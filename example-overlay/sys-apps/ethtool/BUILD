@@ -20,7 +20,7 @@ set -x
 mkdir -p "$${DISTDIR}"
 cp $(location @ethtool_4_13//file) "$${DISTDIR}/ethtool-4.13.tar.xz"
 $(location @chromiumos_portage_tool//:ebuild) $(location :ethtool-4.13.ebuild) clean package
-cp "$${PKGDIR}/experimental/ethtool-4.13.tbz2" $@
+cp "$${PKGDIR}/sys-apps/ethtool-4.13.tbz2" $@
 """,
   tools = ["@chromiumos_portage_tool//:ebuild"],
 )
