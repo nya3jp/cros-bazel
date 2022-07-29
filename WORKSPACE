@@ -89,6 +89,10 @@ new_git_repository(
 
 http_file(
     name = "ethtool_4_13",
-    sha256 = "b7c1a380007d30eaf261a63b3cfc000f9d93f9eb7626dcd48b5d2a733af99cba",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/ethtool-4.13.tar.xz"],
+)
+
+http_file(
+    name = "elt-patches_20210924",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/elt-patches-20210924.tar.xz"],
 )
