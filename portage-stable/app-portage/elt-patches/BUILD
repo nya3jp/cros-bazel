@@ -7,4 +7,5 @@ ebuild(
     distfiles = {
         "@elt-patches_20210924//file": "elt-patches-20210924.tar.xz",
     },
+    visibility = ["//visibility:public"],
 )

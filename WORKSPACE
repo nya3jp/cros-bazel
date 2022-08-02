@@ -72,19 +72,22 @@ go_repository(
     version = "v2.1.0",
 )
 
+go_repository(
+    name = "org_golang_x_sys",
+    importpath = "golang.org/x/sys",
+    sum = "h1:Sv5ogFZatcgIMMtBSTTAgMYsicp25MXBubjXNDKwm80=",
+    version = "v0.0.0-20220731174439-a90be440212d",
+)
+
 go_rules_dependencies()
 
 go_register_toolchains(version = "1.18.3")
 
 gazelle_dependencies()
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
-
-new_git_repository(
-    name = "chromiumos_portage_tool",
-    branch = "chromeos-2.3.75",
-    build_file = "@//:BUILD.chromiumos_portage_tool",
-    remote = "https://chromium.googlesource.com/chromiumos/third_party/portage_tool",
+http_file(
+    name = "chromiumos_sdk",
+    urls = ["https://commondatastorage.googleapis.com/chromiumos-sdk/cros-sdk-2022.07.30.133332.tar.xz"],
 )
 
 http_file(
@@ -95,4 +98,11 @@ http_file(
 http_file(
     name = "elt-patches_20210924",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/elt-patches-20210924.tar.xz"],
+)
+
+http_file(
+    name = "dumb_init",
+    executable = True,
+    urls = ["https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64"],
+    sha256 = "e874b55f3279ca41415d290c512a7ba9d08f98041b28ae7c2acb19a545f1c4df",
 )
