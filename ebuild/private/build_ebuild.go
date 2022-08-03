@@ -117,6 +117,10 @@ var flagEclass = &cli.StringSliceFlag{
 	Name: "eclass",
 }
 
+var flagFile = &cli.StringSliceFlag{
+	Name: "file",
+}
+
 var flagOverlaySquashfs = &cli.StringSliceFlag{
 	Name: "overlay-squashfs",
 }
@@ -132,6 +136,7 @@ var app = &cli.App{
 		flagCategory,
 		flagDistfile,
 		flagEclass,
+		flagFile,
 		flagOverlaySquashfs,
 		flagOutput,
 	},
@@ -140,6 +145,7 @@ var app = &cli.App{
 		category := c.String(flagCategory.Name)
 		distfiles := c.StringSlice(flagDistfile.Name)
 		eclasses := c.StringSlice(flagEclass.Name)
+		files := c.StringSlice(flagFile.Name)
 		images := c.StringSlice(flagOverlaySquashfs.Name)
 		finalOutPath := c.String(flagOutput.Name)
 
@@ -182,6 +188,21 @@ var app = &cli.App{
 		overlayEbuildPath := packageDir.Add(filepath.Base(originalEBuildPath))
 		if err := copyFile(originalEBuildPath, overlayEbuildPath.Outside()); err != nil {
 			return err
+		}
+
+		for _, file := range files {
+			v := strings.SplitN(file, "=", 2)
+			if len(v) < 2 {
+				return errors.New("invalid file spec")
+			}
+			src := v[1]
+			dst := packageDir.Add(v[0]).Outside()
+			if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+				return err
+			}
+			if err := copyFile(src, dst); err != nil {
+				return err
+			}
 		}
 
 		for _, distfile := range distfiles {

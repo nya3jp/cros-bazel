@@ -1,3 +1,6 @@
+load("@bazel_skylib//lib:paths.bzl", "paths")
+
+
 PackageInfo = provider(
   "Portage package info",
   fields = {
@@ -9,9 +12,22 @@ PackageInfo = provider(
 )
 
 
+def _relative_path_in_package(file):
+  owner = file.owner
+  if owner == None:
+    fail("File does not have an associated owner label")
+  workspace_root = paths.join("..", owner.workspace_name) if owner.workspace_name else ""
+  return paths.relativize(file.short_path, paths.join(workspace_root, owner.package))
+
+
+def _format_file_arg(file):
+  return "--file=%s=%s" % (_relative_path_in_package(file), file.path)
+
+
 def _ebuild_impl(ctx):
   src_basename = ctx.file.src.basename.rsplit(".", 1)[0]
   output = ctx.actions.declare_file(src_basename + ".squashfs")
+
   args = ctx.actions.args()
   args.add_all([
     "--ebuild=" + ctx.file.src.path,
@@ -19,10 +35,16 @@ def _ebuild_impl(ctx):
     "--output=" + output.path,
     "--overlay-squashfs=" + ctx.file._sdk.path,
   ])
+
   direct_inputs = [
     ctx.file.src,
     ctx.file._sdk,
   ]
+  transitive_inputs = []
+
+  for file in ctx.attr.files:
+    transitive_inputs.append(file.files)
+    args.add_all(file.files, map_each=_format_file_arg)
 
   for distfile, name in ctx.attr.distfiles.items():
     files = distfile.files.to_list()
@@ -44,7 +66,7 @@ def _ebuild_impl(ctx):
     [dep[PackageInfo].squashfs_file for dep in ctx.attr.build_target_deps]
   )
   runtime_deps = depset(
-    [dep[PackageInfo].squashfs_file for dep  in ctx.attr.runtime_deps],
+    [dep[PackageInfo].squashfs_file for dep in ctx.attr.runtime_deps],
     transitive = [dep[PackageInfo].runtime_deps for dep in ctx.attr.runtime_deps]
   )
 
@@ -52,16 +74,14 @@ def _ebuild_impl(ctx):
   # TODO: Support target deps
   # args.add_all(build_target_deps, format_each='--mount=/build/target/=%s')
 
-  inputs = depset(
-    direct_inputs,
-    transitive = [build_host_deps, build_target_deps]
-  )
-  outputs = [
-    output,
-  ]
+  transitive_inputs.extend([
+    build_host_deps,
+    build_target_deps,
+  ])
+
   ctx.actions.run(
-    inputs = inputs,
-    outputs = outputs,
+    inputs = depset(direct_inputs, transitive = transitive_inputs),
+    outputs = [output],
     executable = ctx.executable._tool,
     arguments = [args],
     mnemonic = "Ebuild",
@@ -103,6 +123,9 @@ ebuild = rule(
     ),
     "runtime_deps": attr.label_list(
       providers = [PackageInfo],
+    ),
+    "files": attr.label_list(
+      allow_files = True,
     ),
     "_tool": attr.label(
       executable = True,
