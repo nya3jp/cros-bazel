@@ -1,5 +1,0 @@
-set noparent
-
-include ../OWNERS.general
-
-# COMPONENT: Infra>ChromeOS>Build>Platform
