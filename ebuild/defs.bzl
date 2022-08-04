@@ -11,13 +11,23 @@ PackageInfo = provider(
   },
 )
 
+OverlayInfo = provider(
+  "Portage overlay info",
+  fields = {
+    "squashfs_files": "Depset",
+  },
+)
+
+
+def _workspace_root(label):
+  return paths.join("..", label.workspace_name) if label.workspace_name else ""
+
 
 def _relative_path_in_package(file):
   owner = file.owner
   if owner == None:
     fail("File does not have an associated owner label")
-  workspace_root = paths.join("..", owner.workspace_name) if owner.workspace_name else ""
-  return paths.relativize(file.short_path, paths.join(workspace_root, owner.package))
+  return paths.relativize(file.short_path, paths.join(_workspace_root(owner), owner.package))
 
 
 def _format_file_arg(file):
@@ -33,7 +43,7 @@ def _ebuild_impl(ctx):
     "--ebuild=" + ctx.file.src.path,
     "--category=" + ctx.attr.category,
     "--output=" + output.path,
-    "--overlay-squashfs=" + ctx.file._sdk.path,
+    "--sdk=" + ctx.file._sdk.path,
   ])
 
   direct_inputs = [
@@ -54,9 +64,9 @@ def _ebuild_impl(ctx):
     args.add("--distfile=%s=%s" % (name, file.path))
     direct_inputs.append(file)
 
-  for file in ctx.files.eclasses:
-    args.add("--eclass=" + file.path)
-    direct_inputs.append(file)
+  overlay_deps = ctx.attr.overlay[OverlayInfo].squashfs_files
+  args.add_all(overlay_deps, format_each="--overlay=%s")
+  transitive_inputs.append(overlay_deps)
 
   build_host_deps = depset(
     [dep[PackageInfo].squashfs_file for dep in ctx.attr.build_host_deps],
@@ -70,8 +80,8 @@ def _ebuild_impl(ctx):
     transitive = [dep[PackageInfo].runtime_deps for dep in ctx.attr.runtime_deps]
   )
 
-  args.add_all(build_host_deps, format_each='--overlay-squashfs=%s')
-  # TODO: Support target deps
+  # TODO: Support deps
+  # args.add_all(build_host_deps, format_each='--overlay-squashfs=%s')
   # args.add_all(build_target_deps, format_each='--mount=/build/target/=%s')
 
   transitive_inputs.extend([
@@ -111,8 +121,10 @@ ebuild = rule(
     "distfiles": attr.label_keyed_string_dict(
       allow_files = True,
     ),
-    "eclasses": attr.label_list(
-      allow_files = True,
+    "overlay": attr.label(
+      mandatory = True,
+      providers = [OverlayInfo],
+      cfg = "exec",
     ),
     "build_host_deps": attr.label_list(
       providers = [PackageInfo],
@@ -136,6 +148,61 @@ ebuild = rule(
       allow_single_file = True,
       cfg = "exec",
       default = Label("//sdk:squashfs"),
+    ),
+  },
+)
+
+
+def _format_create_squashfs_arg(file):
+  return "%s:%s" % (_relative_path_in_package(file), file.path)
+
+
+def _create_squashfs_action(ctx, out, exe, files):
+  args = ctx.actions.args()
+  args.add_all(files, map_each=_format_create_squashfs_arg)
+  args.set_param_file_format("multiline")
+  args.use_param_file("--specs-from=%s", use_always=True)
+
+  ctx.actions.run(
+    inputs = [exe] + files,
+    outputs = [out],
+    executable = exe.path,
+    arguments = ["--output=" + out.path, args],
+  )
+
+
+def _overlay_impl(ctx):
+  out = ctx.actions.declare_file(ctx.attr.name + ".squashfs")
+
+  _create_squashfs_action(ctx, out, ctx.executable._create_squashfs, ctx.files.srcs)
+
+  return [
+    DefaultInfo(files = depset([out])),
+    OverlayInfo(
+      squashfs_files = depset(
+        [out],
+        transitive = [dep[OverlayInfo].squashfs_files for dep in ctx.attr.deps],
+        order = "preorder",
+      ),
+    ),
+  ]
+
+
+overlay = rule(
+  implementation = _overlay_impl,
+  attrs = {
+    "srcs": attr.label_list(
+      allow_files = True,
+      mandatory = True,
+    ),
+    "deps": attr.label_list(
+      providers = [OverlayInfo],
+      cfg = "exec",
+    ),
+    "_create_squashfs": attr.label(
+      executable = True,
+      cfg = "exec",
+      default = Label("//ebuild/private:create_squashfs"),
     ),
   },
 )

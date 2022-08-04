@@ -101,6 +101,11 @@ http_file(
 )
 
 http_file(
+    name = "fuse_3_10_4",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/fuse-3.10.4.tar.xz"],
+)
+
+http_file(
     name = "dumb_init",
     executable = True,
     urls = ["https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64"],

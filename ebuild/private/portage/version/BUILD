@@ -10,4 +10,5 @@ go_library(
 go_test(
     name = "version_test",
     srcs = ["version_test.go"],
+    deps = [":version"],
 )

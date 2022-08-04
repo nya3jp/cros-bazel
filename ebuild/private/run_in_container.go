@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -22,44 +23,61 @@ func runCommand(name string, args ...string) error {
 	return cmd.Run()
 }
 
-type bindInfo struct {
-	Src string
-	Dst string
+type overlayType int
+
+const (
+	overlayDir overlayType = iota
+	overlaySquashfs
+)
+
+type overlayInfo struct {
+	Target string
+	Source string
+	Type   overlayType
 }
 
-func parseBindSpecs(specs []string) ([]bindInfo, error) {
-	var binds []bindInfo
+func parseOverlaySpecs(specs []string, t overlayType) ([]overlayInfo, error) {
+	var mounts []overlayInfo
 	for _, spec := range specs {
-		v := strings.Split(spec, ":")
+		v := strings.Split(spec, "=")
 		if len(v) != 2 {
-			return nil, fmt.Errorf("invalid bind mount spec: %s", spec)
+			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
 		}
-		binds = append(binds, bindInfo{Src: v[0], Dst: v[1]})
+		mounts = append(mounts, overlayInfo{
+			Target: "/" + strings.Trim(v[0], "/"),
+			Source: v[1],
+			Type:   t,
+		})
 	}
-	return binds, nil
+	return mounts, nil
 }
 
-var flagStore = &cli.StringFlag{
-	Name: "store",
+var flagDiffDir = &cli.StringFlag{
+	Name:     "diff-dir",
+	Required: true,
+}
+
+var flagWorkDir = &cli.StringFlag{
+	Name:     "work-dir",
 	Required: true,
 }
 
 var flagInit = &cli.StringFlag{
-	Name: "init",
+	Name:     "init",
 	Required: true,
 }
 
 var flagChdir = &cli.StringFlag{
-	Name: "chdir",
+	Name:  "chdir",
 	Value: "/",
+}
+
+var flagOverlayDir = &cli.StringSliceFlag{
+	Name: "overlay-dir",
 }
 
 var flagOverlaySquashfs = &cli.StringSliceFlag{
 	Name: "overlay-squashfs",
-}
-
-var flagBindMount = &cli.StringSliceFlag{
-	Name: "bind-mount",
 }
 
 var flagKeepHostMount = &cli.BoolFlag{
@@ -67,30 +85,34 @@ var flagKeepHostMount = &cli.BoolFlag{
 }
 
 var flagInternalContinue = &cli.BoolFlag{
-	Name: "internal-continue",
+	Name:   "internal-continue",
 	Hidden: true,
 }
 
 var app = &cli.App{
 	Flags: []cli.Flag{
-		flagStore,
+		flagDiffDir,
+		flagWorkDir,
 		flagInit,
 		flagChdir,
+		flagOverlayDir,
 		flagOverlaySquashfs,
-		flagBindMount,
 		flagKeepHostMount,
 		flagInternalContinue,
 	},
-	Before: func (c *cli.Context) error {
+	Before: func(c *cli.Context) error {
 		if len(c.Args()) == 0 {
 			return errors.New("positional arguments missing")
 		}
-		if _, err := parseBindSpecs(c.StringSlice(flagBindMount.Name)); err != nil {
+		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlaySquashfs.Name), overlayDir); err != nil {
+			return err
+		}
+		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlaySquashfs.Name), overlaySquashfs); err != nil {
 			return err
 		}
 		return nil
 	},
-	Action: func (c *cli.Context) error {
+	Action: func(c *cli.Context) error {
 		if !c.Bool(flagInternalContinue.Name) {
 			return enterNamespace(c)
 		}
@@ -110,13 +132,13 @@ func enterNamespace(c *cli.Context) error {
 		Cloneflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID,
 		UidMappings: []syscall.SysProcIDMap{{
 			ContainerID: 0,
-			HostID: os.Getuid(),
-			Size: 1,
+			HostID:      os.Getuid(),
+			Size:        1,
 		}},
 		GidMappings: []syscall.SysProcIDMap{{
 			ContainerID: 0,
-			HostID: os.Getgid(),
-			Size: 1,
+			HostID:      os.Getgid(),
+			Size:        1,
 		}},
 	}
 	err := cmd.Run()
@@ -132,19 +154,22 @@ func enterNamespace(c *cli.Context) error {
 }
 
 func continueNamespace(c *cli.Context) error {
-	storeDir := c.String(flagStore.Name)
+	diffDir := c.String(flagDiffDir.Name)
+	workDir := c.String(flagWorkDir.Name)
 	chdir := c.String(flagChdir.Name)
-	images := c.StringSlice(flagOverlaySquashfs.Name)
-	bindSpecs := c.StringSlice(flagBindMount.Name)
+	dirOverlays, err := parseOverlaySpecs(c.StringSlice(flagOverlayDir.Name), overlayDir)
+	if err != nil {
+		return err
+	}
+	squashfsOverlays, err := parseOverlaySpecs(c.StringSlice(flagOverlaySquashfs.Name), overlaySquashfs)
+	if err != nil {
+		return err
+	}
+	overlays := append(dirOverlays, squashfsOverlays...)
 	keepHostMount := c.Bool(flagKeepHostMount.Name)
 	args := []string(c.Args())
 
 	pivotRootDone := false // whether pivot_root has been called
-
-	binds, err := parseBindSpecs(bindSpecs)
-	if err != nil {
-		return err
-	}
 
 	stageDir, err := os.MkdirTemp("/tmp", "run_in_container.*")
 	if err != nil {
@@ -169,9 +194,8 @@ func continueNamespace(c *cli.Context) error {
 	rootDir := filepath.Join(stageDir, "root")
 	baseDir := filepath.Join(stageDir, "base")
 	lowersDir := filepath.Join(stageDir, "lowers")
-	storeMountDir := filepath.Join(stageDir, "store")
 
-	for _, dir := range []string{rootDir, baseDir, lowersDir, storeMountDir} {
+	for _, dir := range []string{rootDir, baseDir, lowersDir} {
 		if err := os.Mkdir(dir, 0o755); err != nil {
 			return err
 		}
@@ -184,54 +208,90 @@ func continueNamespace(c *cli.Context) error {
 		}
 	}
 
-	// Create mountpoints for the user-requested bind mounts.
-	for _, bind := range binds {
-		if err := os.MkdirAll(filepath.Join(baseDir, bind.Dst), 0o755); err != nil {
-			return err
-		}
-	}
-
 	// Set up lower directories.
-	lowerDirs := []string{baseDir}
-	for i, image := range images {
+	lowerDirsByMountDir := make(map[string][]string)
+	for i, overlay := range overlays {
 		lowerDir := filepath.Join(lowersDir, strconv.Itoa(i))
-		lowerDirs = append(lowerDirs, lowerDir)
-		if err := os.Mkdir(lowerDir, 0o755); err != nil {
+		lowerDirsByMountDir[overlay.Target] = append(lowerDirsByMountDir[overlay.Target], lowerDir)
+		if err := os.MkdirAll(lowerDir, 0o755); err != nil {
 			return err
 		}
-		if err := runCommand("squashfuse", image, lowerDir); err != nil {
-			return fmt.Errorf("failed mounting %s: %w", image, err)
+		switch overlay.Type {
+		case overlayDir:
+			if err := unix.Mount(overlay.Source, lowerDir, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
+				return fmt.Errorf("failed bind-mounting %s: %w", overlay.Source, err)
+			}
+		case overlaySquashfs:
+			if err := runCommand("squashfuse", overlay.Source, lowerDir); err != nil {
+				return fmt.Errorf("failed mounting %s: %w", overlay.Source, err)
+			}
+		default:
+			return fmt.Errorf("BUG: unknown overlay type %d", overlay.Type)
 		}
 	}
 
-	// Bind-mount the store directory to avoid special characters in overlayfs options.
-	if err := unix.Mount(storeDir, storeMountDir, "", unix.MS_BIND, ""); err != nil {
-		return fmt.Errorf("bind-mounting store dir: %w", err)
-	}
-
-	// Set up the store directory.
-	upperDir := filepath.Join(storeMountDir, "upper")
-	workDir := filepath.Join(storeMountDir, "work")
-	for _, dir := range []string{upperDir, workDir} {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
+	// Ensure mountpoints to exist.
+	for mountDir, lowerDirs := range lowerDirsByMountDir {
+		if err := os.MkdirAll(filepath.Join(baseDir, mountDir), 0o755); err != nil {
 			return err
 		}
+		lowerDirsByMountDir[mountDir] = append([]string{filepath.Join(baseDir, mountDir)}, lowerDirs...)
 	}
 
-	// Mount overlayfs.
-	overlayOptions := fmt.Sprintf("upperdir=%s,workdir=%s,lowerdir=%s", upperDir, workDir, strings.Join(lowerDirs, ":"))
-	if err := unix.Mount("none", rootDir, "overlay", 0, overlayOptions); err != nil {
-		return fmt.Errorf("mounting overlayfs: %w", err)
+	// Change the current directory to minimize the option string passed to
+	// mount(2) as its length is constrained.
+	if err := os.Chdir(lowersDir); err != nil {
+		return err
+	}
+
+	// Overlay multiple directories.
+	// This is done by mounting overlayfs per mount offset.
+	mountDirs := make([]string, 0, len(lowerDirsByMountDir))
+	for mountDir := range lowerDirsByMountDir {
+		mountDirs = append(mountDirs, mountDir)
+	}
+	sort.Strings(mountDirs) // must be topologically sorted
+
+	for i, mountDir := range mountDirs {
+		// Set up the store directory.
+		upperDir := filepath.Join(diffDir, mountDir)
+		workDir := filepath.Join(workDir, strconv.Itoa(i))
+		for _, dir := range []string{upperDir, workDir} {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return err
+			}
+		}
+
+		// Compute shorter representations of lower directories.
+		lowerDirs := lowerDirsByMountDir[mountDir]
+		shortLowerDirs := make([]string, 0, len(lowerDirs))
+		for _, lowerDir := range lowerDirs {
+			relLowerDir, err := filepath.Rel(lowersDir, lowerDir)
+			if err != nil {
+				return err
+			}
+			shortLowerDir := relLowerDir
+			if len(relLowerDir) > len(lowerDir) {
+				shortLowerDir = lowerDir
+			}
+			shortLowerDirs = append(shortLowerDirs, shortLowerDir)
+		}
+
+		// Mount overlayfs.
+		overlayOptions := fmt.Sprintf("upperdir=%s,workdir=%s,lowerdir=%s", upperDir, workDir, strings.Join(shortLowerDirs, ":"))
+		if err := unix.Mount("none", filepath.Join(rootDir, mountDir), "overlay", 0, overlayOptions); err != nil {
+			return fmt.Errorf("mounting overlayfs: %w", err)
+		}
 	}
 
 	// Mount essential filesystems.
-	if err := unix.Mount("/dev", filepath.Join(rootDir, "dev"), "", unix.MS_BIND | unix.MS_REC, ""); err != nil {
+	if err := unix.Mount("/dev", filepath.Join(rootDir, "dev"), "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
 		return fmt.Errorf("bind-mounting /dev: %w", err)
 	}
 	if err := unix.Mount("proc", filepath.Join(rootDir, "proc"), "proc", 0, ""); err != nil {
 		return fmt.Errorf("mounting /proc: %w", err)
 	}
-	if err := unix.Mount("/sys", filepath.Join(rootDir, "sys"), "", unix.MS_BIND | unix.MS_REC, ""); err != nil {
+	if err := unix.Mount("/sys", filepath.Join(rootDir, "sys"), "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
 		return fmt.Errorf("bind-mounting /sys: %w", err)
 	}
 
@@ -248,13 +308,6 @@ func continueNamespace(c *cli.Context) error {
 	}
 	if err := os.Remove(pivotedTmpDir); err != nil {
 		fmt.Fprintf(os.Stderr, "WARNING: failed to delete stage directory: %v\n", err)
-	}
-
-	// Execute user-requested bind mounts.
-	for _, bind := range binds {
-		if err := unix.Mount(bind.Src, bind.Dst, "", unix.MS_BIND | unix.MS_REC, ""); err != nil {
-			return fmt.Errorf("bind-mounting %s to %s: %w", bind.Src, bind.Dst, err)
-		}
 	}
 
 	// Unmount /host.

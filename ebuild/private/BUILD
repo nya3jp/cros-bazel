@@ -37,3 +37,19 @@ go_library(
         "@org_golang_x_sys//unix",
     ],
 )
+
+go_binary(
+    name = "create_squashfs",
+    embed = [":create_squashfs_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "create_squashfs_lib",
+    srcs = ["create_squashfs.go"],
+    importpath = "cros.local/ebuild/private",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@com_github_urfave_cli//:cli",
+    ],
+)

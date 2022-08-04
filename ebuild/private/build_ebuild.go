@@ -35,7 +35,7 @@ func newDualPath(outside, inside string) dualPath {
 }
 
 func (dp dualPath) Outside() string { return dp.outside }
-func (dp dualPath) Inside() string { return dp.inside }
+func (dp dualPath) Inside() string  { return dp.inside }
 
 func (dp dualPath) Add(components ...string) dualPath {
 	return newDualPath(
@@ -59,6 +59,10 @@ func parseEBuildPath(path string) (packageShortName string, ver *version.Version
 	}
 	packageShortName = filepath.Base(strings.TrimSuffix(rest, versionSep))
 	return packageShortName, ver, nil
+}
+
+func baseNoExt(path string) string {
+	return strings.SplitN(filepath.Base(path), ".", 2)[0]
 }
 
 func runCommand(name string, args ...string) error {
@@ -100,12 +104,22 @@ func convertTbz2ToSquashfs(src, dst string) error {
 }
 
 var flagEBuild = &cli.StringFlag{
-	Name: "ebuild",
+	Name:     "ebuild",
 	Required: true,
 }
 
 var flagCategory = &cli.StringFlag{
-	Name: "category",
+	Name:     "category",
+	Required: true,
+}
+
+var flagSDK = &cli.StringFlag{
+	Name:     "sdk",
+	Required: true,
+}
+
+var flagOverlay = &cli.StringSliceFlag{
+	Name:     "overlay",
 	Required: true,
 }
 
@@ -113,20 +127,12 @@ var flagDistfile = &cli.StringSliceFlag{
 	Name: "distfile",
 }
 
-var flagEclass = &cli.StringSliceFlag{
-	Name: "eclass",
-}
-
 var flagFile = &cli.StringSliceFlag{
 	Name: "file",
 }
 
-var flagOverlaySquashfs = &cli.StringSliceFlag{
-	Name: "overlay-squashfs",
-}
-
 var flagOutput = &cli.StringFlag{
-	Name: "output",
+	Name:     "output",
 	Required: true,
 }
 
@@ -134,19 +140,19 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagEBuild,
 		flagCategory,
+		flagSDK,
+		flagOverlay,
 		flagDistfile,
-		flagEclass,
 		flagFile,
-		flagOverlaySquashfs,
 		flagOutput,
 	},
-	Action: func (c *cli.Context) error {
+	Action: func(c *cli.Context) error {
 		originalEBuildPath := c.String(flagEBuild.Name)
 		category := c.String(flagCategory.Name)
-		distfiles := c.StringSlice(flagDistfile.Name)
-		eclasses := c.StringSlice(flagEclass.Name)
-		files := c.StringSlice(flagFile.Name)
-		images := c.StringSlice(flagOverlaySquashfs.Name)
+		distfileSpecs := c.StringSlice(flagDistfile.Name)
+		sdkPath := c.String(flagSDK.Name)
+		overlayPaths := c.StringSlice(flagOverlay.Name)
+		fileSpecs := c.StringSlice(flagFile.Name)
 		finalOutPath := c.String(flagOutput.Name)
 
 		packageShortName, _, err := parseEBuildPath(originalEBuildPath)
@@ -166,20 +172,23 @@ var app = &cli.App{
 		}
 		defer os.RemoveAll(tmpDir)
 
-		storeDir := filepath.Join(tmpDir, "store")
+		diffDir := filepath.Join(tmpDir, "diff")
+		workDir := filepath.Join(tmpDir, "work")
 
-		const stageMountPoint = "/stage"
-		stageDir := newDualPath(filepath.Join(tmpDir, "stage"), stageMountPoint)
-		overlayDir := stageDir.Add("bazel-overlay")
-		eclassDir := overlayDir.Add("eclass")
-		packageDir := overlayDir.Add(category, packageShortName)
-		distfilesDir := stageDir.Add("distfiles")
-		binaryPkgsDir := stageDir.Add("binpkgs")
+		stageDir := newDualPath(tmpDir, "/").Add("stage")
+		inputDir := stageDir.Add("input")
+		outputDir := stageDir.Add("output")
+		overlaysDir := inputDir.Add("overlays")
+		packageDir := overlaysDir.Add(baseNoExt(overlayPaths[0]), category, packageShortName)
+		distfilesDir := outputDir.Add("distfiles")
+		binaryPkgsDir := outputDir.Add("binpkgs")
 
-		if err := os.Mkdir(storeDir, 0o755); err != nil {
-			return err
+		for _, dir := range []string{diffDir, workDir} {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return err
+			}
 		}
-		for _, dir := range []dualPath{stageDir, overlayDir, eclassDir, packageDir, distfilesDir, binaryPkgsDir} {
+		for _, dir := range []dualPath{inputDir, outputDir, overlaysDir, packageDir, distfilesDir, binaryPkgsDir} {
 			if err := os.MkdirAll(dir.Outside(), 0o755); err != nil {
 				return err
 			}
@@ -190,8 +199,8 @@ var app = &cli.App{
 			return err
 		}
 
-		for _, file := range files {
-			v := strings.SplitN(file, "=", 2)
+		for _, fileSpec := range fileSpecs {
+			v := strings.SplitN(fileSpec, "=", 2)
 			if len(v) < 2 {
 				return errors.New("invalid file spec")
 			}
@@ -205,8 +214,8 @@ var app = &cli.App{
 			}
 		}
 
-		for _, distfile := range distfiles {
-			v := strings.SplitN(distfile, "=", 2)
+		for _, distfileSpec := range distfileSpecs {
+			v := strings.SplitN(distfileSpec, "=", 2)
 			if len(v) < 2 {
 				return errors.New("invalid distfile spec")
 			}
@@ -215,40 +224,50 @@ var app = &cli.App{
 			}
 		}
 
-		for _, eclass := range eclasses {
-			if err := copyFile(eclass, eclassDir.Add(filepath.Base(eclass)).Outside()); err != nil {
-				return err
-			}
+		args := []string{
+			"--diff-dir=" + diffDir,
+			"--work-dir=" + workDir,
+			// TODO: Consider avoiding runfiles.
+			"--init=" + filepath.Join(runfilesDir, "dumb_init/file/downloaded"),
+			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
+			"--overlay-dir=" + packageDir.Inside() + "=" + packageDir.Outside(),
+			"--overlay-squashfs=/=" + sdkPath,
 		}
 
-		args := []string{
-			"--store=" + storeDir,
-			"--init=" + filepath.Join(runfilesDir, "dumb_init/file/downloaded"),
-			"--bind-mount=" + filepath.Join("/host", stageDir.Outside()) + ":" + stageMountPoint,
+		var overlayDirsInside []string
+		for _, overlayPath := range overlayPaths {
+			overlayDir := overlaysDir.Add(baseNoExt(overlayPath))
+			args = append(args, "--overlay-squashfs="+overlayDir.Inside()+"="+overlayPath)
+			overlayDirsInside = append(overlayDirsInside, overlayDir.Inside())
 		}
-		for _, image := range images {
-			args = append(args, "--overlay-squashfs=" + image)
-		}
+
 		args = append(args,
+			"bash",
+			"-c",
+			`ln -sf "$0" /etc/portage/make.profile; exec "$@"`,
+			// TODO: Avoid hard-coding the default profile.
+			"/stage/input/overlays/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk",
 			"ebuild",
 			overlayEbuildPath.Inside(),
 			"clean",
 			"package",
 		)
 		cmd := exec.Command(
+			// TODO: Consider avoiding runfiles.
 			filepath.Join(runfilesDir, "rules_ebuild/ebuild/private/run_in_container_/run_in_container"),
 			args...)
 		cmd.Env = append(
 			os.Environ(),
-			"PATH=" + strings.Join(systemBinPaths, ":"),
+			"PATH="+strings.Join(systemBinPaths, ":"),
 			"ROOT=/",
 			"SYSROOT=/",
-			"FEATURES=digest -sandbox -usersandbox",  // TODO: turn on sandbox
+			"FEATURES=digest -sandbox -usersandbox", // TODO: turn on sandbox
 			"PORTAGE_USERNAME=root",
 			"PORTAGE_GRPNAME=root",
-			"PORTDIR=" + overlayDir.Inside(),
-			"DISTDIR=" + distfilesDir.Inside(),
-			"PKGDIR=" + binaryPkgsDir.Inside(),
+			"PORTDIR="+overlayDirsInside[0],
+			"PORTDIR_OVERLAY="+strings.Join(overlayDirsInside[1:], " "),
+			"DISTDIR="+distfilesDir.Inside(),
+			"PKGDIR="+binaryPkgsDir.Inside(),
 		)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -261,8 +280,8 @@ var app = &cli.App{
 
 		binaryOutPath := binaryPkgsDir.Add(
 			category,
-			strings.TrimSuffix(filepath.Base(originalEBuildPath), ebuildExt) + binaryExt)
-		if err := convertTbz2ToSquashfs(binaryOutPath.Outside(), finalOutPath); err != nil {
+			strings.TrimSuffix(filepath.Base(originalEBuildPath), ebuildExt)+binaryExt)
+		if err := convertTbz2ToSquashfs(filepath.Join(diffDir, binaryOutPath.Inside()), finalOutPath); err != nil {
 			return fmt.Errorf("converting tbz2 to squashfs: %w", err)
 		}
 
