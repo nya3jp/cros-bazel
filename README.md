@@ -3,8 +3,8 @@
 This is an experiment to build Portage packages with Bazel.
 
 ```
-$ bazel build //portage-stable/sys-apps/ethtool
-$ unsquashfs -l bazel-bin/portage-stable/sys-apps/ethtool/ethtool-4.13.squashfs
+$ bazel build //third_party/portage-stable/sys-apps/ethtool
+$ unsquashfs -l bazel-bin/third_party/portage-stable/sys-apps/ethtool/ethtool-4.13.squashfs
 squashfs-root
 squashfs-root/usr
 squashfs-root/usr/sbin
