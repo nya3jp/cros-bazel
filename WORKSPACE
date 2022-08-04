@@ -88,26 +88,31 @@ gazelle_dependencies()
 http_file(
     name = "chromiumos_sdk",
     urls = ["https://commondatastorage.googleapis.com/chromiumos-sdk/cros-sdk-2022.07.30.133332.tar.xz"],
+    sha256 = "af5d6f53a52bd35ce6513dd0b2bbb78154b71f3b47eb01851e364fae76ef55ac",
 )
 
 http_file(
     name = "ethtool_4_13",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/ethtool-4.13.tar.xz"],
+    sha256 = "b7c1a380007d30eaf261a63b3cfc000f9d93f9eb7626dcd48b5d2a733af99cba",
 )
 
 http_file(
     name = "elt-patches_20210924",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/elt-patches-20210924.tar.xz"],
+    sha256 = "1b804bbaa7ebc89126762ef639b266f2c105c77f5b6eb6b76f46c77924773268",
 )
 
 http_file(
     name = "fuse_2_9_8",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/fuse-2.9.8.tar.gz"],
+    sha256 = "5e84f81d8dd527ea74f39b6bc001c874c02bad6871d7a9b0c14efb57430eafe3",
 )
 
 http_file(
     name = "fuse_3_10_4",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/fuse-3.10.4.tar.xz"],
+    sha256 = "9365b74fd8471caecdb3cc5adf25a821f70a931317ee9103d15bd39089e3590d",
 )
 
 http_file(
