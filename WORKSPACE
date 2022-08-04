@@ -101,6 +101,11 @@ http_file(
 )
 
 http_file(
+    name = "fuse_2_9_8",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/fuse-2.9.8.tar.gz"],
+)
+
+http_file(
     name = "fuse_3_10_4",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/fuse-3.10.4.tar.xz"],
 )

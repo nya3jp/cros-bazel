@@ -17,6 +17,8 @@ import (
 const (
 	ebuildExt = ".ebuild"
 	binaryExt = ".tbz2"
+
+	sysrootDir = "/build/target/"
 )
 
 var systemBinPaths = []string{
@@ -123,6 +125,10 @@ var flagOverlay = &cli.StringSliceFlag{
 	Required: true,
 }
 
+var flagDependency = &cli.StringSliceFlag{
+	Name: "dependency",
+}
+
 var flagDistfile = &cli.StringSliceFlag{
 	Name: "distfile",
 }
@@ -142,6 +148,7 @@ var app = &cli.App{
 		flagCategory,
 		flagSDK,
 		flagOverlay,
+		flagDependency,
 		flagDistfile,
 		flagFile,
 		flagOutput,
@@ -152,6 +159,7 @@ var app = &cli.App{
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
 		sdkPath := c.String(flagSDK.Name)
 		overlayPaths := c.StringSlice(flagOverlay.Name)
+		dependencyPaths := c.StringSlice(flagDependency.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		finalOutPath := c.String(flagOutput.Name)
 
@@ -241,10 +249,15 @@ var app = &cli.App{
 			overlayDirsInside = append(overlayDirsInside, overlayDir.Inside())
 		}
 
+		for _, dependencyPath := range dependencyPaths {
+			args = append(args, "--overlay-squashfs="+sysrootDir+"="+dependencyPath)
+		}
+
 		args = append(args,
 			"bash",
 			"-c",
-			`ln -sf "$0" /etc/portage/make.profile; exec "$@"`,
+			// TODO: Can we get rid of mkdir?
+			`mkdir -p "${ROOT}"; ln -sf "$0" /etc/portage/make.profile; exec "$@"`,
 			// TODO: Avoid hard-coding the default profile.
 			"/stage/input/overlays/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk",
 			"ebuild",
@@ -259,8 +272,8 @@ var app = &cli.App{
 		cmd.Env = append(
 			os.Environ(),
 			"PATH="+strings.Join(systemBinPaths, ":"),
-			"ROOT=/",
-			"SYSROOT=/",
+			"ROOT="+sysrootDir,
+			"SYSROOT="+sysrootDir,
 			"FEATURES=digest -sandbox -usersandbox", // TODO: turn on sandbox
 			"PORTAGE_USERNAME=root",
 			"PORTAGE_GRPNAME=root",
