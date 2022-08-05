@@ -46,6 +46,8 @@ def _ebuild_impl(ctx):
 
   args = ctx.actions.args()
   args.add_all([
+    "--run-in-container=" + ctx.executable._run_in_container.path,
+    "--dumb-init=" + ctx.executable._dumb_init.path,
     "--ebuild=" + ctx.file.src.path,
     "--category=" + ctx.attr.category,
     "--output=" + output.path,
@@ -55,6 +57,9 @@ def _ebuild_impl(ctx):
   direct_inputs = [
     ctx.file.src,
     ctx.file._sdk,
+    ctx.executable._build_ebuild,
+    ctx.executable._run_in_container,
+    ctx.executable._dumb_init,
   ]
   transitive_inputs = []
 
@@ -89,7 +94,7 @@ def _ebuild_impl(ctx):
   ctx.actions.run(
     inputs = depset(direct_inputs, transitive = transitive_inputs),
     outputs = [output],
-    executable = ctx.executable._tool,
+    executable = ctx.executable._build_ebuild,
     arguments = [args],
     mnemonic = "Ebuild",
     progress_message = "Building " + ctx.file.src.basename,
@@ -131,10 +136,20 @@ ebuild = rule(
       providers = [OverlaySetInfo],
       cfg = "exec",
     ),
-    "_tool": attr.label(
+    "_build_ebuild": attr.label(
       executable = True,
       cfg = "exec",
       default = Label("//ebuild/private:build_ebuild"),
+    ),
+    "_run_in_container": attr.label(
+      executable = True,
+      cfg = "exec",
+      default = Label("//ebuild/private:run_in_container"),
+    ),
+    "_dumb_init": attr.label(
+      executable = True,
+      cfg = "exec",
+      default = Label("@dumb_init//file"),
     ),
     "_sdk": attr.label(
       allow_single_file = True,

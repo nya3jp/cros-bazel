@@ -142,6 +142,16 @@ var flagOutput = &cli.StringFlag{
 	Required: true,
 }
 
+var flagRunInContainer = &cli.StringFlag{
+	Name:     "run-in-container",
+	Required: true,
+}
+
+var flagDumbInit = &cli.StringFlag{
+	Name:     "dumb-init",
+	Required: true,
+}
+
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagEBuild,
@@ -152,6 +162,8 @@ var app = &cli.App{
 		flagDistfile,
 		flagFile,
 		flagOutput,
+		flagRunInContainer,
+		flagDumbInit,
 	},
 	Action: func(c *cli.Context) error {
 		originalEBuildPath := c.String(flagEBuild.Name)
@@ -162,17 +174,13 @@ var app = &cli.App{
 		dependencyPaths := c.StringSlice(flagDependency.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		finalOutPath := c.String(flagOutput.Name)
+		runInContainerPath := c.String(flagRunInContainer.Name)
+		dumbInitPath := c.String(flagDumbInit.Name)
 
 		packageShortName, _, err := parseEBuildPath(originalEBuildPath)
 		if err != nil {
 			return fmt.Errorf("invalid ebuild file name: %w", err)
 		}
-
-		exe, err := os.Executable()
-		if err != nil {
-			return err
-		}
-		runfilesDir := exe + ".runfiles"
 
 		tmpDir, err := os.MkdirTemp("", "build_ebuild.*")
 		if err != nil {
@@ -235,8 +243,7 @@ var app = &cli.App{
 		args := []string{
 			"--diff-dir=" + diffDir,
 			"--work-dir=" + workDir,
-			// TODO: Consider avoiding runfiles.
-			"--init=" + filepath.Join(runfilesDir, "dumb_init/file/downloaded"),
+			"--dumb-init=" + dumbInitPath,
 			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
 			"--overlay-dir=" + packageDir.Inside() + "=" + packageDir.Outside(),
 			"--overlay-squashfs=/=" + sdkPath,
@@ -266,8 +273,7 @@ var app = &cli.App{
 			"package",
 		)
 		cmd := exec.Command(
-			// TODO: Consider avoiding runfiles.
-			filepath.Join(runfilesDir, "rules_ebuild/ebuild/private/run_in_container_/run_in_container"),
+			runInContainerPath,
 			args...)
 		cmd.Env = append(
 			os.Environ(),

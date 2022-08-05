@@ -62,8 +62,8 @@ var flagWorkDir = &cli.StringFlag{
 	Required: true,
 }
 
-var flagInit = &cli.StringFlag{
-	Name:     "init",
+var flagDumbInit = &cli.StringFlag{
+	Name:     "dumb-init",
 	Required: true,
 }
 
@@ -93,7 +93,7 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagDiffDir,
 		flagWorkDir,
-		flagInit,
+		flagDumbInit,
 		flagChdir,
 		flagOverlayDir,
 		flagOverlaySquashfs,
@@ -121,10 +121,10 @@ var app = &cli.App{
 }
 
 func enterNamespace(c *cli.Context) error {
-	init := c.String(flagInit.Name)
+	dumbInitPath := c.String(flagDumbInit.Name)
 
 	args := append([]string{os.Args[0], "--" + flagInternalContinue.Name}, os.Args[1:]...)
-	cmd := exec.Command(init, args...)
+	cmd := exec.Command(dumbInitPath, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

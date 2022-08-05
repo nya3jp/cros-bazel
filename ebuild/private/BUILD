@@ -9,10 +9,6 @@ go_binary(
 go_library(
     name = "build_ebuild_lib",
     srcs = ["build_ebuild.go"],
-    data = [
-        ":run_in_container",
-        "@dumb_init//file",
-    ],
     importpath = "cros.local/ebuild/private",
     visibility = ["//visibility:private"],
     deps = [
