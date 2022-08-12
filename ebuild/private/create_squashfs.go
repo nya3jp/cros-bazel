@@ -124,7 +124,7 @@ func processFile(w *tar.Writer, spec string) error {
 			return err
 		}
 		if written < stat.Size() {
-			log.Printf("WARNING: short read (got %d, want %d): %s\n", written, stat.Size())
+			log.Printf("WARNING: short read (got %d, want %d)\n", written, stat.Size())
 			if err := writeZeros(w, stat.Size()-written); err != nil {
 				return err
 			}
