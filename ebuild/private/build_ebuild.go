@@ -78,33 +78,6 @@ func copyFile(src, dst string) error {
 	return runCommand("/usr/bin/cp", "--", src, dst)
 }
 
-func convertTbz2ToSquashfs(src, dst string) error {
-	r, w, err := os.Pipe()
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-	defer w.Close()
-
-	bzcat := exec.Command("/usr/bin/bzcat", src)
-	bzcat.Stdout = w
-	bzcat.Stderr = os.Stderr
-	if err := bzcat.Start(); err != nil {
-		return err
-	}
-	defer func() {
-		bzcat.Process.Kill()
-		bzcat.Wait()
-	}()
-
-	w.Close()
-
-	mksquashfs := exec.Command("/usr/bin/mksquashfs", "-", dst, "-tar")
-	mksquashfs.Stdin = r
-	mksquashfs.Stderr = os.Stderr
-	return mksquashfs.Run()
-}
-
 var flagEBuild = &cli.StringFlag{
 	Name:     "ebuild",
 	Required: true,
@@ -300,8 +273,8 @@ var app = &cli.App{
 		binaryOutPath := binaryPkgsDir.Add(
 			category,
 			strings.TrimSuffix(filepath.Base(originalEBuildPath), ebuildExt)+binaryExt)
-		if err := convertTbz2ToSquashfs(filepath.Join(diffDir, binaryOutPath.Inside()), finalOutPath); err != nil {
-			return fmt.Errorf("converting tbz2 to squashfs: %w", err)
+		if err := copyFile(filepath.Join(diffDir, binaryOutPath.Inside()), finalOutPath); err != nil {
+			return err
 		}
 
 		return nil

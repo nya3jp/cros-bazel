@@ -1,10 +1,10 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
 
-PackageInfo = provider(
-  "Portage package info",
+BinaryPackageInfo = provider(
+  "Portage binary package info",
   fields = {
-    "squashfs_file": "File",
+    "file": "File",
     "build_target_deps": "Depset",
     "runtime_deps": "Depset",
   },
@@ -42,7 +42,7 @@ def _format_file_arg(file):
 
 def _ebuild_impl(ctx):
   src_basename = ctx.file.src.basename.rsplit(".", 1)[0]
-  output = ctx.actions.declare_file(src_basename + ".squashfs")
+  output = ctx.actions.declare_file(src_basename + ".tbz2")
 
   args = ctx.actions.args()
   args.add_all([
@@ -79,12 +79,15 @@ def _ebuild_impl(ctx):
   args.add_all(overlay_deps, format_each="--overlay=%s")
   transitive_inputs.append(overlay_deps)
 
+  # TODO: Consider target/host transitions.
   build_target_deps = depset(
-    [dep[PackageInfo].squashfs_file for dep in ctx.attr.build_target_deps]
+    [dep[BinaryPackageInfo].file for dep in ctx.attr.build_target_deps],
+    order = "postorder"
   )
   runtime_deps = depset(
-    [dep[PackageInfo].squashfs_file for dep in ctx.attr.runtime_deps],
-    transitive = [dep[PackageInfo].runtime_deps for dep in ctx.attr.runtime_deps]
+    [dep[BinaryPackageInfo].file for dep in ctx.attr.runtime_deps],
+    transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.runtime_deps],
+    order = "postorder"
   )
 
   args.add_all(build_target_deps, format_each='--dependency=%s')
@@ -101,8 +104,8 @@ def _ebuild_impl(ctx):
   )
   return [
     DefaultInfo(files = depset([output])),
-    PackageInfo(
-      squashfs_file = output,
+    BinaryPackageInfo(
+      file = output,
       build_target_deps = build_target_deps,
       runtime_deps = runtime_deps,
     ),
@@ -123,10 +126,10 @@ ebuild = rule(
       allow_files = True,
     ),
     "build_target_deps": attr.label_list(
-      providers = [PackageInfo],
+      providers = [BinaryPackageInfo],
     ),
     "runtime_deps": attr.label_list(
-      providers = [PackageInfo],
+      providers = [BinaryPackageInfo],
     ),
     "files": attr.label_list(
       allow_files = True,
@@ -155,6 +158,47 @@ ebuild = rule(
       allow_single_file = True,
       cfg = "exec",
       default = Label("//sdk:squashfs"),
+    ),
+  },
+)
+
+
+def _binary_package_impl(ctx):
+  src = ctx.file.src
+
+  # TODO: Consider target/host transitions.
+  build_target_deps = depset(
+    [dep[BinaryPackageInfo].file for dep in ctx.attr.build_target_deps],
+    order = "postorder"
+  )
+  runtime_deps = depset(
+    [dep[BinaryPackageInfo].file for dep in ctx.attr.runtime_deps],
+    transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.runtime_deps],
+    order = "postorder"
+  )
+
+  return [
+    DefaultInfo(files = depset([src])),
+    BinaryPackageInfo(
+      file = src,
+      build_target_deps = build_target_deps,
+      runtime_deps = runtime_deps,
+    ),
+  ]
+
+
+binary_package = rule(
+  implementation = _binary_package_impl,
+  attrs = {
+    "src": attr.label(
+      mandatory = True,
+      allow_single_file = [".tbz2"],
+    ),
+    "build_target_deps": attr.label_list(
+      providers = [BinaryPackageInfo],
+    ),
+    "runtime_deps": attr.label_list(
+      providers = [BinaryPackageInfo],
     ),
   },
 )
