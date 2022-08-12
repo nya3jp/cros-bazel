@@ -129,7 +129,7 @@ func enterNamespace(c *cli.Context) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Cloneflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID,
+		Cloneflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNET,
 		UidMappings: []syscall.SysProcIDMap{{
 			ContainerID: 0,
 			HostID:      os.Getuid(),
@@ -170,6 +170,11 @@ func continueNamespace(c *cli.Context) error {
 	args := []string(c.Args())
 
 	pivotRootDone := false // whether pivot_root has been called
+
+	// Enable the loopback networking.
+	if err := runCommand("/usr/sbin/ifconfig", "lo", "up"); err != nil {
+		return err
+	}
 
 	stageDir, err := os.MkdirTemp("/tmp", "run_in_container.*")
 	if err != nil {
