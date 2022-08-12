@@ -125,6 +125,11 @@ var flagDumbInit = &cli.StringFlag{
 	Required: true,
 }
 
+var flagSquashfuse = &cli.StringFlag{
+	Name:     "squashfuse",
+	Required: true,
+}
+
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagEBuild,
@@ -137,6 +142,7 @@ var app = &cli.App{
 		flagOutput,
 		flagRunInContainer,
 		flagDumbInit,
+		flagSquashfuse,
 	},
 	Action: func(c *cli.Context) error {
 		originalEBuildPath := c.String(flagEBuild.Name)
@@ -149,6 +155,7 @@ var app = &cli.App{
 		finalOutPath := c.String(flagOutput.Name)
 		runInContainerPath := c.String(flagRunInContainer.Name)
 		dumbInitPath := c.String(flagDumbInit.Name)
+		squashfusePath := c.String(flagSquashfuse.Name)
 
 		packageShortName, _, err := parseEBuildPath(originalEBuildPath)
 		if err != nil {
@@ -217,6 +224,7 @@ var app = &cli.App{
 			"--diff-dir=" + diffDir,
 			"--work-dir=" + workDir,
 			"--dumb-init=" + dumbInitPath,
+			"--squashfuse=" + squashfusePath,
 			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
 			"--overlay-dir=" + packageDir.Inside() + "=" + packageDir.Outside(),
 			"--overlay-squashfs=/=" + sdkPath,

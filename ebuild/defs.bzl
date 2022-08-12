@@ -43,6 +43,7 @@ def _ebuild_impl(ctx):
     args.add_all([
         "--run-in-container=" + ctx.executable._run_in_container.path,
         "--dumb-init=" + ctx.executable._dumb_init.path,
+        "--squashfuse=" + ctx.file._squashfuse.path,
         "--ebuild=" + ctx.file.src.path,
         "--category=" + ctx.attr.category,
         "--output=" + output.path,
@@ -52,6 +53,7 @@ def _ebuild_impl(ctx):
     direct_inputs = [
         ctx.file.src,
         ctx.file._sdk,
+        ctx.file._squashfuse,
         ctx.executable._build_ebuild,
         ctx.executable._run_in_container,
         ctx.executable._dumb_init,
@@ -142,6 +144,12 @@ ebuild = rule(
             executable = True,
             cfg = "exec",
             default = Label("//ebuild/private:run_in_container"),
+        ),
+        "_squashfuse": attr.label(
+            allow_single_file = True,
+            executable = True,
+            cfg = "exec",
+            default = Label("//third_party/prebuilts:squashfuse"),
         ),
         "_dumb_init": attr.label(
             executable = True,

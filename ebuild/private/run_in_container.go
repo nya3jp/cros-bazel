@@ -67,6 +67,11 @@ var flagDumbInit = &cli.StringFlag{
 	Required: true,
 }
 
+var flagSquashfuse = &cli.StringFlag{
+	Name:     "squashfuse",
+	Required: true,
+}
+
 var flagChdir = &cli.StringFlag{
 	Name:  "chdir",
 	Value: "/",
@@ -94,6 +99,7 @@ var app = &cli.App{
 		flagDiffDir,
 		flagWorkDir,
 		flagDumbInit,
+		flagSquashfuse,
 		flagChdir,
 		flagOverlayDir,
 		flagOverlaySquashfs,
@@ -129,7 +135,7 @@ func enterNamespace(c *cli.Context) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Cloneflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNET,
+		Cloneflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNET | syscall.CLONE_NEWIPC,
 		UidMappings: []syscall.SysProcIDMap{{
 			ContainerID: 0,
 			HostID:      os.Getuid(),
@@ -156,6 +162,7 @@ func enterNamespace(c *cli.Context) error {
 func continueNamespace(c *cli.Context) error {
 	diffDir := c.String(flagDiffDir.Name)
 	workDir := c.String(flagWorkDir.Name)
+	squashfusePath := c.String(flagSquashfuse.Name)
 	chdir := c.String(flagChdir.Name)
 	dirOverlays, err := parseOverlaySpecs(c.StringSlice(flagOverlayDir.Name), overlayDir)
 	if err != nil {
@@ -227,7 +234,7 @@ func continueNamespace(c *cli.Context) error {
 				return fmt.Errorf("failed bind-mounting %s: %w", overlay.Source, err)
 			}
 		case overlaySquashfs:
-			if err := runCommand("squashfuse", overlay.Source, lowerDir); err != nil {
+			if err := runCommand(squashfusePath, overlay.Source, lowerDir); err != nil {
 				return fmt.Errorf("failed mounting %s: %w", overlay.Source, err)
 			}
 		default:
