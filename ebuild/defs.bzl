@@ -4,23 +4,23 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 BinaryPackageInfo = provider(
   "Portage binary package info",
   fields = {
-    "file": "File",
-    "build_target_deps": "Depset",
-    "runtime_deps": "Depset",
+    "file": "File of a binary package file (.tbz2)",
+    "build_target_deps": "Depset[File] of binary package files (.tbz2)",
+    "runtime_deps": "Depset[File] of binary package files (.tbz2)",
   },
 )
 
 OverlayInfo = provider(
   "Portage overlay info",
   fields = {
-    "squashfs_file": "File",
+    "squashfs_file": "File of a squashfs image (.squashfs)",
   },
 )
 
 OverlaySetInfo = provider(
   "Portage overlay set info",
   fields = {
-    "squashfs_files": "Depset",
+    "squashfs_files": "Depset[File] of squashfs images (.squashfs)",
   },
 )
 
@@ -75,7 +75,7 @@ def _ebuild_impl(ctx):
     args.add("--distfile=%s=%s" % (name, file.path))
     direct_inputs.append(file)
 
-  overlay_deps = ctx.attr.overlays[OverlaySetInfo].squashfs_files
+  overlay_deps = ctx.attr._overlays[OverlaySetInfo].squashfs_files
   args.add_all(overlay_deps, format_each="--overlay=%s")
   transitive_inputs.append(overlay_deps)
 
@@ -134,10 +134,10 @@ ebuild = rule(
     "files": attr.label_list(
       allow_files = True,
     ),
-    "overlays": attr.label(
-      mandatory = True,
+    "_overlays": attr.label(
       providers = [OverlaySetInfo],
       cfg = "exec",
+      default = "//config:overlays",
     ),
     "_build_ebuild": attr.label(
       executable = True,
