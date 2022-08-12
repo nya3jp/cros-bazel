@@ -259,6 +259,8 @@ func continueNamespace(c *cli.Context) error {
 
 	for i, mountDir := range mountDirs {
 		// Set up the store directory.
+		// TODO: Avoid overlapped upper directories. They cause overlayfs to emit
+		// warnings in kernel logs.
 		upperDir := filepath.Join(diffDir, mountDir)
 		workDir := filepath.Join(workDir, strconv.Itoa(i))
 		for _, dir := range []string{upperDir, workDir} {
