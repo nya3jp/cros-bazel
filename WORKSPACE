@@ -127,6 +127,17 @@ http_file(
 )
 
 http_file(
+    name = "baselayout_2_2",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/baselayout-2.2.tar.bz2"],
+)
+
+http_file(
+    name = "dbus_1_12_20",
+    sha256 = "f77620140ecb4cdc67f37fb444f8a6bea70b5b6461f12f1cbe2cec60fa7de5fe",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/dbus-1.12.20.tar.gz"],
+)
+
+http_file(
     name = "ethtool_4_13",
     sha256 = "b7c1a380007d30eaf261a63b3cfc000f9d93f9eb7626dcd48b5d2a733af99cba",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/ethtool-4.13.tar.xz"],
@@ -136,6 +147,12 @@ http_file(
     name = "elt-patches_20210924",
     sha256 = "1b804bbaa7ebc89126762ef639b266f2c105c77f5b6eb6b76f46c77924773268",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/elt-patches-20210924.tar.xz"],
+)
+
+http_file(
+    name = "expat_2_4_8",
+    sha256 = "f79b8f904b749e3e0d20afeadecf8249c55b2e32d4ebb089ae378df479dcaf25",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/expat-2.4.8.tar.xz"],
 )
 
 http_file(
