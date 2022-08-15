@@ -128,7 +128,14 @@ http_file(
 
 http_file(
     name = "baselayout_2_2",
+    sha256 = "11d4a223b06da545c3e59e07c9195570f334b5b1be05d995df0ebc8ea2203e98",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/baselayout-2.2.tar.bz2"],
+)
+
+http_file(
+    name = "bzip2_1_0_8",
+    sha256 = "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/bzip2-1.0.8.tar.gz"],
 )
 
 http_file(
@@ -180,6 +187,12 @@ http_file(
 )
 
 http_file(
+    name = "pcre_8_44",
+    sha256 = "19108658b23b3ec5058edc9f66ac545ea19f9537234be1ec62b714c84399366d",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/pcre-8.44.tar.bz2"]
+)
+
+http_file(
     name = "readline_6_3_p8_r3",
     sha256 = "2dc5e5d1178f01baf2481c8364fedcf7c32df2cd647f496001d06e5a6a7c8dd1",
     urls = ["https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/readline-6.3_p8-r3.tbz2"]
@@ -201,6 +214,36 @@ http_file(
     name = "readline_8_1_patch_002",
     sha256 = "e55be055a68cb0719b0ccb5edc9a74edcc1d1f689e8a501525b3bc5ebad325dc",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/readline81-002"]
+)
+
+http_file(
+    name = "sqlite_src_3320300",
+    sha256 = "9312f0865d3692384d466048f746d18f88e7ffd1758b77d4f07904e03ed5f5b9",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/sqlite-src-3320300.zip"]
+)
+
+http_file(
+    name = "sqlite_doc_3320300",
+    sha256 = "36920536daf7f8b19c2e646dc79db62e13cc1a992f562ba9a11fa7c191f24a4e",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/sqlite-doc-3320300.zip"]
+)
+
+http_file(
+    name = "zlib_1_2_11",
+    sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/zlib-1.2.11.tar.gz"]
+)
+
+http_file(
+    name = "zlib_1_2_11_cygwin_gzopen_w_patch",
+    sha256 = "2eea64808bc6edd2f12a7f7ef66381a73a546fa31ec9f95e5305cf51f3db3d86",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/zlib-1.2.11-cygwin-gzopen_w.patch"]
+)
+
+http_file(
+    name = "zlib_1_2_7_cygwin_minizip_patch",
+    sha256 = "0352e8b84ea4c9c8e3de1817fe42db6a729cce834d5784b399974418ec0e44e8",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/zlib-1.2.7-cygwin-minizip.patch"]
 )
 
 http_file(
