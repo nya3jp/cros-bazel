@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"log"
@@ -9,9 +10,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/alessio/shellescape"
 	"github.com/urfave/cli"
 
 	"cros.local/ebuild/private/portage/version"
+	"cros.local/ebuild/private/portage/xpak"
 )
 
 const (
@@ -21,12 +24,8 @@ const (
 	sysrootDir = "/build/target/"
 )
 
-var systemBinPaths = []string{
-	"/usr/sbin",
-	"/usr/bin",
-	"/sbin",
-	"/bin",
-}
+//go:embed build_ebuild_setup.sh
+var setupScript []byte
 
 type dualPath struct {
 	outside, inside string
@@ -98,8 +97,12 @@ var flagOverlay = &cli.StringSliceFlag{
 	Required: true,
 }
 
-var flagDependency = &cli.StringSliceFlag{
-	Name: "dependency",
+var flagInstallTarget = &cli.StringSliceFlag{
+	Name: "install-target",
+}
+
+var flagInstallHost = &cli.StringSliceFlag{
+	Name: "install-host",
 }
 
 var flagDistfile = &cli.StringSliceFlag{
@@ -130,19 +133,52 @@ var flagSquashfuse = &cli.StringFlag{
 	Required: true,
 }
 
+var flagLogin = &cli.BoolFlag{
+	Name: "login",
+}
+
+func preparePackages(installPaths []string, dir dualPath) ([]string, error) {
+	var atoms []string
+
+	for _, installPath := range installPaths {
+		xp, err := xpak.Read(installPath)
+		if err != nil {
+			return nil, fmt.Errorf("reading %s: %w", filepath.Base(installPath), err)
+		}
+		category := strings.TrimSpace(string(xp["CATEGORY"]))
+		pf := strings.TrimSpace(string(xp["PF"]))
+
+		categoryDir := dir.Add(category)
+		if err := os.MkdirAll(categoryDir.Outside(), 0o755); err != nil {
+			return nil, err
+		}
+
+		copyPath := categoryDir.Add(pf + binaryExt)
+		if err := copyFile(installPath, copyPath.Outside()); err != nil {
+			return nil, err
+		}
+
+		atoms = append(atoms, fmt.Sprintf("=%s/%s", category, pf))
+	}
+
+	return atoms, nil
+}
+
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagEBuild,
 		flagCategory,
 		flagSDK,
 		flagOverlay,
-		flagDependency,
+		flagInstallTarget,
+		flagInstallHost,
 		flagDistfile,
 		flagFile,
 		flagOutput,
 		flagRunInContainer,
 		flagDumbInit,
 		flagSquashfuse,
+		flagLogin,
 	},
 	Action: func(c *cli.Context) error {
 		originalEBuildPath := c.String(flagEBuild.Name)
@@ -150,12 +186,20 @@ var app = &cli.App{
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
 		sdkPath := c.String(flagSDK.Name)
 		overlayPaths := c.StringSlice(flagOverlay.Name)
-		dependencyPaths := c.StringSlice(flagDependency.Name)
+		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
+		hostInstallPaths := c.StringSlice(flagInstallHost.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		finalOutPath := c.String(flagOutput.Name)
 		runInContainerPath := c.String(flagRunInContainer.Name)
 		dumbInitPath := c.String(flagDumbInit.Name)
 		squashfusePath := c.String(flagSquashfuse.Name)
+		login := c.Bool(flagLogin.Name)
+
+		if !login {
+			log.Print("HINT: To debug this build environment, run the Bazel build with --spawn_strategy=standalone, and run the command printed below:")
+			pwd, _ := os.Getwd()
+			log.Printf("( cd %s && %s --login )", shellescape.Quote(pwd), shellescape.QuoteCommand(os.Args))
+		}
 
 		packageShortName, _, err := parseEBuildPath(originalEBuildPath)
 		if err != nil {
@@ -172,25 +216,26 @@ var app = &cli.App{
 		workDir := filepath.Join(tmpDir, "work")
 
 		stageDir := newDualPath(tmpDir, "/").Add("stage")
-		inputDir := stageDir.Add("input")
-		outputDir := stageDir.Add("output")
-		overlaysDir := inputDir.Add("overlays")
-		packageDir := overlaysDir.Add(baseNoExt(overlayPaths[0]), category, packageShortName)
-		distfilesDir := outputDir.Add("distfiles")
-		binaryPkgsDir := outputDir.Add("binpkgs")
+		overlaysDir := stageDir.Add("overlays")
+		ebuildDir := overlaysDir.Add(baseNoExt(overlayPaths[0]), category, packageShortName)
+		distfilesDir := stageDir.Add("distfiles")
+		packagesDir := stageDir.Add("packages")
+		targetPackagesDir := packagesDir.Add("target")
+		hostPackagesDir := packagesDir.Add("host")
+		extrasDir := stageDir.Add("extras")
 
 		for _, dir := range []string{diffDir, workDir} {
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return err
 			}
 		}
-		for _, dir := range []dualPath{inputDir, outputDir, overlaysDir, packageDir, distfilesDir, binaryPkgsDir} {
+		for _, dir := range []dualPath{stageDir, overlaysDir, ebuildDir, distfilesDir, packagesDir, targetPackagesDir, hostPackagesDir, extrasDir} {
 			if err := os.MkdirAll(dir.Outside(), 0o755); err != nil {
 				return err
 			}
 		}
 
-		overlayEbuildPath := packageDir.Add(filepath.Base(originalEBuildPath))
+		overlayEbuildPath := ebuildDir.Add(filepath.Base(originalEBuildPath))
 		if err := copyFile(originalEBuildPath, overlayEbuildPath.Outside()); err != nil {
 			return err
 		}
@@ -201,7 +246,7 @@ var app = &cli.App{
 				return errors.New("invalid file spec")
 			}
 			src := v[1]
-			dst := packageDir.Add(v[0]).Outside()
+			dst := ebuildDir.Add(v[0]).Outside()
 			if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 				return err
 			}
@@ -221,12 +266,13 @@ var app = &cli.App{
 		}
 
 		args := []string{
+			runInContainerPath,
 			"--diff-dir=" + diffDir,
 			"--work-dir=" + workDir,
 			"--dumb-init=" + dumbInitPath,
 			"--squashfuse=" + squashfusePath,
 			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
-			"--overlay-dir=" + packageDir.Inside() + "=" + packageDir.Outside(),
+			"--overlay-dir=" + ebuildDir.Inside() + "=" + ebuildDir.Outside(),
 			"--overlay-squashfs=/=" + sdkPath,
 		}
 
@@ -237,38 +283,45 @@ var app = &cli.App{
 			overlayDirsInside = append(overlayDirsInside, overlayDir.Inside())
 		}
 
-		for _, dependencyPath := range dependencyPaths {
-			args = append(args, "--overlay-squashfs="+sysrootDir+"="+dependencyPath)
+		hostInstallAtoms, err := preparePackages(hostInstallPaths, hostPackagesDir)
+		if err != nil {
+			return err
 		}
 
-		args = append(args,
-			"bash",
-			"-c",
-			// TODO: Can we get rid of mkdir?
-			`mkdir -p "${ROOT}"; ln -sf "$0" /etc/portage/make.profile; exec "$@"`,
-			// TODO: Avoid hard-coding the default profile.
-			"/stage/input/overlays/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk",
-			"ebuild",
-			overlayEbuildPath.Inside(),
-			"clean",
-			"package",
-		)
-		cmd := exec.Command(
-			runInContainerPath,
-			args...)
+		targetInstallAtoms, err := preparePackages(targetInstallPaths, targetPackagesDir)
+		if err != nil {
+			return err
+		}
+
+		setupPath := stageDir.Add("setup.sh")
+		if err := os.WriteFile(setupPath.Outside(), setupScript, 0o755); err != nil {
+			return err
+		}
+
+		args = append(args, setupPath.Inside())
+		if !login {
+			args = append(args, "fakeroot", "ebuild", overlayEbuildPath.Inside(), "clean", "package")
+		}
+		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Env = append(
 			os.Environ(),
-			"PATH="+strings.Join(systemBinPaths, ":"),
-			"ROOT="+sysrootDir,
-			"SYSROOT="+sysrootDir,
+			"PATH=/usr/sbin:/usr/bin:/sbin:/bin",
 			"FEATURES=digest -sandbox -usersandbox", // TODO: turn on sandbox
 			"PORTAGE_USERNAME=root",
 			"PORTAGE_GRPNAME=root",
+			"ROOT=/build/target/",
+			"SYSROOT=/build/target/",
+			"PORTAGE_CONFIGROOT=/build/target/",
+			// TODO: Dump PORTDIRs in make.conf.
 			"PORTDIR="+overlayDirsInside[0],
 			"PORTDIR_OVERLAY="+strings.Join(overlayDirsInside[1:], " "),
 			"DISTDIR="+distfilesDir.Inside(),
-			"PKGDIR="+binaryPkgsDir.Inside(),
+			"PKGDIR="+targetPackagesDir.Inside(),
+			"PKGDIR_HOST="+hostPackagesDir.Inside(),
+			"INSTALL_ATOMS_HOST="+strings.Join(hostInstallAtoms, " "),
+			"INSTALL_ATOMS_TARGET="+strings.Join(targetInstallAtoms, " "),
 		)
+		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
@@ -278,11 +331,13 @@ var app = &cli.App{
 			return err
 		}
 
-		binaryOutPath := binaryPkgsDir.Add(
-			category,
-			strings.TrimSuffix(filepath.Base(originalEBuildPath), ebuildExt)+binaryExt)
-		if err := copyFile(filepath.Join(diffDir, binaryOutPath.Inside()), finalOutPath); err != nil {
-			return err
+		if !login {
+			binaryOutPath := targetPackagesDir.Add(
+				category,
+				strings.TrimSuffix(filepath.Base(originalEBuildPath), ebuildExt)+binaryExt)
+			if err := copyFile(filepath.Join(diffDir, binaryOutPath.Inside()), finalOutPath); err != nil {
+				return err
+			}
 		}
 
 		return nil

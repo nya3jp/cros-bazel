@@ -9,10 +9,13 @@ go_binary(
 go_library(
     name = "build_ebuild_lib",
     srcs = ["build_ebuild.go"],
+    embedsrcs = ["build_ebuild_setup.sh"],
     importpath = "cros.local/ebuild/private",
     visibility = ["//visibility:private"],
     deps = [
         "//ebuild/private/portage/version",
+        "//ebuild/private/portage/xpak",
+        "@com_github_alessio_shellescape//:shellescape",
         "@com_github_urfave_cli//:cli",
     ],
 )

@@ -2,7 +2,8 @@ genrule(
     name = "convert_to_squashfs",
     srcs = ["@chromiumos_sdk//file"],
     outs = ["chromiumos_sdk.squashfs"],
-    cmd = "xzcat $< | mksquashfs - $@ -tar -all-time 0",
+    # TODO: Avoid -all-root.
+    cmd = "xzcat $< | mksquashfs - $@ -tar -all-time 0 -all-root",
 )
 
 alias(

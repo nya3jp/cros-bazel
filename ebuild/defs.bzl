@@ -38,6 +38,7 @@ def _format_file_arg(file):
 def _ebuild_impl(ctx):
     src_basename = ctx.file.src.basename.rsplit(".", 1)[0]
     output = ctx.actions.declare_file(src_basename + ".tbz2")
+    fakeroot_file = ctx.attr._fakeroot[BinaryPackageInfo].file
 
     args = ctx.actions.args()
     args.add_all([
@@ -48,6 +49,7 @@ def _ebuild_impl(ctx):
         "--category=" + ctx.attr.category,
         "--output=" + output.path,
         "--sdk=" + ctx.file._sdk.path,
+        "--install-host=" + fakeroot_file.path,
     ])
 
     direct_inputs = [
@@ -57,6 +59,7 @@ def _ebuild_impl(ctx):
         ctx.executable._build_ebuild,
         ctx.executable._run_in_container,
         ctx.executable._dumb_init,
+        fakeroot_file,
     ]
     transitive_inputs = []
 
@@ -87,8 +90,7 @@ def _ebuild_impl(ctx):
         order = "postorder",
     )
 
-    args.add_all(build_target_deps, format_each = "--dependency=%s")
-
+    args.add_all(build_target_deps, format_each = "--install-target=%s")
     transitive_inputs.extend([build_target_deps])
 
     ctx.actions.run(
@@ -150,6 +152,11 @@ ebuild = rule(
             executable = True,
             cfg = "exec",
             default = Label("//third_party/prebuilts:squashfuse"),
+        ),
+        "_fakeroot": attr.label(
+            providers = [BinaryPackageInfo],
+            cfg = "exec",
+            default = Label("//third_party/prebuilts:fakeroot"),
         ),
         "_dumb_init": attr.label(
             executable = True,
