@@ -20,3 +20,13 @@ drwxr-xr-x root/root         0 2022-08-12 14:41 ./usr/share/man/
 drwxr-xr-x root/root         0 2022-08-12 14:41 ./usr/share/man/man8/
 -rw-r--r-- root/root      7876 2022-08-12 14:41 ./usr/share/man/man8/ethtool.8.bz2
 ```
+
+## Prerequisites
+
+You need several binaries in your host environment to make the build work.
+
+TODO: Build these binaries with Bazel and get rid of host dependencies.
+
+```
+sudo apt install squashfs-tools
+```
