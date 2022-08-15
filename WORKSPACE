@@ -174,6 +174,36 @@ http_file(
 )
 
 http_file(
+    name = "ncurses_5_9",
+    sha256 = "9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/ncurses-5.9.tar.gz"]
+)
+
+http_file(
+    name = "readline_6_3_p8_r3",
+    sha256 = "2dc5e5d1178f01baf2481c8364fedcf7c32df2cd647f496001d06e5a6a7c8dd1",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/readline-6.3_p8-r3.tbz2"]
+)
+
+http_file(
+    name = "readline_8_1",
+    sha256 = "f8ceb4ee131e3232226a17f51b164afc46cd0b9e6cef344be87c65962cb82b02",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/readline-8.1.tar.gz"]
+)
+
+http_file(
+    name = "readline_8_1_patch_001",
+    sha256 = "682a465a68633650565c43d59f0b8cdf149c13a874682d3c20cb4af6709b9144",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/readline81-001"]
+)
+
+http_file(
+    name = "readline_8_1_patch_002",
+    sha256 = "e55be055a68cb0719b0ccb5edc9a74edcc1d1f689e8a501525b3bc5ebad325dc",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/readline81-002"]
+)
+
+http_file(
     name = "dumb_init",
     executable = True,
     sha256 = "e874b55f3279ca41415d290c512a7ba9d08f98041b28ae7c2acb19a545f1c4df",
