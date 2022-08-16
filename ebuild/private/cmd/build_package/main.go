@@ -13,36 +13,18 @@ import (
 	"github.com/alessio/shellescape"
 	"github.com/urfave/cli"
 
-	"cros.local/ebuild/private/portage/version"
-	"cros.local/ebuild/private/portage/xpak"
+	"cros.local/ebuild/private/common/fileutil"
+	"cros.local/ebuild/private/common/portage/version"
+	"cros.local/ebuild/private/common/portage/xpak"
 )
 
 const (
 	ebuildExt = ".ebuild"
 	binaryExt = ".tbz2"
-
-	sysrootDir = "/build/target/"
 )
 
-//go:embed build_ebuild_setup.sh
+//go:embed setup.sh
 var setupScript []byte
-
-type dualPath struct {
-	outside, inside string
-}
-
-func newDualPath(outside, inside string) dualPath {
-	return dualPath{outside: outside, inside: inside}
-}
-
-func (dp dualPath) Outside() string { return dp.outside }
-func (dp dualPath) Inside() string  { return dp.inside }
-
-func (dp dualPath) Add(components ...string) dualPath {
-	return newDualPath(
-		filepath.Join(append([]string{dp.outside}, components...)...),
-		filepath.Join(append([]string{dp.inside}, components...)...))
-}
 
 func parseEBuildPath(path string) (packageShortName string, ver *version.Version, err error) {
 	const versionSep = "-"
@@ -87,7 +69,12 @@ var flagCategory = &cli.StringFlag{
 	Required: true,
 }
 
-var flagSDK = &cli.StringFlag{
+var flagBoard = &cli.StringFlag{
+	Name:  "board",
+	Required: true,
+}
+
+var flagSDK = &cli.StringSliceFlag{
 	Name:     "sdk",
 	Required: true,
 }
@@ -99,10 +86,6 @@ var flagOverlay = &cli.StringSliceFlag{
 
 var flagInstallTarget = &cli.StringSliceFlag{
 	Name: "install-target",
-}
-
-var flagInstallHost = &cli.StringSliceFlag{
-	Name: "install-host",
 }
 
 var flagDistfile = &cli.StringSliceFlag{
@@ -137,7 +120,27 @@ var flagLogin = &cli.BoolFlag{
 	Name: "login",
 }
 
-func preparePackages(installPaths []string, dir dualPath) ([]string, error) {
+type overlayInfo struct {
+	MountDir     string
+	SquashfsPath string
+}
+
+func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
+	var overlays []overlayInfo
+	for _, spec := range specs {
+		v := strings.Split(spec, "=")
+		if len(v) != 2 {
+			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
+		}
+		overlays = append(overlays, overlayInfo{
+			MountDir:     strings.Trim(v[0], "/"),
+			SquashfsPath: v[1],
+		})
+	}
+	return overlays, nil
+}
+
+func preparePackages(installPaths []string, dir fileutil.DualPath) ([]string, error) {
 	var atoms []string
 
 	for _, installPath := range installPaths {
@@ -168,10 +171,10 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagEBuild,
 		flagCategory,
+		flagBoard,
 		flagSDK,
 		flagOverlay,
 		flagInstallTarget,
-		flagInstallHost,
 		flagDistfile,
 		flagFile,
 		flagOutput,
@@ -183,11 +186,14 @@ var app = &cli.App{
 	Action: func(c *cli.Context) error {
 		originalEBuildPath := c.String(flagEBuild.Name)
 		category := c.String(flagCategory.Name)
+		board := c.String(flagBoard.Name)
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
-		sdkPath := c.String(flagSDK.Name)
-		overlayPaths := c.StringSlice(flagOverlay.Name)
+		sdkPaths := c.StringSlice(flagSDK.Name)
+		overlays, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name))
+		if err != nil {
+			return err
+		}
 		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
-		hostInstallPaths := c.StringSlice(flagInstallHost.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		finalOutPath := c.String(flagOutput.Name)
 		runInContainerPath := c.String(flagRunInContainer.Name)
@@ -206,7 +212,7 @@ var app = &cli.App{
 			return fmt.Errorf("invalid ebuild file name: %w", err)
 		}
 
-		tmpDir, err := os.MkdirTemp("", "build_ebuild.*")
+		tmpDir, err := os.MkdirTemp("", "build_package.*")
 		if err != nil {
 			return err
 		}
@@ -215,21 +221,21 @@ var app = &cli.App{
 		diffDir := filepath.Join(tmpDir, "diff")
 		workDir := filepath.Join(tmpDir, "work")
 
-		stageDir := newDualPath(tmpDir, "/").Add("stage")
-		overlaysDir := stageDir.Add("overlays")
-		ebuildDir := overlaysDir.Add(baseNoExt(overlayPaths[0]), category, packageShortName)
-		distfilesDir := stageDir.Add("distfiles")
-		packagesDir := stageDir.Add("packages")
-		targetPackagesDir := packagesDir.Add("target")
-		hostPackagesDir := packagesDir.Add("host")
-		extrasDir := stageDir.Add("extras")
+		rootDir := fileutil.NewDualPath(tmpDir, "/")
+		bazelBuildDir := rootDir.Add("mnt/host/bazel-build")
+		sourceDir := rootDir.Add("mnt/host/source")
+		// TODO: Choose a right overlay.
+		ebuildDir := sourceDir.Add(overlays[0].MountDir, category, packageShortName)
+		distDir := rootDir.Add("var/cache/distfiles")
+		hostPackagesDir := rootDir.Add("var/lib/portage/pkgs")
+		targetPackagesDir := rootDir.Add("build").Add(board).Add("packages")
 
 		for _, dir := range []string{diffDir, workDir} {
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return err
 			}
 		}
-		for _, dir := range []dualPath{stageDir, overlaysDir, ebuildDir, distfilesDir, packagesDir, targetPackagesDir, hostPackagesDir, extrasDir} {
+		for _, dir := range []fileutil.DualPath{bazelBuildDir, sourceDir, ebuildDir, distDir, hostPackagesDir, targetPackagesDir} {
 			if err := os.MkdirAll(dir.Outside(), 0o755); err != nil {
 				return err
 			}
@@ -260,7 +266,7 @@ var app = &cli.App{
 			if len(v) < 2 {
 				return errors.New("invalid distfile spec")
 			}
-			if err := copyFile(v[1], distfilesDir.Add(v[0]).Outside()); err != nil {
+			if err := copyFile(v[1], distDir.Add(v[0]).Outside()); err != nil {
 				return err
 			}
 		}
@@ -271,21 +277,20 @@ var app = &cli.App{
 			"--work-dir=" + workDir,
 			"--dumb-init=" + dumbInitPath,
 			"--squashfuse=" + squashfusePath,
-			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
+			"--overlay-dir=" + bazelBuildDir.Inside() + "=" + bazelBuildDir.Outside(),
 			"--overlay-dir=" + ebuildDir.Inside() + "=" + ebuildDir.Outside(),
-			"--overlay-squashfs=/=" + sdkPath,
+			"--overlay-dir=" + distDir.Inside() + "=" + distDir.Outside(),
+			"--overlay-dir=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
+			"--overlay-dir=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
 		}
 
-		var overlayDirsInside []string
-		for _, overlayPath := range overlayPaths {
-			overlayDir := overlaysDir.Add(baseNoExt(overlayPath))
-			args = append(args, "--overlay-squashfs="+overlayDir.Inside()+"="+overlayPath)
-			overlayDirsInside = append(overlayDirsInside, overlayDir.Inside())
+		for _, sdkPath := range sdkPaths {
+			args = append(args, "--overlay-squashfs=/="+sdkPath)
 		}
 
-		hostInstallAtoms, err := preparePackages(hostInstallPaths, hostPackagesDir)
-		if err != nil {
-			return err
+		for _, overlay := range overlays {
+			overlayDir := sourceDir.Add(overlay.MountDir)
+			args = append(args, "--overlay-squashfs="+overlayDir.Inside()+"="+overlay.SquashfsPath)
 		}
 
 		targetInstallAtoms, err := preparePackages(targetInstallPaths, targetPackagesDir)
@@ -293,7 +298,7 @@ var app = &cli.App{
 			return err
 		}
 
-		setupPath := stageDir.Add("setup.sh")
+		setupPath := bazelBuildDir.Add("setup.sh")
 		if err := os.WriteFile(setupPath.Outside(), setupScript, 0o755); err != nil {
 			return err
 		}
@@ -306,19 +311,7 @@ var app = &cli.App{
 		cmd.Env = append(
 			os.Environ(),
 			"PATH=/usr/sbin:/usr/bin:/sbin:/bin",
-			"FEATURES=digest -sandbox -usersandbox", // TODO: turn on sandbox
-			"PORTAGE_USERNAME=root",
-			"PORTAGE_GRPNAME=root",
-			"ROOT=/build/target/",
-			"SYSROOT=/build/target/",
-			"PORTAGE_CONFIGROOT=/build/target/",
-			// TODO: Dump PORTDIRs in make.conf.
-			"PORTDIR="+overlayDirsInside[0],
-			"PORTDIR_OVERLAY="+strings.Join(overlayDirsInside[1:], " "),
-			"DISTDIR="+distfilesDir.Inside(),
-			"PKGDIR="+targetPackagesDir.Inside(),
-			"PKGDIR_HOST="+hostPackagesDir.Inside(),
-			"INSTALL_ATOMS_HOST="+strings.Join(hostInstallAtoms, " "),
+			"BOARD="+board,
 			"INSTALL_ATOMS_TARGET="+strings.Join(targetInstallAtoms, " "),
 		)
 		cmd.Stdin = os.Stdin

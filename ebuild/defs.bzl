@@ -13,13 +13,22 @@ OverlayInfo = provider(
     "Portage overlay info",
     fields = {
         "squashfs_file": "File of a squashfs image (.squashfs)",
+        "mount_path": "String of a path where the overlay is mounted",
     },
 )
 
 OverlaySetInfo = provider(
     "Portage overlay set info",
     fields = {
-        "squashfs_files": "Depset[File] of squashfs images (.squashfs)",
+        "overlays": "OverlayInfo[]",
+    },
+)
+
+SDKInfo = provider(
+    "ChromiumOS SDK info",
+    fields = {
+        "board": "string",
+        "squashfs_files": "File[] of squashfs images (.squashfs)",
     },
 )
 
@@ -38,7 +47,7 @@ def _format_file_arg(file):
 def _ebuild_impl(ctx):
     src_basename = ctx.file.src.basename.rsplit(".", 1)[0]
     output = ctx.actions.declare_file(src_basename + ".tbz2")
-    fakeroot_file = ctx.attr._fakeroot[BinaryPackageInfo].file
+    sdk = ctx.attr._sdk[SDKInfo]
 
     args = ctx.actions.args()
     args.add_all([
@@ -48,24 +57,24 @@ def _ebuild_impl(ctx):
         "--ebuild=" + ctx.file.src.path,
         "--category=" + ctx.attr.category,
         "--output=" + output.path,
-        "--sdk=" + ctx.file._sdk.path,
-        "--install-host=" + fakeroot_file.path,
+        "--board=" + sdk.board,
     ])
 
     direct_inputs = [
-        ctx.file.src,
-        ctx.file._sdk,
-        ctx.file._squashfuse,
-        ctx.executable._build_ebuild,
+        ctx.executable._build_package,
         ctx.executable._run_in_container,
         ctx.executable._dumb_init,
-        fakeroot_file,
+        ctx.file._squashfuse,
+        ctx.file.src,
     ]
     transitive_inputs = []
 
+    args.add_all(sdk.squashfs_files, format_each = "--sdk=%s")
+    direct_inputs.extend(sdk.squashfs_files)
+
     for file in ctx.attr.files:
-        transitive_inputs.append(file.files)
         args.add_all(file.files, map_each = _format_file_arg)
+        transitive_inputs.append(file.files)
 
     for distfile, name in ctx.attr.distfiles.items():
         files = distfile.files.to_list()
@@ -75,9 +84,10 @@ def _ebuild_impl(ctx):
         args.add("--distfile=%s=%s" % (name, file.path))
         direct_inputs.append(file)
 
-    overlay_deps = ctx.attr._overlays[OverlaySetInfo].squashfs_files
-    args.add_all(overlay_deps, format_each = "--overlay=%s")
-    transitive_inputs.append(overlay_deps)
+    overlays = ctx.attr._overlays[OverlaySetInfo].overlays
+    for overlay in overlays:
+        args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
+        direct_inputs.append(overlay.squashfs_file)
 
     # TODO: Consider target/host transitions.
     build_target_deps = depset(
@@ -96,7 +106,7 @@ def _ebuild_impl(ctx):
     ctx.actions.run(
         inputs = depset(direct_inputs, transitive = transitive_inputs),
         outputs = [output],
-        executable = ctx.executable._build_ebuild,
+        executable = ctx.executable._build_package,
         arguments = [args],
         mnemonic = "Ebuild",
         progress_message = "Building " + ctx.file.src.basename,
@@ -134,29 +144,23 @@ ebuild = rule(
         ),
         "_overlays": attr.label(
             providers = [OverlaySetInfo],
-            cfg = "exec",
             default = "//config:overlays",
         ),
-        "_build_ebuild": attr.label(
+        "_build_package": attr.label(
             executable = True,
             cfg = "exec",
-            default = Label("//ebuild/private:build_ebuild"),
+            default = Label("//ebuild/private/cmd/build_package"),
         ),
         "_run_in_container": attr.label(
             executable = True,
             cfg = "exec",
-            default = Label("//ebuild/private:run_in_container"),
+            default = Label("//ebuild/private/cmd/run_in_container"),
         ),
         "_squashfuse": attr.label(
             allow_single_file = True,
             executable = True,
             cfg = "exec",
-            default = Label("//third_party/prebuilts:squashfuse"),
-        ),
-        "_fakeroot": attr.label(
-            providers = [BinaryPackageInfo],
-            cfg = "exec",
-            default = Label("//third_party/prebuilts:fakeroot"),
+            default = Label("//third_party/prebuilts/host:squashfuse"),
         ),
         "_dumb_init": attr.label(
             executable = True,
@@ -164,9 +168,8 @@ ebuild = rule(
             default = Label("@dumb_init//file"),
         ),
         "_sdk": attr.label(
-            allow_single_file = True,
-            cfg = "exec",
-            default = Label("//sdk:squashfs"),
+            providers = [SDKInfo],
+            default = Label("//sdk"),
         ),
     },
 )
@@ -175,10 +178,6 @@ def _binary_package_impl(ctx):
     src = ctx.file.src
 
     # TODO: Consider target/host transitions.
-    build_target_deps = depset(
-        [dep[BinaryPackageInfo].file for dep in ctx.attr.build_target_deps],
-        order = "postorder",
-    )
     runtime_deps = depset(
         [dep[BinaryPackageInfo].file for dep in ctx.attr.runtime_deps],
         transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.runtime_deps],
@@ -189,7 +188,7 @@ def _binary_package_impl(ctx):
         DefaultInfo(files = depset([src])),
         BinaryPackageInfo(
             file = src,
-            build_target_deps = build_target_deps,
+            build_target_deps = depset(),
             runtime_deps = runtime_deps,
         ),
     ]
@@ -200,9 +199,6 @@ binary_package = rule(
         "src": attr.label(
             mandatory = True,
             allow_single_file = [".tbz2"],
-        ),
-        "build_target_deps": attr.label_list(
-            providers = [BinaryPackageInfo],
         ),
         "runtime_deps": attr.label_list(
             providers = [BinaryPackageInfo],
@@ -233,7 +229,7 @@ def _overlay_impl(ctx):
 
     return [
         DefaultInfo(files = depset([out])),
-        OverlayInfo(squashfs_file = out),
+        OverlayInfo(squashfs_file = out, mount_path = ctx.attr.mount_path),
     ]
 
 overlay = rule(
@@ -243,20 +239,22 @@ overlay = rule(
             allow_files = True,
             mandatory = True,
         ),
+        "mount_path": attr.string(
+            mandatory = True,
+        ),
         "_create_squashfs": attr.label(
             executable = True,
             cfg = "exec",
-            default = Label("//ebuild/private:create_squashfs"),
+            default = Label("//ebuild/private/cmd/create_squashfs"),
         ),
     },
 )
 
 def _overlay_set_impl(ctx):
     return [
-        OverlaySetInfo(squashfs_files = depset([
-            overlay[OverlayInfo].squashfs_file
-            for overlay in ctx.attr.overlays
-        ], order = "preorder")),
+        OverlaySetInfo(
+            overlays = [overlay[OverlayInfo] for overlay in ctx.attr.overlays],
+        ),
     ]
 
 overlay_set = rule(
@@ -264,7 +262,104 @@ overlay_set = rule(
     attrs = {
         "overlays": attr.label_list(
             providers = [OverlayInfo],
+        ),
+    },
+)
+
+def _sdk_impl(ctx):
+    base_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_base.squashfs")
+    pkgs_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_pkgs.squashfs")
+    host_installs = [label[BinaryPackageInfo].file for label in ctx.attr.host_deps]
+    target_installs = [label[BinaryPackageInfo].file for label in ctx.attr.target_deps]
+
+    ctx.actions.run_shell(
+        outputs = [base_squashfs_output],
+        inputs = [ctx.file.src],
+        # TODO: Avoid -all-root.
+        command = "xzcat \"$1\" | mksquashfs - \"$2\" -tar -all-time 0 -all-root",
+        arguments = [ctx.file.src.path, base_squashfs_output.path],
+        progress_message = "Converting %{input} to squashfs",
+    )
+
+    args = ctx.actions.args()
+    args.add_all([
+        "--run-in-container=" + ctx.executable._run_in_container.path,
+        "--dumb-init=" + ctx.executable._dumb_init.path,
+        "--squashfuse=" + ctx.file._squashfuse.path,
+        "--input-squashfs=" + base_squashfs_output.path,
+        "--output-squashfs=" + pkgs_squashfs_output.path,
+        "--board=" + ctx.attr.board,
+    ])
+    args.add_all(host_installs, format_each = "--install-host=%s")
+    args.add_all(target_installs, format_each = "--install-target=%s")
+
+    inputs = [
+        ctx.executable._build_sdk,
+        ctx.executable._run_in_container,
+        ctx.file._squashfuse,
+        ctx.executable._dumb_init,
+        base_squashfs_output,
+    ] + host_installs + target_installs
+
+    for overlay in ctx.attr._overlays[OverlaySetInfo].overlays:
+        args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
+        inputs.append(overlay.squashfs_file)
+
+    ctx.actions.run(
+        inputs = inputs,
+        outputs = [pkgs_squashfs_output],
+        executable = ctx.executable._build_sdk,
+        arguments = [args],
+        mnemonic = "Sdk",
+        progress_message = "Building SDK",
+    )
+
+    outputs = [pkgs_squashfs_output, base_squashfs_output]
+    return [
+        DefaultInfo(files = depset(outputs)),
+        SDKInfo(board = ctx.attr.board, squashfs_files = outputs),
+    ]
+
+sdk = rule(
+    implementation = _sdk_impl,
+    attrs = {
+        "src": attr.label(
+            mandatory = True,
+            allow_single_file = True,
+        ),
+        "board": attr.string(
+            mandatory = True,
+        ),
+        "host_deps": attr.label_list(
+            providers = [BinaryPackageInfo],
+        ),
+        "target_deps": attr.label_list(
+            providers = [BinaryPackageInfo],
+        ),
+        "_build_sdk": attr.label(
+            executable = True,
             cfg = "exec",
+            default = Label("//ebuild/private/cmd/build_sdk"),
+        ),
+        "_run_in_container": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//ebuild/private/cmd/run_in_container"),
+        ),
+        "_squashfuse": attr.label(
+            allow_single_file = True,
+            executable = True,
+            cfg = "exec",
+            default = Label("//third_party/prebuilts/host:squashfuse"),
+        ),
+        "_dumb_init": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("@dumb_init//file"),
+        ),
+        "_overlays": attr.label(
+            providers = [OverlaySetInfo],
+            default = "//config:overlays",
         ),
     },
 )
