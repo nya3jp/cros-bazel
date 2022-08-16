@@ -181,6 +181,26 @@ http_file(
 )
 
 http_file(
+    name = "gmp_6_2_1",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/gmp-6.2.1.tar.xz"],
+)
+
+http_file(
+    name = "gmp_6_2_1_man",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/gmp-man-6.2.1.pdf"],
+)
+
+http_file(
+    name = "gmp_6_2_1_patch",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/gmp-6.2.1-arm64-darwin.patch.bz2"],
+)
+
+http_file(
+    name = "mpfr_3_1_3",
+    urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/mpfr-3.1.3.tar.xz"],
+)
+
+http_file(
     name = "ncurses_5_9",
     sha256 = "9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b",
     urls = ["https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/ncurses-5.9.tar.gz"],
