@@ -25,6 +25,13 @@ import (
 
 const ebuildExt = ".ebuild"
 
+// TODO: Remove this blocklist.
+var blockedPackages = map[string]struct{}{
+	"fzf":   {}, // tries to access goproxy.io
+	"jlink": {}, // distfile unavailable due to restricted license
+	"shfmt": {}, // tries to access goproxy.io
+}
+
 var distBaseURLs = []string{
 	"https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/",
 	"https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/",
@@ -169,9 +176,12 @@ var app = &cli.App{
 			v := strings.Split(ebuildDir, "/")
 			category := v[len(v)-2]
 			packageName := v[len(v)-1]
+			buildPath := filepath.Join(ebuildDir, "BUILD")
 
-			if category == "dev-embedded" && packageName == "jlink" {
-				// Skip restricted packages.
+			if _, ok := blockedPackages[packageName]; ok {
+				if err := os.Remove(buildPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+					return err
+				}
 				continue
 			}
 
@@ -248,7 +258,6 @@ var app = &cli.App{
 				Category:    category,
 				Dists:       dists,
 			}
-			buildPath := filepath.Join(ebuildDir, "BUILD")
 			log.Printf("Generating: %s", buildPath)
 			if err := generateBuild(buildPath, ebuild); err != nil {
 				return err
