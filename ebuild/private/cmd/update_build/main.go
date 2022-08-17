@@ -30,24 +30,6 @@ var distBaseURLs = []string{
 	"https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/",
 }
 
-func findWorkspace(dir string) (string, error) {
-	dir, err := filepath.Abs(dir)
-	if err != nil {
-		return "", err
-	}
-
-	for {
-		path := filepath.Join(dir, "WORKSPACE")
-		if _, err := os.Stat(path); err == nil {
-			return path, nil
-		}
-		dir = filepath.Dir(dir)
-		if dir == "/" {
-			return "", fmt.Errorf("WORKSPACE not found above %s", dir)
-		}
-	}
-}
-
 type distEntry struct {
 	Filename string `json:"filename"`
 	URL      string `json:"url"`
