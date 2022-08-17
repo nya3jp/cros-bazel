@@ -69,7 +69,7 @@ func getSHA256(url string) (string, error) {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode / 100 != 2 {
+	if res.StatusCode/100 != 2 {
 		return "", fmt.Errorf("http status %d", res.StatusCode)
 	}
 
@@ -146,8 +146,7 @@ func updateRepositories(bzlPath string, dists []*distEntry) error {
 }
 
 var app = &cli.App{
-	Flags: []cli.Flag{
-	},
+	Flags: []cli.Flag{},
 	Action: func(c *cli.Context) error {
 		if len(c.Args()) != 1 {
 			return errors.New("need exactly one directory")
