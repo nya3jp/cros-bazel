@@ -325,6 +325,7 @@ var app = &cli.App{
 		}
 
 		if !login {
+			// TODO: Normalize timestamps in the archive.
 			binaryOutPath := targetPackagesDir.Add(
 				category,
 				strings.TrimSuffix(filepath.Base(originalEBuildPath), ebuildExt)+binaryExt)
