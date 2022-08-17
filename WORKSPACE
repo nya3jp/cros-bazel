@@ -137,6 +137,6 @@ load("//third_party/prebuilts:repositories.bzl", "prebuilts_dependencies")
 
 prebuilts_dependencies()
 
-load("//third_party/portage-stable:repositories.bzl", "portage_stable_dependencies")
+load("//third_party/portage-stable:repositories.bzl", portage_stable_dependencies = "dependencies")
 
 portage_stable_dependencies()
