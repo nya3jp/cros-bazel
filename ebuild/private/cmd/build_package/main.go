@@ -70,7 +70,7 @@ var flagCategory = &cli.StringFlag{
 }
 
 var flagBoard = &cli.StringFlag{
-	Name:  "board",
+	Name:     "board",
 	Required: true,
 }
 
