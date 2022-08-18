@@ -37,5 +37,5 @@ You need several binaries in your host environment to make the build work.
 TODO: Build these binaries with Bazel and get rid of host dependencies.
 
 ```
-sudo apt install squashfs-tools
+sudo apt install squashfs-tools libsquashfs-dev
 ```
