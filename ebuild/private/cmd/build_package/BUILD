@@ -8,8 +8,8 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//ebuild/private/common/fileutil",
-        "//ebuild/private/common/portage/version",
         "//ebuild/private/common/portage/xpak",
+        "//ebuild/private/common/standard/version",
         "@com_github_alessio_shellescape//:shellescape",
         "@com_github_urfave_cli//:cli",
     ],

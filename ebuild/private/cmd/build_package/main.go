@@ -14,8 +14,8 @@ import (
 	"github.com/urfave/cli"
 
 	"cros.local/ebuild/private/common/fileutil"
-	"cros.local/ebuild/private/common/portage/version"
 	"cros.local/ebuild/private/common/portage/xpak"
+	"cros.local/ebuild/private/common/standard/version"
 )
 
 const (

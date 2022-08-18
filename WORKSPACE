@@ -114,6 +114,132 @@ go_repository(
     version = "v2.2.2",
 )
 
+go_repository(
+    name = "cc_mvdan_editorconfig",
+    importpath = "mvdan.cc/editorconfig",
+    sum = "h1:XL+7ys6ls/RKrkUNFQvEwIvNHh+JKx8Mj1pUV5wQxQE=",
+    version = "v0.2.0",
+)
+
+go_repository(
+    name = "cc_mvdan_sh_v3",
+    importpath = "mvdan.cc/sh/v3",
+    sum = "h1:hmP3UOw4f+EYexsJjFxvU38+kn+V/s2CclXHanIBkmQ=",
+    version = "v3.5.1",
+)
+
+go_repository(
+    name = "com_github_alecthomas_assert_v2",
+    importpath = "github.com/alecthomas/assert/v2",
+    sum = "h1:WKqJODfOiQG0nEJKFKzDIG3E29CN2/4zR9XGJzKIkbg=",
+    version = "v2.0.3",
+)
+
+go_repository(
+    name = "com_github_alecthomas_participle_v2",
+    importpath = "github.com/alecthomas/participle/v2",
+    sum = "h1:y6dsSYVb1G5eK6mgmy+BgI3Mw35a3WghArZ/Hbebrjo=",
+    version = "v2.0.0-beta.5",
+)
+
+go_repository(
+    name = "com_github_alecthomas_repr",
+    importpath = "github.com/alecthomas/repr",
+    sum = "h1:ENn2e1+J3k09gyj2shc0dHr/yjaWSHRlrJ4DPMevDqE=",
+    version = "v0.1.0",
+)
+
+go_repository(
+    name = "com_github_creack_pty",
+    importpath = "github.com/creack/pty",
+    sum = "h1:QeVUsEDNrLBW4tMgZHvxy18sKtr6VI492kBhUfhDJNI=",
+    version = "v1.1.17",
+)
+
+go_repository(
+    name = "com_github_frankban_quicktest",
+    importpath = "github.com/frankban/quicktest",
+    sum = "h1:+cqqvzZV87b4adx/5ayVOaYZ2CrvM4ejQvUdBzPPUss=",
+    version = "v1.14.0",
+)
+
+go_repository(
+    name = "com_github_google_go_cmp",
+    importpath = "github.com/google/go-cmp",
+    sum = "h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=",
+    version = "v0.5.8",
+)
+
+go_repository(
+    name = "com_github_google_renameio",
+    importpath = "github.com/google/renameio",
+    sum = "h1:Lh/jXZmvZxb0BBeSY5VKEfidcbcbenKjZFzM/q0fSeU=",
+    version = "v1.0.1",
+)
+
+go_repository(
+    name = "com_github_hexops_gotextdiff",
+    importpath = "github.com/hexops/gotextdiff",
+    sum = "h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=",
+    version = "v1.0.3",
+)
+
+go_repository(
+    name = "com_github_kr_pretty",
+    importpath = "github.com/kr/pretty",
+    sum = "h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=",
+    version = "v0.3.0",
+)
+
+go_repository(
+    name = "com_github_kr_text",
+    importpath = "github.com/kr/text",
+    sum = "h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=",
+    version = "v0.2.0",
+)
+
+go_repository(
+    name = "com_github_pkg_diff",
+    importpath = "github.com/pkg/diff",
+    sum = "h1:aoZm08cpOy4WuID//EZDgcC4zIxODThtZNPirFr42+A=",
+    version = "v0.0.0-20210226163009-20ebb0f2a09e",
+)
+
+go_repository(
+    name = "com_github_rogpeppe_go_internal",
+    importpath = "github.com/rogpeppe/go-internal",
+    sum = "h1:geMPLpDpQOgVyCg5z5GoRwLHepNdb71NXb67XFkP+Eg=",
+    version = "v1.8.1",
+)
+
+go_repository(
+    name = "in_gopkg_errgo_v2",
+    importpath = "gopkg.in/errgo.v2",
+    sum = "h1:0vLT13EuvQ0hNvakwLuFZ/jYrLp5F3kcWHXdRggjCE8=",
+    version = "v2.1.0",
+)
+
+go_repository(
+    name = "org_golang_x_sync",
+    importpath = "golang.org/x/sync",
+    sum = "h1:5KslGYwFpkhGh+Q16bwMP3cOontH8FOep7tGV86Y7SQ=",
+    version = "v0.0.0-20210220032951-036812b2e83c",
+)
+
+go_repository(
+    name = "org_golang_x_term",
+    importpath = "golang.org/x/term",
+    sum = "h1:JGgROgKl9N8DuW20oFS5gxc+lE67/N3FcwmBPMe7ArY=",
+    version = "v0.0.0-20210927222741-03fcf44c2211",
+)
+
+go_repository(
+    name = "org_golang_x_xerrors",
+    importpath = "golang.org/x/xerrors",
+    sum = "h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=",
+    version = "v0.0.0-20200804184101-5ec99f83aff1",
+)
+
 go_rules_dependencies()
 
 go_register_toolchains(version = "1.18.3")

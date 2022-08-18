@@ -6,7 +6,7 @@ go_library(
     importpath = "cros.local/ebuild/private/cmd/update_build",
     visibility = ["//visibility:private"],
     deps = [
-        "//ebuild/private/common/portage/version",
+        "//ebuild/private/common/standard/version",
         "@com_github_urfave_cli//:cli",
     ],
 )

@@ -3,7 +3,7 @@ package version_test
 import (
 	"testing"
 
-	"cros.local/ebuild/private/common/portage/version"
+	"cros.local/ebuild/private/common/standard/version"
 )
 
 func mustParse(t *testing.T, s string) *version.Version {
