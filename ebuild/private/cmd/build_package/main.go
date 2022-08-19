@@ -11,10 +11,12 @@ import (
 	"strings"
 
 	"github.com/alessio/shellescape"
+	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
 	"cros.local/ebuild/private/common/fileutil"
 	"cros.local/ebuild/private/common/portage/xpak"
+	"cros.local/ebuild/private/common/runfiles"
 	"cros.local/ebuild/private/common/standard/version"
 )
 
@@ -101,21 +103,6 @@ var flagOutput = &cli.StringFlag{
 	Required: true,
 }
 
-var flagRunInContainer = &cli.StringFlag{
-	Name:     "run-in-container",
-	Required: true,
-}
-
-var flagDumbInit = &cli.StringFlag{
-	Name:     "dumb-init",
-	Required: true,
-}
-
-var flagSquashfuse = &cli.StringFlag{
-	Name:     "squashfuse",
-	Required: true,
-}
-
 var flagLogin = &cli.BoolFlag{
 	Name: "login",
 }
@@ -178,9 +165,6 @@ var app = &cli.App{
 		flagDistfile,
 		flagFile,
 		flagOutput,
-		flagRunInContainer,
-		flagDumbInit,
-		flagSquashfuse,
 		flagLogin,
 	},
 	Action: func(c *cli.Context) error {
@@ -196,15 +180,17 @@ var app = &cli.App{
 		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		finalOutPath := c.String(flagOutput.Name)
-		runInContainerPath := c.String(flagRunInContainer.Name)
-		dumbInitPath := c.String(flagDumbInit.Name)
-		squashfusePath := c.String(flagSquashfuse.Name)
 		login := c.Bool(flagLogin.Name)
 
 		if !login {
 			log.Print("HINT: To debug this build environment, run the Bazel build with --spawn_strategy=standalone, and run the command printed below:")
 			pwd, _ := os.Getwd()
 			log.Printf("( cd %s && %s --login )", shellescape.Quote(pwd), shellescape.QuoteCommand(os.Args))
+		}
+
+		runInContainerPath, ok := bazel.FindBinary("ebuild/private/cmd/run_in_container", "run_in_container")
+		if !ok {
+			return errors.New("run_in_container not found")
 		}
 
 		packageShortName, _, err := parseEBuildPath(originalEBuildPath)
@@ -275,8 +261,6 @@ var app = &cli.App{
 			runInContainerPath,
 			"--diff-dir=" + diffDir,
 			"--work-dir=" + workDir,
-			"--dumb-init=" + dumbInitPath,
-			"--squashfuse=" + squashfusePath,
 			"--overlay-dir=" + bazelBuildDir.Inside() + "=" + bazelBuildDir.Outside(),
 			"--overlay-dir=" + ebuildDir.Inside() + "=" + ebuildDir.Outside(),
 			"--overlay-dir=" + distDir.Inside() + "=" + distDir.Outside(),
@@ -339,6 +323,8 @@ var app = &cli.App{
 }
 
 func main() {
+	runfiles.FixEnv()
+
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("ERROR: %v", err)
 	}

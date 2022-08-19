@@ -12,8 +12,11 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 	"golang.org/x/sys/unix"
+
+	"cros.local/ebuild/private/common/runfiles"
 )
 
 func runCommand(name string, args ...string) error {
@@ -62,16 +65,6 @@ var flagWorkDir = &cli.StringFlag{
 	Required: true,
 }
 
-var flagDumbInit = &cli.StringFlag{
-	Name:     "dumb-init",
-	Required: true,
-}
-
-var flagSquashfuse = &cli.StringFlag{
-	Name:     "squashfuse",
-	Required: true,
-}
-
 var flagChdir = &cli.StringFlag{
 	Name:  "chdir",
 	Value: "/",
@@ -98,8 +91,6 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagDiffDir,
 		flagWorkDir,
-		flagDumbInit,
-		flagSquashfuse,
 		flagChdir,
 		flagOverlayDir,
 		flagOverlaySquashfs,
@@ -127,7 +118,10 @@ var app = &cli.App{
 }
 
 func enterNamespace(c *cli.Context) error {
-	dumbInitPath := c.String(flagDumbInit.Name)
+	dumbInitPath, err := bazel.Runfile("external/dumb_init/file/downloaded")
+	if err != nil {
+		return err
+	}
 
 	args := append([]string{os.Args[0], "--" + flagInternalContinue.Name}, os.Args[1:]...)
 	cmd := exec.Command(dumbInitPath, args...)
@@ -147,7 +141,7 @@ func enterNamespace(c *cli.Context) error {
 			Size:        1,
 		}},
 	}
-	err := cmd.Run()
+	err = cmd.Run()
 	if cmd.ProcessState != nil {
 		if status, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
 			if status.Signaled() {
@@ -162,7 +156,7 @@ func enterNamespace(c *cli.Context) error {
 func continueNamespace(c *cli.Context) error {
 	diffDir := c.String(flagDiffDir.Name)
 	workDir := c.String(flagWorkDir.Name)
-	squashfusePath := c.String(flagSquashfuse.Name)
+	//squashfusePath := c.String(flagSquashfuse.Name)
 	chdir := c.String(flagChdir.Name)
 	dirOverlays, err := parseOverlaySpecs(c.StringSlice(flagOverlayDir.Name), overlayDir)
 	if err != nil {
@@ -175,6 +169,11 @@ func continueNamespace(c *cli.Context) error {
 	overlays := append(dirOverlays, squashfsOverlays...)
 	keepHostMount := c.Bool(flagKeepHostMount.Name)
 	args := []string(c.Args())
+
+	squashfusePath, err := bazel.Runfile("third_party/prebuilts/host/squashfuse")
+	if err != nil {
+		return err
+	}
 
 	pivotRootDone := false // whether pivot_root has been called
 
@@ -345,6 +344,8 @@ func continueNamespace(c *cli.Context) error {
 }
 
 func main() {
+	runfiles.FixEnv()
+
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("ERROR: %v", err)
 	}

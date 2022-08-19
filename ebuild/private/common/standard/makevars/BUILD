@@ -9,8 +9,8 @@ go_library(
     importpath = "cros.local/ebuild/private/common/standard/makevars",
     visibility = ["//visibility:public"],
     deps = [
-        "@cc_mvdan_sh_v3//expand:go_default_library",
-        "@cc_mvdan_sh_v3//syntax:go_default_library",
+        "@cc_mvdan_sh_v3//expand",
+        "@cc_mvdan_sh_v3//syntax",
         "@com_github_alessio_shellescape//:shellescape",
     ],
 )

@@ -51,9 +51,6 @@ def _ebuild_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--run-in-container=" + ctx.executable._run_in_container.path,
-        "--dumb-init=" + ctx.executable._dumb_init.path,
-        "--squashfuse=" + ctx.file._squashfuse.path,
         "--ebuild=" + ctx.file.src.path,
         "--category=" + ctx.attr.category,
         "--output=" + output.path,
@@ -62,9 +59,6 @@ def _ebuild_impl(ctx):
 
     direct_inputs = [
         ctx.executable._build_package,
-        ctx.executable._run_in_container,
-        ctx.executable._dumb_init,
-        ctx.file._squashfuse,
         ctx.file.src,
     ]
     transitive_inputs = []
@@ -150,22 +144,6 @@ ebuild = rule(
             executable = True,
             cfg = "exec",
             default = Label("//ebuild/private/cmd/build_package"),
-        ),
-        "_run_in_container": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//ebuild/private/cmd/run_in_container"),
-        ),
-        "_squashfuse": attr.label(
-            allow_single_file = True,
-            executable = True,
-            cfg = "exec",
-            default = Label("//third_party/prebuilts/host:squashfuse"),
-        ),
-        "_dumb_init": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("@dumb_init//file"),
         ),
         "_sdk": attr.label(
             providers = [SDKInfo],
@@ -275,6 +253,7 @@ def _sdk_impl(ctx):
     ctx.actions.run_shell(
         outputs = [base_squashfs_output],
         inputs = [ctx.file.src],
+        # TODO: Don't depend on system binaries (xzcat, mksquashfs).
         # TODO: Avoid -all-root.
         command = "xzcat \"$1\" | mksquashfs - \"$2\" -tar -all-time 0 -all-root",
         arguments = [ctx.file.src.path, base_squashfs_output.path],
@@ -283,9 +262,6 @@ def _sdk_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--run-in-container=" + ctx.executable._run_in_container.path,
-        "--dumb-init=" + ctx.executable._dumb_init.path,
-        "--squashfuse=" + ctx.file._squashfuse.path,
         "--input-squashfs=" + base_squashfs_output.path,
         "--output-squashfs=" + pkgs_squashfs_output.path,
         "--board=" + ctx.attr.board,
@@ -293,17 +269,15 @@ def _sdk_impl(ctx):
     args.add_all(host_installs, format_each = "--install-host=%s")
     args.add_all(target_installs, format_each = "--install-target=%s")
 
-    inputs = [
-        ctx.executable._build_sdk,
-        ctx.executable._run_in_container,
-        ctx.file._squashfuse,
-        ctx.executable._dumb_init,
-        base_squashfs_output,
-    ] + host_installs + target_installs
-
+    overlay_inputs = []
     for overlay in ctx.attr._overlays[OverlaySetInfo].overlays:
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
-        inputs.append(overlay.squashfs_file)
+        overlay_inputs.append(overlay.squashfs_file)
+
+    inputs = [
+        ctx.executable._build_sdk,
+        base_squashfs_output,
+    ] + host_installs + target_installs + overlay_inputs
 
     ctx.actions.run(
         inputs = inputs,
@@ -340,22 +314,6 @@ sdk = rule(
             executable = True,
             cfg = "exec",
             default = Label("//ebuild/private/cmd/build_sdk"),
-        ),
-        "_run_in_container": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//ebuild/private/cmd/run_in_container"),
-        ),
-        "_squashfuse": attr.label(
-            allow_single_file = True,
-            executable = True,
-            cfg = "exec",
-            default = Label("//third_party/prebuilts/host:squashfuse"),
-        ),
-        "_dumb_init": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("@dumb_init//file"),
         ),
         "_overlays": attr.label(
             providers = [OverlaySetInfo],

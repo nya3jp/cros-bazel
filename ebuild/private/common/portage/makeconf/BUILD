@@ -6,8 +6,8 @@ go_library(
     importpath = "cros.local/ebuild/private/common/portage/makeconf",
     visibility = ["//visibility:public"],
     deps = [
-        "@cc_mvdan_sh_v3//expand:go_default_library",
-        "@cc_mvdan_sh_v3//syntax:go_default_library",
+        "@cc_mvdan_sh_v3//expand",
+        "@cc_mvdan_sh_v3//syntax",
     ],
 )
 
@@ -16,6 +16,6 @@ go_test(
     srcs = ["makeconf_test.go"],
     deps = [
         ":makeconf",
-        "@com_github_google_go_cmp//cmp:go_default_library",
+        "@com_github_google_go_cmp//cmp",
     ],
 )

@@ -6,13 +6,19 @@ go_library(
     importpath = "cros.local/ebuild/private/cmd/run_in_container",
     visibility = ["//visibility:private"],
     deps = [
+        "//ebuild/private/common/runfiles",
         "@com_github_urfave_cli//:cli",
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
         "@org_golang_x_sys//unix",
     ],
 )
 
 go_binary(
     name = "run_in_container",
+    data = [
+        "//third_party/prebuilts/host:squashfuse",
+        "@dumb_init//file",
+    ],
     embed = [":run_in_container_lib"],
     visibility = ["//visibility:public"],
 )

@@ -2,16 +2,19 @@ package main
 
 import (
 	_ "embed"
+	"errors"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
 	"cros.local/ebuild/private/common/fileutil"
 	"cros.local/ebuild/private/common/makechroot"
+	"cros.local/ebuild/private/common/runfiles"
 )
 
 //go:embed setup.sh
@@ -52,21 +55,6 @@ var flagInstallTarget = &cli.StringSliceFlag{
 	Name: "install-target",
 }
 
-var flagRunInContainer = &cli.StringFlag{
-	Name:     "run-in-container",
-	Required: true,
-}
-
-var flagDumbInit = &cli.StringFlag{
-	Name:     "dumb-init",
-	Required: true,
-}
-
-var flagSquashfuse = &cli.StringFlag{
-	Name:     "squashfuse",
-	Required: true,
-}
-
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagInputSquashfs,
@@ -75,9 +63,6 @@ var app = &cli.App{
 		flagOverlay,
 		flagInstallHost,
 		flagInstallTarget,
-		flagRunInContainer,
-		flagDumbInit,
-		flagSquashfuse,
 	},
 	Action: func(c *cli.Context) error {
 		inputSquashfsPaths := c.StringSlice(flagInputSquashfs.Name)
@@ -89,9 +74,11 @@ var app = &cli.App{
 		}
 		hostInstallPaths := c.StringSlice(flagInstallHost.Name)
 		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
-		runInContainerPath := c.String(flagRunInContainer.Name)
-		dumbInitPath := c.String(flagDumbInit.Name)
-		squashfusePath := c.String(flagSquashfuse.Name)
+
+		runInContainerPath, ok := bazel.FindBinary("ebuild/private/cmd/run_in_container", "run_in_container")
+		if !ok {
+			return errors.New("run_in_container not found")
+		}
 
 		tmpDir, err := os.MkdirTemp("", "build_sdk.*")
 		if err != nil {
@@ -134,8 +121,6 @@ var app = &cli.App{
 			runInContainerPath,
 			"--diff-dir=" + diffDir,
 			"--work-dir=" + workDir,
-			"--dumb-init=" + dumbInitPath,
-			"--squashfuse=" + squashfusePath,
 			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
 			"--overlay-dir=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
 			"--overlay-dir=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
@@ -196,6 +181,8 @@ var app = &cli.App{
 }
 
 func main() {
+	runfiles.FixEnv()
+
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("ERROR: %v", err)
 	}
