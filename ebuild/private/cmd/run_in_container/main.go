@@ -170,7 +170,7 @@ func continueNamespace(c *cli.Context) error {
 	keepHostMount := c.Bool(flagKeepHostMount.Name)
 	args := []string(c.Args())
 
-	squashfusePath, err := bazel.Runfile("third_party/prebuilts/host/squashfuse")
+	squashfusePath, err := bazel.Runfile("prebuilts/squashfuse")
 	if err != nil {
 		return err
 	}

@@ -98,7 +98,7 @@ def dependencies():
 {{- end }}
 `))
 
-var buildTemplate = template.Must(template.New("").Parse(`load("//ebuild:defs.bzl", "ebuild")
+var buildTemplate = template.Must(template.New("").Parse(`load("@rules_ebuild//ebuild:defs.bzl", "ebuild")
 
 ebuild(
     name = "{{ .PackageName }}",
@@ -185,6 +185,8 @@ var app = &cli.App{
 				continue
 			}
 
+			log.Printf("Generating: %s", buildPath)
+
 			// Find the best version.
 			fis, err := os.ReadDir(ebuildDir)
 			if err != nil {
@@ -235,6 +237,7 @@ var app = &cli.App{
 					dists = append(dists, dist)
 					continue
 				}
+				log.Printf("  locating distfile %s...", filename)
 				dist, err := locateDistFile(filename)
 				if err != nil {
 					return fmt.Errorf("%s: unable to locate distfile %s: %w", ebuildDir, filename, err)
@@ -258,7 +261,6 @@ var app = &cli.App{
 				Category:    category,
 				Dists:       dists,
 			}
-			log.Printf("Generating: %s", buildPath)
 			if err := generateBuild(buildPath, ebuild); err != nil {
 				return err
 			}

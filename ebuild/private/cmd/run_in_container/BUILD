@@ -16,7 +16,7 @@ go_library(
 go_binary(
     name = "run_in_container",
     data = [
-        "//third_party/prebuilts/host:squashfuse",
+        "//prebuilts:squashfuse",
         "@dumb_init//file",
     ],
     embed = [":run_in_container_lib"],
