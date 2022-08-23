@@ -14,10 +14,10 @@ import (
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
-	"cros.local/ebuild/private/common/fileutil"
-	"cros.local/ebuild/private/common/portage/xpak"
-	"cros.local/ebuild/private/common/runfiles"
-	"cros.local/ebuild/private/common/standard/version"
+	"cros.local/rules_ebuild/ebuild/private/common/fileutil"
+	"cros.local/rules_ebuild/ebuild/private/common/portage/xpak"
+	"cros.local/rules_ebuild/ebuild/private/common/runfiles"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
 )
 
 const (

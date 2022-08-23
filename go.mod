@@ -1,4 +1,4 @@
-module cros.local
+module cros.local/rules_ebuild
 
 go 1.18
 

@@ -8,7 +8,7 @@ go_library(
         "expr.go",
         "expr_compile.go",
     ],
-    importpath = "cros.local/ebuild/private/common/standard/dependency",
+    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/dependency",
     visibility = ["//visibility:public"],
     deps = [
         "//ebuild/private/common/standard/dependency/internal/grammer",

@@ -6,7 +6,7 @@ go_library(
         "repo.go",
         "reposet.go",
     ],
-    importpath = "cros.local/ebuild/private/common/portage/repository",
+    importpath = "cros.local/rules_ebuild/ebuild/private/common/portage/repository",
     visibility = ["//visibility:public"],
     deps = [
         "//ebuild/private/common/standard/dependency",

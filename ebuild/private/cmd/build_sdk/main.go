@@ -12,9 +12,9 @@ import (
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
-	"cros.local/ebuild/private/common/fileutil"
-	"cros.local/ebuild/private/common/makechroot"
-	"cros.local/ebuild/private/common/runfiles"
+	"cros.local/rules_ebuild/ebuild/private/common/fileutil"
+	"cros.local/rules_ebuild/ebuild/private/common/makechroot"
+	"cros.local/rules_ebuild/ebuild/private/common/runfiles"
 )
 
 //go:embed setup.sh

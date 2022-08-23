@@ -25,7 +25,7 @@ func resolveUseExpr(expr Expr, use map[string]struct{}) Expr {
 
 	case *UseConditional:
 		if _, ok := use[expr.Name()]; ok == expr.Expect() {
-			return expr.Child()
+			return resolveUseExpr(expr.Child(), use)
 		}
 		return constTrue
 
@@ -157,21 +157,21 @@ func Simplify(deps *Deps) *Deps {
 func simplifyExpr(expr Expr) Expr {
 	switch expr := expr.(type) {
 	case *AllOf:
-		newChildren := simplifyExprs(expr.Children(), isConstTrue)
+		newChildren := simplifyExprs(expr.Children(), isConstTrue, true)
 		if len(newChildren) == 1 {
 			return newChildren[0]
 		}
 		return NewAllOf(newChildren)
 
 	case *AnyOf:
-		newChildren := simplifyExprs(expr.Children(), isConstFalse)
+		newChildren := simplifyExprs(expr.Children(), isConstFalse, false)
 		if len(newChildren) == 1 {
 			return newChildren[0]
 		}
 		return NewAnyOf(newChildren)
 
 	case *ExactlyOneOf:
-		newChildren := simplifyExprs(expr.Children(), isConstFalse)
+		newChildren := simplifyExprs(expr.Children(), isConstFalse, false)
 		trues := 0
 		for _, newChild := range newChildren {
 			if isConstTrue(newChild) {
@@ -197,7 +197,7 @@ func simplifyExpr(expr Expr) Expr {
 		return NewExactlyOneOf(newChildren)
 
 	case *AtMostOneOf:
-		newChildren := simplifyExprs(expr.Children(), isConstFalse)
+		newChildren := simplifyExprs(expr.Children(), isConstFalse, false)
 		trues := 0
 		for _, newChild := range newChildren {
 			if isConstTrue(newChild) {
@@ -237,14 +237,135 @@ func simplifyExpr(expr Expr) Expr {
 	}
 }
 
-func simplifyExprs(children []Expr, omit func(Expr) bool) []Expr {
+func simplifyExprs(children []Expr, omit func(Expr) bool, inlineAllOf bool) []Expr {
 	var newChildren []Expr
 	for _, child := range children {
 		newChild := simplifyExpr(child)
 		if omit != nil && omit(newChild) {
 			continue
 		}
-		newChildren = append(newChildren, newChild)
+		if newAllOf, ok := newChild.(*AllOf); ok {
+			newChildren = append(newChildren, newAllOf.Children()...)
+		} else {
+			newChildren = append(newChildren, newChild)
+		}
+	}
+	return newChildren
+}
+
+func RemoveBlocks(deps *Deps) (*Deps, error) {
+	expr, err := removeBlocksExpr(deps.Expr())
+	if err != nil {
+		return nil, err
+	}
+	return NewDeps(expr.(*AllOf)), nil
+}
+
+func removeBlocksExpr(expr Expr) (Expr, error) {
+	switch expr := expr.(type) {
+	case *AllOf:
+		newChildren, _, err := removeBlocksExprs(expr.Children())
+		if err != nil {
+			return nil, err
+		}
+		return NewAllOf(newChildren), nil
+
+	case *AnyOf:
+		newChildren, removed, err := removeBlocksExprs(expr.Children())
+		if err != nil {
+			return nil, err
+		}
+		if removed {
+			return constTrue, nil
+		}
+		return NewAnyOf(newChildren), nil
+
+	case *ExactlyOneOf:
+		newChildren, removed, err := removeBlocksExprs(expr.Children())
+		if err != nil {
+			return nil, err
+		}
+		if removed {
+			return nil, fmt.Errorf("cannot remove blocks under ExactlyOneOf")
+		}
+		return NewExactlyOneOf(newChildren), nil
+
+	case *AtMostOneOf:
+		newChildren, removed, err := removeBlocksExprs(expr.Children())
+		if err != nil {
+			return nil, err
+		}
+		if removed {
+			return nil, fmt.Errorf("cannot remove blocks under AtMostOneOf")
+		}
+		return NewAtMostOneOf(newChildren), nil
+
+	case *UseConditional:
+		newChild, err := removeBlocksExpr(expr.Child())
+		if err != nil {
+			return nil, err
+		}
+		return NewUseConditional(expr.Name(), expr.Expect(), newChild.(*AllOf)), nil
+
+	case *Package:
+		if expr.Blocks() > 0 {
+			return constTrue, nil
+		}
+		return expr, nil
+
+	default:
+		panic(fmt.Sprintf("unknown Expr type %T", expr))
+	}
+}
+
+func removeBlocksExprs(children []Expr) (newChildren []Expr, removed bool, err error) {
+	for _, child := range children {
+		newChild, err := removeBlocksExpr(child)
+		if err != nil {
+			return nil, false, err
+		}
+		if isConstTrue(newChild) {
+			removed = true
+		} else {
+			newChildren = append(newChildren, newChild)
+		}
+	}
+	return newChildren, removed, nil
+}
+
+func MapPackage(deps *Deps, f func(p *Package) *Package) *Deps {
+	return NewDeps(mapPackageExpr(deps.Expr(), f).(*AllOf))
+}
+
+func mapPackageExpr(expr Expr, f func(p *Package) *Package) Expr {
+	switch expr := expr.(type) {
+	case *AllOf:
+		return NewAllOf(mapPackageExprs(expr.Children(), f))
+
+	case *AnyOf:
+		return NewAnyOf(mapPackageExprs(expr.Children(), f))
+
+	case *ExactlyOneOf:
+		return NewExactlyOneOf(mapPackageExprs(expr.Children(), f))
+
+	case *AtMostOneOf:
+		return NewAtMostOneOf(mapPackageExprs(expr.Children(), f))
+
+	case *UseConditional:
+		return NewUseConditional(expr.Name(), expr.Expect(), mapPackageExpr(expr.Child(), f).(*AllOf))
+
+	case *Package:
+		return f(expr)
+
+	default:
+		panic(fmt.Sprintf("unknown Expr type %T", expr))
+	}
+}
+
+func mapPackageExprs(children []Expr, f func(p *Package) *Package) []Expr {
+	var newChildren []Expr
+	for _, child := range children {
+		newChildren = append(newChildren, mapPackageExpr(child, f))
 	}
 	return newChildren
 }

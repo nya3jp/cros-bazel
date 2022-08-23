@@ -4,7 +4,7 @@ go_library(
     name = "build_sdk_lib",
     srcs = ["main.go"],
     embedsrcs = ["setup.sh"],
-    importpath = "cros.local/ebuild/private/cmd/build_sdk",
+    importpath = "cros.local/rules_ebuild/ebuild/private/cmd/build_sdk",
     visibility = ["//visibility:private"],
     deps = [
         "//ebuild/private/common/fileutil",

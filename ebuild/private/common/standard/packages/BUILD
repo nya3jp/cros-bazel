@@ -6,7 +6,7 @@ go_library(
         "package.go",
         "stability.go",
     ],
-    importpath = "cros.local/ebuild/private/common/standard/packages",
+    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/packages",
     visibility = ["//visibility:public"],
     deps = [
         "//ebuild/private/common/standard/dependency",

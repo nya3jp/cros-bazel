@@ -6,7 +6,7 @@ go_library(
         "binpkgs.go",
         "overlay.go",
     ],
-    importpath = "cros.local/ebuild/private/common/makechroot",
+    importpath = "cros.local/rules_ebuild/ebuild/private/common/makechroot",
     visibility = ["//visibility:public"],
     deps = [
         "//ebuild/private/common/fileutil",

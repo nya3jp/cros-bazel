@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"cros.local/ebuild/private/common/standard/dependency"
-	"cros.local/ebuild/private/common/standard/version"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/dependency"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
 )
 
 func verifyParseAtom(t *testing.T, atomStr string) {

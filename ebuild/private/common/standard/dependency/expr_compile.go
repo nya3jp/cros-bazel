@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"cros.local/ebuild/private/common/standard/dependency/internal/grammer"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/dependency/internal/grammer"
 )
 
 func Parse(s string) (*Deps, error) {

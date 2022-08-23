@@ -7,7 +7,7 @@ go_library(
         "processor.go",
     ],
     embedsrcs = ["ebuild_prelude.sh"],
-    importpath = "cros.local/ebuild/private/common/standard/ebuild",
+    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/ebuild",
     visibility = ["//visibility:public"],
     deps = [
         "//ebuild/private/common/standard/makevars",

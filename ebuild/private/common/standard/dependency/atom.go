@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"cros.local/ebuild/private/common/standard/naming"
-	"cros.local/ebuild/private/common/standard/version"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/naming"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
 )
 
 type TargetPackage struct {

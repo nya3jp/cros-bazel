@@ -132,7 +132,7 @@ func (d *UseConditional) String() string {
 	if !d.expect {
 		cond = "!" + cond
 	}
-	return fmt.Sprintf("%s %s", cond, d.child.String())
+	return fmt.Sprintf("%s? %s", cond, d.child.String())
 }
 
 type Package struct {

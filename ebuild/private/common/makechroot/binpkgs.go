@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"cros.local/ebuild/private/common/fileutil"
-	"cros.local/ebuild/private/common/portage/xpak"
+	"cros.local/rules_ebuild/ebuild/private/common/fileutil"
+	"cros.local/rules_ebuild/ebuild/private/common/portage/xpak"
 )
 
 func CopyBinaryPackages(packagesDir string, packagePaths []string) (atoms []string, err error) {

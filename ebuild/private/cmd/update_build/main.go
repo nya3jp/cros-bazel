@@ -20,7 +20,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	"cros.local/ebuild/private/common/standard/version"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
 )
 
 const ebuildExt = ".ebuild"

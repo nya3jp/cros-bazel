@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 go_library(
     name = "run_in_container_lib",
     srcs = ["main.go"],
-    importpath = "cros.local/ebuild/private/cmd/run_in_container",
+    importpath = "cros.local/rules_ebuild/ebuild/private/cmd/run_in_container",
     visibility = ["//visibility:private"],
     deps = [
         "//ebuild/private/common/runfiles",

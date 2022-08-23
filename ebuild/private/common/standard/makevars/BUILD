@@ -6,7 +6,7 @@ go_library(
         "parse.go",
         "vars.go",
     ],
-    importpath = "cros.local/ebuild/private/common/standard/makevars",
+    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/makevars",
     visibility = ["//visibility:public"],
     deps = [
         "@cc_mvdan_sh_v3//expand",

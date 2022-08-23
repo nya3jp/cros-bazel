@@ -16,7 +16,7 @@ import (
 	"github.com/urfave/cli"
 	"golang.org/x/sys/unix"
 
-	"cros.local/ebuild/private/common/runfiles"
+	"cros.local/rules_ebuild/ebuild/private/common/runfiles"
 )
 
 func runCommand(name string, args ...string) error {

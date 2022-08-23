@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "portagevars",
     srcs = ["overlays.go"],
-    importpath = "cros.local/ebuild/private/common/portage/portagevars",
+    importpath = "cros.local/rules_ebuild/ebuild/private/common/portage/portagevars",
     visibility = ["//visibility:public"],
     deps = ["//ebuild/private/common/standard/makevars"],
 )

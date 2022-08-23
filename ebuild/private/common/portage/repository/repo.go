@@ -12,11 +12,11 @@ import (
 	"strings"
 	"sync"
 
-	"cros.local/ebuild/private/common/standard/dependency"
-	"cros.local/ebuild/private/common/standard/ebuild"
-	"cros.local/ebuild/private/common/standard/packages"
-	"cros.local/ebuild/private/common/standard/profile"
-	"cros.local/ebuild/private/common/standard/version"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/dependency"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/ebuild"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/packages"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/profile"
+	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
 )
 
 type Repo struct {
