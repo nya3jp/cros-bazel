@@ -6,4 +6,5 @@ rules_ebuild_repositories()
 
 load("@rules_ebuild//ebuild:deps.bzl", "rules_ebuild_dependencies")
 
+# gazelle:repository_macro ebuild/deps.bzl%rules_ebuild_go_dependencies
 rules_ebuild_dependencies()
