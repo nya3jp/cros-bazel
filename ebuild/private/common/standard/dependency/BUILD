@@ -3,7 +3,8 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "dependency",
     srcs = [
-        "algorithm.go",
+        "algorithm_base.go",
+        "algorithm_extra.go",
         "atom.go",
         "expr.go",
         "expr_compile.go",
