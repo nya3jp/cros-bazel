@@ -60,7 +60,7 @@ func ParseAtom(atomStr string) (*Atom, error) {
 
 	var useDeps []*UseDependency
 	if strings.HasSuffix(rest, "]") {
-		v := strings.SplitN(rest, "[", 2)
+		v := strings.SplitN(strings.TrimSuffix(rest, "]"), "[", 2)
 		if len(v) != 2 {
 			return nil, fmt.Errorf("%s: invalid use dependencies", atomStr)
 		}
