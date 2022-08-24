@@ -138,7 +138,7 @@ ebuild = rule(
         ),
         "_overlays": attr.label(
             providers = [OverlaySetInfo],
-            default = "@//config:overlays",
+            default = "@//bazel/config:overlays",
         ),
         "_build_package": attr.label(
             executable = True,
@@ -147,7 +147,7 @@ ebuild = rule(
         ),
         "_sdk": attr.label(
             providers = [SDKInfo],
-            default = Label("@//sdk"),
+            default = Label("@//bazel/sdk"),
         ),
     },
 )
@@ -317,7 +317,7 @@ sdk = rule(
         ),
         "_overlays": attr.label(
             providers = [OverlaySetInfo],
-            default = "@//config:overlays",
+            default = "@//bazel/config:overlays",
         ),
     },
 )
