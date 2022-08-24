@@ -25,6 +25,12 @@ import (
 
 const ebuildExt = ".ebuild"
 
+var overlayRelDirs = []string{
+	"third_party/portage-stable",
+	"third_party/chromiumos-overlay",
+	"overlays/overlay-arm64-generic",
+}
+
 // TODO: Remove this blocklist.
 var blockedPackages = map[string]struct{}{
 	"fzf":   {}, // tries to access goproxy.io
@@ -44,11 +50,17 @@ type distEntry struct {
 	Name     string `json:"name"`
 }
 
+type packageInfo struct {
+	BuildDeps   []string `json:"buildDeps"`
+	RuntimeDeps []string `json:"runtimeDeps"`
+}
+
 type ebuildInfo struct {
 	EBuildName  string
 	PackageName string
 	Category    string
 	Dists       []*distEntry
+	PackageInfo *packageInfo
 }
 
 func getSHA256(url string) (string, error) {
@@ -105,10 +117,24 @@ ebuild(
     src = "{{ .EBuildName }}",
     category = "{{ .Category }}",
     distfiles = {
-{{- range .Dists }}
+        {{- range .Dists }}
         "@{{ .Name }}//file": "{{ .Filename }}",
-{{- end }}
+        {{- end }}
     },
+    {{- if .PackageInfo.BuildDeps }}
+    build_target_deps = [
+        {{- range .PackageInfo.BuildDeps }}
+        "{{ . }}",
+        {{- end }}
+    ],
+    {{- end }}
+    {{- if .PackageInfo.RuntimeDeps }}
+    runtime_deps = [
+        {{- range .PackageInfo.RuntimeDeps }}
+        "{{ . }}",
+        {{- end }}
+    ],
+    {{- end }}
     files = glob(["files/**"]),
     visibility = ["//visibility:public"],
 )
@@ -134,143 +160,203 @@ func updateRepositories(bzlPath string, dists []*distEntry) error {
 	return repositoriesTemplate.Execute(f, dists)
 }
 
+func rewritePackageNamesToLabels(names []string, overlayDirs []string) {
+	for i, name := range names {
+		for _, overlayDir := range overlayDirs {
+			if _, err := os.Stat(filepath.Join(overlayDir, name)); err == nil {
+				v := strings.Split(overlayDir, "/")
+				label := fmt.Sprintf("//%s/%s/%s", v[len(v)-2], v[len(v)-1], name)
+				names[i] = label
+			}
+		}
+	}
+}
+
+var flagPackageInfoFile = &cli.StringFlag{
+	Name: "package-info-file",
+}
+
 var app = &cli.App{
-	Flags: []cli.Flag{},
+	Flags: []cli.Flag{
+		flagPackageInfoFile,
+	},
 	Action: func(c *cli.Context) error {
-		if len(c.Args()) != 1 {
-			return errors.New("need exactly one directory")
-		}
-		topDir := c.Args()[0]
+		packageInfoPath := c.String(flagPackageInfoFile.Name)
 
-		var knownDists []*distEntry
-		distJSONPath := filepath.Join(topDir, "distfiles.json")
-		if b, err := os.ReadFile(distJSONPath); err == nil {
-			if err := json.Unmarshal(b, &knownDists); err != nil {
-				return fmt.Errorf("%s: %w", distJSONPath, err)
-			}
+		workspaceDir := os.Getenv("BUILD_WORKSPACE_DIRECTORY")
+
+		var overlayDirs []string
+		for _, overlayRelDir := range overlayRelDirs {
+			overlayDir := filepath.Join(workspaceDir, overlayRelDir)
+			overlayDirs = append(overlayDirs, overlayDir)
 		}
 
-		knownDistMap := make(map[string]*distEntry)
-		for _, dist := range knownDists {
-			knownDistMap[dist.Filename] = dist
-		}
-
-		var ebuildDirs []string
-		if err := filepath.WalkDir(topDir, func(path string, d fs.DirEntry, err error) error {
+		var pkgInfoMap map[string]*packageInfo
+		if packageInfoPath != "" {
+			b, err := os.ReadFile(packageInfoPath)
 			if err != nil {
 				return err
 			}
-			if !d.IsDir() {
+			if err := json.Unmarshal(b, &pkgInfoMap); err != nil {
+				return err
+			}
+
+			// Rewrite package names to labels.
+			for _, pkgInfo := range pkgInfoMap {
+				rewritePackageNamesToLabels(pkgInfo.BuildDeps, overlayDirs)
+				rewritePackageNamesToLabels(pkgInfo.RuntimeDeps, overlayDirs)
+			}
+		}
+
+		for _, overlayDir := range overlayDirs {
+			var knownDists []*distEntry
+			distJSONPath := filepath.Join(overlayDir, "distfiles.json")
+			if b, err := os.ReadFile(distJSONPath); err == nil {
+				if err := json.Unmarshal(b, &knownDists); err != nil {
+					return fmt.Errorf("%s: %w", distJSONPath, err)
+				}
+			}
+
+			knownDistMap := make(map[string]*distEntry)
+			for _, dist := range knownDists {
+				knownDistMap[dist.Filename] = dist
+			}
+
+			var ebuildDirs []string
+			if err := filepath.WalkDir(overlayDir, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if !d.IsDir() {
+					return nil
+				}
+
+				fis, err := os.ReadDir(path)
+				if err != nil {
+					return err
+				}
+				for _, fi := range fis {
+					if strings.HasSuffix(fi.Name(), ebuildExt) {
+						ebuildDirs = append(ebuildDirs, path)
+						return fs.SkipDir
+					}
+				}
 				return nil
-			}
-			if _, err := os.Stat(filepath.Join(path, "Manifest")); err == nil {
-				ebuildDirs = append(ebuildDirs, path)
-				return fs.SkipDir
-			}
-			return nil
-		}); err != nil {
-			return err
-		}
-
-		for _, ebuildDir := range ebuildDirs {
-			v := strings.Split(ebuildDir, "/")
-			category := v[len(v)-2]
-			packageName := v[len(v)-1]
-			buildPath := filepath.Join(ebuildDir, "BUILD")
-
-			if _, ok := blockedPackages[packageName]; ok {
-				if err := os.Remove(buildPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-					return err
-				}
-				continue
-			}
-
-			log.Printf("Generating: %s", buildPath)
-
-			// Find the best version.
-			fis, err := os.ReadDir(ebuildDir)
-			if err != nil {
+			}); err != nil {
 				return err
 			}
 
-			var bestName string
-			var bestVer *version.Version
-			for _, fi := range fis {
-				name := fi.Name()
-				if !strings.HasSuffix(name, ebuildExt) {
+			for _, ebuildDir := range ebuildDirs {
+				v := strings.Split(ebuildDir, "/")
+				category := v[len(v)-2]
+				packageName := v[len(v)-1]
+				buildPath := filepath.Join(ebuildDir, "BUILD")
+
+				if _, ok := blockedPackages[packageName]; ok {
+					if err := os.Remove(buildPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+						return err
+					}
 					continue
 				}
-				_, ver, err := version.ExtractSuffix(strings.TrimSuffix(name, ebuildExt))
-				if err != nil {
-					return fmt.Errorf("%s: %w", filepath.Join(ebuildDir, name), err)
+
+				log.Printf("Generating: %s", buildPath)
+
+				if err := func() error {
+					// Find the best version.
+					fis, err := os.ReadDir(ebuildDir)
+					if err != nil {
+						return err
+					}
+
+					var bestName string
+					var bestVer *version.Version
+					for _, fi := range fis {
+						name := fi.Name()
+						if !strings.HasSuffix(name, ebuildExt) {
+							continue
+						}
+						_, ver, err := version.ExtractSuffix(strings.TrimSuffix(name, ebuildExt))
+						if err != nil {
+							return fmt.Errorf("%s: %w", filepath.Join(ebuildDir, name), err)
+						}
+						if bestVer == nil || bestVer.Compare(ver) < 0 {
+							bestName = name
+							bestVer = ver
+						}
+					}
+					if bestName == "" {
+						return errors.New("no ebuild found")
+					}
+
+					// Read Manifest to get a list of distfiles.
+					manifest, err := os.ReadFile(filepath.Join(ebuildDir, "Manifest"))
+					if err != nil && !errors.Is(err, os.ErrNotExist) {
+						return err
+					}
+
+					var dists []*distEntry
+					for _, line := range strings.Split(string(manifest), "\n") {
+						fields := strings.Fields(line)
+						if len(fields) < 2 || fields[0] != "DIST" {
+							continue
+						}
+						filename, err := url.PathUnescape(fields[1])
+						if err != nil {
+							return err
+						}
+						if strings.Contains(filename, "/") {
+							// This is likely a Go dep, skip for now.
+							continue
+						}
+						if dist, ok := knownDistMap[filename]; ok {
+							dists = append(dists, dist)
+							continue
+						}
+						log.Printf("  locating distfile %s...", filename)
+						dist, err := locateDistFile(filename)
+						if err != nil {
+							return fmt.Errorf("unable to locate distfile %s: %w", filename, err)
+						}
+						knownDists = append(knownDists, dist)
+						knownDistMap[filename] = dist
+
+						// Update distfiles.json.
+						b, err := json.Marshal(knownDists)
+						if err != nil {
+							return err
+						}
+						if err := os.WriteFile(distJSONPath, b, 0o644); err != nil {
+							return err
+						}
+					}
+
+					pkgInfo := pkgInfoMap[fmt.Sprintf("%s/%s", category, packageName)]
+					if pkgInfo == nil {
+						pkgInfo = &packageInfo{}
+					}
+
+					ebuild := &ebuildInfo{
+						EBuildName:  bestName,
+						PackageName: packageName,
+						Category:    category,
+						Dists:       dists,
+						PackageInfo: pkgInfo,
+					}
+					if err := generateBuild(buildPath, ebuild); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					log.Printf("WARNING: Failed to generate %s: %v", buildPath, err)
 				}
-				if bestVer == nil || bestVer.Compare(ver) < 0 {
-					bestName = name
-					bestVer = ver
-				}
-			}
-			if bestName == "" {
-				return fmt.Errorf("%s: no ebuild found", ebuildDir)
 			}
 
-			// Read Manifest to get a list of distfiles.
-			manifest, err := os.ReadFile(filepath.Join(ebuildDir, "Manifest"))
-			if err != nil {
+			sort.Slice(knownDists, func(i, j int) bool {
+				return knownDists[i].Name < knownDists[j].Name
+			})
+			if err := updateRepositories(filepath.Join(overlayDir, "repositories.bzl"), knownDists); err != nil {
 				return err
 			}
-
-			var dists []*distEntry
-			for _, line := range strings.Split(string(manifest), "\n") {
-				fields := strings.Fields(line)
-				if len(fields) < 2 || fields[0] != "DIST" {
-					continue
-				}
-				filename, err := url.PathUnescape(fields[1])
-				if err != nil {
-					return err
-				}
-				if strings.Contains(filename, "/") {
-					// This is likely a Go dep, skip for now.
-					continue
-				}
-				if dist, ok := knownDistMap[filename]; ok {
-					dists = append(dists, dist)
-					continue
-				}
-				log.Printf("  locating distfile %s...", filename)
-				dist, err := locateDistFile(filename)
-				if err != nil {
-					return fmt.Errorf("%s: unable to locate distfile %s: %w", ebuildDir, filename, err)
-				}
-				knownDists = append(knownDists, dist)
-				knownDistMap[filename] = dist
-
-				// Update distfiles.json.
-				b, err := json.Marshal(knownDists)
-				if err != nil {
-					return err
-				}
-				if err := os.WriteFile(distJSONPath, b, 0o644); err != nil {
-					return err
-				}
-			}
-
-			ebuild := &ebuildInfo{
-				EBuildName:  bestName,
-				PackageName: packageName,
-				Category:    category,
-				Dists:       dists,
-			}
-			if err := generateBuild(buildPath, ebuild); err != nil {
-				return err
-			}
-		}
-
-		sort.Slice(knownDists, func(i, j int) bool {
-			return knownDists[i].Name < knownDists[j].Name
-		})
-		if err := updateRepositories(filepath.Join(topDir, "repositories.bzl"), knownDists); err != nil {
-			return err
 		}
 		return nil
 	},
