@@ -160,16 +160,27 @@ func updateRepositories(bzlPath string, dists []*distEntry) error {
 	return repositoriesTemplate.Execute(f, dists)
 }
 
-func rewritePackageNamesToLabels(names []string, overlayDirs []string) {
-	for i, name := range names {
-		for _, overlayDir := range overlayDirs {
-			if _, err := os.Stat(filepath.Join(overlayDir, name)); err == nil {
-				v := strings.Split(overlayDir, "/")
-				label := fmt.Sprintf("//%s/%s/%s", v[len(v)-2], v[len(v)-1], name)
-				names[i] = label
-			}
+func packageNameToLabel(name string, overlayDirs []string) (string, error) {
+	for _, overlayDir := range overlayDirs {
+		if _, err := os.Stat(filepath.Join(overlayDir, name)); err != nil {
+			continue
 		}
+		v := strings.Split(overlayDir, "/")
+		return fmt.Sprintf("//%s/%s/%s", v[len(v)-2], v[len(v)-1], name), nil
 	}
+	return "", fmt.Errorf("%s not found in overlays", name)
+}
+
+func packageNamesToLabels(names []string, overlayDirs []string) ([]string, error) {
+	var labels []string
+	for _, name := range names {
+		label, err := packageNameToLabel(name, overlayDirs)
+		if err != nil {
+			return nil, err
+		}
+		labels = append(labels, label)
+	}
+	return labels, nil
 }
 
 var flagPackageInfoFile = &cli.StringFlag{
@@ -203,8 +214,14 @@ var app = &cli.App{
 
 			// Rewrite package names to labels.
 			for _, pkgInfo := range pkgInfoMap {
-				rewritePackageNamesToLabels(pkgInfo.BuildDeps, overlayDirs)
-				rewritePackageNamesToLabels(pkgInfo.RuntimeDeps, overlayDirs)
+				pkgInfo.BuildDeps, err = packageNamesToLabels(pkgInfo.BuildDeps, overlayDirs)
+				if err != nil {
+					return err
+				}
+				pkgInfo.RuntimeDeps, err = packageNamesToLabels(pkgInfo.RuntimeDeps, overlayDirs)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
