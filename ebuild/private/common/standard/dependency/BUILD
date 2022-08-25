@@ -9,12 +9,12 @@ go_library(
         "expr.go",
         "expr_compile.go",
     ],
-    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/dependency",
+    importpath = "cros.local/bazel/ebuild/private/common/standard/dependency",
     visibility = ["//visibility:public"],
     deps = [
-        "//ebuild/private/common/standard/dependency/internal/grammer",
-        "//ebuild/private/common/standard/naming",
-        "//ebuild/private/common/standard/version",
+        "//bazel/ebuild/private/common/standard/dependency/internal/grammer",
+        "//bazel/ebuild/private/common/standard/naming",
+        "//bazel/ebuild/private/common/standard/version",
     ],
 )
 
@@ -23,6 +23,6 @@ go_test(
     srcs = ["atom_test.go"],
     deps = [
         ":dependency",
-        "//ebuild/private/common/standard/version",
+        "//bazel/ebuild/private/common/standard/version",
     ],
 )

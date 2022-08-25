@@ -20,7 +20,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
+	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 const ebuildExt = ".ebuild"
@@ -110,7 +110,7 @@ def dependencies():
 {{- end }}
 `))
 
-var buildTemplate = template.Must(template.New("").Parse(`load("@rules_ebuild//ebuild:defs.bzl", "ebuild")
+var buildTemplate = template.Must(template.New("").Parse(`load("//bazel/ebuild:defs.bzl", "ebuild")
 
 ebuild(
     name = "{{ .PackageName }}",

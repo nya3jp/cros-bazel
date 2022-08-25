@@ -1,4 +1,4 @@
-module cros.local/rules_ebuild
+module cros.local/bazel
 
 go 1.18
 

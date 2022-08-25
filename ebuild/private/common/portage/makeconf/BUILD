@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "makeconf",
     srcs = ["makeconf.go"],
-    importpath = "cros.local/rules_ebuild/ebuild/private/common/portage/makeconf",
+    importpath = "cros.local/bazel/ebuild/private/common/portage/makeconf",
     visibility = ["//visibility:public"],
     deps = [
         "@cc_mvdan_sh_v3//expand",

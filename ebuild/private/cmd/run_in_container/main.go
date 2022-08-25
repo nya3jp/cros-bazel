@@ -16,7 +16,7 @@ import (
 	"github.com/urfave/cli"
 	"golang.org/x/sys/unix"
 
-	"cros.local/rules_ebuild/ebuild/private/common/runfiles"
+	"cros.local/bazel/ebuild/private/common/runfiles"
 )
 
 func runCommand(name string, args ...string) error {
@@ -170,7 +170,7 @@ func continueNamespace(c *cli.Context) error {
 	keepHostMount := c.Bool(flagKeepHostMount.Name)
 	args := []string(c.Args())
 
-	squashfusePath, err := bazel.Runfile("prebuilts/squashfuse")
+	squashfusePath, err := bazel.Runfile("bazel/prebuilts/squashfuse")
 	if err != nil {
 		return err
 	}

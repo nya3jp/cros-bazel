@@ -1,0 +1,24 @@
+load("//bazel/ebuild:repositories.bzl", "rules_ebuild_repositories")
+
+rules_ebuild_repositories()
+
+load("//bazel/ebuild:deps.bzl", "rules_ebuild_dependencies")
+
+# gazelle:repository_macro bazel/ebuild/deps.bzl%rules_ebuild_go_dependencies
+rules_ebuild_dependencies()
+
+load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
+
+prebuilts_dependencies()
+
+load("//third_party/portage-stable:repositories.bzl", portage_stable_dependencies = "dependencies")
+
+portage_stable_dependencies()
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "chromiumos_sdk",
+    sha256 = "acc090ab670aca9a05b97412c0616e5674c2835dc18d3f205ad4ea3afeef90cf",
+    urls = ["https://commondatastorage.googleapis.com/chromiumos-sdk/cros-sdk-2022.08.22.085953.tar.xz"],
+)

@@ -6,6 +6,6 @@ go_library(
         "copy.go",
         "dualpath.go",
     ],
-    importpath = "cros.local/rules_ebuild/ebuild/private/common/fileutil",
+    importpath = "cros.local/bazel/ebuild/private/common/fileutil",
     visibility = ["//visibility:public"],
 )

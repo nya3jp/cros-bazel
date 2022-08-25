@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"cros.local/rules_ebuild/ebuild/private/common/standard/makevars"
+	"cros.local/bazel/ebuild/private/common/standard/makevars"
 )
 
 type Resolver interface {

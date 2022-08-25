@@ -3,8 +3,8 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "grammer",
     srcs = ["grammer.go"],
-    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/dependency/internal/grammer",
-    visibility = ["//ebuild/private/common/standard/dependency:__subpackages__"],
+    importpath = "cros.local/bazel/ebuild/private/common/standard/dependency/internal/grammer",
+    visibility = ["//bazel/ebuild/private/common/standard/dependency:__subpackages__"],
     deps = [
         "@com_github_alecthomas_participle_v2//:participle",
         "@com_github_alecthomas_participle_v2//lexer",

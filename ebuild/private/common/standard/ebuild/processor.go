@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"cros.local/rules_ebuild/ebuild/private/common/standard/makevars"
-	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
+	"cros.local/bazel/ebuild/private/common/standard/makevars"
+	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 type Processor struct {

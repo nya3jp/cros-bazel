@@ -7,10 +7,10 @@ go_library(
         "processor.go",
     ],
     embedsrcs = ["ebuild_prelude.sh"],
-    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/ebuild",
+    importpath = "cros.local/bazel/ebuild/private/common/standard/ebuild",
     visibility = ["//visibility:public"],
     deps = [
-        "//ebuild/private/common/standard/makevars",
-        "//ebuild/private/common/standard/version",
+        "//bazel/ebuild/private/common/standard/makevars",
+        "//bazel/ebuild/private/common/standard/version",
     ],
 )

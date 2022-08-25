@@ -6,10 +6,10 @@ go_library(
         "binpkgs.go",
         "overlay.go",
     ],
-    importpath = "cros.local/rules_ebuild/ebuild/private/common/makechroot",
+    importpath = "cros.local/bazel/ebuild/private/common/makechroot",
     visibility = ["//visibility:public"],
     deps = [
-        "//ebuild/private/common/fileutil",
-        "//ebuild/private/common/portage/xpak",
+        "//bazel/ebuild/private/common/fileutil",
+        "//bazel/ebuild/private/common/portage/xpak",
     ],
 )

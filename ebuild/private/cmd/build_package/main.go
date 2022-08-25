@@ -14,10 +14,10 @@ import (
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
-	"cros.local/rules_ebuild/ebuild/private/common/fileutil"
-	"cros.local/rules_ebuild/ebuild/private/common/portage/xpak"
-	"cros.local/rules_ebuild/ebuild/private/common/runfiles"
-	"cros.local/rules_ebuild/ebuild/private/common/standard/version"
+	"cros.local/bazel/ebuild/private/common/fileutil"
+	"cros.local/bazel/ebuild/private/common/portage/xpak"
+	"cros.local/bazel/ebuild/private/common/runfiles"
+	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 const (
@@ -188,7 +188,7 @@ var app = &cli.App{
 			log.Printf("( cd %s && %s --login )", shellescape.Quote(pwd), shellescape.QuoteCommand(os.Args))
 		}
 
-		runInContainerPath, ok := bazel.FindBinary("ebuild/private/cmd/run_in_container", "run_in_container")
+		runInContainerPath, ok := bazel.FindBinary("bazel/ebuild/private/cmd/run_in_container", "run_in_container")
 		if !ok {
 			return errors.New("run_in_container not found")
 		}

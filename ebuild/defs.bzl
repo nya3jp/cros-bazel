@@ -138,16 +138,16 @@ ebuild = rule(
         ),
         "_overlays": attr.label(
             providers = [OverlaySetInfo],
-            default = "@//bazel/config:overlays",
+            default = "//bazel/config:overlays",
         ),
         "_build_package": attr.label(
             executable = True,
             cfg = "exec",
-            default = Label("//ebuild/private/cmd/build_package"),
+            default = Label("//bazel/ebuild/private/cmd/build_package"),
         ),
         "_sdk": attr.label(
             providers = [SDKInfo],
-            default = Label("@//bazel/sdk"),
+            default = Label("//bazel/sdk"),
         ),
     },
 )
@@ -223,7 +223,7 @@ overlay = rule(
         "_create_squashfs": attr.label(
             executable = True,
             cfg = "exec",
-            default = Label("//ebuild/private/cmd/create_squashfs"),
+            default = Label("//bazel/ebuild/private/cmd/create_squashfs"),
         ),
     },
 )
@@ -313,11 +313,11 @@ sdk = rule(
         "_build_sdk": attr.label(
             executable = True,
             cfg = "exec",
-            default = Label("//ebuild/private/cmd/build_sdk"),
+            default = Label("//bazel/ebuild/private/cmd/build_sdk"),
         ),
         "_overlays": attr.label(
             providers = [OverlaySetInfo],
-            default = "@//bazel/config:overlays",
+            default = "//bazel/config:overlays",
         ),
     },
 )

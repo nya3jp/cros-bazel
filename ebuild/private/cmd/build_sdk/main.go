@@ -12,9 +12,9 @@ import (
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
-	"cros.local/rules_ebuild/ebuild/private/common/fileutil"
-	"cros.local/rules_ebuild/ebuild/private/common/makechroot"
-	"cros.local/rules_ebuild/ebuild/private/common/runfiles"
+	"cros.local/bazel/ebuild/private/common/fileutil"
+	"cros.local/bazel/ebuild/private/common/makechroot"
+	"cros.local/bazel/ebuild/private/common/runfiles"
 )
 
 //go:embed setup.sh
@@ -75,7 +75,7 @@ var app = &cli.App{
 		hostInstallPaths := c.StringSlice(flagInstallHost.Name)
 		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
 
-		runInContainerPath, ok := bazel.FindBinary("ebuild/private/cmd/run_in_container", "run_in_container")
+		runInContainerPath, ok := bazel.FindBinary("bazel/ebuild/private/cmd/run_in_container", "run_in_container")
 		if !ok {
 			return errors.New("run_in_container not found")
 		}

@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "version",
     srcs = ["version.go"],
-    importpath = "cros.local/rules_ebuild/ebuild/private/common/standard/version",
+    importpath = "cros.local/bazel/ebuild/private/common/standard/version",
     visibility = ["//visibility:public"],
 )
 

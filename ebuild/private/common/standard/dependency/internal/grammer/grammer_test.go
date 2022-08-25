@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"cros.local/rules_ebuild/ebuild/private/common/standard/dependency/internal/grammer"
+	"cros.local/bazel/ebuild/private/common/standard/dependency/internal/grammer"
 )
 
 func mustParse(t *testing.T, s string) *grammer.AllOf {

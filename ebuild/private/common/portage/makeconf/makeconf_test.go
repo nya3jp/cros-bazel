@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"cros.local/rules_ebuild/ebuild/private/common/portage/makeconf"
+	"cros.local/bazel/ebuild/private/common/portage/makeconf"
 )
 
 func callParse(t *testing.T, entryName string, files map[string]string) map[string]string {
