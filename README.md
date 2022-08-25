@@ -11,12 +11,12 @@ Use `repo` to check out a snapshotted ChromiumOS tree + Bazel files.
 mkdir cros-bazel
 cd cros-bazel
 repo init -u sso://team/cros-build-tiger/cros-bazel-manifest
-repo sync
+repo sync -c
 ```
 
 ## Building
 
-This is a command to build sys-apps/ethtool for example.
+For example, to build sys-apps/ethtool:
 
 ```
 bazel build //third_party/portage-stable/sys-apps/ethtool
