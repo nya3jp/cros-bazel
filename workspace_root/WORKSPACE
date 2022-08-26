@@ -15,6 +15,10 @@ load("//third_party/portage-stable:repositories.bzl", portage_stable_dependencie
 
 portage_stable_dependencies()
 
+load("//third_party/chromiumos-overlay:repositories.bzl", chromiumos_overlay_dependencies = "dependencies")
+
+chromiumos_overlay_dependencies()
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
