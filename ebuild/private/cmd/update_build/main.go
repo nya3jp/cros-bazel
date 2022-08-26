@@ -332,7 +332,8 @@ var app = &cli.App{
 						log.Printf("  locating distfile %s...", filename)
 						dist, err := locateDistFile(filename)
 						if err != nil {
-							return fmt.Errorf("unable to locate distfile %s: %w", filename, err)
+							log.Printf("WARNING: unable to locate distfile %s: %v", filename, err)
+							continue
 						}
 						knownDists = append(knownDists, dist)
 						knownDistMap[filename] = dist
