@@ -88,3 +88,17 @@ func (s *RepoSet) Package(atom *dependency.Atom, processor *ebuild.CachedProcess
 
 	return pkgs, nil
 }
+
+func (s *RepoSet) BestPackage(atom *dependency.Atom, processor *ebuild.CachedProcessor) (*packages.Package, error) {
+	candidates, err := s.Package(atom, processor)
+	if err != nil {
+		return nil, err
+	}
+
+	candidates = packages.SelectByStability(candidates)
+	if len(candidates) == 0 {
+		return nil, fmt.Errorf("no package satisfies %s", atom.String())
+	}
+
+	return candidates[0], nil
+}

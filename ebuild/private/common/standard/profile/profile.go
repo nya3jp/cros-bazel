@@ -4,26 +4,24 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"cros.local/bazel/ebuild/private/common/standard/makevars"
 )
+
+const makeDefaults = "make.defaults"
 
 type Resolver interface {
 	ResolveProfile(path, base string) (*Profile, error)
 }
 
 type Profile struct {
-	name      string
-	path      string
-	parents   []*Profile
-	localVars makevars.Vars
-	vars      makevars.Vars
+	name    string
+	path    string
+	parents []*Profile
 }
 
 func Parse(path string, name string, resolver Resolver) (*Profile, error) {
@@ -48,23 +46,15 @@ func Parse(path string, name string, resolver Resolver) (*Profile, error) {
 		parents = append(parents, parent)
 	}
 
-	localVars, err := makevars.ParseMakeDefaults(filepath.Join(path, "make.defaults"))
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+	// Parse make.defaults without evaluating to make sure there are no syntax errors.
+	if err := makevars.ParseMakeDefaults(filepath.Join(path, makeDefaults), makevars.Vars{}); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("profile %s: %w", name, err)
 	}
 
-	var parentVars []makevars.Vars
-	for _, parent := range parents {
-		parentVars = append(parentVars, parent.Vars())
-	}
-	vars := makevars.Merge(append(append([]makevars.Vars(nil), parentVars...), localVars)...)
-
 	return &Profile{
-		name:      name,
-		path:      path,
-		parents:   parents,
-		localVars: localVars,
-		vars:      vars,
+		name:    name,
+		path:    path,
+		parents: parents,
 	}, nil
 }
 
@@ -73,35 +63,18 @@ func (p *Profile) Path() string        { return p.path }
 func (p *Profile) Parents() []*Profile { return append([]*Profile(nil), p.parents...) }
 
 func (p *Profile) Vars() makevars.Vars {
-	// Make a copy.
-	vars := make(makevars.Vars)
-	for name, value := range p.vars {
-		vars[name] = value
-	}
+	vars := makevars.Vars{}
+	p.parseVars(vars)
 	return vars
 }
 
-func (p *Profile) DumpForTesting(w io.Writer) {
-	fmt.Fprint(w, "[vars]\n")
-	var names []string
-	for name := range p.vars {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	for _, name := range names {
-		value := p.vars[name]
-		fmt.Fprintf(w, "    %s=%s\n", name, value)
+func (p *Profile) parseVars(vars makevars.Vars) {
+	for _, parent := range p.parents {
+		parent.parseVars(vars)
 	}
 
-	var printTree func(p *Profile, depth int)
-	printTree = func(p *Profile, depth int) {
-		fmt.Fprintf(w, "%s%s VIDEO_CARDS=%s\n", strings.Repeat("  ", depth), p.name, p.localVars["VIDEO_CARDS"])
-		for _, pp := range p.parents {
-			printTree(pp, depth+1)
-		}
-	}
-	fmt.Fprint(w, "[tree]\n")
-	printTree(p, 0)
+	// Assume no error as we already checked syntax in Parse.
+	_ = makevars.ParseMakeDefaults(filepath.Join(p.path, makeDefaults), vars)
 }
 
 func readParents(path string) ([]string, error) {

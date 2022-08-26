@@ -8,59 +8,51 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
-func ParseMakeDefaults(path string) (Vars, error) {
+func ParseMakeDefaults(path string, vars Vars) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
+		return fmt.Errorf("%s: %w", path, err)
 	}
 	defer file.Close()
 
 	parser := syntax.NewParser(syntax.Variant(syntax.LangBash))
 	parsed, err := parser.Parse(file, path)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
+		return fmt.Errorf("%s: %w", path, err)
 	}
 
-	env := make(environ)
+	newVars := vars.Copy()
 
 	for _, stmt := range parsed.Stmts {
 		call, ok := stmt.Cmd.(*syntax.CallExpr)
 		if !ok {
-			return nil, fmt.Errorf("%s:%s: unsupported statement", path, stmt.Pos())
+			return fmt.Errorf("%s:%s: unsupported statement", path, stmt.Pos())
 		}
 
 		// Reject calls.
 		if len(call.Args) >= 1 {
-			return nil, fmt.Errorf("%s:%s: unsupported call", path, call.Pos())
+			return fmt.Errorf("%s:%s: unsupported call", path, call.Pos())
 		}
 
 		// Process variable assignments.
 		for _, assign := range call.Assigns {
 			name := assign.Name.Value
 			if assign.Append || assign.Array != nil || assign.Index != nil || assign.Naked {
-				return nil, fmt.Errorf("%s:%s: unsupported assignment", path, assign.Pos())
+				return fmt.Errorf("%s:%s: unsupported assignment", path, assign.Pos())
 			}
 
-			cfg := &expand.Config{Env: env}
+			cfg := &expand.Config{Env: environ(newVars)}
 			value, err := expand.Literal(cfg, assign.Value)
 			if err != nil {
-				return nil, fmt.Errorf("%s:%s: %w", path, assign.Value.Pos(), err)
+				return fmt.Errorf("%s:%s: %w", path, assign.Value.Pos(), err)
 			}
 
-			env.Set(name, expand.Variable{
-				Kind: expand.String,
-				Str:  value,
-			})
+			newVars[name] = value
 		}
 	}
 
-	vars := make(Vars)
-	for name, v := range env {
-		if v.IsSet() && v.Kind == expand.String {
-			vars[name] = v.Str
-		}
-	}
-	return vars, nil
+	MergeTo(vars, newVars)
+	return nil
 }
 
 func ParseSetOutput(path string) (Vars, error) {
@@ -76,7 +68,7 @@ func ParseSetOutput(path string) (Vars, error) {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 
-	env := make(environ)
+	vars := Vars{}
 
 	for _, stmt := range parsed.Stmts {
 		call, ok := stmt.Cmd.(*syntax.CallExpr)
@@ -100,44 +92,47 @@ func ParseSetOutput(path string) (Vars, error) {
 				return nil, fmt.Errorf("%s:%s: unsupported assignment", path, assign.Pos())
 			}
 
-			cfg := &expand.Config{Env: env}
+			cfg := &expand.Config{Env: environ(vars)}
 			value, err := expand.Literal(cfg, assign.Value)
 			if err != nil {
 				return nil, fmt.Errorf("%s:%s: %w", path, assign.Value.Pos(), err)
 			}
 
-			env.Set(name, expand.Variable{
-				Kind: expand.String,
-				Str:  value,
-			})
+			vars[name] = value
 		}
 	}
 
-	vars := make(Vars)
-	for name, v := range env {
-		if v.IsSet() && v.Kind == expand.String {
-			vars[name] = v.Str
-		}
-	}
 	return vars, nil
 }
 
-type environ map[string]expand.Variable
+type environ Vars
 
 var _ expand.Environ = environ{}
 
 func (e environ) Get(name string) expand.Variable {
-	return e[name]
+	value, ok := e[name]
+	if !ok {
+		return expand.Variable{}
+	}
+	return expand.Variable{
+		Local: true,
+		Kind:  expand.String,
+		Str:   value,
+	}
 }
 
 func (e environ) Each(f func(name string, v expand.Variable) bool) {
-	for name, v := range e {
-		if !f(name, v) {
+	for name := range e {
+		if !f(name, e.Get(name)) {
 			return
 		}
 	}
 }
 
 func (e environ) Set(name string, v expand.Variable) {
-	e[name] = v
+	if v.Kind != expand.String {
+		// Silently ignore non-string variables.
+		return
+	}
+	e[name] = v.Str
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -17,7 +17,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/ebuild"
-	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
 
 var knownMissingPackages = map[string]struct{}{
@@ -116,6 +115,15 @@ var flagPackages = &cli.StringFlag{
 	Required: true,
 }
 
+type packageInfo struct {
+	BuildDeps            []string `json:"buildDeps"`
+	RuntimeDeps          []string `json:"runtimeDeps"`
+	ProcessedBuildDeps   string   `json:"processedBuildDeps"`
+	ProcessedRuntimeDeps string   `json:"processedRuntimeDeps"`
+	RawBuildDeps         string   `json:"rawBuildDeps"`
+	RawRuntimeDeps       string   `json:"rawRuntimeDeps"`
+}
+
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagPackages,
@@ -130,8 +138,8 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
-		builtPackages := strings.Split(strings.TrimSpace(string(b)), "\n")
-		sort.Strings(builtPackages)
+		packageNames := strings.Split(strings.TrimSpace(string(b)), "\n")
+		sort.Strings(packageNames)
 
 		configVars, err := makeconf.ParseDefaults(rootDir)
 		if err != nil {
@@ -157,25 +165,20 @@ var app = &cli.App{
 
 		processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(profile.Vars(), repoSet.EClassDirs()))
 
-		csvOut := csv.NewWriter(os.Stdout)
+		infoMap := make(map[string]*packageInfo)
 
-		for _, builtPackage := range builtPackages {
+		for _, packageName := range packageNames {
 			if err := func() error {
-				atom, err := dependency.ParseAtom(builtPackage)
+				atom, err := dependency.ParseAtom(packageName)
 				if err != nil {
 					return err
 				}
 
-				candidates, err := repoSet.Package(atom, processor)
+				pkg, err := repoSet.BestPackage(atom, processor)
 				if err != nil {
 					return err
 				}
-				candidates = packages.SelectByStability(candidates)
-				if len(candidates) == 0 {
-					return fmt.Errorf("no package satisfies %s", atom.String())
-				}
 
-				pkg := candidates[0]
 				vars := pkg.Vars()
 				use := vars.ComputeUse()
 
@@ -184,37 +187,40 @@ var app = &cli.App{
 					return err
 				}
 
-				buildDeps = simplifyDeps(buildDeps, use)
-
 				runtimeDeps, err := dependency.Parse(vars["RDEPEND"])
 				if err != nil {
 					return err
 				}
 
-				runtimeDeps = simplifyDeps(runtimeDeps, use)
+				simpleBuildDeps := simplifyDeps(buildDeps, use)
+				simpleRuntimeDeps := simplifyDeps(runtimeDeps, use)
 
-				record := []string{
-					pkg.Name(),
-					buildDeps.String(),
-					"???",
-					runtimeDeps.String(),
-					"???",
+				info := &packageInfo{
+					ProcessedBuildDeps:   simpleBuildDeps.String(),
+					ProcessedRuntimeDeps: simpleRuntimeDeps.String(),
+					RawBuildDeps:         buildDeps.String(),
+					RawRuntimeDeps:       runtimeDeps.String(),
 				}
-				if parsedDeps, ok := parseSimpleDeps(buildDeps); ok {
-					record[2] = strings.Join(parsedDeps, " ")
+				if parsedDeps, ok := parseSimpleDeps(simpleBuildDeps); ok {
+					info.BuildDeps = parsedDeps
 				}
-				if parsedDeps, ok := parseSimpleDeps(runtimeDeps); ok {
-					record[4] = strings.Join(parsedDeps, " ")
+				if parsedDeps, ok := parseSimpleDeps(simpleRuntimeDeps); ok {
+					info.RuntimeDeps = parsedDeps
 				}
 
-				return csvOut.Write(record)
+				infoMap[pkg.Name()] = info
+				log.Print(packageName)
+
+				return nil
 			}(); err != nil {
-				log.Printf("WARNING: %s: %v", builtPackage, err)
+				log.Printf("WARNING: %s: %v", packageName, err)
 			}
 		}
 
-		csvOut.Flush()
-		return nil
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		encoder.SetEscapeHTML(false)
+		return encoder.Encode(infoMap)
 	},
 }
 
