@@ -101,7 +101,11 @@ func locateDistFile(filename string) (*distEntry, error) {
 	return nil, fmt.Errorf("no distfile found for %s", filename)
 }
 
-var repositoriesTemplate = template.Must(template.New("").Parse(`load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+var repositoriesTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 def dependencies():
 {{- range . }}
@@ -114,7 +118,11 @@ def dependencies():
 {{- end }}
 `))
 
-var buildTemplate = template.Must(template.New("").Parse(`load("//bazel/ebuild:defs.bzl", "ebuild")
+var buildTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "ebuild")
 
 ebuild(
     name = "{{ .PackageName }}",
@@ -155,6 +163,10 @@ func generateBuild(buildPath string, ebuild *ebuildInfo) error {
 }
 
 func updateRepositories(bzlPath string, dists []*distEntry) error {
+	if len(dists) == 0 {
+		return nil
+	}
+
 	f, err := os.Create(bzlPath)
 	if err != nil {
 		return err
