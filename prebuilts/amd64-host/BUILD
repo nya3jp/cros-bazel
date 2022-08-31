@@ -1,3 +1,7 @@
+# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("//bazel/ebuild:defs.bzl", "binary_package")
 
 # fakeroot-1.27.tbz2 is a binary package generated with:
