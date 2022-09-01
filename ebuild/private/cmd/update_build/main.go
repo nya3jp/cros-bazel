@@ -283,7 +283,7 @@ var app = &cli.App{
 				v := strings.Split(ebuildDir, "/")
 				category := v[len(v)-2]
 				packageName := v[len(v)-1]
-				buildPath := filepath.Join(ebuildDir, "BUILD")
+				buildPath := filepath.Join(ebuildDir, "BUILD.bazel")
 
 				if _, ok := blockedPackages[packageName]; ok {
 					if err := os.Remove(buildPath); err != nil && !errors.Is(err, os.ErrNotExist) {

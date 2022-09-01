@@ -195,7 +195,7 @@ def rules_ebuild_go_dependencies():
         version = "v0.0.0-20200804184101-5ec99f83aff1",
     )
 
-def rules_ebuild_dependencies():
+def rules_ebuild_dependencies(go_repository_default_config = "//:WORKSPACE.bazel"):
     http_file(
         name = "dumb_init",
         executable = True,
@@ -207,4 +207,4 @@ def rules_ebuild_dependencies():
 
     go_rules_dependencies()
     go_register_toolchains(version = "1.18.3")
-    gazelle_dependencies()
+    gazelle_dependencies(go_repository_default_config=go_repository_default_config)
