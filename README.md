@@ -25,6 +25,10 @@ tar tvf bazel-bin/third_party/portage-stable/sys-apps/ethtool/ethtool-4.13.tbz2
 
 ## Directory structure
 
+See [manifest/_bazel.xml] for details on how this repository is organized.
+
+[manifest/_bazel.xml]: https://team.git.corp.google.com/cros-build-tiger/cros-bazel-manifest/+/refs/heads/main/_bazel.xml
+
 * `src/`
     * `bazel/` ... contains Bazel-related files
         * `ebuild/`
