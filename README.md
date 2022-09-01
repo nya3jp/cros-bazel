@@ -19,6 +19,7 @@ $ repo sync -c -j 4
 For example, to build sys-apps/ethtool:
 
 ```sh
+$ cd src
 $ bazel build //third_party/portage-stable/sys-apps/ethtool
 $ tar tvf bazel-bin/third_party/portage-stable/sys-apps/ethtool/ethtool-4.13.tbz2
 ```
