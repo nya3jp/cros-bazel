@@ -10,7 +10,7 @@ Use `repo` to check out a snapshotted ChromiumOS tree + Bazel files.
 ```
 mkdir cros-bazel
 cd cros-bazel
-repo init -u sso://team/cros-build-tiger/cros-bazel-manifest -b main -g minilayout
+repo init -u sso://team/cros-build-tiger/cros-bazel-manifest -b main -g minilayout,bazel
 repo sync -c -j 4
 ```
 
