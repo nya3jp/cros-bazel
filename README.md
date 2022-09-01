@@ -7,20 +7,20 @@ This is an experiment to build ChromeOS with Bazel.
 For the prototyping phase, we're working on building a snapshot of ChromiumOS.
 Use `repo` to check out a snapshotted ChromiumOS tree + Bazel files.
 
-```
-mkdir cros-bazel
-cd cros-bazel
-repo init -u sso://team/cros-build-tiger/cros-bazel-manifest -b main -g minilayout,bazel
-repo sync -c -j 4
+```sh
+$ mkdir cros-bazel
+$ cd cros-bazel
+$ repo init -u sso://team/cros-build-tiger/cros-bazel-manifest -b main -g minilayout,bazel
+$ repo sync -c -j 4
 ```
 
 ## Building
 
 For example, to build sys-apps/ethtool:
 
-```
-bazel build //third_party/portage-stable/sys-apps/ethtool
-tar tvf bazel-bin/third_party/portage-stable/sys-apps/ethtool/ethtool-4.13.tbz2
+```sh
+$ bazel build //third_party/portage-stable/sys-apps/ethtool
+$ tar tvf bazel-bin/third_party/portage-stable/sys-apps/ethtool/ethtool-4.13.tbz2
 ```
 
 ## Directory structure
