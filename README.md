@@ -12,16 +12,21 @@ $ mkdir cros-bazel
 $ cd cros-bazel
 $ repo init -u sso://team/cros-build-tiger/cros-bazel-manifest -b main -g minilayout,bazel
 $ repo sync -c -j 4
+$ cd src
 ```
 
 ## Building
 
-For example, to build sys-apps/ethtool:
+To build a single package (sys-apps/ethtool for example):
 
 ```sh
-$ cd src
 $ bazel build //third_party/portage-stable/sys-apps/ethtool
-$ tar tvf bazel-bin/third_party/portage-stable/sys-apps/ethtool/ethtool-4.13.tbz2
+```
+
+To build all target packages:
+
+```
+$ bazel build --keep_going //:all_target_packages
 ```
 
 ## Directory structure
