@@ -308,6 +308,10 @@ var app = &cli.App{
 						if !strings.HasSuffix(name, ebuildExt) {
 							continue
 						}
+						// TODO: Remove this hack.
+						if name == "ncurses-5.9-r99.ebuild" {
+							continue
+						}
 						_, ver, err := version.ExtractSuffix(strings.TrimSuffix(name, ebuildExt))
 						if err != nil {
 							return fmt.Errorf("%s: %w", filepath.Join(ebuildDir, name), err)
