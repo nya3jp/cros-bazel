@@ -6,19 +6,16 @@ load("common.bzl", "BinaryPackageInfo")
 
 def _binary_package_impl(ctx):
     src = ctx.file.src
-
     # TODO: Consider target/host transitions.
     runtime_deps = depset(
-        [dep[BinaryPackageInfo].file for dep in ctx.attr.runtime_deps],
+        [src],
         transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.runtime_deps],
         order = "postorder",
     )
-
     return [
         DefaultInfo(files = depset([src])),
         BinaryPackageInfo(
             file = src,
-            build_target_deps = depset(),
             runtime_deps = runtime_deps,
         ),
     ]

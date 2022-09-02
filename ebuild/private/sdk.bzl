@@ -7,8 +7,12 @@ load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKInfo")
 def _sdk_impl(ctx):
     base_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_base.squashfs")
     pkgs_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_pkgs.squashfs")
-    host_installs = [label[BinaryPackageInfo].file for label in ctx.attr.host_deps]
-    target_installs = [label[BinaryPackageInfo].file for label in ctx.attr.target_deps]
+    host_installs = depset(
+        transitive = [label[BinaryPackageInfo].runtime_deps for label in ctx.attr.host_deps],
+    )
+    target_installs = depset(
+        transitive = [label[BinaryPackageInfo].runtime_deps for label in ctx.attr.target_deps],
+    )
 
     ctx.actions.run_shell(
         outputs = [base_squashfs_output],
@@ -34,10 +38,10 @@ def _sdk_impl(ctx):
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         overlay_inputs.append(overlay.squashfs_file)
 
-    inputs = [
-        ctx.executable._build_sdk,
-        base_squashfs_output,
-    ] + host_installs + target_installs + overlay_inputs
+    inputs = depset(
+        [ctx.executable._build_sdk, base_squashfs_output] + overlay_inputs,
+        transitive = [host_installs, target_installs],
+    )
 
     ctx.actions.run(
         inputs = inputs,

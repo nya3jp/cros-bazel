@@ -47,18 +47,18 @@ def _ebuild_impl(ctx):
         direct_inputs.append(overlay.squashfs_file)
 
     # TODO: Consider target/host transitions.
-    build_target_deps = depset(
+    build_deps = depset(
         [dep[BinaryPackageInfo].file for dep in ctx.attr.build_target_deps],
         order = "postorder",
     )
     runtime_deps = depset(
-        [dep[BinaryPackageInfo].file for dep in ctx.attr.runtime_deps],
+        [output],
         transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.runtime_deps],
         order = "postorder",
     )
 
-    args.add_all(build_target_deps, format_each = "--install-target=%s")
-    transitive_inputs.extend([build_target_deps])
+    args.add_all(build_deps, format_each = "--install-target=%s")
+    transitive_inputs.append(build_deps)
 
     ctx.actions.run(
         inputs = depset(direct_inputs, transitive = transitive_inputs),
@@ -68,11 +68,11 @@ def _ebuild_impl(ctx):
         mnemonic = "Ebuild",
         progress_message = "Building " + ctx.file.src.basename,
     )
+
     return [
         DefaultInfo(files = depset([output])),
         BinaryPackageInfo(
             file = output,
-            build_target_deps = build_target_deps,
             runtime_deps = runtime_deps,
         ),
     ]

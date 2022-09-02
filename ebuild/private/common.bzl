@@ -7,32 +7,52 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 BinaryPackageInfo = provider(
     "Portage binary package info",
     fields = {
-        "file": "File of a binary package file (.tbz2)",
-        "build_target_deps": "Depset[File] of binary package files (.tbz2)",
-        "runtime_deps": "Depset[File] of binary package files (.tbz2)",
+        "file": """
+            File: A binary package file (.tbz2) of this package.
+        """,
+        "runtime_deps": """
+            Depset[File]: Binary package files (.tbz2) to be installed when
+            this package is required in run time.
+            The depset always contains the binary package file of this package
+            itself.
+        """,
     },
 )
 
 OverlayInfo = provider(
     "Portage overlay info",
     fields = {
-        "squashfs_file": "File of a squashfs image (.squashfs)",
-        "mount_path": "String of a path where the overlay is mounted",
+        "squashfs_file": """
+            File: A squashfs image (.squashfs) that contains files of this
+            overlay.
+        """,
+        "mount_path": """
+            str: A path where the overlay is mounted. It is a relative path
+            from /mnt/host/source.
+        """,
     },
 )
 
 OverlaySetInfo = provider(
     "Portage overlay set info",
     fields = {
-        "overlays": "OverlayInfo[]",
+        "overlays": """
+            OverlayInfo[]: Overlays.
+        """,
     },
 )
 
 SDKInfo = provider(
     "ChromiumOS SDK info",
     fields = {
-        "board": "string",
-        "squashfs_files": "File[] of squashfs images (.squashfs)",
+        "board": """
+            str: A board name.
+        """,
+        "squashfs_files": """
+            File[]: Squashfs image files (.squashfs).
+            The order matters; the first image must be overlayed on top of the
+            second image, and so on.
+        """,
     },
 )
 
