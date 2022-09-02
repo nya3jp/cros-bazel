@@ -135,6 +135,10 @@ EOF
   chmod +x "${path}"
 done
 
+# HACK: Create /usr/share/aclocal to make autoconf work.
+# TODO: Figure out why this is needed.
+mkdir -p "/build/${BOARD}/usr/share/aclocal"
+
 # TODO: Consider using fakeroot-like approach to emulate file permissions.
 sed -i -e '/dir_mode_map = {/,/}/s/False/True/' /usr/lib/python3.6/site-packages/portage/package/ebuild/config.py
 
