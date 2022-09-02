@@ -13,6 +13,7 @@ export SYSROOT="${ROOT}"
 export PORTAGE_CONFIGROOT="${ROOT}"
 export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
+export RESTRICT="fetch"
 export FEATURES="digest -sandbox -usersandbox"  # TODO: turn on sandbox
 
 read -ra atoms <<<"${INSTALL_ATOMS_TARGET}"

@@ -8,6 +8,7 @@ exec >&2
 
 export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
+export RESTRICT="fetch"
 export FEATURES="digest -sandbox -usersandbox"  # TODO: turn on sandbox
 
 # TODO: Avoid hard-coding the default profile path.
