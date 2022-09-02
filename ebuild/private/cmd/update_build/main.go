@@ -134,7 +134,7 @@ ebuild(
         {{- end }}
     },
     {{- if .PackageInfo.BuildDeps }}
-    build_target_deps = [
+    build_deps = [
         {{- range .PackageInfo.BuildDeps }}
         "{{ . }}",
         {{- end }}

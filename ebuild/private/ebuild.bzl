@@ -48,7 +48,7 @@ def _ebuild_impl(ctx):
 
     # TODO: Consider target/host transitions.
     build_deps = depset(
-        [dep[BinaryPackageInfo].file for dep in ctx.attr.build_target_deps],
+        [dep[BinaryPackageInfo].file for dep in ctx.attr.build_deps],
         order = "postorder",
     )
     runtime_deps = depset(
@@ -90,7 +90,7 @@ ebuild = rule(
         "distfiles": attr.label_keyed_string_dict(
             allow_files = True,
         ),
-        "build_target_deps": attr.label_list(
+        "build_deps": attr.label_list(
             providers = [BinaryPackageInfo],
         ),
         "runtime_deps": attr.label_list(
