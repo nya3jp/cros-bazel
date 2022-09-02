@@ -85,6 +85,56 @@ source /mnt/host/source/src/third_party/chromiumos-overlay/chromeos/binhost/targ
 PORTAGE_BINHOST="\$PORTAGE_BINHOST \$POSTSUBMIT_BINHOST"
 EOF
 
+# Create sysroot tool wrappers.
+# Logic borrowed from chromite/lib/sysroot_lib.py
+mkdir -p "/build/${BOARD}/build/bin" /usr/local/bin
+for cmd in emerge ebuild eclean emaint equery portageq qcheck qdepends qfile qlist qmerge qsize; do
+  for path in "/build/${BOARD}/build/bin/${cmd}" "/usr/local/bin/${cmd}-${BOARD}"; do
+    cat > "${path}" <<EOF
+#!/bin/sh
+
+# If we try to use sudo when the sandbox is active, we get ugly warnings that
+# just confuse developers.  Disable the sandbox in this case by rexecing.
+if [ "\${SANDBOX_ON}" = "1" ]; then
+  SANDBOX_ON=0 exec "\$0" "\$@"
+else
+  unset LD_PRELOAD
+fi
+
+# TODO: Stop hard-coding CHOST.
+export CHOST="aarch64-cros-linux-gnu"
+export PORTAGE_CONFIGROOT="/build/${BOARD}"
+export SYSROOT="/build/${BOARD}"
+if [ -z "\$PORTAGE_USERNAME" ]; then
+  export PORTAGE_USERNAME=$(basename "\${HOME}")
+fi
+export ROOT="/build/${BOARD}"
+exec sudo -E ${cmd} $(if [[ ${cmd} = emerge ]]; then echo --root-deps; fi) "\$@"
+EOF
+    chmod +x "${path}"
+  done
+done
+
+for path in "/build/${BOARD}/build/bin/pkg-config" "/usr/local/bin/pkg-config-${BOARD}"; do
+  cat > "${path}" <<EOF
+#!/bin/bash
+
+PKG_CONFIG_LIBDIR=\$(printf '%s:' "/build/${BOARD}"/usr/*/pkgconfig)
+export PKG_CONFIG_LIBDIR
+
+export PKG_CONFIG_SYSROOT_DIR="/build/${BOARD}"
+
+# Portage will get confused and try to "help" us by exporting this.
+# Undo that logic.
+unset PKG_CONFIG_PATH
+
+# Use full path to bypass automated wrapper checks that block pkg-config.
+# https://crbug.com/985180
+exec /usr/bin/pkg-config "\$@"
+EOF
+  chmod +x "${path}"
+done
+
 # TODO: Consider using fakeroot-like approach to emulate file permissions.
 sed -i -e '/dir_mode_map = {/,/}/s/False/True/' /usr/lib/python3.6/site-packages/portage/package/ebuild/config.py
 
