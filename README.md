@@ -72,3 +72,18 @@ Then you can run `generate_build` to update `BUILD` files.
 ```sh
 $ bazel run //bazel/ebuild/private/cmd/update_build -- --package-info-file $PWD/bazel/data/deps.json
 ```
+
+### Visualizing the dependency graph
+
+Firstly, build all packages to generate .tbz2 files.
+
+```sh
+$ bazel build --keep_going //:all_target_packages
+```
+
+Then run `bazel/tools/generate_depgraph.py` to generate a DOT file. It inspects
+`bazel-bin` directory to see if a package was successfully built or not.
+
+```sh
+$ bazel/tools/generate_depgraph.py bazel/data/deps.json > bazel/data/deps.dot
+```
