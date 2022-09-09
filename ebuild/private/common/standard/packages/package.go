@@ -29,7 +29,8 @@ func NewPackage(path string, vars makevars.Vars, target *dependency.TargetPackag
 func (p *Package) Path() string                             { return p.path }
 func (p *Package) Name() string                             { return p.target.Name }
 func (p *Package) Version() *version.Version                { return p.target.Version }
-func (p *Package) Vars() makevars.Vars                      { return p.vars.Copy() }
+func (p *Package) Uses() map[string]struct{}                { return p.target.Uses }
+func (p *Package) Vars() makevars.Vars                      { return p.vars }
 func (p *Package) TargetPackage() *dependency.TargetPackage { return p.target }
 
 func (p *Package) MainSlot() string {
@@ -52,24 +53,4 @@ func (p *Package) Stability() Stability {
 		}
 	}
 	return StabilityTesting
-}
-
-func SelectByStability(pkgs []*Package) []*Package {
-	if len(pkgs) == 0 {
-		return nil
-	}
-
-	candidates := make(map[Stability][]*Package)
-	for _, pkg := range pkgs {
-		s := pkg.Stability()
-		candidates[s] = append(candidates[s], pkg)
-	}
-
-	if stable := candidates[StabilityStable]; len(stable) > 0 {
-		return stable
-	}
-	if testing := candidates[StabilityTesting]; len(testing) > 0 {
-		return testing
-	}
-	return nil
 }

@@ -17,6 +17,7 @@ go_library(
         "//bazel/ebuild/private/common/standard/ebuild",
         "//bazel/ebuild/private/common/standard/packages",
         "//bazel/ebuild/private/common/standard/profile",
+        "//bazel/ebuild/private/common/standard/useflags",
         "//bazel/ebuild/private/common/standard/version",
     ],
 )

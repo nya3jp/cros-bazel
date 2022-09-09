@@ -6,6 +6,7 @@ package makevars
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"mvdan.cc/sh/v3/expand"
@@ -25,7 +26,7 @@ func ParseMakeDefaults(path string, vars Vars) error {
 		return fmt.Errorf("%s: %w", path, err)
 	}
 
-	newVars := vars.Copy()
+	newVars := vars.CopyNoIncrementalVars()
 
 	for _, stmt := range parsed.Stmts {
 		call, ok := stmt.Cmd.(*syntax.CallExpr)
@@ -55,21 +56,15 @@ func ParseMakeDefaults(path string, vars Vars) error {
 		}
 	}
 
-	MergeTo(vars, newVars)
+	vars.Merge(newVars)
 	return nil
 }
 
-func ParseSetOutput(path string) (Vars, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
-	}
-	defer file.Close()
-
+func ParseSetOutput(r io.Reader) (Vars, error) {
 	parser := syntax.NewParser(syntax.Variant(syntax.LangBash))
-	parsed, err := parser.Parse(file, path)
+	parsed, err := parser.Parse(r, "")
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
+		return nil, err
 	}
 
 	vars := Vars{}
@@ -77,12 +72,12 @@ func ParseSetOutput(path string) (Vars, error) {
 	for _, stmt := range parsed.Stmts {
 		call, ok := stmt.Cmd.(*syntax.CallExpr)
 		if !ok {
-			return nil, fmt.Errorf("%s:%s: unsupported statement", path, stmt.Pos())
+			return nil, fmt.Errorf("%s: unsupported statement", stmt.Pos())
 		}
 
 		// Reject calls.
 		if len(call.Args) >= 1 {
-			return nil, fmt.Errorf("%s:%s: unsupported call", path, call.Pos())
+			return nil, fmt.Errorf("%s: unsupported call", call.Pos())
 		}
 
 		// Process variable assignments.
@@ -93,13 +88,13 @@ func ParseSetOutput(path string) (Vars, error) {
 				continue
 			}
 			if assign.Append || assign.Index != nil || assign.Naked {
-				return nil, fmt.Errorf("%s:%s: unsupported assignment", path, assign.Pos())
+				return nil, fmt.Errorf("%s: unsupported assignment", assign.Pos())
 			}
 
 			cfg := &expand.Config{Env: environ(vars)}
 			value, err := expand.Literal(cfg, assign.Value)
 			if err != nil {
-				return nil, fmt.Errorf("%s:%s: %w", path, assign.Value.Pos(), err)
+				return nil, fmt.Errorf("%s: %w", assign.Value.Pos(), err)
 			}
 
 			vars[name] = value

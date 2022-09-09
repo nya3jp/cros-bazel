@@ -1,16 +1,17 @@
-# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Copyright 2022 The ChromiumOS Authors.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "profile",
-    srcs = ["profile.go"],
-    importpath = "cros.local/bazel/ebuild/private/common/standard/profile",
+    name = "useflags",
+    srcs = ["useflags.go"],
+    importpath = "cros.local/bazel/ebuild/private/common/standard/useflags",
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/standard/makevars",
+        "//bazel/ebuild/private/common/standard/profile",
         "//bazel/ebuild/private/common/standard/version",
     ],
 )

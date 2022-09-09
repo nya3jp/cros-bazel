@@ -207,4 +207,4 @@ def rules_ebuild_dependencies(go_repository_default_config = "//:WORKSPACE.bazel
 
     go_rules_dependencies()
     go_register_toolchains(version = "1.18.3")
-    gazelle_dependencies(go_repository_default_config=go_repository_default_config)
+    gazelle_dependencies(go_repository_default_config = go_repository_default_config)

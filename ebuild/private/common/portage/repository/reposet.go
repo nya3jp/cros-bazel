@@ -14,6 +14,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/ebuild"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 	"cros.local/bazel/ebuild/private/common/standard/profile"
+	"cros.local/bazel/ebuild/private/common/standard/useflags"
 )
 
 type RepoSet struct {
@@ -76,10 +77,10 @@ func (s *RepoSet) EClassDirs() []string {
 	return dirs
 }
 
-func (s *RepoSet) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor) ([]*packages.Package, error) {
+func (s *RepoSet) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor, useContext *useflags.Context) ([]*packages.Package, error) {
 	var pkgs []*packages.Package
 	for _, repo := range s.ordered {
-		repoPkgs, err := repo.Package(atom, processor)
+		repoPkgs, err := repo.Package(atom, processor, useContext)
 		if err != nil {
 			return nil, err
 		}
@@ -93,8 +94,8 @@ func (s *RepoSet) Package(atom *dependency.Atom, processor *ebuild.CachedProcess
 	return pkgs, nil
 }
 
-func (s *RepoSet) BestPackage(atom *dependency.Atom, processor *ebuild.CachedProcessor) (*packages.Package, error) {
-	candidates, err := s.Package(atom, processor)
+func (s *RepoSet) BestPackage(atom *dependency.Atom, processor *ebuild.CachedProcessor, useContext *useflags.Context) (*packages.Package, error) {
+	candidates, err := s.Package(atom, processor, useContext)
 	if err != nil {
 		return nil, err
 	}

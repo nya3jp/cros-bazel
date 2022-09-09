@@ -21,46 +21,77 @@ import (
 	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/ebuild"
+	"cros.local/bazel/ebuild/private/common/standard/useflags"
 )
 
-var knownMissingPackages = map[string]struct{}{
-	"media-libs/jpeg":         {},
-	"net-firewall/nftables":   {},
-	"sys-freebsd/freebsd-lib": {},
-	"sys-fs/eudev":            {},
-	// "sys-libs/e2fsprogs-libs": {},
-	// "sys-libs/glibc": {},
-}
+// HACK: Hard-code several package info.
+// TODO: Remove these hacks.
+var (
+	knownInstalledPackages = map[string]struct{}{
+		"sys-libs/glibc": {},
+	}
+	knownMissingPackages = map[string]struct{}{
+		"app-crypt/heimdal":       {},
+		"app-misc/realpath":       {},
+		"media-libs/jpeg":         {},
+		"net-firewall/nftables":   {},
+		"sys-auth/openpam":        {},
+		"sys-freebsd/freebsd-bin": {},
+		"sys-freebsd/freebsd-lib": {},
+		"sys-fs/eudev":            {},
+		"sys-libs/e2fsprogs-libs": {},
+	}
+	forceDepsPackages = map[string][]string{
+		"sys-libs/ncurses":              {},
+		"virtual/chromeos-bootcomplete": {"chromeos-base/bootcomplete-login"},
+		"virtual/editor":                {},
+		"virtual/libgudev":              {"sys-fs/udev"},
+		"virtual/logger":                {"app-admin/rsyslog"},
+		"virtual/mta":                   {},
+		"virtual/pkgconfig":             {"dev-util/pkgconfig"},
+		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
+	}
+)
 
-func simplifyDeps(deps *dependency.Deps, use map[string]struct{}) *dependency.Deps {
+func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName string) *dependency.Deps {
+	isRust := strings.HasPrefix(packageName, "dev-rust/")
+
 	deps = dependency.ResolveUse(deps, use)
 
 	// Rewrite package atoms.
-	deps = dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
+	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
 		pkg, ok := expr.(*dependency.Package)
 		if !ok {
 			return expr
 		}
+
+		packageName := pkg.Atom().PackageName()
 
 		// Remove blocks.
 		if pkg.Blocks() > 0 {
 			return dependency.ConstTrue
 		}
 
-		// Remove known missing packages.
-		if _, missing := knownMissingPackages[pkg.Atom().PackageName()]; missing {
+		// Rewrite known packages.
+		if _, installed := knownInstalledPackages[packageName]; installed {
+			return dependency.ConstTrue
+		}
+		if _, missing := knownMissingPackages[packageName]; missing {
 			return dependency.ConstFalse
 		}
 
-		// Strip modifiers.
-		atom := dependency.NewAtom(pkg.Atom().PackageName(), dependency.OpNone, nil, false, "", nil)
-		return dependency.NewPackage(atom, 0)
-	})
+		// Heuristic: ~ deps in Rust packages can be dropped.
+		if isRust && pkg.Atom().VersionOperator() == dependency.OpRoughEqual {
+			return dependency.ConstTrue
+		}
 
-	deps = dependency.Simplify(deps)
+		// Strip modifiers.
+		atom := dependency.NewAtom(packageName, dependency.OpNone, nil, false, "", nil)
+		return dependency.NewPackage(atom, 0)
+	}))
 
 	// Unify AnyOf whose children refer to the same package.
-	deps = dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
+	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
 		anyOf, ok := expr.(*dependency.AnyOf)
 		if !ok {
 			return expr
@@ -89,9 +120,58 @@ func simplifyDeps(deps *dependency.Deps, use map[string]struct{}) *dependency.De
 			return expr
 		}
 		return pkg0
-	})
+	}))
 
-	deps = dependency.Simplify(deps)
+	// Deduplicate occurrences of the same package atom.
+	var alwaysPkgs []dependency.Expr
+	alwaysSet := make(map[string]struct{})
+	for _, expr := range deps.Expr().Children() {
+		pkg, ok := expr.(*dependency.Package)
+		if !ok {
+			continue
+		}
+		alwaysPkgs = append(alwaysPkgs, pkg)
+		alwaysSet[pkg.String()] = struct{}{}
+	}
+	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
+		pkg, ok := expr.(*dependency.Package)
+		if !ok {
+			return expr
+		}
+		if _, ok := alwaysSet[pkg.Atom().PackageName()]; ok {
+			return dependency.ConstTrue
+		}
+		return pkg
+	}))
+	deps = dependency.Simplify(dependency.NewDeps(dependency.NewAllOf(append(alwaysPkgs, deps.Expr()))))
+
+	// Remove trivial AnyOf.
+	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
+		anyOf, ok := expr.(*dependency.AnyOf)
+		if !ok {
+			return expr
+		}
+		log.Print(anyOf.String())
+		children := anyOf.Children()
+		if len(children) == 0 {
+			return expr
+		}
+		pkg0, ok := children[0].(*dependency.Package)
+		if !ok {
+			return expr
+		}
+		for _, child := range children {
+			pkg, ok := child.(*dependency.Package)
+			if !ok {
+				return expr
+			}
+			if pkg.Atom().PackageName() != pkg0.Atom().PackageName() {
+				return expr
+			}
+		}
+		return pkg0
+	}))
+
 	return deps
 }
 
@@ -114,43 +194,153 @@ func parseSimpleDeps(deps *dependency.Deps) ([]string, bool) {
 	return names, true
 }
 
-var flagPackages = &cli.StringFlag{
-	Name:     "packages",
+func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error)) error {
+	queue := make([]Key, len(start))
+	for i, key := range start {
+		queue[i] = key
+	}
+
+	seen := make(map[Key]struct{})
+	for _, key := range start {
+		seen[key] = struct{}{}
+	}
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		nexts, err := visitor(current)
+		if err != nil {
+			return fmt.Errorf("%v: %w", current, err)
+		}
+
+		for _, next := range nexts {
+			if _, ok := seen[next]; ok {
+				continue
+			}
+			queue = append(queue, next)
+			seen[next] = struct{}{}
+		}
+	}
+	return nil
+}
+
+func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, startPackageNames []string) (map[string][]string, error) {
+	depsMap := make(map[string][]string)
+	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
+		atom, err := dependency.ParseAtom(packageName)
+		if err != nil {
+			return nil, err
+		}
+
+		pkg, err := repoSet.BestPackage(atom, processor, useContext)
+		if err != nil {
+			return nil, err
+		}
+
+		vars := pkg.Vars()
+
+		rawDeps, err := dependency.Parse(vars["RDEPEND"])
+		if err != nil {
+			return nil, err
+		}
+
+		simpleDeps := simplifyDeps(rawDeps, pkg.Uses(), packageName)
+
+		parsedDeps, ok := forceDepsPackages[packageName]
+		if !ok {
+			parsedDeps, ok = parseSimpleDeps(simpleDeps)
+			if !ok {
+				return nil, fmt.Errorf("cannot simplify deps: %s", simpleDeps.String())
+			}
+		}
+
+		log.Printf("R: %s => %s", packageName, strings.Join(parsedDeps, ", "))
+		depsMap[packageName] = parsedDeps
+		return parsedDeps, nil
+	}); err != nil {
+		return nil, err
+	}
+	return depsMap, nil
+}
+
+func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, installPackageNames []string) (map[string][]string, error) {
+	depsMap := make(map[string][]string)
+	if err := genericBFS(installPackageNames, func(packageName string) ([]string, error) {
+		atom, err := dependency.ParseAtom(packageName)
+		if err != nil {
+			return nil, err
+		}
+
+		pkg, err := repoSet.BestPackage(atom, processor, useContext)
+		if err != nil {
+			return nil, err
+		}
+
+		vars := pkg.Vars()
+
+		rawDeps, err := dependency.Parse(vars["DEPEND"])
+		if err != nil {
+			return nil, err
+		}
+
+		simpleDeps := simplifyDeps(rawDeps, pkg.Uses(), packageName)
+
+		var parsedDeps []string
+		if _, ok := forceDepsPackages[packageName]; ok {
+			parsedDeps = nil
+		} else {
+			parsedDeps, ok = parseSimpleDeps(simpleDeps)
+			if !ok {
+				return nil, fmt.Errorf("cannot simplify deps: %s", simpleDeps.String())
+			}
+		}
+
+		log.Printf("B: %s => %s", packageName, strings.Join(parsedDeps, ", "))
+		depsMap[packageName] = parsedDeps
+		return parsedDeps, nil
+	}); err != nil {
+		return nil, err
+	}
+	return depsMap, nil
+}
+
+var flagBoard = &cli.StringFlag{
+	Name:     "board",
+	Required: true,
+}
+
+var flagStart = &cli.StringSliceFlag{
+	Name:     "start",
 	Required: true,
 }
 
 type packageInfo struct {
-	BuildDeps            []string `json:"buildDeps"`
-	RuntimeDeps          []string `json:"runtimeDeps"`
-	ProcessedBuildDeps   string   `json:"processedBuildDeps"`
-	ProcessedRuntimeDeps string   `json:"processedRuntimeDeps"`
-	RawBuildDeps         string   `json:"rawBuildDeps"`
-	RawRuntimeDeps       string   `json:"rawRuntimeDeps"`
+	BuildDeps   []string `json:"buildDeps"`
+	RuntimeDeps []string `json:"runtimeDeps"`
 }
 
 var app = &cli.App{
 	Flags: []cli.Flag{
-		flagPackages,
+		flagBoard,
+		flagStart,
 	},
 	Action: func(c *cli.Context) error {
-		packagesPath := c.String(flagPackages.Name)
+		board := c.String(flagBoard.Name)
+		startPackageNames := c.StringSlice(flagStart.Name)
 
-		// TODO: Stop hard-coding.
-		const rootDir = "/build/arm64-generic"
+		rootDir := filepath.Join("/build", board)
 
-		b, err := os.ReadFile(packagesPath)
-		if err != nil {
-			return err
-		}
-		packageNames := strings.Split(strings.TrimSpace(string(b)), "\n")
-		sort.Strings(packageNames)
-
-		configVars, err := makeconf.ParseDefaults(rootDir)
+		makeConfVars, err := makeconf.ParseDefaults(rootDir)
 		if err != nil {
 			return err
 		}
 
-		overlays := portagevars.Overlays(configVars)
+		// HACK: Set some USE variables since we don't support USE_EXPAND yet.
+		// TODO: Remove this hack.
+		makeConfVars["USE"] += " elibc_glibc"
+
+		overlays := portagevars.Overlays(makeConfVars)
 
 		repoSet, err := repository.NewRepoSet(overlays)
 		if err != nil {
@@ -159,65 +349,51 @@ var app = &cli.App{
 
 		profilePath, err := os.Readlink(filepath.Join(rootDir, "etc/portage/make.profile"))
 		if err != nil {
-			return fmt.Errorf("detecting default profile: %w", err)
+			return err
 		}
 
-		profile, err := repoSet.ProfileByPath(profilePath)
+		rawProfile, err := repoSet.ProfileByPath(profilePath)
+		if err != nil {
+			return err
+		}
+
+		profile, err := rawProfile.Parse()
 		if err != nil {
 			return err
 		}
 
 		processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(profile.Vars(), repoSet.EClassDirs()))
 
+		useContext := useflags.NewContext(makeConfVars, profile)
+
+		runtimeDeps, err := computeRuntimeDeps(repoSet, processor, useContext, startPackageNames)
+		if err != nil {
+			return err
+		}
+
+		installPackageNames := make([]string, 0, len(runtimeDeps))
+		for packageName := range runtimeDeps {
+			installPackageNames = append(installPackageNames, packageName)
+		}
+		sort.Strings(installPackageNames)
+
+		buildDeps, err := computeBuildDeps(repoSet, processor, useContext, installPackageNames)
+		if err != nil {
+			return err
+		}
+
+		nonNil := func(deps []string) []string {
+			if deps == nil {
+				deps = []string{}
+			}
+			return deps
+		}
+
 		infoMap := make(map[string]*packageInfo)
-
-		for _, packageName := range packageNames {
-			if err := func() error {
-				atom, err := dependency.ParseAtom(packageName)
-				if err != nil {
-					return err
-				}
-
-				pkg, err := repoSet.BestPackage(atom, processor)
-				if err != nil {
-					return err
-				}
-
-				vars := pkg.Vars()
-				use := vars.ComputeUse()
-
-				buildDeps, err := dependency.Parse(vars["DEPEND"])
-				if err != nil {
-					return err
-				}
-
-				runtimeDeps, err := dependency.Parse(vars["RDEPEND"])
-				if err != nil {
-					return err
-				}
-
-				simpleBuildDeps := simplifyDeps(buildDeps, use)
-				simpleRuntimeDeps := simplifyDeps(runtimeDeps, use)
-
-				info := &packageInfo{
-					ProcessedBuildDeps:   simpleBuildDeps.String(),
-					ProcessedRuntimeDeps: simpleRuntimeDeps.String(),
-					RawBuildDeps:         buildDeps.String(),
-					RawRuntimeDeps:       runtimeDeps.String(),
-				}
-				if parsedDeps, ok := parseSimpleDeps(simpleBuildDeps); ok {
-					info.BuildDeps = parsedDeps
-				}
-				if parsedDeps, ok := parseSimpleDeps(simpleRuntimeDeps); ok {
-					info.RuntimeDeps = parsedDeps
-				}
-
-				infoMap[pkg.Name()] = info
-				log.Print(packageName)
-
-				return nil
-			}(); err != nil {
-				log.Printf("WARNING: %s: %v", packageName, err)
+		for packageName := range buildDeps {
+			infoMap[packageName] = &packageInfo{
+				RuntimeDeps: nonNil(runtimeDeps[packageName]),
+				BuildDeps:   nonNil(buildDeps[packageName]),
 			}
 		}
 

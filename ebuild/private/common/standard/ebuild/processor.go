@@ -110,7 +110,12 @@ func runEBuild(absPath string, vars makevars.Vars, eclassDirs []string) (makevar
 		return nil, fmt.Errorf("bash: %w", err)
 	}
 
-	outVars, err := makevars.ParseSetOutput(outPath)
+	b, err := os.ReadFile(outPath)
+	if err != nil {
+		return nil, err
+	}
+
+	outVars, err := makevars.ParseSetOutput(bytes.NewBuffer(b))
 	if err != nil {
 		return nil, fmt.Errorf("reading output: %w", err)
 	}

@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"cros.local/bazel/ebuild/private/common/standard/makevars"
+	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 const makeDefaults = "make.defaults"
@@ -28,7 +29,7 @@ type Profile struct {
 	parents []*Profile
 }
 
-func Parse(path string, name string, resolver Resolver) (*Profile, error) {
+func Load(path string, name string, resolver Resolver) (*Profile, error) {
 	if _, err := os.Stat(path); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil, fmt.Errorf("profile %s: not found", name)
@@ -36,7 +37,7 @@ func Parse(path string, name string, resolver Resolver) (*Profile, error) {
 		return nil, fmt.Errorf("profile %s: %w", name, err)
 	}
 
-	parentPaths, err := readParents(filepath.Join(path, "parent"))
+	parentPaths, err := readLines(filepath.Join(path, "parent"))
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("profile %s: reading parents: %w", name, err)
 	}
@@ -50,11 +51,6 @@ func Parse(path string, name string, resolver Resolver) (*Profile, error) {
 		parents = append(parents, parent)
 	}
 
-	// Parse make.defaults without evaluating to make sure there are no syntax errors.
-	if err := makevars.ParseMakeDefaults(filepath.Join(path, makeDefaults), makevars.Vars{}); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("profile %s: %w", name, err)
-	}
-
 	return &Profile{
 		name:    name,
 		path:    path,
@@ -66,40 +62,115 @@ func (p *Profile) Name() string        { return p.name }
 func (p *Profile) Path() string        { return p.path }
 func (p *Profile) Parents() []*Profile { return append([]*Profile(nil), p.parents...) }
 
-func (p *Profile) Vars() makevars.Vars {
+func (p *Profile) Parse() (*ParsedProfile, error) {
 	vars := makevars.Vars{}
-	p.parseVars(vars)
-	return vars
-}
-
-func (p *Profile) parseVars(vars makevars.Vars) {
-	for _, parent := range p.parents {
-		parent.parseVars(vars)
+	if err := p.parseVars(vars); err != nil {
+		return nil, err
 	}
 
-	// Assume no error as we already checked syntax in Parse.
-	_ = makevars.ParseMakeDefaults(filepath.Join(p.path, makeDefaults), vars)
+	overrides := &Overrides{
+		packageUse: make(map[string]string),
+	}
+	if err := p.parseOverrides(overrides); err != nil {
+		return nil, err
+	}
+
+	return &ParsedProfile{
+		profile:   p,
+		vars:      vars,
+		overrides: overrides,
+	}, nil
 }
 
-func readParents(path string) ([]string, error) {
+func (p *Profile) parseVars(vars makevars.Vars) error {
+	for _, parent := range p.parents {
+		if err := parent.parseVars(vars); err != nil {
+			return err
+		}
+	}
+
+	if err := makevars.ParseMakeDefaults(filepath.Join(p.path, makeDefaults), vars); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+	return nil
+}
+
+func (p *Profile) parseOverrides(overrides *Overrides) error {
+	for _, parent := range p.parents {
+		parent.parseOverrides(overrides)
+	}
+
+	return readPackageUse(filepath.Join(p.path, "package.use"), overrides)
+}
+
+type ParsedProfile struct {
+	profile   *Profile
+	vars      makevars.Vars
+	overrides *Overrides
+}
+
+func (p *ParsedProfile) Vars() makevars.Vars {
+	return p.vars.Copy()
+}
+
+func (p *ParsedProfile) Overrides() *Overrides {
+	return p.overrides
+}
+
+type Overrides struct {
+	packageUse map[string]string
+}
+
+func (o *Overrides) ForPackage(packageName string, ver *version.Version) *PackageOverrides {
+	return &PackageOverrides{
+		use: o.packageUse[packageName],
+	}
+}
+
+type PackageOverrides struct {
+	use string
+}
+
+func (po *PackageOverrides) Use() string {
+	return po.use
+}
+
+func readPackageUse(path string, overrides *Overrides) error {
+	lines, err := readLines(path)
+	if err != nil {
+		return err
+	}
+
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+		packageName := fields[0]
+		uses := fields[1:]
+		overrides.packageUse[packageName] += " " + strings.Join(uses, " ")
+	}
+	return nil
+}
+
+func readLines(path string) ([]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	var names []string
+	var lines []string
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
-		// PMS doesn't allow comments, but in reality there are comments.
-		line := strings.TrimSpace(strings.SplitN(sc.Text(), "#", 2)[0])
-		if line == "" {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		names = append(names, line)
+		lines = append(lines, line)
 	}
 	if err := sc.Err(); err != nil {
 		return nil, err
 	}
-	return names, nil
+	return lines, nil
 }

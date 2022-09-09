@@ -23,6 +23,17 @@ func (v Vars) Copy() Vars {
 	return u
 }
 
+func (v Vars) CopyNoIncrementalVars() Vars {
+	u := make(Vars)
+	for key, value := range v {
+		if isIncrementalVar(key) {
+			continue
+		}
+		u[key] = value
+	}
+	return u
+}
+
 func (v Vars) Environ() []string {
 	names := make([]string, 0, len(v))
 	for name := range v {
@@ -61,79 +72,22 @@ func (v Vars) GetAsSet(key string) map[string]struct{} {
 	return set
 }
 
-func (v Vars) ComputeUse() map[string]struct{} {
-	// TODO: Ensure this computation is correct.
-	uses := v.GetAsSet("USE")
-	iuses := v.GetAsSet("IUSE")
-
-	computed := make(map[string]struct{})
-	for u := range uses {
-		if !strings.HasPrefix(u, "-") {
-			computed[u] = struct{}{}
+func (v Vars) Merge(nv Vars) {
+	for key, newValue := range nv {
+		if isIncrementalVar(key) {
+			v[key] = v[key] + " " + newValue
+		} else {
+			v[key] = newValue
 		}
 	}
-	for iuse := range iuses {
-		if strings.HasPrefix(iuse, "+") {
-			u := strings.TrimPrefix(iuse, "+")
-			if _, ok := uses["-"+u]; !ok {
-				computed[u] = struct{}{}
-			}
-		}
-	}
-
-	return computed
 }
 
 func Merge(varsList ...Vars) Vars {
-	vars := Vars{}
-	MergeTo(vars, varsList...)
-	return vars
-}
-
-func MergeTo(vars Vars, varsList ...Vars) {
-	for _, v := range varsList {
-		mergeTo(vars, v)
+	merged := make(Vars)
+	for _, vars := range varsList {
+		merged.Merge(vars)
 	}
-}
-
-func mergeTo(vars, newVars Vars) {
-	for name := range newVars {
-		vars[name] = mergeVar(name, vars[name], newVars[name])
-	}
-}
-
-func mergeVar(name, oldValue, newValue string) string {
-	if !isIncrementalVar(name) {
-		return newValue
-	}
-	return mergeIncrementalVar(oldValue, newValue)
-}
-
-func mergeIncrementalVar(oldValue, newValue string) string {
-	tokenSet := make(map[string]struct{})
-
-	for _, token := range strings.Fields(oldValue) {
-		tokenSet[token] = struct{}{}
-	}
-
-	for _, token := range strings.Fields(newValue) {
-		if token == "-*" {
-			tokenSet = make(map[string]struct{})
-			continue
-		}
-		if strings.HasPrefix(token, "-") {
-			delete(tokenSet, token[1:])
-			continue
-		}
-		tokenSet[token] = struct{}{}
-	}
-
-	var tokens []string
-	for token := range tokenSet {
-		tokens = append(tokens, token)
-	}
-	sort.Strings(tokens)
-	return strings.Join(tokens, " ")
+	return merged
 }
 
 var incrementalVarNames = map[string]struct{}{
@@ -158,4 +112,27 @@ func isIncrementalVar(name string) bool {
 		return true
 	}
 	return false
+}
+
+func FinalizeIncrementalVar(value string) string {
+	tokenSet := make(map[string]struct{})
+
+	for _, token := range strings.Fields(value) {
+		if token == "-*" {
+			tokenSet = make(map[string]struct{})
+			continue
+		}
+		if strings.HasPrefix(token, "-") {
+			delete(tokenSet, token[1:])
+			continue
+		}
+		tokenSet[token] = struct{}{}
+	}
+
+	var tokens []string
+	for token := range tokenSet {
+		tokens = append(tokens, token)
+	}
+	sort.Strings(tokens)
+	return strings.Join(tokens, " ")
 }

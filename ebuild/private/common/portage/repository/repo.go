@@ -20,6 +20,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/ebuild"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 	"cros.local/bazel/ebuild/private/common/standard/profile"
+	"cros.local/bazel/ebuild/private/common/standard/useflags"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
@@ -73,7 +74,7 @@ func (r *Repo) Profile(relPath string) (*profile.Profile, error) {
 	return r.profiles.LookupOrParse(r, relPath)
 }
 
-func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor) ([]*packages.Package, error) {
+func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor, useContext *useflags.Context) ([]*packages.Package, error) {
 	packageDir := filepath.Join(r.rootDir, atom.PackageName())
 	es, err := os.ReadDir(packageDir)
 	if errors.Is(err, os.ErrNotExist) {
@@ -116,7 +117,7 @@ func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor)
 		target := &dependency.TargetPackage{
 			Name:    atom.PackageName(),
 			Version: ver,
-			Uses:    vars.ComputeUse(),
+			Uses:    useContext.ComputeForPackage(atom.PackageName(), ver, vars),
 		}
 		if atom.Match(target) {
 			pkgs = append(pkgs, packages.NewPackage(fullPath, vars, target))
@@ -159,7 +160,7 @@ func (p *repoProfiles) LookupOrParse(repo *Repo, relPath string) (*profile.Profi
 	path := filepath.Join(repo.RootDir(), "profiles", relPath)
 	name := fmt.Sprintf("%s:%s", repo.Name(), relPath)
 	resolver := &repoSetProfileResolver{repoSet: repo.RepoSet()}
-	prof, err := profile.Parse(path, name, resolver)
+	prof, err := profile.Load(path, name, resolver)
 	if err != nil {
 		return nil, err
 	}
