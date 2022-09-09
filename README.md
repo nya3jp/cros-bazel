@@ -55,3 +55,20 @@ See [manifest/_bazel.xml] for details on how this repository is organized.
         * `eclass-overlay/` ... a fork of overlay
         * `chromiumos-overlay/` ... a fork of overlay
 * `manifest/` ... copy of cros-bazel-manifest repository
+
+## Misc Memo
+
+### Generating BUILD files in overlays
+
+Firstly, run `extract_deps` **in CrOS chroot** to extract package dependency
+info from ebuilds.
+
+```sh
+$ cros_sdk bazel-5 run //bazel/ebuild/private/cmd/extract_deps -- --board=arm64-generic --start=virtual/target-os > bazel/data/deps.json
+```
+
+Then you can run `generate_build` to update `BUILD` files.
+
+```sh
+$ bazel run //bazel/ebuild/private/cmd/update_build -- --package-info-file $PWD/bazel/data/deps.json
+```
