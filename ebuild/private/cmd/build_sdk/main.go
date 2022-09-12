@@ -181,7 +181,6 @@ var app = &cli.App{
 		for _, exclude := range []string{
 			strings.TrimLeft(hostPackagesDir.Inside(), "/"),
 			strings.TrimLeft(targetPackagesDir.Inside(), "/"),
-			"mnt",
 			"stage",
 			"tmp",
 			"var/tmp",

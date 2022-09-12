@@ -22,3 +22,11 @@ binary_package(
     src = "@amd64_host_docbook_xml_dtd_4_4_r3//file",
     visibility = ["//visibility:public"],
 )
+
+# dev-libs/glib needs this, but it looks missing in SDK and instead pulled in by
+# BDEPEND.
+binary_package(
+    name = "meson-format-array",
+    src = "@amd64_host_meson_format_array_0//file",
+    visibility = ["//visibility:public"],
+)

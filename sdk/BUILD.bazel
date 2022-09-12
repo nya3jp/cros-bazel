@@ -12,6 +12,7 @@ pkg_tar(
         "//bazel/sdk/build/arm64-generic/etc",
         "//bazel/sdk/build/arm64-generic/usr/share/aclocal",
         "//bazel/sdk/etc",
+        "//bazel/sdk/mnt/host/source/src/platform2/common-mk",
         "//bazel/sdk/run/lock",
         "//bazel/sdk/usr/local/bin",
     ],
@@ -25,6 +26,7 @@ sdk(
     host_deps = [
         "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
         "//bazel/prebuilts/amd64-host:fakeroot",
+        "//bazel/prebuilts/amd64-host:meson-format-array",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",

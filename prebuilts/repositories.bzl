@@ -85,3 +85,9 @@ def prebuilts_dependencies():
         sha256 = "9a5e7219710bddfb977bbc419a7df2dec71000c909c69484be13a8d3a89e5232",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/app-text/docbook-xml-dtd-4.4-r3.tbz2"],
     )
+    http_file(
+        name = "amd64_host_meson_format_array_0",
+        downloaded_file_path = "meson-format-array-0.tbz2",
+        sha256 = "09d863e180a251b745a91e2c4d4d39ddf7f97a89bd851bc8ec460f041f387ffb",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-util/meson-format-array-0.tbz2"],
+    )
