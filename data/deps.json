@@ -8764,8 +8764,12 @@
     "runtimeDeps": []
   },
   "sys-libs/pam": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "virtual/libcrypt"
+    ],
+    "runtimeDeps": [
+      "virtual/libcrypt"
+    ]
   },
   "sys-libs/readline": {
     "buildDeps": [
