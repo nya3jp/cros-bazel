@@ -98,14 +98,18 @@
       "app-arch/xz-utils",
       "dev-libs/libxml2",
       "dev-libs/openssl",
+      "sys-apps/attr",
+      "sys-fs/e2fsprogs",
       "sys-libs/zlib",
-      "virtual/libiconv"
+      "virtual/libiconv",
+      "virtual/os-headers"
     ],
     "runtimeDeps": [
       "app-arch/bzip2",
       "app-arch/xz-utils",
       "dev-libs/libxml2",
       "dev-libs/openssl",
+      "sys-apps/attr",
       "sys-libs/zlib",
       "virtual/libiconv"
     ]
@@ -3112,6 +3116,7 @@
     "buildDeps": [
       "dev-libs/libffi",
       "dev-libs/libpcre",
+      "sys-apps/util-linux",
       "sys-libs/zlib",
       "virtual/libiconv",
       "virtual/libintl"
@@ -3119,6 +3124,7 @@
     "runtimeDeps": [
       "dev-libs/libffi",
       "dev-libs/libpcre",
+      "sys-apps/util-linux",
       "sys-libs/zlib",
       "virtual/libiconv",
       "virtual/libintl"
@@ -7355,14 +7361,16 @@
       "dev-libs/glib",
       "dev-libs/libdaemon",
       "dev-libs/libevent",
-      "sys-apps/dbus"
+      "sys-apps/dbus",
+      "sys-libs/libcap"
     ],
     "runtimeDeps": [
       "dev-libs/expat",
       "dev-libs/glib",
       "dev-libs/libdaemon",
       "dev-libs/libevent",
-      "sys-apps/dbus"
+      "sys-apps/dbus",
+      "sys-libs/libcap"
     ]
   },
   "net-dns/avahi-daemon": {
@@ -7816,12 +7824,14 @@
       "dev-libs/lzo",
       "dev-libs/openssl",
       "dev-libs/pkcs11-helper",
+      "sys-apps/net-tools",
       "virtual/pam"
     ],
     "runtimeDeps": [
       "dev-libs/lzo",
       "dev-libs/openssl",
       "dev-libs/pkcs11-helper",
+      "sys-apps/net-tools",
       "virtual/pam"
     ]
   },
@@ -7918,16 +7928,18 @@
     "buildDeps": [
       "chromeos-base/minijail",
       "dev-libs/engine_pkcs11",
+      "dev-libs/libnl",
       "dev-libs/openssl",
-      "net-libs/libpcap",
+      "net-wireless/crda",
       "sys-apps/dbus",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "chromeos-base/minijail",
       "dev-libs/engine_pkcs11",
+      "dev-libs/libnl",
       "dev-libs/openssl",
-      "net-libs/libpcap",
+      "net-wireless/crda",
       "sys-apps/dbus"
     ]
   },
@@ -8830,7 +8842,9 @@
   },
   "virtual/acl": {
     "buildDeps": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "sys-apps/acl"
+    ]
   },
   "virtual/assets": {
     "buildDeps": [],

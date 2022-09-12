@@ -53,6 +53,13 @@ var (
 	}
 )
 
+// HACK: Hard-code several USE flags.
+// TODO: Support USE_EXPAND and remove this hack.
+var forceUse = []string{
+	"elibc_glibc",
+	"kernel_linux",
+}
+
 func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName string) *dependency.Deps {
 	isRust := strings.HasPrefix(packageName, "dev-rust/")
 
@@ -338,7 +345,7 @@ var app = &cli.App{
 
 		// HACK: Set some USE variables since we don't support USE_EXPAND yet.
 		// TODO: Remove this hack.
-		makeConfVars["USE"] += " elibc_glibc"
+		makeConfVars["USE"] += " " + strings.Join(forceUse, " ")
 
 		overlays := portagevars.Overlays(makeConfVars)
 
