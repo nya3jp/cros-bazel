@@ -1,0 +1,13 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_mkdirs")
+
+# Create /usr/share/aclocal to make autoconf work.
+# TODO: Figure out why this is needed.
+pkg_mkdirs(
+    name = "aclocal",
+    dirs = ["build/arm64-generic/usr/share/aclocal"],
+    visibility = ["//bazel/sdk:__subpackages__"],
+)

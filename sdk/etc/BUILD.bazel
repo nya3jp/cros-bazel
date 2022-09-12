@@ -1,0 +1,38 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
+
+pkg_files(
+    name = "files",
+    srcs = [
+        "make.conf.board_setup",
+        "make.conf.host_setup",
+        "make.conf.user",
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+pkg_mklink(
+    name = "make_conf",
+    link_name = "make.conf",
+    target = "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
+)
+
+pkg_mklink(
+    name = "portage_make_profile",
+    link_name = "portage/make.profile",
+    target = "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk",
+)
+
+pkg_filegroup(
+    name = "etc",
+    prefix = "etc",
+    srcs = [
+        ":files",
+        ":make_conf",
+        ":portage_make_profile",
+    ],
+    visibility = ["//bazel/sdk:__subpackages__"],
+)

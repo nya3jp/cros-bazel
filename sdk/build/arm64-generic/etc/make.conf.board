@@ -1,0 +1,20 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+  # Source make.conf from each overlay.
+USE="$USE -ondevice_speech"
+BOTO_CONFIG=""
+FETCHCOMMAND_GS="bash -c 'BOTO_CONFIG= /mnt/host/source/chromite/bin/gs_fetch_binpkg \"${URI}\" \"${DISTDIR}/${FILE}\"'"
+RESUMECOMMAND_GS="$FETCHCOMMAND_GS"
+
+# FULL_BINHOST is populated by the full builders. It is listed first because it
+# is the lowest priority binhost. It is better to download packages from the
+# postsubmit binhost because they are fresher packages.
+PORTAGE_BINHOST="$FULL_BINHOST"
+
+
+# POSTSUBMIT_BINHOST is populated by the postsubmit builders. If the same
+# package is provided by both the postsubmit and full binhosts, the package is
+# downloaded from the postsubmit binhost.
+source /mnt/host/source/src/third_party/chromiumos-overlay/chromeos/binhost/target/arm64-generic-POSTSUBMIT_BINHOST.conf
+PORTAGE_BINHOST="$PORTAGE_BINHOST $POSTSUBMIT_BINHOST"
+

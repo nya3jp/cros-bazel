@@ -32,6 +32,7 @@ def _sdk_impl(ctx):
     ])
     args.add_all(host_installs, format_each = "--install-host=%s")
     args.add_all(target_installs, format_each = "--install-target=%s")
+    args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
 
     overlay_inputs = []
     for overlay in ctx.attr._overlays[OverlaySetInfo].overlays:
@@ -39,7 +40,7 @@ def _sdk_impl(ctx):
         overlay_inputs.append(overlay.squashfs_file)
 
     inputs = depset(
-        [ctx.executable._build_sdk, base_squashfs_output] + overlay_inputs,
+        [ctx.executable._build_sdk, base_squashfs_output] + overlay_inputs + ctx.files.extra_tarballs,
         transitive = [host_installs, target_installs],
     )
 
@@ -73,6 +74,9 @@ sdk = rule(
         ),
         "target_deps": attr.label_list(
             providers = [BinaryPackageInfo],
+        ),
+        "extra_tarballs": attr.label_list(
+            allow_files = True,
         ),
         "_build_sdk": attr.label(
             executable = True,

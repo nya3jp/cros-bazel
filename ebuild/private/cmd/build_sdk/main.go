@@ -59,6 +59,10 @@ var flagInstallTarget = &cli.StringSliceFlag{
 	Name: "install-target",
 }
 
+var flagInstallTarball = &cli.StringSliceFlag{
+	Name: "install-tarball",
+}
+
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagInputSquashfs,
@@ -67,6 +71,7 @@ var app = &cli.App{
 		flagOverlay,
 		flagInstallHost,
 		flagInstallTarget,
+		flagInstallTarball,
 	},
 	Action: func(c *cli.Context) error {
 		inputSquashfsPaths := c.StringSlice(flagInputSquashfs.Name)
@@ -78,6 +83,7 @@ var app = &cli.App{
 		}
 		hostInstallPaths := c.StringSlice(flagInstallHost.Name)
 		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
+		tarballPaths := c.StringSlice(flagInstallTarball.Name)
 
 		runInContainerPath, ok := bazel.FindBinary("bazel/ebuild/private/cmd/run_in_container", "run_in_container")
 		if !ok {
@@ -97,10 +103,11 @@ var app = &cli.App{
 		sysrootDir := rootDir.Add("build", board)
 		sourceDir := rootDir.Add("mnt/host/source")
 		stageDir := rootDir.Add("stage")
+		tarballsDir := stageDir.Add("tarballs")
 		hostPackagesDir := rootDir.Add("var/lib/portage/pkgs")
 		targetPackagesDir := sysrootDir.Add("packages")
 
-		for _, dir := range []string{diffDir, workDir, stageDir.Outside(), hostPackagesDir.Outside(), targetPackagesDir.Outside()} {
+		for _, dir := range []string{diffDir, workDir, stageDir.Outside(), tarballsDir.Outside(), hostPackagesDir.Outside(), targetPackagesDir.Outside()} {
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return err
 			}
@@ -114,6 +121,12 @@ var app = &cli.App{
 		targetInstallAtoms, err := makechroot.CopyBinaryPackages(targetPackagesDir.Outside(), targetInstallPaths)
 		if err != nil {
 			return err
+		}
+
+		for _, path := range tarballPaths {
+			if err := fileutil.Copy(path, tarballsDir.Add(filepath.Base(path)).Outside()); err != nil {
+				return err
+			}
 		}
 
 		scriptPath := stageDir.Add("setup.sh")

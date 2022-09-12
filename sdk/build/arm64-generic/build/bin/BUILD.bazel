@@ -1,0 +1,16 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+
+pkg_files(
+    name = "bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "build/arm64-generic/build/bin",
+    srcs = glob(["**/*"], exclude=["BUILD.bazel"]),
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//bazel/sdk:__subpackages__"],
+)

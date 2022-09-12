@@ -1,0 +1,12 @@
+# Created by cros_sysroot_utils from --board=arm64-generic.
+ARCH="arm64"
+BOARD_OVERLAY="/mnt/host/source/src/overlays/overlay-arm64-generic"
+BOARD_USE="arm64-generic"
+CHOST="aarch64-cros-linux-gnu"
+MAKEOPTS="-j128"
+PKG_CONFIG="/build/arm64-generic/build/bin/pkg-config"
+PORTDIR_OVERLAY="/mnt/host/source/src/third_party/eclass-overlay
+/mnt/host/source/src/third_party/portage-stable
+/mnt/host/source/src/third_party/chromiumos-overlay
+/mnt/host/source/src/overlays/overlay-arm64-generic"
+ROOT="/build/arm64-generic/"

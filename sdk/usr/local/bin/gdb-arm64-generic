@@ -1,0 +1,2 @@
+#!/bin/sh
+exec cros_gdb --board="arm64-generic" "$@"

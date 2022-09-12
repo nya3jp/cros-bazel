@@ -3,6 +3,19 @@
 # found in the LICENSE file.
 
 load("//bazel/ebuild:defs.bzl", "sdk")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "extra_tarball",
+    srcs = [
+        "//bazel/sdk/build/arm64-generic/build/bin",
+        "//bazel/sdk/build/arm64-generic/etc",
+        "//bazel/sdk/build/arm64-generic/usr/share/aclocal",
+        "//bazel/sdk/etc",
+        "//bazel/sdk/usr/local/bin",
+    ],
+    extension = "tar.gz",
+)
 
 sdk(
     name = "sdk",
@@ -26,6 +39,9 @@ sdk(
         "//bazel/prebuilts/arm64-generic/sys-libs:gcc-libs",
         "//bazel/prebuilts/arm64-generic/sys-libs:libcxx",
         "//bazel/prebuilts/arm64-generic/sys-libs:llvm-libunwind",
+    ],
+    extra_tarballs = [
+        ":extra_tarball",
     ],
     visibility = ["//visibility:public"],
 )
