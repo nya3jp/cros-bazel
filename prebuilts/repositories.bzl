@@ -79,3 +79,9 @@ def prebuilts_dependencies():
         downloaded_file_path = "llvm-libunwind-15.0_pre458507-r4.tbz2",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.07.20.214841/packages/cross-aarch64-cros-linux-gnu/llvm-libunwind-15.0_pre458507-r4.tbz2"],
     )
+    http_file(
+        name = "amd64_host_docbook_xml_dtd_4_4_r3",
+        downloaded_file_path = "docbook-xml-dtd-4.4-r3.tbz2",
+        sha256 = "9a5e7219710bddfb977bbc419a7df2dec71000c909c69484be13a8d3a89e5232",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/app-text/docbook-xml-dtd-4.4-r3.tbz2"],
+    )

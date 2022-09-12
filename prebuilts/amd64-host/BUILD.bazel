@@ -14,3 +14,11 @@ binary_package(
     # runtime_deps = ["//third_party/portage-stable/libcap"],
     visibility = ["//visibility:public"],
 )
+
+# sys-libs/pam needs this, but it looks missing in SDK and instead pulled in by
+# BDEPEND.
+binary_package(
+    name = "docbook-xml-dtd-4_4",
+    src = "@amd64_host_docbook_xml_dtd_4_4_r3//file",
+    visibility = ["//visibility:public"],
+)

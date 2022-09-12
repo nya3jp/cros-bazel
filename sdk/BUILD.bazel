@@ -12,6 +12,7 @@ pkg_tar(
         "//bazel/sdk/build/arm64-generic/etc",
         "//bazel/sdk/build/arm64-generic/usr/share/aclocal",
         "//bazel/sdk/etc",
+        "//bazel/sdk/run/lock",
         "//bazel/sdk/usr/local/bin",
     ],
     extension = "tar.gz",
@@ -22,6 +23,7 @@ sdk(
     src = "@chromiumos_sdk//file",
     board = "arm64-generic",
     host_deps = [
+        "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
         "//bazel/prebuilts/amd64-host:fakeroot",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
