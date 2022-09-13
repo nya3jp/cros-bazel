@@ -285,7 +285,9 @@ var app = &cli.App{
 				packageName := v[len(v)-1]
 				buildPath := filepath.Join(ebuildDir, "BUILD.bazel")
 
-				if _, ok := blockedPackages[packageName]; ok {
+				pkgInfo := pkgInfoMap[fmt.Sprintf("%s/%s", category, packageName)]
+				_, blocked := blockedPackages[packageName]
+				if pkgInfo == nil || blocked {
 					if err := os.Remove(buildPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 						return err
 					}
@@ -366,11 +368,6 @@ var app = &cli.App{
 						if err := os.WriteFile(distJSONPath, b, 0o644); err != nil {
 							return err
 						}
-					}
-
-					pkgInfo := pkgInfoMap[fmt.Sprintf("%s/%s", category, packageName)]
-					if pkgInfo == nil {
-						pkgInfo = &packageInfo{}
 					}
 
 					ebuild := &ebuildInfo{
