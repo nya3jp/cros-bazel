@@ -8,6 +8,7 @@ if [[ $# -gt 0 ]]; then
   exec >&2
 fi
 
+export LANG=en_US.UTF-8
 export ROOT="/build/${BOARD}/"
 export SYSROOT="${ROOT}"
 export PORTAGE_CONFIGROOT="${ROOT}"

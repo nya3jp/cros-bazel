@@ -6,6 +6,7 @@
 # HACK: Print all outputs to stderr to avoid shuffled logs in Bazel output.
 exec >&2
 
+export LANG=en_US.UTF-8
 export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
 export RESTRICT="fetch"
@@ -14,6 +15,8 @@ export FEATURES="digest -sandbox -usersandbox"  # TODO: turn on sandbox
 for i in /stage/tarballs/*; do
   tar -xv -f "${i}" -C /
 done
+
+locale-gen --jobs 1
 
 # TODO: Consider using fakeroot-like approach to emulate file permissions.
 sed -i -e '/dir_mode_map = {/,/}/s/False/True/' /usr/lib/python3.6/site-packages/portage/package/ebuild/config.py
