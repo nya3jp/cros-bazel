@@ -201,6 +201,16 @@ func parseSimpleDeps(deps *dependency.Deps) ([]string, bool) {
 	return names, true
 }
 
+func filterPackages(pkgs []string, dropSet map[string]struct{}) []string {
+	var filtered []string
+	for _, pkg := range pkgs {
+		if _, ok := dropSet[pkg]; !ok {
+			filtered = append(filtered, pkg)
+		}
+	}
+	return filtered
+}
+
 func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error)) error {
 	queue := make([]Key, len(start))
 	for i, key := range start {
@@ -232,7 +242,7 @@ func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error
 	return nil
 }
 
-func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, startPackageNames []string) (map[string][]string, error) {
+func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, startPackageNames []string) (map[string][]string, error) {
 	depsMap := make(map[string][]string)
 	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
@@ -262,6 +272,8 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 			}
 		}
 
+		parsedDeps = filterPackages(parsedDeps, providedPackages)
+
 		log.Printf("R: %s => %s", packageName, strings.Join(parsedDeps, ", "))
 		depsMap[packageName] = parsedDeps
 		return parsedDeps, nil
@@ -271,7 +283,7 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 	return depsMap, nil
 }
 
-func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, installPackageNames []string) (map[string][]string, error) {
+func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, installPackageNames []string) (map[string][]string, error) {
 	depsMap := make(map[string][]string)
 	if err := genericBFS(installPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
@@ -302,6 +314,8 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 				return nil, fmt.Errorf("cannot simplify deps: %s", simpleDeps.String())
 			}
 		}
+
+		parsedDeps = filterPackages(parsedDeps, providedPackages)
 
 		log.Printf("B: %s => %s", packageName, strings.Join(parsedDeps, ", "))
 		depsMap[packageName] = parsedDeps
@@ -369,11 +383,16 @@ var app = &cli.App{
 			return err
 		}
 
+		providedPackages := make(map[string]struct{})
+		for _, pp := range profile.Provided() {
+			providedPackages[pp.Name()] = struct{}{}
+		}
+
 		processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(profile.Vars(), repoSet.EClassDirs()))
 
 		useContext := useflags.NewContext(makeConfVars, profile)
 
-		runtimeDeps, err := computeRuntimeDeps(repoSet, processor, useContext, startPackageNames)
+		runtimeDeps, err := computeRuntimeDeps(repoSet, processor, useContext, providedPackages, startPackageNames)
 		if err != nil {
 			return err
 		}
@@ -384,7 +403,7 @@ var app = &cli.App{
 		}
 		sort.Strings(installPackageNames)
 
-		buildDeps, err := computeBuildDeps(repoSet, processor, useContext, installPackageNames)
+		buildDeps, err := computeBuildDeps(repoSet, processor, useContext, providedPackages, installPackageNames)
 		if err != nil {
 			return err
 		}

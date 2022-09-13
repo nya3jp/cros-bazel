@@ -24,18 +24,6 @@
     "buildDeps": [],
     "runtimeDeps": []
   },
-  "app-admin/eselect": {
-    "buildDeps": [
-      "sys-apps/coreutils",
-      "sys-apps/sed"
-    ],
-    "runtimeDeps": [
-      "sys-apps/coreutils",
-      "sys-apps/file",
-      "sys-apps/sed",
-      "sys-libs/ncurses"
-    ]
-  },
   "app-admin/rsyslog": {
     "buildDeps": [
       "chromeos-base/syslog-cat",
@@ -60,7 +48,6 @@
       "virtual/libcrypt"
     ],
     "runtimeDeps": [
-      "app-misc/editor-wrapper",
       "dev-libs/openssl",
       "sys-auth/pambase",
       "sys-libs/pam",
@@ -116,8 +103,7 @@
   },
   "app-arch/sharutils": {
     "buildDeps": [
-      "app-arch/xz-utils",
-      "sys-apps/texinfo"
+      "app-arch/xz-utils"
     ],
     "runtimeDeps": []
   },
@@ -136,12 +122,6 @@
   },
   "app-arch/unrar": {
     "buildDeps": [],
-    "runtimeDeps": []
-  },
-  "app-arch/unzip": {
-    "buildDeps": [
-      "app-arch/bzip2"
-    ],
     "runtimeDeps": []
   },
   "app-arch/xz-utils": {
@@ -171,12 +151,6 @@
       "dev-libs/openssl",
       "sys-fs/e2fsprogs"
     ]
-  },
-  "app-crypt/rhash": {
-    "buildDeps": [
-      "dev-libs/openssl"
-    ],
-    "runtimeDeps": []
   },
   "app-crypt/trousers": {
     "buildDeps": [
@@ -212,21 +186,11 @@
     "buildDeps": [],
     "runtimeDeps": []
   },
-  "app-eselect/eselect-iptables": {
-    "buildDeps": [],
-    "runtimeDeps": [
-      "app-admin/eselect"
-    ]
-  },
   "app-eselect/eselect-vi": {
     "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
       "sys-devel/libtool"
     ],
-    "runtimeDeps": [
-      "app-admin/eselect"
-    ]
+    "runtimeDeps": []
   },
   "app-i18n/chinese-input": {
     "buildDeps": [
@@ -309,19 +273,10 @@
     "buildDeps": [],
     "runtimeDeps": []
   },
-  "app-misc/editor-wrapper": {
-    "buildDeps": [],
-    "runtimeDeps": []
-  },
   "app-misc/jq": {
     "buildDeps": [
-      "sys-devel/bison",
       "sys-devel/flex"
     ],
-    "runtimeDeps": []
-  },
-  "app-portage/elt-patches": {
-    "buildDeps": [],
     "runtimeDeps": []
   },
   "app-portage/portage-utils": {
@@ -347,30 +302,8 @@
     ],
     "runtimeDeps": []
   },
-  "app-text/docbook-dsssl-stylesheets": {
-    "buildDeps": [],
-    "runtimeDeps": []
-  },
-  "app-text/docbook-sgml-dtd": {
-    "buildDeps": [
-      "app-arch/unzip"
-    ],
-    "runtimeDeps": []
-  },
-  "app-text/docbook-xml-dtd": {
-    "buildDeps": [
-      "app-arch/unzip"
-    ],
-    "runtimeDeps": []
-  },
-  "app-text/docbook-xsl-stylesheets": {
-    "buildDeps": [],
-    "runtimeDeps": []
-  },
   "app-text/libpaper": {
     "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
       "sys-devel/libtool"
     ],
     "runtimeDeps": []
@@ -631,7 +564,6 @@
       "chromeos-base/protofiles",
       "dev-libs/nspr",
       "dev-libs/nss",
-      "dev-util/gperf",
       "media-libs/alsa-lib",
       "media-libs/fontconfig",
       "media-libs/libsync",
@@ -1442,7 +1374,6 @@
     "buildDeps": [
       "dev-rust/anyhow",
       "dev-rust/bayer",
-      "dev-rust/bindgen",
       "dev-rust/bitflags",
       "dev-rust/clap",
       "dev-rust/colored",
@@ -2730,7 +2661,6 @@
   },
   "dev-cpp/gflags": {
     "buildDeps": [
-      "dev-util/cmake",
       "sys-devel/make"
     ],
     "runtimeDeps": []
@@ -3006,18 +2936,6 @@
     ],
     "runtimeDeps": []
   },
-  "dev-lang/perl": {
-    "buildDeps": [
-      "app-arch/bzip2",
-      "sys-libs/gdbm",
-      "sys-libs/zlib"
-    ],
-    "runtimeDeps": [
-      "app-arch/bzip2",
-      "sys-libs/gdbm",
-      "sys-libs/zlib"
-    ]
-  },
   "dev-lang/python": {
     "buildDeps": [
       "app-arch/bzip2",
@@ -3066,7 +2984,6 @@
       "dev-libs/expat",
       "dev-libs/glib",
       "dev-util/glib-utils",
-      "dev-util/gtk-doc-am",
       "sys-apps/dbus",
       "virtual/pkgconfig"
     ],
@@ -3196,7 +3113,6 @@
   },
   "dev-libs/libdivsufsort": {
     "buildDeps": [
-      "dev-util/cmake",
       "sys-devel/make"
     ],
     "runtimeDeps": []
@@ -3207,8 +3123,6 @@
   },
   "dev-libs/libev": {
     "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
       "sys-devel/libtool"
     ],
     "runtimeDeps": []
@@ -3247,7 +3161,6 @@
     "buildDeps": [
       "dev-libs/glib",
       "dev-util/glib-utils",
-      "dev-util/gtk-doc-am",
       "virtual/libudev",
       "virtual/pkgconfig"
     ],
@@ -3292,7 +3205,6 @@
   },
   "dev-libs/libnl": {
     "buildDeps": [
-      "sys-devel/bison",
       "sys-devel/flex"
     ],
     "runtimeDeps": []
@@ -3330,9 +3242,7 @@
     "runtimeDeps": []
   },
   "dev-libs/libtasn1": {
-    "buildDeps": [
-      "app-portage/elt-patches"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-libs/libtextclassifier": {
@@ -3352,9 +3262,7 @@
     ]
   },
   "dev-libs/libunistring": {
-    "buildDeps": [
-      "app-portage/elt-patches"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-libs/libusb": {
@@ -3367,14 +3275,6 @@
   },
   "dev-libs/libutf": {
     "buildDeps": [],
-    "runtimeDeps": []
-  },
-  "dev-libs/libuv": {
-    "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
-      "sys-devel/libtool"
-    ],
     "runtimeDeps": []
   },
   "dev-libs/libverto": {
@@ -3404,13 +3304,6 @@
       "dev-libs/glib",
       "sys-apps/util-linux"
     ]
-  },
-  "dev-libs/libxslt": {
-    "buildDeps": [
-      "dev-libs/libgcrypt",
-      "dev-libs/libxml2"
-    ],
-    "runtimeDeps": []
   },
   "dev-libs/libzip": {
     "buildDeps": [
@@ -3452,8 +3345,6 @@
   },
   "dev-libs/nspr": {
     "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
       "sys-devel/libtool"
     ],
     "runtimeDeps": []
@@ -3516,12 +3407,6 @@
   "dev-perl/Parse-Yapp": {
     "buildDeps": [
       "virtual/perl-ExtUtils-MakeMaker"
-    ],
-    "runtimeDeps": []
-  },
-  "dev-perl/XML-Parser": {
-    "buildDeps": [
-      "dev-libs/expat"
     ],
     "runtimeDeps": []
   },
@@ -3739,42 +3624,6 @@
       "virtual/rust-binaries"
     ]
   },
-  "dev-rust/bindgen": {
-    "buildDeps": [
-      "dev-rust/bitflags",
-      "dev-rust/cexpr",
-      "dev-rust/clang-sys",
-      "dev-rust/clap",
-      "dev-rust/env_logger",
-      "dev-rust/lazy_static",
-      "dev-rust/lazycell",
-      "dev-rust/log",
-      "dev-rust/peeking_take_while",
-      "dev-rust/proc-macro2",
-      "dev-rust/quote",
-      "dev-rust/regex",
-      "dev-rust/rustc-hash",
-      "dev-rust/shlex",
-      "dev-rust/which"
-    ],
-    "runtimeDeps": [
-      "dev-rust/bitflags",
-      "dev-rust/cexpr",
-      "dev-rust/clang-sys",
-      "dev-rust/clap",
-      "dev-rust/env_logger",
-      "dev-rust/lazy_static",
-      "dev-rust/lazycell",
-      "dev-rust/log",
-      "dev-rust/peeking_take_while",
-      "dev-rust/proc-macro2",
-      "dev-rust/quote",
-      "dev-rust/regex",
-      "dev-rust/rustc-hash",
-      "dev-rust/shlex",
-      "dev-rust/which"
-    ]
-  },
   "dev-rust/bit_field": {
     "buildDeps": [
       "virtual/rust",
@@ -3857,14 +3706,6 @@
       "dev-rust/jobserver"
     ]
   },
-  "dev-rust/cexpr": {
-    "buildDeps": [
-      "dev-rust/nom"
-    ],
-    "runtimeDeps": [
-      "dev-rust/nom"
-    ]
-  },
   "dev-rust/cfg-if": {
     "buildDeps": [
       "virtual/rust",
@@ -3911,18 +3752,6 @@
     ],
     "runtimeDeps": []
   },
-  "dev-rust/clang-sys": {
-    "buildDeps": [
-      "dev-rust/glob",
-      "dev-rust/libc",
-      "dev-rust/libloading"
-    ],
-    "runtimeDeps": [
-      "dev-rust/glob",
-      "dev-rust/libc",
-      "dev-rust/libloading"
-    ]
-  },
   "dev-rust/clap": {
     "buildDeps": [
       "dev-rust/atty",
@@ -3939,29 +3768,13 @@
       "dev-rust/unicase",
       "dev-rust/yaml-rust"
     ],
-    "runtimeDeps": [
-      "dev-rust/atty",
-      "dev-rust/backtrace",
-      "dev-rust/bitflags",
-      "dev-rust/clap_lex",
-      "dev-rust/indexmap",
-      "dev-rust/lazy_static",
-      "dev-rust/regex",
-      "dev-rust/strsim",
-      "dev-rust/termcolor",
-      "dev-rust/terminal_size",
-      "dev-rust/textwrap",
-      "dev-rust/unicase",
-      "dev-rust/yaml-rust"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/clap_lex": {
     "buildDeps": [
       "dev-rust/os_str_bytes"
     ],
-    "runtimeDeps": [
-      "dev-rust/os_str_bytes"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/clippy": {
     "buildDeps": [
@@ -4387,7 +4200,6 @@
   "dev-rust/featured": {
     "buildDeps": [
       "chromeos-base/featured",
-      "dev-rust/bindgen",
       "dev-rust/log",
       "dev-rust/thiserror"
     ],
@@ -4638,9 +4450,7 @@
     "buildDeps": [
       "dev-rust/nom"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/gpio-cdev": {
     "buildDeps": [
@@ -4753,9 +4563,7 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/i2cdev": {
     "buildDeps": [
@@ -4877,15 +4685,6 @@
       "dev-rust/spin"
     ]
   },
-  "dev-rust/lazycell": {
-    "buildDeps": [
-      "dev-rust/clippy",
-      "dev-rust/serde"
-    ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
-  },
   "dev-rust/libc": {
     "buildDeps": [
       "dev-rust/rustc-std-workspace-core"
@@ -4937,14 +4736,6 @@
       "virtual/rust-binaries"
     ]
   },
-  "dev-rust/libloading": {
-    "buildDeps": [
-      "dev-rust/cfg-if"
-    ],
-    "runtimeDeps": [
-      "dev-rust/cfg-if"
-    ]
-  },
   "dev-rust/libusb1-sys": {
     "buildDeps": [
       "dev-rust/cc",
@@ -4970,9 +4761,7 @@
       "dev-rust/serde",
       "dev-rust/serde_test"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/linux-embedded-hal": {
     "buildDeps": [
@@ -5120,9 +4909,7 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/miniz-sys": {
     "buildDeps": [
@@ -5203,11 +4990,7 @@
       "dev-rust/minimal-lexical",
       "dev-rust/version_check"
     ],
-    "runtimeDeps": [
-      "dev-rust/memchr",
-      "dev-rust/minimal-lexical",
-      "dev-rust/version_check"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/num-bigint": {
     "buildDeps": [
@@ -5386,7 +5169,6 @@
   "dev-rust/openssl-sys": {
     "buildDeps": [
       "dev-rust/autocfg",
-      "dev-rust/bindgen",
       "dev-rust/cc",
       "dev-rust/libc",
       "dev-rust/openssl-src",
@@ -5395,7 +5177,6 @@
     ],
     "runtimeDeps": [
       "dev-rust/autocfg",
-      "dev-rust/bindgen",
       "dev-rust/cc",
       "dev-rust/libc",
       "dev-rust/openssl-src",
@@ -5409,11 +5190,7 @@
       "dev-rust/print_bytes",
       "dev-rust/uniquote"
     ],
-    "runtimeDeps": [
-      "dev-rust/memchr",
-      "dev-rust/print_bytes",
-      "dev-rust/uniquote"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/owning_ref": {
     "buildDeps": [
@@ -5477,15 +5254,6 @@
       "virtual/rust-binaries"
     ],
     "runtimeDeps": []
-  },
-  "dev-rust/peeking_take_while": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
   },
   "dev-rust/percent-encoding": {
     "buildDeps": [
@@ -5560,9 +5328,7 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/proc-macro-crate": {
     "buildDeps": [
@@ -5881,15 +5647,6 @@
       "dev-rust/rustc-demangle"
     ]
   },
-  "dev-rust/rustc-hash": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
-  },
   "dev-rust/rustc-serialize": {
     "buildDeps": [
       "dev-rust/rand"
@@ -6059,15 +5816,6 @@
     ],
     "runtimeDeps": []
   },
-  "dev-rust/shlex": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
-  },
   "dev-rust/signal-hook-registry": {
     "buildDeps": [
       "dev-rust/libc"
@@ -6119,9 +5867,7 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/socket2": {
     "buildDeps": [
@@ -6205,9 +5951,7 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/sval": {
     "buildDeps": [
@@ -6367,9 +6111,7 @@
     "buildDeps": [
       "dev-rust/libc"
     ],
-    "runtimeDeps": [
-      "dev-rust/libc"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/termios": {
     "buildDeps": [
@@ -6385,13 +6127,7 @@
       "dev-rust/unicode-linebreak",
       "dev-rust/unicode-width"
     ],
-    "runtimeDeps": [
-      "dev-rust/hyphenation",
-      "dev-rust/smawk",
-      "dev-rust/terminal_size",
-      "dev-rust/unicode-linebreak",
-      "dev-rust/unicode-width"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/thiserror": {
     "buildDeps": [],
@@ -6542,9 +6278,7 @@
     "buildDeps": [
       "dev-rust/version_check"
     ],
-    "runtimeDeps": [
-      "dev-rust/version_check"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/unicode-bidi": {
     "buildDeps": [
@@ -6561,9 +6295,7 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/unicode-normalization": {
     "buildDeps": [
@@ -6604,9 +6336,7 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/url": {
     "buildDeps": [
@@ -6762,9 +6492,7 @@
     "buildDeps": [
       "dev-rust/linked-hash-map"
     ],
-    "runtimeDeps": [
-      "dev-rust/linked-hash-map"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/zeroize": {
     "buildDeps": [
@@ -6800,23 +6528,8 @@
       "dev-libs/libdivsufsort"
     ]
   },
-  "dev-util/cmake": {
-    "buildDeps": [
-      "app-arch/libarchive",
-      "app-crypt/rhash",
-      "dev-libs/expat",
-      "dev-libs/jsoncpp",
-      "dev-libs/libuv",
-      "net-misc/curl",
-      "sys-libs/ncurses",
-      "sys-libs/zlib",
-      "virtual/pkgconfig"
-    ],
-    "runtimeDeps": []
-  },
   "dev-util/cmocka": {
     "buildDeps": [
-      "dev-util/cmake",
       "sys-devel/make"
     ],
     "runtimeDeps": []
@@ -6825,39 +6538,7 @@
     "buildDeps": [],
     "runtimeDeps": []
   },
-  "dev-util/gperf": {
-    "buildDeps": [],
-    "runtimeDeps": []
-  },
-  "dev-util/gtk-doc": {
-    "buildDeps": [
-      "app-text/docbook-dsssl-stylesheets",
-      "app-text/docbook-sgml-dtd",
-      "app-text/docbook-xml-dtd",
-      "app-text/docbook-xsl-stylesheets",
-      "dev-libs/glib",
-      "dev-libs/libxml2",
-      "dev-libs/libxslt",
-      "dev-util/gtk-doc-am",
-      "dev-util/itstool",
-      "virtual/pkgconfig"
-    ],
-    "runtimeDeps": []
-  },
-  "dev-util/gtk-doc-am": {
-    "buildDeps": [
-      "virtual/pkgconfig"
-    ],
-    "runtimeDeps": []
-  },
   "dev-util/intltool": {
-    "buildDeps": [
-      "dev-lang/perl",
-      "dev-perl/XML-Parser"
-    ],
-    "runtimeDeps": []
-  },
-  "dev-util/itstool": {
     "buildDeps": [],
     "runtimeDeps": []
   },
@@ -6878,16 +6559,6 @@
       "sys-libs/binutils-libs",
       "sys-libs/zlib",
       "virtual/libcrypt"
-    ]
-  },
-  "dev-util/pkgconfig": {
-    "buildDeps": [
-      "dev-libs/glib",
-      "virtual/libintl"
-    ],
-    "runtimeDeps": [
-      "dev-libs/glib",
-      "virtual/libintl"
     ]
   },
   "dev-util/puffin": {
@@ -7005,7 +6676,6 @@
   "media-gfx/sane-backends": {
     "buildDeps": [
       "media-libs/tiff",
-      "sys-devel/gettext",
       "virtual/jpeg",
       "virtual/libusb",
       "virtual/pkgconfig"
@@ -7053,7 +6723,6 @@
       "dev-libs/expat",
       "media-libs/freetype",
       "sys-apps/util-linux",
-      "sys-devel/gettext",
       "virtual/libintl",
       "virtual/pkgconfig"
     ],
@@ -7137,7 +6806,6 @@
       "dev-libs/expat",
       "dev-libs/libgcrypt",
       "dev-libs/libxml2",
-      "sys-devel/bison",
       "sys-devel/flex",
       "virtual/pkgconfig",
       "virtual/udev",
@@ -7381,8 +7049,6 @@
   },
   "net-dns/c-ares": {
     "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
       "sys-devel/libtool"
     ],
     "runtimeDeps": []
@@ -7422,7 +7088,6 @@
       "virtual/os-headers"
     ],
     "runtimeDeps": [
-      "app-eselect/eselect-iptables",
       "net-libs/libnetfilter_conntrack"
     ]
   },
@@ -7430,7 +7095,6 @@
     "buildDeps": [
       "app-arch/libarchive",
       "app-crypt/mit-krb5",
-      "dev-lang/perl",
       "dev-libs/libbsd",
       "dev-libs/libtasn1",
       "dev-libs/popt",
@@ -7458,7 +7122,6 @@
       "app-arch/libarchive",
       "app-crypt/mit-krb5",
       "chromeos-base/chrome-icu",
-      "dev-lang/perl",
       "dev-libs/libbsd",
       "dev-libs/libtasn1",
       "dev-libs/popt",
@@ -7497,7 +7160,6 @@
       "app-misc/ca-certificates",
       "dev-libs/glib",
       "net-libs/gnutls",
-      "sys-devel/gettext",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
@@ -7621,10 +7283,8 @@
       "dev-libs/glib",
       "dev-libs/libxml2",
       "dev-util/glib-utils",
-      "dev-util/gtk-doc-am",
       "dev-util/intltool",
       "net-libs/glib-networking",
-      "sys-devel/gettext",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
@@ -7647,8 +7307,6 @@
   },
   "net-libs/rpcsvc-proto": {
     "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
       "sys-devel/libtool"
     ],
     "runtimeDeps": []
@@ -7698,7 +7356,6 @@
     "buildDeps": [
       "dev-libs/dbus-glib",
       "dev-libs/glib",
-      "dev-util/gtk-doc",
       "dev-util/intltool",
       "net-dialup/ppp",
       "net-libs/libmbim",
@@ -8023,14 +7680,6 @@
     "buildDeps": [],
     "runtimeDeps": []
   },
-  "sys-apps/file": {
-    "buildDeps": [
-      "sys-libs/zlib"
-    ],
-    "runtimeDeps": [
-      "sys-libs/zlib"
-    ]
-  },
   "sys-apps/findutils": {
     "buildDeps": [
       "sys-libs/libselinux"
@@ -8122,20 +7771,11 @@
     ]
   },
   "sys-apps/groff": {
-    "buildDeps": [
-      "dev-lang/perl",
-      "sys-apps/texinfo"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "sys-apps/hdparm": {
     "buildDeps": [],
-    "runtimeDeps": []
-  },
-  "sys-apps/help2man": {
-    "buildDeps": [
-      "dev-lang/perl"
-    ],
     "runtimeDeps": []
   },
   "sys-apps/hwdata": {
@@ -8147,7 +7787,6 @@
       "app-arch/xz-utils",
       "net-firewall/iptables",
       "net-libs/libmnl",
-      "sys-devel/bison",
       "sys-devel/flex",
       "sys-kernel/linux-headers",
       "virtual/pkgconfig"
@@ -8254,13 +7893,6 @@
       "sys-libs/libcap",
       "sys-libs/libselinux"
     ]
-  },
-  "sys-apps/texinfo": {
-    "buildDeps": [
-      "dev-lang/perl",
-      "sys-libs/ncurses"
-    ],
-    "runtimeDeps": []
   },
   "sys-apps/upstart": {
     "buildDeps": [
@@ -8379,28 +8011,7 @@
       "dev-libs/glib"
     ]
   },
-  "sys-devel/autoconf": {
-    "buildDeps": [
-      "dev-lang/perl",
-      "sys-devel/m4"
-    ],
-    "runtimeDeps": []
-  },
   "sys-devel/autoconf-archive": {
-    "buildDeps": [],
-    "runtimeDeps": []
-  },
-  "sys-devel/automake": {
-    "buildDeps": [
-      "dev-lang/perl",
-      "sys-apps/help2man",
-      "sys-devel/autoconf",
-      "sys-devel/automake-wrapper",
-      "sys-devel/gnuconfig"
-    ],
-    "runtimeDeps": []
-  },
-  "sys-devel/automake-wrapper": {
     "buildDeps": [],
     "runtimeDeps": []
   },
@@ -8429,47 +8040,16 @@
       "sys-apps/gentoo-functions"
     ]
   },
-  "sys-devel/bison": {
-    "buildDeps": [
-      "sys-devel/gettext",
-      "sys-devel/m4"
-    ],
-    "runtimeDeps": []
-  },
   "sys-devel/flex": {
     "buildDeps": [
-      "app-arch/xz-utils",
-      "sys-devel/m4"
+      "app-arch/xz-utils"
     ],
-    "runtimeDeps": []
-  },
-  "sys-devel/gettext": {
-    "buildDeps": [
-      "dev-libs/expat",
-      "dev-libs/libxml2",
-      "sys-libs/ncurses",
-      "virtual/libiconv",
-      "virtual/libintl"
-    ],
-    "runtimeDeps": []
-  },
-  "sys-devel/gnuconfig": {
-    "buildDeps": [],
     "runtimeDeps": []
   },
   "sys-devel/libtool": {
     "buildDeps": [
       "app-arch/xz-utils",
-      "dev-libs/libltdl",
-      "sys-devel/autoconf",
-      "sys-devel/automake",
-      "sys-devel/gnuconfig"
-    ],
-    "runtimeDeps": []
-  },
-  "sys-devel/m4": {
-    "buildDeps": [
-      "virtual/libiconv"
+      "dev-libs/libltdl"
     ],
     "runtimeDeps": []
   },
@@ -8530,7 +8110,6 @@
       "dev-libs/nss",
       "dev-util/intltool",
       "sys-apps/keyutils",
-      "sys-devel/gettext",
       "sys-libs/pam",
       "virtual/pkgconfig"
     ],
@@ -8652,8 +8231,7 @@
   },
   "sys-kernel/linux-headers": {
     "buildDeps": [
-      "app-arch/xz-utils",
-      "dev-lang/perl"
+      "app-arch/xz-utils"
     ],
     "runtimeDeps": []
   },
@@ -8674,9 +8252,7 @@
     "buildDeps": [
       "sys-libs/readline"
     ],
-    "runtimeDeps": [
-      "sys-libs/readline"
-    ]
+    "runtimeDeps": []
   },
   "sys-libs/ldb": {
     "buildDeps": [
@@ -8728,7 +8304,6 @@
     "buildDeps": [
       "dev-libs/expat",
       "sys-apps/dbus",
-      "sys-devel/gettext",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
@@ -9070,9 +8645,7 @@
   },
   "virtual/pkgconfig": {
     "buildDeps": [],
-    "runtimeDeps": [
-      "dev-util/pkgconfig"
-    ]
+    "runtimeDeps": []
   },
   "virtual/rust": {
     "buildDeps": [],
@@ -9339,7 +8912,6 @@
       "dev-libs/fribidi",
       "dev-libs/glib",
       "dev-util/glib-utils",
-      "dev-util/gtk-doc-am",
       "media-libs/fontconfig",
       "media-libs/freetype",
       "media-libs/harfbuzz",
@@ -9361,8 +8933,6 @@
   },
   "x11-libs/xtrans": {
     "buildDeps": [
-      "sys-devel/autoconf",
-      "sys-devel/automake",
       "sys-devel/libtool"
     ],
     "runtimeDeps": []
@@ -9378,7 +8948,6 @@
   "x11-misc/xkeyboard-config": {
     "buildDeps": [
       "dev-util/intltool",
-      "sys-devel/gettext",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": []

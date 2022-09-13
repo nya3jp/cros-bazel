@@ -75,10 +75,16 @@ func (p *Profile) Parse() (*ParsedProfile, error) {
 		return nil, err
 	}
 
+	var provided []*ProvidedPackage
+	if err := p.parseProvided(&provided); err != nil {
+		return nil, err
+	}
+
 	return &ParsedProfile{
 		profile:   p,
 		vars:      vars,
 		overrides: overrides,
+		provided:  provided,
 	}, nil
 }
 
@@ -103,10 +109,19 @@ func (p *Profile) parseOverrides(overrides *Overrides) error {
 	return readPackageUse(filepath.Join(p.path, "package.use"), overrides)
 }
 
+func (p *Profile) parseProvided(provided *[]*ProvidedPackage) error {
+	for _, parent := range p.parents {
+		parent.parseProvided(provided)
+	}
+
+	return readPackageProvided(filepath.Join(p.path, "package.provided"), provided)
+}
+
 type ParsedProfile struct {
 	profile   *Profile
 	vars      makevars.Vars
 	overrides *Overrides
+	provided  []*ProvidedPackage
 }
 
 func (p *ParsedProfile) Vars() makevars.Vars {
@@ -115,6 +130,10 @@ func (p *ParsedProfile) Vars() makevars.Vars {
 
 func (p *ParsedProfile) Overrides() *Overrides {
 	return p.overrides
+}
+
+func (p *ParsedProfile) Provided() []*ProvidedPackage {
+	return p.provided
 }
 
 type Overrides struct {
@@ -135,8 +154,24 @@ func (po *PackageOverrides) Use() string {
 	return po.use
 }
 
+type ProvidedPackage struct {
+	name string
+	ver  *version.Version
+}
+
+func (pp *ProvidedPackage) Name() string {
+	return pp.name
+}
+
+func (pp *ProvidedPackage) Version() *version.Version {
+	return pp.ver
+}
+
 func readPackageUse(path string, overrides *Overrides) error {
 	lines, err := readLines(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -149,6 +184,34 @@ func readPackageUse(path string, overrides *Overrides) error {
 		packageName := fields[0]
 		uses := fields[1:]
 		overrides.packageUse[packageName] += " " + strings.Join(uses, " ")
+	}
+	return nil
+}
+
+func readPackageProvided(path string, provided *[]*ProvidedPackage) error {
+	lines, err := readLines(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	for _, line := range lines {
+		prefix, ver, err := version.ExtractSuffix(line)
+		if err != nil {
+			return fmt.Errorf("invalid provided package spec: %s: %w", line, err)
+		}
+
+		const hyphen = "-"
+		if !strings.HasSuffix(prefix, hyphen) {
+			return fmt.Errorf("invalid provided package spec: %s", line)
+		}
+		name := strings.TrimSuffix(prefix, hyphen)
+		*provided = append(*provided, &ProvidedPackage{
+			name: name,
+			ver:  ver,
+		})
 	}
 	return nil
 }
