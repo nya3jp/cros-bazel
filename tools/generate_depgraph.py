@@ -3,15 +3,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import json
 import pathlib
 import sys
 from typing import List, Optional
 
+import deps_lib
+
 
 def main(argv: List[str]) -> Optional[int]:
-    with open(argv[1]) as f:
-        package_map = json.load(f)
+    deps = deps_lib.load_deps_json(argv[1])
 
     built_packages = set()
     bazel_bin = pathlib.Path(__file__).parent.parent.parent / 'bazel-bin'
@@ -20,17 +20,21 @@ def main(argv: List[str]) -> Optional[int]:
 
     print('digraph {')
 
-    for src, info in sorted(package_map.items()):
-        build_deps = info['buildDeps']
-        runtime_deps = info['runtimeDeps']
+    for package, info in sorted(deps.items()):
+        build_only_deps = list(set(info.build_deps).difference(info.runtime_deps))
 
-        build_only_deps = list(set(build_deps).difference(runtime_deps))
+        if package in built_packages:
+            color = 'green'
+        elif all(pkg in built_packages for pkg in info.transitive_build_deps):
+            color = 'red'
+        else:
+            color = 'yellow'
 
-        print('  "%s" [style = filled, fillcolor = %s]' % (src, 'green' if src in built_packages else 'red'))
+        print('  "%s" [style = filled, fillcolor = %s]' % (package, color))
         if build_only_deps:
-            print('  "%s" -> {%s} [style = dashed]' % (src, ' '.join('"%s"' % dst for dst in build_only_deps)))
-        if runtime_deps:
-            print('  "%s" -> {%s}' % (src, ' '.join('"%s"' % dst for dst in runtime_deps)))
+            print('  "%s" -> {%s} [style = dashed]' % (package, ' '.join('"%s"' % dst for dst in build_only_deps)))
+        if info.runtime_deps:
+            print('  "%s" -> {%s}' % (package, ' '.join('"%s"' % dst for dst in info.runtime_deps)))
 
     print('}')
 
