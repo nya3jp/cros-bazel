@@ -48,7 +48,10 @@ def _ebuild_impl(ctx):
 
     # TODO: Consider target/host transitions.
     build_deps = depset(
-        [dep[BinaryPackageInfo].file for dep in ctx.attr.build_deps],
+        # Pull in runtime dependencies of build-time dependencies.
+        # TODO: Revisit this logic to see if we can avoid pulling in transitive
+        # dependencies.
+        transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.build_deps],
         order = "postorder",
     )
     runtime_deps = depset(
