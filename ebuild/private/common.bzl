@@ -56,6 +56,20 @@ SDKInfo = provider(
     },
 )
 
+EbuildSrcInfo = provider(
+    "Source files used by an ebuild",
+    fields = {
+        "squashfs_file": """
+            File: A squashfs image (.squashfs) that contains src files for this
+            ebuild.
+        """,
+        "src_path": """
+            str: The patch where the src files came from. It will be mounted
+            relative to /mnt/host/source so it mirrors the external repo.
+        """,
+    },
+)
+
 def _workspace_root(label):
     return paths.join("..", label.workspace_name) if label.workspace_name else ""
 

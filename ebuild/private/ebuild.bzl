@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package")
+load("common.bzl", "BinaryPackageInfo", "EbuildSrcInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package")
 
 def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
@@ -45,6 +45,11 @@ def _ebuild_impl(ctx):
     for overlay in overlays:
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
+
+    for target in ctx.attr.srcs:
+        info = target[EbuildSrcInfo]
+        args.add("--overlay=src/%s=%s" % (info.src_path, info.squashfs_file.path))
+        direct_inputs.append(info.squashfs_file)
 
     # TODO: Consider target/host transitions.
     build_deps = depset(
@@ -92,6 +97,10 @@ ebuild = rule(
         ),
         "distfiles": attr.label_keyed_string_dict(
             allow_files = True,
+        ),
+        "srcs": attr.label_list(
+            doc="src files used by the ebuild",
+            providers = [EbuildSrcInfo]
         ),
         "build_deps": attr.label_list(
             providers = [BinaryPackageInfo],
