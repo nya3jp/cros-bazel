@@ -384,7 +384,12 @@ var app = &cli.App{
 			return err
 		}
 
-		providedPackages := make(map[string]struct{})
+		providedPackages := map[string]struct{}{
+			// TODO: Parse /etc/portage/profile/package.provided and obtain this list.
+			"sys-devel/gcc":  {},
+			"sys-libs/glibc": {},
+			"dev-lang/go":    {},
+		}
 		for _, pp := range profile.Provided() {
 			providedPackages[pp.Name()] = struct{}{}
 		}

@@ -712,8 +712,7 @@
   },
   "chromeos-base/chromeos-dbus-bindings": {
     "buildDeps": [
-      "dev-go/cmp",
-      "dev-lang/go"
+      "dev-go/cmp"
     ],
     "runtimeDeps": []
   },
@@ -3003,7 +3002,6 @@
       "dev-cpp/gtest",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
-      "dev-lang/go",
       "dev-libs/protobuf"
     ],
     "runtimeDeps": [
@@ -3249,7 +3247,6 @@
       "dev-go/grpc",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
-      "dev-lang/go",
       "dev-libs/protobuf",
       "net-libs/grpc"
     ],
@@ -3334,8 +3331,7 @@
       "dev-go/gapi",
       "dev-go/oauth2",
       "dev-go/sftp",
-      "dev-go/text",
-      "dev-lang/go"
+      "dev-go/text"
     ],
     "runtimeDeps": []
   },
@@ -3343,29 +3339,25 @@
     "buildDeps": [
       "dev-go/net",
       "dev-go/protobuf-legacy-api",
-      "dev-go/text",
-      "dev-lang/go"
+      "dev-go/text"
     ],
     "runtimeDeps": []
   },
   "dev-go/check": {
     "buildDeps": [
-      "dev-go/pretty",
-      "dev-lang/go"
+      "dev-go/pretty"
     ],
     "runtimeDeps": []
   },
   "dev-go/cmp": {
     "buildDeps": [
-      "dev-go/xerrors",
-      "dev-lang/go"
+      "dev-go/xerrors"
     ],
     "runtimeDeps": []
   },
   "dev-go/cncf-xds": {
     "buildDeps": [
-      "dev-go/ep-pvg",
-      "dev-lang/go"
+      "dev-go/ep-pvg"
     ],
     "runtimeDeps": []
   },
@@ -3373,8 +3365,7 @@
     "buildDeps": [
       "dev-go/go-sys",
       "dev-go/net",
-      "dev-go/term",
-      "dev-lang/go"
+      "dev-go/term"
     ],
     "runtimeDeps": []
   },
@@ -3387,8 +3378,7 @@
       "dev-go/net",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
-      "dev-go/testify",
-      "dev-lang/go"
+      "dev-go/testify"
     ],
     "runtimeDeps": []
   },
@@ -3397,8 +3387,7 @@
       "dev-go/afero",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
-      "dev-go/strcase",
-      "dev-lang/go"
+      "dev-go/strcase"
     ],
     "runtimeDeps": []
   },
@@ -3408,8 +3397,7 @@
       "dev-go/cmp",
       "dev-go/genproto",
       "dev-go/golang-groupcache",
-      "dev-go/net",
-      "dev-lang/go"
+      "dev-go/net"
     ],
     "runtimeDeps": []
   },
@@ -3419,53 +3407,40 @@
       "dev-go/gapi",
       "dev-go/genproto",
       "dev-go/net",
-      "dev-go/protoc-gen-go-grpc",
-      "dev-lang/go"
+      "dev-go/protoc-gen-go-grpc"
     ],
     "runtimeDeps": []
   },
   "dev-go/gcp-compute": {
     "buildDeps": [
-      "dev-go/net",
-      "dev-lang/go"
+      "dev-go/net"
     ],
     "runtimeDeps": []
   },
   "dev-go/genproto": {
     "buildDeps": [
-      "dev-go/protobuf-legacy-api",
-      "dev-lang/go"
+      "dev-go/protobuf-legacy-api"
     ],
     "runtimeDeps": []
   },
   "dev-go/glog": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/go-difflib": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/go-spew": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/go-sys": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/golang-groupcache": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/grpc": {
@@ -3481,21 +3456,17 @@
       "dev-go/protobuf-legacy-api",
       "dev-go/uuid",
       "dev-go/xxhash",
-      "dev-go/yaml",
-      "dev-lang/go"
+      "dev-go/yaml"
     ],
     "runtimeDeps": []
   },
   "dev-go/kr-fs": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/kr-text": {
     "buildDeps": [
-      "dev-go/pty",
-      "dev-lang/go"
+      "dev-go/pty"
     ],
     "runtimeDeps": []
   },
@@ -3503,8 +3474,7 @@
     "buildDeps": [
       "dev-go/go-sys",
       "dev-go/term",
-      "dev-go/text",
-      "dev-lang/go"
+      "dev-go/text"
     ],
     "runtimeDeps": []
   },
@@ -3513,51 +3483,43 @@
       "dev-go/gcp",
       "dev-go/gcp-compute",
       "dev-go/net",
-      "dev-go/yaml",
-      "dev-lang/go"
+      "dev-go/yaml"
     ],
     "runtimeDeps": []
   },
   "dev-go/objx": {
     "buildDeps": [
-      "dev-go/go-spew",
-      "dev-lang/go"
+      "dev-go/go-spew"
     ],
     "runtimeDeps": []
   },
   "dev-go/pretty": {
     "buildDeps": [
-      "dev-go/kr-text",
-      "dev-lang/go"
+      "dev-go/kr-text"
     ],
     "runtimeDeps": []
   },
   "dev-go/protobuf": {
     "buildDeps": [
-      "dev-go/cmp",
-      "dev-lang/go"
+      "dev-go/cmp"
     ],
     "runtimeDeps": []
   },
   "dev-go/protobuf-legacy-api": {
     "buildDeps": [
       "dev-go/cmp",
-      "dev-go/protobuf",
-      "dev-lang/go"
+      "dev-go/protobuf"
     ],
     "runtimeDeps": []
   },
   "dev-go/protoc-gen-go-grpc": {
     "buildDeps": [
-      "dev-go/protobuf",
-      "dev-lang/go"
+      "dev-go/protobuf"
     ],
     "runtimeDeps": []
   },
   "dev-go/pty": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/sftp": {
@@ -3565,21 +3527,17 @@
       "dev-go/crypto",
       "dev-go/go-sys",
       "dev-go/kr-fs",
-      "dev-go/testify",
-      "dev-lang/go"
+      "dev-go/testify"
     ],
     "runtimeDeps": []
   },
   "dev-go/strcase": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/term": {
     "buildDeps": [
-      "dev-go/go-sys",
-      "dev-lang/go"
+      "dev-go/go-sys"
     ],
     "runtimeDeps": []
   },
@@ -3588,44 +3546,30 @@
       "dev-go/go-difflib",
       "dev-go/go-spew",
       "dev-go/objx",
-      "dev-go/yaml",
-      "dev-lang/go"
+      "dev-go/yaml"
     ],
     "runtimeDeps": []
   },
   "dev-go/text": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/uuid": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/xerrors": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/xxhash": {
-    "buildDeps": [
-      "dev-lang/go"
-    ],
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-go/yaml": {
     "buildDeps": [
-      "dev-go/check",
-      "dev-lang/go"
+      "dev-go/check"
     ],
-    "runtimeDeps": []
-  },
-  "dev-lang/go": {
-    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-lang/python": {
