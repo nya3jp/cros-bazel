@@ -20,7 +20,7 @@ export FEATURES="digest -sandbox -usersandbox"  # TODO: turn on sandbox
 read -ra atoms <<<"${INSTALL_ATOMS_TARGET}"
 if (( ${#atoms[@]} )); then
   # TODO: emerge is too slow! Find a way to speed up.
-  time emerge --oneshot --usepkgonly --nodeps "${atoms[@]}"
+  time emerge --oneshot --usepkgonly --nodeps --noreplace "${atoms[@]}"
 fi
 
 unset BOARD
