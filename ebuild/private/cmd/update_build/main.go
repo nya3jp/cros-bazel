@@ -30,9 +30,10 @@ import (
 const ebuildExt = ".ebuild"
 
 var overlayRelDirs = []string{
-	"third_party/portage-stable",
-	"third_party/chromiumos-overlay",
+	// The order matters; the first one has the highest priority.
 	"overlays/overlay-arm64-generic",
+	"third_party/chromiumos-overlay",
+	"third_party/portage-stable",
 }
 
 // TODO: Remove this blocklist.
@@ -178,7 +179,17 @@ func updateRepositories(bzlPath string, dists []*distEntry) error {
 
 func packageNameToLabel(name string, overlayDirs []string) (string, error) {
 	for _, overlayDir := range overlayDirs {
-		if _, err := os.Stat(filepath.Join(overlayDir, name)); err != nil {
+		fis, err := os.ReadDir(filepath.Join(overlayDir, name))
+		if err != nil {
+			continue
+		}
+		hasEBuild := false
+		for _, fi := range fis {
+			if strings.HasSuffix(fi.Name(), ".ebuild") {
+				hasEBuild = true
+			}
+		}
+		if !hasEBuild {
 			continue
 		}
 		v := strings.Split(overlayDir, "/")
