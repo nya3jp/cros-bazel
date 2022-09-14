@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("common.bzl", "BinaryPackageInfo", "EbuildSrcInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package")
+load("@bazel_skylib//lib:paths.bzl", "paths")
 
 def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
@@ -68,13 +69,15 @@ def _ebuild_impl(ctx):
     args.add_all(build_deps, format_each = "--install-target=%s")
     transitive_inputs.append(build_deps)
 
+    package_name = "%s/%s" % (ctx.attr.category, paths.split_extension(ctx.file.ebuild.basename)[0])
+
     ctx.actions.run(
         inputs = depset(direct_inputs, transitive = transitive_inputs),
         outputs = [output],
         executable = ctx.executable._build_package,
         arguments = [args],
         mnemonic = "Ebuild",
-        progress_message = "Building " + ctx.file.ebuild.basename,
+        progress_message = "Building " + package_name,
     )
 
     return [
