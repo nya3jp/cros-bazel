@@ -36,13 +36,13 @@ binary_package(
 
 binary_package(
     name = "go",
-    src = "@amd64_host_go_1_18_r1//file",
+    src = "@amd64_host_go_1_18_r2//file",
     visibility = ["//visibility:public"],
 )
 
 binary_package(
     name = "libcxx",
-    src = "@amd64_host_libcxx_15_0_pre458507_r5//file",
+    src = "@amd64_host_libcxx_15_0_pre458507_r6//file",
     visibility = ["//visibility:public"],
 )
 
@@ -54,7 +54,7 @@ binary_package(
 
 binary_package(
     name = "linux-headers",
-    src = "@amd64_host_linux_headers_4_14_r52//file",
+    src = "@amd64_host_linux_headers_4_14_r56//file",
     visibility = ["//visibility:public"],
 )
 

@@ -12,7 +12,7 @@ binary_package(
 
 binary_package(
     name = "libcxx",
-    src = "@arm64_generic_libcxx_15_0_pre458507_r5//file",
+    src = "@arm64_generic_libcxx_15_0_pre458507_r6//file",
     visibility = ["//visibility:public"],
 )
 
