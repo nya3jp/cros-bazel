@@ -8,13 +8,13 @@ def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
 
 def _ebuild_impl(ctx):
-    src_basename = ctx.file.src.basename.rsplit(".", 1)[0]
+    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
     output = ctx.actions.declare_file(src_basename + ".tbz2")
     sdk = ctx.attr._sdk[SDKInfo]
 
     args = ctx.actions.args()
     args.add_all([
-        "--ebuild=" + ctx.file.src.path,
+        "--ebuild=" + ctx.file.ebuild.path,
         "--category=" + ctx.attr.category,
         "--output=" + output.path,
         "--board=" + sdk.board,
@@ -22,7 +22,7 @@ def _ebuild_impl(ctx):
 
     direct_inputs = [
         ctx.executable._build_package,
-        ctx.file.src,
+        ctx.file.ebuild,
     ]
     transitive_inputs = []
 
@@ -69,7 +69,7 @@ def _ebuild_impl(ctx):
         executable = ctx.executable._build_package,
         arguments = [args],
         mnemonic = "Ebuild",
-        progress_message = "Building " + ctx.file.src.basename,
+        progress_message = "Building " + ctx.file.ebuild.basename,
     )
 
     return [
@@ -83,7 +83,7 @@ def _ebuild_impl(ctx):
 ebuild = rule(
     implementation = _ebuild_impl,
     attrs = {
-        "src": attr.label(
+        "ebuild": attr.label(
             mandatory = True,
             allow_single_file = [".ebuild"],
         ),

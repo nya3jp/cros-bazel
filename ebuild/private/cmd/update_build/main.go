@@ -126,7 +126,7 @@ load("//bazel/ebuild:defs.bzl", "ebuild")
 
 ebuild(
     name = "{{ .PackageName }}",
-    src = "{{ .EBuildName }}",
+    ebuild = "{{ .EBuildName }}",
     category = "{{ .Category }}",
     distfiles = {
         {{- range .Dists }}
