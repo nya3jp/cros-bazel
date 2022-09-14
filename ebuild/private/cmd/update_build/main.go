@@ -241,19 +241,16 @@ var app = &cli.App{
 			}
 		}
 
-		for _, overlayDir := range overlayDirs {
-			var knownDists []*distEntry
-			distJSONPath := filepath.Join(overlayDir, "distfiles.json")
-			if b, err := os.ReadFile(distJSONPath); err == nil {
-				if err := json.Unmarshal(b, &knownDists); err != nil {
-					return fmt.Errorf("%s: %w", distJSONPath, err)
-				}
+		cachedDists := make(map[string]*distEntry)
+		distJSONPath := filepath.Join(workspaceDir, "bazel/data/distfiles.json")
+		if b, err := os.ReadFile(distJSONPath); err == nil {
+			if err := json.Unmarshal(b, &cachedDists); err != nil {
+				return fmt.Errorf("%s: %w", distJSONPath, err)
 			}
+		}
 
-			knownDistMap := make(map[string]*distEntry)
-			for _, dist := range knownDists {
-				knownDistMap[dist.Filename] = dist
-			}
+		for _, overlayDir := range overlayDirs {
+			var overlayDists []*distEntry
 
 			var ebuildDirs []string
 			if err := filepath.WalkDir(overlayDir, func(path string, d fs.DirEntry, err error) error {
@@ -347,21 +344,28 @@ var app = &cli.App{
 							// This is likely a Go dep, skip for now.
 							continue
 						}
-						if dist, ok := knownDistMap[filename]; ok {
+
+						// Check the cache first.
+						if dist, ok := cachedDists[filename]; ok {
+							if dist == nil {
+								log.Printf("WARNING: unable to locate distfile %s: negative-cached", filename)
+								continue
+							}
 							dists = append(dists, dist)
 							continue
 						}
+
 						log.Printf("  locating distfile %s...", filename)
 						dist, err := locateDistFile(filename)
 						if err != nil {
 							log.Printf("WARNING: unable to locate distfile %s: %v", filename, err)
-							continue
 						}
-						knownDists = append(knownDists, dist)
-						knownDistMap[filename] = dist
 
-						// Update distfiles.json.
-						b, err := json.Marshal(knownDists)
+						dists = append(dists, dist)
+						cachedDists[filename] = dist
+
+						// Update cache.
+						b, err := json.MarshalIndent(cachedDists, "", "  ")
 						if err != nil {
 							return err
 						}
@@ -380,16 +384,18 @@ var app = &cli.App{
 					if err := generateBuild(buildPath, ebuild); err != nil {
 						return err
 					}
+
+					overlayDists = append(overlayDists, dists...)
 					return nil
 				}(); err != nil {
 					log.Printf("WARNING: Failed to generate %s: %v", buildPath, err)
 				}
 			}
 
-			sort.Slice(knownDists, func(i, j int) bool {
-				return knownDists[i].Name < knownDists[j].Name
+			sort.Slice(overlayDists, func(i, j int) bool {
+				return overlayDists[i].Name < overlayDists[j].Name
 			})
-			if err := updateRepositories(filepath.Join(overlayDir, "repositories.bzl"), knownDists); err != nil {
+			if err := updateRepositories(filepath.Join(overlayDir, "repositories.bzl"), overlayDists); err != nil {
 				return err
 			}
 		}
