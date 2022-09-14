@@ -2,12 +2,15 @@
   "app-accessibility/brltty": {
     "buildDeps": [
       "net-wireless/bluez",
+      "sys-apps/baselayout",
+      "sys-devel/libtool",
       "virtual/libiconv",
       "virtual/libusb",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "net-wireless/bluez",
+      "sys-apps/baselayout",
       "virtual/libiconv",
       "virtual/libusb"
     ]
@@ -30,6 +33,7 @@
       "dev-libs/libestr",
       "dev-libs/libfastjson",
       "sys-apps/util-linux",
+      "sys-devel/libtool",
       "sys-libs/zlib"
     ],
     "runtimeDeps": [
@@ -54,7 +58,8 @@
       "sys-libs/zlib",
       "virtual/editor",
       "virtual/libcrypt",
-      "virtual/mta"
+      "virtual/mta",
+      "virtual/tmpfiles"
     ]
   },
   "app-arch/brotli": {
@@ -68,7 +73,9 @@
   "app-arch/gcab": {
     "buildDeps": [
       "dev-libs/glib",
-      "sys-libs/zlib"
+      "dev-util/desktop-file-utils",
+      "sys-libs/zlib",
+      "x11-misc/shared-mime-info"
     ],
     "runtimeDeps": [
       "dev-libs/glib",
@@ -144,6 +151,7 @@
     "buildDeps": [
       "dev-libs/libverto",
       "dev-libs/openssl",
+      "sys-devel/libtool",
       "sys-fs/e2fsprogs"
     ],
     "runtimeDeps": [
@@ -154,14 +162,21 @@
   },
   "app-crypt/trousers": {
     "buildDeps": [
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/metrics",
-      "dev-libs/openssl"
+      "dev-libs/openssl",
+      "sys-apps/baselayout",
+      "sys-devel/libtool",
+      "virtual/pkgconfig"
     ],
     "runtimeDeps": [
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/metrics",
-      "dev-libs/openssl"
+      "dev-libs/openssl",
+      "sys-apps/baselayout",
+      "virtual/tmpfiles"
     ]
   },
   "app-editors/vim": {
@@ -275,7 +290,8 @@
   },
   "app-misc/jq": {
     "buildDeps": [
-      "sys-devel/flex"
+      "sys-devel/flex",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": []
   },
@@ -344,13 +360,18 @@
   },
   "chromeos-base/aosp-frameworks-ml-nn": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/nnapi",
       "dev-cpp/eigen",
+      "dev-cpp/gtest",
       "dev-libs/libtextclassifier",
       "dev-libs/openssl",
       "sci-libs/tensorflow"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/nnapi",
       "dev-libs/openssl",
       "sci-libs/tensorflow"
@@ -361,33 +382,43 @@
       "app-crypt/trousers",
       "chromeos-base/attestation-client",
       "chromeos-base/chaps",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
       "chromeos-base/tpm_manager",
-      "chromeos-base/vboot_reference"
+      "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
       "chromeos-base/attestation-client",
       "chromeos-base/chaps",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
-      "chromeos-base/tpm_manager"
+      "chromeos-base/tpm_manager",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/attestation-client": {
     "buildDeps": [
       "chromeos-base/libbrillo",
-      "chromeos-base/system_api"
+      "chromeos-base/libchrome",
+      "chromeos-base/system_api",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
-      "chromeos-base/libbrillo"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
     ]
   },
   "chromeos-base/authpolicy": {
@@ -395,13 +426,16 @@
       "app-crypt/mit-krb5",
       "chromeos-base/cryptohome-client",
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/protofiles",
       "chromeos-base/session_manager-client",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "net-fs/samba",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-libs/libcap"
     ],
@@ -409,20 +443,37 @@
       "app-crypt/mit-krb5",
       "chromeos-base/cryptohome-client",
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "dev-libs/protobuf",
       "net-fs/samba",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-libs/libcap"
+    ]
+  },
+  "chromeos-base/autotest": {
+    "buildDeps": [
+      "virtual/autotest-assistant-libs",
+      "virtual/autotest-libs"
+    ],
+    "runtimeDeps": [
+      "virtual/autotest-assistant-libs",
+      "virtual/autotest-libs"
     ]
   },
   "chromeos-base/biod_proxy": {
     "buildDeps": [
       "chromeos-base/libbrillo",
-      "chromeos-base/system_api"
+      "chromeos-base/libchrome",
+      "chromeos-base/system_api",
+      "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/bootcomplete-login": {
     "buildDeps": [],
@@ -432,10 +483,15 @@
   },
   "chromeos-base/bootid-logger": {
     "buildDeps": [
-      "chromeos-base/croslog"
+      "chromeos-base/croslog",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
-      "chromeos-base/croslog"
+      "chromeos-base/croslog",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
     ]
   },
   "chromeos-base/bootlockbox-client": {
@@ -451,9 +507,14 @@
   },
   "chromeos-base/bootstat": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "sys-apps/rootdev"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/rootdev"
     ]
   },
@@ -472,20 +533,26 @@
     "buildDeps": [
       "app-crypt/trousers",
       "chromeos-base/chaps-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
       "chromeos-base/tpm_manager",
+      "dev-cpp/gtest",
       "dev-libs/leveldb",
       "dev-libs/nspr",
       "dev-libs/nss",
       "dev-libs/openssl",
-      "dev-libs/protobuf"
+      "dev-libs/protobuf",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
       "chromeos-base/chaps-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
@@ -493,15 +560,19 @@
       "chromeos-base/tpm_manager",
       "dev-libs/leveldb",
       "dev-libs/openssl",
-      "dev-libs/protobuf"
+      "dev-libs/protobuf",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/chaps-client": {
     "buildDeps": [
-      "chromeos-base/libbrillo"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
-      "chromeos-base/libbrillo"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
     ]
   },
   "chromeos-base/chrome-icu": {
@@ -590,6 +661,7 @@
       "app-crypt/mit-krb5",
       "app-misc/edid-decode",
       "chromeos-base/authpolicy",
+      "chromeos-base/autotest",
       "chromeos-base/chrome-icu",
       "chromeos-base/chromeos-fonts",
       "chromeos-base/gestures",
@@ -628,12 +700,20 @@
     ]
   },
   "chromeos-base/chromeos-config-tools": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/chromeos-dbus-bindings": {
     "buildDeps": [
-      "dev-go/cmp"
+      "dev-go/cmp",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -652,7 +732,12 @@
     "buildDeps": [
       "chromeos-base/vboot_reference"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/vboot_reference",
+      "chromeos-base/vpd",
+      "sys-apps/flashrom",
+      "sys-apps/mosys"
+    ]
   },
   "chromeos-base/chromeos-fonts": {
     "buildDeps": [
@@ -688,20 +773,31 @@
   },
   "chromeos-base/chromeos-imageburner": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "sys-apps/rootdev"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "sys-apps/baselayout",
       "sys-apps/rootdev"
     ]
   },
   "chromeos-base/chromeos-init": {
     "buildDeps": [
       "chromeos-base/bootstat",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/secure-erase-file",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/re2",
+      "sys-apps/baselayout",
       "sys-apps/rootdev"
     ],
     "runtimeDeps": [
@@ -711,6 +807,8 @@
       "chromeos-base/chromeos-common-script",
       "chromeos-base/chromeos-storage-info",
       "chromeos-base/common-assets",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/oobe_config",
       "chromeos-base/secure-erase-file",
@@ -718,27 +816,33 @@
       "chromeos-base/tty",
       "chromeos-base/vboot_reference",
       "dev-libs/re2",
+      "sys-apps/baselayout",
       "sys-apps/frecon",
       "sys-apps/rootdev",
       "sys-apps/systemd-tmpfiles",
       "sys-apps/upstart",
       "sys-fs/e2fsprogs",
       "sys-process/lsof",
-      "virtual/chromeos-bootcomplete"
+      "virtual/chromeos-bootcomplete",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/chromeos-installer": {
     "buildDeps": [
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/vboot_reference",
       "chromeos-base/verity",
-      "dev-libs/openssl"
+      "dev-cpp/gtest",
+      "dev-libs/openssl",
+      "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "app-admin/sudo",
       "chromeos-base/chromeos-common-script",
       "chromeos-base/chromeos-storage-info",
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/vboot_reference",
       "chromeos-base/verity",
       "dev-libs/openssl",
@@ -760,6 +864,8 @@
       "chromeos-base/bootstat",
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/cryptohome",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libchromeos-ui",
       "chromeos-base/libcontainer",
       "chromeos-base/libpasswordprovider",
@@ -768,14 +874,18 @@
       "chromeos-base/protofiles",
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/nss",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/util-linux"
     ],
     "runtimeDeps": [
       "chromeos-base/bootstat",
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/cryptohome",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libchromeos-ui",
       "chromeos-base/libcontainer",
       "chromeos-base/libpasswordprovider",
@@ -783,7 +893,9 @@
       "chromeos-base/minijail",
       "dev-libs/nss",
       "dev-libs/protobuf",
-      "sys-apps/util-linux"
+      "sys-apps/baselayout",
+      "sys-apps/util-linux",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/chromeos-machine-id-regen": {
@@ -803,18 +915,30 @@
     "runtimeDeps": []
   },
   "chromeos-base/chromeos-storage-info": {
-    "buildDeps": [],
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
     "runtimeDeps": [
       "chromeos-base/chromeos-common-script",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/hdparm",
       "sys-apps/smartmontools"
     ]
   },
   "chromeos-base/chromeos-trim": {
-    "buildDeps": [],
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
     "runtimeDeps": [
       "chromeos-base/chromeos-common-script",
       "chromeos-base/chromeos-init",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/util-linux"
     ]
   },
@@ -833,6 +957,8 @@
     "buildDeps": [
       "chromeos-base/debugd-client",
       "chromeos-base/google-breakpad",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libcrossystem",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
@@ -841,20 +967,25 @@
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
       "chromeos-base/vm_protos",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "dev-libs/re2",
       "net-misc/curl",
+      "sys-apps/baselayout",
       "sys-libs/zlib"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-ca-certificates",
       "chromeos-base/google-breakpad",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libcrossystem",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "dev-libs/protobuf",
       "dev-libs/re2",
       "net-misc/curl",
+      "sys-apps/baselayout",
       "sys-apps/keyutils",
       "sys-libs/zlib"
     ]
@@ -872,20 +1003,29 @@
       "dev-rust/protoc-rust",
       "dev-rust/serde",
       "dev-rust/serde_derive",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "sys-apps/baselayout",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "sys-apps/dbus"
+      "sys-apps/baselayout",
+      "sys-apps/dbus",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/cros-camera": {
     "buildDeps": [
       "chromeos-base/cros-camera-android-deps",
       "chromeos-base/cros-camera-libs",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
+      "dev-cpp/gtest",
       "media-libs/cros-camera-hal-usb",
       "media-libs/libsync",
       "media-libs/minigbm",
+      "sys-apps/baselayout",
       "virtual/cros-camera-hal",
       "virtual/cros-camera-hal-configs",
       "x11-libs/libdrm"
@@ -893,10 +1033,14 @@
     "runtimeDeps": [
       "chromeos-base/cros-camera-android-deps",
       "chromeos-base/cros-camera-libs",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "media-libs/cros-camera-hal-usb",
       "media-libs/libsync",
+      "sys-apps/baselayout",
       "virtual/cros-camera-hal",
-      "virtual/cros-camera-hal-configs"
+      "virtual/cros-camera-hal-configs",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/cros-camera-android-deps": {
@@ -905,13 +1049,19 @@
       "chromeos-base/libchrome",
       "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/cros-camera-libs": {
     "buildDeps": [
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/cros-camera-android-deps",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
+      "dev-cpp/gtest",
       "media-libs/cros-camera-libcamera_connector_headers",
       "media-libs/cros-camera-libfs",
       "media-libs/libexif",
@@ -927,6 +1077,8 @@
     "runtimeDeps": [
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/cros-camera-android-deps",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "media-libs/cros-camera-libfs",
       "media-libs/libexif",
       "media-libs/libsync",
@@ -938,18 +1090,25 @@
   },
   "chromeos-base/cros-disks": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/session_manager-client",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "sys-apps/rootdev",
       "sys-apps/util-linux"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/session_manager-client",
       "net-fs/sshfs",
+      "sys-apps/baselayout",
       "sys-apps/rootdev",
       "sys-apps/util-linux",
       "sys-fs/dosfstools",
@@ -980,7 +1139,9 @@
       "dev-rust/tempfile",
       "dev-rust/textwrap",
       "dev-rust/tlsdate_dbus",
-      "sys-apps/dbus"
+      "sys-apps/dbus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "app-admin/sudo",
@@ -989,7 +1150,8 @@
       "net-misc/openssh",
       "net-wireless/iw",
       "sys-apps/dbus",
-      "sys-apps/net-tools"
+      "sys-apps/net-tools",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/crosh-extension": {
@@ -1002,7 +1164,10 @@
   },
   "chromeos-base/croslog": {
     "buildDeps": [
-      "chromeos-base/metrics"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "chromeos-base/metrics",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1030,7 +1195,9 @@
       "dev-rust/thiserror",
       "dev-rust/uuid",
       "media-sound/audio_streams",
-      "sys-libs/libcap"
+      "sys-libs/libcap",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/cfg-if",
@@ -1052,7 +1219,8 @@
       "dev-rust/thiserror",
       "dev-rust/uuid",
       "media-sound/audio_streams",
-      "sys-libs/libcap"
+      "sys-libs/libcap",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/cryptohome": {
@@ -1066,6 +1234,8 @@
       "chromeos-base/chaps",
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/cryptohome-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/metrics",
       "chromeos-base/power_manager-client",
@@ -1077,9 +1247,11 @@
       "chromeos-base/tpm_manager",
       "chromeos-base/tpm_manager-client",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/flatbuffers",
       "dev-libs/openssl",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/flashmap",
       "sys-apps/keyutils",
       "sys-apps/rootdev",
@@ -1096,6 +1268,8 @@
       "chromeos-base/cbor",
       "chromeos-base/chaps",
       "chromeos-base/chromeos-config-tools",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/metrics",
       "chromeos-base/secure-erase-file",
@@ -1104,13 +1278,15 @@
       "dev-libs/flatbuffers",
       "dev-libs/openssl",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/flashmap",
       "sys-apps/keyutils",
       "sys-apps/rootdev",
       "sys-fs/e2fsprogs",
       "sys-fs/ecryptfs-utils",
       "sys-fs/lvm2",
-      "sys-libs/libselinux"
+      "sys-libs/libselinux",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/cryptohome-client": {
@@ -1119,22 +1295,29 @@
       "chromeos-base/libchrome",
       "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/debugd": {
     "buildDeps": [
       "chromeos-base/chromeos-login",
       "chromeos-base/cryptohome-client",
       "chromeos-base/debugd-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/shill-client",
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "dev-libs/re2",
       "net-libs/libpcap",
       "net-wireless/iw",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-apps/rootdev",
       "sys-libs/libcap"
@@ -1144,6 +1327,8 @@
       "chromeos-base/chromeos-ssh-testkeys",
       "chromeos-base/chromeos-sshd-init",
       "chromeos-base/cryptohome-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/shill-client",
@@ -1152,10 +1337,12 @@
       "dev-libs/re2",
       "net-libs/libpcap",
       "net-wireless/iw",
+      "sys-apps/baselayout",
       "sys-apps/iproute2",
       "sys-apps/memtester",
       "sys-apps/rootdev",
-      "sys-libs/libcap"
+      "sys-libs/libcap",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/debugd-client": {
@@ -1168,11 +1355,16 @@
   },
   "chromeos-base/dev-install": {
     "buildDeps": [
-      "chromeos-base/vboot_reference"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "chromeos-base/vboot_reference",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
       "app-arch/bzip2",
       "app-arch/tar",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/vboot_reference",
       "net-misc/curl"
     ]
@@ -1183,14 +1375,18 @@
       "chromeos-base/attestation-client",
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/debugd-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
       "chromeos-base/missive",
       "chromeos-base/system_api",
       "chromeos-base/tpm_manager-client",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "dev-libs/re2",
       "media-sound/adhd",
       "net-libs/grpc",
+      "sys-apps/baselayout",
       "sys-apps/fwupd",
       "sys-apps/pciutils",
       "virtual/libudev",
@@ -1201,12 +1397,15 @@
     "runtimeDeps": [
       "app-arch/zstd",
       "chromeos-base/chromeos-config-tools",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
       "chromeos-base/missive",
       "dev-libs/protobuf",
       "dev-libs/re2",
       "dev-util/stressapptest",
       "net-libs/grpc",
+      "sys-apps/baselayout",
       "sys-apps/fwupd",
       "sys-apps/pciutils",
       "virtual/libudev",
@@ -1219,44 +1418,64 @@
       "chromeos-base/dlcservice-client",
       "chromeos-base/imageloader",
       "chromeos-base/imageloader-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/session_manager-client",
       "chromeos-base/system_api",
       "chromeos-base/update_engine-client",
       "chromeos-base/vboot_reference",
-      "dev-libs/protobuf"
+      "dev-cpp/gtest",
+      "dev-libs/protobuf",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "chromeos-base/imageloader",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
-      "dev-libs/protobuf"
+      "dev-libs/protobuf",
+      "sys-apps/baselayout",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/dlcservice-client": {
     "buildDeps": [
-      "chromeos-base/chromeos-dbus-bindings"
+      "chromeos-base/chromeos-dbus-bindings",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": []
   },
   "chromeos-base/dlp": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
       "chromeos-base/session_manager-client",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/leveldb",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
       "dev-libs/leveldb",
-      "dev-libs/protobuf"
+      "dev-libs/protobuf",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/dns-proxy": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/patchpanel",
@@ -1264,12 +1483,16 @@
       "chromeos-base/permission_broker-client",
       "chromeos-base/shill-dbus-client",
       "chromeos-base/shill-net",
+      "dev-cpp/gtest",
       "dev-libs/dbus-glib",
       "dev-libs/protobuf",
       "net-misc/curl",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/patchpanel",
@@ -1279,6 +1502,7 @@
       "dev-libs/dbus-glib",
       "dev-libs/protobuf",
       "net-misc/curl",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
@@ -1286,22 +1510,30 @@
     "buildDeps": [
       "dev-embedded/libftdi",
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-libs/zlib",
       "virtual/libusb"
     ],
     "runtimeDeps": [
       "dev-embedded/libftdi",
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-libs/zlib",
       "virtual/libusb"
     ]
   },
   "chromeos-base/featured": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/baselayout"
     ]
   },
@@ -1318,13 +1550,20 @@
   },
   "chromeos-base/fusebox": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-fs/fuse"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-fs/fuse"
     ]
@@ -1361,12 +1600,18 @@
   "chromeos-base/hardware_verifier": {
     "buildDeps": [
       "chromeos-base/chromeos-config-tools",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/runtime_probe-client",
       "chromeos-base/system_api",
-      "chromeos-base/vboot_reference"
+      "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/baselayout"
     ]
   },
@@ -1405,9 +1650,13 @@
       "dev-rust/spi-memory",
       "dev-rust/stm32g0xx-hal",
       "dev-rust/ufmt",
-      "dev-rust/ufmt-write"
+      "dev-rust/ufmt-write",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "chromeos-base/hps-firmware-images": {
     "buildDeps": [],
@@ -1415,51 +1664,76 @@
   },
   "chromeos-base/hpsd": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "virtual/libusb"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
+      "sys-apps/baselayout",
       "virtual/libusb"
     ]
   },
   "chromeos-base/iioservice": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libiioservice_ipc",
       "chromeos-base/libmems",
       "chromeos-base/mems_setup",
       "chromeos-base/metrics",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "virtual/chromeos-ec-driver-init"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libiioservice_ipc",
       "chromeos-base/libmems",
       "chromeos-base/mems_setup",
       "chromeos-base/metrics",
+      "sys-apps/baselayout",
       "virtual/chromeos-ec-driver-init"
     ]
   },
   "chromeos-base/imageloader": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/openssl",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-fs/lvm2"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
       "chromeos-base/vboot_reference",
       "dev-libs/openssl",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-fs/lvm2"
     ]
   },
   "chromeos-base/imageloader-client": {
-    "buildDeps": [],
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
     "runtimeDeps": []
   },
   "chromeos-base/inputcontrol": {
@@ -1478,48 +1752,65 @@
       "dev-rust/sync",
       "dev-rust/sys_util",
       "dev-rust/tiny_http",
-      "virtual/libusb"
+      "sys-apps/baselayout",
+      "virtual/libusb",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "virtual/libusb"
+      "sys-apps/baselayout",
+      "virtual/libusb",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/kerberos": {
     "buildDeps": [
       "app-crypt/mit-krb5",
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/protofiles",
       "chromeos-base/session_manager-client",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
       "app-crypt/mit-krb5",
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
   "chromeos-base/lexmark-fax-pnh": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "net-print/cups"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "net-print/cups"
     ]
   },
   "chromeos-base/libbrillo": {
     "buildDeps": [
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
       "chromeos-base/protofiles",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/dbus-glib",
       "dev-libs/modp_b64",
       "dev-libs/openssl",
@@ -1533,6 +1824,7 @@
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-ca-certificates",
+      "chromeos-base/libchrome",
       "chromeos-base/libchromeos-use-flags",
       "chromeos-base/minijail",
       "dev-libs/dbus-glib",
@@ -1576,9 +1868,15 @@
     ]
   },
   "chromeos-base/libchromeos-ui": {
-    "buildDeps": [],
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
     "runtimeDeps": [
-      "chromeos-base/bootstat"
+      "chromeos-base/bootstat",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
     ]
   },
   "chromeos-base/libchromeos-use-flags": {
@@ -1587,26 +1885,45 @@
   },
   "chromeos-base/libcontainer": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "sys-fs/lvm2"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/minijail",
+      "sys-apps/baselayout",
       "sys-fs/lvm2"
     ]
   },
   "chromeos-base/libcrossystem": {
     "buildDeps": [
-      "chromeos-base/vboot_reference"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "chromeos-base/vboot_reference",
+      "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/libec": {
     "buildDeps": [
       "chromeos-base/chromeos-ec-headers",
-      "chromeos-base/power_manager-client"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "chromeos-base/power_manager-client",
+      "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/libevdev": {
     "buildDeps": [],
@@ -1615,13 +1932,18 @@
   "chromeos-base/libhwsec": {
     "buildDeps": [
       "app-crypt/trousers",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/tpm_manager-client",
+      "dev-cpp/gtest",
       "dev-libs/flatbuffers",
       "dev-libs/openssl"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/tpm_manager-client",
       "dev-libs/flatbuffers",
@@ -1635,6 +1957,8 @@
       "dev-cpp/gtest"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/system_api",
       "chromeos-base/tpm_manager-client"
@@ -1642,9 +1966,15 @@
   },
   "chromeos-base/libiioservice_ipc": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "virtual/pkgconfig"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/libipp": {
     "buildDeps": [
@@ -1659,18 +1989,28 @@
   },
   "chromeos-base/libmems": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "net-libs/libiio"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "net-libs/libiio"
     ]
   },
   "chromeos-base/libpasswordprovider": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "sys-apps/keyutils"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/keyutils"
     ]
   },
@@ -1693,7 +2033,9 @@
       "dev-rust/serde_bytes",
       "dev-rust/serde_derive",
       "dev-rust/serde_json",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "chromeos-base/crosvm-base",
@@ -1713,38 +2055,51 @@
       "dev-rust/serde_bytes",
       "dev-rust/serde_derive",
       "dev-rust/serde_json",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/libtpmcrypto": {
     "buildDeps": [
       "app-crypt/trousers",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec-foundation",
+      "dev-cpp/gtest",
       "dev-libs/protobuf"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec-foundation",
       "dev-libs/protobuf"
     ]
   },
   "chromeos-base/lorgnette": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/permission_broker-client",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "media-gfx/sane-airscan",
       "media-gfx/sane-backends",
       "media-libs/libpng",
+      "sys-apps/baselayout",
       "virtual/jpeg",
       "virtual/libusb"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "media-gfx/sane-airscan",
       "media-gfx/sane-backends",
       "media-libs/libpng",
+      "sys-apps/baselayout",
       "virtual/jpeg",
       "virtual/libusb"
     ]
@@ -1760,7 +2115,9 @@
       "dev-rust/serde",
       "dev-rust/serde_bytes",
       "dev-rust/stderrlog",
-      "dev-rust/sync"
+      "dev-rust/sync",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "chromeos-base/libsirenia",
@@ -1772,7 +2129,8 @@
       "dev-rust/serde",
       "dev-rust/serde_bytes",
       "dev-rust/stderrlog",
-      "dev-rust/sync"
+      "dev-rust/sync",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/memd": {
@@ -1788,20 +2146,28 @@
       "dev-rust/syslog",
       "dev-rust/tempfile",
       "dev-rust/time",
-      "sys-apps/dbus"
+      "sys-apps/dbus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "sys-apps/dbus"
+      "sys-apps/dbus",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/mems_setup": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libmems",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/re2",
       "net-libs/libiio"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libmems",
       "dev-libs/re2",
       "net-libs/libiio"
@@ -1809,17 +2175,25 @@
   },
   "chromeos-base/metrics": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/session_manager-client",
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "dev-libs/re2",
+      "sys-apps/baselayout",
       "sys-apps/rootdev"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/protobuf",
       "dev-libs/re2",
-      "sys-apps/rootdev"
+      "sys-apps/baselayout",
+      "sys-apps/rootdev",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/minijail": {
@@ -1833,29 +2207,41 @@
   "chromeos-base/missive": {
     "buildDeps": [
       "app-arch/snappy",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
-      "dev-libs/protobuf"
+      "dev-cpp/gtest",
+      "dev-libs/protobuf",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "app-arch/snappy",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
-      "dev-libs/protobuf"
+      "dev-libs/protobuf",
+      "sys-apps/baselayout",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/mist": {
     "buildDeps": [
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "net-dialup/ppp",
       "virtual/libusb",
+      "virtual/pkgconfig",
       "virtual/udev"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "dev-libs/protobuf",
       "net-dialup/ppp",
@@ -1867,10 +2253,13 @@
     "buildDeps": [
       "chromeos-base/aosp-frameworks-ml-nn",
       "chromeos-base/chrome-icu",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
       "dev-cpp/abseil-cpp",
+      "dev-cpp/gtest",
       "dev-libs/libgrammar",
       "dev-libs/libhandwriting",
       "dev-libs/libsuggest",
@@ -1878,11 +2267,14 @@
       "dev-libs/libutf",
       "dev-libs/marisa-aosp",
       "media-libs/cros-camera-libfs",
-      "sci-libs/tensorflow"
+      "sci-libs/tensorflow",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "chromeos-base/aosp-frameworks-ml-nn",
       "chromeos-base/chrome-icu",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "dev-libs/libgrammar",
@@ -1890,7 +2282,8 @@
       "dev-libs/libsuggest",
       "dev-libs/libtextclassifier",
       "media-libs/cros-camera-libfs",
-      "sci-libs/tensorflow"
+      "sci-libs/tensorflow",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/ml-client": {
@@ -1906,37 +2299,63 @@
   },
   "chromeos-base/modem-utilities": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
-      "sys-apps/dbus"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "sys-apps/dbus",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/mojo_service_manager": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api",
-      "chromeos-base/vboot_reference"
+      "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/baselayout"
     ]
   },
   "chromeos-base/mtpd": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "media-libs/libmtp",
+      "sys-apps/baselayout",
       "virtual/udev"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/protobuf",
       "media-libs/libmtp",
+      "sys-apps/baselayout",
       "virtual/udev"
     ]
   },
   "chromeos-base/nnapi": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/nsswitch": {
     "buildDeps": [],
@@ -1946,41 +2365,62 @@
   },
   "chromeos-base/oobe_config": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/power_manager-client",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
-      "sys-apps/dbus"
+      "sys-apps/baselayout",
+      "sys-apps/dbus",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/p2p": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
+      "dev-cpp/gtest",
       "dev-libs/glib",
       "net-dns/avahi-daemon",
-      "net-firewall/iptables"
+      "net-firewall/iptables",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "dev-libs/glib",
       "net-dns/avahi-daemon",
-      "net-firewall/iptables"
+      "net-firewall/iptables",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/patchpanel": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/session_manager-client",
       "chromeos-base/shill-client",
       "chromeos-base/shill-net",
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
-      "dev-libs/protobuf"
+      "dev-cpp/gtest",
+      "dev-libs/protobuf",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/shill",
       "chromeos-base/shill-net",
@@ -1988,16 +2428,22 @@
       "dev-libs/protobuf",
       "net-firewall/iptables",
       "net-misc/bridge-utils",
+      "sys-apps/baselayout",
       "sys-apps/iproute2"
     ]
   },
   "chromeos-base/patchpanel-client": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/protobuf"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/protobuf"
     ]
   },
@@ -2006,49 +2452,67 @@
       "sys-apps/baselayout"
     ],
     "runtimeDeps": [
-      "sys-apps/baselayout"
+      "sys-apps/baselayout",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/permission_broker": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/patchpanel-client",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-kernel/linux-headers",
       "virtual/libusb",
       "virtual/udev"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/patchpanel-client",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "virtual/libusb",
       "virtual/udev"
     ]
   },
   "chromeos-base/permission_broker-client": {
-    "buildDeps": [],
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
     "runtimeDeps": []
   },
   "chromeos-base/power_manager": {
     "buildDeps": [
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/chromeos-ec-headers",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libec",
       "chromeos-base/metrics",
       "chromeos-base/ml-client",
       "chromeos-base/shill-dbus-client",
       "chromeos-base/system_api",
       "chromeos-base/tpm_manager-client",
+      "dev-cpp/gtest",
       "dev-libs/libnl",
       "dev-libs/protobuf",
       "dev-libs/re2",
       "media-sound/adhd",
       "net-misc/modemmanager-next",
+      "sys-apps/baselayout",
       "virtual/udev"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/ec-utils",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libec",
       "chromeos-base/libiioservice_ipc",
       "chromeos-base/metrics",
@@ -2060,18 +2524,32 @@
       "dev-libs/re2",
       "media-sound/adhd",
       "net-misc/modemmanager-next",
+      "sys-apps/baselayout",
+      "virtual/tmpfiles",
       "virtual/udev"
     ]
   },
   "chromeos-base/power_manager-client": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/print_tools": {
     "buildDeps": [
-      "chromeos-base/libipp"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "chromeos-base/libipp",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libipp"
     ]
   },
@@ -2081,8 +2559,11 @@
   },
   "chromeos-base/quipper": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/protofiles",
       "dev-cpp/gflags",
+      "dev-cpp/gtest",
       "dev-libs/glib",
       "dev-libs/openssl",
       "dev-libs/protobuf",
@@ -2090,6 +2571,8 @@
       "dev-util/perf"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-cpp/gflags",
       "dev-libs/glib",
       "dev-libs/openssl",
@@ -2113,27 +2596,45 @@
       "dev-rust/glob",
       "dev-rust/once_cell",
       "dev-rust/regex",
-      "dev-rust/sys_util"
+      "dev-rust/sys_util",
+      "sys-apps/baselayout",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "sys-apps/baselayout"
+      "sys-apps/baselayout",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/rgbkbd": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libec",
-      "chromeos-base/system_api"
+      "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "sys-apps/baselayout",
+      "virtual/tmpfiles"
+    ]
   },
   "chromeos-base/run_oci": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libcontainer",
       "chromeos-base/minijail",
+      "dev-cpp/gtest",
       "sys-apps/util-linux",
       "sys-libs/libcap"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libcontainer",
       "chromeos-base/minijail",
       "sys-apps/util-linux",
@@ -2144,15 +2645,22 @@
     "buildDeps": [
       "chromeos-base/chromeos-config-tools",
       "chromeos-base/debugd-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libec",
       "chromeos-base/shill-client",
       "chromeos-base/system_api",
       "chromeos-base/vboot_reference",
-      "media-libs/minigbm"
+      "dev-cpp/gtest",
+      "media-libs/minigbm",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-config-tools",
-      "chromeos-base/ec-utils"
+      "chromeos-base/ec-utils",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/runtime_probe-client": {
@@ -2169,19 +2677,33 @@
   },
   "chromeos-base/secanomalyd": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/session_manager-client",
-      "chromeos-base/vboot_reference"
+      "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
-      "chromeos-base/vboot_reference"
+      "chromeos-base/vboot_reference",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/secure-erase-file": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/selinux-policy": {
     "buildDeps": [],
@@ -2191,13 +2713,22 @@
     ]
   },
   "chromeos-base/session_manager-client": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/shill": {
     "buildDeps": [
       "chromeos-base/bootstat",
       "chromeos-base/chaps",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
@@ -2208,6 +2739,7 @@
       "chromeos-base/shill-net",
       "chromeos-base/system_api",
       "chromeos-base/vpn-manager",
+      "dev-cpp/gtest",
       "dev-libs/re2",
       "net-dialup/ppp",
       "net-dns/c-ares",
@@ -2215,12 +2747,15 @@
       "net-firewall/iptables",
       "net-libs/libtirpc",
       "net-misc/modemmanager-next",
+      "sys-apps/baselayout",
       "sys-apps/rootdev",
       "virtual/wpa_supplicant"
     ],
     "runtimeDeps": [
       "chromeos-base/bootstat",
       "chromeos-base/chaps",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
@@ -2237,7 +2772,9 @@
       "net-misc/modemmanager-next",
       "net-vpn/openvpn",
       "net-vpn/wireguard-tools",
+      "sys-apps/baselayout",
       "sys-apps/rootdev",
+      "virtual/tmpfiles",
       "virtual/wpa_supplicant"
     ]
   },
@@ -2247,23 +2784,37 @@
       "chromeos-base/libchrome",
       "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/shill-dbus-client": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/shill-client",
-      "chromeos-base/shill-net"
+      "chromeos-base/shill-net",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/shill-client",
       "chromeos-base/shill-net"
     ]
   },
   "chromeos-base/shill-net": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "dev-libs/re2"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/sirenia": {
     "buildDeps": [
@@ -2287,7 +2838,10 @@
       "dev-rust/serde_derive",
       "dev-rust/serde_json",
       "dev-rust/stderrlog",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "sys-apps/baselayout",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "chromeos-base/cronista",
@@ -2314,7 +2868,9 @@
       "dev-rust/serde_json",
       "dev-rust/stderrlog",
       "dev-rust/thiserror",
-      "sys-apps/dbus"
+      "sys-apps/baselayout",
+      "sys-apps/dbus",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/sirenia-rpc-macros": {
@@ -2323,48 +2879,71 @@
       "dev-rust/assert_matches",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/anyhow",
       "dev-rust/assert_matches",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust-binaries"
     ]
   },
   "chromeos-base/smbfs": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "net-fs/samba",
+      "sys-apps/baselayout",
       "sys-fs/fuse"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "net-fs/samba",
+      "sys-apps/baselayout",
       "sys-fs/fuse"
     ]
   },
   "chromeos-base/smbprovider": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/protofiles",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "net-fs/samba",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/protobuf",
       "net-fs/samba",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
   "chromeos-base/spaced": {
     "buildDeps": [
-      "chromeos-base/system_api"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "chromeos-base/system_api",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "sys-apps/baselayout"
     ]
   },
@@ -2392,63 +2971,84 @@
   },
   "chromeos-base/system-proxy": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/minijail",
       "chromeos-base/patchpanel",
       "chromeos-base/patchpanel-client",
       "chromeos-base/permission_broker-client",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "net-misc/curl",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libpasswordprovider",
       "chromeos-base/minijail",
       "chromeos-base/patchpanel",
       "chromeos-base/patchpanel-client",
       "dev-libs/protobuf",
       "net-misc/curl",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
   "chromeos-base/system_api": {
     "buildDeps": [
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
+      "dev-lang/go",
       "dev-libs/protobuf"
     ],
     "runtimeDeps": [
+      "chromeos-base/libchrome",
       "dev-libs/protobuf"
     ]
   },
   "chromeos-base/tpm_manager": {
     "buildDeps": [
       "app-crypt/trousers",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/libtpmcrypto",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
-      "chromeos-base/tpm_manager-client"
+      "chromeos-base/tpm_manager-client",
+      "dev-cpp/gtest",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/libhwsec-foundation",
       "chromeos-base/libtpmcrypto",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/system_api",
-      "chromeos-base/tpm_manager-client"
+      "chromeos-base/tpm_manager-client",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/tpm_manager-client": {
     "buildDeps": [
-      "chromeos-base/libbrillo"
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/system_api"
     ]
   },
@@ -2468,6 +3068,8 @@
       "chromeos-base/cbor",
       "chromeos-base/chromeos-ec-headers",
       "chromeos-base/cryptohome-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/metrics",
       "chromeos-base/power_manager-client",
@@ -2475,7 +3077,9 @@
       "chromeos-base/system_api",
       "chromeos-base/tpm_manager",
       "chromeos-base/u2fd-client",
-      "dev-libs/hidapi"
+      "dev-cpp/gtest",
+      "dev-libs/hidapi",
+      "sys-apps/baselayout"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -2484,20 +3088,29 @@
       "chromeos-base/cbor",
       "chromeos-base/chromeos-ec-headers",
       "chromeos-base/cryptohome-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/libhwsec",
       "chromeos-base/metrics",
       "chromeos-base/power_manager-client",
       "chromeos-base/tpm_manager",
       "chromeos-base/u2fd-client",
-      "dev-libs/hidapi"
+      "dev-libs/hidapi",
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/u2fd-client": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/protofiles",
-      "chromeos-base/system_api"
+      "chromeos-base/system_api",
+      "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "chromeos-base/update-policy-chromeos": {
     "buildDeps": [],
@@ -2510,6 +3123,8 @@
       "chromeos-base/chromeos-ca-certificates",
       "chromeos-base/debugd-client",
       "chromeos-base/dlcservice-client",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/p2p",
       "chromeos-base/power_manager-client",
@@ -2518,6 +3133,7 @@
       "chromeos-base/system_api",
       "chromeos-base/update_engine-client",
       "chromeos-base/vboot_reference",
+      "dev-cpp/gtest",
       "dev-libs/expat",
       "dev-libs/openssl",
       "dev-libs/protobuf",
@@ -2531,6 +3147,8 @@
       "app-arch/bzip2",
       "chromeos-base/chromeos-ca-certificates",
       "chromeos-base/chromeos-installer",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/p2p",
       "chromeos-base/power_manager",
@@ -2556,17 +3174,25 @@
   },
   "chromeos-base/usb_bouncer": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "chromeos-base/session_manager-client",
+      "dev-cpp/gtest",
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-apps/usbguard"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/minijail",
       "dev-libs/openssl",
-      "sys-apps/usbguard"
+      "sys-apps/baselayout",
+      "sys-apps/usbguard",
+      "virtual/tmpfiles"
     ]
   },
   "chromeos-base/userfeedback": {
@@ -2617,9 +3243,13 @@
   },
   "chromeos-base/vm_protos": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "dev-go/grpc",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
+      "dev-lang/go",
       "dev-libs/protobuf",
       "net-libs/grpc"
     ],
@@ -2637,11 +3267,16 @@
   },
   "chromeos-base/vpn-manager": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "net-dialup/ppp",
       "net-dialup/xl2tpd",
       "net-vpn/strongswan"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "net-dialup/ppp",
       "net-dialup/xl2tpd",
       "net-vpn/strongswan"
@@ -2666,11 +3301,14 @@
     "runtimeDeps": []
   },
   "dev-cpp/gtest": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/make"
+    ],
     "runtimeDeps": []
   },
   "dev-db/sqlite": {
     "buildDeps": [
+      "sys-devel/libtool",
       "sys-libs/readline",
       "sys-libs/zlib"
     ],
@@ -2682,6 +3320,7 @@
   "dev-embedded/libftdi": {
     "buildDeps": [
       "dev-libs/confuse",
+      "sys-devel/make",
       "virtual/libusb"
     ],
     "runtimeDeps": [
@@ -2695,7 +3334,8 @@
       "dev-go/gapi",
       "dev-go/oauth2",
       "dev-go/sftp",
-      "dev-go/text"
+      "dev-go/text",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2703,25 +3343,29 @@
     "buildDeps": [
       "dev-go/net",
       "dev-go/protobuf-legacy-api",
-      "dev-go/text"
+      "dev-go/text",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/check": {
     "buildDeps": [
-      "dev-go/pretty"
+      "dev-go/pretty",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/cmp": {
     "buildDeps": [
-      "dev-go/xerrors"
+      "dev-go/xerrors",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/cncf-xds": {
     "buildDeps": [
-      "dev-go/ep-pvg"
+      "dev-go/ep-pvg",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2729,7 +3373,8 @@
     "buildDeps": [
       "dev-go/go-sys",
       "dev-go/net",
-      "dev-go/term"
+      "dev-go/term",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2742,7 +3387,8 @@
       "dev-go/net",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
-      "dev-go/testify"
+      "dev-go/testify",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2751,7 +3397,8 @@
       "dev-go/afero",
       "dev-go/protobuf",
       "dev-go/protobuf-legacy-api",
-      "dev-go/strcase"
+      "dev-go/strcase",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2761,7 +3408,8 @@
       "dev-go/cmp",
       "dev-go/genproto",
       "dev-go/golang-groupcache",
-      "dev-go/net"
+      "dev-go/net",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2771,40 +3419,53 @@
       "dev-go/gapi",
       "dev-go/genproto",
       "dev-go/net",
-      "dev-go/protoc-gen-go-grpc"
+      "dev-go/protoc-gen-go-grpc",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/gcp-compute": {
     "buildDeps": [
-      "dev-go/net"
+      "dev-go/net",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/genproto": {
     "buildDeps": [
-      "dev-go/protobuf-legacy-api"
+      "dev-go/protobuf-legacy-api",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/glog": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/go-difflib": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/go-spew": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/go-sys": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/golang-groupcache": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/grpc": {
@@ -2820,17 +3481,21 @@
       "dev-go/protobuf-legacy-api",
       "dev-go/uuid",
       "dev-go/xxhash",
-      "dev-go/yaml"
+      "dev-go/yaml",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/kr-fs": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/kr-text": {
     "buildDeps": [
-      "dev-go/pty"
+      "dev-go/pty",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2838,7 +3503,8 @@
     "buildDeps": [
       "dev-go/go-sys",
       "dev-go/term",
-      "dev-go/text"
+      "dev-go/text",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2847,43 +3513,51 @@
       "dev-go/gcp",
       "dev-go/gcp-compute",
       "dev-go/net",
-      "dev-go/yaml"
+      "dev-go/yaml",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/objx": {
     "buildDeps": [
-      "dev-go/go-spew"
+      "dev-go/go-spew",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/pretty": {
     "buildDeps": [
-      "dev-go/kr-text"
+      "dev-go/kr-text",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/protobuf": {
     "buildDeps": [
-      "dev-go/cmp"
+      "dev-go/cmp",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/protobuf-legacy-api": {
     "buildDeps": [
       "dev-go/cmp",
-      "dev-go/protobuf"
+      "dev-go/protobuf",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/protoc-gen-go-grpc": {
     "buildDeps": [
-      "dev-go/protobuf"
+      "dev-go/protobuf",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/pty": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/sftp": {
@@ -2891,17 +3565,21 @@
       "dev-go/crypto",
       "dev-go/go-sys",
       "dev-go/kr-fs",
-      "dev-go/testify"
+      "dev-go/testify",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/strcase": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/term": {
     "buildDeps": [
-      "dev-go/go-sys"
+      "dev-go/go-sys",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
@@ -2910,30 +3588,44 @@
       "dev-go/go-difflib",
       "dev-go/go-spew",
       "dev-go/objx",
-      "dev-go/yaml"
+      "dev-go/yaml",
+      "dev-lang/go"
     ],
     "runtimeDeps": []
   },
   "dev-go/text": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/uuid": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/xerrors": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/xxhash": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-lang/go"
+    ],
     "runtimeDeps": []
   },
   "dev-go/yaml": {
     "buildDeps": [
-      "dev-go/check"
+      "dev-go/check",
+      "dev-lang/go"
     ],
+    "runtimeDeps": []
+  },
+  "dev-lang/go": {
+    "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-lang/python": {
@@ -3057,6 +3749,7 @@
   },
   "dev-libs/hidapi": {
     "buildDeps": [
+      "sys-devel/libtool",
       "virtual/libudev",
       "virtual/libusb"
     ],
@@ -3118,7 +3811,9 @@
     "runtimeDeps": []
   },
   "dev-libs/libestr": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool"
+    ],
     "runtimeDeps": []
   },
   "dev-libs/libev": {
@@ -3128,12 +3823,15 @@
     "runtimeDeps": []
   },
   "dev-libs/libevent": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool"
+    ],
     "runtimeDeps": []
   },
   "dev-libs/libfastjson": {
     "buildDeps": [
-      "sys-devel/autoconf-archive"
+      "sys-devel/autoconf-archive",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": []
   },
@@ -3143,14 +3841,17 @@
   },
   "dev-libs/libgcrypt": {
     "buildDeps": [
-      "dev-libs/libgpg-error"
+      "dev-libs/libgpg-error",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/libgpg-error"
     ]
   },
   "dev-libs/libgpg-error": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool"
+    ],
     "runtimeDeps": []
   },
   "dev-libs/libgrammar": {
@@ -3159,10 +3860,13 @@
   },
   "dev-libs/libgudev": {
     "buildDeps": [
+      "app-arch/xz-utils",
       "dev-libs/glib",
+      "dev-util/desktop-file-utils",
       "dev-util/glib-utils",
       "virtual/libudev",
-      "virtual/pkgconfig"
+      "virtual/pkgconfig",
+      "x11-misc/shared-mime-info"
     ],
     "runtimeDeps": [
       "dev-libs/glib",
@@ -3211,7 +3915,8 @@
   },
   "dev-libs/libp11": {
     "buildDeps": [
-      "dev-libs/openssl"
+      "dev-libs/openssl",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/openssl"
@@ -3234,7 +3939,10 @@
     ]
   },
   "dev-libs/libpthread-stubs": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool",
+      "virtual/pkgconfig"
+    ],
     "runtimeDeps": []
   },
   "dev-libs/libsuggest": {
@@ -3248,6 +3956,9 @@
   "dev-libs/libtextclassifier": {
     "buildDeps": [
       "chromeos-base/chrome-icu",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "dev-libs/flatbuffers",
       "dev-libs/libutf",
       "dev-libs/marisa-aosp",
@@ -3256,6 +3967,8 @@
     ],
     "runtimeDeps": [
       "chromeos-base/chrome-icu",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/flatbuffers",
       "sci-libs/tensorflow",
       "sys-libs/zlib"
@@ -3274,12 +3987,17 @@
     ]
   },
   "dev-libs/libutf": {
-    "buildDeps": [],
+    "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest"
+    ],
     "runtimeDeps": []
   },
   "dev-libs/libverto": {
     "buildDeps": [
-      "dev-libs/libev"
+      "dev-libs/libev",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/libev"
@@ -3287,6 +4005,7 @@
   },
   "dev-libs/libxml2": {
     "buildDeps": [
+      "sys-devel/libtool",
       "sys-libs/readline",
       "sys-libs/zlib"
     ],
@@ -3337,7 +4056,8 @@
   },
   "dev-libs/nettle": {
     "buildDeps": [
-      "dev-libs/gmp"
+      "dev-libs/gmp",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/gmp"
@@ -3386,6 +4106,7 @@
   },
   "dev-libs/protobuf": {
     "buildDeps": [
+      "sys-devel/libtool",
       "sys-libs/zlib"
     ],
     "runtimeDeps": [
@@ -3426,7 +4147,9 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/smallvec"
+      "dev-rust/smallvec",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
@@ -3437,7 +4160,8 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/smallvec"
+      "dev-rust/smallvec",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/adler": {
@@ -3450,16 +4174,21 @@
   "dev-rust/adler32": {
     "buildDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/aho-corasick": {
     "buildDeps": [
-      "dev-rust/memchr"
+      "dev-rust/memchr",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/memchr"
+      "dev-rust/memchr",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/android_log-sys": {
@@ -3473,10 +4202,13 @@
   },
   "dev-rust/anyhow": {
     "buildDeps": [
-      "dev-rust/backtrace"
+      "dev-rust/backtrace",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/backtrace"
+      "dev-rust/backtrace",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/arbitrary": {
@@ -3489,7 +4221,9 @@
   "dev-rust/ascii": {
     "buildDeps": [
       "dev-rust/serde",
-      "dev-rust/serde_test"
+      "dev-rust/serde_test",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3507,7 +4241,9 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/async-task": {
     "buildDeps": [
@@ -3520,7 +4256,9 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -3528,18 +4266,24 @@
   },
   "dev-rust/atomic-polyfill": {
     "buildDeps": [
-      "dev-rust/critical-section"
+      "dev-rust/critical-section",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/critical-section"
+      "dev-rust/critical-section",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/atty": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/autocfg": {
@@ -3563,7 +4307,9 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
-      "dev-rust/winapi"
+      "dev-rust/winapi",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/addr2line",
@@ -3576,15 +4322,19 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
-      "dev-rust/winapi"
+      "dev-rust/winapi",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/balloon_control": {
     "buildDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/bare-metal": {
@@ -3610,7 +4360,9 @@
       "dev-rust/byteorder",
       "dev-rust/libc",
       "dev-rust/quick-error",
-      "dev-rust/rayon"
+      "dev-rust/rayon",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3618,7 +4370,9 @@
     "buildDeps": [
       "dev-rust/byteorder",
       "dev-rust/serde",
-      "dev-rust/serde_derive"
+      "dev-rust/serde_derive",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -3645,11 +4399,14 @@
   "dev-rust/bitflags": {
     "buildDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/bumpalo": {
@@ -3663,7 +4420,9 @@
   },
   "dev-rust/bytemuck": {
     "buildDeps": [
-      "dev-rust/bytemuck_derive"
+      "dev-rust/bytemuck_derive",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3685,7 +4444,9 @@
   },
   "dev-rust/bytes": {
     "buildDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -3700,10 +4461,13 @@
   },
   "dev-rust/cc": {
     "buildDeps": [
-      "dev-rust/jobserver"
+      "dev-rust/jobserver",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/jobserver"
+      "dev-rust/jobserver",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/cfg-if": {
@@ -3717,10 +4481,13 @@
   },
   "dev-rust/chromeos-dbus-bindings": {
     "buildDeps": [
-      "dev-rust/which"
+      "dev-rust/which",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/which"
+      "dev-rust/which",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/chrono": {
@@ -3732,7 +4499,9 @@
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
       "dev-rust/serde_derive",
-      "dev-rust/serde_json"
+      "dev-rust/serde_json",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bincode",
@@ -3742,7 +4511,8 @@
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
       "dev-rust/serde_derive",
-      "dev-rust/serde_json"
+      "dev-rust/serde_json",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/chunked_transfer": {
@@ -3766,13 +4536,17 @@
       "dev-rust/terminal_size",
       "dev-rust/textwrap",
       "dev-rust/unicase",
-      "dev-rust/yaml-rust"
+      "dev-rust/yaml-rust",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/clap_lex": {
     "buildDeps": [
-      "dev-rust/os_str_bytes"
+      "dev-rust/os_str_bytes",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3785,7 +4559,9 @@
   },
   "dev-rust/cloudflare-zlib-sys": {
     "buildDeps": [
-      "dev-rust/cc"
+      "dev-rust/cc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3799,7 +4575,9 @@
   "dev-rust/colored": {
     "buildDeps": [
       "dev-rust/atty",
-      "dev-rust/lazy_static"
+      "dev-rust/lazy_static",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3818,7 +4596,9 @@
       "dev-rust/once_cell",
       "dev-rust/regex",
       "dev-rust/terminal_size",
-      "dev-rust/unicode-width"
+      "dev-rust/unicode-width",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3834,18 +4614,23 @@
       "dev-rust/bare-metal",
       "dev-rust/bitfield",
       "dev-rust/embedded-hal",
-      "dev-rust/volatile-register"
+      "dev-rust/volatile-register",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bare-metal",
       "dev-rust/bitfield",
       "dev-rust/embedded-hal",
-      "dev-rust/volatile-register"
+      "dev-rust/volatile-register",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/cortex-m-rt": {
     "buildDeps": [
-      "dev-rust/r0"
+      "dev-rust/r0",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3857,7 +4642,9 @@
       "dev-rust/heapless",
       "dev-rust/rtic-core",
       "dev-rust/rtic-monotonic",
-      "dev-rust/version_check"
+      "dev-rust/version_check",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3867,7 +4654,9 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/rtic-syntax",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3882,7 +4671,9 @@
   },
   "dev-rust/crc": {
     "buildDeps": [
-      "dev-rust/crc-catalog"
+      "dev-rust/crc-catalog",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3895,7 +4686,9 @@
   },
   "dev-rust/crc32fast": {
     "buildDeps": [
-      "dev-rust/cfg-if"
+      "dev-rust/cfg-if",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -3915,13 +4708,16 @@
       "dev-rust/bare-metal",
       "dev-rust/cfg-if",
       "dev-rust/cortex-m",
-      "dev-rust/riscv"
+      "dev-rust/riscv",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bare-metal",
       "dev-rust/cfg-if",
       "dev-rust/cortex-m",
-      "dev-rust/riscv"
+      "dev-rust/riscv",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/cros_async": {
@@ -3942,7 +4738,9 @@
       "dev-rust/sys_util",
       "dev-rust/tempfile",
       "dev-rust/thiserror",
-      "media-sound/audio_streams"
+      "media-sound/audio_streams",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3950,7 +4748,9 @@
     "buildDeps": [
       "dev-rust/cfg-if",
       "dev-rust/crossbeam-utils",
-      "dev-rust/rand"
+      "dev-rust/rand",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3958,7 +4758,9 @@
     "buildDeps": [
       "dev-rust/cfg-if",
       "dev-rust/crossbeam-epoch",
-      "dev-rust/crossbeam-utils"
+      "dev-rust/crossbeam-utils",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3969,7 +4771,9 @@
       "dev-rust/crossbeam-utils",
       "dev-rust/lazy_static",
       "dev-rust/memoffset",
-      "dev-rust/scopeguard"
+      "dev-rust/scopeguard",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3977,7 +4781,9 @@
     "buildDeps": [
       "dev-rust/autocfg",
       "dev-rust/cfg-if",
-      "dev-rust/lazy_static"
+      "dev-rust/lazy_static",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -3994,14 +4800,17 @@
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/assertions",
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/dav1d": {
@@ -4017,27 +4826,35 @@
       "dev-rust/futures-executor",
       "dev-rust/futures-util",
       "dev-rust/libc",
-      "dev-rust/libdbus-sys"
+      "dev-rust/libdbus-sys",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/futures-channel",
       "dev-rust/futures-executor",
       "dev-rust/futures-util",
       "dev-rust/libc",
-      "dev-rust/libdbus-sys"
+      "dev-rust/libdbus-sys",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/dbus-crossroads": {
     "buildDeps": [
-      "dev-rust/dbus"
+      "dev-rust/dbus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/dbus"
+      "dev-rust/dbus",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/dbus-tree": {
     "buildDeps": [
-      "dev-rust/dbus"
+      "dev-rust/dbus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4052,14 +4869,18 @@
     "buildDeps": [
       "dev-rust/adler32",
       "dev-rust/byteorder",
-      "dev-rust/gzip-header"
+      "dev-rust/gzip-header",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/defmt": {
     "buildDeps": [
       "dev-rust/defmt-macros",
-      "dev-rust/semver"
+      "dev-rust/semver",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4067,14 +4888,18 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/defmt-rtt": {
     "buildDeps": [
       "dev-rust/cortex-m",
-      "dev-rust/defmt"
+      "dev-rust/defmt",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4082,7 +4907,9 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -4098,13 +4925,17 @@
   "dev-rust/dirs-next": {
     "buildDeps": [
       "dev-rust/cfg-if",
-      "dev-rust/dirs-sys-next"
+      "dev-rust/dirs-sys-next",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/dirs-sys-next": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4119,13 +4950,17 @@
     "buildDeps": [
       "dev-rust/ct-codecs",
       "dev-rust/ed25519",
-      "dev-rust/getrandom"
+      "dev-rust/getrandom",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/either": {
     "buildDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -4134,17 +4969,22 @@
   "dev-rust/embedded-hal": {
     "buildDeps": [
       "dev-rust/nb",
-      "dev-rust/void"
+      "dev-rust/void",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/nb",
-      "dev-rust/void"
+      "dev-rust/void",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/embedded-hal-mock": {
     "buildDeps": [
       "dev-rust/embedded-hal",
-      "dev-rust/nb"
+      "dev-rust/nb",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4161,24 +5001,30 @@
       "dev-rust/humantime",
       "dev-rust/log",
       "dev-rust/regex",
-      "dev-rust/termcolor"
+      "dev-rust/termcolor",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/atty",
       "dev-rust/humantime",
       "dev-rust/log",
       "dev-rust/regex",
-      "dev-rust/termcolor"
+      "dev-rust/termcolor",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/error-chain": {
     "buildDeps": [
       "dev-rust/backtrace",
-      "dev-rust/version_check"
+      "dev-rust/version_check",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/backtrace",
-      "dev-rust/version_check"
+      "dev-rust/version_check",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/fallible-iterator": {
@@ -4193,7 +5039,9 @@
   "dev-rust/fd-lock": {
     "buildDeps": [
       "dev-rust/cfg-if",
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4201,7 +5049,9 @@
     "buildDeps": [
       "chromeos-base/featured",
       "dev-rust/log",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4229,7 +5079,9 @@
       "dev-rust/libz-sys",
       "dev-rust/miniz-sys",
       "dev-rust/miniz_oxide",
-      "dev-rust/tokio-io"
+      "dev-rust/tokio-io",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -4241,22 +5093,28 @@
       "dev-rust/byteorder",
       "dev-rust/num_enum",
       "dev-rust/serde",
-      "dev-rust/serde_derive"
+      "dev-rust/serde_derive",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bitflags",
       "dev-rust/byteorder",
       "dev-rust/num_enum",
       "dev-rust/serde",
-      "dev-rust/serde_derive"
+      "dev-rust/serde_derive",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/foreign-types": {
     "buildDeps": [
-      "dev-rust/foreign-types-shared"
+      "dev-rust/foreign-types-shared",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/foreign-types-shared"
+      "dev-rust/foreign-types-shared",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/foreign-types-shared": {
@@ -4271,7 +5129,9 @@
   "dev-rust/form_urlencoded": {
     "buildDeps": [
       "dev-rust/matches",
-      "dev-rust/percent-encoding"
+      "dev-rust/percent-encoding",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4283,7 +5143,9 @@
       "dev-rust/futures-io",
       "dev-rust/futures-sink",
       "dev-rust/futures-task",
-      "dev-rust/futures-util"
+      "dev-rust/futures-util",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/futures-channel",
@@ -4292,17 +5154,21 @@
       "dev-rust/futures-io",
       "dev-rust/futures-sink",
       "dev-rust/futures-task",
-      "dev-rust/futures-util"
+      "dev-rust/futures-util",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/futures-channel": {
     "buildDeps": [
       "dev-rust/futures-core",
-      "dev-rust/futures-sink"
+      "dev-rust/futures-sink",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/futures-core",
-      "dev-rust/futures-sink"
+      "dev-rust/futures-sink",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/futures-core": {
@@ -4310,20 +5176,25 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/futures-executor": {
     "buildDeps": [
       "dev-rust/futures-core",
       "dev-rust/futures-task",
       "dev-rust/futures-util",
-      "dev-rust/num_cpus"
+      "dev-rust/num_cpus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/futures-core",
       "dev-rust/futures-task",
       "dev-rust/futures-util",
-      "dev-rust/num_cpus"
+      "dev-rust/num_cpus",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/futures-io": {
@@ -4331,20 +5202,25 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/futures-macro": {
     "buildDeps": [
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/futures-sink": {
@@ -4352,14 +5228,18 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/futures-task": {
     "buildDeps": [
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/futures-util": {
     "buildDeps": [
@@ -4374,7 +5254,9 @@
       "dev-rust/pin-utils",
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro-nested",
-      "dev-rust/slab"
+      "dev-rust/slab",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/futures-channel",
@@ -4388,19 +5270,23 @@
       "dev-rust/pin-utils",
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro-nested",
-      "dev-rust/slab"
+      "dev-rust/slab",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/getopts": {
     "buildDeps": [
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/rustc-std-workspace-std",
-      "dev-rust/unicode-width"
+      "dev-rust/unicode-width",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/rustc-std-workspace-std",
-      "dev-rust/unicode-width"
+      "dev-rust/unicode-width",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/getrandom": {
@@ -4410,7 +5296,9 @@
       "dev-rust/libc",
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/wasi",
-      "dev-rust/wasm-bindgen"
+      "dev-rust/wasm-bindgen",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/cfg-if",
@@ -4418,7 +5306,8 @@
       "dev-rust/libc",
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/wasi",
-      "dev-rust/wasm-bindgen"
+      "dev-rust/wasm-bindgen",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/gif": {
@@ -4435,7 +5324,9 @@
       "dev-rust/indexmap",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/stable_deref_trait"
+      "dev-rust/stable_deref_trait",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
@@ -4443,12 +5334,15 @@
       "dev-rust/indexmap",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/stable_deref_trait"
+      "dev-rust/stable_deref_trait",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/glob": {
     "buildDeps": [
-      "dev-rust/nom"
+      "dev-rust/nom",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4458,7 +5352,9 @@
       "dev-rust/futures",
       "dev-rust/libc",
       "dev-rust/nix",
-      "dev-rust/tokio"
+      "dev-rust/tokio",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4471,7 +5367,9 @@
   },
   "dev-rust/hash32": {
     "buildDeps": [
-      "dev-rust/byteorder"
+      "dev-rust/byteorder",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4482,7 +5380,9 @@
       "dev-rust/rayon",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bumpalo",
@@ -4490,7 +5390,8 @@
       "dev-rust/rayon",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/heapless": {
@@ -4502,7 +5403,9 @@
       "dev-rust/serde",
       "dev-rust/spin",
       "dev-rust/stable_deref_trait",
-      "dev-rust/ufmt-write"
+      "dev-rust/ufmt-write",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4522,7 +5425,9 @@
   },
   "dev-rust/hmac-sha256": {
     "buildDeps": [
-      "dev-rust/digest"
+      "dev-rust/digest",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4530,16 +5435,22 @@
     "buildDeps": [
       "dev-rust/libc",
       "dev-rust/match_cfg",
-      "dev-rust/winapi"
+      "dev-rust/winapi",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
       "dev-rust/match_cfg",
-      "dev-rust/winapi"
+      "dev-rust/winapi",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/hound": {
-    "buildDeps": [],
+    "buildDeps": [
+      "virtual/rust",
+      "virtual/rust-binaries"
+    ],
     "runtimeDeps": []
   },
   "dev-rust/httparse": {
@@ -4570,7 +5481,9 @@
       "dev-rust/bitflags",
       "dev-rust/byteorder",
       "dev-rust/libc",
-      "dev-rust/nix"
+      "dev-rust/nix",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4578,7 +5491,9 @@
     "buildDeps": [
       "dev-rust/matches",
       "dev-rust/unicode-bidi",
-      "dev-rust/unicode-normalization"
+      "dev-rust/unicode-normalization",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4599,7 +5514,9 @@
       "dev-rust/ravif",
       "dev-rust/rgb",
       "dev-rust/scoped_threadpool",
-      "dev-rust/tiff"
+      "dev-rust/tiff",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4608,13 +5525,16 @@
       "dev-rust/autocfg",
       "dev-rust/hashbrown",
       "dev-rust/rayon",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/autocfg",
       "dev-rust/hashbrown",
       "dev-rust/rayon",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/indicatif": {
@@ -4625,13 +5545,17 @@
       "dev-rust/rayon",
       "dev-rust/regex",
       "dev-rust/unicode-segmentation",
-      "dev-rust/unicode-width"
+      "dev-rust/unicode-width",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/intrusive-collections": {
     "buildDeps": [
-      "dev-rust/memoffset"
+      "dev-rust/memoffset",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4643,13 +5567,17 @@
       "dev-rust/sync",
       "dev-rust/sys_util",
       "dev-rust/tempfile",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/ioctl-rs": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4664,10 +5592,13 @@
   },
   "dev-rust/jobserver": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/jpeg-decoder": {
@@ -4679,18 +5610,24 @@
   },
   "dev-rust/lazy_static": {
     "buildDeps": [
-      "dev-rust/spin"
+      "dev-rust/spin",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/spin"
+      "dev-rust/spin",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/libc": {
     "buildDeps": [
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/libchromeos": {
@@ -4708,7 +5645,9 @@
       "dev-rust/system_api",
       "dev-rust/thiserror",
       "dev-rust/vboot_reference-sys",
-      "dev-rust/zeroize"
+      "dev-rust/zeroize",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "chromeos-base/crosvm-base",
@@ -4724,13 +5663,16 @@
       "dev-rust/system_api",
       "dev-rust/thiserror",
       "dev-rust/vboot_reference-sys",
-      "dev-rust/zeroize"
+      "dev-rust/zeroize",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/libdbus-sys": {
     "buildDeps": [
       "dev-rust/pkg-config",
-      "sys-apps/dbus"
+      "sys-apps/dbus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -4741,7 +5683,9 @@
       "dev-rust/cc",
       "dev-rust/libc",
       "dev-rust/pkg-config",
-      "virtual/libusb"
+      "virtual/libusb",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4750,7 +5694,9 @@
       "dev-rust/cc",
       "dev-rust/libc",
       "dev-rust/pkg-config",
-      "dev-rust/vcpkg"
+      "dev-rust/vcpkg",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4759,7 +5705,9 @@
       "dev-rust/clippy",
       "dev-rust/heapsize",
       "dev-rust/serde",
-      "dev-rust/serde_test"
+      "dev-rust/serde_test",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4774,7 +5722,9 @@
       "dev-rust/serial-unix",
       "dev-rust/spidev",
       "dev-rust/sysfs_gpio",
-      "dev-rust/void"
+      "dev-rust/void",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4783,13 +5733,16 @@
       "dev-rust/autocfg",
       "dev-rust/owning_ref",
       "dev-rust/scopeguard",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/autocfg",
       "dev-rust/owning_ref",
       "dev-rust/scopeguard",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/log": {
@@ -4797,13 +5750,16 @@
       "dev-rust/cfg-if",
       "dev-rust/serde",
       "dev-rust/sval",
-      "dev-rust/value-bag"
+      "dev-rust/value-bag",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/cfg-if",
       "dev-rust/serde",
       "dev-rust/sval",
-      "dev-rust/value-bag"
+      "dev-rust/value-bag",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/manatee-client": {
@@ -4818,7 +5774,9 @@
       "dev-rust/log",
       "dev-rust/stderrlog",
       "dev-rust/thiserror",
-      "dev-rust/which"
+      "dev-rust/which",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "chromeos-base/crosvm-base",
@@ -4833,7 +5791,8 @@
       "dev-rust/stderrlog",
       "dev-rust/thiserror",
       "dev-rust/which",
-      "sys-apps/dbus"
+      "sys-apps/dbus",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/match_cfg": {
@@ -4846,7 +5805,10 @@
     ]
   },
   "dev-rust/matches": {
-    "buildDeps": [],
+    "buildDeps": [
+      "virtual/rust",
+      "virtual/rust-binaries"
+    ],
     "runtimeDeps": []
   },
   "dev-rust/md5": {
@@ -4862,28 +5824,36 @@
     "buildDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/libc",
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/libc",
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/memoffset": {
     "buildDeps": [
-      "dev-rust/autocfg"
+      "dev-rust/autocfg",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/minijail": {
     "buildDeps": [
       "dev-rust/libc",
-      "dev-rust/minijail-sys"
+      "dev-rust/minijail-sys",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
-      "dev-rust/minijail-sys"
+      "dev-rust/minijail-sys",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/minijail-sys": {
@@ -4893,7 +5863,9 @@
       "dev-rust/pkg-config",
       "dev-rust/which",
       "sys-libs/libcap",
-      "virtual/bindgen"
+      "virtual/bindgen",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "chromeos-base/minijail",
@@ -4901,7 +5873,8 @@
       "dev-rust/pkg-config",
       "dev-rust/which",
       "sys-libs/libcap",
-      "virtual/bindgen"
+      "virtual/bindgen",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/minimal-lexical": {
@@ -4914,13 +5887,17 @@
   "dev-rust/miniz-sys": {
     "buildDeps": [
       "dev-rust/cc",
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/miniz_oxide": {
     "buildDeps": [
-      "dev-rust/adler"
+      "dev-rust/adler",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -4929,7 +5906,9 @@
   "dev-rust/mio": {
     "buildDeps": [
       "dev-rust/libc",
-      "dev-rust/log"
+      "dev-rust/log",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4942,10 +5921,13 @@
   },
   "dev-rust/multi_log": {
     "buildDeps": [
-      "dev-rust/log"
+      "dev-rust/log",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/log"
+      "dev-rust/log",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/nb": {
@@ -4959,7 +5941,9 @@
   },
   "dev-rust/nibble_vec": {
     "buildDeps": [
-      "dev-rust/smallvec"
+      "dev-rust/smallvec",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4969,7 +5953,9 @@
       "dev-rust/cc",
       "dev-rust/cfg-if",
       "dev-rust/libc",
-      "dev-rust/memoffset"
+      "dev-rust/memoffset",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -4978,7 +5964,9 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/tempfile"
+      "dev-rust/tempfile",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -4988,7 +5976,9 @@
     "buildDeps": [
       "dev-rust/memchr",
       "dev-rust/minimal-lexical",
-      "dev-rust/version_check"
+      "dev-rust/version_check",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5000,30 +5990,38 @@
       "dev-rust/num-traits",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/num-integer": {
     "buildDeps": [
       "dev-rust/autocfg",
-      "dev-rust/num-traits"
+      "dev-rust/num-traits",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/autocfg",
-      "dev-rust/num-traits"
+      "dev-rust/num-traits",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/num-iter": {
     "buildDeps": [
       "dev-rust/autocfg",
       "dev-rust/num-integer",
-      "dev-rust/num-traits"
+      "dev-rust/num-traits",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/autocfg",
       "dev-rust/num-integer",
-      "dev-rust/num-traits"
+      "dev-rust/num-traits",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/num-rational": {
@@ -5032,7 +6030,9 @@
       "dev-rust/num-bigint",
       "dev-rust/num-integer",
       "dev-rust/num-traits",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5048,7 +6048,9 @@
   "dev-rust/num_cpus": {
     "buildDeps": [
       "dev-rust/hermit-abi",
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5057,11 +6059,14 @@
   "dev-rust/num_enum": {
     "buildDeps": [
       "dev-rust/derivative",
-      "dev-rust/num_enum_derive"
+      "dev-rust/num_enum_derive",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/derivative",
-      "dev-rust/num_enum_derive"
+      "dev-rust/num_enum_derive",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/num_enum_derive": {
@@ -5069,13 +6074,16 @@
       "dev-rust/proc-macro-crate",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/proc-macro-crate",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/num_threads": {
@@ -5103,7 +6111,9 @@
       "dev-rust/memchr",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/wasmparser"
+      "dev-rust/wasmparser",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
@@ -5113,17 +6123,21 @@
       "dev-rust/memchr",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/wasmparser"
+      "dev-rust/wasmparser",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/once_cell": {
     "buildDeps": [
       "dev-rust/atomic-polyfill",
-      "dev-rust/parking_lot"
+      "dev-rust/parking_lot",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/atomic-polyfill",
-      "dev-rust/parking_lot"
+      "dev-rust/parking_lot",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/openssl": {
@@ -5134,7 +6148,9 @@
       "dev-rust/libc",
       "dev-rust/once_cell",
       "dev-rust/openssl-macros",
-      "dev-rust/openssl-sys"
+      "dev-rust/openssl-sys",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bitflags",
@@ -5143,24 +6159,30 @@
       "dev-rust/libc",
       "dev-rust/once_cell",
       "dev-rust/openssl-macros",
-      "dev-rust/openssl-sys"
+      "dev-rust/openssl-sys",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/openssl-macros": {
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/openssl-src": {
     "buildDeps": [
-      "dev-libs/openssl"
+      "dev-libs/openssl",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5173,7 +6195,9 @@
       "dev-rust/libc",
       "dev-rust/openssl-src",
       "dev-rust/pkg-config",
-      "dev-rust/vcpkg"
+      "dev-rust/vcpkg",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/autocfg",
@@ -5181,23 +6205,29 @@
       "dev-rust/libc",
       "dev-rust/openssl-src",
       "dev-rust/pkg-config",
-      "dev-rust/vcpkg"
+      "dev-rust/vcpkg",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/os_str_bytes": {
     "buildDeps": [
       "dev-rust/memchr",
       "dev-rust/print_bytes",
-      "dev-rust/uniquote"
+      "dev-rust/uniquote",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/owning_ref": {
     "buildDeps": [
-      "dev-rust/stable_deref_trait"
+      "dev-rust/stable_deref_trait",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/stable_deref_trait"
+      "dev-rust/stable_deref_trait",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/panic-halt": {
@@ -5209,25 +6239,32 @@
   },
   "dev-rust/panic-reset": {
     "buildDeps": [
-      "dev-rust/cortex-m"
+      "dev-rust/cortex-m",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/panic-rtt-target": {
     "buildDeps": [
       "dev-rust/cortex-m",
-      "dev-rust/rtt-target"
+      "dev-rust/rtt-target",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/parking_lot": {
     "buildDeps": [
       "dev-rust/lock_api",
-      "dev-rust/parking_lot_core"
+      "dev-rust/parking_lot_core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/lock_api",
-      "dev-rust/parking_lot_core"
+      "dev-rust/parking_lot_core",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/parking_lot_core": {
@@ -5237,7 +6274,9 @@
       "dev-rust/libc",
       "dev-rust/petgraph",
       "dev-rust/smallvec",
-      "dev-rust/thread-id"
+      "dev-rust/thread-id",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/backtrace",
@@ -5245,7 +6284,8 @@
       "dev-rust/libc",
       "dev-rust/petgraph",
       "dev-rust/smallvec",
-      "dev-rust/thread-id"
+      "dev-rust/thread-id",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/paste": {
@@ -5285,7 +6325,9 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/pkg-config": {
     "buildDeps": [
@@ -5301,7 +6343,9 @@
       "dev-rust/bitflags",
       "dev-rust/crc32fast",
       "dev-rust/deflate",
-      "dev-rust/miniz_oxide"
+      "dev-rust/miniz_oxide",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5332,10 +6376,13 @@
   },
   "dev-rust/proc-macro-crate": {
     "buildDeps": [
-      "dev-rust/toml"
+      "dev-rust/toml",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/toml"
+      "dev-rust/toml",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/proc-macro-error": {
@@ -5343,7 +6390,9 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/version_check"
+      "dev-rust/version_check",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5352,7 +6401,9 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/proc-macro-nested": {
     "buildDeps": [
@@ -5365,30 +6416,39 @@
   },
   "dev-rust/proc-macro2": {
     "buildDeps": [
-      "dev-rust/unicode-xid"
+      "dev-rust/unicode-xid",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/unicode-xid"
+      "dev-rust/unicode-xid",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/protobuf": {
     "buildDeps": [
       "dev-rust/bytes",
       "dev-rust/serde",
-      "dev-rust/serde_derive"
+      "dev-rust/serde_derive",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bytes",
       "dev-rust/serde",
-      "dev-rust/serde_derive"
+      "dev-rust/serde_derive",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/protoc-rust": {
     "buildDeps": [
-      "dev-rust/tempfile"
+      "dev-rust/tempfile",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/tempfile"
+      "dev-rust/tempfile",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/quick-error": {
@@ -5409,10 +6469,13 @@
   },
   "dev-rust/quote": {
     "buildDeps": [
-      "dev-rust/proc-macro2"
+      "dev-rust/proc-macro2",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/proc-macro2"
+      "dev-rust/proc-macro2",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/r0": {
@@ -5426,7 +6489,9 @@
     "buildDeps": [
       "dev-rust/endian-type",
       "dev-rust/nibble_vec",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5437,7 +6502,9 @@
       "dev-rust/rand_chacha",
       "dev-rust/rand_core",
       "dev-rust/rand_hc",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
@@ -5445,37 +6512,47 @@
       "dev-rust/rand_chacha",
       "dev-rust/rand_core",
       "dev-rust/rand_hc",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/rand_chacha": {
     "buildDeps": [
       "dev-rust/ppv-lite86",
       "dev-rust/rand_core",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/ppv-lite86",
       "dev-rust/rand_core",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/rand_core": {
     "buildDeps": [
       "dev-rust/getrandom",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/getrandom",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/rand_hc": {
     "buildDeps": [
-      "dev-rust/rand_core"
+      "dev-rust/rand_core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/rand_core"
+      "dev-rust/rand_core",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/ravif": {
@@ -5490,9 +6567,13 @@
       "dev-rust/autocfg",
       "dev-rust/crossbeam-deque",
       "dev-rust/either",
-      "dev-rust/rayon-core"
+      "dev-rust/rayon-core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/rayon-core": {
     "buildDeps": [
@@ -5500,7 +6581,9 @@
       "dev-rust/crossbeam-deque",
       "dev-rust/crossbeam-utils",
       "dev-rust/lazy_static",
-      "dev-rust/num_cpus"
+      "dev-rust/num_cpus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5508,12 +6591,15 @@
     "buildDeps": [
       "dev-rust/aho-corasick",
       "dev-rust/memchr",
-      "dev-rust/regex-syntax"
+      "dev-rust/regex-syntax",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/aho-corasick",
       "dev-rust/memchr",
-      "dev-rust/regex-syntax"
+      "dev-rust/regex-syntax",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/regex-syntax": {
@@ -5529,7 +6615,9 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5537,7 +6625,9 @@
   },
   "dev-rust/remove_dir_all": {
     "buildDeps": [
-      "dev-rust/winapi"
+      "dev-rust/winapi",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5554,12 +6644,15 @@
     "buildDeps": [
       "dev-rust/bare-metal",
       "dev-rust/bit_field",
-      "dev-rust/riscv-target"
+      "dev-rust/riscv-target",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/bare-metal",
       "dev-rust/bit_field",
-      "dev-rust/riscv-target"
+      "dev-rust/riscv-target",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/riscv-rt": {
@@ -5568,7 +6661,9 @@
       "dev-rust/r0",
       "dev-rust/riscv",
       "dev-rust/riscv-rt-macros",
-      "dev-rust/riscv-target"
+      "dev-rust/riscv-target",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5577,18 +6672,23 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/rand",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/riscv-target": {
     "buildDeps": [
       "dev-rust/lazy_static",
-      "dev-rust/regex"
+      "dev-rust/regex",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/lazy_static",
-      "dev-rust/regex"
+      "dev-rust/regex",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/rtic-core": {
@@ -5610,7 +6710,9 @@
       "dev-rust/indexmap",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5618,38 +6720,50 @@
     "buildDeps": [
       "dev-rust/cortex-m",
       "dev-rust/riscv",
-      "dev-rust/ufmt-write"
+      "dev-rust/ufmt-write",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/rusb": {
     "buildDeps": [
       "dev-rust/libc",
-      "dev-rust/libusb1-sys"
+      "dev-rust/libusb1-sys",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/rustc-demangle": {
     "buildDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core"
+      "dev-rust/rustc-std-workspace-core",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/rustc-demangle-capi": {
     "buildDeps": [
-      "dev-rust/rustc-demangle"
+      "dev-rust/rustc-demangle",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/rustc-demangle"
+      "dev-rust/rustc-demangle",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/rustc-serialize": {
     "buildDeps": [
-      "dev-rust/rand"
+      "dev-rust/rand",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5684,7 +6798,9 @@
   },
   "dev-rust/rustc_version": {
     "buildDeps": [
-      "dev-rust/semver"
+      "dev-rust/semver",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5704,16 +6820,21 @@
       "dev-rust/smallvec",
       "dev-rust/unicode-segmentation",
       "dev-rust/unicode-width",
-      "dev-rust/utf8parse"
+      "dev-rust/utf8parse",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/ryu": {
     "buildDeps": [
-      "dev-rust/no-panic"
+      "dev-rust/no-panic",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/no-panic"
+      "dev-rust/no-panic",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/scoped_threadpool": {
@@ -5734,20 +6855,29 @@
   },
   "dev-rust/semver": {
     "buildDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/serde": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "virtual/rust",
+      "virtual/rust-binaries"
+    ],
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/serde_bytes": {
     "buildDeps": [
       "dev-rust/bincode",
       "dev-rust/serde",
       "dev-rust/serde_derive",
-      "dev-rust/serde_test"
+      "dev-rust/serde_test",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5757,12 +6887,15 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/serde_json": {
@@ -5770,24 +6903,31 @@
       "dev-rust/indexmap",
       "dev-rust/itoa",
       "dev-rust/ryu",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/indexmap",
       "dev-rust/itoa",
       "dev-rust/ryu",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/serde_test": {
     "buildDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/serial-core": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5796,7 +6936,9 @@
       "dev-rust/ioctl-rs",
       "dev-rust/libc",
       "dev-rust/serial-core",
-      "dev-rust/termios"
+      "dev-rust/termios",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5818,7 +6960,9 @@
   },
   "dev-rust/signal-hook-registry": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5826,7 +6970,9 @@
     "buildDeps": [
       "dev-rust/chrono",
       "dev-rust/colored",
-      "dev-rust/log"
+      "dev-rust/log",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5839,10 +6985,13 @@
   },
   "dev-rust/slab": {
     "buildDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/slog": {
@@ -5856,7 +7005,9 @@
   },
   "dev-rust/smallvec": {
     "buildDeps": [
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5871,7 +7022,9 @@
   },
   "dev-rust/socket2": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5879,7 +7032,9 @@
     "buildDeps": [
       "dev-rust/bitflags",
       "dev-rust/embedded-hal",
-      "dev-rust/log"
+      "dev-rust/log",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5887,18 +7042,23 @@
     "buildDeps": [
       "dev-rust/bitflags",
       "dev-rust/libc",
-      "dev-rust/nix"
+      "dev-rust/nix",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/spin": {
     "buildDeps": [
       "dev-rust/lock_api",
-      "dev-rust/portable-atomic"
+      "dev-rust/portable-atomic",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/lock_api",
-      "dev-rust/portable-atomic"
+      "dev-rust/portable-atomic",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/stable_deref_trait": {
@@ -5916,14 +7076,17 @@
       "dev-rust/chrono",
       "dev-rust/log",
       "dev-rust/termcolor",
-      "dev-rust/thread_local"
+      "dev-rust/thread_local",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/atty",
       "dev-rust/chrono",
       "dev-rust/log",
       "dev-rust/termcolor",
-      "dev-rust/thread_local"
+      "dev-rust/thread_local",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/stm32g0": {
@@ -5931,7 +7094,9 @@
       "dev-rust/bare-metal",
       "dev-rust/cortex-m",
       "dev-rust/cortex-m-rt",
-      "dev-rust/vcell"
+      "dev-rust/vcell",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5942,7 +7107,9 @@
       "dev-rust/embedded-hal",
       "dev-rust/nb",
       "dev-rust/stm32g0",
-      "dev-rust/void"
+      "dev-rust/void",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -5966,12 +7133,15 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/unicode-xid"
+      "dev-rust/unicode-xid",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/unicode-xid"
+      "dev-rust/unicode-xid",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/sync": {
@@ -5979,20 +7149,25 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/synstructure": {
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/unicode-xid"
+      "dev-rust/unicode-xid",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/unicode-xid"
+      "dev-rust/unicode-xid",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/sys_util": {
@@ -6011,7 +7186,9 @@
       "dev-rust/sys_util_core",
       "dev-rust/tempfile",
       "dev-rust/thiserror",
-      "sys-libs/libcap"
+      "sys-libs/libcap",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/android_log-sys",
@@ -6028,7 +7205,8 @@
       "dev-rust/sys_util_core",
       "dev-rust/tempfile",
       "dev-rust/thiserror",
-      "sys-libs/libcap"
+      "sys-libs/libcap",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/sys_util_core": {
@@ -6036,13 +7214,16 @@
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/sysfs_gpio": {
@@ -6050,7 +7231,9 @@
       "dev-rust/futures",
       "dev-rust/mio",
       "dev-rust/nix",
-      "dev-rust/tokio"
+      "dev-rust/tokio",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6060,14 +7243,17 @@
       "dev-rust/hostname",
       "dev-rust/libc",
       "dev-rust/log",
-      "dev-rust/time"
+      "dev-rust/time",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/error-chain",
       "dev-rust/hostname",
       "dev-rust/libc",
       "dev-rust/log",
-      "dev-rust/time"
+      "dev-rust/time",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/system_api": {
@@ -6075,13 +7261,16 @@
       "dev-rust/chromeos-dbus-bindings",
       "dev-rust/dbus",
       "dev-rust/protobuf",
-      "dev-rust/protoc-rust"
+      "dev-rust/protoc-rust",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/chromeos-dbus-bindings",
       "dev-rust/dbus",
       "dev-rust/protobuf",
-      "dev-rust/protoc-rust"
+      "dev-rust/protoc-rust",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/tempfile": {
@@ -6089,13 +7278,16 @@
       "dev-rust/cfg-if",
       "dev-rust/libc",
       "dev-rust/rand",
-      "dev-rust/remove_dir_all"
+      "dev-rust/remove_dir_all",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/cfg-if",
       "dev-rust/libc",
       "dev-rust/rand",
-      "dev-rust/remove_dir_all"
+      "dev-rust/remove_dir_all",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/termcolor": {
@@ -6109,13 +7301,17 @@
   },
   "dev-rust/terminal_size": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/termios": {
     "buildDeps": [
-      "dev-rust/libc"
+      "dev-rust/libc",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6125,13 +7321,20 @@
       "dev-rust/smawk",
       "dev-rust/terminal_size",
       "dev-rust/unicode-linebreak",
-      "dev-rust/unicode-width"
+      "dev-rust/unicode-width",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/thiserror": {
-    "buildDeps": [],
-    "runtimeDeps": []
+    "buildDeps": [
+      "virtual/rust",
+      "virtual/rust-binaries"
+    ],
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/thread-id": {
     "buildDeps": [
@@ -6145,11 +7348,14 @@
   "dev-rust/thread_local": {
     "buildDeps": [
       "dev-rust/criterion",
-      "dev-rust/once_cell"
+      "dev-rust/once_cell",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/criterion",
-      "dev-rust/once_cell"
+      "dev-rust/once_cell",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/tiff": {
@@ -6166,7 +7372,9 @@
       "dev-rust/num_threads",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/itoa",
@@ -6174,7 +7382,8 @@
       "dev-rust/num_threads",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/tiny_http": {
@@ -6183,7 +7392,9 @@
       "dev-rust/chrono",
       "dev-rust/chunked_transfer",
       "dev-rust/log",
-      "dev-rust/url"
+      "dev-rust/url",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6191,7 +7402,9 @@
     "buildDeps": [
       "dev-rust/arbitrary",
       "dev-rust/serde",
-      "dev-rust/tinyvec_macros"
+      "dev-rust/tinyvec_macros",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6205,7 +7418,9 @@
   "dev-rust/tlsdate_dbus": {
     "buildDeps": [
       "dev-rust/chromeos-dbus-bindings",
-      "dev-rust/dbus"
+      "dev-rust/dbus",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6221,7 +7436,9 @@
       "dev-rust/pin-project-lite",
       "dev-rust/signal-hook-registry",
       "dev-rust/socket2",
-      "dev-rust/tokio-macros"
+      "dev-rust/tokio-macros",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6229,7 +7446,9 @@
     "buildDeps": [
       "dev-rust/bytes",
       "dev-rust/futures",
-      "dev-rust/log"
+      "dev-rust/log",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6237,14 +7456,18 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/toml": {
     "buildDeps": [
       "dev-rust/linked-hash-map",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -6254,7 +7477,9 @@
     "buildDeps": [
       "dev-rust/proc-macro-hack",
       "dev-rust/ufmt-macros",
-      "dev-rust/ufmt-write"
+      "dev-rust/ufmt-write",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6263,7 +7488,9 @@
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn"
+      "dev-rust/syn",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6276,7 +7503,9 @@
   },
   "dev-rust/unicase": {
     "buildDeps": [
-      "dev-rust/version_check"
+      "dev-rust/version_check",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6286,7 +7515,9 @@
       "dev-rust/flamer",
       "dev-rust/matches",
       "dev-rust/serde",
-      "dev-rust/serde_test"
+      "dev-rust/serde_test",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6299,7 +7530,9 @@
   },
   "dev-rust/unicode-normalization": {
     "buildDeps": [
-      "dev-rust/tinyvec"
+      "dev-rust/tinyvec",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6314,12 +7547,15 @@
     "buildDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/rustc-std-workspace-std"
+      "dev-rust/rustc-std-workspace-std",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/rustc-std-workspace-std"
+      "dev-rust/rustc-std-workspace-std",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/unicode-xid": {
@@ -6344,7 +7580,9 @@
       "dev-rust/idna",
       "dev-rust/matches",
       "dev-rust/percent-encoding",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6361,14 +7599,17 @@
       "dev-rust/md5",
       "dev-rust/serde",
       "dev-rust/sha1",
-      "dev-rust/slog"
+      "dev-rust/slog",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/getrandom",
       "dev-rust/md5",
       "dev-rust/serde",
       "dev-rust/sha1",
-      "dev-rust/slog"
+      "dev-rust/slog",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/value-bag": {
@@ -6386,14 +7627,17 @@
       "dev-rust/libc",
       "dev-rust/pkg-config",
       "dev-rust/which",
-      "virtual/bindgen"
+      "virtual/bindgen",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "chromeos-base/vboot_reference",
       "dev-rust/libc",
       "dev-rust/pkg-config",
       "dev-rust/which",
-      "virtual/bindgen"
+      "virtual/bindgen",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/vcell": {
@@ -6410,7 +7654,9 @@
       "virtual/rust",
       "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "dev-rust/version_check": {
     "buildDeps": [
@@ -6432,10 +7678,13 @@
   },
   "dev-rust/volatile-register": {
     "buildDeps": [
-      "dev-rust/vcell"
+      "dev-rust/vcell",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/vcell"
+      "dev-rust/vcell",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/wasi": {
@@ -6470,13 +7719,16 @@
       "dev-rust/either",
       "dev-rust/lazy_static",
       "dev-rust/libc",
-      "dev-rust/regex"
+      "dev-rust/regex",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/either",
       "dev-rust/lazy_static",
       "dev-rust/libc",
-      "dev-rust/regex"
+      "dev-rust/regex",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/winapi": {
@@ -6490,16 +7742,21 @@
   },
   "dev-rust/yaml-rust": {
     "buildDeps": [
-      "dev-rust/linked-hash-map"
+      "dev-rust/linked-hash-map",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
   "dev-rust/zeroize": {
     "buildDeps": [
-      "dev-rust/zeroize_derive"
+      "dev-rust/zeroize_derive",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
-      "dev-rust/zeroize_derive"
+      "dev-rust/zeroize_derive",
+      "virtual/rust-binaries"
     ]
   },
   "dev-rust/zeroize_derive": {
@@ -6507,24 +7764,32 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/synstructure"
+      "dev-rust/synstructure",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/synstructure"
+      "dev-rust/synstructure",
+      "virtual/rust-binaries"
     ]
   },
   "dev-util/bsdiff": {
     "buildDeps": [
       "app-arch/brotli",
       "app-arch/bzip2",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "dev-libs/libdivsufsort"
     ],
     "runtimeDeps": [
       "app-arch/brotli",
       "app-arch/bzip2",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/libdivsufsort"
     ]
   },
@@ -6534,11 +7799,23 @@
     ],
     "runtimeDeps": []
   },
+  "dev-util/desktop-file-utils": {
+    "buildDeps": [
+      "app-arch/xz-utils",
+      "dev-libs/glib",
+      "virtual/pkgconfig"
+    ],
+    "runtimeDeps": []
+  },
   "dev-util/glib-utils": {
     "buildDeps": [],
     "runtimeDeps": []
   },
   "dev-util/intltool": {
+    "buildDeps": [],
+    "runtimeDeps": []
+  },
+  "dev-util/meson-format-array": {
     "buildDeps": [],
     "runtimeDeps": []
   },
@@ -6564,11 +7841,14 @@
   "dev-util/puffin": {
     "buildDeps": [
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "dev-libs/protobuf",
       "dev-util/bsdiff"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/protobuf",
       "dev-util/bsdiff"
     ]
@@ -6676,24 +7956,32 @@
   "media-gfx/sane-backends": {
     "buildDeps": [
       "media-libs/tiff",
+      "sys-apps/baselayout",
+      "sys-devel/libtool",
       "virtual/jpeg",
       "virtual/libusb",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "media-libs/tiff",
+      "sys-apps/baselayout",
       "virtual/jpeg",
       "virtual/libusb"
     ]
   },
   "media-libs/alsa-lib": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool"
+    ],
     "runtimeDeps": []
   },
   "media-libs/cros-camera-hal-usb": {
     "buildDeps": [
       "chromeos-base/cros-camera-android-deps",
       "chromeos-base/cros-camera-libs",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
+      "dev-cpp/gtest",
       "dev-libs/re2",
       "media-libs/libsync",
       "media-libs/libyuv",
@@ -6702,6 +7990,8 @@
     "runtimeDeps": [
       "chromeos-base/cros-camera-android-deps",
       "chromeos-base/cros-camera-libs",
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "dev-libs/re2",
       "media-libs/libsync"
     ]
@@ -6716,13 +8006,17 @@
       "chromeos-base/libchrome",
       "dev-cpp/gtest"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome"
+    ]
   },
   "media-libs/fontconfig": {
     "buildDeps": [
       "dev-libs/expat",
       "media-libs/freetype",
       "sys-apps/util-linux",
+      "sys-devel/libtool",
       "virtual/libintl",
       "virtual/pkgconfig"
     ],
@@ -6766,7 +8060,9 @@
     "runtimeDeps": []
   },
   "media-libs/libexif": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool"
+    ],
     "runtimeDeps": []
   },
   "media-libs/libjpeg-turbo": {
@@ -6775,6 +8071,7 @@
   },
   "media-libs/libmtp": {
     "buildDeps": [
+      "sys-devel/libtool",
       "virtual/libusb",
       "virtual/pkgconfig"
     ],
@@ -6833,6 +8130,7 @@
       "media-libs/lcms",
       "media-libs/libpng",
       "media-libs/tiff",
+      "sys-devel/make",
       "sys-libs/zlib"
     ],
     "runtimeDeps": [
@@ -6849,11 +8147,14 @@
     "runtimeDeps": []
   },
   "media-libs/speex": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool"
+    ],
     "runtimeDeps": []
   },
   "media-libs/tiff": {
     "buildDeps": [
+      "sys-devel/libtool",
       "sys-libs/zlib"
     ],
     "runtimeDeps": [
@@ -6879,6 +8180,7 @@
   "media-plugins/alsa-plugins": {
     "buildDeps": [
       "media-libs/alsa-lib",
+      "sys-devel/libtool",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
@@ -6897,7 +8199,9 @@
       "media-libs/webrtc-apm",
       "media-sound/cras_rust",
       "sci-libs/tensorflow",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
+      "sys-devel/libtool",
       "sys-libs/libselinux",
       "virtual/udev"
     ],
@@ -6915,6 +8219,7 @@
       "media-sound/alsa-utils",
       "media-sound/sr-bt-dlc",
       "sci-libs/tensorflow",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-libs/libselinux",
       "virtual/udev"
@@ -6938,7 +8243,9 @@
       "dev-rust/serde_json",
       "dev-rust/sync",
       "dev-rust/sys_util",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
       "dev-rust/async-trait",
@@ -6947,7 +8254,8 @@
       "dev-rust/serde_json",
       "dev-rust/sync",
       "dev-rust/sys_util",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust-binaries"
     ]
   },
   "media-sound/cras-sys": {
@@ -6955,7 +8263,9 @@
       "dev-rust/data_model",
       "dev-rust/serde",
       "media-sound/audio_streams",
-      "virtual/bindgen"
+      "virtual/bindgen",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6966,7 +8276,9 @@
       "dev-rust/libc",
       "dev-rust/protobuf",
       "dev-rust/system_api",
-      "dev-rust/thiserror"
+      "dev-rust/thiserror",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -6980,9 +8292,13 @@
       "dev-rust/sys_util",
       "dev-rust/thiserror",
       "media-sound/audio_streams",
-      "media-sound/libcras"
+      "media-sound/libcras",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "virtual/rust-binaries"
+    ]
   },
   "media-sound/libcras": {
     "buildDeps": [
@@ -6994,7 +8310,9 @@
       "dev-rust/serde",
       "dev-rust/sys_util",
       "media-sound/audio_streams",
-      "media-sound/cras-sys"
+      "media-sound/cras-sys",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": []
   },
@@ -7005,17 +8323,20 @@
   "net-dialup/ppp": {
     "buildDeps": [
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-libs/pam"
     ],
     "runtimeDeps": [
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-libs/pam"
     ]
   },
   "net-dialup/xl2tpd": {
     "buildDeps": [
       "net-libs/libpcap",
-      "sys-kernel/linux-headers"
+      "sys-kernel/linux-headers",
+      "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "net-dialup/ppp",
@@ -7029,7 +8350,9 @@
       "dev-libs/glib",
       "dev-libs/libdaemon",
       "dev-libs/libevent",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
+      "sys-devel/libtool",
       "sys-libs/libcap"
     ],
     "runtimeDeps": [
@@ -7037,6 +8360,7 @@
       "dev-libs/glib",
       "dev-libs/libdaemon",
       "dev-libs/libevent",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-libs/libcap"
     ]
@@ -7069,7 +8393,8 @@
       "net-libs/libnetfilter_cttimeout",
       "net-libs/libnetfilter_queue",
       "net-libs/libnfnetlink",
-      "net-libs/libtirpc"
+      "net-libs/libtirpc",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "net-libs/libmnl",
@@ -7084,6 +8409,7 @@
   "net-firewall/iptables": {
     "buildDeps": [
       "net-libs/libnetfilter_conntrack",
+      "sys-devel/libtool",
       "sys-kernel/linux-headers",
       "virtual/os-headers"
     ],
@@ -7140,7 +8466,8 @@
       "sys-libs/zlib",
       "virtual/acl",
       "virtual/libcrypt",
-      "virtual/libiconv"
+      "virtual/libiconv",
+      "virtual/tmpfiles"
     ]
   },
   "net-fs/sshfs": {
@@ -7157,10 +8484,13 @@
   },
   "net-libs/glib-networking": {
     "buildDeps": [
+      "app-arch/xz-utils",
       "app-misc/ca-certificates",
       "dev-libs/glib",
+      "dev-util/desktop-file-utils",
       "net-libs/gnutls",
-      "virtual/pkgconfig"
+      "virtual/pkgconfig",
+      "x11-misc/shared-mime-info"
     ],
     "runtimeDeps": [
       "app-misc/ca-certificates",
@@ -7210,6 +8540,7 @@
   "net-libs/libmbim": {
     "buildDeps": [
       "dev-libs/glib",
+      "dev-util/meson-format-array",
       "virtual/libgudev",
       "virtual/pkgconfig"
     ],
@@ -7226,6 +8557,7 @@
     "buildDeps": [
       "net-libs/libmnl",
       "net-libs/libnfnetlink",
+      "sys-devel/libtool",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
@@ -7270,6 +8602,7 @@
     "buildDeps": [
       "net-wireless/bluez",
       "sys-devel/flex",
+      "sys-devel/libtool",
       "virtual/yacc"
     ],
     "runtimeDeps": [
@@ -7278,14 +8611,17 @@
   },
   "net-libs/libsoup": {
     "buildDeps": [
+      "app-arch/xz-utils",
       "dev-db/sqlite",
       "dev-lang/python",
       "dev-libs/glib",
       "dev-libs/libxml2",
+      "dev-util/desktop-file-utils",
       "dev-util/glib-utils",
       "dev-util/intltool",
       "net-libs/glib-networking",
-      "virtual/pkgconfig"
+      "virtual/pkgconfig",
+      "x11-misc/shared-mime-info"
     ],
     "runtimeDeps": [
       "dev-db/sqlite",
@@ -7297,6 +8633,7 @@
   "net-libs/libtirpc": {
     "buildDeps": [
       "app-arch/xz-utils",
+      "sys-devel/libtool",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": []
@@ -7313,6 +8650,7 @@
   },
   "net-misc/bridge-utils": {
     "buildDeps": [
+      "sys-devel/libtool",
       "virtual/os-headers"
     ],
     "runtimeDeps": []
@@ -7322,6 +8660,7 @@
       "dev-libs/openssl",
       "net-dns/c-ares",
       "net-libs/nghttp2",
+      "sys-devel/libtool",
       "sys-libs/zlib",
       "virtual/krb5"
     ],
@@ -7335,10 +8674,13 @@
   },
   "net-misc/dhcpcd": {
     "buildDeps": [
+      "sys-apps/baselayout",
       "sys-apps/dbus",
+      "virtual/pkgconfig",
       "virtual/udev"
     ],
     "runtimeDeps": [
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "virtual/udev"
     ]
@@ -7346,6 +8688,7 @@
   "net-misc/iputils": {
     "buildDeps": [
       "dev-libs/openssl",
+      "sys-libs/libcap",
       "virtual/os-headers"
     ],
     "runtimeDeps": [
@@ -7359,20 +8702,26 @@
       "dev-util/intltool",
       "net-dialup/ppp",
       "net-libs/libmbim",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
-      "virtual/libgudev"
+      "sys-devel/libtool",
+      "virtual/libgudev",
+      "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "dev-libs/dbus-glib",
       "dev-libs/glib",
       "net-dialup/ppp",
       "net-libs/libmbim",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
   "net-misc/openssh": {
     "buildDeps": [
       "dev-libs/openssl",
+      "sys-apps/baselayout",
+      "sys-devel/libtool",
       "sys-libs/pam",
       "sys-libs/zlib",
       "virtual/libcrypt",
@@ -7380,6 +8729,7 @@
     ],
     "runtimeDeps": [
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-auth/pambase",
       "sys-libs/pam",
       "sys-libs/zlib",
@@ -7390,19 +8740,24 @@
     "buildDeps": [
       "dev-libs/libevent",
       "dev-libs/openssl",
-      "sys-apps/dbus"
+      "sys-apps/baselayout",
+      "sys-apps/dbus",
+      "sys-devel/libtool",
+      "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-ca-certificates",
       "dev-libs/libevent",
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
   "net-nds/openldap": {
     "buildDeps": [
       "dev-libs/openssl",
-      "sys-apps/groff"
+      "sys-apps/groff",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/openssl"
@@ -7414,6 +8769,8 @@
       "dev-libs/libgcrypt",
       "net-dns/avahi",
       "net-libs/gnutls",
+      "sys-apps/baselayout",
+      "sys-devel/libtool",
       "virtual/libusb",
       "virtual/pam"
     ],
@@ -7422,8 +8779,10 @@
       "dev-libs/libgcrypt",
       "net-dns/avahi",
       "net-libs/gnutls",
+      "sys-apps/baselayout",
       "virtual/libusb",
-      "virtual/pam"
+      "virtual/pam",
+      "virtual/tmpfiles"
     ]
   },
   "net-print/cups-filters": {
@@ -7454,7 +8813,8 @@
   },
   "net-print/dymo-cups-drivers": {
     "buildDeps": [
-      "net-print/cups"
+      "net-print/cups",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "net-print/cups"
@@ -7462,7 +8822,8 @@
   },
   "net-print/epson-inkjet-printer-escpr": {
     "buildDeps": [
-      "net-print/cups"
+      "net-print/cups",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "net-print/cups"
@@ -7481,13 +8842,17 @@
       "dev-libs/lzo",
       "dev-libs/openssl",
       "dev-libs/pkcs11-helper",
+      "sys-apps/baselayout",
       "sys-apps/net-tools",
-      "virtual/pam"
+      "sys-devel/libtool",
+      "virtual/pam",
+      "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "dev-libs/lzo",
       "dev-libs/openssl",
       "dev-libs/pkcs11-helper",
+      "sys-apps/baselayout",
       "sys-apps/net-tools",
       "virtual/pam"
     ]
@@ -7496,14 +8861,17 @@
     "buildDeps": [
       "dev-libs/gmp",
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-kernel/linux-headers",
       "sys-libs/libcap",
       "sys-libs/pam",
-      "virtual/linux-sources"
+      "virtual/linux-sources",
+      "virtual/pkgconfig"
     ],
     "runtimeDeps": [
       "dev-libs/gmp",
       "dev-libs/openssl",
+      "sys-apps/baselayout",
       "sys-apps/iproute2",
       "sys-libs/libcap",
       "sys-libs/pam",
@@ -7517,19 +8885,25 @@
   "net-wireless/bluez": {
     "buildDeps": [
       "app-arch/bzip2",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "dev-libs/glib",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
+      "sys-devel/libtool",
       "sys-libs/readline",
       "virtual/libudev"
     ],
     "runtimeDeps": [
       "app-arch/bzip2",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "dev-libs/glib",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "sys-libs/readline",
-      "virtual/libudev"
+      "virtual/libudev",
+      "virtual/tmpfiles"
     ]
   },
   "net-wireless/crda": {
@@ -7549,16 +8923,23 @@
   },
   "net-wireless/floss": {
     "buildDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/system_api",
+      "dev-cpp/gtest",
       "dev-libs/flatbuffers",
       "dev-libs/modp_b64",
       "dev-libs/openssl",
       "dev-libs/tinyxml2",
       "dev-rust/cc",
-      "net-wireless/bluez"
+      "net-wireless/bluez",
+      "virtual/rust",
+      "virtual/rust-binaries"
     ],
     "runtimeDeps": [
+      "chromeos-base/libbrillo",
+      "chromeos-base/libchrome",
       "chromeos-base/metrics",
       "chromeos-base/system_api",
       "dev-libs/flatbuffers",
@@ -7566,7 +8947,9 @@
       "dev-libs/openssl",
       "dev-libs/tinyxml2",
       "dev-rust/cc",
-      "net-wireless/bluez"
+      "net-wireless/bluez",
+      "virtual/rust-binaries",
+      "virtual/tmpfiles"
     ]
   },
   "net-wireless/iw": {
@@ -7588,6 +8971,7 @@
       "dev-libs/libnl",
       "dev-libs/openssl",
       "net-wireless/crda",
+      "sys-apps/baselayout",
       "sys-apps/dbus",
       "virtual/pkgconfig"
     ],
@@ -7597,6 +8981,7 @@
       "dev-libs/libnl",
       "dev-libs/openssl",
       "net-wireless/crda",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
@@ -7666,10 +9051,13 @@
   },
   "sys-apps/dbus": {
     "buildDeps": [
-      "dev-libs/expat"
+      "dev-libs/expat",
+      "sys-apps/baselayout",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
-      "dev-libs/expat"
+      "dev-libs/expat",
+      "sys-apps/baselayout"
     ]
   },
   "sys-apps/debianutils": {
@@ -7736,10 +9124,13 @@
       "dev-libs/libgusb",
       "dev-libs/libjcat",
       "dev-libs/libxmlb",
+      "dev-util/desktop-file-utils",
       "net-libs/gnutls",
       "net-libs/libsoup",
       "net-misc/curl",
-      "x11-libs/pango"
+      "sys-apps/baselayout",
+      "x11-libs/pango",
+      "x11-misc/shared-mime-info"
     ],
     "runtimeDeps": [
       "app-arch/gcab",
@@ -7755,6 +9146,7 @@
       "net-libs/gnutls",
       "net-libs/libsoup",
       "net-misc/curl",
+      "sys-apps/baselayout",
       "sys-apps/dbus"
     ]
   },
@@ -7827,6 +9219,17 @@
     "buildDeps": [],
     "runtimeDeps": []
   },
+  "sys-apps/mosys": {
+    "buildDeps": [
+      "chromeos-base/minijail",
+      "dev-cpp/gtest",
+      "dev-util/cmocka"
+    ],
+    "runtimeDeps": [
+      "chromeos-base/minijail",
+      "dev-util/cmocka"
+    ]
+  },
   "sys-apps/net-tools": {
     "buildDeps": [
       "app-arch/xz-utils"
@@ -7875,7 +9278,10 @@
     ]
   },
   "sys-apps/smartmontools": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool",
+      "virtual/pkgconfig"
+    ],
     "runtimeDeps": []
   },
   "sys-apps/systemd-tmpfiles": {
@@ -7899,6 +9305,7 @@
       "dev-libs/expat",
       "sys-apps/dbus",
       "sys-apps/keyutils",
+      "sys-devel/libtool",
       "sys-fs/e2fsprogs",
       "sys-libs/libnih",
       "sys-libs/libselinux",
@@ -7929,16 +9336,20 @@
     "buildDeps": [
       "dev-libs/openssl",
       "dev-libs/protobuf",
-      "sys-cluster/libqb"
+      "sys-apps/baselayout",
+      "sys-cluster/libqb",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/openssl",
       "dev-libs/protobuf",
+      "sys-apps/baselayout",
       "sys-cluster/libqb"
     ]
   },
   "sys-apps/usbutils": {
     "buildDeps": [
+      "sys-devel/libtool",
       "virtual/libudev",
       "virtual/libusb"
     ],
@@ -7995,7 +9406,8 @@
     "buildDeps": [
       "dev-libs/boost",
       "dev-libs/expat",
-      "dev-libs/libaio"
+      "dev-libs/libaio",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/expat",
@@ -8005,7 +9417,8 @@
   "sys-cluster/libqb": {
     "buildDeps": [
       "app-arch/xz-utils",
-      "dev-libs/glib"
+      "dev-libs/glib",
+      "sys-devel/libtool"
     ],
     "runtimeDeps": [
       "dev-libs/glib"
@@ -8077,6 +9490,7 @@
       "dev-libs/openssl",
       "dev-libs/popt",
       "sys-apps/util-linux",
+      "sys-devel/libtool",
       "sys-fs/lvm2",
       "virtual/libudev"
     ],
@@ -8110,6 +9524,7 @@
       "dev-libs/nss",
       "dev-util/intltool",
       "sys-apps/keyutils",
+      "sys-devel/libtool",
       "sys-libs/pam",
       "virtual/pkgconfig"
     ],
@@ -8127,6 +9542,7 @@
   },
   "sys-fs/fuse": {
     "buildDeps": [
+      "sys-libs/libcap",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
@@ -8160,6 +9576,7 @@
     "buildDeps": [
       "dev-libs/libaio",
       "sys-devel/binutils",
+      "sys-devel/libtool",
       "virtual/libudev"
     ],
     "runtimeDeps": [
@@ -8196,6 +9613,7 @@
   "sys-fs/rar2fs": {
     "buildDeps": [
       "app-arch/unrar",
+      "sys-devel/libtool",
       "sys-fs/fuse"
     ],
     "runtimeDeps": [
@@ -8206,14 +9624,17 @@
   "sys-fs/udev": {
     "buildDeps": [
       "sys-apps/acl",
+      "sys-apps/baselayout",
       "sys-apps/kmod",
       "sys-apps/util-linux",
+      "sys-devel/libtool",
       "sys-kernel/linux-headers",
       "sys-libs/libcap",
       "virtual/os-headers"
     ],
     "runtimeDeps": [
       "sys-apps/acl",
+      "sys-apps/baselayout",
       "sys-apps/kmod",
       "sys-apps/util-linux",
       "sys-libs/libcap"
@@ -8285,6 +9706,7 @@
   },
   "sys-libs/libcap-ng": {
     "buildDeps": [
+      "sys-devel/libtool",
       "sys-kernel/linux-headers"
     ],
     "runtimeDeps": []
@@ -8304,6 +9726,7 @@
     "buildDeps": [
       "dev-libs/expat",
       "sys-apps/dbus",
+      "sys-devel/libtool",
       "virtual/pkgconfig"
     ],
     "runtimeDeps": [
@@ -8331,7 +9754,9 @@
     "runtimeDeps": []
   },
   "sys-libs/llvm-libunwind": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/make"
+    ],
     "runtimeDeps": []
   },
   "sys-libs/ncurses": {
@@ -8340,6 +9765,8 @@
   },
   "sys-libs/pam": {
     "buildDeps": [
+      "sys-devel/libtool",
+      "sys-libs/libcap",
       "virtual/libcrypt"
     ],
     "runtimeDeps": [
@@ -8393,6 +9820,7 @@
   },
   "sys-process/audit": {
     "buildDeps": [
+      "sys-devel/libtool",
       "sys-kernel/linux-headers",
       "sys-libs/libcap-ng"
     ],
@@ -8430,6 +9858,14 @@
     "runtimeDeps": [
       "chromeos-base/chromiumos-assets"
     ]
+  },
+  "virtual/autotest-assistant-libs": {
+    "buildDeps": [],
+    "runtimeDeps": []
+  },
+  "virtual/autotest-libs": {
+    "buildDeps": [],
+    "runtimeDeps": []
   },
   "virtual/bindgen": {
     "buildDeps": [],
@@ -8783,6 +10219,12 @@
       "virtual/target-chromium-os"
     ]
   },
+  "virtual/tmpfiles": {
+    "buildDeps": [],
+    "runtimeDeps": [
+      "sys-apps/systemd-tmpfiles"
+    ]
+  },
   "virtual/udev": {
     "buildDeps": [],
     "runtimeDeps": [
@@ -8808,7 +10250,9 @@
     "runtimeDeps": []
   },
   "x11-base/xcb-proto": {
-    "buildDeps": [],
+    "buildDeps": [
+      "sys-devel/libtool"
+    ],
     "runtimeDeps": []
   },
   "x11-base/xorg-proto": {
@@ -8834,6 +10278,7 @@
       "media-libs/fontconfig",
       "media-libs/freetype",
       "media-libs/libpng",
+      "sys-devel/libtool",
       "sys-libs/binutils-libs",
       "sys-libs/zlib",
       "x11-libs/pixman"
@@ -8851,6 +10296,7 @@
   },
   "x11-libs/libX11": {
     "buildDeps": [
+      "sys-devel/libtool",
       "x11-base/xorg-proto",
       "x11-libs/libxcb",
       "x11-libs/xtrans",
@@ -8863,6 +10309,7 @@
   },
   "x11-libs/libXau": {
     "buildDeps": [
+      "sys-devel/libtool",
       "x11-base/xorg-proto"
     ],
     "runtimeDeps": []
@@ -8870,6 +10317,7 @@
   "x11-libs/libXdmcp": {
     "buildDeps": [
       "dev-libs/libbsd",
+      "sys-devel/libtool",
       "x11-base/xorg-proto"
     ],
     "runtimeDeps": [
@@ -8888,6 +10336,7 @@
   },
   "x11-libs/libxcb": {
     "buildDeps": [
+      "sys-devel/libtool",
       "x11-base/xcb-proto",
       "x11-libs/libXau",
       "x11-libs/libXdmcp"
@@ -8909,14 +10358,17 @@
   },
   "x11-libs/pango": {
     "buildDeps": [
+      "app-arch/xz-utils",
       "dev-libs/fribidi",
       "dev-libs/glib",
+      "dev-util/desktop-file-utils",
       "dev-util/glib-utils",
       "media-libs/fontconfig",
       "media-libs/freetype",
       "media-libs/harfbuzz",
       "virtual/pkgconfig",
-      "x11-libs/cairo"
+      "x11-libs/cairo",
+      "x11-misc/shared-mime-info"
     ],
     "runtimeDeps": [
       "dev-libs/fribidi",
@@ -8939,9 +10391,17 @@
   },
   "x11-misc/compose-tables": {
     "buildDeps": [
+      "sys-devel/libtool",
       "x11-base/xorg-proto",
       "x11-libs/libxcb",
       "x11-libs/xtrans"
+    ],
+    "runtimeDeps": []
+  },
+  "x11-misc/shared-mime-info": {
+    "buildDeps": [
+      "dev-libs/glib",
+      "dev-libs/libxml2"
     ],
     "runtimeDeps": []
   },

@@ -49,6 +49,7 @@ var (
 		"virtual/logger":                {"app-admin/rsyslog"},
 		"virtual/mta":                   {},
 		"virtual/pkgconfig":             {"dev-util/pkgconfig"},
+		"virtual/tmpfiles":              {"sys-apps/systemd-tmpfiles"},
 		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
 	}
 )

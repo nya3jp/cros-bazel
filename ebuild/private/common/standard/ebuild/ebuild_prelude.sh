@@ -245,6 +245,21 @@ __xbuild_source_eclass() {
   local saved_ECLASS="${ECLASS}"
   local saved_INHERITED="${INHERITED}"
 
+  local saved_IUSE="${IUSE}"
+  unset IUSE
+  local saved_REQUIRED_USE="${REQUIRED_USE}"
+  unset REQUIRED_USE
+  local saved_DEPEND="${DEPEND}"
+  unset DEPEND
+  local saved_BDEPEND="${BDEPEND}"
+  unset BDEPEND
+  local saved_RDEPEND="${RDEPEND}"
+  unset RDEPEND
+  local saved_PDEPEND="${PDEPEND}"
+  unset PDEPEND
+  local saved_IDEPEND="${IDEPEND}"
+  unset IDEPEND
+
   ECLASS="${name}"
   INHERITED=""
 
@@ -255,6 +270,21 @@ __xbuild_source_eclass() {
     ECLASS="${saved_ECLASS}"
   fi
   INHERITED="${saved_INHERITED} ${name}"
+
+  __xbuild_eclass_IUSE="${__xbuild_eclass_IUSE} ${IUSE}"
+  IUSE="${saved_IUSE}"
+  __xbuild_eclass_REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE} ${REQUIRED_USE}"
+  REQUIRED_USE="${saved_REQUIRED_USE}"
+  __xbuild_eclass_DEPEND="${__xbuild_eclass_DEPEND} ${DEPEND}"
+  DEPEND="${saved_DEPEND}"
+  __xbuild_eclass_BDEPEND="${__xbuild_eclass_BDEPEND} ${BDEPEND}"
+  BDEPEND="${saved_BDEPEND}"
+  __xbuild_eclass_RDEPEND="${__xbuild_eclass_RDEPEND} ${RDEPEND}"
+  RDEPEND="${saved_RDEPEND}"
+  __xbuild_eclass_PDEPEND="${__xbuild_eclass_PDEPEND} ${PDEPEND}"
+  PDEPEND="${saved_PDEPEND}"
+  __xbuild_eclass_IDEPEND="${__xbuild_eclass_IDEPEND} ${IDEPEND}"
+  IDEPEND="${saved_IDEPEND}"
 }
 
 unset EAPI EBUILD ECLASS INHERITED
@@ -262,6 +292,25 @@ EBUILD="${__xbuild_in_ebuild}"
 set -- "${__xbuild_in_ebuild}"
 
 source "${__xbuild_in_ebuild}"
+
+# In EAPI=0/1/2/3, RDEPEND=DEPEND if RDEPEND is unset.
+# https://projects.gentoo.org/pms/8/pms.html#x1-690007.3.7
+case "${EAPI}" in
+0|1|2|3)
+  if [[ -z "${RDEPEND+x}" ]]; then
+    RDEPEND="${DEPEND}"
+  fi
+esac
+
+# Collect accumulated metadata keys in eclasses.
+# https://projects.gentoo.org/pms/8/pms.html#x1-10600010.2
+IUSE="${__xbuild_eclass_IUSE} ${IUSE}"
+REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE} ${REQUIRED_USE}"
+DEPEND="${__xbuild_eclass_DEPEND} ${DEPEND}"
+BDEPEND="${__xbuild_eclass_BDEPEND} ${BDEPEND}"
+RDEPEND="${__xbuild_eclass_RDEPEND} ${RDEPEND}"
+PDEPEND="${__xbuild_eclass_PDEPEND} ${PDEPEND}"
+IDEPEND="${__xbuild_eclass_IDEPEND} ${IDEPEND}"
 
 set -o posix
 set > "${__xbuild_in_output_vars}"
