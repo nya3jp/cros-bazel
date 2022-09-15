@@ -9340,7 +9340,8 @@
   "sys-auth/pambase": {
     "buildDeps": [
       "app-arch/xz-utils",
-      "app-portage/portage-utils"
+      "app-portage/portage-utils",
+      "virtual/pam"
     ],
     "runtimeDeps": [
       "sys-libs/pam"
