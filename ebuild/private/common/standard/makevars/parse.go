@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/syntax"
@@ -83,8 +84,8 @@ func ParseSetOutput(r io.Reader) (Vars, error) {
 		// Process variable assignments.
 		for _, assign := range call.Assigns {
 			name := assign.Name.Value
-			// Skip arrays.
-			if assign.Array != nil {
+			// Skip non CROS_WORKON_ arrays.
+			if assign.Array != nil && !strings.HasPrefix(name, "CROS_WORKON_") {
 				continue
 			}
 			if assign.Append || assign.Index != nil || assign.Naked {
@@ -92,12 +93,29 @@ func ParseSetOutput(r io.Reader) (Vars, error) {
 			}
 
 			cfg := &expand.Config{Env: environ(vars)}
-			value, err := expand.Literal(cfg, assign.Value)
-			if err != nil {
-				return nil, fmt.Errorf("%s: %w", assign.Value.Pos(), err)
-			}
 
-			vars[name] = value
+			if assign.Array == nil {
+				value, err := expand.Literal(cfg, assign.Value)
+				if err != nil {
+					return nil, fmt.Errorf("%s: %w", assign.Value.Pos(), err)
+				}
+
+				vars[name] = value
+			} else {
+				var values []string
+
+				for _, elem := range assign.Array.Elems {
+					value, err := expand.Literal(cfg, elem.Value)
+					if err != nil {
+						return nil, fmt.Errorf("%s: %w", elem.Value.Pos(), err)
+					}
+
+					values = append(values, value)
+				}
+
+				// TODO: Make vars store an actual array
+				vars[name] = strings.Join(values, "|")
+			}
 		}
 	}
 
