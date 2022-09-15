@@ -28,6 +28,7 @@ func NewPackage(path string, vars makevars.Vars, target *dependency.TargetPackag
 
 func (p *Package) Path() string                             { return p.path }
 func (p *Package) Name() string                             { return p.target.Name }
+func (p *Package) Category() string                         { return strings.Split(p.target.Name, "/")[0] }
 func (p *Package) Version() *version.Version                { return p.target.Version }
 func (p *Package) Uses() map[string]struct{}                { return p.target.Uses }
 func (p *Package) Vars() makevars.Vars                      { return p.vars }

@@ -183,6 +183,98 @@ func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName st
 	return deps
 }
 
+func computeSrcPackages(category string, project string, localName string, subtree string) ([]string, error) {
+
+	// The parser will return | concat arrays, so undo that here.
+	projects := strings.Split(project, "|")
+
+	// Not a cros-workon package
+	if len(projects) == 0 {
+		return nil, nil
+	}
+
+	var localNames []string
+	if subtree == "" {
+		localNames = []string{}
+	} else {
+		localNames = strings.Split(localName, "|")
+	}
+	if len(localNames) > 0 && len(localNames) != len(projects) {
+		return nil, fmt.Errorf("Number of elements in LOCAL_NAME (%d) and PROJECT (%d) don't match.", len(localNames), len(projects))
+	}
+
+	var subTrees []string
+	if subtree == "" {
+		subTrees = []string{}
+	} else {
+		subTrees = strings.Split(subtree, "|")
+	}
+
+	if len(subTrees) > 0 && len(subTrees) != len(projects) {
+		return nil, fmt.Errorf("Number of elements in SUBTREE (%d) and PROJECT (%d) don't match.", len(subTrees), len(projects))
+	}
+
+	var allPaths []string
+
+	for i, project := range projects {
+		// Empty project was a workaround to make anealing notice the files dir
+		if project == "chromiumos/infra/build/empty-project" {
+			continue
+		}
+
+		var localName string
+		var subtree string
+		if len(localNames) > i {
+			localName = localNames[i]
+		}
+		if len(subTrees) > i {
+			subtree = subTrees[i]
+		}
+
+		var paths []string
+
+		// If there is no local name, then we need to compute it
+		if localName == "" {
+			if strings.HasPrefix(project, "chromiumos/") {
+				paths = []string{strings.TrimPrefix(project, "chromiumos/")}
+			}
+		} else {
+			if category == "chromeos-base" {
+				paths = []string{localName}
+			} else {
+				paths = []string{"third_party/" + localName}
+			}
+		}
+
+		if subtree != "" {
+			var newPaths = []string{}
+			for _, path := range paths {
+				for _, subtree := range strings.Split(subtree, " ") {
+					if subtree == ".gn" {
+						// Use the platform2 src package instead
+						newPaths = append(newPaths, path)
+					} else if subtree == "chromeos-config/cros_config_host" {
+						// We don't have a sub package for chromeos-config
+						newPaths = append(newPaths, path+"/chromeos-config")
+					} else {
+						newPaths = append(newPaths, path+"/"+subtree)
+					}
+				}
+			}
+			paths = newPaths
+		}
+
+		allPaths = append(allPaths, paths...)
+	}
+
+	var srcDeps []string
+	for _, path := range allPaths {
+		srcDeps = append(srcDeps, "//"+path+":src")
+	}
+
+	return srcDeps, nil
+}
+
 func parseSimpleDeps(deps *dependency.Deps) ([]string, bool) {
 	nameSet := make(map[string]struct{})
 	for _, expr := range deps.Expr().Children() {
@@ -284,8 +376,9 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 	return depsMap, nil
 }
 
-func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, installPackageNames []string) (map[string][]string, error) {
+func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, installPackageNames []string) (map[string][]string, map[string][]string, error) {
 	depsMap := make(map[string][]string)
+	srcDepMap := make(map[string][]string)
 	if err := genericBFS(installPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
 		if err != nil {
@@ -320,11 +413,19 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 
 		log.Printf("B: %s => %s", packageName, strings.Join(parsedDeps, ", "))
 		depsMap[packageName] = parsedDeps
+
+		srcDeps, err := computeSrcPackages(pkg.Category(), vars["CROS_WORKON_PROJECT"], vars["CROS_WORKON_LOCALNAME"], vars["CROS_WORKON_SUBTREE"])
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("   PROJECT: '%s', LOCALNAME: '%s', SUBTREE: '%s' -> %s", vars["CROS_WORKON_PROJECT"], vars["CROS_WORKON_LOCALNAME"], vars["CROS_WORKON_SUBTREE"], srcDeps)
+		srcDepMap[packageName] = srcDeps
+
 		return parsedDeps, nil
 	}); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return depsMap, nil
+	return depsMap, srcDepMap, nil
 }
 
 var flagBoard = &cli.StringFlag{
@@ -339,6 +440,7 @@ var flagStart = &cli.StringSliceFlag{
 
 type packageInfo struct {
 	BuildDeps   []string `json:"buildDeps"`
+	LocalSrc    []string `json:"localSrc"`
 	RuntimeDeps []string `json:"runtimeDeps"`
 }
 
@@ -409,7 +511,7 @@ var app = &cli.App{
 		}
 		sort.Strings(installPackageNames)
 
-		buildDeps, err := computeBuildDeps(repoSet, processor, useContext, providedPackages, installPackageNames)
+		buildDeps, buildSrcDeps, err := computeBuildDeps(repoSet, processor, useContext, providedPackages, installPackageNames)
 		if err != nil {
 			return err
 		}
@@ -425,6 +527,7 @@ var app = &cli.App{
 		for packageName := range buildDeps {
 			infoMap[packageName] = &packageInfo{
 				RuntimeDeps: nonNil(runtimeDeps[packageName]),
+				LocalSrc:    nonNil(buildSrcDeps[packageName]),
 				BuildDeps:   nonNil(buildDeps[packageName]),
 			}
 		}
