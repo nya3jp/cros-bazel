@@ -865,7 +865,7 @@
     "buildDeps": [],
     "localSrc": [
       "//platform/ec:src",
-      "//platform/ec:src"
+      "//platform/cr50:src"
     ],
     "runtimeDeps": []
   },
@@ -1139,7 +1139,7 @@
   "chromeos-base/chromiumos-assets": {
     "buildDeps": [],
     "localSrc": [
-      "//platform/chromiumos-assets:src"
+      "//chromiumos-assets:src"
     ],
     "runtimeDeps": []
   },
@@ -1948,7 +1948,10 @@
       "dev-rust/rustc-demangle-capi",
       "net-misc/curl"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "//third_party/breakpad:src",
+      "//third_party/breakpad/src/third_party/lss:src"
+    ],
     "runtimeDeps": [
       "dev-rust/rustc-demangle-capi",
       "net-misc/curl"
@@ -2019,7 +2022,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/hps-firmware:src"
+      "//platform/hps-firmware2:src"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -3048,7 +3051,9 @@
     "buildDeps": [
       "sys-apps/baselayout"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "//aosp/external/perfetto:src"
+    ],
     "runtimeDeps": [
       "sys-apps/baselayout",
       "virtual/tmpfiles"
@@ -3183,7 +3188,11 @@
   },
   "chromeos-base/protofiles": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//chromium/src/components/policy:src",
+      "//chromium/src/third_party/private_membership:src",
+      "//chromium/src/third_party/shell-encryption:src"
+    ],
     "runtimeDeps": []
   },
   "chromeos-base/quipper": {
@@ -4825,8 +4834,8 @@
       "sys-libs/zlib"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2:src",
       "//third_party/libtextclassifier:src"
     ],
     "runtimeDeps": [
@@ -4859,9 +4868,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform2:src",
-      "//third_party/../aosp/external/libutf:src"
+      "//platform2/common-mk:src",
+      "//platform2:src",
+      "//aosp/external/libutf:src"
     ],
     "runtimeDeps": []
   },
@@ -4923,9 +4932,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform2:src",
-      "//third_party/../aosp/external/marisa-trie:src"
+      "//platform2/common-mk:src",
+      "//platform2:src",
+      "//aosp/external/marisa-trie:src"
     ],
     "runtimeDeps": []
   },
@@ -4934,9 +4943,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform2:src",
-      "//third_party/../third_party/modp_b64:src"
+      "//platform2/common-mk:src",
+      "//platform2:src",
+      "//third_party/modp_b64:src"
     ],
     "runtimeDeps": []
   },
@@ -5149,8 +5158,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/assertions:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/assertions:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5250,7 +5259,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/balloon_control:src"
+      "//platform/crosvm/common/balloon_control:src"
     ],
     "runtimeDeps": [
       "dev-rust/serde",
@@ -5421,7 +5430,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform2/chromeos-dbus-bindings:src"
+      "//platform2/chromeos-dbus-bindings:src"
     ],
     "runtimeDeps": [
       "dev-rust/which",
@@ -5702,8 +5711,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/cros_async:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/cros_async:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": []
   },
@@ -5773,8 +5782,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/data_model:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/data_model:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": [
       "dev-rust/assertions",
@@ -6049,7 +6058,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform2/featured:src"
+      "//platform2/featured:src"
     ],
     "runtimeDeps": []
   },
@@ -6610,8 +6619,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/io_uring:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/io_uring:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": []
   },
@@ -6698,7 +6707,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform2/libchromeos-rs:src"
+      "//platform2/libchromeos-rs:src"
     ],
     "runtimeDeps": [
       "chromeos-base/crosvm-base",
@@ -6837,8 +6846,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform2/sirenia/manatee-client:src",
-      "//third_party/../platform2/sirenia/dbus_bindings:src"
+      "//platform2/sirenia/manatee-client:src",
+      "//platform2/sirenia/dbus_bindings:src"
     ],
     "runtimeDeps": [
       "chromeos-base/crosvm-base",
@@ -6918,7 +6927,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/minijail/rust/minijail:src"
+      "//platform/minijail/rust/minijail:src"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
@@ -8339,8 +8348,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/sync:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/sync:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -8385,8 +8394,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/sys_util:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/sys_util:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": [
       "dev-rust/android_log-sys",
@@ -8417,8 +8426,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/sys_util_core:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/sys_util_core:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
@@ -8470,15 +8479,15 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform2/system_api:src",
-      "//third_party/../platform2/authpolicy/dbus_bindings:src",
-      "//third_party/../platform2/cryptohome/dbus_bindings:src",
-      "//third_party/../platform2/debugd/dbus_bindings:src",
-      "//third_party/../platform2/dlcservice/dbus_adaptors:src",
-      "//third_party/../platform2/login_manager/dbus_bindings:src",
-      "//third_party/../platform2/shill/dbus_bindings:src",
-      "//third_party/../platform2/power_manager/dbus_bindings:src",
-      "//third_party/../platform2/vtpm:src"
+      "//platform2/system_api:src",
+      "//platform2/authpolicy/dbus_bindings:src",
+      "//platform2/cryptohome/dbus_bindings:src",
+      "//platform2/debugd/dbus_bindings:src",
+      "//platform2/dlcservice/dbus_adaptors:src",
+      "//platform2/login_manager/dbus_bindings:src",
+      "//platform2/shill/dbus_bindings:src",
+      "//platform2/power_manager/dbus_bindings:src",
+      "//platform2/vtpm:src"
     ],
     "runtimeDeps": [
       "dev-rust/chromeos-dbus-bindings",
@@ -8882,8 +8891,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/vboot_reference/host/include:src",
-      "//third_party/../platform/vboot_reference/rust/vboot_reference-sys:src"
+      "//platform/vboot_reference/host/include:src",
+      "//platform/vboot_reference/rust/vboot_reference-sys:src"
     ],
     "runtimeDeps": [
       "chromeos-base/vboot_reference",
@@ -9053,9 +9062,9 @@
       "dev-libs/libdivsufsort"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform2:src",
-      "//third_party/../aosp/external/bsdiff:src"
+      "//platform2/common-mk:src",
+      "//platform2:src",
+      "//aosp/external/bsdiff:src"
     ],
     "runtimeDeps": [
       "app-arch/brotli",
@@ -9126,9 +9135,9 @@
       "dev-util/bsdiff"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform2:src",
-      "//third_party/../aosp/external/puffin:src"
+      "//platform2/common-mk:src",
+      "//platform2:src",
+      "//aosp/external/puffin:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -9289,13 +9298,13 @@
       "virtual/pkgconfig"
     ],
     "localSrc": [
-      "//third_party/../platform2:src",
-      "//third_party/../platform2/camera/build:src",
-      "//third_party/../platform2/camera/common:src",
-      "//third_party/../platform2/camera/hal/usb:src",
-      "//third_party/../platform2/camera/include:src",
-      "//third_party/../platform2/camera/mojo:src",
-      "//third_party/../platform2/common-mk:src"
+      "//platform2:src",
+      "//platform2/camera/build:src",
+      "//platform2/camera/common:src",
+      "//platform2/camera/hal/usb:src",
+      "//platform2/camera/include:src",
+      "//platform2/camera/mojo:src",
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/cros-camera-android-deps",
@@ -9318,10 +9327,10 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//third_party/../platform2:src",
-      "//third_party/../platform2/camera/build:src",
-      "//third_party/../platform2/camera/libfs:src",
-      "//third_party/../platform2/common-mk:src"
+      "//platform2:src",
+      "//platform2/camera/build:src",
+      "//platform2/camera/libfs:src",
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -9416,7 +9425,9 @@
   },
   "media-libs/libsync": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//aosp/system/libsync:src"
+    ],
     "runtimeDeps": []
   },
   "media-libs/libyuv": {
@@ -9594,8 +9605,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform/crosvm/common/audio_streams:src",
-      "//third_party/../platform/crosvm/.cargo:src"
+      "//platform/crosvm/common/audio_streams:src",
+      "//platform/crosvm/.cargo:src"
     ],
     "runtimeDeps": [
       "dev-rust/async-trait",
@@ -10310,9 +10321,9 @@
       "virtual/libudev"
     ],
     "localSrc": [
-      "//third_party/bluez:src",
-      "//third_party/bluez:src",
-      "//third_party/bluez:src"
+      "//third_party/bluez/current:src",
+      "//third_party/bluez/next:src",
+      "//third_party/bluez/upstream:src"
     ],
     "runtimeDeps": [
       "app-arch/bzip2",
@@ -10359,12 +10370,12 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform2:src",
-      "//third_party/../aosp/packages/modules/Bluetooth/local:src",
-      "//third_party/../aosp/packages/modules/Bluetooth/upstream:src",
-      "//third_party/../aosp/frameworks/proto_logging:src",
-      "//third_party/../third_party/rust_crates:src"
+      "//platform2/common-mk:src",
+      "//platform2:src",
+      "//aosp/packages/modules/Bluetooth/local:src",
+      "//aosp/packages/modules/Bluetooth/upstream:src",
+      "//aosp/frameworks/proto_logging:src",
+      "//third_party/rust_crates:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -10407,8 +10418,8 @@
       "virtual/pkgconfig"
     ],
     "localSrc": [
-      "//third_party/hostap:src",
-      "//third_party/hostap:src"
+      "//third_party/wpa_supplicant-cros/current:src",
+      "//third_party/wpa_supplicant-cros/next:src"
     ],
     "runtimeDeps": [
       "chromeos-base/minijail",
@@ -10486,11 +10497,11 @@
       "//third_party/coreboot/util/nvramtool:src",
       "//third_party/coreboot/util/superiotool:src",
       "//third_party/coreboot/util/amdfwtool:src",
-      "//third_party/../platform/vboot_reference/Makefile:src",
-      "//third_party/../platform/vboot_reference/cgpt:src",
-      "//third_party/../platform/vboot_reference/host:src",
-      "//third_party/../platform/vboot_reference/firmware:src",
-      "//third_party/../platform/vboot_reference/futility:src"
+      "//platform/vboot_reference/Makefile:src",
+      "//platform/vboot_reference/cgpt:src",
+      "//platform/vboot_reference/host:src",
+      "//platform/vboot_reference/firmware:src",
+      "//platform/vboot_reference/futility:src"
     ],
     "runtimeDeps": [
       "sys-apps/flashrom",
@@ -10712,8 +10723,8 @@
       "dev-util/cmocka"
     ],
     "localSrc": [
-      "//third_party/../platform2/common-mk:src",
-      "//third_party/../platform/mosys:src"
+      "//platform2/common-mk:src",
+      "//platform/mosys:src"
     ],
     "runtimeDeps": [
       "chromeos-base/minijail",
@@ -11184,7 +11195,7 @@
       "sys-kernel/linux-firmware"
     ],
     "localSrc": [
-      "//third_party/kernel:src"
+      "//third_party/kernel/v5.15:src"
     ],
     "runtimeDeps": []
   },
@@ -11269,7 +11280,9 @@
       "sys-libs/gcc-libs",
       "sys-libs/llvm-libunwind"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "//third_party/llvm-project:src"
+    ],
     "runtimeDeps": [
       "sys-libs/gcc-libs",
       "sys-libs/llvm-libunwind"
@@ -11314,7 +11327,9 @@
     "buildDeps": [
       "sys-devel/make"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "//third_party/llvm-project:src"
+    ],
     "runtimeDeps": []
   },
   "sys-libs/ncurses": {

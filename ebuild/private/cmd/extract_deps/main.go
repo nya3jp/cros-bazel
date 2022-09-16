@@ -194,7 +194,7 @@ func computeSrcPackages(category string, project string, localName string, subtr
 	}
 
 	var localNames []string
-	if subtree == "" {
+	if localName == "" {
 		localNames = []string{}
 	} else {
 		localNames = strings.Split(localName, "|")
@@ -241,6 +241,8 @@ func computeSrcPackages(category string, project string, localName string, subtr
 		} else {
 			if category == "chromeos-base" {
 				paths = []string{localName}
+			} else if strings.HasPrefix(localName, "../") {
+				paths = []string{strings.TrimPrefix(localName, "../")}
 			} else {
 				paths = []string{"third_party/" + localName}
 			}
