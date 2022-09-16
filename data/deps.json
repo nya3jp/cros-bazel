@@ -28,7 +28,9 @@
   },
   "app-accessibility/pumpkin": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//platform/empty-project:src"
+    ],
     "runtimeDeps": []
   },
   "app-admin/rsyslog": {
@@ -417,10 +419,10 @@
       "sci-libs/tensorflow"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2:src",
       "//aosp/frameworks/ml:src",
-      "//aosp/hardware/interfaces/neuralnetworks:src"
+      "//aosp/hardware/interfaces/neuralnetworks:src",
+      "//platform2:src",
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -448,15 +450,15 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/attestation:src",
       "//platform2/chaps:src",
+      "//platform2/common-mk:src",
       "//platform2/libhwsec:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/metrics:src",
       "//platform2/tpm_manager:src",
-      "//platform2/trunks:src",
-      "//platform2:src"
+      "//platform2/trunks:src"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -481,10 +483,10 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/attestation:src",
-      "//platform2/libhwsec-foundation:src",
-      "//platform2:src"
+      "//platform2/common-mk:src",
+      "//platform2/libhwsec-foundation:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -510,10 +512,10 @@
       "sys-libs/libcap"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/authpolicy:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/common-mk:src",
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "app-crypt/mit-krb5",
@@ -535,8 +537,8 @@
       "virtual/autotest-libs"
     ],
     "localSrc": [
+      "//config:src",
       "//third_party/autotest/files:src",
-      "//config/python:src",
       "//third_party/autotest/files/server/cros/faft/fw-testing-configs:src"
     ],
     "runtimeDeps": [
@@ -552,9 +554,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/biod:src",
-      "//platform2:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -576,10 +578,10 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/bootid-logger:src",
-      "//platform2/croslog:src",
-      "//platform2:src"
+      "//platform2/common-mk:src",
+      "//platform2/croslog:src"
     ],
     "runtimeDeps": [
       "chromeos-base/croslog",
@@ -594,9 +596,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/cryptohome:src",
-      "//platform2:src"
+      "//platform2/cryptohome:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -611,9 +613,9 @@
       "sys-apps/rootdev"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/bootstat:src",
-      "//platform2:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -628,9 +630,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform/cbor:src",
       "//platform2:src",
-      "//platform/cbor:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -657,14 +659,14 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chaps:src",
+      "//platform2/common-mk:src",
       "//platform2/libhwsec:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/metrics:src",
-      "//platform2/trunks:src",
       "//platform2/tpm_manager:src",
-      "//platform2:src"
+      "//platform2/trunks:src"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -689,9 +691,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chaps:src",
-      "//platform2:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -732,7 +734,9 @@
       "sys-apps/baselayout",
       "sys-libs/timezone-data"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "//platform/empty-project:src"
+    ],
     "runtimeDeps": [
       "app-shells/bash",
       "sys-apps/baselayout",
@@ -824,9 +828,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chromeos-common-script:src",
-      "//platform2:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -840,12 +844,11 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/.clang-format:src",
-      "//platform2/common-mk:src",
-      "//platform2/chromeos-config:src",
+      "//platform/dev:src",
       "//platform2:src",
-      "//platform2/power_manager:src",
-      "//platform/dev/test/gtest:src"
+      "//platform2/chromeos-config:src",
+      "//platform2/common-mk:src",
+      "//platform2/power_manager:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -864,8 +867,8 @@
   "chromeos-base/chromeos-ec-headers": {
     "buildDeps": [],
     "localSrc": [
-      "//platform/ec:src",
-      "//platform/cr50:src"
+      "//platform/cr50:src",
+      "//platform/ec:src"
     ],
     "runtimeDeps": []
   },
@@ -934,9 +937,9 @@
       "sys-apps/rootdev"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/image-burner:src",
-      "//platform2:src"
+      "//platform2/image-burner:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -959,10 +962,10 @@
       "sys-apps/rootdev"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/init:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "app-arch/tar",
@@ -1002,11 +1005,11 @@
       "virtual/pkgconfig"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
       "//platform2/installer:src",
-      "//platform2/verity:src",
-      "//platform2:src"
+      "//platform2/verity:src"
     ],
     "runtimeDeps": [
       "app-admin/sudo",
@@ -1026,7 +1029,9 @@
   },
   "chromeos-base/chromeos-lacros": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//platform/empty-project:src"
+    ],
     "runtimeDeps": [
       "chromeos-base/chromeos-chrome"
     ]
@@ -1053,13 +1058,13 @@
       "sys-apps/util-linux"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chromeos-config:src",
+      "//platform2/common-mk:src",
       "//platform2/libcontainer:src",
       "//platform2/libpasswordprovider:src",
       "//platform2/login_manager:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/bootstat",
@@ -1105,9 +1110,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/storage_info:src",
-      "//platform2:src"
+      "//platform2/storage_info:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-common-script",
@@ -1124,9 +1129,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/trim:src",
-      "//platform2:src"
+      "//platform2/trim:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-common-script",
@@ -1175,11 +1180,11 @@
       "sys-libs/zlib"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/crash-reporter:src",
       "//platform2/libcrossystem:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-ca-certificates",
@@ -1273,8 +1278,8 @@
     ],
     "localSrc": [
       "//platform2:src",
-      "//platform2/camera/build:src",
       "//platform2/camera/android:src",
+      "//platform2/camera/build:src",
       "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
@@ -1304,8 +1309,6 @@
     ],
     "localSrc": [
       "//platform2:src",
-      "//platform2/common-mk:src",
-      "//platform2/metrics:src",
       "//platform2/camera/build:src",
       "//platform2/camera/common:src",
       "//platform2/camera/features:src",
@@ -1313,8 +1316,10 @@
       "//platform2/camera/include:src",
       "//platform2/camera/mojo:src",
       "//platform2/chromeos-config:src",
+      "//platform2/common-mk:src",
       "//platform2/iioservice/libiioservice_ipc:src",
-      "//platform2/iioservice/mojo:src"
+      "//platform2/iioservice/mojo:src",
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-config-tools",
@@ -1344,10 +1349,10 @@
       "sys-apps/util-linux"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/cros-disks:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1408,13 +1413,7 @@
   "chromeos-base/crosh-extension": {
     "buildDeps": [],
     "localSrc": [
-      "//third_party/libapps/libdot:src",
-      "//third_party/libapps/hterm:src",
-      "//third_party/libapps/nassh:src",
-      "//third_party/libapps/ssh_client:src",
-      "//third_party/libapps/terminal:src",
-      "//third_party/libapps/wasi-js-bindings:src",
-      "//third_party/libapps/wassh:src"
+      "//third_party/libapps:src"
     ],
     "runtimeDeps": []
   },
@@ -1433,10 +1432,10 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/croslog:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1469,8 +1468,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/base:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "dev-rust/cfg-if",
@@ -1534,12 +1532,12 @@
       "sys-libs/libselinux"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/cryptohome:src",
       "//platform2/libhwsec:src",
       "//platform2/libhwsec-foundation:src",
-      "//platform2/secure_erase_file:src",
-      "//platform2:src"
+      "//platform2/secure_erase_file:src"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -1577,9 +1575,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/cryptohome:src",
-      "//platform2:src"
+      "//platform2/cryptohome:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1609,10 +1607,10 @@
       "sys-libs/libcap"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/debugd:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-login",
@@ -1644,9 +1642,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/debugd:src",
-      "//platform2:src"
+      "//platform2/debugd:src"
     ],
     "runtimeDeps": []
   },
@@ -1658,9 +1656,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/dev-install:src",
-      "//platform2:src"
+      "//platform2/dev-install:src"
     ],
     "runtimeDeps": [
       "app-arch/bzip2",
@@ -1697,10 +1695,10 @@
       "x11-drivers/opengles-headers"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chromeos-config:src",
-      "//platform2/diagnostics:src",
-      "//platform2:src"
+      "//platform2/common-mk:src",
+      "//platform2/diagnostics:src"
     ],
     "runtimeDeps": [
       "app-arch/zstd",
@@ -1739,10 +1737,10 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/dlcservice:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/imageloader",
@@ -1763,9 +1761,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/dlcservice:src",
-      "//platform2:src"
+      "//platform2/dlcservice:src"
     ],
     "runtimeDeps": []
   },
@@ -1783,9 +1781,9 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/dlp:src",
-      "//platform2:src"
+      "//platform2/dlp:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1815,12 +1813,12 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/dns-proxy:src",
       "//platform2/metrics:src",
       "//platform2/shill/dbus/client:src",
-      "//platform2/shill/net:src",
-      "//platform2:src"
+      "//platform2/shill/net:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1867,9 +1865,9 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/featured:src",
-      "//platform2:src"
+      "//platform2/featured:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1884,9 +1882,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/foomatic_shell:src",
-      "//platform2:src"
+      "//platform2/foomatic_shell:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1905,9 +1903,9 @@
       "sys-fs/fuse"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/fusebox:src",
-      "//platform2:src"
+      "//platform2/fusebox:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -1970,11 +1968,11 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chromeos-config:src",
+      "//platform2/common-mk:src",
       "//platform2/hardware_verifier:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2047,8 +2045,8 @@
     ],
     "localSrc": [
       "//platform2:src",
-      "//platform2/hps:src",
       "//platform2/common-mk:src",
+      "//platform2/hps:src",
       "//platform2/metrics:src"
     ],
     "runtimeDeps": [
@@ -2073,12 +2071,12 @@
       "virtual/chromeos-ec-driver-init"
     ],
     "localSrc": [
+      "//aosp/frameworks/native:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//platform2/iioservice:src",
       "//platform2/libmems:src",
-      "//platform2/common-mk:src",
-      "//platform2/metrics:src",
-      "//aosp/frameworks/native:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2105,9 +2103,9 @@
       "sys-fs/lvm2"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/imageloader:src",
-      "//platform2:src"
+      "//platform2/imageloader:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2127,9 +2125,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/imageloader:src",
-      "//platform2:src"
+      "//platform2/imageloader:src"
     ],
     "runtimeDeps": []
   },
@@ -2183,11 +2181,11 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/kerberos:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "app-crypt/mit-krb5",
@@ -2209,8 +2207,8 @@
       "net-print/cups"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/lexmark-fax-pnh:src"
     ],
     "runtimeDeps": [
@@ -2238,9 +2236,9 @@
       "virtual/libusb"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libbrillo:src",
-      "//platform2:src"
+      "//platform2/libbrillo:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-ca-certificates",
@@ -2274,9 +2272,9 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform/libchrome:src",
       "//platform2:src",
-      "//platform/libchrome:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/perfetto",
@@ -2299,9 +2297,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libchromeos-ui:src",
-      "//platform2:src"
+      "//platform2/libchromeos-ui:src"
     ],
     "runtimeDeps": [
       "chromeos-base/bootstat",
@@ -2311,7 +2309,9 @@
   },
   "chromeos-base/libchromeos-use-flags": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//platform/empty-project:src"
+    ],
     "runtimeDeps": []
   },
   "chromeos-base/libcontainer": {
@@ -2324,9 +2324,9 @@
       "sys-fs/lvm2"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libcontainer:src",
-      "//platform2:src"
+      "//platform2/libcontainer:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2344,9 +2344,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libcrossystem:src",
-      "//platform2:src"
+      "//platform2/libcrossystem:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2362,10 +2362,10 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/biod:src",
       "//platform2/common-mk:src",
-      "//platform2/libec:src",
-      "//platform2:src"
+      "//platform2/libec:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2391,13 +2391,13 @@
       "dev-libs/openssl"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libhwsec:src",
       "//platform2/libhwsec-foundation:src",
-      "//platform2/tpm_manager:src",
       "//platform2/tpm2-simulator:src",
-      "//platform2/trunks:src",
-      "//platform2:src"
+      "//platform2/tpm_manager:src",
+      "//platform2/trunks:src"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -2416,11 +2416,11 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/metrics:src",
       "//platform2/libhwsec:src",
       "//platform2/libhwsec-foundation:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2439,8 +2439,8 @@
     ],
     "localSrc": [
       "//platform2:src",
-      "//platform2/iioservice:src",
-      "//platform2/common-mk:src"
+      "//platform2/common-mk:src",
+      "//platform2/iioservice:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2454,9 +2454,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libipp:src",
-      "//platform2:src"
+      "//platform2/libipp:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2472,9 +2472,9 @@
       "net-libs/libiio"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libmems:src",
-      "//platform2:src"
+      "//platform2/libmems:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2490,9 +2490,9 @@
       "sys-apps/keyutils"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libpasswordprovider:src",
-      "//platform2:src"
+      "//platform2/libpasswordprovider:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2558,12 +2558,12 @@
       "dev-libs/protobuf"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libhwsec:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/libtpmcrypto:src",
-      "//platform2/trunks:src",
-      "//platform2:src"
+      "//platform2/trunks:src"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -2589,10 +2589,10 @@
       "virtual/libusb"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/lorgnette:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2657,8 +2657,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform2/metrics/memd:src",
-      "//platform2/common-mk:src"
+      "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src"
     ],
     "runtimeDeps": [
       "sys-apps/dbus",
@@ -2676,12 +2676,12 @@
       "net-libs/libiio"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chromeos-config:src",
+      "//platform2/common-mk:src",
       "//platform2/iioservice:src",
-      "//platform2/mems_setup:src",
       "//platform2/libmems:src",
-      "//platform2:src"
+      "//platform2/mems_setup:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2705,9 +2705,9 @@
       "sys-apps/rootdev"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/metrics:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2743,9 +2743,9 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/missive:src",
-      "//platform2:src"
+      "//platform2/missive:src"
     ],
     "runtimeDeps": [
       "app-arch/snappy",
@@ -2771,10 +2771,10 @@
       "virtual/udev"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/metrics:src",
-      "//platform2/mist:src",
-      "//platform2:src"
+      "//platform2/mist:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2808,10 +2808,10 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/ml:src",
-      "//platform2/ml_benchmark:src",
-      "//platform2:src"
+      "//platform2/ml_benchmark:src"
     ],
     "runtimeDeps": [
       "chromeos-base/aosp-frameworks-ml-nn",
@@ -2836,9 +2836,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/ml:src",
-      "//platform2:src"
+      "//platform2/ml:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2853,9 +2853,9 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/modem-utilities:src",
-      "//platform2:src"
+      "//platform2/modem-utilities:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2874,9 +2874,9 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/mojo_service_manager:src",
-      "//platform2:src"
+      "//platform2/mojo_service_manager:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2896,9 +2896,9 @@
       "virtual/udev"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/mtpd:src",
-      "//platform2:src"
+      "//platform2/mtpd:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2916,16 +2916,16 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/nnapi:src",
-      "//platform2:src",
       "//aosp/frameworks/native:src",
       "//aosp/system/core/libcutils:src",
       "//aosp/system/core/libutils:src",
       "//aosp/system/libbase:src",
       "//aosp/system/libfmq:src",
       "//aosp/system/libhidl:src",
-      "//aosp/system/logging:src"
+      "//aosp/system/logging:src",
+      "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/nnapi:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2951,10 +2951,10 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/oobe_config:src",
       "//platform2/metrics:src",
-      "//platform2:src"
+      "//platform2/oobe_config:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -2977,10 +2977,10 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/metrics:src",
-      "//platform2/p2p:src",
-      "//platform2:src"
+      "//platform2/p2p:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3007,11 +3007,11 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/metrics:src",
       "//platform2/patchpanel:src",
-      "//platform2/shill/net:src",
-      "//platform2:src"
+      "//platform2/shill/net:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3037,9 +3037,9 @@
       "dev-libs/protobuf"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/patchpanel:src",
-      "//platform2:src"
+      "//platform2/patchpanel:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3073,9 +3073,9 @@
       "virtual/udev"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/permission_broker:src",
-      "//platform2:src"
+      "//platform2/permission_broker:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3094,9 +3094,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/permission_broker:src",
-      "//platform2:src"
+      "//platform2/permission_broker:src"
     ],
     "runtimeDeps": []
   },
@@ -3122,14 +3122,14 @@
       "virtual/udev"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chromeos-config:src",
+      "//platform2/common-mk:src",
       "//platform2/iioservice:src",
       "//platform2/libec:src",
       "//platform2/metrics:src",
       "//platform2/power_manager:src",
-      "//platform2/shill/dbus/client:src",
-      "//platform2:src"
+      "//platform2/shill/dbus/client:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-config-tools",
@@ -3159,9 +3159,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/power_manager:src",
-      "//platform2:src"
+      "//platform2/power_manager:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3176,9 +3176,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/print_tools:src",
-      "//platform2:src"
+      "//platform2/print_tools:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3209,8 +3209,8 @@
       "dev-util/perf"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2:src"
+      "//platform2:src",
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3264,10 +3264,10 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libec:src",
-      "//platform2/rgbkbd:src",
-      "//platform2:src"
+      "//platform2/rgbkbd:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3287,10 +3287,10 @@
       "sys-libs/libcap"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libcontainer:src",
-      "//platform2/run_oci:src",
-      "//platform2:src"
+      "//platform2/run_oci:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3316,11 +3316,11 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chromeos-config:src",
+      "//platform2/common-mk:src",
       "//platform2/libec:src",
-      "//platform2/runtime_probe:src",
-      "//platform2:src"
+      "//platform2/runtime_probe:src"
     ],
     "runtimeDeps": [
       "chromeos-base/chromeos-config-tools",
@@ -3337,9 +3337,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/runtime_probe:src",
-      "//platform2:src"
+      "//platform2/runtime_probe:src"
     ],
     "runtimeDeps": []
   },
@@ -3359,10 +3359,10 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/metrics:src",
-      "//platform2/secanomalyd:src",
-      "//platform2:src"
+      "//platform2/secanomalyd:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3380,9 +3380,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/secure_erase_file:src",
-      "//platform2:src"
+      "//platform2/secure_erase_file:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3406,9 +3406,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/login_manager:src",
-      "//platform2:src"
+      "//platform2/login_manager:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3444,13 +3444,13 @@
       "virtual/wpa_supplicant"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//platform2:src",
       "//platform2/chaps:src",
+      "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
       "//platform2/metrics:src",
       "//platform2/shill:src",
-      "//platform2/vpn-manager:src",
-      "//platform2:src"
+      "//platform2/vpn-manager:src"
     ],
     "runtimeDeps": [
       "chromeos-base/bootstat",
@@ -3486,9 +3486,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/shill:src",
-      "//platform2:src"
+      "//platform2/shill:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3504,9 +3504,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/shill:src",
-      "//platform2:src"
+      "//platform2/shill:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3523,9 +3523,9 @@
       "dev-libs/re2"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/shill:src",
-      "//platform2:src"
+      "//platform2/shill:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3626,10 +3626,10 @@
       "sys-fs/fuse"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2/smbfs:src",
-      "//platform2:src"
+      "//platform2/smbfs:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3653,10 +3653,10 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2/smbprovider:src",
-      "//platform2:src"
+      "//platform2/smbprovider:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3676,10 +3676,10 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/spaced:src",
-      "//platform2/system_api:src",
-      "//platform2:src"
+      "//platform2/system_api:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3702,9 +3702,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/syslog-cat:src",
-      "//platform2:src"
+      "//platform2/syslog-cat:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3732,10 +3732,10 @@
       "sys-apps/dbus"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2/system-proxy:src",
-      "//platform2:src"
+      "//platform2/system-proxy:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3759,9 +3759,9 @@
       "dev-libs/protobuf"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/system_api:src",
-      "//platform2:src"
+      "//platform2/system_api:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libchrome",
@@ -3784,14 +3784,14 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libhwsec:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/libtpmcrypto:src",
       "//platform2/metrics:src",
       "//platform2/tpm_manager:src",
-      "//platform2/trunks:src",
-      "//platform2:src"
+      "//platform2/trunks:src"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -3814,10 +3814,10 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libhwsec-foundation:src",
-      "//platform2/tpm_manager:src",
-      "//platform2:src"
+      "//platform2/tpm_manager:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3856,15 +3856,14 @@
       "sys-apps/baselayout"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/trunks:src",
       "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/metrics:src",
       "//platform2/tpm_manager:src",
-      "//platform2/u2fd:src",
-      "//platform2/libhwsec-foundation:src",
-      "//platform2/libhwsec:src",
-      "//platform2:src"
+      "//platform2/trunks:src",
+      "//platform2/u2fd:src"
     ],
     "runtimeDeps": [
       "app-crypt/trousers",
@@ -3893,10 +3892,10 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/trunks:src",
-      "//platform2/u2fd:src",
-      "//platform2:src"
+      "//platform2/u2fd:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -3936,10 +3935,10 @@
       "sys-apps/rootdev"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/diagnostics:src",
+      "//aosp/system/update_engine:src",
       "//platform2:src",
-      "//aosp/system/update_engine:src"
+      "//platform2/common-mk:src",
+      "//platform2/diagnostics:src"
     ],
     "runtimeDeps": [
       "app-arch/bzip2",
@@ -3969,9 +3968,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//aosp/system/update_engine:src",
       "//platform2:src",
-      "//aosp/system/update_engine:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": []
   },
@@ -3988,10 +3987,10 @@
       "sys-apps/usbguard"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/metrics:src",
-      "//platform2/usb_bouncer:src",
-      "//platform2:src"
+      "//platform2/usb_bouncer:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -4052,9 +4051,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/verity:src",
-      "//platform2:src"
+      "//platform2/verity:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -4073,9 +4072,9 @@
       "net-libs/grpc"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/vm_tools/proto:src",
-      "//platform2:src"
+      "//platform2/vm_tools/proto:src"
     ],
     "runtimeDeps": []
   },
@@ -4102,9 +4101,9 @@
       "net-vpn/strongswan"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/vpn-manager:src",
-      "//platform2:src"
+      "//platform2/vpn-manager:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -4834,8 +4833,8 @@
       "sys-libs/zlib"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/libtextclassifier:src"
     ],
     "runtimeDeps": [
@@ -4868,9 +4867,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//aosp/external/libutf:src",
       "//platform2:src",
-      "//aosp/external/libutf:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": []
   },
@@ -4932,9 +4931,9 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//aosp/external/marisa-trie:src",
       "//platform2:src",
-      "//aosp/external/marisa-trie:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": []
   },
@@ -4943,8 +4942,8 @@
       "dev-cpp/gtest"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/modp_b64:src"
     ],
     "runtimeDeps": []
@@ -5158,8 +5157,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/assertions:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -5259,7 +5257,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/balloon_control:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "dev-rust/serde",
@@ -5711,8 +5709,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/cros_async:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": []
   },
@@ -5782,8 +5779,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/data_model:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "dev-rust/assertions",
@@ -6619,8 +6615,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/io_uring:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": []
   },
@@ -6846,8 +6841,8 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform2/sirenia/manatee-client:src",
-      "//platform2/sirenia/dbus_bindings:src"
+      "//platform2/sirenia/dbus_bindings:src",
+      "//platform2/sirenia/manatee-client:src"
     ],
     "runtimeDeps": [
       "chromeos-base/crosvm-base",
@@ -6927,7 +6922,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/minijail/rust/minijail:src"
+      "//platform/minijail:src"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
@@ -8348,8 +8343,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/sync:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -8394,8 +8388,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/sys_util:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "dev-rust/android_log-sys",
@@ -8426,8 +8419,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/sys_util_core:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
@@ -8479,14 +8471,14 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform2/system_api:src",
       "//platform2/authpolicy/dbus_bindings:src",
       "//platform2/cryptohome/dbus_bindings:src",
       "//platform2/debugd/dbus_bindings:src",
       "//platform2/dlcservice/dbus_adaptors:src",
       "//platform2/login_manager/dbus_bindings:src",
-      "//platform2/shill/dbus_bindings:src",
       "//platform2/power_manager/dbus_bindings:src",
+      "//platform2/shill/dbus_bindings:src",
+      "//platform2/system_api:src",
       "//platform2/vtpm:src"
     ],
     "runtimeDeps": [
@@ -8891,8 +8883,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/vboot_reference/host/include:src",
-      "//platform/vboot_reference/rust/vboot_reference-sys:src"
+      "//platform/vboot_reference:src"
     ],
     "runtimeDeps": [
       "chromeos-base/vboot_reference",
@@ -9062,9 +9053,9 @@
       "dev-libs/libdivsufsort"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//aosp/external/bsdiff:src",
       "//platform2:src",
-      "//aosp/external/bsdiff:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "app-arch/brotli",
@@ -9135,9 +9126,9 @@
       "dev-util/bsdiff"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
+      "//aosp/external/puffin:src",
       "//platform2:src",
-      "//aosp/external/puffin:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/libbrillo",
@@ -9605,8 +9596,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform/crosvm/common/audio_streams:src",
-      "//platform/crosvm/.cargo:src"
+      "//platform/crosvm:src"
     ],
     "runtimeDeps": [
       "dev-rust/async-trait",
@@ -9629,8 +9619,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/adhd/cras/client/cras-sys:src",
-      "//third_party/adhd/cras/src/common:src"
+      "//third_party/adhd:src"
     ],
     "runtimeDeps": []
   },
@@ -9646,7 +9635,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/adhd/cras/src/server/rust:src"
+      "//third_party/adhd:src"
     ],
     "runtimeDeps": []
   },
@@ -9665,8 +9654,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/adhd/cras/client/cras_tests:src",
-      "//third_party/adhd/cras/dbus_bindings:src"
+      "//third_party/adhd:src"
     ],
     "runtimeDeps": [
       "virtual/rust-binaries"
@@ -9687,7 +9675,7 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//third_party/adhd/cras/client/libcras:src"
+      "//third_party/adhd:src"
     ],
     "runtimeDeps": []
   },
@@ -10370,11 +10358,11 @@
       "virtual/rust-binaries"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2:src",
+      "//aosp/frameworks/proto_logging:src",
       "//aosp/packages/modules/Bluetooth/local:src",
       "//aosp/packages/modules/Bluetooth/upstream:src",
-      "//aosp/frameworks/proto_logging:src",
+      "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/rust_crates:src"
     ],
     "runtimeDeps": [
@@ -10485,23 +10473,8 @@
       "sys-apps/pciutils"
     ],
     "localSrc": [
-      "//third_party/coreboot/src/arch/x86/include/arch:src",
-      "//third_party/coreboot/src/commonlib:src",
-      "//third_party/coreboot/src/vendorcode/intel:src",
-      "//third_party/coreboot/util/archive:src",
-      "//third_party/coreboot/util/cbmem:src",
-      "//third_party/coreboot/util/cbfstool:src",
-      "//third_party/coreboot/util/ifdtool:src",
-      "//third_party/coreboot/util/inteltool:src",
-      "//third_party/coreboot/util/mma:src",
-      "//third_party/coreboot/util/nvramtool:src",
-      "//third_party/coreboot/util/superiotool:src",
-      "//third_party/coreboot/util/amdfwtool:src",
-      "//platform/vboot_reference/Makefile:src",
-      "//platform/vboot_reference/cgpt:src",
-      "//platform/vboot_reference/host:src",
-      "//platform/vboot_reference/firmware:src",
-      "//platform/vboot_reference/futility:src"
+      "//platform/vboot_reference:src",
+      "//third_party/coreboot:src"
     ],
     "runtimeDeps": [
       "sys-apps/flashrom",
@@ -10723,8 +10696,8 @@
       "dev-util/cmocka"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform/mosys:src"
+      "//platform/mosys:src",
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [
       "chromeos-base/minijail",
@@ -11006,14 +10979,18 @@
   },
   "sys-firmware/fwupd-peripherals": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//platform/empty-project:src"
+    ],
     "runtimeDeps": [
       "sys-apps/fwupd"
     ]
   },
   "sys-firmware/fwupd-storage": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//platform/empty-project:src"
+    ],
     "runtimeDeps": [
       "sys-apps/fwupd"
     ]
@@ -11724,7 +11701,9 @@
   },
   "virtual/target-chromium-os": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "//platform/empty-project:src"
+    ],
     "runtimeDeps": [
       "app-accessibility/pumpkin",
       "app-admin/rsyslog",

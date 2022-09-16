@@ -217,11 +217,6 @@ func computeSrcPackages(category string, project string, localName string, subtr
 	var allPaths []string
 
 	for i, project := range projects {
-		// Empty project was a workaround to make anealing notice the files dir
-		if project == "chromiumos/infra/build/empty-project" {
-			continue
-		}
-
 		var localName string
 		var subtree string
 		if len(localNames) > i {
@@ -250,11 +245,29 @@ func computeSrcPackages(category string, project string, localName string, subtr
 
 		if subtree != "" {
 			var newPaths = []string{}
+
 			for _, path := range paths {
+				if path == "platform/vboot_reference" || path == "third_party/coreboot"  {
+					// coreboot-utils maps a lot of different sub folders.
+					// TODO: Do we want to support such fine granularity?
+					newPaths = append(newPaths, path)
+					continue
+				} else if !strings.HasPrefix(path, "platform2") {
+					// TODO: Should we support sub paths for non-platform2?
+					// It requires adding BUILD files in a lot more places
+					// Or we need to figure out how to pass individual files
+					// into the build.
+					newPaths = append(newPaths, path)
+					continue
+				}
+
 				for _, subtree := range strings.Split(subtree, " ") {
 					if subtree == ".gn" {
 						// Use the platform2 src package instead
 						newPaths = append(newPaths, path)
+					} else if subtree == ".clang-format" {
+						// We really don't need .clang-format to build...
+						continue
 					} else if subtree == "chromeos-config/cros_config_host" {
 						// We don't have a sub package for chromeos-config
 						newPaths = append(newPaths, path+"/chromeos-config")
@@ -269,8 +282,16 @@ func computeSrcPackages(category string, project string, localName string, subtr
 		allPaths = append(allPaths, paths...)
 	}
 
+	sort.Strings(allPaths)
+
 	var srcDeps []string
+	var previousPath string
 	for _, path := range allPaths {
+		if previousPath == path {
+			// Some packages contain duplicate paths
+			continue
+		}
+		previousPath = path
 		srcDeps = append(srcDeps, "//"+path+":src")
 	}
 
