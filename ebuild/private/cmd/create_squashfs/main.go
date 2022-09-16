@@ -44,7 +44,7 @@ var app = &cli.App{
 			specs = append(specs, strings.Split(strings.TrimRight(string(b), "\n"), "\n")...)
 		}
 
-		cmd := exec.Command("/usr/bin/mksquashfs", "-", outputPath, "-tar", "-noappend", "-all-time", "0")
+		cmd := exec.Command("/usr/bin/mksquashfs", "-", outputPath, "-tar", "-noappend", "-all-time", "0", "-comp", "lz4")
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			return err
