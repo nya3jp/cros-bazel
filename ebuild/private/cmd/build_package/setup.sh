@@ -19,6 +19,10 @@ export FEATURES="digest -sandbox -usersandbox"  # TODO: turn on sandbox
 
 read -ra atoms <<<"${INSTALL_ATOMS_TARGET}"
 if (( ${#atoms[@]} )); then
+  # We need to unmask the -9999 cros-workon ebuilds so we can install them
+  mkdir -p "${ROOT}/etc/portage/package.accept_keywords"
+  printf "%s\n" "${atoms[@]}" \
+    > "${ROOT}/etc/portage/package.accept_keywords/cros-workon"
   # TODO: emerge is too slow! Find a way to speed up.
   time emerge --oneshot --usepkgonly --nodeps --noreplace "${atoms[@]}"
 fi
