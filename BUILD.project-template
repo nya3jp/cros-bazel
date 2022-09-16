@@ -6,6 +6,14 @@ load("//bazel/ebuild:defs.bzl", "ebuild_src")
 
 ebuild_src(
     name = "src",
-    srcs = glob(["**"], exclude=[".git/**", "BUILD.bazel", "OWNERS", "PRESUBMIT"]),
+    srcs = glob(["**"], exclude=[
+        ".git/**",
+        "BUILD.bazel",
+        "OWNERS",
+        "PRESUBMIT",
+
+        # Hack for systemd
+        "units/system-systemd*.slice"
+    ]),
     visibility = ["//visibility:public"],
 )

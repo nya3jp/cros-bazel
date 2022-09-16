@@ -1,0 +1,53 @@
+# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "ebuild_src")
+
+ebuild_src(
+    name = "src",
+    # Autotest has some recursive symlinks which we need to exclude
+    srcs = glob([
+        "bin/**",
+        "BLUETOOTH_OWNERS",
+        "cli/**",
+        "common.py",
+        "contrib/**",
+        "CTS_OWNERS",
+        "database/**",
+        "docs/**",
+        "ENGPROD_OWNERS",
+        "FINGERPRINT_OWNERS",
+        "FIRMWARE_OWNERS",
+        "frontend/**",
+        "global_config.ini",
+        "HARNESS_OWNERS",
+        "INFRA_OWNERS",
+        "__init__.py",
+        "LGPL_LICENSE",
+        "LICENSE",
+        "logs/**",
+        "main.star",
+        "metadata/**",
+        "MODULE_LICENSE_LGPL",
+        "OWNERS",
+        "POWER_OWNERS",
+        "PRESUBMIT.cfg",
+        "PRESUBMIT.py",
+        "README.md",
+        "results/**",
+        "server/**",
+        "site_utils/**",
+        "ssp_deploy_config.json",
+        ".style.yapf",
+        "test_suites/**",
+        "tko/**",
+        "unblocked_terms.txt",
+        "utils/**",
+        "WIFI_OWNERS",
+    ], exclude=[
+        "frontend/client/src/autotest/public/*.woff",
+        "server/site_tests/display_EdidStress/test_data/edids/rest_edids/*"
+    ]),
+    visibility = ["//visibility:public"],
+)
