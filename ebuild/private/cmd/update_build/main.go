@@ -57,6 +57,7 @@ type distEntry struct {
 
 type packageInfo struct {
 	BuildDeps   []string `json:"buildDeps"`
+	LocalSrc    []string `json:"localSrc"`
 	RuntimeDeps []string `json:"runtimeDeps"`
 }
 
@@ -134,6 +135,13 @@ ebuild(
         "@{{ .Name }}//file": "{{ .Filename }}",
         {{- end }}
     },
+    {{- if .PackageInfo.LocalSrc }}
+    srcs = [
+        {{- range .PackageInfo.LocalSrc }}
+        "{{ . }}",
+        {{- end }}
+    ],
+    {{- end }}
     {{- if .PackageInfo.BuildDeps }}
     build_deps = [
         {{- range .PackageInfo.BuildDeps }}
