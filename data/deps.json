@@ -11172,6 +11172,7 @@
       "sys-kernel/linux-firmware"
     ],
     "localSrc": [
+      "//third_party/chromiumos-overlay/eclass/cros-kernel:src",
       "//third_party/kernel/v5.15:src"
     ],
     "runtimeDeps": []

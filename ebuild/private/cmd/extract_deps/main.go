@@ -279,6 +279,10 @@ func computeSrcPackages(category string, project string, localName string, subtr
 			paths = newPaths
 		}
 
+		if project == "chromiumos/third_party/kernel" {
+			paths = append(paths, "third_party/chromiumos-overlay/eclass/cros-kernel")
+		}
+
 		allPaths = append(allPaths, paths...)
 	}
 
