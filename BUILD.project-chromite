@@ -1,0 +1,44 @@
+# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/ebuild:defs.bzl", "ebuild_src")
+
+# Chromite has some recursive symlinks which we need to exclude
+
+ebuild_src(
+    name="src",
+    srcs = glob([
+        "api/**",
+        "bin/**",
+        "cidb/**",
+        "cli/**",
+        "config/**",
+        # "conftest.py",
+        "contrib/**",
+        "cbuildbot/**",
+        "cros/**",
+        # "docs/**",
+        # ".env",
+        "format/**",
+        "infra/**",
+        "__init__.py",
+        "lib/**",
+        "licensing/**",
+        # "pytest.ini",
+        # "run_tests",
+        "scripts/**",
+        "PRESUBMIT.cfg",
+        "sdk/**",
+        "service/**",
+        "signing/**",
+        "ssh_keys/**",
+        "test/**",
+        "third_party/**",
+        "utils/**",
+    ], exclude=[
+        # Contains utf-8 characters
+        "third_party/swarming.client/example/**"
+    ]),
+    visibility = ["//visibility:public"],
+)

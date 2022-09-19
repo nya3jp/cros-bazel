@@ -49,7 +49,10 @@ def _ebuild_impl(ctx):
 
     for target in ctx.attr.srcs:
         info = target[EbuildSrcInfo]
-        args.add("--overlay=src/%s=%s" % (info.src_path, info.squashfs_file.path))
+        if target.label.workspace_name == "chromite" and target.label.package == "" and target.label.name == "src":
+            args.add("--overlay=chromite=%s" % (info.squashfs_file.path))
+        else:
+            args.add("--overlay=src/%s=%s" % (info.src_path, info.squashfs_file.path))
         direct_inputs.append(info.squashfs_file)
 
     # TODO: Consider target/host transitions.
