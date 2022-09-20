@@ -73,8 +73,12 @@ EbuildSrcInfo = provider(
 def _workspace_root(label):
     return paths.join("..", label.workspace_name) if label.workspace_name else ""
 
+def relative_path_in_label(file, label):
+    return paths.relativize(file.short_path, paths.join(_workspace_root(label), label.package))
+
 def relative_path_in_package(file):
     owner = file.owner
     if owner == None:
         fail("File does not have an associated owner label")
-    return paths.relativize(file.short_path, paths.join(_workspace_root(owner), owner.package))
+    return relative_path_in_label(file, owner)
+

@@ -2,14 +2,21 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "EbuildSrcInfo", "relative_path_in_package")
+load("common.bzl", "EbuildSrcInfo", "relative_path_in_label")
 
-def _format_create_squashfs_arg(file):
-    return "%s:%s" % (relative_path_in_package(file), file.path)
+def _format_create_squashfs_arg(file, package):
+    return "%s:%s" % (relative_path_in_label(file, package), file.path)
 
 def _create_squashfs_action(ctx, out, exe, files):
+    # We want to support adding files from sub packages, so we need to use
+    # the target's path instead of the file owners path when computing
+    # the relative path.
+    package = ctx.label
+
     args = ctx.actions.args()
-    args.add_all(files, map_each = _format_create_squashfs_arg)
+    args.add_all(files,
+        allow_closure = True,
+        map_each = lambda file: _format_create_squashfs_arg(file, package))
     args.set_param_file_format("multiline")
     args.use_param_file("--specs-from=%s", use_always = True)
 
