@@ -1144,7 +1144,7 @@
   "chromeos-base/chromiumos-assets": {
     "buildDeps": [],
     "localSrc": [
-      "//chromiumos-assets:src"
+      "//platform/chromiumos-assets:src"
     ],
     "runtimeDeps": []
   },

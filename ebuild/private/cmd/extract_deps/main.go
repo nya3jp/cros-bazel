@@ -226,6 +226,11 @@ func computeSrcPackages(category string, project string, localName string, subtr
 			subtree = subTrees[i]
 		}
 
+		if project == "chromiumos/platform/chromiumos-assets" && localName == "chromiumos-assets" {
+			// ebuild is incorrect
+			localName = "platform/chromiumos-assets"
+		}
+
 		var paths []string
 
 		// If there is no local name, then we need to compute it
