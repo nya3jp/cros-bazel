@@ -293,7 +293,7 @@ var app = &cli.App{
 
 		args = append(args, setupPath.Inside())
 		if !login {
-			args = append(args, "fakeroot", "ebuild", overlayEbuildPath.Inside(), "clean", "package")
+			args = append(args, "fakeroot", "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
 		}
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Env = append(
