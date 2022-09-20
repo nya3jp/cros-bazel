@@ -30,3 +30,10 @@ binary_package(
     src = "@amd64_host_meson_format_array_0//file",
     visibility = ["//visibility:public"],
 )
+
+# We need to pull in the rust cross compiler libs
+binary_package(
+    name = "rust",
+    src = "@amd64_host_rust_1_62_1//file",
+    visibility = ["//visibility:public"],
+)

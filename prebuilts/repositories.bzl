@@ -101,3 +101,9 @@ def prebuilts_dependencies():
         sha256 = "09d863e180a251b745a91e2c4d4d39ddf7f97a89bd851bc8ec460f041f387ffb",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-util/meson-format-array-0.tbz2"],
     )
+    http_file(
+        name = "amd64_host_rust_1_62_1",
+        downloaded_file_path = "rust-1.62.1.tbz2",
+        sha256 = "03af218671910e7f590fe92a0f3ba7d4c076c1390f9f1c9cd2d71b85f50a4744",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-lang/rust-1.62.1.tbz2"],
+    )
