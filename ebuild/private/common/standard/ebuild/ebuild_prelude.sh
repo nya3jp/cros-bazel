@@ -18,6 +18,8 @@ if [[ -z "${__xbuild_in_output_vars}" ]]; then
   exit 1
 fi
 
+declare -A __xbuild_used_eclasses
+
 readarray -t __xbuild_eclass_dirs <<< "${__xbuild_in_eclass_dirs}"
 
 # TODO: Is it okay to enable extglob by default?
@@ -34,6 +36,7 @@ inherit() {
   for name in "${names[@]}"; do
     path=$(__xbuild_find_eclass "${name}")
     __xbuild_source_eclass "${name}" "${path}"
+    __xbuild_used_eclasses["$name"]=1
   done
 }
 
@@ -311,6 +314,14 @@ BDEPEND="${__xbuild_eclass_BDEPEND} ${BDEPEND}"
 RDEPEND="${__xbuild_eclass_RDEPEND} ${RDEPEND}"
 PDEPEND="${__xbuild_eclass_PDEPEND} ${PDEPEND}"
 IDEPEND="${__xbuild_eclass_IDEPEND} ${IDEPEND}"
+
+USED_ECLASSES=("${!__xbuild_used_eclasses[@]}")
+
+if [[ "$(type -t src_compile)" == "function" ]]; then
+  HAS_SRC_COMPILE=1
+else
+  HAS_SRC_COMPILE=0
+fi
 
 set -o posix
 set > "${__xbuild_in_output_vars}"

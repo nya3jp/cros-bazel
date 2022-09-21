@@ -84,8 +84,8 @@ func ParseSetOutput(r io.Reader) (Vars, error) {
 		// Process variable assignments.
 		for _, assign := range call.Assigns {
 			name := assign.Name.Value
-			// Skip non CROS_WORKON_ arrays.
-			if assign.Array != nil && !strings.HasPrefix(name, "CROS_WORKON_") {
+			// Skip non CROS_WORKON_ or USED_ECLASSES arrays.
+			if assign.Array != nil && !strings.HasPrefix(name, "CROS_WORKON_") && name != "USED_ECLASSES" {
 				continue
 			}
 			if assign.Append || assign.Index != nil || assign.Naked {

@@ -5045,7 +5045,10 @@
       "dev-rust/rustc-std-workspace-core"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/compiler_builtins",
+      "dev-rust/rustc-std-workspace-core"
+    ]
   },
   "dev-rust/aho-corasick": {
     "buildDeps": [
@@ -5081,7 +5084,10 @@
       "dev-rust/serde_test"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/serde",
+      "dev-rust/serde_test"
+    ]
   },
   "dev-rust/assert_matches": {
     "buildDeps": [],
@@ -5107,7 +5113,11 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/atomic-polyfill": {
     "buildDeps": [
@@ -5190,7 +5200,12 @@
       "dev-rust/rayon"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/byteorder",
+      "dev-rust/libc",
+      "dev-rust/quick-error",
+      "dev-rust/rayon"
+    ]
   },
   "dev-rust/bincode": {
     "buildDeps": [
@@ -5199,7 +5214,11 @@
       "dev-rust/serde_derive"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/byteorder",
+      "dev-rust/serde",
+      "dev-rust/serde_derive"
+    ]
   },
   "dev-rust/bit_field": {
     "buildDeps": [],
@@ -5232,7 +5251,9 @@
       "dev-rust/bytemuck_derive"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bytemuck_derive"
+    ]
   },
   "dev-rust/bytemuck_derive": {
     "buildDeps": [],
@@ -5249,7 +5270,9 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/cast": {
     "buildDeps": [],
@@ -5326,14 +5349,30 @@
       "dev-rust/yaml-rust"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/atty",
+      "dev-rust/backtrace",
+      "dev-rust/bitflags",
+      "dev-rust/clap_lex",
+      "dev-rust/indexmap",
+      "dev-rust/lazy_static",
+      "dev-rust/regex",
+      "dev-rust/strsim",
+      "dev-rust/termcolor",
+      "dev-rust/terminal_size",
+      "dev-rust/textwrap",
+      "dev-rust/unicase",
+      "dev-rust/yaml-rust"
+    ]
   },
   "dev-rust/clap_lex": {
     "buildDeps": [
       "dev-rust/os_str_bytes"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/os_str_bytes"
+    ]
   },
   "dev-rust/clippy": {
     "buildDeps": [],
@@ -5345,7 +5384,9 @@
       "dev-rust/cc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cc"
+    ]
   },
   "dev-rust/color_quant": {
     "buildDeps": [],
@@ -5358,7 +5399,10 @@
       "dev-rust/lazy_static"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/atty",
+      "dev-rust/lazy_static"
+    ]
   },
   "dev-rust/compiler_builtins": {
     "buildDeps": [],
@@ -5374,7 +5418,13 @@
       "dev-rust/unicode-width"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc",
+      "dev-rust/once_cell",
+      "dev-rust/regex",
+      "dev-rust/terminal_size",
+      "dev-rust/unicode-width"
+    ]
   },
   "dev-rust/const_fn": {
     "buildDeps": [],
@@ -5401,7 +5451,9 @@
       "dev-rust/r0"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/r0"
+    ]
   },
   "dev-rust/cortex-m-rtic": {
     "buildDeps": [
@@ -5414,7 +5466,15 @@
       "dev-rust/version_check"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bare-metal",
+      "dev-rust/cortex-m",
+      "dev-rust/cortex-m-rtic-macros",
+      "dev-rust/heapless",
+      "dev-rust/rtic-core",
+      "dev-rust/rtic-monotonic",
+      "dev-rust/version_check"
+    ]
   },
   "dev-rust/cortex-m-rtic-macros": {
     "buildDeps": [
@@ -5425,7 +5485,13 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro-error",
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/rtic-syntax",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/cpp_demangle": {
     "buildDeps": [],
@@ -5437,7 +5503,9 @@
       "dev-rust/crc-catalog"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/crc-catalog"
+    ]
   },
   "dev-rust/crc-catalog": {
     "buildDeps": [],
@@ -5449,7 +5517,9 @@
       "dev-rust/cfg-if"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cfg-if"
+    ]
   },
   "dev-rust/criterion": {
     "buildDeps": [],
@@ -5503,7 +5573,11 @@
       "dev-rust/rand"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cfg-if",
+      "dev-rust/crossbeam-utils",
+      "dev-rust/rand"
+    ]
   },
   "dev-rust/crossbeam-deque": {
     "buildDeps": [
@@ -5512,7 +5586,11 @@
       "dev-rust/crossbeam-utils"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cfg-if",
+      "dev-rust/crossbeam-epoch",
+      "dev-rust/crossbeam-utils"
+    ]
   },
   "dev-rust/crossbeam-epoch": {
     "buildDeps": [
@@ -5524,7 +5602,14 @@
       "dev-rust/scopeguard"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cfg-if",
+      "dev-rust/const_fn",
+      "dev-rust/crossbeam-utils",
+      "dev-rust/lazy_static",
+      "dev-rust/memoffset",
+      "dev-rust/scopeguard"
+    ]
   },
   "dev-rust/crossbeam-utils": {
     "buildDeps": [
@@ -5533,7 +5618,11 @@
       "dev-rust/lazy_static"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/autocfg",
+      "dev-rust/cfg-if",
+      "dev-rust/lazy_static"
+    ]
   },
   "dev-rust/ct-codecs": {
     "buildDeps": [],
@@ -5595,7 +5684,9 @@
       "dev-rust/dbus"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/dbus"
+    ]
   },
   "dev-rust/dcv-color-primitives": {
     "buildDeps": [],
@@ -5609,7 +5700,11 @@
       "dev-rust/gzip-header"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/adler32",
+      "dev-rust/byteorder",
+      "dev-rust/gzip-header"
+    ]
   },
   "dev-rust/defmt": {
     "buildDeps": [
@@ -5617,7 +5712,10 @@
       "dev-rust/semver"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/defmt-macros",
+      "dev-rust/semver"
+    ]
   },
   "dev-rust/defmt-macros": {
     "buildDeps": [
@@ -5626,7 +5724,11 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/defmt-rtt": {
     "buildDeps": [
@@ -5634,7 +5736,10 @@
       "dev-rust/defmt"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cortex-m",
+      "dev-rust/defmt"
+    ]
   },
   "dev-rust/derivative": {
     "buildDeps": [
@@ -5643,7 +5748,11 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/digest": {
     "buildDeps": [],
@@ -5656,14 +5765,19 @@
       "dev-rust/dirs-sys-next"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cfg-if",
+      "dev-rust/dirs-sys-next"
+    ]
   },
   "dev-rust/dirs-sys-next": {
     "buildDeps": [
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/ed25519": {
     "buildDeps": [],
@@ -5677,14 +5791,20 @@
       "dev-rust/getrandom"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/ct-codecs",
+      "dev-rust/ed25519",
+      "dev-rust/getrandom"
+    ]
   },
   "dev-rust/either": {
     "buildDeps": [
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/embedded-hal": {
     "buildDeps": [
@@ -5703,7 +5823,10 @@
       "dev-rust/nb"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/embedded-hal",
+      "dev-rust/nb"
+    ]
   },
   "dev-rust/endian-type": {
     "buildDeps": [],
@@ -5749,7 +5872,10 @@
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cfg-if",
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/featured": {
     "buildDeps": [
@@ -5785,7 +5911,17 @@
       "dev-rust/tokio-io"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cfg-if",
+      "dev-rust/cloudflare-zlib-sys",
+      "dev-rust/crc32fast",
+      "dev-rust/futures",
+      "dev-rust/libc",
+      "dev-rust/libz-sys",
+      "dev-rust/miniz-sys",
+      "dev-rust/miniz_oxide",
+      "dev-rust/tokio-io"
+    ]
   },
   "dev-rust/flexbuffers": {
     "buildDeps": [
@@ -5824,7 +5960,10 @@
       "dev-rust/percent-encoding"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/matches",
+      "dev-rust/percent-encoding"
+    ]
   },
   "dev-rust/futures": {
     "buildDeps": [
@@ -6000,7 +6139,9 @@
       "dev-rust/nom"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/nom"
+    ]
   },
   "dev-rust/gpio-cdev": {
     "buildDeps": [
@@ -6011,7 +6152,13 @@
       "dev-rust/tokio"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bitflags",
+      "dev-rust/futures",
+      "dev-rust/libc",
+      "dev-rust/nix",
+      "dev-rust/tokio"
+    ]
   },
   "dev-rust/gzip-header": {
     "buildDeps": [],
@@ -6023,7 +6170,9 @@
       "dev-rust/byteorder"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/byteorder"
+    ]
   },
   "dev-rust/hashbrown": {
     "buildDeps": [
@@ -6056,7 +6205,16 @@
       "dev-rust/ufmt-write"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/atomic-polyfill",
+      "dev-rust/defmt",
+      "dev-rust/hash32",
+      "dev-rust/rustc_version",
+      "dev-rust/serde",
+      "dev-rust/spin",
+      "dev-rust/stable_deref_trait",
+      "dev-rust/ufmt-write"
+    ]
   },
   "dev-rust/heapsize": {
     "buildDeps": [],
@@ -6073,7 +6231,9 @@
       "dev-rust/digest"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/digest"
+    ]
   },
   "dev-rust/hostname": {
     "buildDeps": [
@@ -6116,7 +6276,12 @@
       "dev-rust/nix"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bitflags",
+      "dev-rust/byteorder",
+      "dev-rust/libc",
+      "dev-rust/nix"
+    ]
   },
   "dev-rust/idna": {
     "buildDeps": [
@@ -6125,7 +6290,11 @@
       "dev-rust/unicode-normalization"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/matches",
+      "dev-rust/unicode-bidi",
+      "dev-rust/unicode-normalization"
+    ]
   },
   "dev-rust/image": {
     "buildDeps": [
@@ -6147,7 +6316,24 @@
       "dev-rust/tiff"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bytemuck",
+      "dev-rust/byteorder",
+      "dev-rust/color_quant",
+      "dev-rust/dav1d",
+      "dev-rust/dcv-color-primitives",
+      "dev-rust/gif",
+      "dev-rust/jpeg-decoder",
+      "dev-rust/mp4parse",
+      "dev-rust/num-iter",
+      "dev-rust/num-rational",
+      "dev-rust/num-traits",
+      "dev-rust/png",
+      "dev-rust/ravif",
+      "dev-rust/rgb",
+      "dev-rust/scoped_threadpool",
+      "dev-rust/tiff"
+    ]
   },
   "dev-rust/indexmap": {
     "buildDeps": [
@@ -6175,14 +6361,24 @@
       "dev-rust/unicode-width"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/console",
+      "dev-rust/lazy_static",
+      "dev-rust/number_prefix",
+      "dev-rust/rayon",
+      "dev-rust/regex",
+      "dev-rust/unicode-segmentation",
+      "dev-rust/unicode-width"
+    ]
   },
   "dev-rust/intrusive-collections": {
     "buildDeps": [
       "dev-rust/memoffset"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/memoffset"
+    ]
   },
   "dev-rust/io_uring": {
     "buildDeps": [
@@ -6204,7 +6400,9 @@
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/itoa": {
     "buildDeps": [],
@@ -6286,7 +6484,10 @@
       "sys-apps/dbus"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/pkg-config",
+      "sys-apps/dbus"
+    ]
   },
   "dev-rust/libusb1-sys": {
     "buildDeps": [
@@ -6296,7 +6497,12 @@
       "virtual/libusb"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cc",
+      "dev-rust/libc",
+      "dev-rust/pkg-config",
+      "virtual/libusb"
+    ]
   },
   "dev-rust/libz-sys": {
     "buildDeps": [
@@ -6306,7 +6512,12 @@
       "dev-rust/vcpkg"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cc",
+      "dev-rust/libc",
+      "dev-rust/pkg-config",
+      "dev-rust/vcpkg"
+    ]
   },
   "dev-rust/linked-hash-map": {
     "buildDeps": [
@@ -6316,7 +6527,12 @@
       "dev-rust/serde_test"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/clippy",
+      "dev-rust/heapsize",
+      "dev-rust/serde",
+      "dev-rust/serde_test"
+    ]
   },
   "dev-rust/linux-embedded-hal": {
     "buildDeps": [
@@ -6332,7 +6548,18 @@
       "dev-rust/void"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cast",
+      "dev-rust/embedded-hal",
+      "dev-rust/gpio-cdev",
+      "dev-rust/i2cdev",
+      "dev-rust/nb",
+      "dev-rust/serial-core",
+      "dev-rust/serial-unix",
+      "dev-rust/spidev",
+      "dev-rust/sysfs_gpio",
+      "dev-rust/void"
+    ]
   },
   "dev-rust/lock_api": {
     "buildDeps": [
@@ -6431,7 +6658,9 @@
       "dev-rust/autocfg"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/autocfg"
+    ]
   },
   "dev-rust/minijail": {
     "buildDeps": [
@@ -6478,14 +6707,19 @@
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cc",
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/miniz_oxide": {
     "buildDeps": [
       "dev-rust/adler"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/adler"
+    ]
   },
   "dev-rust/mio": {
     "buildDeps": [
@@ -6493,7 +6727,10 @@
       "dev-rust/log"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc",
+      "dev-rust/log"
+    ]
   },
   "dev-rust/mp4parse": {
     "buildDeps": [],
@@ -6519,7 +6756,9 @@
       "dev-rust/smallvec"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/smallvec"
+    ]
   },
   "dev-rust/nix": {
     "buildDeps": [
@@ -6530,7 +6769,13 @@
       "dev-rust/memoffset"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bitflags",
+      "dev-rust/cc",
+      "dev-rust/cfg-if",
+      "dev-rust/libc",
+      "dev-rust/memoffset"
+    ]
   },
   "dev-rust/no-panic": {
     "buildDeps": [
@@ -6540,7 +6785,12 @@
       "dev-rust/tempfile"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn",
+      "dev-rust/tempfile"
+    ]
   },
   "dev-rust/nom": {
     "buildDeps": [
@@ -6549,7 +6799,11 @@
       "dev-rust/version_check"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/memchr",
+      "dev-rust/minimal-lexical",
+      "dev-rust/version_check"
+    ]
   },
   "dev-rust/num-bigint": {
     "buildDeps": [
@@ -6562,7 +6816,15 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/arbitrary",
+      "dev-rust/autocfg",
+      "dev-rust/num-integer",
+      "dev-rust/num-traits",
+      "dev-rust/quickcheck",
+      "dev-rust/rand",
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/num-integer": {
     "buildDeps": [
@@ -6597,7 +6859,13 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/autocfg",
+      "dev-rust/num-bigint",
+      "dev-rust/num-integer",
+      "dev-rust/num-traits",
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/num-traits": {
     "buildDeps": [],
@@ -6610,7 +6878,10 @@
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/hermit-abi",
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/num_enum": {
     "buildDeps": [
@@ -6721,7 +6992,9 @@
       "dev-libs/openssl"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-libs/openssl"
+    ]
   },
   "dev-rust/openssl-sys": {
     "buildDeps": [
@@ -6749,7 +7022,11 @@
       "dev-rust/uniquote"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/memchr",
+      "dev-rust/print_bytes",
+      "dev-rust/uniquote"
+    ]
   },
   "dev-rust/owning_ref": {
     "buildDeps": [
@@ -6770,7 +7047,9 @@
       "dev-rust/cortex-m"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cortex-m"
+    ]
   },
   "dev-rust/panic-rtt-target": {
     "buildDeps": [
@@ -6778,7 +7057,10 @@
       "dev-rust/rtt-target"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cortex-m",
+      "dev-rust/rtt-target"
+    ]
   },
   "dev-rust/parking_lot": {
     "buildDeps": [
@@ -6848,7 +7130,12 @@
       "dev-rust/miniz_oxide"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bitflags",
+      "dev-rust/crc32fast",
+      "dev-rust/deflate",
+      "dev-rust/miniz_oxide"
+    ]
   },
   "dev-rust/portable-atomic": {
     "buildDeps": [],
@@ -6882,7 +7169,12 @@
       "dev-rust/version_check"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn",
+      "dev-rust/version_check"
+    ]
   },
   "dev-rust/proc-macro-hack": {
     "buildDeps": [],
@@ -6956,7 +7248,11 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/endian-type",
+      "dev-rust/nibble_vec",
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/rand": {
     "buildDeps": [
@@ -7023,7 +7319,12 @@
       "dev-rust/rayon-core"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/autocfg",
+      "dev-rust/crossbeam-deque",
+      "dev-rust/either",
+      "dev-rust/rayon-core"
+    ]
   },
   "dev-rust/rayon-core": {
     "buildDeps": [
@@ -7034,7 +7335,13 @@
       "dev-rust/num_cpus"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/crossbeam-channel",
+      "dev-rust/crossbeam-deque",
+      "dev-rust/crossbeam-utils",
+      "dev-rust/lazy_static",
+      "dev-rust/num_cpus"
+    ]
   },
   "dev-rust/regex": {
     "buildDeps": [
@@ -7061,14 +7368,20 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/remove_dir_all": {
     "buildDeps": [
       "dev-rust/winapi"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/winapi"
+    ]
   },
   "dev-rust/rgb": {
     "buildDeps": [],
@@ -7097,7 +7410,13 @@
       "dev-rust/riscv-target"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/panic-halt",
+      "dev-rust/r0",
+      "dev-rust/riscv",
+      "dev-rust/riscv-rt-macros",
+      "dev-rust/riscv-target"
+    ]
   },
   "dev-rust/riscv-rt-macros": {
     "buildDeps": [
@@ -7107,7 +7426,12 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/rand",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/riscv-target": {
     "buildDeps": [
@@ -7138,7 +7462,12 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/indexmap",
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/rtt-target": {
     "buildDeps": [
@@ -7147,7 +7476,11 @@
       "dev-rust/ufmt-write"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/cortex-m",
+      "dev-rust/riscv",
+      "dev-rust/ufmt-write"
+    ]
   },
   "dev-rust/rusb": {
     "buildDeps": [
@@ -7155,7 +7488,10 @@
       "dev-rust/libusb1-sys"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc",
+      "dev-rust/libusb1-sys"
+    ]
   },
   "dev-rust/rustc-demangle": {
     "buildDeps": [
@@ -7182,7 +7518,9 @@
       "dev-rust/rand"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/rand"
+    ]
   },
   "dev-rust/rustc-std-workspace-alloc": {
     "buildDeps": [],
@@ -7204,7 +7542,9 @@
       "dev-rust/semver"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/semver"
+    ]
   },
   "dev-rust/rustyline": {
     "buildDeps": [
@@ -7225,7 +7565,23 @@
       "dev-rust/utf8parse"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bitflags",
+      "dev-rust/cfg-if",
+      "dev-rust/dirs-next",
+      "dev-rust/fd-lock",
+      "dev-rust/libc",
+      "dev-rust/log",
+      "dev-rust/memchr",
+      "dev-rust/nix",
+      "dev-rust/radix_trie",
+      "dev-rust/regex",
+      "dev-rust/skim",
+      "dev-rust/smallvec",
+      "dev-rust/unicode-segmentation",
+      "dev-rust/unicode-width",
+      "dev-rust/utf8parse"
+    ]
   },
   "dev-rust/ryu": {
     "buildDeps": [
@@ -7251,7 +7607,9 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/serde": {
     "buildDeps": [],
@@ -7266,7 +7624,12 @@
       "dev-rust/serde_test"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bincode",
+      "dev-rust/serde",
+      "dev-rust/serde_derive",
+      "dev-rust/serde_test"
+    ]
   },
   "dev-rust/serde_derive": {
     "buildDeps": [
@@ -7301,14 +7664,18 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/serial-core": {
     "buildDeps": [
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/serial-unix": {
     "buildDeps": [
@@ -7318,7 +7685,12 @@
       "dev-rust/termios"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/ioctl-rs",
+      "dev-rust/libc",
+      "dev-rust/serial-core",
+      "dev-rust/termios"
+    ]
   },
   "dev-rust/sha1": {
     "buildDeps": [],
@@ -7335,7 +7707,9 @@
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/simple_logger": {
     "buildDeps": [
@@ -7344,7 +7718,11 @@
       "dev-rust/log"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/chrono",
+      "dev-rust/colored",
+      "dev-rust/log"
+    ]
   },
   "dev-rust/skim": {
     "buildDeps": [],
@@ -7370,7 +7748,9 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/smawk": {
     "buildDeps": [],
@@ -7382,7 +7762,9 @@
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/spi-memory": {
     "buildDeps": [
@@ -7391,7 +7773,11 @@
       "dev-rust/log"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bitflags",
+      "dev-rust/embedded-hal",
+      "dev-rust/log"
+    ]
   },
   "dev-rust/spidev": {
     "buildDeps": [
@@ -7400,7 +7786,11 @@
       "dev-rust/nix"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bitflags",
+      "dev-rust/libc",
+      "dev-rust/nix"
+    ]
   },
   "dev-rust/spin": {
     "buildDeps": [
@@ -7443,7 +7833,12 @@
       "dev-rust/vcell"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bare-metal",
+      "dev-rust/cortex-m",
+      "dev-rust/cortex-m-rt",
+      "dev-rust/vcell"
+    ]
   },
   "dev-rust/stm32g0xx-hal": {
     "buildDeps": [
@@ -7455,7 +7850,14 @@
       "dev-rust/void"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bare-metal",
+      "dev-rust/cortex-m",
+      "dev-rust/embedded-hal",
+      "dev-rust/nb",
+      "dev-rust/stm32g0",
+      "dev-rust/void"
+    ]
   },
   "dev-rust/strsim": {
     "buildDeps": [],
@@ -7566,7 +7968,12 @@
       "dev-rust/tokio"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/futures",
+      "dev-rust/mio",
+      "dev-rust/nix",
+      "dev-rust/tokio"
+    ]
   },
   "dev-rust/syslog": {
     "buildDeps": [
@@ -7635,14 +8042,18 @@
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/termios": {
     "buildDeps": [
       "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/libc"
+    ]
   },
   "dev-rust/textwrap": {
     "buildDeps": [
@@ -7653,7 +8064,13 @@
       "dev-rust/unicode-width"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/hyphenation",
+      "dev-rust/smawk",
+      "dev-rust/terminal_size",
+      "dev-rust/unicode-linebreak",
+      "dev-rust/unicode-width"
+    ]
   },
   "dev-rust/thiserror": {
     "buildDeps": [],
@@ -7709,7 +8126,13 @@
       "dev-rust/url"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/ascii",
+      "dev-rust/chrono",
+      "dev-rust/chunked_transfer",
+      "dev-rust/log",
+      "dev-rust/url"
+    ]
   },
   "dev-rust/tinyvec": {
     "buildDeps": [
@@ -7718,7 +8141,11 @@
       "dev-rust/tinyvec_macros"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/arbitrary",
+      "dev-rust/serde",
+      "dev-rust/tinyvec_macros"
+    ]
   },
   "dev-rust/tinyvec_macros": {
     "buildDeps": [],
@@ -7750,7 +8177,19 @@
       "dev-rust/tokio-macros"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bytes",
+      "dev-rust/libc",
+      "dev-rust/memchr",
+      "dev-rust/mio",
+      "dev-rust/num_cpus",
+      "dev-rust/once_cell",
+      "dev-rust/parking_lot",
+      "dev-rust/pin-project-lite",
+      "dev-rust/signal-hook-registry",
+      "dev-rust/socket2",
+      "dev-rust/tokio-macros"
+    ]
   },
   "dev-rust/tokio-io": {
     "buildDeps": [
@@ -7759,7 +8198,11 @@
       "dev-rust/log"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/bytes",
+      "dev-rust/futures",
+      "dev-rust/log"
+    ]
   },
   "dev-rust/tokio-macros": {
     "buildDeps": [
@@ -7768,7 +8211,11 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/toml": {
     "buildDeps": [
@@ -7776,7 +8223,10 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/linked-hash-map",
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/ufmt": {
     "buildDeps": [
@@ -7785,7 +8235,11 @@
       "dev-rust/ufmt-write"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro-hack",
+      "dev-rust/ufmt-macros",
+      "dev-rust/ufmt-write"
+    ]
   },
   "dev-rust/ufmt-macros": {
     "buildDeps": [
@@ -7795,7 +8249,12 @@
       "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/proc-macro-hack",
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/ufmt-write": {
     "buildDeps": [],
@@ -7807,7 +8266,9 @@
       "dev-rust/version_check"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/version_check"
+    ]
   },
   "dev-rust/unicode-bidi": {
     "buildDeps": [
@@ -7818,7 +8279,13 @@
       "dev-rust/serde_test"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/flame",
+      "dev-rust/flamer",
+      "dev-rust/matches",
+      "dev-rust/serde",
+      "dev-rust/serde_test"
+    ]
   },
   "dev-rust/unicode-linebreak": {
     "buildDeps": [],
@@ -7830,7 +8297,9 @@
       "dev-rust/tinyvec"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/tinyvec"
+    ]
   },
   "dev-rust/unicode-segmentation": {
     "buildDeps": [],
@@ -7869,7 +8338,13 @@
       "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/form_urlencoded",
+      "dev-rust/idna",
+      "dev-rust/matches",
+      "dev-rust/percent-encoding",
+      "dev-rust/serde"
+    ]
   },
   "dev-rust/utf8parse": {
     "buildDeps": [],
@@ -7986,7 +8461,9 @@
       "dev-rust/linked-hash-map"
     ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/linked-hash-map"
+    ]
   },
   "dev-rust/zeroize": {
     "buildDeps": [

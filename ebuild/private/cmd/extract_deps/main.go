@@ -21,6 +21,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/ebuild"
+	"cros.local/bazel/ebuild/private/common/standard/packages"
 	"cros.local/bazel/ebuild/private/common/standard/useflags"
 )
 
@@ -59,6 +60,18 @@ var (
 var forceUse = []string{
 	"elibc_glibc",
 	"kernel_linux",
+}
+
+func isCrosWorkonPackage(pkg *packages.Package) bool {
+	return pkg.UsesEclass("cros-workon")
+}
+
+func isRustPackage(pkg *packages.Package) bool {
+	return pkg.UsesEclass("cros-rust")
+}
+
+func isRustSrcPackage(pkg *packages.Package) bool {
+	return isRustPackage(pkg) && !isCrosWorkonPackage(pkg) && pkg.Vars()["HAS_SRC_COMPILE"] == "0"
 }
 
 func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName string) *dependency.Deps {
@@ -408,9 +421,10 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 	return depsMap, nil
 }
 
-func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, installPackageNames []string) (map[string][]string, map[string][]string, error) {
+func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, installPackageNames []string) (map[string][]string, map[string][]string, map[string][]string, error) {
 	depsMap := make(map[string][]string)
 	srcDepMap := make(map[string][]string)
+	runtimeDepMap := make(map[string][]string)
 	if err := genericBFS(installPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
 		if err != nil {
@@ -443,8 +457,17 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 
 		parsedDeps = filterPackages(parsedDeps, providedPackages)
 
-		log.Printf("B: %s => %s", packageName, strings.Join(parsedDeps, ", "))
-		depsMap[packageName] = parsedDeps
+		// Some rust src packages have their dependencies only listed as DEPEND.
+		// They also need to be listed as RDPEND so they get pulled in as
+		// transitive deps.
+		if isRustSrcPackage(pkg) {
+			log.Printf("B & R: %s => %s", packageName, strings.Join(parsedDeps, ", "))
+			runtimeDepMap[packageName] = parsedDeps
+			depsMap[packageName] = parsedDeps
+		} else {
+			log.Printf("B: %s => %s", packageName, strings.Join(parsedDeps, ", "))
+			depsMap[packageName] = parsedDeps
+		}
 
 		srcDeps, err := computeSrcPackages(pkg.Category(), vars["CROS_WORKON_PROJECT"], vars["CROS_WORKON_LOCALNAME"], vars["CROS_WORKON_SUBTREE"])
 		if err != nil {
@@ -455,9 +478,9 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 
 		return parsedDeps, nil
 	}); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return depsMap, srcDepMap, nil
+	return depsMap, srcDepMap, runtimeDepMap, nil
 }
 
 var flagBoard = &cli.StringFlag{
@@ -551,7 +574,8 @@ var app = &cli.App{
 		}
 		sort.Strings(installPackageNames)
 
-		buildDeps, buildSrcDeps, err := computeBuildDeps(repoSet, processor, useContext, providedPackages, installPackageNames)
+		buildDeps, buildSrcDeps, additionalRuntimeDeps, err := computeBuildDeps(
+			repoSet, processor, useContext, providedPackages, installPackageNames)
 		if err != nil {
 			return err
 		}
@@ -565,8 +589,21 @@ var app = &cli.App{
 
 		infoMap := make(map[string]*packageInfo)
 		for packageName := range buildDeps {
+			newRuntimeDeps := append(runtimeDeps[packageName], additionalRuntimeDeps[packageName]...)
+			sort.Strings(newRuntimeDeps)
+
+			var uniqueRuntimeDeps = []string{}
+			var previousDep string
+			for _, dep := range newRuntimeDeps {
+				if dep == previousDep {
+					continue
+				}
+				previousDep = dep
+				uniqueRuntimeDeps = append(uniqueRuntimeDeps, dep)
+			}
+
 			infoMap[packageName] = &packageInfo{
-				RuntimeDeps: nonNil(runtimeDeps[packageName]),
+				RuntimeDeps: nonNil(uniqueRuntimeDeps),
 				LocalSrc:    nonNil(buildSrcDeps[packageName]),
 				BuildDeps:   nonNil(buildDeps[packageName]),
 			}
