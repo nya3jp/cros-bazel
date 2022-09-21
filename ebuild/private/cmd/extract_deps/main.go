@@ -523,6 +523,14 @@ var app = &cli.App{
 			"sys-devel/gcc":  {},
 			"sys-libs/glibc": {},
 			"dev-lang/go":    {},
+
+			// This package was used to force rust binary packages to rebuild.
+			// We no longer need this workaround with bazel.
+			"virtual/rust-binaries": {},
+
+			// This is really a BDEPEND and there is no need to declare it as a
+			// RDEPEND.
+			"virtual/rust": {},
 		}
 		for _, pp := range profile.Provided() {
 			providedPackages[pp.Name()] = struct{}{}

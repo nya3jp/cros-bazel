@@ -1216,17 +1216,14 @@
       "dev-rust/serde",
       "dev-rust/serde_derive",
       "dev-rust/thiserror",
-      "sys-apps/baselayout",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-apps/baselayout"
     ],
     "localSrc": [
       "//platform2/cronista:src"
     ],
     "runtimeDeps": [
       "sys-apps/baselayout",
-      "sys-apps/dbus",
-      "virtual/rust-binaries"
+      "sys-apps/dbus"
     ]
   },
   "chromeos-base/cros-camera": {
@@ -1392,9 +1389,7 @@
       "dev-rust/tempfile",
       "dev-rust/textwrap",
       "dev-rust/tlsdate_dbus",
-      "sys-apps/dbus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-apps/dbus"
     ],
     "localSrc": [
       "//platform2/crosh:src"
@@ -1406,8 +1401,7 @@
       "net-misc/openssh",
       "net-wireless/iw",
       "sys-apps/dbus",
-      "sys-apps/net-tools",
-      "virtual/rust-binaries"
+      "sys-apps/net-tools"
     ]
   },
   "chromeos-base/crosh-extension": {
@@ -1463,9 +1457,7 @@
       "dev-rust/thiserror",
       "dev-rust/uuid",
       "media-sound/audio_streams",
-      "sys-libs/libcap",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-libs/libcap"
     ],
     "localSrc": [
       "//platform/crosvm:src"
@@ -1490,8 +1482,7 @@
       "dev-rust/thiserror",
       "dev-rust/uuid",
       "media-sound/audio_streams",
-      "sys-libs/libcap",
-      "virtual/rust-binaries"
+      "sys-libs/libcap"
     ]
   },
   "chromeos-base/cryptohome": {
@@ -2015,16 +2006,12 @@
       "dev-rust/spi-memory",
       "dev-rust/stm32g0xx-hal",
       "dev-rust/ufmt",
-      "dev-rust/ufmt-write",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/ufmt-write"
     ],
     "localSrc": [
       "//platform/hps-firmware2:src"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "chromeos-base/hps-firmware-images": {
     "buildDeps": [],
@@ -2151,17 +2138,14 @@
       "dev-rust/sys_util",
       "dev-rust/tiny_http",
       "sys-apps/baselayout",
-      "virtual/libusb",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "virtual/libusb"
     ],
     "localSrc": [
       "//platform2/ippusb_bridge:src"
     ],
     "runtimeDeps": [
       "sys-apps/baselayout",
-      "virtual/libusb",
-      "virtual/rust-binaries"
+      "virtual/libusb"
     ]
   },
   "chromeos-base/kerberos": {
@@ -2519,9 +2503,7 @@
       "dev-rust/serde_bytes",
       "dev-rust/serde_derive",
       "dev-rust/serde_json",
-      "dev-rust/thiserror",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ],
     "localSrc": [
       "//platform2/sirenia/libsirenia:src"
@@ -2544,8 +2526,7 @@
       "dev-rust/serde_bytes",
       "dev-rust/serde_derive",
       "dev-rust/serde_json",
-      "dev-rust/thiserror",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ]
   },
   "chromeos-base/libtpmcrypto": {
@@ -2618,9 +2599,7 @@
       "dev-rust/serde",
       "dev-rust/serde_bytes",
       "dev-rust/stderrlog",
-      "dev-rust/sync",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/sync"
     ],
     "localSrc": [
       "//platform2/sirenia/manatee-runtime:src"
@@ -2635,8 +2614,7 @@
       "dev-rust/serde",
       "dev-rust/serde_bytes",
       "dev-rust/stderrlog",
-      "dev-rust/sync",
-      "virtual/rust-binaries"
+      "dev-rust/sync"
     ]
   },
   "chromeos-base/memd": {
@@ -2652,17 +2630,14 @@
       "dev-rust/syslog",
       "dev-rust/tempfile",
       "dev-rust/time",
-      "sys-apps/dbus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-apps/dbus"
     ],
     "localSrc": [
       "//platform2/common-mk:src",
       "//platform2/metrics/memd:src"
     ],
     "runtimeDeps": [
-      "sys-apps/dbus",
-      "virtual/rust-binaries"
+      "sys-apps/dbus"
     ]
   },
   "chromeos-base/mems_setup": {
@@ -3242,16 +3217,13 @@
       "dev-rust/once_cell",
       "dev-rust/regex",
       "dev-rust/sys_util",
-      "sys-apps/baselayout",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-apps/baselayout"
     ],
     "localSrc": [
       "//platform2/resourced:src"
     ],
     "runtimeDeps": [
-      "sys-apps/baselayout",
-      "virtual/rust-binaries"
+      "sys-apps/baselayout"
     ]
   },
   "chromeos-base/rgbkbd": {
@@ -3555,9 +3527,7 @@
       "dev-rust/serde_json",
       "dev-rust/stderrlog",
       "dev-rust/thiserror",
-      "sys-apps/baselayout",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-apps/baselayout"
     ],
     "localSrc": [
       "//platform2/sirenia:src"
@@ -3588,8 +3558,7 @@
       "dev-rust/stderrlog",
       "dev-rust/thiserror",
       "sys-apps/baselayout",
-      "sys-apps/dbus",
-      "virtual/rust-binaries"
+      "sys-apps/dbus"
     ]
   },
   "chromeos-base/sirenia-rpc-macros": {
@@ -3598,9 +3567,7 @@
       "dev-rust/assert_matches",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [
       "//platform2/sirenia/libsirenia/sirenia-rpc-macros:src"
@@ -3610,8 +3577,7 @@
       "dev-rust/assert_matches",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ]
   },
   "chromeos-base/smbfs": {
@@ -5053,9 +5019,7 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/smallvec",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/smallvec"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -5067,107 +5031,72 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/smallvec",
-      "virtual/rust-binaries"
+      "dev-rust/smallvec"
     ]
   },
   "dev-rust/adler": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/adler32": {
     "buildDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/aho-corasick": {
     "buildDeps": [
-      "dev-rust/memchr",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/memchr"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/memchr",
-      "virtual/rust-binaries"
+      "dev-rust/memchr"
     ]
   },
   "dev-rust/android_log-sys": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/anyhow": {
     "buildDeps": [
-      "dev-rust/backtrace",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/backtrace"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/backtrace",
-      "virtual/rust-binaries"
+      "dev-rust/backtrace"
     ]
   },
   "dev-rust/arbitrary": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/ascii": {
     "buildDeps": [
       "dev-rust/serde",
-      "dev-rust/serde_test",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_test"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/assert_matches": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/assertions": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [
       "//platform/crosvm:src"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/async-task": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5175,48 +5104,33 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/atomic-polyfill": {
     "buildDeps": [
-      "dev-rust/critical-section",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/critical-section"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/critical-section",
-      "virtual/rust-binaries"
+      "dev-rust/critical-section"
     ]
   },
   "dev-rust/atty": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/libc",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ]
   },
   "dev-rust/autocfg": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/backtrace": {
     "buildDeps": [
@@ -5230,9 +5144,7 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
-      "dev-rust/winapi",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/winapi"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -5246,52 +5158,36 @@
       "dev-rust/rustc-demangle",
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
-      "dev-rust/winapi",
-      "virtual/rust-binaries"
+      "dev-rust/winapi"
     ]
   },
   "dev-rust/balloon_control": {
     "buildDeps": [
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [
       "//platform/crosvm:src"
     ],
     "runtimeDeps": [
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/bare-metal": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/base64": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/bayer": {
     "buildDeps": [
       "dev-rust/byteorder",
       "dev-rust/libc",
       "dev-rust/quick-error",
-      "dev-rust/rayon",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rayon"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5300,139 +5196,89 @@
     "buildDeps": [
       "dev-rust/byteorder",
       "dev-rust/serde",
-      "dev-rust/serde_derive",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_derive"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/bit_field": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/bitfield": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/bitflags": {
     "buildDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ]
   },
   "dev-rust/bumpalo": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/bytemuck": {
     "buildDeps": [
-      "dev-rust/bytemuck_derive",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/bytemuck_derive"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/bytemuck_derive": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/byteorder": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/bytes": {
     "buildDeps": [
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/cast": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/cc": {
     "buildDeps": [
-      "dev-rust/jobserver",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/jobserver"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/jobserver",
-      "virtual/rust-binaries"
+      "dev-rust/jobserver"
     ]
   },
   "dev-rust/cfg-if": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/chromeos-dbus-bindings": {
     "buildDeps": [
-      "dev-rust/which",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/which"
     ],
     "localSrc": [
       "//platform2/chromeos-dbus-bindings:src"
     ],
     "runtimeDeps": [
-      "dev-rust/which",
-      "virtual/rust-binaries"
+      "dev-rust/which"
     ]
   },
   "dev-rust/chrono": {
@@ -5444,9 +5290,7 @@
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
       "dev-rust/serde_derive",
-      "dev-rust/serde_json",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_json"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -5457,15 +5301,11 @@
       "dev-rust/rustc-serialize",
       "dev-rust/serde",
       "dev-rust/serde_derive",
-      "dev-rust/serde_json",
-      "virtual/rust-binaries"
+      "dev-rust/serde_json"
     ]
   },
   "dev-rust/chunked_transfer": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5483,66 +5323,47 @@
       "dev-rust/terminal_size",
       "dev-rust/textwrap",
       "dev-rust/unicase",
-      "dev-rust/yaml-rust",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/yaml-rust"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/clap_lex": {
     "buildDeps": [
-      "dev-rust/os_str_bytes",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/os_str_bytes"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/clippy": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/cloudflare-zlib-sys": {
     "buildDeps": [
-      "dev-rust/cc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/cc"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/color_quant": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/colored": {
     "buildDeps": [
       "dev-rust/atty",
-      "dev-rust/lazy_static",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/lazy_static"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/compiler_builtins": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/console": {
     "buildDeps": [
@@ -5550,18 +5371,13 @@
       "dev-rust/once_cell",
       "dev-rust/regex",
       "dev-rust/terminal_size",
-      "dev-rust/unicode-width",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-width"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/const_fn": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5570,24 +5386,19 @@
       "dev-rust/bare-metal",
       "dev-rust/bitfield",
       "dev-rust/embedded-hal",
-      "dev-rust/volatile-register",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/volatile-register"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/bare-metal",
       "dev-rust/bitfield",
       "dev-rust/embedded-hal",
-      "dev-rust/volatile-register",
-      "virtual/rust-binaries"
+      "dev-rust/volatile-register"
     ]
   },
   "dev-rust/cortex-m-rt": {
     "buildDeps": [
-      "dev-rust/r0",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/r0"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5600,9 +5411,7 @@
       "dev-rust/heapless",
       "dev-rust/rtic-core",
       "dev-rust/rtic-monotonic",
-      "dev-rust/version_check",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/version_check"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5613,77 +5422,53 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/rtic-syntax",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/cpp_demangle": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/crc": {
     "buildDeps": [
-      "dev-rust/crc-catalog",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/crc-catalog"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/crc-catalog": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/crc32fast": {
     "buildDeps": [
-      "dev-rust/cfg-if",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/cfg-if"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/criterion": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/critical-section": {
     "buildDeps": [
       "dev-rust/bare-metal",
       "dev-rust/cfg-if",
       "dev-rust/cortex-m",
-      "dev-rust/riscv",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/riscv"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/bare-metal",
       "dev-rust/cfg-if",
       "dev-rust/cortex-m",
-      "dev-rust/riscv",
-      "virtual/rust-binaries"
+      "dev-rust/riscv"
     ]
   },
   "dev-rust/cros_async": {
@@ -5704,9 +5489,7 @@
       "dev-rust/sys_util",
       "dev-rust/tempfile",
       "dev-rust/thiserror",
-      "media-sound/audio_streams",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "media-sound/audio_streams"
     ],
     "localSrc": [
       "//platform/crosvm:src"
@@ -5717,9 +5500,7 @@
     "buildDeps": [
       "dev-rust/cfg-if",
       "dev-rust/crossbeam-utils",
-      "dev-rust/rand",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rand"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5728,9 +5509,7 @@
     "buildDeps": [
       "dev-rust/cfg-if",
       "dev-rust/crossbeam-epoch",
-      "dev-rust/crossbeam-utils",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/crossbeam-utils"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5742,9 +5521,7 @@
       "dev-rust/crossbeam-utils",
       "dev-rust/lazy_static",
       "dev-rust/memoffset",
-      "dev-rust/scopeguard",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/scopeguard"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5753,18 +5530,13 @@
     "buildDeps": [
       "dev-rust/autocfg",
       "dev-rust/cfg-if",
-      "dev-rust/lazy_static",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/lazy_static"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/ct-codecs": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5774,9 +5546,7 @@
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ],
     "localSrc": [
       "//platform/crosvm:src"
@@ -5786,15 +5556,11 @@
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ]
   },
   "dev-rust/dav1d": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5804,9 +5570,7 @@
       "dev-rust/futures-executor",
       "dev-rust/futures-util",
       "dev-rust/libc",
-      "dev-rust/libdbus-sys",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libdbus-sys"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -5814,36 +5578,27 @@
       "dev-rust/futures-executor",
       "dev-rust/futures-util",
       "dev-rust/libc",
-      "dev-rust/libdbus-sys",
-      "virtual/rust-binaries"
+      "dev-rust/libdbus-sys"
     ]
   },
   "dev-rust/dbus-crossroads": {
     "buildDeps": [
-      "dev-rust/dbus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/dbus"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/dbus",
-      "virtual/rust-binaries"
+      "dev-rust/dbus"
     ]
   },
   "dev-rust/dbus-tree": {
     "buildDeps": [
-      "dev-rust/dbus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/dbus"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/dcv-color-primitives": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5851,9 +5606,7 @@
     "buildDeps": [
       "dev-rust/adler32",
       "dev-rust/byteorder",
-      "dev-rust/gzip-header",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/gzip-header"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5861,9 +5614,7 @@
   "dev-rust/defmt": {
     "buildDeps": [
       "dev-rust/defmt-macros",
-      "dev-rust/semver",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/semver"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5872,9 +5623,7 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5882,9 +5631,7 @@
   "dev-rust/defmt-rtt": {
     "buildDeps": [
       "dev-rust/cortex-m",
-      "dev-rust/defmt",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/defmt"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -5893,47 +5640,33 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/digest": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/dirs-next": {
     "buildDeps": [
       "dev-rust/cfg-if",
-      "dev-rust/dirs-sys-next",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/dirs-sys-next"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/dirs-sys-next": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/ed25519": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5941,53 +5674,39 @@
     "buildDeps": [
       "dev-rust/ct-codecs",
       "dev-rust/ed25519",
-      "dev-rust/getrandom",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/getrandom"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/either": {
     "buildDeps": [
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/embedded-hal": {
     "buildDeps": [
       "dev-rust/nb",
-      "dev-rust/void",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/void"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/nb",
-      "dev-rust/void",
-      "virtual/rust-binaries"
+      "dev-rust/void"
     ]
   },
   "dev-rust/embedded-hal-mock": {
     "buildDeps": [
       "dev-rust/embedded-hal",
-      "dev-rust/nb",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/nb"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/endian-type": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -5997,9 +5716,7 @@
       "dev-rust/humantime",
       "dev-rust/log",
       "dev-rust/regex",
-      "dev-rust/termcolor",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/termcolor"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -6007,40 +5724,29 @@
       "dev-rust/humantime",
       "dev-rust/log",
       "dev-rust/regex",
-      "dev-rust/termcolor",
-      "virtual/rust-binaries"
+      "dev-rust/termcolor"
     ]
   },
   "dev-rust/error-chain": {
     "buildDeps": [
       "dev-rust/backtrace",
-      "dev-rust/version_check",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/version_check"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/backtrace",
-      "dev-rust/version_check",
-      "virtual/rust-binaries"
+      "dev-rust/version_check"
     ]
   },
   "dev-rust/fallible-iterator": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/fd-lock": {
     "buildDeps": [
       "dev-rust/cfg-if",
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6049,9 +5755,7 @@
     "buildDeps": [
       "chromeos-base/featured",
       "dev-rust/log",
-      "dev-rust/thiserror",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ],
     "localSrc": [
       "//platform2/featured:src"
@@ -6059,18 +5763,12 @@
     "runtimeDeps": []
   },
   "dev-rust/flame": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/flamer": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -6084,14 +5782,10 @@
       "dev-rust/libz-sys",
       "dev-rust/miniz-sys",
       "dev-rust/miniz_oxide",
-      "dev-rust/tokio-io",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tokio-io"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/flexbuffers": {
     "buildDeps": [
@@ -6099,9 +5793,7 @@
       "dev-rust/byteorder",
       "dev-rust/num_enum",
       "dev-rust/serde",
-      "dev-rust/serde_derive",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_derive"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -6109,38 +5801,27 @@
       "dev-rust/byteorder",
       "dev-rust/num_enum",
       "dev-rust/serde",
-      "dev-rust/serde_derive",
-      "virtual/rust-binaries"
+      "dev-rust/serde_derive"
     ]
   },
   "dev-rust/foreign-types": {
     "buildDeps": [
-      "dev-rust/foreign-types-shared",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/foreign-types-shared"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/foreign-types-shared",
-      "virtual/rust-binaries"
+      "dev-rust/foreign-types-shared"
     ]
   },
   "dev-rust/foreign-types-shared": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/form_urlencoded": {
     "buildDeps": [
       "dev-rust/matches",
-      "dev-rust/percent-encoding",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/percent-encoding"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6153,9 +5834,7 @@
       "dev-rust/futures-io",
       "dev-rust/futures-sink",
       "dev-rust/futures-task",
-      "dev-rust/futures-util",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/futures-util"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -6165,99 +5844,69 @@
       "dev-rust/futures-io",
       "dev-rust/futures-sink",
       "dev-rust/futures-task",
-      "dev-rust/futures-util",
-      "virtual/rust-binaries"
+      "dev-rust/futures-util"
     ]
   },
   "dev-rust/futures-channel": {
     "buildDeps": [
       "dev-rust/futures-core",
-      "dev-rust/futures-sink",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/futures-sink"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/futures-core",
-      "dev-rust/futures-sink",
-      "virtual/rust-binaries"
+      "dev-rust/futures-sink"
     ]
   },
   "dev-rust/futures-core": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/futures-executor": {
     "buildDeps": [
       "dev-rust/futures-core",
       "dev-rust/futures-task",
       "dev-rust/futures-util",
-      "dev-rust/num_cpus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/num_cpus"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/futures-core",
       "dev-rust/futures-task",
       "dev-rust/futures-util",
-      "dev-rust/num_cpus",
-      "virtual/rust-binaries"
+      "dev-rust/num_cpus"
     ]
   },
   "dev-rust/futures-io": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/futures-macro": {
     "buildDeps": [
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ]
   },
   "dev-rust/futures-sink": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/futures-task": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/futures-util": {
     "buildDeps": [
@@ -6272,9 +5921,7 @@
       "dev-rust/pin-utils",
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro-nested",
-      "dev-rust/slab",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/slab"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -6289,24 +5936,20 @@
       "dev-rust/pin-utils",
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro-nested",
-      "dev-rust/slab",
-      "virtual/rust-binaries"
+      "dev-rust/slab"
     ]
   },
   "dev-rust/getopts": {
     "buildDeps": [
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/rustc-std-workspace-std",
-      "dev-rust/unicode-width",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-width"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/rustc-std-workspace-std",
-      "dev-rust/unicode-width",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-width"
     ]
   },
   "dev-rust/getrandom": {
@@ -6316,9 +5959,7 @@
       "dev-rust/libc",
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/wasi",
-      "dev-rust/wasm-bindgen",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/wasm-bindgen"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -6327,15 +5968,11 @@
       "dev-rust/libc",
       "dev-rust/rustc-std-workspace-core",
       "dev-rust/wasi",
-      "dev-rust/wasm-bindgen",
-      "virtual/rust-binaries"
+      "dev-rust/wasm-bindgen"
     ]
   },
   "dev-rust/gif": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -6346,9 +5983,7 @@
       "dev-rust/indexmap",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/stable_deref_trait",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/stable_deref_trait"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -6357,15 +5992,12 @@
       "dev-rust/indexmap",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/stable_deref_trait",
-      "virtual/rust-binaries"
+      "dev-rust/stable_deref_trait"
     ]
   },
   "dev-rust/glob": {
     "buildDeps": [
-      "dev-rust/nom",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/nom"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6376,26 +6008,19 @@
       "dev-rust/futures",
       "dev-rust/libc",
       "dev-rust/nix",
-      "dev-rust/tokio",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tokio"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/gzip-header": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/hash32": {
     "buildDeps": [
-      "dev-rust/byteorder",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/byteorder"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6407,9 +6032,7 @@
       "dev-rust/rayon",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -6418,8 +6041,7 @@
       "dev-rust/rayon",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/heapless": {
@@ -6431,34 +6053,24 @@
       "dev-rust/serde",
       "dev-rust/spin",
       "dev-rust/stable_deref_trait",
-      "dev-rust/ufmt-write",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/ufmt-write"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/heapsize": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/hermit-abi": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/hmac-sha256": {
     "buildDeps": [
-      "dev-rust/digest",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/digest"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6467,49 +6079,32 @@
     "buildDeps": [
       "dev-rust/libc",
       "dev-rust/match_cfg",
-      "dev-rust/winapi",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/winapi"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/libc",
       "dev-rust/match_cfg",
-      "dev-rust/winapi",
-      "virtual/rust-binaries"
+      "dev-rust/winapi"
     ]
   },
   "dev-rust/hound": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/httparse": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/humantime": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/hyphenation": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -6518,9 +6113,7 @@
       "dev-rust/bitflags",
       "dev-rust/byteorder",
       "dev-rust/libc",
-      "dev-rust/nix",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/nix"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6529,9 +6122,7 @@
     "buildDeps": [
       "dev-rust/matches",
       "dev-rust/unicode-bidi",
-      "dev-rust/unicode-normalization",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-normalization"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6553,9 +6144,7 @@
       "dev-rust/ravif",
       "dev-rust/rgb",
       "dev-rust/scoped_threadpool",
-      "dev-rust/tiff",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tiff"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6565,17 +6154,14 @@
       "dev-rust/autocfg",
       "dev-rust/hashbrown",
       "dev-rust/rayon",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/autocfg",
       "dev-rust/hashbrown",
       "dev-rust/rayon",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/indicatif": {
@@ -6586,18 +6172,14 @@
       "dev-rust/rayon",
       "dev-rust/regex",
       "dev-rust/unicode-segmentation",
-      "dev-rust/unicode-width",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-width"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/intrusive-collections": {
     "buildDeps": [
-      "dev-rust/memoffset",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/memoffset"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6610,9 +6192,7 @@
       "dev-rust/sync",
       "dev-rust/sys_util",
       "dev-rust/tempfile",
-      "dev-rust/thiserror",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ],
     "localSrc": [
       "//platform/crosvm:src"
@@ -6621,65 +6201,46 @@
   },
   "dev-rust/ioctl-rs": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/itoa": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/jobserver": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/libc",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ]
   },
   "dev-rust/jpeg-decoder": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/lazy_static": {
     "buildDeps": [
-      "dev-rust/spin",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/spin"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/spin",
-      "virtual/rust-binaries"
+      "dev-rust/spin"
     ]
   },
   "dev-rust/libc": {
     "buildDeps": [
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ]
   },
   "dev-rust/libchromeos": {
@@ -6697,9 +6258,7 @@
       "dev-rust/system_api",
       "dev-rust/thiserror",
       "dev-rust/vboot_reference-sys",
-      "dev-rust/zeroize",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/zeroize"
     ],
     "localSrc": [
       "//platform2/libchromeos-rs:src"
@@ -6718,30 +6277,23 @@
       "dev-rust/system_api",
       "dev-rust/thiserror",
       "dev-rust/vboot_reference-sys",
-      "dev-rust/zeroize",
-      "virtual/rust-binaries"
+      "dev-rust/zeroize"
     ]
   },
   "dev-rust/libdbus-sys": {
     "buildDeps": [
       "dev-rust/pkg-config",
-      "sys-apps/dbus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-apps/dbus"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/libusb1-sys": {
     "buildDeps": [
       "dev-rust/cc",
       "dev-rust/libc",
       "dev-rust/pkg-config",
-      "virtual/libusb",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "virtual/libusb"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6751,9 +6303,7 @@
       "dev-rust/cc",
       "dev-rust/libc",
       "dev-rust/pkg-config",
-      "dev-rust/vcpkg",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/vcpkg"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6763,9 +6313,7 @@
       "dev-rust/clippy",
       "dev-rust/heapsize",
       "dev-rust/serde",
-      "dev-rust/serde_test",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_test"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6781,9 +6329,7 @@
       "dev-rust/serial-unix",
       "dev-rust/spidev",
       "dev-rust/sysfs_gpio",
-      "dev-rust/void",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/void"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6793,17 +6339,14 @@
       "dev-rust/autocfg",
       "dev-rust/owning_ref",
       "dev-rust/scopeguard",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/autocfg",
       "dev-rust/owning_ref",
       "dev-rust/scopeguard",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/log": {
@@ -6811,17 +6354,14 @@
       "dev-rust/cfg-if",
       "dev-rust/serde",
       "dev-rust/sval",
-      "dev-rust/value-bag",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/value-bag"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/cfg-if",
       "dev-rust/serde",
       "dev-rust/sval",
-      "dev-rust/value-bag",
-      "virtual/rust-binaries"
+      "dev-rust/value-bag"
     ]
   },
   "dev-rust/manatee-client": {
@@ -6836,9 +6376,7 @@
       "dev-rust/log",
       "dev-rust/stderrlog",
       "dev-rust/thiserror",
-      "dev-rust/which",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/which"
     ],
     "localSrc": [
       "//platform2/sirenia/dbus_bindings:src",
@@ -6857,59 +6395,40 @@
       "dev-rust/stderrlog",
       "dev-rust/thiserror",
       "dev-rust/which",
-      "sys-apps/dbus",
-      "virtual/rust-binaries"
+      "sys-apps/dbus"
     ]
   },
   "dev-rust/match_cfg": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/matches": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/md5": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/memchr": {
     "buildDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/libc",
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/libc",
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ]
   },
   "dev-rust/memoffset": {
     "buildDeps": [
-      "dev-rust/autocfg",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/autocfg"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -6917,17 +6436,14 @@
   "dev-rust/minijail": {
     "buildDeps": [
       "dev-rust/libc",
-      "dev-rust/minijail-sys",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/minijail-sys"
     ],
     "localSrc": [
       "//platform/minijail:src"
     ],
     "runtimeDeps": [
       "dev-rust/libc",
-      "dev-rust/minijail-sys",
-      "virtual/rust-binaries"
+      "dev-rust/minijail-sys"
     ]
   },
   "dev-rust/minijail-sys": {
@@ -6937,9 +6453,7 @@
       "dev-rust/pkg-config",
       "dev-rust/which",
       "sys-libs/libcap",
-      "virtual/bindgen",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "virtual/bindgen"
     ],
     "localSrc": [
       "//platform/minijail:src"
@@ -6950,84 +6464,59 @@
       "dev-rust/pkg-config",
       "dev-rust/which",
       "sys-libs/libcap",
-      "virtual/bindgen",
-      "virtual/rust-binaries"
+      "virtual/bindgen"
     ]
   },
   "dev-rust/minimal-lexical": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/miniz-sys": {
     "buildDeps": [
       "dev-rust/cc",
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/miniz_oxide": {
     "buildDeps": [
-      "dev-rust/adler",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/adler"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/mio": {
     "buildDeps": [
       "dev-rust/libc",
-      "dev-rust/log",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/log"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/mp4parse": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/multi_log": {
     "buildDeps": [
-      "dev-rust/log",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/log"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/log",
-      "virtual/rust-binaries"
+      "dev-rust/log"
     ]
   },
   "dev-rust/nb": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/nibble_vec": {
     "buildDeps": [
-      "dev-rust/smallvec",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/smallvec"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7038,9 +6527,7 @@
       "dev-rust/cc",
       "dev-rust/cfg-if",
       "dev-rust/libc",
-      "dev-rust/memoffset",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/memoffset"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7050,22 +6537,16 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/tempfile",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tempfile"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/nom": {
     "buildDeps": [
       "dev-rust/memchr",
       "dev-rust/minimal-lexical",
-      "dev-rust/version_check",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/version_check"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7078,9 +6559,7 @@
       "dev-rust/num-traits",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7088,31 +6567,25 @@
   "dev-rust/num-integer": {
     "buildDeps": [
       "dev-rust/autocfg",
-      "dev-rust/num-traits",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/num-traits"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/autocfg",
-      "dev-rust/num-traits",
-      "virtual/rust-binaries"
+      "dev-rust/num-traits"
     ]
   },
   "dev-rust/num-iter": {
     "buildDeps": [
       "dev-rust/autocfg",
       "dev-rust/num-integer",
-      "dev-rust/num-traits",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/num-traits"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/autocfg",
       "dev-rust/num-integer",
-      "dev-rust/num-traits",
-      "virtual/rust-binaries"
+      "dev-rust/num-traits"
     ]
   },
   "dev-rust/num-rational": {
@@ -7121,47 +6594,33 @@
       "dev-rust/num-bigint",
       "dev-rust/num-integer",
       "dev-rust/num-traits",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/num-traits": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/num_cpus": {
     "buildDeps": [
       "dev-rust/hermit-abi",
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/num_enum": {
     "buildDeps": [
       "dev-rust/derivative",
-      "dev-rust/num_enum_derive",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/num_enum_derive"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/derivative",
-      "dev-rust/num_enum_derive",
-      "virtual/rust-binaries"
+      "dev-rust/num_enum_derive"
     ]
   },
   "dev-rust/num_enum_derive": {
@@ -7169,34 +6628,23 @@
       "dev-rust/proc-macro-crate",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/proc-macro-crate",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ]
   },
   "dev-rust/num_threads": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/number_prefix": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -7209,9 +6657,7 @@
       "dev-rust/memchr",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/wasmparser",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/wasmparser"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -7222,22 +6668,18 @@
       "dev-rust/memchr",
       "dev-rust/rustc-std-workspace-alloc",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/wasmparser",
-      "virtual/rust-binaries"
+      "dev-rust/wasmparser"
     ]
   },
   "dev-rust/once_cell": {
     "buildDeps": [
       "dev-rust/atomic-polyfill",
-      "dev-rust/parking_lot",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/parking_lot"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/atomic-polyfill",
-      "dev-rust/parking_lot",
-      "virtual/rust-binaries"
+      "dev-rust/parking_lot"
     ]
   },
   "dev-rust/openssl": {
@@ -7248,9 +6690,7 @@
       "dev-rust/libc",
       "dev-rust/once_cell",
       "dev-rust/openssl-macros",
-      "dev-rust/openssl-sys",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/openssl-sys"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -7260,36 +6700,28 @@
       "dev-rust/libc",
       "dev-rust/once_cell",
       "dev-rust/openssl-macros",
-      "dev-rust/openssl-sys",
-      "virtual/rust-binaries"
+      "dev-rust/openssl-sys"
     ]
   },
   "dev-rust/openssl-macros": {
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ]
   },
   "dev-rust/openssl-src": {
     "buildDeps": [
-      "dev-libs/openssl",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-libs/openssl"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/openssl-sys": {
     "buildDeps": [
@@ -7298,9 +6730,7 @@
       "dev-rust/libc",
       "dev-rust/openssl-src",
       "dev-rust/pkg-config",
-      "dev-rust/vcpkg",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/vcpkg"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -7309,46 +6739,35 @@
       "dev-rust/libc",
       "dev-rust/openssl-src",
       "dev-rust/pkg-config",
-      "dev-rust/vcpkg",
-      "virtual/rust-binaries"
+      "dev-rust/vcpkg"
     ]
   },
   "dev-rust/os_str_bytes": {
     "buildDeps": [
       "dev-rust/memchr",
       "dev-rust/print_bytes",
-      "dev-rust/uniquote",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/uniquote"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/owning_ref": {
     "buildDeps": [
-      "dev-rust/stable_deref_trait",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/stable_deref_trait"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/stable_deref_trait",
-      "virtual/rust-binaries"
+      "dev-rust/stable_deref_trait"
     ]
   },
   "dev-rust/panic-halt": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/panic-reset": {
     "buildDeps": [
-      "dev-rust/cortex-m",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/cortex-m"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7356,9 +6775,7 @@
   "dev-rust/panic-rtt-target": {
     "buildDeps": [
       "dev-rust/cortex-m",
-      "dev-rust/rtt-target",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rtt-target"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7366,15 +6783,12 @@
   "dev-rust/parking_lot": {
     "buildDeps": [
       "dev-rust/lock_api",
-      "dev-rust/parking_lot_core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/parking_lot_core"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/lock_api",
-      "dev-rust/parking_lot_core",
-      "virtual/rust-binaries"
+      "dev-rust/parking_lot_core"
     ]
   },
   "dev-rust/parking_lot_core": {
@@ -7384,9 +6798,7 @@
       "dev-rust/libc",
       "dev-rust/petgraph",
       "dev-rust/smallvec",
-      "dev-rust/thread-id",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thread-id"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -7395,116 +6807,71 @@
       "dev-rust/libc",
       "dev-rust/petgraph",
       "dev-rust/smallvec",
-      "dev-rust/thread-id",
-      "virtual/rust-binaries"
+      "dev-rust/thread-id"
     ]
   },
   "dev-rust/paste": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/percent-encoding": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/petgraph": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/pin-project-lite": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/pin-utils": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/pkg-config": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/png": {
     "buildDeps": [
       "dev-rust/bitflags",
       "dev-rust/crc32fast",
       "dev-rust/deflate",
-      "dev-rust/miniz_oxide",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/miniz_oxide"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/portable-atomic": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/ppv-lite86": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/print_bytes": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/proc-macro-crate": {
     "buildDeps": [
-      "dev-rust/toml",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/toml"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/toml",
-      "virtual/rust-binaries"
+      "dev-rust/toml"
     ]
   },
   "dev-rust/proc-macro-error": {
@@ -7512,108 +6879,73 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/version_check",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/version_check"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/proc-macro-hack": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/proc-macro-nested": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/proc-macro2": {
     "buildDeps": [
-      "dev-rust/unicode-xid",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-xid"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/unicode-xid",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-xid"
     ]
   },
   "dev-rust/protobuf": {
     "buildDeps": [
       "dev-rust/bytes",
       "dev-rust/serde",
-      "dev-rust/serde_derive",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_derive"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/bytes",
       "dev-rust/serde",
-      "dev-rust/serde_derive",
-      "virtual/rust-binaries"
+      "dev-rust/serde_derive"
     ]
   },
   "dev-rust/protoc-rust": {
     "buildDeps": [
-      "dev-rust/tempfile",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tempfile"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/tempfile",
-      "virtual/rust-binaries"
+      "dev-rust/tempfile"
     ]
   },
   "dev-rust/quick-error": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/quickcheck": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/quote": {
     "buildDeps": [
-      "dev-rust/proc-macro2",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/proc-macro2"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/proc-macro2",
-      "virtual/rust-binaries"
+      "dev-rust/proc-macro2"
     ]
   },
   "dev-rust/r0": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -7621,9 +6953,7 @@
     "buildDeps": [
       "dev-rust/endian-type",
       "dev-rust/nibble_vec",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7635,9 +6965,7 @@
       "dev-rust/rand_chacha",
       "dev-rust/rand_core",
       "dev-rust/rand_hc",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -7646,57 +6974,44 @@
       "dev-rust/rand_chacha",
       "dev-rust/rand_core",
       "dev-rust/rand_hc",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/rand_chacha": {
     "buildDeps": [
       "dev-rust/ppv-lite86",
       "dev-rust/rand_core",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/ppv-lite86",
       "dev-rust/rand_core",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/rand_core": {
     "buildDeps": [
       "dev-rust/getrandom",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/getrandom",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/rand_hc": {
     "buildDeps": [
-      "dev-rust/rand_core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rand_core"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/rand_core",
-      "virtual/rust-binaries"
+      "dev-rust/rand_core"
     ]
   },
   "dev-rust/ravif": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -7705,14 +7020,10 @@
       "dev-rust/autocfg",
       "dev-rust/crossbeam-deque",
       "dev-rust/either",
-      "dev-rust/rayon-core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rayon-core"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/rayon-core": {
     "buildDeps": [
@@ -7720,9 +7031,7 @@
       "dev-rust/crossbeam-deque",
       "dev-rust/crossbeam-utils",
       "dev-rust/lazy_static",
-      "dev-rust/num_cpus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/num_cpus"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7731,57 +7040,38 @@
     "buildDeps": [
       "dev-rust/aho-corasick",
       "dev-rust/memchr",
-      "dev-rust/regex-syntax",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/regex-syntax"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/aho-corasick",
       "dev-rust/memchr",
-      "dev-rust/regex-syntax",
-      "virtual/rust-binaries"
+      "dev-rust/regex-syntax"
     ]
   },
   "dev-rust/regex-syntax": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/remain": {
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/remove_dir_all": {
     "buildDeps": [
-      "dev-rust/winapi",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/winapi"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/rgb": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -7789,16 +7079,13 @@
     "buildDeps": [
       "dev-rust/bare-metal",
       "dev-rust/bit_field",
-      "dev-rust/riscv-target",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/riscv-target"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/bare-metal",
       "dev-rust/bit_field",
-      "dev-rust/riscv-target",
-      "virtual/rust-binaries"
+      "dev-rust/riscv-target"
     ]
   },
   "dev-rust/riscv-rt": {
@@ -7807,9 +7094,7 @@
       "dev-rust/r0",
       "dev-rust/riscv",
       "dev-rust/riscv-rt-macros",
-      "dev-rust/riscv-target",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/riscv-target"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7819,9 +7104,7 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/rand",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7829,30 +7112,21 @@
   "dev-rust/riscv-target": {
     "buildDeps": [
       "dev-rust/lazy_static",
-      "dev-rust/regex",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/regex"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/lazy_static",
-      "dev-rust/regex",
-      "virtual/rust-binaries"
+      "dev-rust/regex"
     ]
   },
   "dev-rust/rtic-core": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/rtic-monotonic": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -7861,9 +7135,7 @@
       "dev-rust/indexmap",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7872,9 +7144,7 @@
     "buildDeps": [
       "dev-rust/cortex-m",
       "dev-rust/riscv",
-      "dev-rust/ufmt-write",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/ufmt-write"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7882,9 +7152,7 @@
   "dev-rust/rusb": {
     "buildDeps": [
       "dev-rust/libc",
-      "dev-rust/libusb1-sys",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libusb1-sys"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7892,75 +7160,48 @@
   "dev-rust/rustc-demangle": {
     "buildDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
-      "dev-rust/rustc-std-workspace-core",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-core"
     ]
   },
   "dev-rust/rustc-demangle-capi": {
     "buildDeps": [
-      "dev-rust/rustc-demangle",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-demangle"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/rustc-demangle",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-demangle"
     ]
   },
   "dev-rust/rustc-serialize": {
     "buildDeps": [
-      "dev-rust/rand",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rand"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/rustc-std-workspace-alloc": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/rustc-std-workspace-core": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/rustc-std-workspace-std": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/rustc_version": {
     "buildDeps": [
-      "dev-rust/semver",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/semver"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -7981,90 +7222,63 @@
       "dev-rust/smallvec",
       "dev-rust/unicode-segmentation",
       "dev-rust/unicode-width",
-      "dev-rust/utf8parse",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/utf8parse"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/ryu": {
     "buildDeps": [
-      "dev-rust/no-panic",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/no-panic"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/no-panic",
-      "virtual/rust-binaries"
+      "dev-rust/no-panic"
     ]
   },
   "dev-rust/scoped_threadpool": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/scopeguard": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/semver": {
     "buildDeps": [
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/serde": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/serde_bytes": {
     "buildDeps": [
       "dev-rust/bincode",
       "dev-rust/serde",
       "dev-rust/serde_derive",
-      "dev-rust/serde_test",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_test"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/serde_derive": {
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ]
   },
   "dev-rust/serde_json": {
@@ -8072,33 +7286,26 @@
       "dev-rust/indexmap",
       "dev-rust/itoa",
       "dev-rust/ryu",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/indexmap",
       "dev-rust/itoa",
       "dev-rust/ryu",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/serde_test": {
     "buildDeps": [
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/serial-core": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8108,36 +7315,24 @@
       "dev-rust/ioctl-rs",
       "dev-rust/libc",
       "dev-rust/serial-core",
-      "dev-rust/termios",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/termios"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/sha1": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/shell-words": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/signal-hook-registry": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8146,67 +7341,45 @@
     "buildDeps": [
       "dev-rust/chrono",
       "dev-rust/colored",
-      "dev-rust/log",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/log"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/skim": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/slab": {
     "buildDeps": [
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/slog": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/smallvec": {
     "buildDeps": [
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/smawk": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/socket2": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8215,9 +7388,7 @@
     "buildDeps": [
       "dev-rust/bitflags",
       "dev-rust/embedded-hal",
-      "dev-rust/log",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/log"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8226,9 +7397,7 @@
     "buildDeps": [
       "dev-rust/bitflags",
       "dev-rust/libc",
-      "dev-rust/nix",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/nix"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8236,26 +7405,18 @@
   "dev-rust/spin": {
     "buildDeps": [
       "dev-rust/lock_api",
-      "dev-rust/portable-atomic",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/portable-atomic"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/lock_api",
-      "dev-rust/portable-atomic",
-      "virtual/rust-binaries"
+      "dev-rust/portable-atomic"
     ]
   },
   "dev-rust/stable_deref_trait": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/stderrlog": {
     "buildDeps": [
@@ -8263,9 +7424,7 @@
       "dev-rust/chrono",
       "dev-rust/log",
       "dev-rust/termcolor",
-      "dev-rust/thread_local",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thread_local"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -8273,8 +7432,7 @@
       "dev-rust/chrono",
       "dev-rust/log",
       "dev-rust/termcolor",
-      "dev-rust/thread_local",
-      "virtual/rust-binaries"
+      "dev-rust/thread_local"
     ]
   },
   "dev-rust/stm32g0": {
@@ -8282,9 +7440,7 @@
       "dev-rust/bare-metal",
       "dev-rust/cortex-m",
       "dev-rust/cortex-m-rt",
-      "dev-rust/vcell",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/vcell"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8296,75 +7452,54 @@
       "dev-rust/embedded-hal",
       "dev-rust/nb",
       "dev-rust/stm32g0",
-      "dev-rust/void",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/void"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/strsim": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/sval": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/syn": {
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/unicode-xid",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-xid"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/unicode-xid",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-xid"
     ]
   },
   "dev-rust/sync": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [
       "//platform/crosvm:src"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/synstructure": {
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/unicode-xid",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-xid"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/unicode-xid",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-xid"
     ]
   },
   "dev-rust/sys_util": {
@@ -8383,9 +7518,7 @@
       "dev-rust/sys_util_core",
       "dev-rust/tempfile",
       "dev-rust/thiserror",
-      "sys-libs/libcap",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "sys-libs/libcap"
     ],
     "localSrc": [
       "//platform/crosvm:src"
@@ -8405,8 +7538,7 @@
       "dev-rust/sys_util_core",
       "dev-rust/tempfile",
       "dev-rust/thiserror",
-      "sys-libs/libcap",
-      "virtual/rust-binaries"
+      "sys-libs/libcap"
     ]
   },
   "dev-rust/sys_util_core": {
@@ -8414,9 +7546,7 @@
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ],
     "localSrc": [
       "//platform/crosvm:src"
@@ -8425,8 +7555,7 @@
       "dev-rust/libc",
       "dev-rust/remain",
       "dev-rust/serde",
-      "dev-rust/thiserror",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ]
   },
   "dev-rust/sysfs_gpio": {
@@ -8434,9 +7563,7 @@
       "dev-rust/futures",
       "dev-rust/mio",
       "dev-rust/nix",
-      "dev-rust/tokio",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tokio"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8447,9 +7574,7 @@
       "dev-rust/hostname",
       "dev-rust/libc",
       "dev-rust/log",
-      "dev-rust/time",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/time"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -8457,8 +7582,7 @@
       "dev-rust/hostname",
       "dev-rust/libc",
       "dev-rust/log",
-      "dev-rust/time",
-      "virtual/rust-binaries"
+      "dev-rust/time"
     ]
   },
   "dev-rust/system_api": {
@@ -8466,9 +7590,7 @@
       "dev-rust/chromeos-dbus-bindings",
       "dev-rust/dbus",
       "dev-rust/protobuf",
-      "dev-rust/protoc-rust",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/protoc-rust"
     ],
     "localSrc": [
       "//platform2/authpolicy/dbus_bindings:src",
@@ -8485,8 +7607,7 @@
       "dev-rust/chromeos-dbus-bindings",
       "dev-rust/dbus",
       "dev-rust/protobuf",
-      "dev-rust/protoc-rust",
-      "virtual/rust-binaries"
+      "dev-rust/protoc-rust"
     ]
   },
   "dev-rust/tempfile": {
@@ -8494,43 +7615,31 @@
       "dev-rust/cfg-if",
       "dev-rust/libc",
       "dev-rust/rand",
-      "dev-rust/remove_dir_all",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/remove_dir_all"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/cfg-if",
       "dev-rust/libc",
       "dev-rust/rand",
-      "dev-rust/remove_dir_all",
-      "virtual/rust-binaries"
+      "dev-rust/remove_dir_all"
     ]
   },
   "dev-rust/termcolor": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/terminal_size": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/termios": {
     "buildDeps": [
-      "dev-rust/libc",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/libc"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8541,52 +7650,34 @@
       "dev-rust/smawk",
       "dev-rust/terminal_size",
       "dev-rust/unicode-linebreak",
-      "dev-rust/unicode-width",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/unicode-width"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/thiserror": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/thread-id": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/thread_local": {
     "buildDeps": [
       "dev-rust/criterion",
-      "dev-rust/once_cell",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/once_cell"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/criterion",
-      "dev-rust/once_cell",
-      "virtual/rust-binaries"
+      "dev-rust/once_cell"
     ]
   },
   "dev-rust/tiff": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -8597,9 +7688,7 @@
       "dev-rust/num_threads",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -8608,8 +7697,7 @@
       "dev-rust/num_threads",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ]
   },
   "dev-rust/tiny_http": {
@@ -8618,9 +7706,7 @@
       "dev-rust/chrono",
       "dev-rust/chunked_transfer",
       "dev-rust/log",
-      "dev-rust/url",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/url"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8629,27 +7715,20 @@
     "buildDeps": [
       "dev-rust/arbitrary",
       "dev-rust/serde",
-      "dev-rust/tinyvec_macros",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tinyvec_macros"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/tinyvec_macros": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/tlsdate_dbus": {
     "buildDeps": [
       "dev-rust/chromeos-dbus-bindings",
-      "dev-rust/dbus",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/dbus"
     ],
     "localSrc": [
       "//third_party/tlsdate:src"
@@ -8668,9 +7747,7 @@
       "dev-rust/pin-project-lite",
       "dev-rust/signal-hook-registry",
       "dev-rust/socket2",
-      "dev-rust/tokio-macros",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tokio-macros"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8679,9 +7756,7 @@
     "buildDeps": [
       "dev-rust/bytes",
       "dev-rust/futures",
-      "dev-rust/log",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/log"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8690,9 +7765,7 @@
     "buildDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8700,22 +7773,16 @@
   "dev-rust/toml": {
     "buildDeps": [
       "dev-rust/linked-hash-map",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/ufmt": {
     "buildDeps": [
       "dev-rust/proc-macro-hack",
       "dev-rust/ufmt-macros",
-      "dev-rust/ufmt-write",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/ufmt-write"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8725,26 +7792,19 @@
       "dev-rust/proc-macro-hack",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
-      "dev-rust/syn",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/ufmt-write": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/unicase": {
     "buildDeps": [
-      "dev-rust/version_check",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/version_check"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -8755,35 +7815,25 @@
       "dev-rust/flamer",
       "dev-rust/matches",
       "dev-rust/serde",
-      "dev-rust/serde_test",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde_test"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/unicode-linebreak": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/unicode-normalization": {
     "buildDeps": [
-      "dev-rust/tinyvec",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/tinyvec"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/unicode-segmentation": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -8791,33 +7841,22 @@
     "buildDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/rustc-std-workspace-std",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-std"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/compiler_builtins",
       "dev-rust/rustc-std-workspace-core",
-      "dev-rust/rustc-std-workspace-std",
-      "virtual/rust-binaries"
+      "dev-rust/rustc-std-workspace-std"
     ]
   },
   "dev-rust/unicode-xid": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/uniquote": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -8827,18 +7866,13 @@
       "dev-rust/idna",
       "dev-rust/matches",
       "dev-rust/percent-encoding",
-      "dev-rust/serde",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/serde"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/utf8parse": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
   },
@@ -8848,9 +7882,7 @@
       "dev-rust/md5",
       "dev-rust/serde",
       "dev-rust/sha1",
-      "dev-rust/slog",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/slog"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -8858,19 +7890,13 @@
       "dev-rust/md5",
       "dev-rust/serde",
       "dev-rust/sha1",
-      "dev-rust/slog",
-      "virtual/rust-binaries"
+      "dev-rust/slog"
     ]
   },
   "dev-rust/value-bag": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/vboot_reference-sys": {
     "buildDeps": [
@@ -8878,9 +7904,7 @@
       "dev-rust/libc",
       "dev-rust/pkg-config",
       "dev-rust/which",
-      "virtual/bindgen",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "virtual/bindgen"
     ],
     "localSrc": [
       "//platform/vboot_reference:src"
@@ -8890,139 +7914,87 @@
       "dev-rust/libc",
       "dev-rust/pkg-config",
       "dev-rust/which",
-      "virtual/bindgen",
-      "virtual/rust-binaries"
+      "virtual/bindgen"
     ]
   },
   "dev-rust/vcell": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/vcpkg": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/version_check": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/void": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/volatile-register": {
     "buildDeps": [
-      "dev-rust/vcell",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/vcell"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/vcell",
-      "virtual/rust-binaries"
+      "dev-rust/vcell"
     ]
   },
   "dev-rust/wasi": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/wasm-bindgen": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/wasmparser": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/which": {
     "buildDeps": [
       "dev-rust/either",
       "dev-rust/lazy_static",
       "dev-rust/libc",
-      "dev-rust/regex",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/regex"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/either",
       "dev-rust/lazy_static",
       "dev-rust/libc",
-      "dev-rust/regex",
-      "virtual/rust-binaries"
+      "dev-rust/regex"
     ]
   },
   "dev-rust/winapi": {
-    "buildDeps": [
-      "virtual/rust",
-      "virtual/rust-binaries"
-    ],
+    "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "dev-rust/yaml-rust": {
     "buildDeps": [
-      "dev-rust/linked-hash-map",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/linked-hash-map"
     ],
     "localSrc": [],
     "runtimeDeps": []
   },
   "dev-rust/zeroize": {
     "buildDeps": [
-      "dev-rust/zeroize_derive",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/zeroize_derive"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "dev-rust/zeroize_derive",
-      "virtual/rust-binaries"
+      "dev-rust/zeroize_derive"
     ]
   },
   "dev-rust/zeroize_derive": {
@@ -9030,17 +8002,14 @@
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/synstructure",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/synstructure"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
-      "dev-rust/synstructure",
-      "virtual/rust-binaries"
+      "dev-rust/synstructure"
     ]
   },
   "dev-util/bsdiff": {
@@ -9591,9 +8560,7 @@
       "dev-rust/serde_json",
       "dev-rust/sync",
       "dev-rust/sys_util",
-      "dev-rust/thiserror",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ],
     "localSrc": [
       "//platform/crosvm:src"
@@ -9605,8 +8572,7 @@
       "dev-rust/serde_json",
       "dev-rust/sync",
       "dev-rust/sys_util",
-      "dev-rust/thiserror",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ]
   },
   "media-sound/cras-sys": {
@@ -9614,9 +8580,7 @@
       "dev-rust/data_model",
       "dev-rust/serde",
       "media-sound/audio_streams",
-      "virtual/bindgen",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "virtual/bindgen"
     ],
     "localSrc": [
       "//third_party/adhd:src"
@@ -9630,9 +8594,7 @@
       "dev-rust/libc",
       "dev-rust/protobuf",
       "dev-rust/system_api",
-      "dev-rust/thiserror",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "dev-rust/thiserror"
     ],
     "localSrc": [
       "//third_party/adhd:src"
@@ -9649,16 +8611,12 @@
       "dev-rust/sys_util",
       "dev-rust/thiserror",
       "media-sound/audio_streams",
-      "media-sound/libcras",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "media-sound/libcras"
     ],
     "localSrc": [
       "//third_party/adhd:src"
     ],
-    "runtimeDeps": [
-      "virtual/rust-binaries"
-    ]
+    "runtimeDeps": []
   },
   "media-sound/libcras": {
     "buildDeps": [
@@ -9670,9 +8628,7 @@
       "dev-rust/serde",
       "dev-rust/sys_util",
       "media-sound/audio_streams",
-      "media-sound/cras-sys",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "media-sound/cras-sys"
     ],
     "localSrc": [
       "//third_party/adhd:src"
@@ -10353,9 +9309,7 @@
       "dev-libs/openssl",
       "dev-libs/tinyxml2",
       "dev-rust/cc",
-      "net-wireless/bluez",
-      "virtual/rust",
-      "virtual/rust-binaries"
+      "net-wireless/bluez"
     ],
     "localSrc": [
       "//aosp/frameworks/proto_logging:src",
@@ -10376,7 +9330,6 @@
       "dev-libs/tinyxml2",
       "dev-rust/cc",
       "net-wireless/bluez",
-      "virtual/rust-binaries",
       "virtual/tmpfiles"
     ]
   },
@@ -11677,16 +10630,6 @@
     "runtimeDeps": []
   },
   "virtual/pkgconfig": {
-    "buildDeps": [],
-    "localSrc": [],
-    "runtimeDeps": []
-  },
-  "virtual/rust": {
-    "buildDeps": [],
-    "localSrc": [],
-    "runtimeDeps": []
-  },
-  "virtual/rust-binaries": {
     "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
