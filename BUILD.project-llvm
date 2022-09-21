@@ -1,0 +1,20 @@
+# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "ebuild_src")
+
+ebuild_src(
+    name = "src",
+    # We intentionally include the .git repo because it's required
+    # to calculate which patches to apply. We really need to figure out another
+    # way of doing this.
+    srcs = glob(["**"], exclude=[
+        "BUILD.bazel",
+        "OWNERS",
+        "PRESUBMIT",
+    	# Not supported in squashfs
+    	"libcxx/lib/abi/x86_64-apple-darwin.*"
+    ]),
+    visibility = ["//visibility:public"],
+)
