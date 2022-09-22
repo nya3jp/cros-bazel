@@ -40,6 +40,14 @@ func (v *Version) DropRevision() *Version {
 	return copy
 }
 
+func (v *Version) Major() string {
+	if len(v.Main) > 0 {
+		return v.Main[0]
+	}
+
+	return "0"
+}
+
 func (v *Version) String() string {
 	var w strings.Builder
 	for i, n := range v.Main {

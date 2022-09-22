@@ -9,7 +9,13 @@ def _package_set_impl(ctx):
         transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.deps],
         order = "postorder",
     )
-    return [DefaultInfo(files = deps)]
+    return [
+        DefaultInfo(files = deps),
+        BinaryPackageInfo(
+            file = None,
+            runtime_deps = deps,
+        ),
+    ]
 
 package_set = rule(
     implementation = _package_set_impl,

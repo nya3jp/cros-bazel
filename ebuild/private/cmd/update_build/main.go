@@ -69,6 +69,11 @@ type ebuildInfo struct {
 	PackageInfo *packageInfo
 }
 
+type packageGroup struct {
+	PackageName string
+	Packages    []string
+}
+
 func getSHA256(url string) (string, error) {
 	res, err := http.Get(url)
 	if err != nil {
@@ -120,12 +125,14 @@ def dependencies():
 {{- end }}
 `))
 
-var buildTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The Chromium OS Authors. All rights reserved.
+var buildHeaderTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 load("//bazel/ebuild:defs.bzl", "ebuild")
+`))
 
+var ebuildTemplate = template.Must(template.New("").Parse(`
 ebuild(
     name = "{{ .PackageName }}",
     ebuild = "{{ .EBuildName }}",
@@ -161,14 +168,28 @@ ebuild(
 )
 `))
 
-func generateBuild(buildPath string, ebuild *ebuildInfo) error {
+var packageGroupTemplate = template.Must(template.New("").Parse(`
+load("//bazel/ebuild:defs.bzl", "package_set")
+
+package_set(
+    name = "{{ .PackageName }}",
+    deps = [
+        {{- range .Packages }}
+        "{{ . }}",
+        {{- end }}
+    ],
+    visibility = ["//visibility:public"],
+)
+`))
+
+func generateBuild(buildPath string, fn func(f *os.File) error) error {
 	f, err := os.Create(buildPath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	return buildTemplate.Execute(f, ebuild)
+	return fn(f)
 }
 
 func updateRepositories(bzlPath string, dists []*distEntry) error {
@@ -321,6 +342,9 @@ var app = &cli.App{
 
 					var bestName string
 					var bestVer *version.Version
+
+					var allVersions []*version.Version
+
 					for _, fi := range fis {
 						name := fi.Name()
 						if !strings.HasSuffix(name, ebuildExt) {
@@ -338,9 +362,31 @@ var app = &cli.App{
 							bestName = name
 							bestVer = ver
 						}
+						if info, err := fi.Info(); err == nil {
+							// Skip the revbump symlinks
+							if info.Mode() & fs.ModeSymlink == 0 {
+								allVersions = append(allVersions, ver)
+							}
+						} else {
+							return err;
+						}
 					}
 					if bestName == "" {
 						return errors.New("no ebuild found")
+					}
+
+					if category != "dev-rust" {
+						// We only want to generate 1 ebuild for non rust packages
+						allVersions = []*version.Version{bestVer}
+					} else {
+						// If we have cros-workon rust ebuilds only use those.
+						// HACK: We should use the eclass to determine if it's a cros-workon
+						for _, ver := range allVersions {
+							if ver.Major() == "9999" {
+								allVersions = []*version.Version{ver}
+								break
+							}
+						}
 					}
 
 					// Read Manifest to get a list of distfiles.
@@ -393,14 +439,49 @@ var app = &cli.App{
 						}
 					}
 
-					ebuild := &ebuildInfo{
-						EBuildName:  bestName,
-						PackageName: packageName,
-						Category:    category,
-						Dists:       dists,
-						PackageInfo: pkgInfo,
-					}
-					if err := generateBuild(buildPath, ebuild); err != nil {
+					if err := generateBuild(buildPath, func(f *os.File) error {
+						if err := buildHeaderTemplate.Execute(f, nil); err != nil {
+							return err;
+						}
+
+						var targetNames []string
+
+						for _, ver := range allVersions {
+							ebuildName := fmt.Sprintf("%s-%s.ebuild", packageName, ver)
+
+							var localPackageName string
+							if len(allVersions) == 1 {
+								localPackageName = packageName
+							} else {
+								localPackageName = fmt.Sprintf("%s-%s", packageName, ver)
+								targetNames = append(targetNames, ":" + localPackageName)
+							}
+
+							ebuild := &ebuildInfo{
+								EBuildName:  ebuildName,
+								PackageName: localPackageName,
+								Category:    category,
+								Dists:       dists,
+								PackageInfo: pkgInfo,
+							}
+
+							if err := ebuildTemplate.Execute(f, ebuild); err != nil {
+								return err;
+							}
+						}
+
+						if len(targetNames) > 0 {
+							packageGroup := packageGroup{
+								PackageName: packageName,
+								Packages: targetNames,
+							}
+							if err := packageGroupTemplate.Execute(f, packageGroup); err != nil {
+								return err;
+							}
+						}
+
+						return nil;
+					}); err != nil {
 						return err
 					}
 
