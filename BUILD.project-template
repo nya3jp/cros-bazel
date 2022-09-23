@@ -11,9 +11,6 @@ ebuild_src(
         "BUILD.bazel",
         "OWNERS",
         "PRESUBMIT",
-
-        # Hack for systemd
-        "units/system-systemd*.slice"
     ]),
     visibility = ["//visibility:public"],
 )

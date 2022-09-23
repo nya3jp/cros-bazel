@@ -1,0 +1,50 @@
+# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "ebuild_src")
+
+ebuild_src(
+    name = "src",
+    srcs = glob([
+        "catalog/**",
+        "coccinelle/**",
+        "configure",
+        "docs/**",
+        "factory/**",
+        "hwdb.d/**",
+        "LICENSE.GPL2",
+        "LICENSE.LGPL2.1",
+        "Makefile",
+        "man/**",
+        "meson.build",
+        "meson_options.txt",
+        "mkosi.build",
+        "modprobe.d/**",
+        "NEWS",
+        "network/**",
+        "po/**",
+        "presets/**",
+        "README",
+        "rules.d/**",
+        "semaphoreci/**",
+        "shell-completion/**",
+        "src/**",
+        "sysctl.d/**",
+        "sysusers.d/**",
+        # The test directory has a recursive symlink. We can't just exclude it
+        # since that errors out, instead we need to not even glob it in the
+        # first place.
+        "test/*.*",
+        "test/fuzz/**",
+        "tmpfiles.d/**",
+        "tools/**",
+        "travis-ci/**",
+        "units/**",
+        "xorg/**",
+    ], exclude = [
+        "units/system-systemd*.slice",
+        "test/fuzz/fuzz-unit-file/dev-mapper-fedora_krowka*.swap",
+    ]),
+    visibility = ["//visibility:public"],
+)
