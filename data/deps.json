@@ -8049,7 +8049,7 @@
       "dev-rust/thiserror"
     ],
     "localSrc": [
-      "//platform/crosvm:src"
+      "//platform/crosvm-sys_util_core:src"
     ],
     "runtimeDeps": [
       "dev-rust/libc",

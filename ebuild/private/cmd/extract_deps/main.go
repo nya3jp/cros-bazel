@@ -318,6 +318,12 @@ func computeSrcPackages(pkg *packages.Package, project string, localName string,
 	var srcDeps []string
 	var previousPath string
 	for _, path := range allPaths {
+		if pkg.Name() == "dev-rust/sys_util_core" && path == "platform/crosvm" {
+			// We need a pinned version of crosvm for sys_util_core, so we can't
+			// use the default location.
+			path = "platform/crosvm-sys_util_core"
+		}
+
 		if previousPath == path {
 			// Some packages contain duplicate paths
 			continue
