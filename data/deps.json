@@ -29,7 +29,8 @@
   "app-accessibility/pumpkin": {
     "buildDeps": [],
     "localSrc": [
-      "//platform/empty-project:src"
+      "//platform/empty-project:src",
+      "@chromite//:src"
     ],
     "runtimeDeps": []
   },
@@ -2258,7 +2259,8 @@
     "localSrc": [
       "//platform/libchrome:src",
       "//platform2:src",
-      "//platform2/common-mk:src"
+      "//platform2/common-mk:src",
+      "@chromite//:src"
     ],
     "runtimeDeps": [
       "chromeos-base/perfetto",
@@ -4910,7 +4912,8 @@
     "localSrc": [
       "//platform2:src",
       "//platform2/common-mk:src",
-      "//third_party/modp_b64:src"
+      "//third_party/modp_b64:src",
+      "@chromite//:src"
     ],
     "runtimeDeps": []
   },
@@ -9233,7 +9236,9 @@
   },
   "media-sound/sr-bt-dlc": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "@chromite//:src"
+    ],
     "runtimeDeps": []
   },
   "net-dialup/ppp": {

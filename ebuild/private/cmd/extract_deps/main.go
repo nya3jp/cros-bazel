@@ -53,6 +53,12 @@ var (
 		"virtual/tmpfiles":              {"sys-apps/systemd-tmpfiles"},
 		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
 	}
+	additionalSrcPackages = map[string][]string {
+		"app-accessibility/pumpkin": []string{"@chromite//:src"},
+		"chromeos-base/libchrome": []string{"@chromite//:src"},
+		"dev-libs/modp_b64": []string{"@chromite//:src"},
+		"media-sound/sr-bt-dlc": []string{"@chromite//:src"},
+	}
 )
 
 // HACK: Hard-code several USE flags.
@@ -199,7 +205,7 @@ func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName st
 	return deps
 }
 
-func computeSrcPackages(category string, project string, localName string, subtree string) ([]string, error) {
+func computeSrcPackages(pkg *packages.Package, project string, localName string, subtree string) ([]string, error) {
 
 	// The parser will return | concat arrays, so undo that here.
 	projects := strings.Split(project, "|")
@@ -255,7 +261,7 @@ func computeSrcPackages(category string, project string, localName string, subtr
 				paths = []string{strings.TrimPrefix(project, "chromiumos/")}
 			}
 		} else {
-			if category == "chromeos-base" {
+			if pkg.Category() == "chromeos-base" {
 				paths = []string{localName}
 			} else if strings.HasPrefix(localName, "../") {
 				paths = []string{strings.TrimPrefix(localName, "../")}
@@ -318,6 +324,10 @@ func computeSrcPackages(category string, project string, localName string, subtr
 		}
 		previousPath = path
 		srcDeps = append(srcDeps, "//"+path+":src")
+	}
+
+	if additionalSrcPackages, ok := additionalSrcPackages[pkg.Name()]; ok {
+		srcDeps = append(srcDeps, additionalSrcPackages...)
 	}
 
 	return srcDeps, nil
@@ -472,7 +482,7 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 			depsMap[packageName] = parsedDeps
 		}
 
-		srcDeps, err := computeSrcPackages(pkg.Category(), vars["CROS_WORKON_PROJECT"], vars["CROS_WORKON_LOCALNAME"], vars["CROS_WORKON_SUBTREE"])
+		srcDeps, err := computeSrcPackages(pkg, vars["CROS_WORKON_PROJECT"], vars["CROS_WORKON_LOCALNAME"], vars["CROS_WORKON_SUBTREE"])
 		if err != nil {
 			return nil, err
 		}
