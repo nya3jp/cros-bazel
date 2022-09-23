@@ -435,9 +435,10 @@ var app = &cli.App{
 						dist, err := locateDistFile(filename)
 						if err != nil {
 							log.Printf("WARNING: unable to locate distfile %s: %v", filename, err)
+						} else {
+							dists = append(dists, dist)
 						}
 
-						dists = append(dists, dist)
 						cachedDists[filename] = dist
 
 						// Update cache.
