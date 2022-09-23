@@ -48,6 +48,13 @@ var distBaseURLs = []string{
 	"https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/",
 }
 
+// The following packages don't exist in the mirrors above, but instead
+// need to be pulled from the SRC_URI. We should probably mirror these so our
+// build isn't dependent on external hosts.
+var manualDistfileMap = map[string]string {
+	"iproute2-5.16.0.tar.gz": "http://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.gz",
+}
+
 type distEntry struct {
 	Filename string `json:"filename"`
 	URL      string `json:"url"`
@@ -94,7 +101,11 @@ func getSHA256(url string) (string, error) {
 
 func locateDistFile(filename string) (*distEntry, error) {
 	for _, distBaseURL := range distBaseURLs {
-		url := distBaseURL + filename
+		var url string
+		if url = manualDistfileMap[filename]; url == "" {
+			url = distBaseURL + filename
+		}
+		// TODO: This SHA should come from the manifest
 		if sha256, err := getSHA256(url); err == nil {
 			name := regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(filename, "_")
 			return &distEntry{
