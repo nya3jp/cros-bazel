@@ -46,6 +46,12 @@ var blockedPackages = map[string]struct{}{
 var distBaseURLs = []string{
 	"https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/",
 	"https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/",
+	"https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/",
+	"https://storage.googleapis.com/chromeos-localmirror/secureshell/distfiles/",
+	"https://storage.googleapis.com/chromeos-localmirror/secureshell/releases/",
+	"https://storage.googleapis.com/chromium-nodejs/14.15.4/",
+	"https://storage.googleapis.com/chromium-nodejs/16.13.0",
+
 }
 
 // The following packages don't exist in the mirrors above, but instead
@@ -362,7 +368,9 @@ var app = &cli.App{
 							continue
 						}
 						// TODO: Remove this hack.
-						if name == "ncurses-5.9-r99.ebuild" {
+						if name == "ncurses-5.9-r99.ebuild" ||
+								// There are no 9999 lacros distfiles
+								name == "chromeos-lacros-9999.ebuild" {
 							continue
 						}
 						_, ver, err := version.ExtractSuffix(strings.TrimSuffix(name, ebuildExt))

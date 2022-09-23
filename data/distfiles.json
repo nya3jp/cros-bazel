@@ -1,36 +1,106 @@
 {
-  "0.46.tar.xz": null,
-  "0.48.tar.xz": null,
+  "0.46.tar.xz": {
+    "filename": "0.46.tar.xz",
+    "url": "https://storage.googleapis.com/chromeos-localmirror/secureshell/releases/0.46.tar.xz",
+    "sha256": "95def436ce42177238e11fd4fc03cb40721e282f7d5e63152aa1420edb84815b",
+    "name": "0_46_tar_xz"
+  },
+  "0.48.tar.xz": {
+    "filename": "0.48.tar.xz",
+    "url": "https://storage.googleapis.com/chromeos-localmirror/secureshell/releases/0.48.tar.xz",
+    "sha256": "76f9f191d351c02a892ae9cf4a1ccae6f80e0bfb6a1f1848e8f58dea17304430",
+    "name": "0_48_tar_xz"
+  },
   "03-infinality-2.6.2-2015.11.28.patch.xz": {
     "filename": "03-infinality-2.6.2-2015.11.28.patch.xz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/03-infinality-2.6.2-2015.11.28.patch.xz",
     "sha256": "a91f27f76fdcdffcea1d377824db84d6c6d5ab1f6afd61c62a29471dae06f0ea",
     "name": "03_infinality_2_6_2_2015_11_28_patch_xz"
   },
-  "0790e805aa3cfaf9e08b003d7aaca0b2b9988160ef8928200b869e4820fa3963-22321116.cab": null,
-  "1675d5a0f18c148df2a8b28f80de602bc0a556ff36be9004fea8e302ddf75fc5-USBC_DOCK_G5_V1.0.15.0.cab": null,
-  "29835d73b07590db964d796e508058e512c55ff0ca2a75b9c8ac2ed1fe305de5-Lenovo-ThinkPad-USBCGen2Dock-PDFirmware-0.0.34.cab": null,
-  "2e0bf8aaf9c63ca11cfe3444d032277c21ec0d678e5963123a8b33e5dcd37d99-Lenovo-ThinkPad-USBCGen2Dock-Firmware-49-0E-14.cab": null,
+  "0790e805aa3cfaf9e08b003d7aaca0b2b9988160ef8928200b869e4820fa3963-22321116.cab": {
+    "filename": "0790e805aa3cfaf9e08b003d7aaca0b2b9988160ef8928200b869e4820fa3963-22321116.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/0790e805aa3cfaf9e08b003d7aaca0b2b9988160ef8928200b869e4820fa3963-22321116.cab",
+    "sha256": "0790e805aa3cfaf9e08b003d7aaca0b2b9988160ef8928200b869e4820fa3963",
+    "name": "0790e805aa3cfaf9e08b003d7aaca0b2b9988160ef8928200b869e4820fa3963_22321116_cab"
+  },
+  "1675d5a0f18c148df2a8b28f80de602bc0a556ff36be9004fea8e302ddf75fc5-USBC_DOCK_G5_V1.0.15.0.cab": {
+    "filename": "1675d5a0f18c148df2a8b28f80de602bc0a556ff36be9004fea8e302ddf75fc5-USBC_DOCK_G5_V1.0.15.0.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/1675d5a0f18c148df2a8b28f80de602bc0a556ff36be9004fea8e302ddf75fc5-USBC_DOCK_G5_V1.0.15.0.cab",
+    "sha256": "1675d5a0f18c148df2a8b28f80de602bc0a556ff36be9004fea8e302ddf75fc5",
+    "name": "1675d5a0f18c148df2a8b28f80de602bc0a556ff36be9004fea8e302ddf75fc5_USBC_DOCK_G5_V1_0_15_0_cab"
+  },
+  "29835d73b07590db964d796e508058e512c55ff0ca2a75b9c8ac2ed1fe305de5-Lenovo-ThinkPad-USBCGen2Dock-PDFirmware-0.0.34.cab": {
+    "filename": "29835d73b07590db964d796e508058e512c55ff0ca2a75b9c8ac2ed1fe305de5-Lenovo-ThinkPad-USBCGen2Dock-PDFirmware-0.0.34.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/29835d73b07590db964d796e508058e512c55ff0ca2a75b9c8ac2ed1fe305de5-Lenovo-ThinkPad-USBCGen2Dock-PDFirmware-0.0.34.cab",
+    "sha256": "29835d73b07590db964d796e508058e512c55ff0ca2a75b9c8ac2ed1fe305de5",
+    "name": "29835d73b07590db964d796e508058e512c55ff0ca2a75b9c8ac2ed1fe305de5_Lenovo_ThinkPad_USBCGen2Dock_PDFirmware_0_0_34_cab"
+  },
+  "2e0bf8aaf9c63ca11cfe3444d032277c21ec0d678e5963123a8b33e5dcd37d99-Lenovo-ThinkPad-USBCGen2Dock-Firmware-49-0E-14.cab": {
+    "filename": "2e0bf8aaf9c63ca11cfe3444d032277c21ec0d678e5963123a8b33e5dcd37d99-Lenovo-ThinkPad-USBCGen2Dock-Firmware-49-0E-14.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/2e0bf8aaf9c63ca11cfe3444d032277c21ec0d678e5963123a8b33e5dcd37d99-Lenovo-ThinkPad-USBCGen2Dock-Firmware-49-0E-14.cab",
+    "sha256": "2e0bf8aaf9c63ca11cfe3444d032277c21ec0d678e5963123a8b33e5dcd37d99",
+    "name": "2e0bf8aaf9c63ca11cfe3444d032277c21ec0d678e5963123a8b33e5dcd37d99_Lenovo_ThinkPad_USBCGen2Dock_Firmware_49_0E_14_cab"
+  },
   "3.9.2.tar.gz": {
     "filename": "3.9.2.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/3.9.2.tar.gz",
     "sha256": "2de00c65e23fa9d7909cae6594e550b9abe9a7eb1553669ddeaca92d30f97009",
     "name": "3_9_2_tar_gz"
   },
-  "52c0c472993a5d03282efdd1b35d683c60beff4b68fdf9daaa71eadd8d8fbf54-Hynix_BC711_SSD_FW_41002131.cab": null,
-  "532a9ebf8ae2c8d5621efd44cc1cc30475a633760a1f42ce0fbe8de269289983-21113012_ID2409.cab": null,
-  "6df8d0ba1d36b3c9e017a47373c5e84f93090f80d582d7b62d1f5da0c52a5242-SN730-11121012-v1.cab": null,
-  "7239756ad0ad9c084f820c0a94de33b4e3160dbdb1dde97ea83a68c506c5f298-Thunderbolt_Dock_G4_V1.3.12.0.cab": null,
-  "7649776aa1c1e98ca4ae99b05368135078960f1f381890532336f6229e0dc9ad-22301116.cab": null,
-  "7ce04b003b45e9c6f612a5525b54fe51e81f205d36778b94d8db0b99c4df6fd3-Hynix_BC511_SSD_FW_11004101.cab": null,
+  "52c0c472993a5d03282efdd1b35d683c60beff4b68fdf9daaa71eadd8d8fbf54-Hynix_BC711_SSD_FW_41002131.cab": {
+    "filename": "52c0c472993a5d03282efdd1b35d683c60beff4b68fdf9daaa71eadd8d8fbf54-Hynix_BC711_SSD_FW_41002131.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/52c0c472993a5d03282efdd1b35d683c60beff4b68fdf9daaa71eadd8d8fbf54-Hynix_BC711_SSD_FW_41002131.cab",
+    "sha256": "52c0c472993a5d03282efdd1b35d683c60beff4b68fdf9daaa71eadd8d8fbf54",
+    "name": "52c0c472993a5d03282efdd1b35d683c60beff4b68fdf9daaa71eadd8d8fbf54_Hynix_BC711_SSD_FW_41002131_cab"
+  },
+  "532a9ebf8ae2c8d5621efd44cc1cc30475a633760a1f42ce0fbe8de269289983-21113012_ID2409.cab": {
+    "filename": "532a9ebf8ae2c8d5621efd44cc1cc30475a633760a1f42ce0fbe8de269289983-21113012_ID2409.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/532a9ebf8ae2c8d5621efd44cc1cc30475a633760a1f42ce0fbe8de269289983-21113012_ID2409.cab",
+    "sha256": "532a9ebf8ae2c8d5621efd44cc1cc30475a633760a1f42ce0fbe8de269289983",
+    "name": "532a9ebf8ae2c8d5621efd44cc1cc30475a633760a1f42ce0fbe8de269289983_21113012_ID2409_cab"
+  },
+  "6df8d0ba1d36b3c9e017a47373c5e84f93090f80d582d7b62d1f5da0c52a5242-SN730-11121012-v1.cab": {
+    "filename": "6df8d0ba1d36b3c9e017a47373c5e84f93090f80d582d7b62d1f5da0c52a5242-SN730-11121012-v1.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/6df8d0ba1d36b3c9e017a47373c5e84f93090f80d582d7b62d1f5da0c52a5242-SN730-11121012-v1.cab",
+    "sha256": "6df8d0ba1d36b3c9e017a47373c5e84f93090f80d582d7b62d1f5da0c52a5242",
+    "name": "6df8d0ba1d36b3c9e017a47373c5e84f93090f80d582d7b62d1f5da0c52a5242_SN730_11121012_v1_cab"
+  },
+  "7239756ad0ad9c084f820c0a94de33b4e3160dbdb1dde97ea83a68c506c5f298-Thunderbolt_Dock_G4_V1.3.12.0.cab": {
+    "filename": "7239756ad0ad9c084f820c0a94de33b4e3160dbdb1dde97ea83a68c506c5f298-Thunderbolt_Dock_G4_V1.3.12.0.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/7239756ad0ad9c084f820c0a94de33b4e3160dbdb1dde97ea83a68c506c5f298-Thunderbolt_Dock_G4_V1.3.12.0.cab",
+    "sha256": "7239756ad0ad9c084f820c0a94de33b4e3160dbdb1dde97ea83a68c506c5f298",
+    "name": "7239756ad0ad9c084f820c0a94de33b4e3160dbdb1dde97ea83a68c506c5f298_Thunderbolt_Dock_G4_V1_3_12_0_cab"
+  },
+  "7649776aa1c1e98ca4ae99b05368135078960f1f381890532336f6229e0dc9ad-22301116.cab": {
+    "filename": "7649776aa1c1e98ca4ae99b05368135078960f1f381890532336f6229e0dc9ad-22301116.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/7649776aa1c1e98ca4ae99b05368135078960f1f381890532336f6229e0dc9ad-22301116.cab",
+    "sha256": "7649776aa1c1e98ca4ae99b05368135078960f1f381890532336f6229e0dc9ad",
+    "name": "7649776aa1c1e98ca4ae99b05368135078960f1f381890532336f6229e0dc9ad_22301116_cab"
+  },
+  "7ce04b003b45e9c6f612a5525b54fe51e81f205d36778b94d8db0b99c4df6fd3-Hynix_BC511_SSD_FW_11004101.cab": {
+    "filename": "7ce04b003b45e9c6f612a5525b54fe51e81f205d36778b94d8db0b99c4df6fd3-Hynix_BC511_SSD_FW_11004101.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/7ce04b003b45e9c6f612a5525b54fe51e81f205d36778b94d8db0b99c4df6fd3-Hynix_BC511_SSD_FW_11004101.cab",
+    "sha256": "7ce04b003b45e9c6f612a5525b54fe51e81f205d36778b94d8db0b99c4df6fd3",
+    "name": "7ce04b003b45e9c6f612a5525b54fe51e81f205d36778b94d8db0b99c4df6fd3_Hynix_BC511_SSD_FW_11004101_cab"
+  },
   "9950c7162ef41c770bca803b5455bd7bd82c9820b4ca2075bdf5bce4ac91a895-Lenovo-Mini_Dock-2020-10-29-155326_release.cab": {
     "filename": "9950c7162ef41c770bca803b5455bd7bd82c9820b4ca2075bdf5bce4ac91a895-Lenovo-Mini_Dock-2020-10-29-155326_release.cab",
     "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/9950c7162ef41c770bca803b5455bd7bd82c9820b4ca2075bdf5bce4ac91a895-Lenovo-Mini_Dock-2020-10-29-155326_release.cab",
     "sha256": "994fcaae0dbd8458de3d67ebc713a826bc4610035cdb8dee25c8a833a43eb4dd",
     "name": "9950c7162ef41c770bca803b5455bd7bd82c9820b4ca2075bdf5bce4ac91a895_Lenovo_Mini_Dock_2020_10_29_155326_release_cab"
   },
-  "9a13f9fefa59ae42c06e9861dc20a0e53e35d471c6a1c05d6426a011b0fada30-Lenovo-ThinkPad-USBCGen2Dock-USBHUB-Firmware-0D23_7a216856-8a97-550c-882e-8233751c7cf2.cab": null,
-  "9ed8e3c35835daaea253844c678a525f1f71d02f81050763d74920283eb6eadb-Hynix_BC501A_SSD_FW_80002101.cab": null,
+  "9a13f9fefa59ae42c06e9861dc20a0e53e35d471c6a1c05d6426a011b0fada30-Lenovo-ThinkPad-USBCGen2Dock-USBHUB-Firmware-0D23_7a216856-8a97-550c-882e-8233751c7cf2.cab": {
+    "filename": "9a13f9fefa59ae42c06e9861dc20a0e53e35d471c6a1c05d6426a011b0fada30-Lenovo-ThinkPad-USBCGen2Dock-USBHUB-Firmware-0D23_7a216856-8a97-550c-882e-8233751c7cf2.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/9a13f9fefa59ae42c06e9861dc20a0e53e35d471c6a1c05d6426a011b0fada30-Lenovo-ThinkPad-USBCGen2Dock-USBHUB-Firmware-0D23_7a216856-8a97-550c-882e-8233751c7cf2.cab",
+    "sha256": "9a13f9fefa59ae42c06e9861dc20a0e53e35d471c6a1c05d6426a011b0fada30",
+    "name": "9a13f9fefa59ae42c06e9861dc20a0e53e35d471c6a1c05d6426a011b0fada30_Lenovo_ThinkPad_USBCGen2Dock_USBHUB_Firmware_0D23_7a216856_8a97_550c_882e_8233751c7cf2_cab"
+  },
+  "9ed8e3c35835daaea253844c678a525f1f71d02f81050763d74920283eb6eadb-Hynix_BC501A_SSD_FW_80002101.cab": {
+    "filename": "9ed8e3c35835daaea253844c678a525f1f71d02f81050763d74920283eb6eadb-Hynix_BC501A_SSD_FW_80002101.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/9ed8e3c35835daaea253844c678a525f1f71d02f81050763d74920283eb6eadb-Hynix_BC501A_SSD_FW_80002101.cab",
+    "sha256": "9ed8e3c35835daaea253844c678a525f1f71d02f81050763d74920283eb6eadb",
+    "name": "9ed8e3c35835daaea253844c678a525f1f71d02f81050763d74920283eb6eadb_Hynix_BC501A_SSD_FW_80002101_cab"
+  },
   "ARM_NEON_2_x86_SSE-1200fe90bb174a6224a525ee60148671a786a71f.tar.gz": {
     "filename": "ARM_NEON_2_x86_SSE-1200fe90bb174a6224a525ee60148671a786a71f.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/ARM_NEON_2_x86_SSE-1200fe90bb174a6224a525ee60148671a786a71f.tar.gz",
@@ -733,7 +803,12 @@
     "sha256": "5c6e9b3d9e558fc428d8b8710da49ff3bcb9fb606decb63c24816da01c9f8b4d",
     "name": "YAML_Tiny_1_51_tar_gz"
   },
-  "a7ec6fb710d020ab2589e67935c83f507908ecce32ada5e8a773df02518efed6-DellDockFirmwareUpdateLinux_01.00.09.cab": null,
+  "a7ec6fb710d020ab2589e67935c83f507908ecce32ada5e8a773df02518efed6-DellDockFirmwareUpdateLinux_01.00.09.cab": {
+    "filename": "a7ec6fb710d020ab2589e67935c83f507908ecce32ada5e8a773df02518efed6-DellDockFirmwareUpdateLinux_01.00.09.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/a7ec6fb710d020ab2589e67935c83f507908ecce32ada5e8a773df02518efed6-DellDockFirmwareUpdateLinux_01.00.09.cab",
+    "sha256": "a7ec6fb710d020ab2589e67935c83f507908ecce32ada5e8a773df02518efed6",
+    "name": "a7ec6fb710d020ab2589e67935c83f507908ecce32ada5e8a773df02518efed6_DellDockFirmwareUpdateLinux_01_00_09_cab"
+  },
   "aapt-0.0.1.tbz2": {
     "filename": "aapt-0.0.1.tbz2",
     "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/aapt-0.0.1.tbz2",
@@ -771,7 +846,12 @@
     "sha256": "35f22ef5cb286f09954b7cc4c85b5a3f6221c9d4df6b8c4a1e9d399555b366ee",
     "name": "abseil_cpp_997aaf3a28308eba1b9156aa35ab7bca9688e9f6_tar_gz"
   },
-  "ac37f23af002e91df11094b08fd2e076cf9c8cb4f08930be8eefe35850097a60-Lenovo-ThinkPad-USBCGen2Dock-DP-Firmware-5.05.00.cab": null,
+  "ac37f23af002e91df11094b08fd2e076cf9c8cb4f08930be8eefe35850097a60-Lenovo-ThinkPad-USBCGen2Dock-DP-Firmware-5.05.00.cab": {
+    "filename": "ac37f23af002e91df11094b08fd2e076cf9c8cb4f08930be8eefe35850097a60-Lenovo-ThinkPad-USBCGen2Dock-DP-Firmware-5.05.00.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/ac37f23af002e91df11094b08fd2e076cf9c8cb4f08930be8eefe35850097a60-Lenovo-ThinkPad-USBCGen2Dock-DP-Firmware-5.05.00.cab",
+    "sha256": "ac37f23af002e91df11094b08fd2e076cf9c8cb4f08930be8eefe35850097a60",
+    "name": "ac37f23af002e91df11094b08fd2e076cf9c8cb4f08930be8eefe35850097a60_Lenovo_ThinkPad_USBCGen2Dock_DP_Firmware_5_05_00_cab"
+  },
   "acl-2.3.1.tar.gz": {
     "filename": "acl-2.3.1.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/acl-2.3.1.tar.gz",
@@ -820,7 +900,12 @@
     "sha256": "aae1277d39aeec15cb388266ecc24b11c80469deae6067e17a1a7aa9e5c1f234",
     "name": "adler32_1_2_0_crate"
   },
-  "ae2a45818043417ec1bb5e84abd2d1737e2c8d351158fd437413b67df69a71ed-Vulcan_73103012.cab": null,
+  "ae2a45818043417ec1bb5e84abd2d1737e2c8d351158fd437413b67df69a71ed-Vulcan_73103012.cab": {
+    "filename": "ae2a45818043417ec1bb5e84abd2d1737e2c8d351158fd437413b67df69a71ed-Vulcan_73103012.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/ae2a45818043417ec1bb5e84abd2d1737e2c8d351158fd437413b67df69a71ed-Vulcan_73103012.cab",
+    "sha256": "ae2a45818043417ec1bb5e84abd2d1737e2c8d351158fd437413b67df69a71ed",
+    "name": "ae2a45818043417ec1bb5e84abd2d1737e2c8d351158fd437413b67df69a71ed_Vulcan_73103012_cab"
+  },
   "afr.traineddata-tessdata_fast-4.0.0": {
     "filename": "afr.traineddata-tessdata_fast-4.0.0",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/afr.traineddata-tessdata_fast-4.0.0",
@@ -1639,8 +1724,18 @@
     "sha256": "2e96ab67817819e14a3a2d6250261130457c8e78dde3077841ab391fe003551c",
     "name": "aze_cyrl_traineddata_tessdata_fast_4_0_0"
   },
-  "b0b7f76ecf892c42736a7360ccb9571f784382e641bb5451b35166be2182bc91-Hynix_PC601_SSD_FW_80002111.cab": null,
-  "b2e40ddbac04d05baafbb007f203c6663c9d4ca9": null,
+  "b0b7f76ecf892c42736a7360ccb9571f784382e641bb5451b35166be2182bc91-Hynix_PC601_SSD_FW_80002111.cab": {
+    "filename": "b0b7f76ecf892c42736a7360ccb9571f784382e641bb5451b35166be2182bc91-Hynix_PC601_SSD_FW_80002111.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/b0b7f76ecf892c42736a7360ccb9571f784382e641bb5451b35166be2182bc91-Hynix_PC601_SSD_FW_80002111.cab",
+    "sha256": "b0b7f76ecf892c42736a7360ccb9571f784382e641bb5451b35166be2182bc91",
+    "name": "b0b7f76ecf892c42736a7360ccb9571f784382e641bb5451b35166be2182bc91_Hynix_PC601_SSD_FW_80002111_cab"
+  },
+  "b2e40ddbac04d05baafbb007f203c6663c9d4ca9": {
+    "filename": "b2e40ddbac04d05baafbb007f203c6663c9d4ca9",
+    "url": "https://storage.googleapis.com/chromium-nodejs/14.15.4/b2e40ddbac04d05baafbb007f203c6663c9d4ca9",
+    "sha256": "5aa88f1e2bf036950790277f3431634f64044ec78362f3e4f0dc8da28d61e9a4",
+    "name": "b2e40ddbac04d05baafbb007f203c6663c9d4ca9"
+  },
   "backports-1.0.tar.gz": {
     "filename": "backports-1.0.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/backports-1.0.tar.gz",
@@ -6744,7 +6839,12 @@
     "sha256": "c1a06b5ae2cbddb6f04d070e889b8bebf87015b8585889999452ce9846122edf",
     "name": "e2tools_0_1_0_tar_gz"
   },
-  "e74dffeb31030b01d8ce0299240e496641deac2fb069b153af8a5bdfcf3ef805-SN520-20240012-v1.cab": null,
+  "e74dffeb31030b01d8ce0299240e496641deac2fb069b153af8a5bdfcf3ef805-SN520-20240012-v1.cab": {
+    "filename": "e74dffeb31030b01d8ce0299240e496641deac2fb069b153af8a5bdfcf3ef805-SN520-20240012-v1.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/e74dffeb31030b01d8ce0299240e496641deac2fb069b153af8a5bdfcf3ef805-SN520-20240012-v1.cab",
+    "sha256": "e74dffeb31030b01d8ce0299240e496641deac2fb069b153af8a5bdfcf3ef805",
+    "name": "e74dffeb31030b01d8ce0299240e496641deac2fb069b153af8a5bdfcf3ef805_SN520_20240012_v1_cab"
+  },
   "ebfda3c96543d6d7ad97a972344f4d34a14549c535095bfbb1860115a88e6ff6-Lenovo-TravalHub-2020-12-11-153442.cab": {
     "filename": "ebfda3c96543d6d7ad97a972344f4d34a14549c535095bfbb1860115a88e6ff6-Lenovo-TravalHub-2020-12-11-153442.cab",
     "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/ebfda3c96543d6d7ad97a972344f4d34a14549c535095bfbb1860115a88e6ff6-Lenovo-TravalHub-2020-12-11-153442.cab",
@@ -6787,7 +6887,12 @@
     "sha256": "5f6a3ea8c2c531479c7a3b1b206b243798c557b6f1115a41e56398eb16242ffb",
     "name": "ed25519_compact_1_0_2_crate"
   },
-  "ed7ddca0c1b983a9f2f8269de7abed89492bfadba04734568f02227e42553950-Samsung_PM991a_SSD_FW_26300039.cab": null,
+  "ed7ddca0c1b983a9f2f8269de7abed89492bfadba04734568f02227e42553950-Samsung_PM991a_SSD_FW_26300039.cab": {
+    "filename": "ed7ddca0c1b983a9f2f8269de7abed89492bfadba04734568f02227e42553950-Samsung_PM991a_SSD_FW_26300039.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/ed7ddca0c1b983a9f2f8269de7abed89492bfadba04734568f02227e42553950-Samsung_PM991a_SSD_FW_26300039.cab",
+    "sha256": "ed7ddca0c1b983a9f2f8269de7abed89492bfadba04734568f02227e42553950",
+    "name": "ed7ddca0c1b983a9f2f8269de7abed89492bfadba04734568f02227e42553950_Samsung_PM991a_SSD_FW_26300039_cab"
+  },
   "edid-decode-20210514.tar.gz": {
     "filename": "edid-decode-20210514.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/edid-decode-20210514.tar.gz",
@@ -7310,8 +7415,18 @@
     "sha256": "132e36de10b9c91d5d4cc620160a476e0468a88f16c9431817a6729611a81b4e",
     "name": "extras_1_0_0_tar_gz"
   },
-  "f0ac0e20299c3cddd028d63149fce39b7a152c69d1819d20011c745d6c975cd8-25301111.cab": null,
-  "f241ce8c26d83546d5bfd1d67b70b9324f32ea4790acebb2a5e7d5a071eaaa85-Lenovo-ThinkPad-USBCGen2Dock-USBHUBQ7-Firmware-0D24_4ec36768-1858-5e9b-9d35-40e6143c3cd4.cab": null,
+  "f0ac0e20299c3cddd028d63149fce39b7a152c69d1819d20011c745d6c975cd8-25301111.cab": {
+    "filename": "f0ac0e20299c3cddd028d63149fce39b7a152c69d1819d20011c745d6c975cd8-25301111.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/f0ac0e20299c3cddd028d63149fce39b7a152c69d1819d20011c745d6c975cd8-25301111.cab",
+    "sha256": "f0ac0e20299c3cddd028d63149fce39b7a152c69d1819d20011c745d6c975cd8",
+    "name": "f0ac0e20299c3cddd028d63149fce39b7a152c69d1819d20011c745d6c975cd8_25301111_cab"
+  },
+  "f241ce8c26d83546d5bfd1d67b70b9324f32ea4790acebb2a5e7d5a071eaaa85-Lenovo-ThinkPad-USBCGen2Dock-USBHUBQ7-Firmware-0D24_4ec36768-1858-5e9b-9d35-40e6143c3cd4.cab": {
+    "filename": "f241ce8c26d83546d5bfd1d67b70b9324f32ea4790acebb2a5e7d5a071eaaa85-Lenovo-ThinkPad-USBCGen2Dock-USBHUBQ7-Firmware-0D24_4ec36768-1858-5e9b-9d35-40e6143c3cd4.cab",
+    "url": "https://commondatastorage.googleapis.com/chromeos-localmirror/lvfs/f241ce8c26d83546d5bfd1d67b70b9324f32ea4790acebb2a5e7d5a071eaaa85-Lenovo-ThinkPad-USBCGen2Dock-USBHUBQ7-Firmware-0D24_4ec36768-1858-5e9b-9d35-40e6143c3cd4.cab",
+    "sha256": "f241ce8c26d83546d5bfd1d67b70b9324f32ea4790acebb2a5e7d5a071eaaa85",
+    "name": "f241ce8c26d83546d5bfd1d67b70b9324f32ea4790acebb2a5e7d5a071eaaa85_Lenovo_ThinkPad_USBCGen2Dock_USBHUBQ7_Firmware_0D24_4ec36768_1858_5e9b_9d35_40e6143c3cd4_cab"
+  },
   "f2fs-tools-1.12.0.tar.gz": {
     "filename": "f2fs-tools-1.12.0.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/f2fs-tools-1.12.0.tar.gz",
@@ -7636,7 +7751,12 @@
     "sha256": "91dde8492155b7f34bb95079e79be92f1df353fcc682c19be90762fd3e12eeb9",
     "name": "fontconfig_2_13_0_tar_bz2"
   },
-  "fonts-d6dc5eaf459abd058cd3aef1e25963fde893f9d87f5f55f340431697ce4b3506.tar.xz": null,
+  "fonts-d6dc5eaf459abd058cd3aef1e25963fde893f9d87f5f55f340431697ce4b3506.tar.xz": {
+    "filename": "fonts-d6dc5eaf459abd058cd3aef1e25963fde893f9d87f5f55f340431697ce4b3506.tar.xz",
+    "url": "https://storage.googleapis.com/chromeos-localmirror/secureshell/distfiles/fonts-d6dc5eaf459abd058cd3aef1e25963fde893f9d87f5f55f340431697ce4b3506.tar.xz",
+    "sha256": "d6dc5eaf459abd058cd3aef1e25963fde893f9d87f5f55f340431697ce4b3506",
+    "name": "fonts_d6dc5eaf459abd058cd3aef1e25963fde893f9d87f5f55f340431697ce4b3506_tar_xz"
+  },
   "foomatic-db-4.0-20140105.tar.gz": {
     "filename": "foomatic-db-4.0-20140105.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/foomatic-db-4.0-20140105.tar.gz",
@@ -13995,8 +14115,18 @@
     "sha256": "f458cd0b1cb1540611cb08709d833c0c59c74da79310ae1984cc8bad1404ad5e",
     "name": "node_v14_17_6_tar_xz"
   },
-  "node_modules-70ab4f912a599b4d3e01dc6548243857a812d0b858e4d2ea6bdfd036357ee0c9.tar.xz": null,
-  "node_modules-a283a3aff1efc03e00839053da780d03398d2639c8e12ce8c0fa5b678aa8ffe4.tar.xz": null,
+  "node_modules-70ab4f912a599b4d3e01dc6548243857a812d0b858e4d2ea6bdfd036357ee0c9.tar.xz": {
+    "filename": "node_modules-70ab4f912a599b4d3e01dc6548243857a812d0b858e4d2ea6bdfd036357ee0c9.tar.xz",
+    "url": "https://storage.googleapis.com/chromeos-localmirror/secureshell/distfiles/node_modules-70ab4f912a599b4d3e01dc6548243857a812d0b858e4d2ea6bdfd036357ee0c9.tar.xz",
+    "sha256": "70ab4f912a599b4d3e01dc6548243857a812d0b858e4d2ea6bdfd036357ee0c9",
+    "name": "node_modules_70ab4f912a599b4d3e01dc6548243857a812d0b858e4d2ea6bdfd036357ee0c9_tar_xz"
+  },
+  "node_modules-a283a3aff1efc03e00839053da780d03398d2639c8e12ce8c0fa5b678aa8ffe4.tar.xz": {
+    "filename": "node_modules-a283a3aff1efc03e00839053da780d03398d2639c8e12ce8c0fa5b678aa8ffe4.tar.xz",
+    "url": "https://storage.googleapis.com/chromeos-localmirror/secureshell/distfiles/node_modules-a283a3aff1efc03e00839053da780d03398d2639c8e12ce8c0fa5b678aa8ffe4.tar.xz",
+    "sha256": "a283a3aff1efc03e00839053da780d03398d2639c8e12ce8c0fa5b678aa8ffe4",
+    "name": "node_modules_a283a3aff1efc03e00839053da780d03398d2639c8e12ce8c0fa5b678aa8ffe4_tar_xz"
+  },
   "nom-3.2.1.crate": {
     "filename": "nom-3.2.1.crate",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/nom-3.2.1.crate",

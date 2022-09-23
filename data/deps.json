@@ -3319,7 +3319,9 @@
   },
   "chromeos-base/sample-dlc": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "@chromite//:src"
+    ],
     "runtimeDeps": []
   },
   "chromeos-base/secanomalyd": {
@@ -4083,7 +4085,9 @@
   },
   "chromeos-languagepacks/tts-es-us": {
     "buildDeps": [],
-    "localSrc": [],
+    "localSrc": [
+      "@chromite//:src"
+    ],
     "runtimeDeps": []
   },
   "dev-cpp/abseil-cpp": {

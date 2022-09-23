@@ -56,6 +56,8 @@ var (
 	additionalSrcPackages = map[string][]string {
 		"app-accessibility/pumpkin": []string{"@chromite//:src"},
 		"chromeos-base/libchrome": []string{"@chromite//:src"},
+		"chromeos-languagepacks/tts-es-us": []string{"@chromite//:src"},
+		"chromeos-base/sample-dlc": []string{"@chromite//:src"},
 		"dev-libs/modp_b64": []string{"@chromite//:src"},
 		"media-sound/sr-bt-dlc": []string{"@chromite//:src"},
 	}
