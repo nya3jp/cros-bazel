@@ -75,8 +75,6 @@ func isRustSrcPackage(pkg *packages.Package) bool {
 }
 
 func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName string) *dependency.Deps {
-	isRust := strings.HasPrefix(packageName, "dev-rust/")
-
 	deps = dependency.ResolveUse(deps, use)
 
 	// Rewrite package atoms.
@@ -93,17 +91,22 @@ func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName st
 			return dependency.ConstTrue
 		}
 
+		// So we have circular dependencies in the rust graph. See:
+		// * src/third_party/chromiumos-overlay/dev-rust/futures-util/futures-util-0.3.13.ebuild
+		// * src/third_party/chromiumos-overlay/dev-rust/hashbrown/hashbrown-0.11.2.ebuild
+		// In order to break it there is an empty package that is used to break the deps. Since
+		// the package is empty we can get away with just dropping the dependency.
+		if pkg.Atom().String() == "~dev-rust/tokio-io-0.1.9" ||
+				pkg.Atom().String() ==  "~dev-rust/ahash-0.7.0:=" {
+			return dependency.ConstTrue
+		}
+
 		// Rewrite known packages.
 		if _, installed := knownInstalledPackages[packageName]; installed {
 			return dependency.ConstTrue
 		}
 		if _, missing := knownMissingPackages[packageName]; missing {
 			return dependency.ConstFalse
-		}
-
-		// Heuristic: ~ deps in Rust packages can be dropped.
-		if isRust && pkg.Atom().VersionOperator() == dependency.OpRoughEqual {
-			return dependency.ConstTrue
 		}
 
 		// Strip modifiers.
@@ -265,7 +268,7 @@ func computeSrcPackages(category string, project string, localName string, subtr
 			var newPaths = []string{}
 
 			for _, path := range paths {
-				if path == "platform/vboot_reference" || path == "third_party/coreboot"  {
+				if path == "platform/vboot_reference" || path == "third_party/coreboot" {
 					// coreboot-utils maps a lot of different sub folders.
 					// TODO: Do we want to support such fine granularity?
 					newPaths = append(newPaths, path)

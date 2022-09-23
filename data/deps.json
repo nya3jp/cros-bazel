@@ -5337,6 +5337,7 @@
       "dev-rust/atty",
       "dev-rust/backtrace",
       "dev-rust/bitflags",
+      "dev-rust/clap_derive",
       "dev-rust/clap_lex",
       "dev-rust/indexmap",
       "dev-rust/lazy_static",
@@ -5353,6 +5354,7 @@
       "dev-rust/atty",
       "dev-rust/backtrace",
       "dev-rust/bitflags",
+      "dev-rust/clap_derive",
       "dev-rust/clap_lex",
       "dev-rust/indexmap",
       "dev-rust/lazy_static",
@@ -5363,6 +5365,23 @@
       "dev-rust/textwrap",
       "dev-rust/unicase",
       "dev-rust/yaml-rust"
+    ]
+  },
+  "dev-rust/clap_derive": {
+    "buildDeps": [
+      "dev-rust/heck",
+      "dev-rust/proc-macro-error",
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-rust/heck",
+      "dev-rust/proc-macro-error",
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
     ]
   },
   "dev-rust/clap_lex": {
@@ -5448,11 +5467,26 @@
   },
   "dev-rust/cortex-m-rt": {
     "buildDeps": [
+      "dev-rust/cortex-m-rt-macros",
       "dev-rust/r0"
     ],
     "localSrc": [],
     "runtimeDeps": [
+      "dev-rust/cortex-m-rt-macros",
       "dev-rust/r0"
+    ]
+  },
+  "dev-rust/cortex-m-rt-macros": {
+    "buildDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
     ]
   },
   "dev-rust/cortex-m-rtic": {
@@ -5719,16 +5753,23 @@
   },
   "dev-rust/defmt-macros": {
     "buildDeps": [
+      "dev-rust/defmt-parser",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn"
     ],
     "localSrc": [],
     "runtimeDeps": [
+      "dev-rust/defmt-parser",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn"
     ]
+  },
+  "dev-rust/defmt-parser": {
+    "buildDeps": [],
+    "localSrc": [],
+    "runtimeDeps": []
   },
   "dev-rust/defmt-rtt": {
     "buildDeps": [
@@ -6220,6 +6261,15 @@
     "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": []
+  },
+  "dev-rust/heck": {
+    "buildDeps": [
+      "dev-rust/unicode-segmentation"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-rust/unicode-segmentation"
+    ]
   },
   "dev-rust/hermit-abi": {
     "buildDeps": [],
@@ -7163,6 +7213,7 @@
   },
   "dev-rust/proc-macro-error": {
     "buildDeps": [
+      "dev-rust/proc-macro-error-attr",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
@@ -7170,9 +7221,23 @@
     ],
     "localSrc": [],
     "runtimeDeps": [
+      "dev-rust/proc-macro-error-attr",
       "dev-rust/proc-macro2",
       "dev-rust/quote",
       "dev-rust/syn",
+      "dev-rust/version_check"
+    ]
+  },
+  "dev-rust/proc-macro-error-attr": {
+    "buildDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/version_check"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
       "dev-rust/version_check"
     ]
   },
@@ -7208,12 +7273,38 @@
       "dev-rust/serde_derive"
     ]
   },
+  "dev-rust/protobuf-codegen": {
+    "buildDeps": [
+      "dev-rust/protobuf"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-rust/protobuf"
+    ]
+  },
+  "dev-rust/protoc": {
+    "buildDeps": [
+      "dev-rust/log",
+      "dev-rust/which"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-rust/log",
+      "dev-rust/which"
+    ]
+  },
   "dev-rust/protoc-rust": {
     "buildDeps": [
+      "dev-rust/protobuf",
+      "dev-rust/protobuf-codegen",
+      "dev-rust/protoc",
       "dev-rust/tempfile"
     ],
     "localSrc": [],
     "runtimeDeps": [
+      "dev-rust/protobuf",
+      "dev-rust/protobuf-codegen",
+      "dev-rust/protoc",
       "dev-rust/tempfile"
     ]
   },
@@ -7612,9 +7703,13 @@
     ]
   },
   "dev-rust/serde": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-rust/serde_derive"
+    ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/serde_derive"
+    ]
   },
   "dev-rust/serde_bytes": {
     "buildDeps": [
@@ -8073,9 +8168,26 @@
     ]
   },
   "dev-rust/thiserror": {
-    "buildDeps": [],
+    "buildDeps": [
+      "dev-rust/thiserror-impl"
+    ],
     "localSrc": [],
-    "runtimeDeps": []
+    "runtimeDeps": [
+      "dev-rust/thiserror-impl"
+    ]
+  },
+  "dev-rust/thiserror-impl": {
+    "buildDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-rust/proc-macro2",
+      "dev-rust/quote",
+      "dev-rust/syn"
+    ]
   },
   "dev-rust/thread-id": {
     "buildDeps": [],
@@ -8105,7 +8217,8 @@
       "dev-rust/num_threads",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "dev-rust/time-macros"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -8114,8 +8227,14 @@
       "dev-rust/num_threads",
       "dev-rust/quickcheck",
       "dev-rust/rand",
-      "dev-rust/serde"
+      "dev-rust/serde",
+      "dev-rust/time-macros"
     ]
+  },
+  "dev-rust/time-macros": {
+    "buildDeps": [],
+    "localSrc": [],
+    "runtimeDeps": []
   },
   "dev-rust/tiny_http": {
     "buildDeps": [
