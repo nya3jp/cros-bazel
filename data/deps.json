@@ -10250,8 +10250,7 @@
       "dev-util/cmocka"
     ],
     "localSrc": [
-      "//platform/mosys:src",
-      "//platform2/common-mk:src"
+      "//platform/mosys:src"
     ],
     "runtimeDeps": [
       "chromeos-base/minijail",

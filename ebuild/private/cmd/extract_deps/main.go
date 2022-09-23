@@ -324,6 +324,13 @@ func computeSrcPackages(pkg *packages.Package, project string, localName string,
 			path = "platform/crosvm-sys_util_core"
 		}
 
+		if pkg.Name() == "sys-apps/mosys" && path == "platform2/common-mk" {
+			// Mosys calls some unsupported qemu testing code in common-mk.
+			// Instead of pulling this in, use the stubbed out version in the
+			// sdk.
+			continue
+		}
+
 		if previousPath == path {
 			// Some packages contain duplicate paths
 			continue
