@@ -60,9 +60,9 @@ func (p *Package) UsesEclass(eclass string) bool {
 	eclasses := strings.Split(p.vars["USED_ECLASSES"], "|")
 	for _, used_eclass := range eclasses {
 		if used_eclass == eclass {
-			return true;
+			return true
 		}
 	}
 
-	return false;
+	return false
 }

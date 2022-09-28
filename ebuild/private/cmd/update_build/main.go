@@ -51,13 +51,12 @@ var distBaseURLs = []string{
 	"https://storage.googleapis.com/chromeos-localmirror/secureshell/releases/",
 	"https://storage.googleapis.com/chromium-nodejs/14.15.4/",
 	"https://storage.googleapis.com/chromium-nodejs/16.13.0",
-
 }
 
 // The following packages don't exist in the mirrors above, but instead
 // need to be pulled from the SRC_URI. We should probably mirror these so our
 // build isn't dependent on external hosts.
-var manualDistfileMap = map[string]string {
+var manualDistfileMap = map[string]string{
 	"iproute2-5.16.0.tar.gz": "http://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.gz",
 }
 
@@ -369,8 +368,8 @@ var app = &cli.App{
 						}
 						// TODO: Remove this hack.
 						if name == "ncurses-5.9-r99.ebuild" ||
-								// There are no 9999 lacros distfiles
-								name == "chromeos-lacros-9999.ebuild" {
+							// There are no 9999 lacros distfiles
+							name == "chromeos-lacros-9999.ebuild" {
 							continue
 						}
 						_, ver, err := version.ExtractSuffix(strings.TrimSuffix(name, ebuildExt))
@@ -383,11 +382,11 @@ var app = &cli.App{
 						}
 						if info, err := fi.Info(); err == nil {
 							// Skip the revbump symlinks
-							if info.Mode() & fs.ModeSymlink == 0 {
+							if info.Mode()&fs.ModeSymlink == 0 {
 								allVersions = append(allVersions, ver)
 							}
 						} else {
-							return err;
+							return err
 						}
 					}
 					if bestName == "" {
@@ -461,7 +460,7 @@ var app = &cli.App{
 
 					if err := generateBuild(buildPath, func(f *os.File) error {
 						if err := buildHeaderTemplate.Execute(f, nil); err != nil {
-							return err;
+							return err
 						}
 
 						var targetNames []string
@@ -474,7 +473,7 @@ var app = &cli.App{
 								localPackageName = packageName
 							} else {
 								localPackageName = fmt.Sprintf("%s-%s", packageName, ver)
-								targetNames = append(targetNames, ":" + localPackageName)
+								targetNames = append(targetNames, ":"+localPackageName)
 							}
 
 							ebuild := &ebuildInfo{
@@ -486,21 +485,21 @@ var app = &cli.App{
 							}
 
 							if err := ebuildTemplate.Execute(f, ebuild); err != nil {
-								return err;
+								return err
 							}
 						}
 
 						if len(targetNames) > 0 {
 							packageGroup := packageGroup{
 								PackageName: packageName,
-								Packages: targetNames,
+								Packages:    targetNames,
 							}
 							if err := packageGroupTemplate.Execute(f, packageGroup); err != nil {
-								return err;
+								return err
 							}
 						}
 
-						return nil;
+						return nil
 					}); err != nil {
 						return err
 					}

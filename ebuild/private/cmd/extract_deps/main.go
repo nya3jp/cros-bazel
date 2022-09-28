@@ -53,13 +53,13 @@ var (
 		"virtual/tmpfiles":              {"sys-apps/systemd-tmpfiles"},
 		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
 	}
-	additionalSrcPackages = map[string][]string {
-		"app-accessibility/pumpkin": []string{"@chromite//:src"},
-		"chromeos-base/libchrome": []string{"@chromite//:src"},
+	additionalSrcPackages = map[string][]string{
+		"app-accessibility/pumpkin":        []string{"@chromite//:src"},
+		"chromeos-base/libchrome":          []string{"@chromite//:src"},
 		"chromeos-languagepacks/tts-es-us": []string{"@chromite//:src"},
-		"chromeos-base/sample-dlc": []string{"@chromite//:src"},
-		"dev-libs/modp_b64": []string{"@chromite//:src"},
-		"media-sound/sr-bt-dlc": []string{"@chromite//:src"},
+		"chromeos-base/sample-dlc":         []string{"@chromite//:src"},
+		"dev-libs/modp_b64":                []string{"@chromite//:src"},
+		"media-sound/sr-bt-dlc":            []string{"@chromite//:src"},
 	}
 )
 
@@ -105,7 +105,7 @@ func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName st
 		// In order to break it there is an empty package that is used to break the deps. Since
 		// the package is empty we can get away with just dropping the dependency.
 		if pkg.Atom().String() == "~dev-rust/tokio-io-0.1.9" ||
-				pkg.Atom().String() ==  "~dev-rust/ahash-0.7.0:=" {
+			pkg.Atom().String() == "~dev-rust/ahash-0.7.0:=" {
 			return dependency.ConstTrue
 		}
 
