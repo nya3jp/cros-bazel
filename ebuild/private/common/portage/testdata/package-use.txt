@@ -1,0 +1,21 @@
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> overlay/profiles/default/make.defaults
+# make.defaults loses.
+USE="a"
+
+>>> overlay/profiles/default/package.use
+# package.use wins.
+pkg/x -a
+
+>>> overlay/profiles/categories
+pkg
+
+>>> overlay/pkg/x/x-1.ebuild
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+IUSE="a"
+
+>>> expect.use
+pkg/x -a

@@ -1,0 +1,150 @@
+Examines mask/force preference order.
+
+USE=xxxx  (a=on, b=off, x=unset)
+    ^---- package.use.mask
+     ^--- use.mask
+      ^-- package.use.force
+       ^- use.force
+
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> overlay/profiles/default/use.mask
+aaaa
+aaab
+aaax
+aaba
+aabb
+aabx
+aaxa
+aaxb
+aaxx
+-abaa
+-abab
+-abax
+-abba
+-abbb
+-abbx
+-abxa
+-abxb
+-abxx
+baaa
+baab
+baax
+baba
+babb
+babx
+baxa
+baxb
+baxx
+-bbaa
+-bbab
+-bbax
+-bbba
+-bbbb
+-bbbx
+-bbxa
+-bbxb
+-bbxx
+xaaa
+xaab
+xaax
+xaba
+xabb
+xabx
+xaxa
+xaxb
+xaxx
+-xbaa
+-xbab
+-xbax
+-xbba
+-xbbb
+-xbbx
+-xbxa
+-xbxb
+-xbxx
+
+>>> overlay/profiles/default/use.force
+aaaa
+-aaab
+aaba
+-aabb
+aaxa
+-aaxb
+abaa
+-abab
+abba
+-abbb
+abxa
+-abxb
+axaa
+-axab
+axba
+-axbb
+axxa
+-axxb
+baaa
+-baab
+baba
+-babb
+baxa
+-baxb
+bbaa
+-bbab
+bbba
+-bbbb
+bbxa
+-bbxb
+bxaa
+-bxab
+bxba
+-bxbb
+bxxa
+-bxxb
+xaaa
+-xaab
+xaba
+-xabb
+xaxa
+-xaxb
+xbaa
+-xbab
+xbba
+-xbbb
+xbxa
+-xbxb
+xxaa
+-xxab
+xxba
+-xxbb
+xxxa
+-xxxb
+
+>>> overlay/profiles/default/package.use.mask
+pkg/x  aaaa  aaab  aaax  aaba  aabb  aabx  aaxa  aaxb  aaxx  abaa  abab  abax  abba  abbb  abbx  abxa  abxb  abxx  axaa  axab  axax  axba  axbb  axbx  axxa  axxb  axxx
+pkg/x -baaa -baab -baax -baba -babb -babx -baxa -baxb -baxx -bbaa -bbab -bbax -bbba -bbbb -bbbx -bbxa -bbxb -bbxx -bxaa -bxab -bxax -bxba -bxbb -bxbx -bxxa -bxxb -bxxx
+
+>>> overlay/profiles/default/package.use.force
+pkg/x aaaa aaab aaax -aaba -aabb -aabx abaa abab abax -abba -abbb -abbx axaa axab axax -axba -axbb -axbx
+pkg/x baaa baab baax -baba -babb -babx bbaa bbab bbax -bbba -bbbb -bbbx bxaa bxab bxax -bxba -bxbb -bxbx
+pkg/x xaaa xaab xaax -xaba -xabb -xabx xbaa xbab xbax -xbba -xbbb -xbbx xxaa xxab xxax -xxba -xxbb -xbxx
+
+>>> overlay/profiles/categories
+pkg
+
+>>> overlay/pkg/x/x-1.ebuild
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+IUSE="$(echo {a,b,x}{a,b,x}{a,b,x}{a,b,x})"
+
+>>> expect.use
+pkg/x -aaaa -aaab -aaax -aaba -aabb -aabx -aaxa -aaxb -aaxx
+pkg/x -abaa -abab -abax -abba -abbb -abbx -abxa -abxb -abxx
+pkg/x -axaa -axab -axax -axba -axbb -axbx -axxa -axxb -axxx
+pkg/x  baaa  baab  baax -baba -babb -babx  baxa -baxb -baxx
+pkg/x  bbaa  bbab  bbax -bbba -bbbb -bbbx  bbxa -bbxb -bbxx
+pkg/x  bxaa  bxab  bxax -bxba -bxbb -bxbx  bxxa -bxxb -bxxx
+pkg/x -xaaa -xaab -xaax -xaba -xabb -xabx -xaxa -xaxb -xaxx
+pkg/x  xbaa  xbab  xbax -xbba -xbbb -xbbx  xbxa -xbxb -xbxx
+pkg/x  xxaa  xxab  xxax -xxba -xxbb -xxbx  xxxa -xxxb -xxxx

@@ -20,7 +20,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/ebuild"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 	"cros.local/bazel/ebuild/private/common/standard/profile"
-	"cros.local/bazel/ebuild/private/common/standard/useflags"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
@@ -42,11 +41,13 @@ func parseRepo(repoSet *RepoSet, rootDir string) (*Repo, error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		// PMS mandates repo_name to exist, but overlays often miss it.
 		name = layout["repo-name"]
-		if name == "" {
-			return nil, fmt.Errorf("repository name not defined: %s", rootDir)
-		}
 	} else if err != nil {
 		return nil, err
+	}
+
+	// Auto-generate name if it's missing.
+	if name == "" {
+		name = fmt.Sprintf("x-%s", filepath.Base(rootDir))
 	}
 
 	eapi, err := readSingleLineFile(filepath.Join(rootDir, "profiles", "eapi"))
@@ -74,7 +75,7 @@ func (r *Repo) Profile(relPath string) (*profile.Profile, error) {
 	return r.profiles.LookupOrParse(r, relPath)
 }
 
-func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor, useContext *useflags.Context) ([]*packages.Package, error) {
+func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor) ([]*packages.Package, error) {
 	packageDir := filepath.Join(r.rootDir, atom.PackageName())
 	es, err := os.ReadDir(packageDir)
 	if errors.Is(err, os.ErrNotExist) {
@@ -108,7 +109,7 @@ func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor,
 			continue
 		}
 
-		vars, err := processor.ReadMetadata(fullPath)
+		info, err := processor.Read(fullPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: Ignored ebuild: failed to evaluate %s: %v\n", fullPath, err)
 			continue
@@ -117,10 +118,10 @@ func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor,
 		target := &dependency.TargetPackage{
 			Name:    atom.PackageName(),
 			Version: ver,
-			Uses:    useContext.ComputeForPackage(atom.PackageName(), ver, vars),
+			Uses:    info.Uses,
 		}
 		if atom.Match(target) {
-			pkgs = append(pkgs, packages.NewPackage(fullPath, vars, target))
+			pkgs = append(pkgs, packages.NewPackage(fullPath, info.Metadata, target))
 		}
 	}
 

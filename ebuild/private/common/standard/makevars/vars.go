@@ -23,17 +23,6 @@ func (v Vars) Copy() Vars {
 	return u
 }
 
-func (v Vars) CopyNoIncrementalVars() Vars {
-	u := make(Vars)
-	for key, value := range v {
-		if isIncrementalVar(key) {
-			continue
-		}
-		u[key] = value
-	}
-	return u
-}
-
 func (v Vars) Environ() []string {
 	names := make([]string, 0, len(v))
 	for name := range v {
@@ -60,34 +49,32 @@ func (v Vars) Dump(w io.Writer) {
 	}
 }
 
-func (v Vars) GetAsList(key string) []string {
-	return strings.Fields(v[key])
-}
-
-func (v Vars) GetAsSet(key string) map[string]struct{} {
-	set := make(map[string]struct{})
-	for _, e := range v.GetAsList(key) {
-		set[e] = struct{}{}
-	}
-	return set
-}
-
-func (v Vars) Merge(nv Vars) {
-	for key, newValue := range nv {
-		if isIncrementalVar(key) {
-			v[key] = v[key] + " " + newValue
-		} else {
-			v[key] = newValue
+func (v Vars) Merge(varsList ...Vars) {
+	for _, vars := range varsList {
+		for name, value := range vars {
+			v[name] = value
 		}
 	}
 }
 
-func Merge(varsList ...Vars) Vars {
-	merged := make(Vars)
+func Finalize(varsList []Vars) Vars {
+	final := make(Vars)
 	for _, vars := range varsList {
-		merged.Merge(vars)
+		for name, value := range vars {
+			if isIncrementalVar(name) {
+				final[name] += " " + value
+			} else {
+				final[name] = value
+			}
+		}
 	}
-	return merged
+
+	for name, value := range final {
+		if isIncrementalVar(name) {
+			final[name] = finalizeIncrementalVar(value)
+		}
+	}
+	return final
 }
 
 var incrementalVarNames = map[string]struct{}{
@@ -114,7 +101,7 @@ func isIncrementalVar(name string) bool {
 	return false
 }
 
-func FinalizeIncrementalVar(value string) string {
+func finalizeIncrementalVar(value string) string {
 	tokenSet := make(map[string]struct{})
 
 	for _, token := range strings.Fields(value) {

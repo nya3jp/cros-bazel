@@ -1,0 +1,21 @@
+USE (and other incremental variables) must be calculated just like other
+variables, but they're concatenated later.
+
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> overlay/profiles/default/parent
+../1
+../2
+
+>>> overlay/profiles/default/make.defaults
+SAVED_USE="$USE"
+
+>>> overlay/profiles/1/make.defaults
+USE="$USE a b"
+
+>>> overlay/profiles/2/make.defaults
+USE="$USE -a c d"
+
+>>> expect.vars
+SAVED_USE=" a b -a c d"
+USE="b c d"

@@ -15,14 +15,13 @@ import (
 
 	"github.com/urfave/cli"
 
-	"cros.local/bazel/ebuild/private/common/portage/makeconf"
-	"cros.local/bazel/ebuild/private/common/portage/portagevars"
 	"cros.local/bazel/ebuild/private/common/portage/repository"
 	"cros.local/bazel/ebuild/private/common/runfiles"
+	"cros.local/bazel/ebuild/private/common/standard/config"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/ebuild"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
-	"cros.local/bazel/ebuild/private/common/standard/useflags"
+	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 // HACK: Hard-code several package info.
@@ -70,6 +69,22 @@ var forceUse = []string{
 	"kernel_linux",
 }
 
+// HACK: Hard-code several packages not to be installed.
+var forceProvided = []string{
+	// TODO: Parse /etc/portage/profile/package.provided and obtain these packages.
+	"sys-devel/gcc",
+	"sys-libs/glibc",
+	"dev-lang/go",
+
+	// This package was used to force rust binary packages to rebuild.
+	// We no longer need this workaround with bazel.
+	"virtual/rust-binaries",
+
+	// This is really a BDEPEND and there is no need to declare it as a
+	// RDEPEND.
+	"virtual/rust",
+}
+
 func isCrosWorkonPackage(pkg *packages.Package) bool {
 	return pkg.UsesEclass("cros-workon")
 }
@@ -79,10 +94,10 @@ func isRustPackage(pkg *packages.Package) bool {
 }
 
 func isRustSrcPackage(pkg *packages.Package) bool {
-	return isRustPackage(pkg) && !isCrosWorkonPackage(pkg) && pkg.Vars()["HAS_SRC_COMPILE"] == "0"
+	return isRustPackage(pkg) && !isCrosWorkonPackage(pkg) && pkg.Metadata()["HAS_SRC_COMPILE"] == "0"
 }
 
-func simplifyDeps(deps *dependency.Deps, use map[string]struct{}, packageName string) *dependency.Deps {
+func simplifyDeps(deps *dependency.Deps, use map[string]bool, packageName string) *dependency.Deps {
 	deps = dependency.ResolveUse(deps, use)
 
 	// Rewrite package atoms.
@@ -367,10 +382,15 @@ func parseSimpleDeps(deps *dependency.Deps) ([]string, bool) {
 	return names, true
 }
 
-func filterPackages(pkgs []string, dropSet map[string]struct{}) []string {
+func filterPackages(pkgs []string, provided []*config.Package) []string {
+	providedSet := make(map[string]struct{})
+	for _, p := range provided {
+		providedSet[p.Name] = struct{}{}
+	}
+
 	var filtered []string
 	for _, pkg := range pkgs {
-		if _, ok := dropSet[pkg]; !ok {
+		if _, ok := providedSet[pkg]; !ok {
 			filtered = append(filtered, pkg)
 		}
 	}
@@ -408,7 +428,7 @@ func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error
 	return nil
 }
 
-func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, startPackageNames []string) (map[string][]string, error) {
+func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, startPackageNames []string) (map[string][]string, error) {
 	depsMap := make(map[string][]string)
 	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
@@ -416,14 +436,14 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 			return nil, err
 		}
 
-		pkg, err := repoSet.BestPackage(atom, processor, useContext)
+		pkg, err := repoSet.BestPackage(atom, processor)
 		if err != nil {
 			return nil, err
 		}
 
-		vars := pkg.Vars()
+		metadata := pkg.Metadata()
 
-		rawDeps, err := dependency.Parse(vars["RDEPEND"])
+		rawDeps, err := dependency.Parse(metadata["RDEPEND"])
 		if err != nil {
 			return nil, err
 		}
@@ -438,7 +458,7 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 			}
 		}
 
-		parsedDeps = filterPackages(parsedDeps, providedPackages)
+		parsedDeps = filterPackages(parsedDeps, provided)
 
 		log.Printf("R: %s => %s", packageName, strings.Join(parsedDeps, ", "))
 		depsMap[packageName] = parsedDeps
@@ -449,7 +469,7 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 	return depsMap, nil
 }
 
-func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, useContext *useflags.Context, providedPackages map[string]struct{}, installPackageNames []string) (map[string][]string, map[string][]string, map[string][]string, error) {
+func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, installPackageNames []string) (map[string][]string, map[string][]string, map[string][]string, error) {
 	depsMap := make(map[string][]string)
 	srcDepMap := make(map[string][]string)
 	runtimeDepMap := make(map[string][]string)
@@ -459,14 +479,14 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 			return nil, err
 		}
 
-		pkg, err := repoSet.BestPackage(atom, processor, useContext)
+		pkg, err := repoSet.BestPackage(atom, processor)
 		if err != nil {
 			return nil, err
 		}
 
-		vars := pkg.Vars()
+		metadata := pkg.Metadata()
 
-		rawDeps, err := dependency.Parse(vars["DEPEND"])
+		rawDeps, err := dependency.Parse(metadata["DEPEND"])
 		if err != nil {
 			return nil, err
 		}
@@ -483,7 +503,7 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 			}
 		}
 
-		parsedDeps = filterPackages(parsedDeps, providedPackages)
+		parsedDeps = filterPackages(parsedDeps, provided)
 
 		// Some rust src packages have their dependencies only listed as DEPEND.
 		// They also need to be listed as RDPEND so they get pulled in as
@@ -497,11 +517,11 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 			depsMap[packageName] = parsedDeps
 		}
 
-		srcDeps, err := computeSrcPackages(pkg, vars["CROS_WORKON_PROJECT"], vars["CROS_WORKON_LOCALNAME"], vars["CROS_WORKON_SUBTREE"])
+		srcDeps, err := computeSrcPackages(pkg, metadata["CROS_WORKON_PROJECT"], metadata["CROS_WORKON_LOCALNAME"], metadata["CROS_WORKON_SUBTREE"])
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("   PROJECT: '%s', LOCALNAME: '%s', SUBTREE: '%s' -> %s", vars["CROS_WORKON_PROJECT"], vars["CROS_WORKON_LOCALNAME"], vars["CROS_WORKON_SUBTREE"], srcDeps)
+		log.Printf("   PROJECT: '%s', LOCALNAME: '%s', SUBTREE: '%s' -> %s", metadata["CROS_WORKON_PROJECT"], metadata["CROS_WORKON_LOCALNAME"], metadata["CROS_WORKON_SUBTREE"], srcDeps)
 		srcDepMap[packageName] = srcDeps
 
 		return parsedDeps, nil
@@ -538,60 +558,27 @@ var app = &cli.App{
 
 		rootDir := filepath.Join("/build", board)
 
-		makeConfVars, err := makeconf.ParseDefaults(rootDir)
+		var providedPackages []*config.Package
+		for _, name := range forceProvided {
+			providedPackages = append(providedPackages, &config.Package{
+				Name:    name,
+				Version: &version.Version{Main: []string{"0"}}, // assume version 0
+			})
+		}
+		hackSource := config.NewHackSource(strings.Join(forceUse, " "), providedPackages)
+
+		defaults, err := repository.LoadDefaults(rootDir, hackSource)
 		if err != nil {
 			return err
 		}
 
-		// HACK: Set some USE variables since we don't support USE_EXPAND yet.
-		// TODO: Remove this hack.
-		makeConfVars["USE"] += " " + strings.Join(forceUse, " ")
-
-		overlays := portagevars.Overlays(makeConfVars)
-
-		repoSet, err := repository.NewRepoSet(overlays)
+		processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(defaults.Config, defaults.RepoSet.EClassDirs()))
+		provided, err := defaults.Config.ProvidedPackages()
 		if err != nil {
 			return err
 		}
 
-		profilePath, err := os.Readlink(filepath.Join(rootDir, "etc/portage/make.profile"))
-		if err != nil {
-			return err
-		}
-
-		rawProfile, err := repoSet.ProfileByPath(profilePath)
-		if err != nil {
-			return err
-		}
-
-		profile, err := rawProfile.Parse()
-		if err != nil {
-			return err
-		}
-
-		providedPackages := map[string]struct{}{
-			// TODO: Parse /etc/portage/profile/package.provided and obtain this list.
-			"sys-devel/gcc":  {},
-			"sys-libs/glibc": {},
-			"dev-lang/go":    {},
-
-			// This package was used to force rust binary packages to rebuild.
-			// We no longer need this workaround with bazel.
-			"virtual/rust-binaries": {},
-
-			// This is really a BDEPEND and there is no need to declare it as a
-			// RDEPEND.
-			"virtual/rust": {},
-		}
-		for _, pp := range profile.Provided() {
-			providedPackages[pp.Name()] = struct{}{}
-		}
-
-		processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(profile.Vars(), repoSet.EClassDirs()))
-
-		useContext := useflags.NewContext(makeConfVars, profile)
-
-		runtimeDeps, err := computeRuntimeDeps(repoSet, processor, useContext, providedPackages, startPackageNames)
+		runtimeDeps, err := computeRuntimeDeps(defaults.RepoSet, processor, provided, startPackageNames)
 		if err != nil {
 			return err
 		}
@@ -603,7 +590,7 @@ var app = &cli.App{
 		sort.Strings(installPackageNames)
 
 		buildDeps, buildSrcDeps, additionalRuntimeDeps, err := computeBuildDeps(
-			repoSet, processor, useContext, providedPackages, installPackageNames)
+			defaults.RepoSet, processor, provided, installPackageNames)
 		if err != nil {
 			return err
 		}

@@ -15,7 +15,7 @@ import (
 type TargetPackage struct {
 	Name    string
 	Version *version.Version
-	Uses    map[string]struct{}
+	Uses    map[string]bool
 }
 
 type VersionOperator string

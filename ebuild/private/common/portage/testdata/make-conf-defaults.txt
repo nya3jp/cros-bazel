@@ -1,0 +1,11 @@
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> etc/make.conf.custom
+# $USE is initially set to USE=a by the profile.
+USE="-* $USE"
+
+>>> overlay/profiles/default/make.defaults
+USE=a
+
+>>> expect.vars
+USE="a"

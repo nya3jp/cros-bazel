@@ -14,7 +14,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/standard/dependency",
-        "//bazel/ebuild/private/common/standard/makevars",
+        "//bazel/ebuild/private/common/standard/ebuild",
         "//bazel/ebuild/private/common/standard/version",
     ],
 )

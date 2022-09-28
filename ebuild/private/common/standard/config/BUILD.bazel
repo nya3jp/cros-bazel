@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "config",
+    srcs = [
+        "parse.go",
+        "source.go",
+    ],
+    importpath = "cros.local/bazel/ebuild/private/common/standard/config",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/standard/dependency",
+        "//bazel/ebuild/private/common/standard/makevars",
+        "//bazel/ebuild/private/common/standard/version",
+    ],
+)

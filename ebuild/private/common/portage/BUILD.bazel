@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "portage_test",
+    srcs = ["portage_test.go"],
+    data = glob(["testdata/**"]),
+    deps = [
+        "//bazel/ebuild/private/common/portage/repository",
+        "//bazel/ebuild/private/common/standard/ebuild",
+        "//bazel/ebuild/private/common/standard/makevars",
+        "@com_github_alessio_shellescape//:shellescape",
+        "@com_github_google_go_cmp//cmp",
+        "@com_github_google_go_cmp//cmp/cmpopts",
+    ],
+)

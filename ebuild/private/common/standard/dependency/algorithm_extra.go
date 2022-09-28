@@ -9,10 +9,10 @@ import (
 	"sort"
 )
 
-func ResolveUse(deps *Deps, use map[string]struct{}) *Deps {
+func ResolveUse(deps *Deps, use map[string]bool) *Deps {
 	return Map(deps, func(expr Expr) Expr {
 		if cond, ok := expr.(*UseConditional); ok {
-			if _, ok := use[cond.Name()]; ok == cond.Expect() {
+			if use[cond.Name()] == cond.Expect() {
 				return cond.Child()
 			}
 			return ConstTrue

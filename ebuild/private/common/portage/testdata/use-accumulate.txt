@@ -1,0 +1,25 @@
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> overlay/profiles/default/parent
+../1
+
+>>> overlay/profiles/1/parent
+../2
+
+>>> overlay/profiles/2/parent
+../3
+
+>>> overlay/profiles/default/make.defaults
+USE="x"
+
+>>> overlay/profiles/1/make.defaults
+USE="a"
+
+>>> overlay/profiles/2/make.defaults
+USE="b"
+
+>>> overlay/profiles/3/make.defaults
+USE="c"
+
+>>> expect.vars
+USE="a b c x"

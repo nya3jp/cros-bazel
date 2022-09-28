@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "bashutil",
+    srcs = [
+        "environ.go",
+        "parse.go",
+    ],
+    importpath = "cros.local/bazel/ebuild/private/common/standard/bashutil",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@cc_mvdan_sh_v3//expand",
+        "@cc_mvdan_sh_v3//syntax",
+    ],
+)

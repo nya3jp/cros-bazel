@@ -1,0 +1,165 @@
+Examines USE preference order.
+
+USE=xxxxx  (a=on, b=off, x=unset)
+    ^----- /etc/portage/package.use
+     ^---- /etc/make.conf
+      ^--- profile/package.use
+       ^-- profile/make.defaults
+        ^- .ebuild IUSE
+
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> etc/portage/package.use
+pkg/x  aaaaa  aaaax  aaaba  aaabx  aaaxa  aaaxx
+pkg/x  aabaa  aabax  aabba  aabbx  aabxa  aabxx
+pkg/x  aaxaa  aaxax  aaxba  aaxbx  aaxxa  aaxxx
+pkg/x  abaaa  abaax  ababa  ababx  abaxa  abaxx
+pkg/x  abbaa  abbax  abbba  abbbx  abbxa  abbxx
+pkg/x  abxaa  abxax  abxba  abxbx  abxxa  abxxx
+pkg/x  axaaa  axaax  axaba  axabx  axaxa  axaxx
+pkg/x  axbaa  axbax  axbba  axbbx  axbxa  axbxx
+pkg/x  axxaa  axxax  axxba  axxbx  axxxa  axxxx
+pkg/x -baaaa -baaax -baaba -baabx -baaxa -baaxx
+pkg/x -babaa -babax -babba -babbx -babxa -babxx
+pkg/x -baxaa -baxax -baxba -baxbx -baxxa -baxxx
+pkg/x -bbaaa -bbaax -bbaba -bbabx -bbaxa -bbaxx
+pkg/x -bbbaa -bbbax -bbbba -bbbbx -bbbxa -bbbxx
+pkg/x -bbxaa -bbxax -bbxba -bbxbx -bbxxa -bbxxx
+pkg/x -bxaaa -bxaax -bxaba -bxabx -bxaxa -bxaxx
+pkg/x -bxbaa -bxbax -bxbba -bxbbx -bxbxa -bxbxx
+pkg/x -bxxaa -bxxax -bxxba -bxxbx -bxxxa -bxxxx
+
+>>> etc/make.conf.custom
+USE=""
+USE="$USE  aaaaa  aaaax  aaaba  aaabx  aaaxa  aaaxx"
+USE="$USE  aabaa  aabax  aabba  aabbx  aabxa  aabxx"
+USE="$USE  aaxaa  aaxax  aaxba  aaxbx  aaxxa  aaxxx"
+USE="$USE -abaaa -abaax -ababa -ababx -abaxa -abaxx"
+USE="$USE -abbaa -abbax -abbba -abbbx -abbxa -abbxx"
+USE="$USE -abxaa -abxax -abxba -abxbx -abxxa -abxxx"
+USE="$USE  baaaa  baaax  baaba  baabx  baaxa  baaxx"
+USE="$USE  babaa  babax  babba  babbx  babxa  babxx"
+USE="$USE  baxaa  baxax  baxba  baxbx  baxxa  baxxx"
+USE="$USE -bbaaa -bbaax -bbaba -bbabx -bbaxa -bbaxx"
+USE="$USE -bbbaa -bbbax -bbbba -bbbbx -bbbxa -bbbxx"
+USE="$USE -bbxaa -bbxax -bbxba -bbxbx -bbxxa -bbxxx"
+USE="$USE  xaaaa  xaaax  xaaba  xaabx  xaaxa  xaaxx"
+USE="$USE  xabaa  xabax  xabba  xabbx  xabxa  xabxx"
+USE="$USE  xaxaa  xaxax  xaxba  xaxbx  xaxxa  xaxxx"
+USE="$USE -xbaaa -xbaax -xbaba -xbabx -xbaxa -xbaxx"
+USE="$USE -xbbaa -xbbax -xbbba -xbbbx -xbbxa -xbbxx"
+USE="$USE -xbxaa -xbxax -xbxba -xbxbx -xbxxa -xbxxx"
+
+>>> overlay/profiles/default/package.use
+pkg/x  aaaaa  aaaax  aaaba  aaabx  aaaxa  aaaxx
+pkg/x -aabaa -aabax -aabba -aabbx -aabxa -aabxx
+pkg/x  abaaa  abaax  ababa  ababx  abaxa  abaxx
+pkg/x -abbaa -abbax -abbba -abbbx -abbxa -abbxx
+pkg/x  axaaa  axaax  axaba  axabx  axaxa  axaxx
+pkg/x -axbaa -axbax -axbba -axbbx -axbxa -axbxx
+pkg/x  baaaa  baaax  baaba  baabx  baaxa  baaxx
+pkg/x -babaa -babax -babba -babbx -babxa -babxx
+pkg/x  bbaaa  bbaax  bbaba  bbabx  bbaxa  bbaxx
+pkg/x -bbbaa -bbbax -bbbba -bbbbx -bbbxa -bbbxx
+pkg/x  bxaaa  bxaax  bxaba  bxabx  bxaxa  bxaxx
+pkg/x -bxbaa -bxbax -bxbba -bxbbx -bxbxa -bxbxx
+pkg/x  xaaaa  xaaax  xaaba  xaabx  xaaxa  xaaxx
+pkg/x -xabaa -xabax -xabba -xabbx -xabxa -xabxx
+pkg/x  xbaaa  xbaax  xbaba  xbabx  xbaxa  xbaxx
+pkg/x -xbbaa -xbbax -xbbba -xbbbx -xbbxa -xbbxx
+pkg/x  xxaaa  xxaax  xxaba  xxabx  xxaxa  xxaxx
+pkg/x -xxbaa -xxbax -xxbba -xxbbx -xxbxa -xxbxx
+
+>>> overlay/profiles/default/make.defaults
+USE=""
+USE="$USE aaaaa aaaax -aaaba -aaabx"
+USE="$USE aabaa aabax -aabba -aabbx"
+USE="$USE aaxaa aaxax -aaxba -aaxbx"
+USE="$USE abaaa abaax -ababa -ababx"
+USE="$USE abbaa abbax -abbba -abbbx"
+USE="$USE abxaa abxax -abxba -abxbx"
+USE="$USE axaaa axaax -axaba -axabx"
+USE="$USE axbaa axbax -axbba -axbbx"
+USE="$USE axxaa axxax -axxba -axxbx"
+USE="$USE baaaa baaax -baaba -baabx"
+USE="$USE babaa babax -babba -babbx"
+USE="$USE baxaa baxax -baxba -baxbx"
+USE="$USE bbaaa bbaax -bbaba -bbabx"
+USE="$USE bbbaa bbbax -bbbba -bbbbx"
+USE="$USE bbxaa bbxax -bbxba -bbxbx"
+USE="$USE bxaaa bxaax -bxaba -bxabx"
+USE="$USE bxbaa bxbax -bxbba -bxbbx"
+USE="$USE bxxaa bxxax -bxxba -bxxbx"
+USE="$USE xaaaa xaaax -xaaba -xaabx"
+USE="$USE xabaa xabax -xabba -xabbx"
+USE="$USE xaxaa xaxax -xaxba -xaxbx"
+USE="$USE xbaaa xbaax -xbaba -xbabx"
+USE="$USE xbbaa xbbax -xbbba -xbbbx"
+USE="$USE xbxaa xbxax -xbxba -xbxbx"
+USE="$USE xxaaa xxaax -xxaba -xxabx"
+USE="$USE xxbaa xxbax -xxbba -xxbbx"
+USE="$USE xxxaa xxxax -xxxba -xxxbx"
+
+>>> overlay/profiles/categories
+pkg
+
+>>> overlay/pkg/x/x-1.ebuild
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+IUSE="$IUSE +aaaaa aaaax +aaaba aaabx +aaaxa aaaxx"
+IUSE="$IUSE +aabaa aabax +aabba aabbx +aabxa aabxx"
+IUSE="$IUSE +aaxaa aaxax +aaxba aaxbx +aaxxa aaxxx"
+IUSE="$IUSE +abaaa abaax +ababa ababx +abaxa abaxx"
+IUSE="$IUSE +abbaa abbax +abbba abbbx +abbxa abbxx"
+IUSE="$IUSE +abxaa abxax +abxba abxbx +abxxa abxxx"
+IUSE="$IUSE +axaaa axaax +axaba axabx +axaxa axaxx"
+IUSE="$IUSE +axbaa axbax +axbba axbbx +axbxa axbxx"
+IUSE="$IUSE +axxaa axxax +axxba axxbx +axxxa axxxx"
+IUSE="$IUSE +baaaa baaax +baaba baabx +baaxa baaxx"
+IUSE="$IUSE +babaa babax +babba babbx +babxa babxx"
+IUSE="$IUSE +baxaa baxax +baxba baxbx +baxxa baxxx"
+IUSE="$IUSE +bbaaa bbaax +bbaba bbabx +bbaxa bbaxx"
+IUSE="$IUSE +bbbaa bbbax +bbbba bbbbx +bbbxa bbbxx"
+IUSE="$IUSE +bbxaa bbxax +bbxba bbxbx +bbxxa bbxxx"
+IUSE="$IUSE +bxaaa bxaax +bxaba bxabx +bxaxa bxaxx"
+IUSE="$IUSE +bxbaa bxbax +bxbba bxbbx +bxbxa bxbxx"
+IUSE="$IUSE +bxxaa bxxax +bxxba bxxbx +bxxxa bxxxx"
+IUSE="$IUSE +xaaaa xaaax +xaaba xaabx +xaaxa xaaxx"
+IUSE="$IUSE +xabaa xabax +xabba xabbx +xabxa xabxx"
+IUSE="$IUSE +xaxaa xaxax +xaxba xaxbx +xaxxa xaxxx"
+IUSE="$IUSE +xbaaa xbaax +xbaba xbabx +xbaxa xbaxx"
+IUSE="$IUSE +xbbaa xbbax +xbbba xbbbx +xbbxa xbbxx"
+IUSE="$IUSE +xbxaa xbxax +xbxba xbxbx +xbxxa xbxxx"
+IUSE="$IUSE +xxaaa xxaax +xxaba xxabx +xxaxa xxaxx"
+IUSE="$IUSE +xxbaa xxbax +xxbba xxbbx +xxbxa xxbxx"
+IUSE="$IUSE +xxxaa xxxax +xxxba xxxbx +xxxxa xxxxx"
+
+>>> expect.use
+pkg/x  aaaaa  aaaax  aaaba  aaabx  aaaxa  aaaxx
+pkg/x  aabaa  aabax  aabba  aabbx  aabxa  aabxx
+pkg/x  aaxaa  aaxax  aaxba  aaxbx  aaxxa  aaxxx
+pkg/x  abaaa  abaax  ababa  ababx  abaxa  abaxx
+pkg/x  abbaa  abbax  abbba  abbbx  abbxa  abbxx
+pkg/x  abxaa  abxax  abxba  abxbx  abxxa  abxxx
+pkg/x  axaaa  axaax  axaba  axabx  axaxa  axaxx
+pkg/x  axbaa  axbax  axbba  axbbx  axbxa  axbxx
+pkg/x  axxaa  axxax  axxba  axxbx  axxxa  axxxx
+pkg/x -baaaa -baaax -baaba -baabx -baaxa -baaxx
+pkg/x -babaa -babax -babba -babbx -babxa -babxx
+pkg/x -baxaa -baxax -baxba -baxbx -baxxa -baxxx
+pkg/x -bbaaa -bbaax -bbaba -bbabx -bbaxa -bbaxx
+pkg/x -bbbaa -bbbax -bbbba -bbbbx -bbbxa -bbbxx
+pkg/x -bbxaa -bbxax -bbxba -bbxbx -bbxxa -bbxxx
+pkg/x -bxaaa -bxaax -bxaba -bxabx -bxaxa -bxaxx
+pkg/x -bxbaa -bxbax -bxbba -bxbbx -bxbxa -bxbxx
+pkg/x -bxxaa -bxxax -bxxba -bxxbx -bxxxa -bxxxx
+pkg/x  xaaaa  xaaax  xaaba  xaabx  xaaxa  xaaxx
+pkg/x  xabaa  xabax  xabba  xabbx  xabxa  xabxx
+pkg/x  xaxaa  xaxax  xaxba  xaxbx  xaxxa  xaxxx
+pkg/x -xbaaa -xbaax -xbaba -xbabx -xbaxa -xbaxx
+pkg/x -xbbaa -xbbax -xbbba -xbbbx -xbbxa -xbbxx
+pkg/x -xbxaa -xbxax -xbxba -xbxbx -xbxxa -xbxxx
+pkg/x  xxaaa  xxaax  xxaba  xxabx  xxaxa  xxaxx
+pkg/x -xxbaa -xxbax -xxbba -xxbbx -xxbxa -xxbxx
+pkg/x  xxxaa  xxxax -xxxba -xxxbx  xxxxa -xxxxx

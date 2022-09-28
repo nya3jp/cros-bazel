@@ -1,0 +1,19 @@
+Handling -* correctly.
+
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> overlay/profiles/default/parent
+../1
+../2
+
+>>> overlay/profiles/default/make.defaults
+USE="x"
+
+>>> overlay/profiles/1/make.defaults
+USE="a b"
+
+>>> overlay/profiles/2/make.defaults
+USE="c -* d"
+
+>>> expect.vars
+USE="d x"

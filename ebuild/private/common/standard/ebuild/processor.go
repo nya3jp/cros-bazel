@@ -10,75 +10,113 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
+	"cros.local/bazel/ebuild/private/common/standard/bashutil"
+	"cros.local/bazel/ebuild/private/common/standard/config"
 	"cros.local/bazel/ebuild/private/common/standard/makevars"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
-type Processor struct {
-	profileVars makevars.Vars
-	eclassDirs  []string
+type Metadata map[string]string
+
+type Info struct {
+	Metadata Metadata
+	Uses     map[string]bool
 }
 
-func NewProcessor(profileVars makevars.Vars, eclassDirs []string) *Processor {
+type Processor struct {
+	config     config.Source
+	eclassDirs []string
+}
+
+func NewProcessor(config config.Source, eclassDirs []string) *Processor {
 	return &Processor{
-		profileVars: profileVars,
-		eclassDirs:  eclassDirs,
+		config:     config,
+		eclassDirs: eclassDirs,
 	}
 }
 
-func (p *Processor) ReadMetadata(path string) (makevars.Vars, error) {
+func (p *Processor) Read(path string) (*Info, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading ebuild metadata: %s: %w", absPath, err)
 	}
 
-	packageVars, err := computePackageVars(absPath)
+	pkg, err := extractPackage(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading ebuild metadata: %s: %w", absPath, err)
 	}
 
-	allVars := makevars.Merge(p.profileVars, packageVars)
-	outVars, err := runEBuild(absPath, allVars, p.eclassDirs)
+	env := make(makevars.Vars)
+	if _, err := p.config.EvalGlobalVars(env); err != nil {
+		return nil, fmt.Errorf("reading ebuild metadata: %s: %w", absPath, err)
+	}
+
+	env.Merge(computePackageVars(pkg))
+
+	metadata, err := runEBuild(absPath, env, p.eclassDirs)
 	if err != nil {
 		return nil, fmt.Errorf("reading ebuild metadata: %s: %w", absPath, err)
 	}
 
-	return outVars, nil
+	uses, err := computeUseFlags(pkg, p.config, metadata)
+	if err != nil {
+		return nil, fmt.Errorf("reading ebuild metadata: %s: %w", absPath, err)
+	}
+
+	return &Info{
+		Metadata: metadata,
+		Uses:     uses,
+	}, nil
 }
 
-func computePackageVars(absPath string) (makevars.Vars, error) {
+func extractPackage(absPath string) (*config.Package, error) {
 	const suffix = ".ebuild"
 	if !strings.HasSuffix(absPath, suffix) {
 		return nil, fmt.Errorf("must have suffix %s", suffix)
 	}
 
-	packageNameAndVersion := filepath.Base(strings.TrimSuffix(absPath, suffix))
+	packageShortNameAndVersion := filepath.Base(strings.TrimSuffix(absPath, suffix))
+	packageShortName := filepath.Base(filepath.Dir(absPath))
 	categoryName := filepath.Base(filepath.Dir(filepath.Dir(absPath)))
 
-	packageNameAndHyphen, version, err := version.ExtractSuffix(packageNameAndVersion)
+	packageShortNameAndHyphen, version, err := version.ExtractSuffix(packageShortNameAndVersion)
 	if err != nil {
 		return nil, err
 	}
-	if !strings.HasSuffix(packageNameAndHyphen, "-") {
+	if !strings.HasSuffix(packageShortNameAndHyphen, "-") {
 		return nil, errors.New("invalid package name")
 	}
-	packageName := strings.TrimSuffix(packageNameAndHyphen, "-")
+	packageShortName2 := strings.TrimSuffix(packageShortNameAndHyphen, "-")
+	if packageShortName2 != packageShortName {
+		return nil, errors.New("ebuild name mismatch with directory name")
+	}
 
-	return makevars.Vars{
-		"P":        fmt.Sprintf("%s-%s", packageName, version.DropRevision().String()),
-		"PF":       fmt.Sprintf("%s-%s", packageName, version.String()),
-		"PN":       packageName,
-		"CATEGORY": categoryName,
-		"PV":       version.DropRevision().String(),
-		"PR":       fmt.Sprintf("r%s", version.Revision),
-		"PVR":      version.String(),
+	return &config.Package{
+		Name:    path.Join(categoryName, packageShortName),
+		Version: version,
 	}, nil
 }
 
-func runEBuild(absPath string, vars makevars.Vars, eclassDirs []string) (makevars.Vars, error) {
+func computePackageVars(pkg *config.Package) makevars.Vars {
+	categoryName := path.Dir(pkg.Name)
+	packageShortName := path.Base(pkg.Name)
+
+	return makevars.Vars{
+		"P":        fmt.Sprintf("%s-%s", packageShortName, pkg.Version.DropRevision().String()),
+		"PF":       fmt.Sprintf("%s-%s", packageShortName, pkg.Version.String()),
+		"PN":       packageShortName,
+		"CATEGORY": categoryName,
+		"PV":       pkg.Version.DropRevision().String(),
+		"PR":       fmt.Sprintf("r%s", pkg.Version.Revision),
+		"PVR":      pkg.Version.String(),
+	}
+}
+
+func runEBuild(absPath string, env makevars.Vars, eclassDirs []string) (Metadata, error) {
 	tempDir, err := os.MkdirTemp("", "xbuild.*")
 	if err != nil {
 		return nil, err
@@ -92,16 +130,16 @@ func runEBuild(absPath string, vars makevars.Vars, eclassDirs []string) (makevar
 
 	outPath := filepath.Join(tempDir, "vars.txt")
 
-	internalVars := makevars.Vars{
+	vars := make(makevars.Vars)
+	vars.Merge(env, makevars.Vars{
 		"__xbuild_in_ebuild":      absPath,
 		"__xbuild_in_eclass_dirs": strings.Join(eclassDirs, "\n") + "\n",
 		"__xbuild_in_output_vars": outPath,
-	}
-	finalVars := makevars.Merge(vars, internalVars)
+	})
 
 	cmd := exec.Command("bash")
 	cmd.Stdin = bytes.NewBuffer(preludeCode)
-	cmd.Env = finalVars.Environ()
+	cmd.Env = vars.Environ()
 	cmd.Dir = workDir
 	if out, err := cmd.CombinedOutput(); len(out) > 0 {
 		os.Stderr.Write(out)
@@ -115,42 +153,42 @@ func runEBuild(absPath string, vars makevars.Vars, eclassDirs []string) (makevar
 		return nil, err
 	}
 
-	outVars, err := makevars.ParseSetOutput(bytes.NewBuffer(b))
+	out, err := bashutil.ParseSetOutput(bytes.NewBuffer(b))
 	if err != nil {
 		return nil, fmt.Errorf("reading output: %w", err)
 	}
 
 	// Remove internal variables.
-	for name := range outVars {
+	for name := range out {
 		if strings.HasPrefix(name, "__xbuild_") {
-			delete(outVars, name)
+			delete(out, name)
 		}
 	}
-	return outVars, nil
+	return out, nil
 }
 
-type readMetadataResult struct {
-	vars makevars.Vars
+type readResult struct {
+	info *Info
 	err  error
 }
 
 type CachedProcessor struct {
-	p                   *Processor
-	readMetadataResults map[string]readMetadataResult
+	p     *Processor
+	cache map[string]readResult
 }
 
 func NewCachedProcessor(p *Processor) *CachedProcessor {
 	return &CachedProcessor{
-		p:                   p,
-		readMetadataResults: make(map[string]readMetadataResult),
+		p:     p,
+		cache: make(map[string]readResult),
 	}
 }
 
-func (p *CachedProcessor) ReadMetadata(path string) (makevars.Vars, error) {
-	if res, ok := p.readMetadataResults[path]; ok {
-		return res.vars, res.err
+func (p *CachedProcessor) Read(path string) (*Info, error) {
+	if res, ok := p.cache[path]; ok {
+		return res.info, res.err
 	}
-	vars, err := p.p.ReadMetadata(path)
-	p.readMetadataResults[path] = readMetadataResult{vars: vars, err: err}
-	return vars, err
+	info, err := p.p.Read(path)
+	p.cache[path] = readResult{info: info, err: err}
+	return info, err
 }

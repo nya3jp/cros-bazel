@@ -2,19 +2,29 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "makevars",
     srcs = [
-        "parse.go",
+        "eval.go",
         "vars.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/common/standard/makevars",
     visibility = ["//visibility:public"],
     deps = [
+        "//bazel/ebuild/private/common/standard/bashutil",
         "@cc_mvdan_sh_v3//expand",
         "@cc_mvdan_sh_v3//syntax",
         "@com_github_alessio_shellescape//:shellescape",
+    ],
+)
+
+go_test(
+    name = "makevars_test",
+    srcs = ["eval_test.go"],
+    deps = [
+        ":makevars",
+        "@com_github_google_go_cmp//cmp",
     ],
 )

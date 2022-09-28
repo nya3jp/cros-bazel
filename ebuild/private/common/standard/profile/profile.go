@@ -5,7 +5,6 @@
 package profile
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -13,8 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"cros.local/bazel/ebuild/private/common/standard/config"
+	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/makevars"
-	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 const makeDefaults = "make.defaults"
@@ -37,7 +37,7 @@ func Load(path string, name string, resolver Resolver) (*Profile, error) {
 		return nil, fmt.Errorf("profile %s: %w", name, err)
 	}
 
-	parentPaths, err := readLines(filepath.Join(path, "parent"))
+	parentPaths, err := config.ParseLines(filepath.Join(path, "parent"))
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("profile %s: reading parents: %w", name, err)
 	}
@@ -63,177 +63,176 @@ func (p *Profile) Path() string        { return p.path }
 func (p *Profile) Parents() []*Profile { return append([]*Profile(nil), p.parents...) }
 
 func (p *Profile) Parse() (*ParsedProfile, error) {
-	vars := makevars.Vars{}
-	if err := p.parseVars(vars); err != nil {
+	var parents []*ParsedProfile
+	for _, pp := range p.parents {
+		parent, err := pp.Parse()
+		if err != nil {
+			return nil, err
+		}
+		parents = append(parents, parent)
+	}
+
+	// Just make sure make.defaults successfully parses. Actual evaluation is
+	// done later.
+	if _, err := makevars.Eval(filepath.Join(p.path, makeDefaults), make(makevars.Vars), false); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
 
-	overrides := &Overrides{
-		packageUse: make(map[string]string),
-	}
-	if err := p.parseOverrides(overrides); err != nil {
+	packageUse, err := config.ParsePackageUseList(filepath.Join(p.path, "package.use"))
+	if err != nil {
 		return nil, err
 	}
 
-	var provided []*ProvidedPackage
-	if err := p.parseProvided(&provided); err != nil {
+	useMask, err := config.ParseUseList(filepath.Join(p.path, "use.mask"))
+	if err != nil {
+		return nil, err
+	}
+
+	useForce, err := config.ParseUseList(filepath.Join(p.path, "use.force"))
+	if err != nil {
+		return nil, err
+	}
+
+	packageUseMask, err := config.ParsePackageUseList(filepath.Join(p.path, "package.use.mask"))
+	if err != nil {
+		return nil, err
+	}
+
+	packageUseForce, err := config.ParsePackageUseList(filepath.Join(p.path, "package.use.force"))
+	if err != nil {
+		return nil, err
+	}
+
+	provided, err := config.ParsePackageProvided(filepath.Join(p.path, "package.provided"))
+	if err != nil {
 		return nil, err
 	}
 
 	return &ParsedProfile{
-		profile:   p,
-		vars:      vars,
-		overrides: overrides,
-		provided:  provided,
+		profile:         p,
+		parents:         parents,
+		useMask:         useMask,
+		useForce:        useForce,
+		packageUse:      packageUse,
+		packageUseMask:  packageUseMask,
+		packageUseForce: packageUseForce,
+		provided:        provided,
 	}, nil
 }
 
-func (p *Profile) parseVars(vars makevars.Vars) error {
+type ParsedProfile struct {
+	profile         *Profile
+	parents         []*ParsedProfile
+	useMask         []string
+	useForce        []string
+	packageUse      []*config.PackageUse
+	packageUseMask  []*config.PackageUse
+	packageUseForce []*config.PackageUse
+	provided        []*config.Package
+}
+
+var _ config.Source = &ParsedProfile{}
+
+func (p *ParsedProfile) EvalGlobalVars(env makevars.Vars) ([]makevars.Vars, error) {
+	var varsList []makevars.Vars
 	for _, parent := range p.parents {
-		if err := parent.parseVars(vars); err != nil {
+		subVarsList, err := parent.EvalGlobalVars(env)
+		if err != nil {
+			return nil, err
+		}
+		varsList = append(varsList, subVarsList...)
+	}
+
+	vars, err := makevars.Eval(filepath.Join(p.profile.path, makeDefaults), env, false)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return nil, err
+	}
+	varsList = append(varsList, vars)
+
+	return varsList, nil
+}
+
+func (p *ParsedProfile) EvalPackageVars(pkg *config.Package, env makevars.Vars) ([]makevars.Vars, error) {
+	var varsList []makevars.Vars
+	for _, parent := range p.parents {
+		subVarsList, err := parent.EvalPackageVars(pkg, env)
+		if err != nil {
+			return nil, err
+		}
+		varsList = append(varsList, subVarsList...)
+	}
+
+	vars, err := makevars.Eval(filepath.Join(p.profile.path, makeDefaults), env, false)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return nil, err
+	}
+	varsList = append(varsList, vars)
+
+	targetPkg := &dependency.TargetPackage{
+		Name:    pkg.Name,
+		Version: pkg.Version,
+		Uses:    nil, // USE dependencies are unavailable
+	}
+	var uses []string
+	for _, pu := range p.packageUse {
+		if pu.Atom.Match(targetPkg) {
+			uses = append(uses, pu.Uses...)
+		}
+	}
+	if len(uses) > 0 {
+		varsList = append(varsList, makevars.Vars{"USE": strings.Join(uses, " ")})
+	}
+
+	return varsList, nil
+}
+
+func (p *ParsedProfile) UseMasksAndForces(pkg *config.Package, masks map[string]bool, forces map[string]bool) error {
+	for _, parent := range p.parents {
+		if err := parent.UseMasksAndForces(pkg, masks, forces); err != nil {
 			return err
 		}
 	}
 
-	if err := makevars.ParseMakeDefaults(filepath.Join(p.path, makeDefaults), vars); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return err
-	}
-	return nil
-}
-
-func (p *Profile) parseOverrides(overrides *Overrides) error {
-	for _, parent := range p.parents {
-		parent.parseOverrides(overrides)
-	}
-
-	return readPackageUse(filepath.Join(p.path, "package.use"), overrides)
-}
-
-func (p *Profile) parseProvided(provided *[]*ProvidedPackage) error {
-	for _, parent := range p.parents {
-		parent.parseProvided(provided)
-	}
-
-	return readPackageProvided(filepath.Join(p.path, "package.provided"), provided)
-}
-
-type ParsedProfile struct {
-	profile   *Profile
-	vars      makevars.Vars
-	overrides *Overrides
-	provided  []*ProvidedPackage
-}
-
-func (p *ParsedProfile) Vars() makevars.Vars {
-	return p.vars.Copy()
-}
-
-func (p *ParsedProfile) Overrides() *Overrides {
-	return p.overrides
-}
-
-func (p *ParsedProfile) Provided() []*ProvidedPackage {
-	return p.provided
-}
-
-type Overrides struct {
-	packageUse map[string]string
-}
-
-func (o *Overrides) ForPackage(packageName string, ver *version.Version) *PackageOverrides {
-	return &PackageOverrides{
-		use: o.packageUse[packageName],
-	}
-}
-
-type PackageOverrides struct {
-	use string
-}
-
-func (po *PackageOverrides) Use() string {
-	return po.use
-}
-
-type ProvidedPackage struct {
-	name string
-	ver  *version.Version
-}
-
-func (pp *ProvidedPackage) Name() string {
-	return pp.name
-}
-
-func (pp *ProvidedPackage) Version() *version.Version {
-	return pp.ver
-}
-
-func readPackageUse(path string, overrides *Overrides) error {
-	lines, err := readLines(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	for _, line := range lines {
-		fields := strings.Fields(line)
-		if len(fields) == 0 {
-			continue
+	updateMap := func(set map[string]bool, uses []string) {
+		for _, use := range uses {
+			value := true
+			if strings.HasPrefix(use, "-") {
+				use = strings.TrimPrefix(use, "-")
+				value = false
+			}
+			set[use] = value
 		}
-		packageName := fields[0]
-		uses := fields[1:]
-		overrides.packageUse[packageName] += " " + strings.Join(uses, " ")
+	}
+
+	updateMap(masks, p.useMask)
+	updateMap(forces, p.useForce)
+
+	targetPkg := &dependency.TargetPackage{
+		Name:    pkg.Name,
+		Version: pkg.Version,
+		Uses:    nil, // USE dependencies are unavailable
+	}
+	for _, pu := range p.packageUseMask {
+		if pu.Atom.Match(targetPkg) {
+			updateMap(masks, pu.Uses)
+		}
+	}
+	for _, pu := range p.packageUseForce {
+		if pu.Atom.Match(targetPkg) {
+			updateMap(forces, pu.Uses)
+		}
 	}
 	return nil
 }
 
-func readPackageProvided(path string, provided *[]*ProvidedPackage) error {
-	lines, err := readLines(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	for _, line := range lines {
-		prefix, ver, err := version.ExtractSuffix(line)
+func (p *ParsedProfile) ProvidedPackages() ([]*config.Package, error) {
+	var provided []*config.Package
+	for _, parent := range p.parents {
+		pkgs, err := parent.ProvidedPackages()
 		if err != nil {
-			return fmt.Errorf("invalid provided package spec: %s: %w", line, err)
+			return nil, err
 		}
-
-		const hyphen = "-"
-		if !strings.HasSuffix(prefix, hyphen) {
-			return fmt.Errorf("invalid provided package spec: %s", line)
-		}
-		name := strings.TrimSuffix(prefix, hyphen)
-		*provided = append(*provided, &ProvidedPackage{
-			name: name,
-			ver:  ver,
-		})
+		provided = append(provided, pkgs...)
 	}
-	return nil
-}
-
-func readLines(path string) ([]string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	var lines []string
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		lines = append(lines, line)
-	}
-	if err := sc.Err(); err != nil {
-		return nil, err
-	}
-	return lines, nil
+	return append(provided, p.provided...), nil
 }

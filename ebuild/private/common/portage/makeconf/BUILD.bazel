@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "makeconf",
@@ -10,16 +10,8 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/common/portage/makeconf",
     visibility = ["//visibility:public"],
     deps = [
-        "@cc_mvdan_sh_v3//expand",
-        "@cc_mvdan_sh_v3//syntax",
-    ],
-)
-
-go_test(
-    name = "makeconf_test",
-    srcs = ["makeconf_test.go"],
-    deps = [
-        ":makeconf",
-        "@com_github_google_go_cmp//cmp",
+        "//bazel/ebuild/private/common/standard/config",
+        "//bazel/ebuild/private/common/standard/dependency",
+        "//bazel/ebuild/private/common/standard/makevars",
     ],
 )

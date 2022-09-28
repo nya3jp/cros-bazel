@@ -1,0 +1,37 @@
+>>> etc/portage/make.profile -> ../../overlay/profiles/default
+
+>>> overlay/profiles/default/parent
+../1
+../2
+
+>>> overlay/profiles/1/make.defaults
+USE="a"
+
+>>> overlay/profiles/1/package.use
+# This is overridden by profiles/2/make.defaults.
+pkg/a -b
+
+>>> overlay/profiles/2/make.defaults
+USE="b"
+
+>>> overlay/profiles/2/package.use
+pkg/b -a
+
+>>> overlay/profiles/categories
+pkg
+
+>>> overlay/pkg/a/a-1.ebuild
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+IUSE="a b"
+
+>>> overlay/pkg/b/b-1.ebuild
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+IUSE="a b"
+
+>>> expect.use
+pkg/a a b
+pkg/b -a b

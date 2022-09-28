@@ -10,7 +10,8 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/common/standard/profile",
     visibility = ["//visibility:public"],
     deps = [
+        "//bazel/ebuild/private/common/standard/config",
+        "//bazel/ebuild/private/common/standard/dependency",
         "//bazel/ebuild/private/common/standard/makevars",
-        "//bazel/ebuild/private/common/standard/version",
     ],
 )
