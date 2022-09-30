@@ -494,44 +494,6 @@
       "chromeos-base/libchrome"
     ]
   },
-  "chromeos-base/authpolicy": {
-    "buildDeps": [
-      "app-crypt/mit-krb5",
-      "chromeos-base/cryptohome-client",
-      "chromeos-base/libbrillo",
-      "chromeos-base/libchrome",
-      "chromeos-base/metrics",
-      "chromeos-base/minijail",
-      "chromeos-base/protofiles",
-      "chromeos-base/session_manager-client",
-      "chromeos-base/system_api",
-      "dev-cpp/gtest",
-      "dev-libs/protobuf",
-      "net-fs/samba",
-      "sys-apps/baselayout",
-      "sys-apps/dbus",
-      "sys-libs/libcap"
-    ],
-    "localSrc": [
-      "//platform2:src",
-      "//platform2/authpolicy:src",
-      "//platform2/common-mk:src",
-      "//platform2/metrics:src"
-    ],
-    "runtimeDeps": [
-      "app-crypt/mit-krb5",
-      "chromeos-base/cryptohome-client",
-      "chromeos-base/libbrillo",
-      "chromeos-base/libchrome",
-      "chromeos-base/metrics",
-      "chromeos-base/minijail",
-      "dev-libs/protobuf",
-      "net-fs/samba",
-      "sys-apps/baselayout",
-      "sys-apps/dbus",
-      "sys-libs/libcap"
-    ]
-  },
   "chromeos-base/autotest": {
     "buildDeps": [
       "virtual/autotest-assistant-libs",
@@ -758,7 +720,6 @@
       "app-arch/sharutils",
       "app-crypt/mit-krb5",
       "app-misc/edid-decode",
-      "chromeos-base/authpolicy",
       "chromeos-base/chrome-icu",
       "chromeos-base/chromeos-fonts",
       "chromeos-base/gestures",
@@ -794,7 +755,6 @@
       "app-arch/sharutils",
       "app-crypt/mit-krb5",
       "app-misc/edid-decode",
-      "chromeos-base/authpolicy",
       "chromeos-base/autotest",
       "chromeos-base/chrome-icu",
       "chromeos-base/chromeos-fonts",
@@ -4430,7 +4390,6 @@
       "dev-libs/expat",
       "dev-libs/libffi",
       "dev-libs/openssl",
-      "net-wireless/bluez",
       "sys-apps/util-linux",
       "sys-libs/gdbm",
       "sys-libs/ncurses",
@@ -9006,6 +8965,8 @@
       "dev-libs/libgcrypt",
       "dev-libs/libxml2",
       "sys-devel/flex",
+      "sys-devel/llvm",
+      "virtual/libelf",
       "virtual/pkgconfig",
       "virtual/udev",
       "x11-base/xorg-proto",
@@ -9017,6 +8978,7 @@
     "runtimeDeps": [
       "dev-libs/expat",
       "dev-libs/libgcrypt",
+      "virtual/libelf",
       "virtual/udev",
       "x11-libs/libdrm"
     ]
@@ -9615,16 +9577,14 @@
       "net-dns/c-ares",
       "net-libs/nghttp2",
       "sys-devel/libtool",
-      "sys-libs/zlib",
-      "virtual/krb5"
+      "sys-libs/zlib"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "dev-libs/openssl",
       "net-dns/c-ares",
       "net-libs/nghttp2",
-      "sys-libs/zlib",
-      "virtual/krb5"
+      "sys-libs/zlib"
     ]
   },
   "net-misc/dhcpcd": {
@@ -9691,6 +9651,7 @@
     "runtimeDeps": [
       "dev-libs/openssl",
       "sys-apps/baselayout",
+      "sys-apps/shadow",
       "sys-auth/pambase",
       "sys-libs/pam",
       "sys-libs/zlib",
@@ -10271,13 +10232,15 @@
   "sys-apps/pciutils": {
     "buildDeps": [
       "sys-apps/kmod",
-      "sys-libs/zlib"
+      "sys-libs/zlib",
+      "virtual/libudev"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "sys-apps/hwdata",
       "sys-apps/kmod",
-      "sys-libs/zlib"
+      "sys-libs/zlib",
+      "virtual/libudev"
     ]
   },
   "sys-apps/restorecon": {
@@ -10525,6 +10488,14 @@
     "buildDeps": [
       "app-arch/xz-utils",
       "dev-libs/libltdl"
+    ],
+    "localSrc": [],
+    "runtimeDeps": []
+  },
+  "sys-devel/llvm": {
+    "buildDeps": [
+      "dev-libs/libffi",
+      "sys-libs/zlib"
     ],
     "localSrc": [],
     "runtimeDeps": []
@@ -11145,18 +11116,18 @@
       "media-libs/libjpeg-turbo"
     ]
   },
-  "virtual/krb5": {
-    "buildDeps": [],
-    "localSrc": [],
-    "runtimeDeps": [
-      "app-crypt/mit-krb5"
-    ]
-  },
   "virtual/libcrypt": {
     "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
       "sys-libs/libxcrypt"
+    ]
+  },
+  "virtual/libelf": {
+    "buildDeps": [],
+    "localSrc": [],
+    "runtimeDeps": [
+      "dev-libs/elfutils"
     ]
   },
   "virtual/libgudev": {
