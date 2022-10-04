@@ -1,0 +1,9 @@
+"""A build file to be used when importing a repository that will need to be
+built separately.
+"""
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+    visibility = ["//visibility:public"],
+)
