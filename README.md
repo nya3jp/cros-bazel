@@ -87,3 +87,22 @@ Then run `bazel/tools/generate_depgraph.py` to generate a DOT file. It inspects
 ```sh
 $ bazel/tools/generate_depgraph.py bazel/data/deps.json > bazel/data/deps.dot
 ```
+
+### Debugging an ephemeral CrOS chroot
+
+Sometimes you want to enter an ephemeral CrOS chroot where a package build is
+failing to inspect the environment interactively.
+
+To debug an ephemeral CrOS chroot, build a target package with
+`--spawn_strategy=standalone` option. On the very first line of its stderr
+output, a command line to enter the chroot is printed, just like this:
+
+```
+HINT: To debug this build environment, run the Bazel build with --spawn_strategy=standalone, and run the command printed below:
+( cd path/to/somewhere && path/to/command --some-options --login )
+```
+
+The message is shown without `--spawn_strategy=standalone`, but the printed
+command does not work because Bazel uses a temporary execroot.
+
+Related code is located [here](https://team.git.corp.google.com/cros-build-tiger/cros-bazel/+/refs/heads/main/ebuild/private/cmd/build_package/main.go#190).
