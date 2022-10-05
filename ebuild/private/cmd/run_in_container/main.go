@@ -59,14 +59,11 @@ func parseOverlaySpecs(specs []string, t overlayType) ([]overlayInfo, error) {
 	return mounts, nil
 }
 
-var flagDiffDir = &cli.StringFlag{
-	Name:     "diff-dir",
+var flagStagingDir = &cli.StringFlag{
+	Name:     "scratch-dir",
 	Required: true,
-}
-
-var flagWorkDir = &cli.StringFlag{
-	Name:     "work-dir",
-	Required: true,
+	Usage: "Directory that will be used by the overlayfs mount. " +
+	       "Output artifacts can be found in the 'diff' directory.",
 }
 
 var flagChdir = &cli.StringFlag{
@@ -93,8 +90,7 @@ var flagInternalContinue = &cli.BoolFlag{
 
 var app = &cli.App{
 	Flags: []cli.Flag{
-		flagDiffDir,
-		flagWorkDir,
+		flagStagingDir,
 		flagChdir,
 		flagOverlayDir,
 		flagOverlaySquashfs,
@@ -158,8 +154,11 @@ func enterNamespace(c *cli.Context) error {
 }
 
 func continueNamespace(c *cli.Context) error {
-	diffDir := c.String(flagDiffDir.Name)
-	workDir := c.String(flagWorkDir.Name)
+	stageDir, err := filepath.Abs(c.String(flagStagingDir.Name))
+	if err != nil {
+		return err;
+	}
+
 	//squashfusePath := c.String(flagSquashfuse.Name)
 	chdir := c.String(flagChdir.Name)
 	dirOverlays, err := parseOverlaySpecs(c.StringSlice(flagOverlayDir.Name), overlayDir)
@@ -179,39 +178,28 @@ func continueNamespace(c *cli.Context) error {
 		return err
 	}
 
-	pivotRootDone := false // whether pivot_root has been called
-
 	// Enable the loopback networking.
 	if err := runCommand("/usr/sbin/ifconfig", "lo", "up"); err != nil {
 		return err
 	}
 
-	stageDir, err := os.MkdirTemp("/tmp", "run_in_container.*")
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if !pivotRootDone {
-			os.Remove(stageDir)
-		}
-	}()
-
-	// Mount a tmpfs so that staged files are purged automatically on exit.
-	if err := unix.Mount("tmpfs", stageDir, "tmpfs", 0, ""); err != nil {
-		return err
-	}
-	defer func() {
-		if !pivotRootDone {
-			unix.Unmount(stageDir, unix.MNT_DETACH)
-		}
-	}()
-
-	rootDir := filepath.Join(stageDir, "root")
-	baseDir := filepath.Join(stageDir, "base")
+	// We keep all the directories in the stage dir to keep relative file
+	// paths short.
+	rootDir := filepath.Join(stageDir, "root") // Merged directory
+	baseDir := filepath.Join(stageDir, "base") // Directory containing mount targets
 	lowersDir := filepath.Join(stageDir, "lowers")
+	diffDir := filepath.Join(stageDir, "diff")
+	workDir := filepath.Join(stageDir, "work")
+
+	for _, dir := range []string{rootDir, baseDir, lowersDir, diffDir, workDir} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
 
 	for _, dir := range []string{rootDir, baseDir, lowersDir} {
-		if err := os.Mkdir(dir, 0o755); err != nil {
+		// Mount a tmpfs so that files are purged automatically on exit.
+		if err := unix.Mount("tmpfs", dir, "tmpfs", 0, ""); err != nil {
 			return err
 		}
 	}
@@ -245,7 +233,7 @@ func continueNamespace(c *cli.Context) error {
 		}
 	}
 
-	// Ensure mountpoints to exist.
+	// Ensure mountpoints to exist in base.
 	for mountDir, lowerDirs := range lowerDirsByMountDir {
 		if err := os.MkdirAll(filepath.Join(baseDir, mountDir), 0o755); err != nil {
 			return err
@@ -271,8 +259,16 @@ func continueNamespace(c *cli.Context) error {
 		// Set up the store directory.
 		// TODO: Avoid overlapped upper directories. They cause overlayfs to emit
 		// warnings in kernel logs.
-		upperDir := filepath.Join(diffDir, mountDir)
-		workDir := filepath.Join(workDir, strconv.Itoa(i))
+		upperDir, err := filepath.Rel(lowersDir, filepath.Join(diffDir, mountDir))
+		if err != nil {
+			return err;
+		}
+
+		workDir, err := filepath.Rel(lowersDir, filepath.Join(workDir, strconv.Itoa(i)))
+		if err != nil {
+			return err;
+		}
+
 		for _, dir := range []string{upperDir, workDir} {
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return err
@@ -315,16 +311,6 @@ func continueNamespace(c *cli.Context) error {
 	// Execute pivot_root.
 	if err := unix.PivotRoot(rootDir, filepath.Join(rootDir, "host")); err != nil {
 		return fmt.Errorf("pivot_root: %w", err)
-	}
-
-	// From now on, deferred cleanups will not run.
-	pivotRootDone = true
-	pivotedTmpDir := filepath.Join("/host", stageDir)
-	if err := unix.Unmount(pivotedTmpDir, unix.MNT_DETACH); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: failed to unmount stage directory: %v\n", err)
-	}
-	if err := os.Remove(pivotedTmpDir); err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: failed to delete stage directory: %v\n", err)
 	}
 
 	// Unmount /host.

@@ -208,8 +208,8 @@ var app = &cli.App{
 		}
 		defer os.RemoveAll(tmpDir)
 
-		diffDir := filepath.Join(tmpDir, "diff")
-		workDir := filepath.Join(tmpDir, "work")
+		scratchDir := filepath.Join(tmpDir, "scratch")
+		diffDir := filepath.Join(scratchDir, "diff")
 
 		rootDir := fileutil.NewDualPath(tmpDir, "/")
 		bazelBuildDir := rootDir.Add("mnt/host/bazel-build")
@@ -220,11 +220,6 @@ var app = &cli.App{
 		hostPackagesDir := rootDir.Add("var/lib/portage/pkgs")
 		targetPackagesDir := rootDir.Add("build").Add(board).Add("packages")
 
-		for _, dir := range []string{diffDir, workDir} {
-			if err := os.MkdirAll(dir, 0o755); err != nil {
-				return err
-			}
-		}
 		for _, dir := range []fileutil.DualPath{bazelBuildDir, sourceDir, ebuildDir, distDir, hostPackagesDir, targetPackagesDir} {
 			if err := os.MkdirAll(dir.Outside(), 0o755); err != nil {
 				return err
@@ -263,8 +258,7 @@ var app = &cli.App{
 
 		args := []string{
 			runInContainerPath,
-			"--diff-dir=" + diffDir,
-			"--work-dir=" + workDir,
+			"--scratch-dir=" + scratchDir,
 			"--overlay-dir=" + bazelBuildDir.Inside() + "=" + bazelBuildDir.Outside(),
 			"--overlay-dir=" + ebuildDir.Inside() + "=" + ebuildDir.Outside(),
 			"--overlay-dir=" + distDir.Inside() + "=" + distDir.Outside(),

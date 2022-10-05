@@ -96,8 +96,8 @@ var app = &cli.App{
 		}
 		defer os.RemoveAll(tmpDir)
 
-		diffDir := filepath.Join(tmpDir, "diff")
-		workDir := filepath.Join(tmpDir, "work")
+		scratchDir := filepath.Join(tmpDir, "scratch")
+		diffDir := filepath.Join(scratchDir, "diff")
 
 		rootDir := fileutil.NewDualPath(filepath.Join(tmpDir, "root"), "/")
 		sysrootDir := rootDir.Add("build", board)
@@ -107,7 +107,7 @@ var app = &cli.App{
 		hostPackagesDir := rootDir.Add("var/lib/portage/pkgs")
 		targetPackagesDir := sysrootDir.Add("packages")
 
-		for _, dir := range []string{diffDir, workDir, stageDir.Outside(), tarballsDir.Outside(), hostPackagesDir.Outside(), targetPackagesDir.Outside()} {
+		for _, dir := range []string{stageDir.Outside(), tarballsDir.Outside(), hostPackagesDir.Outside(), targetPackagesDir.Outside()} {
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return err
 			}
@@ -136,8 +136,7 @@ var app = &cli.App{
 
 		args := []string{
 			runInContainerPath,
-			"--diff-dir=" + diffDir,
-			"--work-dir=" + workDir,
+			"--scratch-dir=" + scratchDir,
 			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
 			"--overlay-dir=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
 			"--overlay-dir=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
