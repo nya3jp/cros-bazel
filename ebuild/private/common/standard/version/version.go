@@ -250,10 +250,10 @@ func ExtractSuffix(s string) (prefix string, ver *Version, err error) {
 			break
 		}
 
-		suffixes = append(suffixes, &Suffix{
+		suffixes = append([]*Suffix{{
 			Label:  SuffixLabel(m[1]),
 			Number: m[2],
-		})
+		}}, suffixes...)
 		s = s[:len(s)-len(m[0])]
 	}
 

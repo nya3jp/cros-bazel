@@ -86,3 +86,27 @@ func TestVersionCompare_EquivalentVersions(t *testing.T) {
 		}
 	}
 }
+
+func TestVersionString(t *testing.T) {
+	for _, want := range []string{
+		"0",
+		"1.2.3.4.5.6.7.8",
+		"10000000000000000000000",
+		"1x",
+		"1_alpha",
+		"1_alpha42",
+		"1_rc_beta3_rc5",
+		"1-r0",
+		"1-r1000000000000000000",
+	} {
+		ver, err := version.Parse(want)
+		if err != nil {
+			t.Errorf("Parse(%q) failed: %v", want, err)
+			continue
+		}
+
+		if got := ver.String(); got != want {
+			t.Errorf("Parse(%q).String() = %q; want %q", want, got, want)
+		}
+	}
+}
