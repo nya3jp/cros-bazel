@@ -1,4 +1,4 @@
-// Copyright 2022 The Chromium OS Authors. All rights reserved.
+// Copyright 2022 The ChromiumOS Authors.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -124,7 +124,7 @@ func locateDistFile(filename string) (*distEntry, error) {
 	return nil, fmt.Errorf("no distfile found for %s", filename)
 }
 
-var repositoriesTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The Chromium OS Authors. All rights reserved.
+var repositoriesTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The ChromiumOS Authors.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -141,7 +141,7 @@ def dependencies():
 {{- end }}
 `))
 
-var buildHeaderTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The Chromium OS Authors. All rights reserved.
+var buildHeaderTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The ChromiumOS Authors.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
