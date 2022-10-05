@@ -16,6 +16,7 @@ export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
 export RESTRICT="fetch"
 export FEATURES="-sandbox -usersandbox"  # TODO: turn on sandbox
+export CCACHE_DISABLE=1
 
 read -ra atoms <<<"${INSTALL_ATOMS_TARGET}"
 if (( ${#atoms[@]} )); then
