@@ -137,18 +137,18 @@ var app = &cli.App{
 		args := []string{
 			runInContainerPath,
 			"--scratch-dir=" + scratchDir,
-			"--overlay-dir=" + stageDir.Inside() + "=" + stageDir.Outside(),
-			"--overlay-dir=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
-			"--overlay-dir=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
+			"--overlay=" + stageDir.Inside() + "=" + stageDir.Outside(),
+			"--overlay=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
+			"--overlay=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
 		}
 
 		for _, inputSquashfsPath := range inputSquashfsPaths {
-			args = append(args, "--overlay-squashfs=/="+inputSquashfsPath)
+			args = append(args, "--overlay=/="+inputSquashfsPath)
 		}
 
 		for _, overlay := range overlays {
 			overlayDir := sourceDir.Add(overlay.MountDir)
-			args = append(args, "--overlay-squashfs="+overlayDir.Inside()+"="+overlay.SquashfsPath)
+			args = append(args, "--overlay="+overlayDir.Inside()+"="+overlay.SquashfsPath)
 		}
 
 		args = append(args, scriptPath.Inside())

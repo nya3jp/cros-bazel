@@ -43,17 +43,40 @@ type overlayInfo struct {
 	Type   overlayType
 }
 
-func parseOverlaySpecs(specs []string, t overlayType) ([]overlayInfo, error) {
+func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 	var mounts []overlayInfo
 	for _, spec := range specs {
 		v := strings.Split(spec, "=")
 		if len(v) != 2 {
 			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
 		}
+
+		inside := "/" + strings.Trim(v[0], "/")
+		outside := v[1]
+
+		outside, err := filepath.EvalSymlinks(outside)
+		if err != nil {
+			return nil, err
+		}
+
+		fileInfo, err := os.Stat(outside)
+		if err != nil {
+			return nil, err
+		}
+
+		var overlayType overlayType
+		if fileInfo.IsDir() {
+			overlayType = overlayDir
+		} else if strings.HasSuffix(outside, ".squashfs") {
+			overlayType = overlaySquashfs
+		} else {
+			return nil, fmt.Errorf("Unsupported file type: %s", outside)
+		}
+
 		mounts = append(mounts, overlayInfo{
-			Target: "/" + strings.Trim(v[0], "/"),
-			Source: v[1],
-			Type:   t,
+			Target: inside,
+			Source: outside,
+			Type:   overlayType,
 		})
 	}
 	return mounts, nil
@@ -71,12 +94,16 @@ var flagChdir = &cli.StringFlag{
 	Value: "/",
 }
 
-var flagOverlayDir = &cli.StringSliceFlag{
-	Name: "overlay-dir",
-}
+var flagOverlay = &cli.StringSliceFlag{
+	Name: "overlay",
+	Usage: "<inside>=<outside dir | <file>.squashfs>. " +
+	       "Mounts the outside dir or .squashfs file inside the " +
+	       "container at the specified inside path. " +
+	       "This option can be specified multiple times. The earlier " +
+	       "overlays are mounted as the higher layer, and the later " +
+	       "overlays are mounted as the lower layer.",
+	Required: true,
 
-var flagOverlaySquashfs = &cli.StringSliceFlag{
-	Name: "overlay-squashfs",
 }
 
 var flagKeepHostMount = &cli.BoolFlag{
@@ -92,8 +119,7 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagStagingDir,
 		flagChdir,
-		flagOverlayDir,
-		flagOverlaySquashfs,
+		flagOverlay,
 		flagKeepHostMount,
 		flagInternalContinue,
 	},
@@ -101,10 +127,7 @@ var app = &cli.App{
 		if len(c.Args()) == 0 {
 			return errors.New("positional arguments missing")
 		}
-		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlaySquashfs.Name), overlayDir); err != nil {
-			return err
-		}
-		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlaySquashfs.Name), overlaySquashfs); err != nil {
+		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name)); err != nil {
 			return err
 		}
 		return nil
@@ -161,15 +184,10 @@ func continueNamespace(c *cli.Context) error {
 
 	//squashfusePath := c.String(flagSquashfuse.Name)
 	chdir := c.String(flagChdir.Name)
-	dirOverlays, err := parseOverlaySpecs(c.StringSlice(flagOverlayDir.Name), overlayDir)
+	overlays, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name))
 	if err != nil {
 		return err
 	}
-	squashfsOverlays, err := parseOverlaySpecs(c.StringSlice(flagOverlaySquashfs.Name), overlaySquashfs)
-	if err != nil {
-		return err
-	}
-	overlays := append(dirOverlays, squashfsOverlays...)
 	keepHostMount := c.Bool(flagKeepHostMount.Name)
 	args := []string(c.Args())
 

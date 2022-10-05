@@ -259,20 +259,20 @@ var app = &cli.App{
 		args := []string{
 			runInContainerPath,
 			"--scratch-dir=" + scratchDir,
-			"--overlay-dir=" + bazelBuildDir.Inside() + "=" + bazelBuildDir.Outside(),
-			"--overlay-dir=" + ebuildDir.Inside() + "=" + ebuildDir.Outside(),
-			"--overlay-dir=" + distDir.Inside() + "=" + distDir.Outside(),
-			"--overlay-dir=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
-			"--overlay-dir=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
+			"--overlay=" + bazelBuildDir.Inside() + "=" + bazelBuildDir.Outside(),
+			"--overlay=" + ebuildDir.Inside() + "=" + ebuildDir.Outside(),
+			"--overlay=" + distDir.Inside() + "=" + distDir.Outside(),
+			"--overlay=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
+			"--overlay=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
 		}
 
 		for _, sdkPath := range sdkPaths {
-			args = append(args, "--overlay-squashfs=/="+sdkPath)
+			args = append(args, "--overlay=/="+sdkPath)
 		}
 
 		for _, overlay := range overlays {
 			overlayDir := sourceDir.Add(overlay.MountDir)
-			args = append(args, "--overlay-squashfs="+overlayDir.Inside()+"="+overlay.SquashfsPath)
+			args = append(args, "--overlay="+overlayDir.Inside()+"="+overlay.SquashfsPath)
 		}
 
 		targetInstallAtoms, err := preparePackages(targetInstallPaths, targetPackagesDir)
