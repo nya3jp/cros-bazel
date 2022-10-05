@@ -211,7 +211,7 @@ var app = &cli.App{
 		scratchDir := filepath.Join(tmpDir, "scratch")
 		diffDir := filepath.Join(scratchDir, "diff")
 
-		rootDir := fileutil.NewDualPath(tmpDir, "/")
+		rootDir := fileutil.NewDualPath(filepath.Join(tmpDir, "root"), "/")
 		bazelBuildDir := rootDir.Add("mnt/host/bazel-build")
 		sourceDir := rootDir.Add("mnt/host/source")
 		// TODO: Choose a right overlay.
