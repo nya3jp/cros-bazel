@@ -21,7 +21,7 @@ pkg_tar(
 
 sdk(
     name = "sdk",
-    src = "@chromiumos_sdk//file",
+    src = "@cros-sdk-2022.08.22.085953//:root",
     board = "arm64-generic",
     host_deps = [
         "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",

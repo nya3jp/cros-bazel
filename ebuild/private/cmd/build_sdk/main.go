@@ -31,8 +31,8 @@ func runCommand(name string, args ...string) error {
 	return cmd.Run()
 }
 
-var flagInputSquashfs = &cli.StringSliceFlag{
-	Name:     "input-squashfs",
+var flagInput = &cli.StringSliceFlag{
+	Name:     "input",
 	Required: true,
 }
 
@@ -65,7 +65,7 @@ var flagInstallTarball = &cli.StringSliceFlag{
 
 var app = &cli.App{
 	Flags: []cli.Flag{
-		flagInputSquashfs,
+		flagInput,
 		flagOutputSquashfs,
 		flagBoard,
 		flagOverlay,
@@ -74,7 +74,7 @@ var app = &cli.App{
 		flagInstallTarball,
 	},
 	Action: func(c *cli.Context) error {
-		inputSquashfsPaths := c.StringSlice(flagInputSquashfs.Name)
+		inputPaths := c.StringSlice(flagInput.Name)
 		outputSquashfsPath := c.String(flagOutputSquashfs.Name)
 		board := c.String(flagBoard.Name)
 		overlays, err := makechroot.ParseOverlaySpecs(c.StringSlice(flagOverlay.Name))
@@ -142,8 +142,8 @@ var app = &cli.App{
 			"--overlay=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
 		}
 
-		for _, inputSquashfsPath := range inputSquashfsPaths {
-			args = append(args, "--overlay=/="+inputSquashfsPath)
+		for _, inputPath := range inputPaths {
+			args = append(args, "--overlay=/="+inputPath)
 		}
 
 		for _, overlay := range overlays {

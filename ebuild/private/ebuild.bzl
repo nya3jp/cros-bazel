@@ -27,8 +27,8 @@ def _ebuild_impl(ctx):
     ]
     transitive_inputs = []
 
-    args.add_all(sdk.squashfs_files, format_each = "--sdk=%s")
-    direct_inputs.extend(sdk.squashfs_files)
+    args.add_all(sdk.files, format_each = "--sdk=%s")
+    direct_inputs.extend(sdk.files)
 
     for file in ctx.attr.files:
         args.add_all(file.files, map_each = _format_file_arg)

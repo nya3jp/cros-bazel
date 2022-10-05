@@ -63,11 +63,8 @@ load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
 rules_pkg_dependencies()
 
-http_file(
-    name = "chromiumos_sdk",
-    sha256 = "acc090ab670aca9a05b97412c0616e5674c2835dc18d3f205ad4ea3afeef90cf",
-    urls = ["https://commondatastorage.googleapis.com/chromiumos-sdk/cros-sdk-2022.08.22.085953.tar.xz"],
-)
+load("//bazel/sdk:repositories.bzl", "cros_sdk_repositories")
+cros_sdk_repositories()
 
 new_local_repository(
     name = "chromite",

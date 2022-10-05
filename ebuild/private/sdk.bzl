@@ -5,7 +5,6 @@
 load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKInfo")
 
 def _sdk_impl(ctx):
-    base_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_base.squashfs")
     pkgs_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_pkgs.squashfs")
     host_installs = depset(
         transitive = [label[BinaryPackageInfo].runtime_deps for label in ctx.attr.host_deps],
@@ -14,19 +13,9 @@ def _sdk_impl(ctx):
         transitive = [label[BinaryPackageInfo].runtime_deps for label in ctx.attr.target_deps],
     )
 
-    ctx.actions.run_shell(
-        outputs = [base_squashfs_output],
-        inputs = [ctx.file.src],
-        # TODO: Don't depend on system binaries (xzcat, mksquashfs).
-        # TODO: Avoid -all-root.
-        command = "xzcat \"$1\" | mksquashfs - \"$2\" -tar -all-time 0 -all-root",
-        arguments = [ctx.file.src.path, base_squashfs_output.path],
-        progress_message = "Converting %{input} to squashfs",
-    )
-
     args = ctx.actions.args()
     args.add_all([
-        "--input-squashfs=" + base_squashfs_output.path,
+        "--input=" + ctx.file.src.path,
         "--output-squashfs=" + pkgs_squashfs_output.path,
         "--board=" + ctx.attr.board,
     ])
@@ -40,7 +29,7 @@ def _sdk_impl(ctx):
         overlay_inputs.append(overlay.squashfs_file)
 
     inputs = depset(
-        [ctx.executable._build_sdk, base_squashfs_output] + overlay_inputs + ctx.files.extra_tarballs,
+        [ctx.executable._build_sdk, ctx.file.src] + overlay_inputs + ctx.files.extra_tarballs,
         transitive = [host_installs, target_installs],
     )
 
@@ -53,10 +42,9 @@ def _sdk_impl(ctx):
         progress_message = "Building SDK",
     )
 
-    outputs = [pkgs_squashfs_output, base_squashfs_output]
     return [
-        DefaultInfo(files = depset(outputs)),
-        SDKInfo(board = ctx.attr.board, squashfs_files = outputs),
+        DefaultInfo(files = depset([pkgs_squashfs_output])),
+        SDKInfo(board = ctx.attr.board, files = [pkgs_squashfs_output, ctx.file.src]),
     ]
 
 sdk = rule(

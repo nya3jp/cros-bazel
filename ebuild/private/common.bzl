@@ -48,8 +48,8 @@ SDKInfo = provider(
         "board": """
             str: A board name.
         """,
-        "squashfs_files": """
-            File[]: Squashfs image files (.squashfs).
+        "files": """
+            File[]: Squashfs image files(.squashfs) or directory.
             The order matters; the first image must be overlayed on top of the
             second image, and so on.
         """,
