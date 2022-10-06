@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -158,6 +159,80 @@ func preparePackages(installPaths []string, dir fileutil.DualPath) ([]string, er
 	return atoms, nil
 }
 
+// The --sdk inputs can be two types:
+//  1. A symlink to a directory or symlink to a file in the real execroot
+//  2. A directory tree with symlinks pointing to the files in the real exec root
+//
+// This function undose the latter case. Bazel should be giving us a symlink to
+// the directory, instead of creating a symlink tree. We don't want to use the
+// symlink tree because that would require bind mounting the whole execroot
+// inside the container. Otherwise we couldn't resolve the symlinks.
+//
+// This method will find the first symlink in the symlink forest which will be
+// pointing to the real execroot. It then calculates the folder that should have
+// been passed in by bazel.
+func resolveSdkPaths(sdkPath string) (string, error) {
+	log.Println("Sdk Path: ", sdkPath)
+	info, err := os.Lstat(sdkPath)
+	if err != nil {
+		return "", err
+	}
+
+	log.Println("Mode:", info.Mode())
+
+	if info.Mode()&fs.ModeSymlink != 0 {
+		// Resolve the symlink so we always return an absolute path.
+		pointsTo, err := os.Readlink(sdkPath)
+		if err != nil {
+			return "", err
+		}
+		return pointsTo, nil
+	}
+
+	if !info.IsDir() {
+		return "", fmt.Errorf("Can't resolve sdk path %s %s", info.Mode(), sdkPath)
+	}
+
+	done := fmt.Errorf("Done")
+
+	var resolvedSdkPath string
+	err = filepath.WalkDir(sdkPath, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		fileInfo, err := info.Info()
+		if err != nil {
+			return err
+		}
+
+		if fileInfo.Mode().Type()&fs.ModeSymlink == 0 {
+			return fmt.Errorf("Expected %s to be a symlink", path)
+		}
+
+		target, err := os.Readlink(path)
+		if err != nil {
+			return err
+		}
+
+		insidePath := strings.TrimPrefix(path, sdkPath)
+
+		resolvedSdkPath = strings.TrimSuffix(target, insidePath)
+
+		return done
+	})
+
+	if err != nil && err != done {
+		return "", err
+	}
+
+	return resolvedSdkPath, nil
+}
+
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagEBuild,
@@ -267,7 +342,11 @@ var app = &cli.App{
 		}
 
 		for _, sdkPath := range sdkPaths {
-			args = append(args, "--overlay=/="+sdkPath)
+			resolvedSdkPath, err := resolveSdkPaths(sdkPath)
+			if err != nil {
+				return err
+			}
+			args = append(args, "--overlay=/="+resolvedSdkPath)
 		}
 
 		for _, overlay := range overlays {

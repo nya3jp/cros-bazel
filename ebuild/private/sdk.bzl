@@ -5,6 +5,7 @@
 load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKInfo")
 
 def _sdk_impl(ctx):
+    pkgs_dir_output = ctx.actions.declare_directory(ctx.attr.name + "_pkgs")
     pkgs_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_pkgs.squashfs")
     host_installs = depset(
         transitive = [label[BinaryPackageInfo].runtime_deps for label in ctx.attr.host_deps],
@@ -16,6 +17,7 @@ def _sdk_impl(ctx):
     args = ctx.actions.args()
     args.add_all([
         "--input=" + ctx.file.src.path,
+        "--output-dir=" + pkgs_dir_output.path,
         "--output-squashfs=" + pkgs_squashfs_output.path,
         "--board=" + ctx.attr.board,
     ])
@@ -33,9 +35,11 @@ def _sdk_impl(ctx):
         transitive = [host_installs, target_installs],
     )
 
+    outputs = [pkgs_squashfs_output, pkgs_dir_output]
+
     ctx.actions.run(
         inputs = inputs,
-        outputs = [pkgs_squashfs_output],
+        outputs = outputs,
         executable = ctx.executable._build_sdk,
         arguments = [args],
         mnemonic = "Sdk",
@@ -43,8 +47,12 @@ def _sdk_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset([pkgs_squashfs_output])),
-        SDKInfo(board = ctx.attr.board, files = [pkgs_squashfs_output, ctx.file.src]),
+        DefaultInfo(files = depset(outputs)),
+        SDKInfo(board = ctx.attr.board, files = [
+            pkgs_dir_output,
+            pkgs_squashfs_output,
+            ctx.file.src
+        ]),
     ]
 
 sdk = rule(
