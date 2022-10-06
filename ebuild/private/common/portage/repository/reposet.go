@@ -7,12 +7,8 @@ package repository
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
 	"strings"
 
-	"cros.local/bazel/ebuild/private/common/standard/dependency"
-	"cros.local/bazel/ebuild/private/common/standard/ebuild"
-	"cros.local/bazel/ebuild/private/common/standard/packages"
 	"cros.local/bazel/ebuild/private/common/standard/profile"
 )
 
@@ -79,33 +75,14 @@ func (s *RepoSet) EClassDirs() []string {
 	return dirs
 }
 
-func (s *RepoSet) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor) ([]*packages.Package, error) {
-	var pkgs []*packages.Package
+func (s *RepoSet) Packages(packageName string) ([]*Package, error) {
+	var pkgs []*Package
 	for _, repo := range s.ordered {
-		repoPkgs, err := repo.Package(atom, processor)
+		repoPkgs, err := repo.Packages(packageName)
 		if err != nil {
 			return nil, err
 		}
 		pkgs = append(pkgs, repoPkgs...)
 	}
-
-	sort.SliceStable(pkgs, func(i, j int) bool {
-		return pkgs[i].Version().Compare(pkgs[j].Version()) > 0
-	})
-
 	return pkgs, nil
-}
-
-func (s *RepoSet) BestPackage(atom *dependency.Atom, processor *ebuild.CachedProcessor) (*packages.Package, error) {
-	candidates, err := s.Package(atom, processor)
-	if err != nil {
-		return nil, err
-	}
-
-	candidates = packages.SelectByStability(candidates)
-	if len(candidates) == 0 {
-		return nil, fmt.Errorf("no package satisfies %s", atom.String())
-	}
-
-	return candidates[0], nil
 }

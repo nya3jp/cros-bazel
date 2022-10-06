@@ -103,7 +103,12 @@ func (p *Profile) Parse() (*ParsedProfile, error) {
 		return nil, err
 	}
 
-	provided, err := config.ParsePackageProvided(filepath.Join(p.path, "package.provided"))
+	packageMasks, err := config.ParseAtomList(filepath.Join(p.path, "package.mask"))
+	if err != nil {
+		return nil, err
+	}
+
+	provided, err := config.ParsePackageList(filepath.Join(p.path, "package.provided"))
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +121,7 @@ func (p *Profile) Parse() (*ParsedProfile, error) {
 		packageUse:      packageUse,
 		packageUseMask:  packageUseMask,
 		packageUseForce: packageUseForce,
+		packageMasks:    packageMasks,
 		provided:        provided,
 	}, nil
 }
@@ -128,6 +134,7 @@ type ParsedProfile struct {
 	packageUse      []*config.PackageUse
 	packageUseMask  []*config.PackageUse
 	packageUseForce []*config.PackageUse
+	packageMasks    []*dependency.Atom
 	provided        []*config.Package
 }
 
@@ -223,6 +230,18 @@ func (p *ParsedProfile) UseMasksAndForces(pkg *config.Package, masks map[string]
 		}
 	}
 	return nil
+}
+
+func (p *ParsedProfile) PackageMasks() ([]*dependency.Atom, error) {
+	var atoms []*dependency.Atom
+	for _, parent := range p.parents {
+		subatoms, err := parent.PackageMasks()
+		if err != nil {
+			return nil, err
+		}
+		atoms = append(atoms, subatoms...)
+	}
+	return append(atoms, p.packageMasks...), nil
 }
 
 func (p *ParsedProfile) ProvidedPackages() ([]*config.Package, error) {

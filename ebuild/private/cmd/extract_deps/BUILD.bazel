@@ -10,11 +10,10 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/cmd/extract_deps",
     visibility = ["//visibility:private"],
     deps = [
-        "//bazel/ebuild/private/common/portage/repository",
+        "//bazel/ebuild/private/common/portage",
         "//bazel/ebuild/private/common/runfiles",
         "//bazel/ebuild/private/common/standard/config",
         "//bazel/ebuild/private/common/standard/dependency",
-        "//bazel/ebuild/private/common/standard/ebuild",
         "//bazel/ebuild/private/common/standard/packages",
         "//bazel/ebuild/private/common/standard/version",
         "@com_github_urfave_cli//:cli",

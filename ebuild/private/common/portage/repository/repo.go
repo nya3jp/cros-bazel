@@ -16,9 +16,6 @@ import (
 	"strings"
 	"sync"
 
-	"cros.local/bazel/ebuild/private/common/standard/dependency"
-	"cros.local/bazel/ebuild/private/common/standard/ebuild"
-	"cros.local/bazel/ebuild/private/common/standard/packages"
 	"cros.local/bazel/ebuild/private/common/standard/profile"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
@@ -29,6 +26,11 @@ type Repo struct {
 	name     string
 	eapi     string
 	profiles *repoProfiles
+}
+
+type Package struct {
+	Path    string
+	Version *version.Version
 }
 
 func parseRepo(repoSet *RepoSet, rootDir string) (*Repo, error) {
@@ -75,8 +77,8 @@ func (r *Repo) Profile(relPath string) (*profile.Profile, error) {
 	return r.profiles.LookupOrParse(r, relPath)
 }
 
-func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor) ([]*packages.Package, error) {
-	packageDir := filepath.Join(r.rootDir, atom.PackageName())
+func (r *Repo) Packages(packageName string) ([]*Package, error) {
+	packageDir := filepath.Join(r.rootDir, packageName)
 	es, err := os.ReadDir(packageDir)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil
@@ -85,10 +87,10 @@ func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor)
 		return nil, err
 	}
 
-	var pkgs []*packages.Package
+	var pkgs []*Package
 
 	const ebuildExt = ".ebuild"
-	prefix := path.Base(atom.PackageName()) + "-"
+	prefix := path.Base(packageName) + "-"
 	for _, e := range es {
 		if !e.Type().IsRegular() && e.Type() != os.ModeSymlink {
 			continue
@@ -109,24 +111,14 @@ func (r *Repo) Package(atom *dependency.Atom, processor *ebuild.CachedProcessor)
 			continue
 		}
 
-		info, err := processor.Read(fullPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "WARNING: Ignored ebuild: failed to evaluate %s: %v\n", fullPath, err)
-			continue
-		}
-
-		target := &dependency.TargetPackage{
-			Name:    atom.PackageName(),
+		pkgs = append(pkgs, &Package{
+			Path:    fullPath,
 			Version: ver,
-			Uses:    info.Uses,
-		}
-		if atom.Match(target) {
-			pkgs = append(pkgs, packages.NewPackage(fullPath, info.Metadata, target))
-		}
+		})
 	}
 
 	sort.Slice(pkgs, func(i, j int) bool {
-		return pkgs[i].Version().Compare(pkgs[i].Version()) > 0
+		return pkgs[i].Version.Compare(pkgs[i].Version) > 0
 	})
 	return pkgs, nil
 }

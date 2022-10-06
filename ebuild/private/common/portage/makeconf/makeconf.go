@@ -75,6 +75,11 @@ func (s *UserConfigSource) UseMasksAndForces(pkg *config.Package, masks map[stri
 	return nil
 }
 
+func (s *UserConfigSource) PackageMasks() ([]*dependency.Atom, error) {
+	// TODO: Parse /etc/portage/package.mask.
+	return nil, nil
+}
+
 func (s *UserConfigSource) ProvidedPackages() ([]*config.Package, error) {
 	// TODO: Parse /etc/portage/profile/package.provided.
 	return nil, nil

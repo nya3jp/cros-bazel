@@ -21,18 +21,11 @@ type PackageUse struct {
 }
 
 func ParseUseList(path string) ([]string, error) {
-	lines, err := ParseLines(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil, nil
-	}
-	return lines, nil
+	return ParseLines(path)
 }
 
 func ParsePackageUseList(path string) ([]*PackageUse, error) {
 	lines, err := ParseLines(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -56,11 +49,8 @@ func ParsePackageUseList(path string) ([]*PackageUse, error) {
 	return packageUseList, nil
 }
 
-func ParsePackageProvided(path string) ([]*Package, error) {
+func ParsePackageList(path string) ([]*Package, error) {
 	lines, err := ParseLines(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +76,31 @@ func ParsePackageProvided(path string) ([]*Package, error) {
 	return provided, nil
 }
 
+func ParseAtomList(path string) ([]*dependency.Atom, error) {
+	lines, err := ParseLines(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var atoms []*dependency.Atom
+	for _, line := range lines {
+		if strings.HasPrefix(line, "-") {
+			return nil, fmt.Errorf("negative atoms not supported yet: %s", line)
+		}
+		atom, err := dependency.ParseAtom(line)
+		if err != nil {
+			return nil, err
+		}
+		atoms = append(atoms, atom)
+	}
+	return atoms, nil
+}
+
 func ParseLines(path string) ([]string, error) {
 	f, err := os.Open(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

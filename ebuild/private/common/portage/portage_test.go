@@ -20,8 +20,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"cros.local/bazel/ebuild/private/common/portage/repository"
-	"cros.local/bazel/ebuild/private/common/standard/ebuild"
+	"cros.local/bazel/ebuild/private/common/portage"
+	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/makevars"
 )
 
@@ -185,18 +185,16 @@ func TestAll(t *testing.T) {
 				t.Fatalf("Failed to unpack spec: %v", err)
 			}
 
-			defaults, err := repository.LoadDefaults(tempDir)
+			resolver, err := portage.NewResolver(tempDir)
 			if err != nil {
 				t.Fatalf("Failed to initialize: %v", err)
 			}
 
-			globalVarsList, err := defaults.Config.EvalGlobalVars(make(makevars.Vars))
+			globalVarsList, err := resolver.Config().EvalGlobalVars(make(makevars.Vars))
 			if err != nil {
 				t.Fatalf("Failed to evaluate global variables: %v", err)
 			}
 			globalVars := makevars.Finalize(globalVarsList)
-
-			processor := ebuild.NewProcessor(defaults.Config, defaults.RepoSet.EClassDirs())
 
 			wantGlobalVars, err := readExpectVars(filepath.Join(tempDir, "expect.vars"))
 			if err != nil {
@@ -220,38 +218,34 @@ func TestAll(t *testing.T) {
 			}
 
 			gotUse := make(map[string]string)
-			for pkg := range wantUse {
-				ebuilds, err := filepath.Glob(filepath.Join(tempDir, "overlay", pkg, "*.ebuild"))
+			for packageName := range wantUse {
+				atom, err := dependency.ParseAtom(packageName)
 				if err != nil {
-					t.Fatalf("ebuild not found for %s", pkg)
+					t.Fatalf("ParseAtom(%q) failed: %v", packageName, err)
 				}
-				if len(ebuilds) != 1 {
-					t.Fatalf("ebuild not found for %s: got %d, want 1", pkg, len(ebuilds))
-				}
-
-				info, err := processor.Read(ebuilds[0])
+				pkg, err := resolver.BestPackage(atom)
 				if err != nil {
-					t.Fatalf("Failed to parse %s: %v", ebuilds[0], err)
+					t.Fatalf("BestPackage(%q) failed: %v", packageName, err)
 				}
 
 				var validUses []string
-				for name := range info.Uses {
+				for name := range pkg.Uses() {
 					validUses = append(validUses, name)
 				}
 				sort.Strings(validUses)
 
 				var uses []string
-				for _, name := range strings.Fields(wantUse[pkg]) {
+				for _, name := range strings.Fields(wantUse[packageName]) {
 					if strings.HasPrefix(name, "-") {
 						name = strings.TrimPrefix(name, "-")
 					}
-					if info.Uses[name] {
+					if pkg.Uses()[name] {
 						uses = append(uses, name)
 					} else {
 						uses = append(uses, "-"+name)
 					}
 				}
-				gotUse[pkg] = strings.Join(uses, " ")
+				gotUse[packageName] = strings.Join(uses, " ")
 			}
 
 			if diff := cmp.Diff(gotUse, wantUse, cmpopts.EquateEmpty()); diff != "" {

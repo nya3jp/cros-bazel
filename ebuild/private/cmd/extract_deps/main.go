@@ -17,14 +17,14 @@ import (
 
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/urfave/cli"
 	"strconv"
 
-	"cros.local/bazel/ebuild/private/common/portage/repository"
+	"github.com/urfave/cli"
+
+	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/config"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
-	"cros.local/bazel/ebuild/private/common/standard/ebuild"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
@@ -604,9 +604,8 @@ func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error
 	return nil
 }
 
-func selectBestPackagesUsingStability(
-	atom *dependency.Atom, processor *ebuild.CachedProcessor, s *repository.RepoSet) ([]*packages.Package, error) {
-	candidates, err := s.Package(atom, processor)
+func selectBestPackagesUsingStability(resolver *portage.Resolver, atom *dependency.Atom) ([]*packages.Package, error) {
+	candidates, err := resolver.Packages(atom)
 	if err != nil {
 		return nil, err
 	}
@@ -632,8 +631,8 @@ func selectBestPackagesUsingStability(
 	return nil, fmt.Errorf("no package satisfies %s", atom.String())
 }
 
-func selectBestPackages(atom *dependency.Atom, processor *ebuild.CachedProcessor, s *repository.RepoSet) ([]*packages.Package, error) {
-	candidates, err := selectBestPackagesUsingStability(atom, processor, s)
+func selectBestPackages(resolver *portage.Resolver, atom *dependency.Atom) ([]*packages.Package, error) {
+	candidates, err := selectBestPackagesUsingStability(resolver, atom)
 	if err != nil {
 		return nil, err
 	}
@@ -714,7 +713,7 @@ func extractSrcUris(pkg *packages.Package) (map[string]uriInfo, error) {
 	return map[string]uriInfo{}, nil
 }
 
-func computeDepsInfo(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, startPackageNames []string) (map[string][]packageInfo, error) {
+func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (map[string][]packageInfo, error) {
 	depsInfo := make(map[string][]packageInfo)
 	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
@@ -722,7 +721,7 @@ func computeDepsInfo(repoSet *repository.RepoSet, processor *ebuild.CachedProces
 			return nil, err
 		}
 
-		pkgs, err := selectBestPackages(atom, processor, repoSet)
+		pkgs, err := selectBestPackages(resolver, atom)
 		if err != nil {
 			return nil, err
 		}
@@ -732,7 +731,7 @@ func computeDepsInfo(repoSet *repository.RepoSet, processor *ebuild.CachedProces
 		for _, pkg := range pkgs {
 			log.Printf("%s-%s:", pkg.Name(), pkg.Version())
 
-			runtimeDeps, err := extractDeps("RDEPEND", pkg, provided)
+			runtimeDeps, err := extractDeps("RDEPEND", pkg, resolver.ProvidedPackages())
 			if err != nil {
 				return nil, err
 			}
@@ -740,7 +739,7 @@ func computeDepsInfo(repoSet *repository.RepoSet, processor *ebuild.CachedProces
 				log.Printf("  R: %s", strings.Join(runtimeDeps, ", "))
 			}
 
-			buildTimeDeps, err := extractDeps("DEPEND", pkg, provided)
+			buildTimeDeps, err := extractDeps("DEPEND", pkg, resolver.ProvidedPackages())
 			if err != nil {
 				return nil, err
 			}
@@ -835,18 +834,12 @@ var app = &cli.App{
 		}
 		hackSource := config.NewHackSource(strings.Join(forceUse, " "), providedPackages)
 
-		defaults, err := repository.LoadDefaults(rootDir, hackSource)
+		resolver, err := portage.NewResolver(rootDir, hackSource)
 		if err != nil {
 			return err
 		}
 
-		processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(defaults.Config, defaults.RepoSet.EClassDirs()))
-		provided, err := defaults.Config.ProvidedPackages()
-		if err != nil {
-			return err
-		}
-
-		pkgInfoByPkgName, err := computeDepsInfo(defaults.RepoSet, processor, provided, startPackageNames)
+		pkgInfoByPkgName, err := computeDepsInfo(resolver, startPackageNames)
 		if err != nil {
 			return err
 		}

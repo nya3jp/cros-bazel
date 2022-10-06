@@ -865,6 +865,25 @@
       }
     }
   ],
+  "app-misc/mime-types": [
+    {
+      "version": "2.1.53",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "mailcap-r2-1-53.tar.gz": {
+          "uris": [
+            "https://pagure.io/mailcap/archive/r2-1-53/mailcap-r2-1-53.tar.gz"
+          ],
+          "size": 27238,
+          "integrity": "sha512-P5UqAx+ehjIaRYPbpC+nd4ooIcVfxCtglsxWxTG8lX5QxUWrDUcKtyeC6zgV6CeN8SLiDBrlMre7tV2xLgDLdw==",
+          "SHA256": "",
+          "SHA512": "3f952a031f9e86321a4583dba42fa7778a2821c55fc42b6096cc56c531bc957e50c545ab0d470ab72782eb3815e8278df122e20c1ae532b7bbb55db12e00cb77"
+        }
+      }
+    }
+  ],
   "app-portage/portage-utils": [
     {
       "version": "0.63",
@@ -6823,15 +6842,13 @@
   ],
   "dev-lang/python": [
     {
-      "version": "3.8.13-r1",
+      "version": "3.6.15-r2",
       "buildDeps": [
         "app-arch/bzip2",
         "app-arch/xz-utils",
-        "dev-lang/python-exec",
         "dev-libs/expat",
         "dev-libs/libffi",
         "dev-libs/openssl",
-        "sys-apps/util-linux",
         "sys-libs/gdbm",
         "sys-libs/ncurses",
         "sys-libs/readline",
@@ -6843,11 +6860,10 @@
       "runtimeDeps": [
         "app-arch/bzip2",
         "app-arch/xz-utils",
-        "dev-lang/python-exec",
+        "app-misc/mime-types",
         "dev-libs/expat",
         "dev-libs/libffi",
         "dev-libs/openssl",
-        "sys-apps/util-linux",
         "sys-libs/gdbm",
         "sys-libs/ncurses",
         "sys-libs/readline",
@@ -6856,23 +6872,32 @@
         "virtual/libintl"
       ],
       "srcUris": {
-        "Python-3.8.13.tar.xz": {
+        "Python-3.6.15.tar.xz": {
           "uris": [
-            "https://www.python.org/ftp/python/3.8.13/Python-3.8.13.tar.xz"
+            "https://www.python.org/ftp/python/3.6.15/Python-3.6.15.tar.xz"
           ],
-          "size": 19023016,
-          "integrity": "sha512-XHMrXSGxibmaDpzNOuWUZr7WCpMNXT9DeiYtOPB5e3ds7L8SoYUurrz7Y4pvLijkccwuv5QjfMcoFEviGELLgQ==",
+          "size": 17223796,
+          "integrity": "sha512-8YlNcEyRZp2U7IO1YxKIvx4Mc93PM86gl3V18mLrZyyuvIrADjTpuZwyHBnMmnHWCB+pV7uOI89b+6UPNFFF7w==",
           "SHA256": "",
-          "SHA512": "5c732b5d21b189b99a0e9ccd3ae59466bed60a930d5d3f437a262d38f0797b776cecbf12a1852eaebcfb638a6f2e28e471cc2ebf94237cc728144be21842cb81"
+          "SHA512": "f1894d704c91669d94ec83b5631288bf1e0c73ddcf33cea0977575f262eb672caebc8ac00e34e9b99c321c19cc9a71d6081fa957bb8e23cf5bfba50f345145ef"
         },
-        "python-gentoo-patches-3.8.13.tar.xz": {
+        "python-3.6-profile.tar.xz": {
           "uris": [
-            "https://dev.gentoo.org/~mgorny/dist/python/python-gentoo-patches-3.8.13.tar.xz"
+            "gs://chromeos-localmirror/distfiles/python-3.6-profile.tar.xz"
           ],
-          "size": 16004,
-          "integrity": "sha512-TOuDHi1ivXOQm1OjtVOyzXPQi88qHJK0fq6xIh1A2qvK7RSXcmW8smXfALa/Nj2+u9YaYtykv270DGuRHpgFlw==",
+          "size": 369204,
+          "integrity": "sha512-RPA9PfGeo9dz6LsLKNRkLxtgAliNFvhRLX21Sbm+NOuG9wKdI/3o50PZpuaSHeeJKSABIHhKotkvb4GLqE5bSA==",
           "SHA256": "",
-          "SHA512": "4ceb831e2d62bd73909b53a3b553b2cd73d08bcf2a1c92b47eaeb1221d40daabcaed14977265bcb265df00b6bf363dbebbd61a62dca4bf6ef40c6b911e980597"
+          "SHA512": "44f03d3df19ea3d773e8bb0b28d4642f1b6002588d16f8512d7db549b9be34eb86f7029d23fde8e743d9a6e6921de78929200120784aa2d92f6f818ba84e5b48"
+        },
+        "python-gentoo-patches-3.6.15.tar.xz": {
+          "uris": [
+            "https://dev.gentoo.org/~mgorny/dist/python/python-gentoo-patches-3.6.15.tar.xz"
+          ],
+          "size": 15300,
+          "integrity": "sha512-zDNJGjPz8dmQz0lNU7kbdNt2EULorr4b1LEo7xCiaP+UXlugjarTnO4JVhKo5SJl1piIc+z5wHM3fLvBBzWqOQ==",
+          "SHA256": "",
+          "SHA512": "cc33491a33f3f1d990cf494d53b91b74db761142e8aebe1bd4b128ef10a268ff945e5ba08daad39cee095612a8e52265d6988873ecf9c073377cbbc10735aa39"
         }
       }
     }

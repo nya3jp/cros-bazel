@@ -1,15 +1,32 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_test")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_test(
     name = "portage_test",
     srcs = ["portage_test.go"],
     data = glob(["testdata/**"]),
     deps = [
-        "//bazel/ebuild/private/common/portage/repository",
-        "//bazel/ebuild/private/common/standard/ebuild",
+        ":portage",
+        "//bazel/ebuild/private/common/standard/dependency",
         "//bazel/ebuild/private/common/standard/makevars",
         "@com_github_alessio_shellescape//:shellescape",
         "@com_github_google_go_cmp//cmp",
         "@com_github_google_go_cmp//cmp/cmpopts",
+    ],
+)
+
+go_library(
+    name = "portage",
+    srcs = ["portage.go"],
+    importpath = "cros.local/bazel/ebuild/private/common/portage",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/portage/makeconf",
+        "//bazel/ebuild/private/common/portage/portagevars",
+        "//bazel/ebuild/private/common/portage/repository",
+        "//bazel/ebuild/private/common/standard/config",
+        "//bazel/ebuild/private/common/standard/dependency",
+        "//bazel/ebuild/private/common/standard/ebuild",
+        "//bazel/ebuild/private/common/standard/makevars",
+        "//bazel/ebuild/private/common/standard/packages",
     ],
 )

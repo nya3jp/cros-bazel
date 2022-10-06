@@ -5,6 +5,7 @@
 package config
 
 import (
+	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/makevars"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
@@ -18,6 +19,7 @@ type Source interface {
 	EvalGlobalVars(env makevars.Vars) ([]makevars.Vars, error)
 	EvalPackageVars(pkg *Package, env makevars.Vars) ([]makevars.Vars, error)
 	UseMasksAndForces(pkg *Package, masks map[string]bool, forces map[string]bool) error
+	PackageMasks() ([]*dependency.Atom, error)
 	ProvidedPackages() ([]*Package, error)
 }
 
@@ -58,6 +60,18 @@ func (ss Bundle) UseMasksAndForces(pkg *Package, masks map[string]bool, forces m
 	return nil
 }
 
+func (ss Bundle) PackageMasks() ([]*dependency.Atom, error) {
+	var atoms []*dependency.Atom
+	for _, s := range ss {
+		subatoms, err := s.PackageMasks()
+		if err != nil {
+			return nil, err
+		}
+		atoms = append(atoms, subatoms...)
+	}
+	return atoms, nil
+}
+
 func (ss Bundle) ProvidedPackages() ([]*Package, error) {
 	var pkgs []*Package
 	for _, s := range ss {
@@ -95,6 +109,10 @@ func (s *HackSource) EvalPackageVars(pkg *Package, env makevars.Vars) ([]makevar
 
 func (s *HackSource) UseMasksAndForces(pkg *Package, masks map[string]bool, forces map[string]bool) error {
 	return nil
+}
+
+func (s *HackSource) PackageMasks() ([]*dependency.Atom, error) {
+	return nil, nil
 }
 
 func (s *HackSource) ProvidedPackages() ([]*Package, error) {
