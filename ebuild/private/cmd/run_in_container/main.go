@@ -256,7 +256,7 @@ func continueNamespace(c *cli.Context) error {
 		if err := os.MkdirAll(filepath.Join(baseDir, mountDir), 0o755); err != nil {
 			return err
 		}
-		lowerDirsByMountDir[mountDir] = append([]string{filepath.Join(baseDir, mountDir)}, lowerDirs...)
+		lowerDirsByMountDir[mountDir] = append(lowerDirs, filepath.Join(baseDir, mountDir))
 	}
 
 	// Change the current directory to minimize the option string passed to
