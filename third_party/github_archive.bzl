@@ -1,7 +1,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
-def github_archive(name, github_user, github_repo, tag, checksum = "", strip_prefix = None, **kwargs):
+def github_archive(name, github_user, github_repo, tag, checksum = "", strip_prefix = None, patch_args = None, patch_strip = 1, **kwargs):
     """A rule to download a release from github.
 
     Args:
@@ -12,6 +12,8 @@ def github_archive(name, github_user, github_repo, tag, checksum = "", strip_pre
         checksum: The sha256 checksum of the archive.
         strip_prefix: If provided, override the default prefix to strip from the
           files in the archive.
+        patch_args: If provided, overrides the arguments to the patching tool.
+        patch_strip: Adds -p<patch_strip> to patch_args.
         **kwargs: Kwargs to pass through to http_archive.
           See https://bazel.build/rules/lib/repo/http#http_archive
 
@@ -22,6 +24,9 @@ def github_archive(name, github_user, github_repo, tag, checksum = "", strip_pre
     """
     if strip_prefix == None:
         strip_prefix = "{repo}-{tag}".format(repo = github_repo, tag = tag)
+    patch_args = patch_args or []
+    patch_args.append("-p%d" % patch_strip)
+
     maybe(
         http_archive,
         name = name,
@@ -36,5 +41,6 @@ def github_archive(name, github_user, github_repo, tag, checksum = "", strip_pre
                 tag = tag,
             ),
         ],
+        patch_args = patch_args,
         **kwargs
     )
