@@ -213,7 +213,7 @@ ver_rs() {
     esac
 
     for (( i=begin; i<end; i++ )); do
-      if [[ ${i} -gt ${#separators[@]} ]]; then
+      if [[ ${i} -ge ${#separators[@]} ]]; then
         break
       fi
       separators[${i}]="${replacement}"
