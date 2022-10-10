@@ -30,6 +30,12 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/sys-libs/llvm-libunwind-15.0_pre458507-r4.tbz2"],
     )
     http_file(
+        name = "arm64_generic_chromeos_fonts_0_0_1_r52",
+        downloaded_file_path = "chromeos-fonts-0.0.1-r52.tbz2",
+        sha256 = "40128c1465aa6ca717561be8acda996478cc41aa414fda18d64cbaa37509c02c",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2"],
+    )
+    http_file(
         name = "amd64_host_binutils_2_36_1_r8",
         downloaded_file_path = "binutils-2.36.1-r8.tbz2",
         sha256 = "c790efb90da825d0c169c34e191290826e03e21031c6c993e1d337b8b9c7d042",

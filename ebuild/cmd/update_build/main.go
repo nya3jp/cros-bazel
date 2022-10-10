@@ -25,6 +25,10 @@ import (
 
 const ebuildExt = ".ebuild"
 
+var manuallyCreatedBuildFiles = map[string]struct{}{
+	"chromeos-fonts": {},
+}
+
 var overlayRelDirs = []string{
 	// The order matters; the first one has the highest priority.
 	"overlays/overlay-arm64-generic",
@@ -186,6 +190,10 @@ func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, postDeps
 	packageName := v[len(v)-1]
 	buildPath := filepath.Join(ebuildDir, "BUILD.bazel")
 
+	if _, ok := manuallyCreatedBuildFiles[packageName]; ok {
+		return nil, nil
+	}
+
 	log.Printf("Generating: %s", buildPath)
 
 	var ebuildInfos []ebuildInfo
@@ -244,6 +252,10 @@ func cleanOverlay(overlayDir string) error {
 		}
 		if !d.IsDir() {
 			return nil
+		}
+
+		if _, ok := manuallyCreatedBuildFiles[d.Name()]; ok {
+			return fs.SkipDir
 		}
 
 		fis, err := os.ReadDir(path)
