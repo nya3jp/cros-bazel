@@ -86,7 +86,7 @@ var flagStagingDir = &cli.StringFlag{
 	Name:     "scratch-dir",
 	Required: true,
 	Usage: "Directory that will be used by the overlayfs mount. " +
-	       "Output artifacts can be found in the 'diff' directory.",
+		"Output artifacts can be found in the 'diff' directory.",
 }
 
 var flagChdir = &cli.StringFlag{
@@ -97,13 +97,12 @@ var flagChdir = &cli.StringFlag{
 var flagOverlay = &cli.StringSliceFlag{
 	Name: "overlay",
 	Usage: "<inside>=<outside dir | <file>.squashfs>. " +
-	       "Mounts the outside dir or .squashfs file inside the " +
-	       "container at the specified inside path. " +
-	       "This option can be specified multiple times. The earlier " +
-	       "overlays are mounted as the higher layer, and the later " +
-	       "overlays are mounted as the lower layer.",
+		"Mounts the outside dir or .squashfs file inside the " +
+		"container at the specified inside path. " +
+		"This option can be specified multiple times. The earlier " +
+		"overlays are mounted as the higher layer, and the later " +
+		"overlays are mounted as the lower layer.",
 	Required: true,
-
 }
 
 var flagKeepHostMount = &cli.BoolFlag{
@@ -179,7 +178,7 @@ func enterNamespace(c *cli.Context) error {
 func continueNamespace(c *cli.Context) error {
 	stageDir, err := filepath.Abs(c.String(flagStagingDir.Name))
 	if err != nil {
-		return err;
+		return err
 	}
 
 	//squashfusePath := c.String(flagSquashfuse.Name)
@@ -191,7 +190,7 @@ func continueNamespace(c *cli.Context) error {
 	keepHostMount := c.Bool(flagKeepHostMount.Name)
 	args := []string(c.Args())
 
-	squashfusePath, err := bazel.Runfile("bazel/prebuilts/squashfuse")
+	squashfusePath, err := bazel.Runfile("bazel/third_party/squashfuse/squashfuse")
 	if err != nil {
 		return err
 	}
@@ -243,7 +242,12 @@ func continueNamespace(c *cli.Context) error {
 				return fmt.Errorf("failed bind-mounting %s: %w", overlay.Source, err)
 			}
 		case overlaySquashfs:
-			if err := runCommand(squashfusePath, overlay.Source, lowerDir); err != nil {
+			if err := runCommand(
+				"env",
+				fmt.Sprintf("LD_LIBRARY_PATH=%s:%s", os.Getenv("LD_LIBRARY_PATH"), filepath.Join(squashfusePath, "lib")),
+				filepath.Join(squashfusePath, "bin/squashfuse"),
+				overlay.Source,
+				lowerDir); err != nil {
 				return fmt.Errorf("failed mounting %s: %w", overlay.Source, err)
 			}
 		default:
@@ -279,12 +283,12 @@ func continueNamespace(c *cli.Context) error {
 		// warnings in kernel logs.
 		upperDir, err := filepath.Rel(lowersDir, filepath.Join(diffDir, mountDir))
 		if err != nil {
-			return err;
+			return err
 		}
 
 		workDir, err := filepath.Rel(lowersDir, filepath.Join(workDir, strconv.Itoa(i)))
 		if err != nil {
-			return err;
+			return err
 		}
 
 		for _, dir := range []string{upperDir, workDir} {
