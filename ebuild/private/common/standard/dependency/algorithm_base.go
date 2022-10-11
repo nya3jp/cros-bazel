@@ -74,6 +74,9 @@ func MapChildrenWithError(expr Expr, f func(expr Expr) (Expr, error)) (Expr, err
 	case *Package:
 		return expr, nil
 
+	case *Uri:
+		return expr, nil
+
 	default:
 		panic(fmt.Sprintf("unknown Expr type %T", expr))
 	}

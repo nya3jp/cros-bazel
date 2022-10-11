@@ -12,9 +12,10 @@ import (
 var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "whitespace", Pattern: `\s+`},
 	{Name: "Parentheses", Pattern: `[()]`},
-	{Name: "Operators", Pattern: `\|\||\^\^|\?\?`},
+	{Name: "Operators", Pattern: `\|\||\^\^|\?\?|->`},
 	{Name: "Condition", Pattern: `!?[A-Za-z0-9][A-Za-z0-9+_@-]*\?`},
-	{Name: "Package", Pattern: `\S+`},
+	{Name: "Uri", Pattern: `\w+:(?:\/\/)\S+`},
+	{Name: "Value", Pattern: `\S+`},
 })
 
 var parser = participle.MustBuild[AllOf](participle.Lexer(lex))
@@ -29,7 +30,7 @@ type Expr struct {
 	ExactlyOneOf   *ExactlyOneOf   `parser:"| '^^' '(' @@ ')'"`
 	AtMostOneOf    *AtMostOneOf    `parser:"| '??' '(' @@ ')'"`
 	UseConditional *UseConditional `parser:"| @@"`
-	Package        *Package        `parser:"| @@"`
+	Value          *Value          `parser:"| @@"`
 }
 
 type AllOf struct {
@@ -53,6 +54,16 @@ type UseConditional struct {
 	Child     *AllOf `parser:"'(' @@ ')'"`
 }
 
+type Value struct {
+	Uri *Uri `parser:"@@"`
+	Package *Package `parser:"| @@"`
+}
+
+type Uri struct {
+	Uri string `parser:"@Uri"`
+	FileName *string `parser:"('->' @Value)?"`
+}
+
 type Package struct {
-	Raw string `parser:"@Package"`
+	Raw string `parser:"@Value"`
 }

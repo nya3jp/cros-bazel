@@ -106,6 +106,10 @@ func compilePackage(g *grammer.Package) (*Package, error) {
 	return NewPackage(a, blocks), nil
 }
 
+func compileUri(g *grammer.Uri) (Expr, error) {
+	return NewUri(g.Uri, g.FileName), nil
+}
+
 func compileExpr(g *grammer.Expr) (Expr, error) {
 	switch {
 	case g.AllOf != nil:
@@ -118,8 +122,16 @@ func compileExpr(g *grammer.Expr) (Expr, error) {
 		return compileAtMostOneOf(g.AtMostOneOf)
 	case g.UseConditional != nil:
 		return compileUseConditional(g.UseConditional)
-	case g.Package != nil:
-		return compilePackage(g.Package)
+	case g.Value != nil:
+		v := g.Value
+		switch {
+		case v.Uri != nil:
+			return compileUri(v.Uri)
+		case v.Package != nil:
+			return compilePackage(v.Package)
+		default:
+			return nil, errors.New("unknown value")
+		}
 	default:
 		return nil, errors.New("unknown expr")
 	}

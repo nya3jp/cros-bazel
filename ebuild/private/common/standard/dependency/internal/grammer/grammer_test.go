@@ -24,11 +24,11 @@ func TestParse(t *testing.T) {
 	got := mustParse(t, "a ( b )")
 	want := &grammer.AllOf{
 		Children: []*grammer.Expr{
-			{Package: &grammer.Package{Raw: "a"}},
+			{Value: &grammer.Value{Package: &grammer.Package{Raw: "a"}}},
 			{
 				AllOf: &grammer.AllOf{
 					Children: []*grammer.Expr{
-						{Package: &grammer.Package{Raw: "b"}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "b"}}},
 					},
 				},
 			},
@@ -46,9 +46,9 @@ func TestParse_AllOf(t *testing.T) {
 			{
 				AllOf: &grammer.AllOf{
 					Children: []*grammer.Expr{
-						{Package: &grammer.Package{Raw: "a"}},
-						{Package: &grammer.Package{Raw: "b"}},
-						{Package: &grammer.Package{Raw: "c"}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "a"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "b"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "c"}}},
 					},
 				},
 			},
@@ -66,9 +66,9 @@ func TestParse_AnyOf(t *testing.T) {
 			{
 				AnyOf: &grammer.AnyOf{
 					Children: []*grammer.Expr{
-						{Package: &grammer.Package{Raw: "a"}},
-						{Package: &grammer.Package{Raw: "b"}},
-						{Package: &grammer.Package{Raw: "c"}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "a"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "b"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "c"}}},
 					},
 				},
 			},
@@ -86,9 +86,9 @@ func TestParse_ExactlyOneOf(t *testing.T) {
 			{
 				ExactlyOneOf: &grammer.ExactlyOneOf{
 					Children: []*grammer.Expr{
-						{Package: &grammer.Package{Raw: "a"}},
-						{Package: &grammer.Package{Raw: "b"}},
-						{Package: &grammer.Package{Raw: "c"}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "a"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "b"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "c"}}},
 					},
 				},
 			},
@@ -106,9 +106,9 @@ func TestParse_AtMostOneOf(t *testing.T) {
 			{
 				AtMostOneOf: &grammer.AtMostOneOf{
 					Children: []*grammer.Expr{
-						{Package: &grammer.Package{Raw: "a"}},
-						{Package: &grammer.Package{Raw: "b"}},
-						{Package: &grammer.Package{Raw: "c"}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "a"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "b"}}},
+						{Value: &grammer.Value{Package: &grammer.Package{Raw: "c"}}},
 					},
 				},
 			},
@@ -128,8 +128,8 @@ func TestParse_UseConditional(t *testing.T) {
 					Condition: "foo?",
 					Child: &grammer.AllOf{
 						Children: []*grammer.Expr{
-							{Package: &grammer.Package{Raw: "a"}},
-							{Package: &grammer.Package{Raw: "b"}},
+							{Value: &grammer.Value{Package: &grammer.Package{Raw: "a"}}},
+							{Value: &grammer.Value{Package: &grammer.Package{Raw: "b"}}},
 						},
 					},
 				},
@@ -139,8 +139,65 @@ func TestParse_UseConditional(t *testing.T) {
 					Condition: "!bar?",
 					Child: &grammer.AllOf{
 						Children: []*grammer.Expr{
-							{Package: &grammer.Package{Raw: "c"}},
-							{Package: &grammer.Package{Raw: "d"}},
+							{Value: &grammer.Value{Package: &grammer.Package{Raw: "c"}}},
+							{Value: &grammer.Value{Package: &grammer.Package{Raw: "d"}}},
+						},
+					},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Fatalf("Parse result mismatch (-got want):\n%s", diff)
+	}
+}
+
+func TestParse_Uri(t *testing.T) {
+	got := mustParse(t, "http://example.com http://example.org")
+	want := &grammer.AllOf{
+		Children: []*grammer.Expr{
+			{Value: &grammer.Value{Uri: &grammer.Uri{Uri: "http://example.com"}}},
+			{Value: &grammer.Value{Uri: &grammer.Uri{Uri: "http://example.org"}}},
+		},
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Fatalf("Parse result mismatch (-got want):\n%s", diff)
+	}
+}
+
+func TestParse_UseConditional_Uri(t *testing.T) {
+	got := mustParse(t, "a? ( http://example.com )")
+	want := &grammer.AllOf{
+		Children: []*grammer.Expr{
+			{
+				UseConditional: &grammer.UseConditional{
+					Condition: "a?",
+					Child: &grammer.AllOf{
+						Children: []*grammer.Expr{
+							{Value: &grammer.Value{Uri: &grammer.Uri{Uri: "http://example.com"}}},
+						},
+					},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Fatalf("Parse result mismatch (-got want):\n%s", diff)
+	}
+}
+
+func TestParse_UseConditional_Uri_WithRename(t *testing.T) {
+	fileName := "foo.tgz"
+
+	got := mustParse(t, "a? ( http://example.com -> foo.tgz )")
+	want := &grammer.AllOf{
+		Children: []*grammer.Expr{
+			{
+				UseConditional: &grammer.UseConditional{
+					Condition: "a?",
+					Child: &grammer.AllOf{
+						Children: []*grammer.Expr{
+							{Value: &grammer.Value{Uri: &grammer.Uri{Uri: "http://example.com", FileName: &fileName}}},
 						},
 					},
 				},

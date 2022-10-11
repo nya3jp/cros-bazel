@@ -8,12 +8,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"encoding/base64"
+	"encoding/hex"
 	"github.com/urfave/cli"
+	"strconv"
 
 	"cros.local/bazel/ebuild/private/common/portage/repository"
 	"cros.local/bazel/ebuild/private/common/runfiles"
@@ -59,6 +63,9 @@ var (
 		"chromeos-base/sample-dlc":         []string{"@chromite//:src"},
 		"dev-libs/modp_b64":                []string{"@chromite//:src"},
 		"media-sound/sr-bt-dlc":            []string{"@chromite//:src"},
+	}
+	badSrcUris = map[string]struct{}{
+		"x11-misc/xkeyboard-config": {},
 	}
 )
 
@@ -382,6 +389,126 @@ func parseSimpleDeps(deps *dependency.Deps) ([]string, bool) {
 	return names, true
 }
 
+type manifestEntry struct {
+	size      int
+	integrity string
+	SHA256    string
+	SHA512    string
+}
+
+func parseSimpleUris(deps *dependency.Deps, manifest map[string]manifestEntry) (map[string]uriInfo, error) {
+	uriMap := make(map[string][]string)
+	for _, expr := range deps.Expr().Children() {
+		uri, ok := expr.(*dependency.Uri)
+		if !ok {
+			return nil, fmt.Errorf("Expected Uri, got %s", expr)
+		}
+		var fileName string
+		if uri.FileName() != nil {
+			fileName = *uri.FileName()
+		} else {
+			parsedUri, err := url.ParseRequestURI(uri.Uri())
+			if err != nil {
+				return nil, err
+			}
+			fileName = filepath.Base(parsedUri.Path)
+		}
+
+		uriMap[fileName] = append(uriMap[fileName], uri.Uri())
+	}
+
+	uriInfoMap := make(map[string]uriInfo)
+	for fileName, uris := range uriMap {
+		entry, ok := manifest[fileName]
+		if !ok {
+			return nil, fmt.Errorf("Cannot find file %s in Manifest %s", fileName, manifest)
+		}
+
+		uriInfoMap[fileName] = uriInfo{
+			Uris:      uris,
+			Size:      entry.size,
+			Integrity: entry.integrity,
+			// TODO: Remove these when we can use integrity
+			SHA256: entry.SHA256,
+			SHA512: entry.SHA512,
+		}
+	}
+
+	return uriInfoMap, nil
+}
+
+func hashToIntegrity(name string, hexHash string) (string, error) {
+	hashBytes, err := hex.DecodeString(hexHash)
+	if err != nil {
+		return "", err
+	}
+
+	hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
+
+	integrity := fmt.Sprintf("%s-%s", strings.ToLower(name), hashBase64)
+
+	return integrity, nil
+}
+
+func parseManifest(eBuildPath string) (map[string]manifestEntry, error) {
+	files := make(map[string]manifestEntry)
+
+	ebuildDir := filepath.Dir(eBuildPath)
+
+	// Read Manifest to get a list of distfiles.
+	manifest, err := os.ReadFile(filepath.Join(ebuildDir, "Manifest"))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, line := range strings.Split(string(manifest), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 3 || fields[0] != "DIST" {
+			continue
+		}
+
+		fileName, err := url.PathUnescape(fields[1])
+		if err != nil {
+			return nil, err
+		}
+
+		size, err := strconv.Atoi(fields[2])
+		if err != nil {
+			return nil, err
+		}
+
+		hexHashes := make(map[string]string)
+		for i := 3; i+1 < len(fields); i += 2 {
+			hexHashes[fields[i]] = fields[i+1]
+		}
+
+		// We prefer SHA512 for integrity checking
+		for _, hashName := range []string{"SHA512", "SHA256", "BLAKE2B"} {
+			hexHash, ok := hexHashes[hashName]
+			if ok {
+				integrity, err := hashToIntegrity(hashName, hexHash)
+				if err != nil {
+					return nil, err
+				}
+
+				files[fileName] = manifestEntry{
+					size:      size,
+					integrity: integrity,
+					// Our version of bazel doesn't support integrity on http_file, only http_archive
+					// so we need to plumb in the hashes.
+					SHA256: hexHashes["SHA256"],
+					// If we don't have a SHA256 we will use the SHA512 to verify the downloaded file
+					// and then compute the SHA256
+					SHA512: hexHashes["SHA512"],
+				}
+				break
+			}
+		}
+	}
+
+	return files, nil
+}
+
 func filterPackages(pkgs []string, provided []*config.Package) []string {
 	providedSet := make(map[string]struct{})
 	for _, p := range provided {
@@ -469,10 +596,11 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 	return depsMap, nil
 }
 
-func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, installPackageNames []string) (map[string][]string, map[string][]string, map[string][]string, error) {
+func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, installPackageNames []string) (map[string][]string, map[string][]string, map[string][]string, map[string]map[string]uriInfo, error) {
 	depsMap := make(map[string][]string)
 	srcDepMap := make(map[string][]string)
 	runtimeDepMap := make(map[string][]string)
+	srcUriMap := make(map[string]map[string]uriInfo)
 	if err := genericBFS(installPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
 		if err != nil {
@@ -524,11 +652,37 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 		log.Printf("   PROJECT: '%s', LOCALNAME: '%s', SUBTREE: '%s' -> %s", metadata["CROS_WORKON_PROJECT"], metadata["CROS_WORKON_LOCALNAME"], metadata["CROS_WORKON_SUBTREE"], srcDeps)
 		srcDepMap[packageName] = srcDeps
 
+		srcUri, ok := metadata["SRC_URI"]
+		_, hasBadSrcUri := badSrcUris[packageName]
+		if ok && !hasBadSrcUri && srcUri != "" {
+			srcUris, err := dependency.Parse(srcUri)
+			if err != nil {
+				return nil, err
+			}
+
+			srcUris = dependency.ResolveUse(srcUris, pkg.Uses())
+			srcUris = dependency.Simplify(srcUris)
+
+			if len(srcUris.Expr().Children()) > 0 {
+				manifest, err := parseManifest(pkg.Path())
+				if err != nil {
+					return nil, err
+				}
+
+				srcUriInfo, err := parseSimpleUris(srcUris, manifest)
+				if err != nil {
+					return nil, err
+				}
+				srcUriMap[packageName] = srcUriInfo
+			}
+
+		}
+
 		return parsedDeps, nil
 	}); err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	return depsMap, srcDepMap, runtimeDepMap, nil
+	return depsMap, srcDepMap, runtimeDepMap, srcUriMap, nil
 }
 
 var flagBoard = &cli.StringFlag{
@@ -541,10 +695,20 @@ var flagStart = &cli.StringSliceFlag{
 	Required: true,
 }
 
+type uriInfo struct {
+	Uris      []string `json:"uris"`
+	Size      int      `json:"size"`
+	Integrity string   `json:"integrity"`
+	// TODO: Remove when we can use integrity
+	SHA256    string   `json:"SHA256"`
+	SHA512    string   `json:"SHA512"`
+}
+
 type packageInfo struct {
-	BuildDeps   []string `json:"buildDeps"`
-	LocalSrc    []string `json:"localSrc"`
-	RuntimeDeps []string `json:"runtimeDeps"`
+	BuildDeps   []string           `json:"buildDeps"`
+	LocalSrc    []string           `json:"localSrc"`
+	RuntimeDeps []string           `json:"runtimeDeps"`
+	SrcUris     map[string]uriInfo `json:"srcUris"`
 }
 
 var app = &cli.App{
@@ -589,7 +753,7 @@ var app = &cli.App{
 		}
 		sort.Strings(installPackageNames)
 
-		buildDeps, buildSrcDeps, additionalRuntimeDeps, err := computeBuildDeps(
+		buildDeps, buildSrcDeps, additionalRuntimeDeps, srcUris, err := computeBuildDeps(
 			defaults.RepoSet, processor, provided, installPackageNames)
 		if err != nil {
 			return err
@@ -598,6 +762,13 @@ var app = &cli.App{
 		nonNil := func(deps []string) []string {
 			if deps == nil {
 				deps = []string{}
+			}
+			return deps
+		}
+
+		nonNilUri := func(deps map[string]uriInfo) map[string]uriInfo {
+			if deps == nil {
+				deps = map[string]uriInfo{}
 			}
 			return deps
 		}
@@ -621,6 +792,7 @@ var app = &cli.App{
 				RuntimeDeps: nonNil(uniqueRuntimeDeps),
 				LocalSrc:    nonNil(buildSrcDeps[packageName]),
 				BuildDeps:   nonNil(buildDeps[packageName]),
+				SrcUris:     nonNilUri(srcUris[packageName]),
 			}
 		}
 

@@ -128,6 +128,9 @@ func simplifyExpr(expr Expr) Expr {
 	case *Package:
 		return expr
 
+	case *Uri:
+		return expr
+
 	default:
 		panic(fmt.Sprintf("unknown Expr type %T", expr))
 	}

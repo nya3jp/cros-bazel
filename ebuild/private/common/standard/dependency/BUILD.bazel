@@ -30,3 +30,12 @@ go_test(
         "//bazel/ebuild/private/common/standard/version",
     ],
 )
+
+go_test(
+    name = "expr_compile_test",
+    srcs = ["expr_compile_test.go"],
+    deps = [
+        ":dependency",
+        "@com_github_google_go_cmp//cmp",
+    ],
+)

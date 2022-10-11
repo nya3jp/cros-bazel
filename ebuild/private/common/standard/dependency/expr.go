@@ -159,3 +159,27 @@ func (p *Package) isExpr() {}
 func (p *Package) String() string {
 	return strings.Repeat("!", p.blocks) + p.atom.String()
 }
+
+type Uri struct {
+	uri      string
+	fileName *string
+}
+
+func NewUri(uri string, fileName *string) *Uri {
+	return &Uri{
+		uri:      uri,
+		fileName: fileName,
+	}
+}
+
+func (p *Uri) Uri() string       { return p.uri }
+func (p *Uri) FileName() *string { return p.fileName }
+func (p *Uri) isExpr()           {}
+
+func (p *Uri) String() string {
+	if p.fileName != nil {
+		return fmt.Sprintf("%s -> %s", p.uri, *p.fileName)
+	} else {
+		return p.uri
+	}
+}
