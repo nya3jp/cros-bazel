@@ -67,6 +67,11 @@ var (
 	badSrcUris = map[string]struct{}{
 		"x11-misc/xkeyboard-config": {},
 	}
+
+	invalidUnstablePackage = map[string]struct{}{
+		// The 9999 ebuild isn't actually functional.
+		"chromeos-base/chromeos-lacros": {},
+	}
 )
 
 // HACK: Hard-code several USE flags.
@@ -555,6 +560,31 @@ func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error
 	return nil
 }
 
+func selectBestPackages(atom *dependency.Atom, processor *ebuild.CachedProcessor, s *repository.RepoSet) ([]*packages.Package, error) {
+	candidates, err := s.Package(atom, processor)
+	if err != nil {
+		return nil, err
+	}
+
+	stabilityTargets := []packages.Stability{packages.StabilityTesting, packages.StabilityStable}
+	if _, ok := invalidUnstablePackage[atom.PackageName()]; ok {
+		stabilityTargets = stabilityTargets[1:]
+	}
+
+	for _, stabilityTarget := range stabilityTargets {
+		var matchingPackages []*packages.Package
+		for _, candidate := range candidates {
+			if candidate.Stability() == stabilityTarget {
+				matchingPackages = append(matchingPackages, candidate)
+			}
+		}
+		if len(matchingPackages) > 0 {
+			return matchingPackages, nil
+		}
+	}
+	return nil, fmt.Errorf("no package satisfies %s", atom.String())
+}
+
 func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, startPackageNames []string) (map[string][]string, error) {
 	depsMap := make(map[string][]string)
 	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
@@ -563,10 +593,12 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 			return nil, err
 		}
 
-		pkg, err := repoSet.BestPackage(atom, processor)
+		candidates, err := selectBestPackages(atom, processor, repoSet)
 		if err != nil {
 			return nil, err
 		}
+
+		pkg := candidates[0]
 
 		metadata := pkg.Metadata()
 
@@ -607,10 +639,11 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 			return nil, err
 		}
 
-		pkg, err := repoSet.BestPackage(atom, processor)
+		candidates, err := selectBestPackages(atom, processor, repoSet)
 		if err != nil {
 			return nil, err
 		}
+		pkg := candidates[0]
 
 		info.Version = pkg.Version().String()
 

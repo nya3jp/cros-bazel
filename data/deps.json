@@ -70,7 +70,7 @@
   ],
   "app-accessibility/pumpkin": [
     {
-      "version": "0.0.1-r1",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/empty-project:src",
@@ -453,7 +453,7 @@
   ],
   "app-crypt/trousers": [
     {
-      "version": "0.3.3-r121",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libchrome",
         "chromeos-base/libhwsec-foundation",
@@ -1350,7 +1350,7 @@
   ],
   "chromeos-base/aosp-frameworks-ml-nn": [
     {
-      "version": "0.0.1-r369",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1379,7 +1379,7 @@
   ],
   "chromeos-base/attestation": [
     {
-      "version": "0.0.1-r3637",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/trousers",
         "chromeos-base/attestation-client",
@@ -1426,7 +1426,7 @@
   ],
   "chromeos-base/attestation-client": [
     {
-      "version": "0.0.1-r520",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1448,7 +1448,7 @@
   ],
   "chromeos-base/autotest": [
     {
-      "version": "0.0.2-r16290",
+      "version": "9999",
       "buildDeps": [
         "virtual/autotest-assistant-libs",
         "virtual/autotest-libs"
@@ -1467,7 +1467,7 @@
   ],
   "chromeos-base/biod_proxy": [
     {
-      "version": "0.0.1-r365",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1499,7 +1499,7 @@
   ],
   "chromeos-base/bootid-logger": [
     {
-      "version": "0.0.1-r212",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/croslog",
         "chromeos-base/libbrillo",
@@ -1522,7 +1522,7 @@
   ],
   "chromeos-base/bootlockbox-client": [
     {
-      "version": "0.0.1-r1897",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1542,7 +1542,7 @@
   ],
   "chromeos-base/bootstat": [
     {
-      "version": "0.0.2-r3239",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1564,7 +1564,7 @@
   ],
   "chromeos-base/cbor": [
     {
-      "version": "0.0.1-r226",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1584,7 +1584,7 @@
   ],
   "chromeos-base/chaps": [
     {
-      "version": "0.0.1-r3780",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/trousers",
         "chromeos-base/chaps-client",
@@ -1633,7 +1633,7 @@
   ],
   "chromeos-base/chaps-client": [
     {
-      "version": "0.0.1-r149",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1653,7 +1653,7 @@
   ],
   "chromeos-base/chrome-icu": [
     {
-      "version": "107.0.5257.0_rc-r1",
+      "version": "9999",
       "buildDeps": [
         "net-print/cups",
         "x11-libs/libdrm"
@@ -1693,7 +1693,7 @@
   ],
   "chromeos-base/chromeos-base": [
     {
-      "version": "1-r13",
+      "version": "9999",
       "buildDeps": [
         "app-shells/bash",
         "sys-apps/baselayout",
@@ -1721,7 +1721,7 @@
   ],
   "chromeos-base/chromeos-chrome": [
     {
-      "version": "107.0.5257.0_rc-r1",
+      "version": "9999",
       "buildDeps": [
         "app-accessibility/brltty",
         "app-accessibility/espeak-ng",
@@ -1796,7 +1796,7 @@
   ],
   "chromeos-base/chromeos-common-script": [
     {
-      "version": "0.0.1-r404",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1816,7 +1816,7 @@
   ],
   "chromeos-base/chromeos-config-tools": [
     {
-      "version": "0.0.4-r2152",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1838,7 +1838,7 @@
   ],
   "chromeos-base/chromeos-dbus-bindings": [
     {
-      "version": "0.0.1-r2771",
+      "version": "9999",
       "buildDeps": [
         "dev-go/cmp"
       ],
@@ -1851,7 +1851,7 @@
   ],
   "chromeos-base/chromeos-ec-headers": [
     {
-      "version": "0.0.1-r9309",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/cr50:src",
@@ -1875,7 +1875,7 @@
   ],
   "chromeos-base/chromeos-firmware-null": [
     {
-      "version": "0.0.3-r176",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/vboot_reference"
       ],
@@ -1930,7 +1930,7 @@
   ],
   "chromeos-base/chromeos-imageburner": [
     {
-      "version": "0.0.1-r3257",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -1955,7 +1955,7 @@
   ],
   "chromeos-base/chromeos-init": [
     {
-      "version": "0.0.25-r4592",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/bootstat",
         "chromeos-base/libbrillo",
@@ -2005,7 +2005,7 @@
   ],
   "chromeos-base/chromeos-installer": [
     {
-      "version": "0.0.3-r3677",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2074,7 +2074,7 @@
   ],
   "chromeos-base/chromeos-login": [
     {
-      "version": "0.0.2-r5092",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/bootstat",
         "chromeos-base/chromeos-config-tools",
@@ -2157,7 +2157,7 @@
   ],
   "chromeos-base/chromeos-storage-info": [
     {
-      "version": "0.0.1-r392",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2180,7 +2180,7 @@
   ],
   "chromeos-base/chromeos-trim": [
     {
-      "version": "0.0.1-r1772",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2203,7 +2203,7 @@
   ],
   "chromeos-base/chromiumos-assets": [
     {
-      "version": "0.0.1-r15",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/chromiumos-assets:src"
@@ -2214,7 +2214,7 @@
   ],
   "chromeos-base/common-assets": [
     {
-      "version": "0.0.2-r140",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/assets:src"
@@ -2228,7 +2228,7 @@
   ],
   "chromeos-base/crash-reporter": [
     {
-      "version": "0.0.1-r3853",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/debugd-client",
         "chromeos-base/google-breakpad",
@@ -2276,7 +2276,7 @@
   ],
   "chromeos-base/cronista": [
     {
-      "version": "0.24.52-r14",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/crosvm-base",
         "chromeos-base/libsirenia",
@@ -2304,7 +2304,7 @@
   ],
   "chromeos-base/cros-camera": [
     {
-      "version": "0.0.1-r1288",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/cros-camera-android-deps",
         "chromeos-base/cros-camera-libs",
@@ -2349,7 +2349,7 @@
   ],
   "chromeos-base/cros-camera-android-deps": [
     {
-      "version": "0.0.1-r159",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2370,7 +2370,7 @@
   ],
   "chromeos-base/cros-camera-libs": [
     {
-      "version": "0.0.1-r570",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chromeos-config-tools",
         "chromeos-base/cros-camera-android-deps",
@@ -2422,7 +2422,7 @@
   ],
   "chromeos-base/cros-disks": [
     {
-      "version": "0.0.1-r3523",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2465,7 +2465,7 @@
   ],
   "chromeos-base/crosh": [
     {
-      "version": "0.24.52-r3105",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/vboot_reference",
         "dev-rust/bitflags",
@@ -2502,7 +2502,7 @@
   ],
   "chromeos-base/crosh-extension": [
     {
-      "version": "0.48-r1421",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//third_party/libapps:src"
@@ -2577,7 +2577,7 @@
   ],
   "chromeos-base/crosid": [
     {
-      "version": "0.0.1-r78",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform2/chromeos-config:src"
@@ -2588,7 +2588,7 @@
   ],
   "chromeos-base/croslog": [
     {
-      "version": "0.0.1-r367",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2610,7 +2610,7 @@
   ],
   "chromeos-base/crosvm-base": [
     {
-      "version": "0.1.0-r1",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/cfg-if",
         "dev-rust/chrono",
@@ -2663,7 +2663,7 @@
   ],
   "chromeos-base/cryptohome": [
     {
-      "version": "0.0.1-r4488",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/trousers",
         "chromeos-base/attestation",
@@ -2741,7 +2741,7 @@
   ],
   "chromeos-base/cryptohome-client": [
     {
-      "version": "0.0.1-r2080",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2761,7 +2761,7 @@
   ],
   "chromeos-base/debugd": [
     {
-      "version": "0.0.1-r3357",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chromeos-login",
         "chromeos-base/cryptohome-client",
@@ -2816,7 +2816,7 @@
   ],
   "chromeos-base/debugd-client": [
     {
-      "version": "0.0.1-r2288",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2833,7 +2833,7 @@
   ],
   "chromeos-base/dev-install": [
     {
-      "version": "0.0.1-r1347",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2858,7 +2858,7 @@
   ],
   "chromeos-base/diagnostics": [
     {
-      "version": "0.0.1-r1488",
+      "version": "9999",
       "buildDeps": [
         "app-arch/zstd",
         "chromeos-base/attestation-client",
@@ -2912,7 +2912,7 @@
   ],
   "chromeos-base/dlcservice": [
     {
-      "version": "0.0.1-r804",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/dlcservice-client",
         "chromeos-base/imageloader",
@@ -2950,7 +2950,7 @@
   ],
   "chromeos-base/dlcservice-client": [
     {
-      "version": "0.0.1-r608",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chromeos-dbus-bindings",
         "chromeos-base/libbrillo",
@@ -2968,7 +2968,7 @@
   ],
   "chromeos-base/dlp": [
     {
-      "version": "0.0.1-r173",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -2999,7 +2999,7 @@
   ],
   "chromeos-base/dns-proxy": [
     {
-      "version": "0.0.1-r351",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3045,7 +3045,7 @@
   ],
   "chromeos-base/ec-utils": [
     {
-      "version": "0.0.2-r13808",
+      "version": "9999",
       "buildDeps": [
         "dev-embedded/libftdi",
         "dev-libs/openssl",
@@ -3068,7 +3068,7 @@
   ],
   "chromeos-base/featured": [
     {
-      "version": "0.0.1-r133",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3092,7 +3092,7 @@
   ],
   "chromeos-base/foomatic_shell": [
     {
-      "version": "0.0.1-r183",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3112,7 +3112,7 @@
   ],
   "chromeos-base/fusebox": [
     {
-      "version": "0.0.2-r243",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3141,7 +3141,7 @@
   ],
   "chromeos-base/gestures": [
     {
-      "version": "0.0.1-r623",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/gestures-conf",
         "chromeos-base/libevdev",
@@ -3163,7 +3163,7 @@
   ],
   "chromeos-base/gestures-conf": [
     {
-      "version": "0.0.1-r154",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/xorg-conf:src"
@@ -3174,7 +3174,7 @@
   ],
   "chromeos-base/google-breakpad": [
     {
-      "version": "2022.07.13.054504-r211",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/rustc-demangle-capi",
         "net-misc/curl"
@@ -3192,7 +3192,7 @@
   ],
   "chromeos-base/hardware_verifier": [
     {
-      "version": "0.0.1-r584",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chromeos-config-tools",
         "chromeos-base/libbrillo",
@@ -3221,7 +3221,7 @@
   ],
   "chromeos-base/hps-firmware": [
     {
-      "version": "0.1.0-r421",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/anyhow",
         "dev-rust/bayer",
@@ -3267,7 +3267,7 @@
   ],
   "chromeos-base/hps-firmware-images": [
     {
-      "version": "0.0.1-r40",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/hps-firmware-images:src"
@@ -3278,7 +3278,7 @@
   ],
   "chromeos-base/hpsd": [
     {
-      "version": "0.0.1-r345",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3306,7 +3306,7 @@
   ],
   "chromeos-base/iioservice": [
     {
-      "version": "0.0.1-r414",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3342,7 +3342,7 @@
   ],
   "chromeos-base/imageloader": [
     {
-      "version": "0.0.1-r1752",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3375,7 +3375,7 @@
   ],
   "chromeos-base/imageloader-client": [
     {
-      "version": "0.0.1-r792",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3392,7 +3392,7 @@
   ],
   "chromeos-base/inputcontrol": [
     {
-      "version": "0.0.1-r115",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/inputcontrol:src"
@@ -3405,7 +3405,7 @@
   ],
   "chromeos-base/ippusb_bridge": [
     {
-      "version": "0.0.1-r56",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/chunked_transfer",
         "dev-rust/getopts",
@@ -3430,7 +3430,7 @@
   ],
   "chromeos-base/kerberos": [
     {
-      "version": "0.0.1-r561",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/mit-krb5",
         "chromeos-base/libbrillo",
@@ -3469,7 +3469,7 @@
   ],
   "chromeos-base/lexmark-fax-pnh": [
     {
-      "version": "0.0.1-r187",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3491,7 +3491,7 @@
   ],
   "chromeos-base/libbrillo": [
     {
-      "version": "0.0.1-r2040",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libchrome",
         "chromeos-base/minijail",
@@ -3534,7 +3534,7 @@
   ],
   "chromeos-base/libchrome": [
     {
-      "version": "0.0.1-r434",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/perfetto",
         "dev-cpp/abseil-cpp",
@@ -3573,7 +3573,7 @@
   ],
   "chromeos-base/libchromeos-ui": [
     {
-      "version": "0.0.1-r1934",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3594,7 +3594,7 @@
   ],
   "chromeos-base/libchromeos-use-flags": [
     {
-      "version": "1-r42",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/empty-project:src"
@@ -3605,7 +3605,7 @@
   ],
   "chromeos-base/libcontainer": [
     {
-      "version": "0.0.1-r1698",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3631,7 +3631,7 @@
   ],
   "chromeos-base/libcrossystem": [
     {
-      "version": "0.0.1-r56",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3652,7 +3652,7 @@
   ],
   "chromeos-base/libec": [
     {
-      "version": "0.0.1-r243",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chromeos-ec-headers",
         "chromeos-base/libbrillo",
@@ -3675,7 +3675,7 @@
   ],
   "chromeos-base/libevdev": [
     {
-      "version": "0.0.1-r83",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/libevdev:src"
@@ -3686,7 +3686,7 @@
   ],
   "chromeos-base/libhwsec": [
     {
-      "version": "0.0.1-r450",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/trousers",
         "chromeos-base/libbrillo",
@@ -3720,7 +3720,7 @@
   ],
   "chromeos-base/libhwsec-foundation": [
     {
-      "version": "0.0.1-r321",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3745,7 +3745,7 @@
   ],
   "chromeos-base/libiioservice_ipc": [
     {
-      "version": "0.0.1-r331",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3766,7 +3766,7 @@
   ],
   "chromeos-base/libipp": [
     {
-      "version": "0.0.1-r284",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3786,7 +3786,7 @@
   ],
   "chromeos-base/libmems": [
     {
-      "version": "0.0.1-r324",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3809,7 +3809,7 @@
   ],
   "chromeos-base/libpasswordprovider": [
     {
-      "version": "0.0.1-r566",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3831,7 +3831,7 @@
   ],
   "chromeos-base/libsirenia": [
     {
-      "version": "0.1.0-r95",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/crosvm-base",
         "chromeos-base/sirenia-rpc-macros",
@@ -3880,7 +3880,7 @@
   ],
   "chromeos-base/libtpmcrypto": [
     {
-      "version": "0.0.1-r574",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/trousers",
         "chromeos-base/libbrillo",
@@ -3909,7 +3909,7 @@
   ],
   "chromeos-base/lorgnette": [
     {
-      "version": "0.0.1-r3307",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -3947,7 +3947,7 @@
   ],
   "chromeos-base/manatee-runtime": [
     {
-      "version": "0.1.0-r28",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libsirenia",
         "dev-rust/anyhow",
@@ -3980,7 +3980,7 @@
   ],
   "chromeos-base/memd": [
     {
-      "version": "0.1.0-r225",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/system_api",
         "dev-rust/chrono",
@@ -4007,7 +4007,7 @@
   ],
   "chromeos-base/mems_setup": [
     {
-      "version": "0.0.1-r548",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4037,7 +4037,7 @@
   ],
   "chromeos-base/metrics": [
     {
-      "version": "0.0.1-r3474",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4069,7 +4069,7 @@
   ],
   "chromeos-base/minijail": [
     {
-      "version": "18-r20",
+      "version": "9999",
       "buildDeps": [
         "sys-libs/libcap"
       ],
@@ -4084,7 +4084,7 @@
   ],
   "chromeos-base/missive": [
     {
-      "version": "0.0.1-r307",
+      "version": "9999",
       "buildDeps": [
         "app-arch/snappy",
         "chromeos-base/libbrillo",
@@ -4116,7 +4116,7 @@
   ],
   "chromeos-base/mist": [
     {
-      "version": "0.0.1-r3310",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4148,7 +4148,7 @@
   ],
   "chromeos-base/ml": [
     {
-      "version": "0.0.1-r773",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/aosp-frameworks-ml-nn",
         "chromeos-base/chrome-icu",
@@ -4268,7 +4268,7 @@
   ],
   "chromeos-base/ml-client": [
     {
-      "version": "0.0.1-r209",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4288,7 +4288,7 @@
   ],
   "chromeos-base/modem-utilities": [
     {
-      "version": "0.0.1-r2943",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4311,7 +4311,7 @@
   ],
   "chromeos-base/mojo_service_manager": [
     {
-      "version": "0.0.1-r90",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4335,7 +4335,7 @@
   ],
   "chromeos-base/mtpd": [
     {
-      "version": "0.0.1-r1062",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4364,7 +4364,7 @@
   ],
   "chromeos-base/nnapi": [
     {
-      "version": "0.0.2-r7",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4402,7 +4402,7 @@
   ],
   "chromeos-base/oobe_config": [
     {
-      "version": "0.0.1-r682",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4432,7 +4432,7 @@
   ],
   "chromeos-base/p2p": [
     {
-      "version": "0.0.1-r3525",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4463,7 +4463,7 @@
   ],
   "chromeos-base/patchpanel": [
     {
-      "version": "0.0.2-r574",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4502,7 +4502,7 @@
   ],
   "chromeos-base/patchpanel-client": [
     {
-      "version": "0.0.1-r356",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4526,7 +4526,7 @@
   ],
   "chromeos-base/perfetto": [
     {
-      "version": "24.2-r2",
+      "version": "9999",
       "buildDeps": [
         "sys-apps/baselayout"
       ],
@@ -4542,7 +4542,7 @@
   ],
   "chromeos-base/permission_broker": [
     {
-      "version": "0.0.1-r3286",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4574,7 +4574,7 @@
   ],
   "chromeos-base/permission_broker-client": [
     {
-      "version": "0.0.1-r2031",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4591,7 +4591,7 @@
   ],
   "chromeos-base/power_manager": [
     {
-      "version": "0.0.2-r4340",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chromeos-config-tools",
         "chromeos-base/chromeos-ec-headers",
@@ -4647,7 +4647,7 @@
   ],
   "chromeos-base/power_manager-client": [
     {
-      "version": "0.0.1-r2428",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4667,7 +4667,7 @@
   ],
   "chromeos-base/print_tools": [
     {
-      "version": "0.0.1-r264",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4689,7 +4689,7 @@
   ],
   "chromeos-base/protofiles": [
     {
-      "version": "0.0.69",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//chromium/src/components/policy:src",
@@ -4702,7 +4702,7 @@
   ],
   "chromeos-base/quipper": [
     {
-      "version": "0.0.1-r2797",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4744,7 +4744,7 @@
   ],
   "chromeos-base/regions": [
     {
-      "version": "0.0.1-r2027",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform2/regions:src"
@@ -4757,7 +4757,7 @@
   ],
   "chromeos-base/resourced": [
     {
-      "version": "0.1.0-r76",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/anyhow",
         "dev-rust/dbus",
@@ -4780,7 +4780,7 @@
   ],
   "chromeos-base/rgbkbd": [
     {
-      "version": "0.0.1-r134",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4806,7 +4806,7 @@
   ],
   "chromeos-base/run_oci": [
     {
-      "version": "0.0.1-r1247",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4835,7 +4835,7 @@
   ],
   "chromeos-base/runtime_probe": [
     {
-      "version": "0.0.1-r875",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chromeos-config-tools",
         "chromeos-base/debugd-client",
@@ -4868,7 +4868,7 @@
   ],
   "chromeos-base/runtime_probe-client": [
     {
-      "version": "0.0.1-r27",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4896,7 +4896,7 @@
   ],
   "chromeos-base/secanomalyd": [
     {
-      "version": "0.0.1-r268",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4925,7 +4925,7 @@
   ],
   "chromeos-base/secure-erase-file": [
     {
-      "version": "0.0.1-r1049",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4945,7 +4945,7 @@
   ],
   "chromeos-base/selinux-policy": [
     {
-      "version": "0.0.1-r443",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform2/sepolicy:src"
@@ -4959,7 +4959,7 @@
   ],
   "chromeos-base/session_manager-client": [
     {
-      "version": "0.0.1-r2364",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -4979,7 +4979,7 @@
   ],
   "chromeos-base/shill": [
     {
-      "version": "0.0.5-r3449",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/bootstat",
         "chromeos-base/chaps",
@@ -5047,7 +5047,7 @@
   ],
   "chromeos-base/shill-client": [
     {
-      "version": "0.0.1-r3224",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5067,7 +5067,7 @@
   ],
   "chromeos-base/shill-dbus-client": [
     {
-      "version": "0.0.1-r996",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5091,7 +5091,7 @@
   ],
   "chromeos-base/shill-net": [
     {
-      "version": "0.0.1-r1072",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5112,7 +5112,7 @@
   ],
   "chromeos-base/sirenia": [
     {
-      "version": "0.24.52-r165",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/crosvm-base",
         "chromeos-base/libsirenia",
@@ -5173,7 +5173,7 @@
   ],
   "chromeos-base/sirenia-rpc-macros": [
     {
-      "version": "0.1.0-r9",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/anyhow",
         "dev-rust/assert_matches",
@@ -5196,7 +5196,7 @@
   ],
   "chromeos-base/smbfs": [
     {
-      "version": "0.0.1-r350",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5225,7 +5225,7 @@
   ],
   "chromeos-base/smbprovider": [
     {
-      "version": "0.0.1-r855",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5257,7 +5257,7 @@
   ],
   "chromeos-base/spaced": [
     {
-      "version": "0.0.1-r154",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5293,7 +5293,7 @@
   ],
   "chromeos-base/syslog-cat": [
     {
-      "version": "0.0.1-r170",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5322,7 +5322,7 @@
   ],
   "chromeos-base/system-proxy": [
     {
-      "version": "0.0.1-r354",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5360,7 +5360,7 @@
   ],
   "chromeos-base/system_api": [
     {
-      "version": "0.0.1-r4878",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libchrome",
         "dev-cpp/gtest",
@@ -5382,7 +5382,7 @@
   ],
   "chromeos-base/tpm_manager": [
     {
-      "version": "0.0.1-r2627",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/trousers",
         "chromeos-base/libbrillo",
@@ -5425,7 +5425,7 @@
   ],
   "chromeos-base/tpm_manager-client": [
     {
-      "version": "0.0.1-r461",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5460,7 +5460,7 @@
   ],
   "chromeos-base/u2fd": [
     {
-      "version": "0.0.1-r1556",
+      "version": "9999",
       "buildDeps": [
         "app-crypt/trousers",
         "chromeos-base/attestation",
@@ -5513,7 +5513,7 @@
   ],
   "chromeos-base/u2fd-client": [
     {
-      "version": "0.0.1-r76",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5545,7 +5545,7 @@
   ],
   "chromeos-base/update_engine": [
     {
-      "version": "0.0.3-r4178",
+      "version": "9999",
       "buildDeps": [
         "app-arch/bzip2",
         "app-arch/xz-utils",
@@ -5603,7 +5603,7 @@
   ],
   "chromeos-base/update_engine-client": [
     {
-      "version": "0.0.1-r2093",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5620,7 +5620,7 @@
   ],
   "chromeos-base/usb_bouncer": [
     {
-      "version": "0.0.1-r564",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5653,7 +5653,7 @@
   ],
   "chromeos-base/userfeedback": [
     {
-      "version": "0.0.1-r2905",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform2/userfeedback:src"
@@ -5675,7 +5675,7 @@
   ],
   "chromeos-base/vboot_reference": [
     {
-      "version": "1.0-r2314",
+      "version": "9999",
       "buildDeps": [
         "app-arch/libarchive",
         "chromeos-base/crosid",
@@ -5702,7 +5702,7 @@
   ],
   "chromeos-base/verity": [
     {
-      "version": "0.0.1-r311",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5722,7 +5722,7 @@
   ],
   "chromeos-base/vm_protos": [
     {
-      "version": "0.0.1-r345",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -5744,7 +5744,7 @@
   ],
   "chromeos-base/vpd": [
     {
-      "version": "0.0.1-r151",
+      "version": "9999",
       "buildDeps": [
         "sys-apps/util-linux"
       ],
@@ -5761,7 +5761,7 @@
   ],
   "chromeos-base/vpn-manager": [
     {
-      "version": "0.0.1-r2926",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -7773,7 +7773,7 @@
   ],
   "dev-libs/libtextclassifier": [
     {
-      "version": "0.0.1-r236",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/chrome-icu",
         "chromeos-base/libbrillo",
@@ -7864,7 +7864,7 @@
   ],
   "dev-libs/libutf": [
     {
-      "version": "0.0.1-r187",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -8011,7 +8011,7 @@
   ],
   "dev-libs/marisa-aosp": [
     {
-      "version": "0.0.2",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -8028,7 +8028,7 @@
   ],
   "dev-libs/modp_b64": [
     {
-      "version": "0.0.1-r249",
+      "version": "9999",
       "buildDeps": [
         "dev-cpp/gtest"
       ],
@@ -8498,7 +8498,7 @@
   ],
   "dev-rust/assertions": [
     {
-      "version": "0.1.0-r20",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/crosvm:src"
@@ -8663,7 +8663,7 @@
   ],
   "dev-rust/balloon_control": [
     {
-      "version": "0.1.0-r7",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/serde"
       ],
@@ -8979,7 +8979,7 @@
   ],
   "dev-rust/chromeos-dbus-bindings": [
     {
-      "version": "0.25.52-r39",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/which"
       ],
@@ -9547,7 +9547,7 @@
   ],
   "dev-rust/cros_async": [
     {
-      "version": "0.1.0-r41",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/async-task",
         "dev-rust/async-trait",
@@ -9709,7 +9709,7 @@
   ],
   "dev-rust/data_model": [
     {
-      "version": "0.1.0-r50",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/assertions",
         "dev-rust/libc",
@@ -10264,7 +10264,7 @@
   ],
   "dev-rust/featured": [
     {
-      "version": "0.1.0-r10",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/featured",
         "dev-rust/log",
@@ -11284,7 +11284,7 @@
   ],
   "dev-rust/io_uring": [
     {
-      "version": "0.1.0-r23",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/data_model",
         "dev-rust/libc",
@@ -11423,7 +11423,7 @@
   ],
   "dev-rust/libchromeos": [
     {
-      "version": "0.1.0-r61",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/crosvm-base",
         "dev-rust/dbus",
@@ -11675,7 +11675,7 @@
   ],
   "dev-rust/manatee-client": [
     {
-      "version": "0.24.52-r43",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/crosvm-base",
         "chromeos-base/libsirenia",
@@ -11810,7 +11810,7 @@
   ],
   "dev-rust/minijail": [
     {
-      "version": "0.2.3-r17",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/libc",
         "dev-rust/minijail-sys"
@@ -11827,7 +11827,7 @@
   ],
   "dev-rust/minijail-sys": [
     {
-      "version": "0.0.13-r26",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/minijail",
         "dev-rust/libc",
@@ -14579,7 +14579,7 @@
   ],
   "dev-rust/sync": [
     {
-      "version": "0.1.149-r1",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/crosvm:src"
@@ -14619,7 +14619,7 @@
   ],
   "dev-rust/sys_util": [
     {
-      "version": "0.1.0-r206",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/android_log-sys",
         "dev-rust/assertions",
@@ -14662,7 +14662,7 @@
   ],
   "dev-rust/sys_util_core": [
     {
-      "version": "0.1.0-r8",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/libc",
         "dev-rust/remain",
@@ -14743,7 +14743,7 @@
   ],
   "dev-rust/system_api": [
     {
-      "version": "0.24.53-r597",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/chromeos-dbus-bindings",
         "dev-rust/dbus",
@@ -15121,7 +15121,7 @@
   ],
   "dev-rust/tlsdate_dbus": [
     {
-      "version": "0.24.52-r33",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/chromeos-dbus-bindings",
         "dev-rust/dbus"
@@ -15582,7 +15582,7 @@
   ],
   "dev-rust/vboot_reference-sys": [
     {
-      "version": "1.0.0-r4",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/vboot_reference",
         "dev-rust/libc",
@@ -15854,7 +15854,7 @@
   ],
   "dev-util/bsdiff": [
     {
-      "version": "4.3.1-r35",
+      "version": "9999",
       "buildDeps": [
         "app-arch/brotli",
         "app-arch/bzip2",
@@ -16020,7 +16020,7 @@
   ],
   "dev-util/puffin": [
     {
-      "version": "1.0.0-r441",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -16421,7 +16421,7 @@
   ],
   "media-libs/cros-camera-hal-usb": [
     {
-      "version": "0.0.1-r1222",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/cros-camera-android-deps",
         "chromeos-base/cros-camera-libs",
@@ -16474,7 +16474,7 @@
   ],
   "media-libs/cros-camera-libfs": [
     {
-      "version": "0.0.1-r70",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -16736,7 +16736,7 @@
   ],
   "media-libs/libsync": [
     {
-      "version": "0.0.1-r7",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//aosp/system/libsync:src"
@@ -16768,15 +16768,13 @@
   ],
   "media-libs/mesa": [
     {
-      "version": "21.3.8-r2",
+      "version": "9999",
       "buildDeps": [
         "dev-libs/expat",
         "dev-libs/libgcrypt",
         "dev-libs/libxml2",
-        "sys-devel/flex",
         "sys-devel/llvm",
         "virtual/libelf",
-        "virtual/pkgconfig",
         "virtual/udev",
         "x11-base/xorg-proto",
         "x11-libs/libdrm"
@@ -16787,6 +16785,7 @@
       "runtimeDeps": [
         "dev-libs/expat",
         "dev-libs/libgcrypt",
+        "sys-devel/llvm",
         "virtual/libelf",
         "virtual/udev",
         "x11-libs/libdrm"
@@ -16796,7 +16795,7 @@
   ],
   "media-libs/minigbm": [
     {
-      "version": "0.0.1-r600",
+      "version": "9999",
       "buildDeps": [
         "virtual/pkgconfig",
         "x11-libs/libdrm"
@@ -16908,7 +16907,7 @@
   ],
   "media-libs/webrtc-apm": [
     {
-      "version": "0.0.1-r35",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/featured",
         "chromeos-base/metrics",
@@ -16956,7 +16955,7 @@
   ],
   "media-sound/adhd": [
     {
-      "version": "0.0.6-r2652",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/metrics",
         "dev-libs/iniparser",
@@ -17026,7 +17025,7 @@
   ],
   "media-sound/audio_streams": [
     {
-      "version": "0.1.0-r63",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/async-trait",
         "dev-rust/futures",
@@ -17053,7 +17052,7 @@
   ],
   "media-sound/cras-sys": [
     {
-      "version": "0.1.0-r84",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/data_model",
         "dev-rust/serde",
@@ -17069,7 +17068,7 @@
   ],
   "media-sound/cras_rust": [
     {
-      "version": "0.1.0-r10",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/anyhow",
         "dev-rust/dbus",
@@ -17087,7 +17086,7 @@
   ],
   "media-sound/cras_tests": [
     {
-      "version": "0.1.0-r54",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/chromeos-dbus-bindings",
         "dev-rust/clap",
@@ -17108,7 +17107,7 @@
   ],
   "media-sound/libcras": [
     {
-      "version": "0.1.0-r75",
+      "version": "9999",
       "buildDeps": [
         "dev-rust/anyhow",
         "dev-rust/async-trait",
@@ -17585,7 +17584,7 @@
   ],
   "net-libs/libmbim": [
     {
-      "version": "1.27.7-r88",
+      "version": "9999",
       "buildDeps": [
         "dev-libs/glib",
         "dev-util/meson-format-array",
@@ -17991,7 +17990,7 @@
   ],
   "net-misc/modemmanager-next": [
     {
-      "version": "1.19.1-r482",
+      "version": "9999",
       "buildDeps": [
         "dev-libs/dbus-glib",
         "dev-libs/glib",
@@ -18064,7 +18063,7 @@
   ],
   "net-misc/tlsdate": [
     {
-      "version": "0.0.5-r106",
+      "version": "9999",
       "buildDeps": [
         "dev-libs/libevent",
         "dev-libs/openssl",
@@ -18125,7 +18124,7 @@
   ],
   "net-print/cups": [
     {
-      "version": "2.4.0-r238",
+      "version": "9999",
       "buildDeps": [
         "app-text/libpaper",
         "dev-libs/libgcrypt",
@@ -18356,7 +18355,7 @@
   ],
   "net-wireless/bluez": [
     {
-      "version": "5.54-r815",
+      "version": "9999",
       "buildDeps": [
         "app-arch/bzip2",
         "chromeos-base/libchrome",
@@ -18420,7 +18419,7 @@
   ],
   "net-wireless/floss": [
     {
-      "version": "0.0.2-r1498",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libbrillo",
         "chromeos-base/libchrome",
@@ -18502,7 +18501,7 @@
   ],
   "net-wireless/wpa_supplicant-cros": [
     {
-      "version": "2.10_pre-r49",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/minijail",
         "dev-libs/engine_pkcs11",
@@ -18960,7 +18959,7 @@
   ],
   "sys-apps/coreboot-utils": [
     {
-      "version": "0.0.1-r5159",
+      "version": "9999",
       "buildDeps": [
         "sys-apps/flashrom",
         "sys-apps/pciutils"
@@ -19100,7 +19099,7 @@
   ],
   "sys-apps/flashmap": [
     {
-      "version": "0.3-r37",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//third_party/flashmap:src"
@@ -19111,7 +19110,7 @@
   ],
   "sys-apps/flashrom": [
     {
-      "version": "0.9.9-r1451",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/libec",
         "dev-embedded/libftdi",
@@ -19133,7 +19132,7 @@
   ],
   "sys-apps/frecon": [
     {
-      "version": "0.0.1-r180",
+      "version": "9999",
       "buildDeps": [
         "media-libs/libpng",
         "media-sound/adhd",
@@ -19157,7 +19156,7 @@
   ],
   "sys-apps/fwupd": [
     {
-      "version": "9998",
+      "version": "9999",
       "buildDeps": [
         "app-arch/gcab",
         "app-arch/libarchive",
@@ -19438,7 +19437,7 @@
   ],
   "sys-apps/mosys": [
     {
-      "version": "1.2.3-r1460",
+      "version": "9999",
       "buildDeps": [
         "chromeos-base/minijail",
         "dev-cpp/gtest",
@@ -19530,7 +19529,7 @@
   ],
   "sys-apps/rootdev": [
     {
-      "version": "0.0.1-r39",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//third_party/rootdev:src"
@@ -19609,7 +19608,7 @@
   ],
   "sys-apps/systemd-tmpfiles": [
     {
-      "version": "247-r4",
+      "version": "9999",
       "buildDeps": [
         "sys-apps/acl",
         "sys-apps/util-linux",
@@ -19632,7 +19631,7 @@
   ],
   "sys-apps/upstart": [
     {
-      "version": "1.2-r65",
+      "version": "9999",
       "buildDeps": [
         "dev-libs/expat",
         "sys-apps/dbus",
@@ -20079,7 +20078,10 @@
         "sys-libs/zlib"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-libs/libffi",
+        "sys-libs/zlib"
+      ],
       "srcUris": {
         "llvm-12.0.1-manpages.tar.bz2": {
           "uris": [
@@ -20123,7 +20125,7 @@
   ],
   "sys-firmware/fwupd-peripherals": [
     {
-      "version": "0.0.1-r6",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/empty-project:src"
@@ -20227,7 +20229,7 @@
   ],
   "sys-firmware/fwupd-storage": [
     {
-      "version": "0.0.1-r1",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/empty-project:src"
@@ -20609,7 +20611,7 @@
   ],
   "sys-kernel/chromeos-kernel-5_15": [
     {
-      "version": "5.15.61-r806",
+      "version": "9999",
       "buildDeps": [
         "sys-kernel/linux-firmware"
       ],
@@ -20623,7 +20625,7 @@
   ],
   "sys-kernel/linux-firmware": [
     {
-      "version": "0.0.1-r592",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//third_party/linux-firmware:src"
@@ -21633,7 +21635,7 @@
   ],
   "virtual/target-chromium-os": [
     {
-      "version": "1-r218",
+      "version": "9999",
       "buildDeps": [],
       "localSrc": [
         "//platform/empty-project:src"
@@ -21860,7 +21862,7 @@
   ],
   "x11-drivers/opengles-headers": [
     {
-      "version": "0.0.1-r41",
+      "version": "9999",
       "buildDeps": [
         "dev-util/opencl-headers",
         "dev-util/spirv-headers",
@@ -21992,7 +21994,7 @@
   ],
   "x11-libs/libdrm": [
     {
-      "version": "2.4.110-r2",
+      "version": "9999",
       "buildDeps": [
         "dev-libs/libpthread-stubs",
         "virtual/udev"
