@@ -612,6 +612,8 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 			return nil, err
 		}
 
+		info.Version = pkg.Version().String()
+
 		metadata := pkg.Metadata()
 
 		rawDeps, err := dependency.Parse(metadata["DEPEND"])
@@ -706,6 +708,7 @@ type uriInfo struct {
 }
 
 type packageInfo struct {
+	Version     string             `json:"version"`
 	BuildDeps   []string           `json:"buildDeps"`
 	LocalSrc    []string           `json:"localSrc"`
 	RuntimeDeps []string           `json:"runtimeDeps"`
@@ -780,7 +783,7 @@ var app = &cli.App{
 			return deps
 		}
 
-		infoMap := make(map[string]*packageInfo)
+		infoMap := make(map[string][]*packageInfo)
 		for _, packageName := range sortedPackageNames {
 			info := pkgInfoByPkgName[packageName]
 
@@ -802,7 +805,7 @@ var app = &cli.App{
 			info.RuntimeDeps = nonNil(uniqueRuntimeDeps)
 			info.SrcUris = nonNilUri(info.SrcUris)
 
-			infoMap[packageName] = &info
+			infoMap[packageName] = []*packageInfo{&info}
 		}
 
 		encoder := json.NewEncoder(os.Stdout)

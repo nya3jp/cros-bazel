@@ -275,7 +275,7 @@ var app = &cli.App{
 			overlayDirs = append(overlayDirs, overlayDir)
 		}
 
-		var pkgInfoMap map[string]*packageInfo
+		var pkgInfoMap map[string][]*packageInfo
 		if packageInfoPath != "" {
 			b, err := os.ReadFile(packageInfoPath)
 			if err != nil {
@@ -286,14 +286,16 @@ var app = &cli.App{
 			}
 
 			// Rewrite package names to labels.
-			for _, pkgInfo := range pkgInfoMap {
-				pkgInfo.BuildDeps, err = packageNamesToLabels(pkgInfo.BuildDeps, overlayDirs)
-				if err != nil {
-					return err
-				}
-				pkgInfo.RuntimeDeps, err = packageNamesToLabels(pkgInfo.RuntimeDeps, overlayDirs)
-				if err != nil {
-					return err
+			for _, pkgInfos := range pkgInfoMap {
+				for _, pkgInfo := range pkgInfos {
+					pkgInfo.BuildDeps, err = packageNamesToLabels(pkgInfo.BuildDeps, overlayDirs)
+					if err != nil {
+						return err
+					}
+					pkgInfo.RuntimeDeps, err = packageNamesToLabels(pkgInfo.RuntimeDeps, overlayDirs)
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -339,9 +341,9 @@ var app = &cli.App{
 				packageName := v[len(v)-1]
 				buildPath := filepath.Join(ebuildDir, "BUILD.bazel")
 
-				pkgInfo := pkgInfoMap[fmt.Sprintf("%s/%s", category, packageName)]
+				pkgInfos := pkgInfoMap[fmt.Sprintf("%s/%s", category, packageName)]
 				_, blocked := blockedPackages[packageName]
-				if pkgInfo == nil || blocked {
+				if pkgInfos == nil || blocked {
 					if err := os.Remove(buildPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 						return err
 					}
@@ -482,7 +484,7 @@ var app = &cli.App{
 								PackageName: localPackageName,
 								Category:    category,
 								Dists:       dists,
-								PackageInfo: pkgInfo,
+								PackageInfo: pkgInfos[0], //TODO: Iterate
 							}
 
 							if err := ebuildTemplate.Execute(f, ebuild); err != nil {
