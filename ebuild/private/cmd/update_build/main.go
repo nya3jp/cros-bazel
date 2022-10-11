@@ -6,6 +6,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -23,8 +24,6 @@ import (
 	"text/template"
 
 	"github.com/urfave/cli"
-
-	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 const ebuildExt = ".ebuild"
@@ -53,6 +52,11 @@ var distBaseURLs = []string{
 	"https://storage.googleapis.com/chromium-nodejs/16.13.0/",
 }
 
+var allowedHosts = map[string]struct{}{
+	"commondatastorage.googleapis.com": {},
+	"storage.googleapis.com":           {},
+}
+
 // The following packages don't exist in the mirrors above, but instead
 // need to be pulled from the SRC_URI. We should probably mirror these so our
 // build isn't dependent on external hosts.
@@ -67,10 +71,20 @@ type distEntry struct {
 	Name     string `json:"name"`
 }
 
+type uriInfo struct {
+	Uris      []string `json:"uris"`
+	Size      int      `json:"size"`
+	Integrity string   `json:"integrity"`
+	SHA256    string   `json:"SHA256"`
+	SHA512    string   `json:"SHA512"`
+}
+
 type packageInfo struct {
-	BuildDeps   []string `json:"buildDeps"`
-	LocalSrc    []string `json:"localSrc"`
-	RuntimeDeps []string `json:"runtimeDeps"`
+	Version     string             `json:"version"`
+	BuildDeps   []string           `json:"buildDeps"`
+	LocalSrc    []string           `json:"localSrc"`
+	RuntimeDeps []string           `json:"runtimeDeps"`
+	SrcUris     map[string]uriInfo `json:"srcUris"`
 }
 
 type ebuildInfo struct {
@@ -86,43 +100,110 @@ type packageGroup struct {
 	Packages    []string
 }
 
-func getSHA256(url string) (string, error) {
+func getSHA(url string) (string, string, error) {
 	log.Printf("Trying: %s", url)
 	res, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode/100 != 2 {
-		return "", fmt.Errorf("http status %d", res.StatusCode)
+		return "", "", fmt.Errorf("http status %d", res.StatusCode)
 	}
 
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, res.Body); err != nil {
-		return "", err
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", "", err
 	}
-	return hex.EncodeToString(hasher.Sum(nil)), nil
+
+	sha256Hash := sha256.Sum256(body)
+	sha512Hash := sha512.Sum512(body)
+
+	// Need to unsize the slice
+	sha256HashHex := hex.EncodeToString(sha256Hash[:])
+	sha512HashHex := hex.EncodeToString(sha512Hash[:])
+
+	return sha256HashHex, sha512HashHex, nil
 }
 
-func locateDistFile(filename string) (*distEntry, error) {
-	for _, distBaseURL := range distBaseURLs {
-		var url string
-		if url = manualDistfileMap[filename]; url == "" {
-			url = distBaseURL + filename
-		}
-		// TODO: This SHA should come from the manifest
-		if sha256, err := getSHA256(url); err == nil {
-			name := regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(filename, "_")
-			return &distEntry{
-				Filename: filename,
-				URL:      url,
-				SHA256:   sha256,
-				Name:     name,
-			}, nil
+func locateDistFile(filename string, info uriInfo) (*distEntry, error) {
+	// Once we use bazel 6.0 we can just set integrity value on the
+	// http_file.
+	var sha256 string
+	var sha512 string
+
+	goodUri, ok := manualDistfileMap[filename]
+	if !ok {
+		for _, uri := range info.Uris {
+			parsedUri, err := url.ParseRequestURI(uri)
+			if err != nil {
+				return nil, err
+			}
+
+			if parsedUri.Scheme == "gs" {
+				log.Printf("Got gs: %s", parsedUri)
+				parsedUri.Scheme = "https"
+				parsedUri.Path = filepath.Join(parsedUri.Host, parsedUri.Path)
+				parsedUri.Host = "commondatastorage.googleapis.com"
+				uri = parsedUri.String()
+			}
+
+			if _, ok := allowedHosts[parsedUri.Host]; !ok {
+				continue
+			}
+
+			goodUri = uri
+			sha256 = info.SHA256
+			break
 		}
 	}
-	return nil, fmt.Errorf("no distfile found for %s", filename)
+
+	if goodUri != "" && sha256 == "" {
+		// We don't have a SHA256 in the Manifest, Download the file and use
+		// the SHA512 in the Manifest to verify the file, then compute the
+		// SHA256 from the downloaded file.
+		var err error
+		sha256, sha512, err = getSHA(goodUri)
+		if err != nil {
+			return nil, err
+		}
+
+		if info.SHA512 != "" && sha512 != info.SHA512 {
+			return nil, fmt.Errorf("SHA512 doesn't match for file %s: %s != %s", filename, info.SHA512, sha512)
+		}
+	} else if goodUri == "" {
+		for _, distBaseURL := range distBaseURLs {
+			url := distBaseURL + filename
+
+			var err error
+			sha256, sha512, err = getSHA(url)
+			if err != nil {
+				continue
+			}
+
+			if info.SHA512 != "" && sha512 != info.SHA512 {
+				return nil, fmt.Errorf("SHA512 doesn't match for file %s: %s != %s", filename, info.SHA512, sha512)
+			}
+
+			goodUri = url
+			break
+		}
+	}
+
+	log.Printf("Found: %s w/ sha256 %s", goodUri, sha256)
+
+	if goodUri != "" && sha256 != "" {
+		name := regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(filename, "_")
+		return &distEntry{
+			Filename: filename,
+			URL:      goodUri,
+			SHA256:   sha256,
+			Name:     name,
+		}, nil
+	} else {
+		return nil, fmt.Errorf("no distfile found for %s", filename)
+	}
 }
 
 var repositoriesTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The ChromiumOS Authors.
@@ -192,7 +273,7 @@ package_set(
     name = "{{ .PackageName }}",
     deps = [
         {{- range .Packages }}
-        "{{ . }}",
+        ":{{ . }}",
         {{- end }}
     ],
     visibility = ["//visibility:public"],
@@ -254,6 +335,64 @@ func packageNamesToLabels(names []string, overlayDirs []string) ([]string, error
 		labels = append(labels, label)
 	}
 	return labels, nil
+}
+
+func getDistEntries(cachedDists map[string]*distEntry, distJSONPath string, pkgInfo *packageInfo) ([]*distEntry, error) {
+	var dists []*distEntry
+	for filename, srcInfo := range pkgInfo.SrcUris {
+		// Check the cache first.
+		if dist, ok := cachedDists[filename]; ok {
+			if dist != nil {
+				dists = append(dists, dist)
+				continue
+			}
+		}
+
+		log.Printf("  locating distfile %s...", filename)
+		dist, err := locateDistFile(filename, srcInfo)
+		if err != nil {
+			log.Fatalf("WARNING: unable to locate distfile %s: %v", filename, err)
+			// TODO: Do we want to support negative caching?
+			continue
+		} else {
+			dists = append(dists, dist)
+		}
+
+		cachedDists[filename] = dist
+
+		// Update cache.
+		b, err := json.MarshalIndent(cachedDists, "", "  ")
+		if err != nil {
+			return nil, err
+		}
+		if err := os.WriteFile(distJSONPath, b, 0o644); err != nil {
+			return nil, err
+		}
+	}
+
+	sort.Slice(dists, func(i, j int) bool {
+		return dists[i].Name < dists[j].Name
+	})
+
+	return dists, nil
+}
+
+func uniqueDists(list []*distEntry) []*distEntry {
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Name < list[j].Name
+	})
+
+	var uniqueList []*distEntry
+	var previousItem *distEntry
+	for _, dep := range list {
+		if previousItem != nil && dep.Name == previousItem.Name {
+			continue
+		}
+		previousItem = dep
+		uniqueList = append(uniqueList, dep)
+	}
+
+	return uniqueList
 }
 
 var flagPackageInfoFile = &cli.StringFlag{
@@ -353,112 +492,39 @@ var app = &cli.App{
 				log.Printf("Generating: %s", buildPath)
 
 				if err := func() error {
-					// Find the best version.
-					fis, err := os.ReadDir(ebuildDir)
-					if err != nil {
-						return err
-					}
 
-					var bestName string
-					var bestVer *version.Version
+					var ebuildInfos []ebuildInfo
 
-					var allVersions []*version.Version
+					// Keep the previous behavior where rust pkgs were sorted ascending
+					sort.Slice(pkgInfos, func(i, j int) bool {
+						return pkgInfos[i].Version < pkgInfos[j].Version
+					})
 
-					for _, fi := range fis {
-						name := fi.Name()
-						if !strings.HasSuffix(name, ebuildExt) {
-							continue
-						}
-						// TODO: Remove this hack.
-						if name == "ncurses-5.9-r99.ebuild" ||
-							// There are no 9999 lacros distfiles
-							name == "chromeos-lacros-9999.ebuild" {
-							continue
-						}
-						_, ver, err := version.ExtractSuffix(strings.TrimSuffix(name, ebuildExt))
+					for _, pkgInfo := range pkgInfos {
+						dists, err := getDistEntries(cachedDists, distJSONPath, pkgInfo)
 						if err != nil {
-							return fmt.Errorf("%s: %w", filepath.Join(ebuildDir, name), err)
+							return err
 						}
-						if bestVer == nil || bestVer.Compare(ver) < 0 {
-							bestName = name
-							bestVer = ver
-						}
-						if info, err := fi.Info(); err == nil {
-							// Skip the revbump symlinks
-							if info.Mode()&fs.ModeSymlink == 0 {
-								allVersions = append(allVersions, ver)
-							}
+
+						ebuildName := fmt.Sprintf("%s-%s.ebuild", packageName, pkgInfo.Version)
+
+						var localPackageName string
+						if len(pkgInfos) == 1 {
+							localPackageName = packageName
 						} else {
-							return err
-						}
-					}
-					if bestName == "" {
-						return errors.New("no ebuild found")
-					}
-
-					if category != "dev-rust" {
-						// We only want to generate 1 ebuild for non rust packages
-						allVersions = []*version.Version{bestVer}
-					} else {
-						// If we have cros-workon rust ebuilds only use those.
-						// HACK: We should use the eclass to determine if it's a cros-workon
-						for _, ver := range allVersions {
-							if ver.Major() == "9999" {
-								allVersions = []*version.Version{ver}
-								break
-							}
-						}
-					}
-
-					// Read Manifest to get a list of distfiles.
-					manifest, err := os.ReadFile(filepath.Join(ebuildDir, "Manifest"))
-					if err != nil && !errors.Is(err, os.ErrNotExist) {
-						return err
-					}
-
-					var dists []*distEntry
-					for _, line := range strings.Split(string(manifest), "\n") {
-						fields := strings.Fields(line)
-						if len(fields) < 2 || fields[0] != "DIST" {
-							continue
-						}
-						filename, err := url.PathUnescape(fields[1])
-						if err != nil {
-							return err
-						}
-						if strings.Contains(filename, "/") {
-							// This is likely a Go dep, skip for now.
-							continue
+							localPackageName = fmt.Sprintf("%s-%s", packageName, pkgInfo.Version)
 						}
 
-						// Check the cache first.
-						if dist, ok := cachedDists[filename]; ok {
-							if dist == nil {
-								log.Printf("WARNING: unable to locate distfile %s: negative-cached", filename)
-								continue
-							}
-							dists = append(dists, dist)
-							continue
+						ebuild := ebuildInfo{
+							EBuildName:  ebuildName,
+							PackageName: localPackageName,
+							Category:    category,
+							Dists:       dists,
+							PackageInfo: pkgInfo,
 						}
 
-						log.Printf("  locating distfile %s...", filename)
-						dist, err := locateDistFile(filename)
-						if err != nil {
-							log.Printf("WARNING: unable to locate distfile %s: %v", filename, err)
-						} else {
-							dists = append(dists, dist)
-						}
-
-						cachedDists[filename] = dist
-
-						// Update cache.
-						b, err := json.MarshalIndent(cachedDists, "", "  ")
-						if err != nil {
-							return err
-						}
-						if err := os.WriteFile(distJSONPath, b, 0o644); err != nil {
-							return err
-						}
+						ebuildInfos = append(ebuildInfos, ebuild)
+						overlayDists = append(overlayDists, dists...)
 					}
 
 					if err := generateBuild(buildPath, func(f *os.File) error {
@@ -466,33 +532,19 @@ var app = &cli.App{
 							return err
 						}
 
-						var targetNames []string
-
-						for _, ver := range allVersions {
-							ebuildName := fmt.Sprintf("%s-%s.ebuild", packageName, ver)
-
-							var localPackageName string
-							if len(allVersions) == 1 {
-								localPackageName = packageName
-							} else {
-								localPackageName = fmt.Sprintf("%s-%s", packageName, ver)
-								targetNames = append(targetNames, ":"+localPackageName)
-							}
-
-							ebuild := &ebuildInfo{
-								EBuildName:  ebuildName,
-								PackageName: localPackageName,
-								Category:    category,
-								Dists:       dists,
-								PackageInfo: pkgInfos[0], //TODO: Iterate
-							}
-
+						for _, ebuild := range ebuildInfos {
 							if err := ebuildTemplate.Execute(f, ebuild); err != nil {
 								return err
 							}
 						}
 
-						if len(targetNames) > 0 {
+						if len(ebuildInfos) > 1 {
+							var targetNames []string
+
+							for _, ebuild := range ebuildInfos {
+								targetNames = append(targetNames, ebuild.PackageName)
+							}
+
 							packageGroup := packageGroup{
 								PackageName: packageName,
 								Packages:    targetNames,
@@ -506,17 +558,14 @@ var app = &cli.App{
 					}); err != nil {
 						return err
 					}
-
-					overlayDists = append(overlayDists, dists...)
 					return nil
 				}(); err != nil {
 					log.Printf("WARNING: Failed to generate %s: %v", buildPath, err)
 				}
 			}
 
-			sort.Slice(overlayDists, func(i, j int) bool {
-				return overlayDists[i].Name < overlayDists[j].Name
-			})
+			overlayDists = uniqueDists(overlayDists)
+
 			if err := updateRepositories(filepath.Join(overlayDir, "repositories.bzl"), overlayDists); err != nil {
 				return err
 			}
