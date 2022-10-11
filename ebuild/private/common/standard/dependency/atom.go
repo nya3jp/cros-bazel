@@ -127,6 +127,7 @@ func trimVersionOperator(s string) (op VersionOperator, rest string, err error) 
 }
 
 func (a *Atom) PackageName() string              { return a.name }
+func (a *Atom) PackageCategory() string          { return strings.Split(a.name, "/")[0] }
 func (a *Atom) VersionOperator() VersionOperator { return a.op }
 func (a *Atom) Version() *version.Version        { return a.ver }
 func (a *Atom) Wildcard() bool                   { return a.wildcard }

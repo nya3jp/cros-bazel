@@ -7,6 +7,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/url"
 	"os"
@@ -55,6 +56,9 @@ var (
 		"virtual/pkgconfig":             {"dev-util/pkgconfig"},
 		"virtual/tmpfiles":              {"sys-apps/systemd-tmpfiles"},
 		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
+		"virtual/yacc":                  {"sys-devel/bison"},
+		// TODO: Figure out why simplifyDeps doesn't compute this correctly
+		"virtual/perl-ExtUtils-MakeMaker": {"dev-lang/perl"},
 	}
 	additionalSrcPackages = map[string][]string{
 		"app-accessibility/pumpkin":        []string{"@chromite//:src"},
@@ -68,9 +72,11 @@ var (
 		"x11-misc/xkeyboard-config": {},
 	}
 
-	invalidUnstablePackage = map[string]struct{}{
+	invalidEbuilds = map[string]struct{}{
 		// The 9999 ebuild isn't actually functional.
-		"chromeos-base/chromeos-lacros": {},
+		"chromeos-lacros-9999.ebuild": {},
+		// Some type of transitional ebuild
+		"ncurses-5.9-r99.ebuild": {},
 	}
 )
 
@@ -95,6 +101,36 @@ var forceProvided = []string{
 	// This is really a BDEPEND and there is no need to declare it as a
 	// RDEPEND.
 	"virtual/rust",
+}
+
+func unique(list []string) []string {
+	sort.Strings(list)
+
+	var uniqueRuntimeDeps = []string{}
+	var previousDep string
+	for _, dep := range list {
+		if dep == previousDep {
+			continue
+		}
+		previousDep = dep
+		uniqueRuntimeDeps = append(uniqueRuntimeDeps, dep)
+	}
+
+	return uniqueRuntimeDeps
+}
+
+func filterOutSymlinks(list []*packages.Package) ([]*packages.Package, error) {
+	var realFiles []*packages.Package
+	for _, pkg := range list {
+		info, err := os.Lstat(pkg.Path())
+		if err != nil {
+			return nil, err
+		}
+		if info.Mode()&fs.ModeSymlink == 0 {
+			realFiles = append(realFiles, pkg)
+		}
+	}
+	return realFiles, nil
 }
 
 func isCrosWorkonPackage(pkg *packages.Package) bool {
@@ -234,32 +270,36 @@ func simplifyDeps(deps *dependency.Deps, use map[string]bool, packageName string
 	return deps
 }
 
-func computeSrcPackages(pkg *packages.Package, project string, localName string, subtree string) ([]string, error) {
+func computeSrcPackages(pkg *packages.Package) ([]string, error) {
+	metadata := pkg.Metadata()
 
-	// The parser will return | concat arrays, so undo that here.
-	projects := strings.Split(project, "|")
+	splitCrosWorkon := func(value string) []string {
+		if value == "" {
+			return []string{}
+		} else {
+			// The parser will return | concat arrays, so undo that here.
+			return strings.Split(value, "|")
+		}
+	}
+
+	projects := splitCrosWorkon(metadata["CROS_WORKON_PROJECT"])
 
 	// Not a cros-workon package
 	if len(projects) == 0 {
-		return nil, nil
+		if additionalSrcPackages, ok := additionalSrcPackages[pkg.Name()]; ok {
+			return additionalSrcPackages, nil
+		} else {
+			return []string{}, nil
+		}
 	}
 
-	var localNames []string
-	if localName == "" {
-		localNames = []string{}
-	} else {
-		localNames = strings.Split(localName, "|")
-	}
+	localNames := splitCrosWorkon(metadata["CROS_WORKON_LOCALNAME"])
+
 	if len(localNames) > 0 && len(localNames) != len(projects) {
 		return nil, fmt.Errorf("Number of elements in LOCAL_NAME (%d) and PROJECT (%d) don't match.", len(localNames), len(projects))
 	}
 
-	var subTrees []string
-	if subtree == "" {
-		subTrees = []string{}
-	} else {
-		subTrees = strings.Split(subtree, "|")
-	}
+	subTrees := splitCrosWorkon(metadata["CROS_WORKON_SUBTREE"])
 
 	if len(subTrees) > 0 && len(subTrees) != len(projects) {
 		return nil, fmt.Errorf("Number of elements in SUBTREE (%d) and PROJECT (%d) don't match.", len(subTrees), len(projects))
@@ -370,6 +410,10 @@ func computeSrcPackages(pkg *packages.Package, project string, localName string,
 
 	if additionalSrcPackages, ok := additionalSrcPackages[pkg.Name()]; ok {
 		srcDeps = append(srcDeps, additionalSrcPackages...)
+	}
+
+	if len(srcDeps) == 0 {
+		srcDeps = []string{}
 	}
 
 	return srcDeps, nil
@@ -560,20 +604,23 @@ func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error
 	return nil
 }
 
-func selectBestPackages(atom *dependency.Atom, processor *ebuild.CachedProcessor, s *repository.RepoSet) ([]*packages.Package, error) {
+func selectBestPackagesUsingStability(
+	atom *dependency.Atom, processor *ebuild.CachedProcessor, s *repository.RepoSet) ([]*packages.Package, error) {
 	candidates, err := s.Package(atom, processor)
 	if err != nil {
 		return nil, err
 	}
 
 	stabilityTargets := []packages.Stability{packages.StabilityTesting, packages.StabilityStable}
-	if _, ok := invalidUnstablePackage[atom.PackageName()]; ok {
-		stabilityTargets = stabilityTargets[1:]
-	}
 
 	for _, stabilityTarget := range stabilityTargets {
 		var matchingPackages []*packages.Package
 		for _, candidate := range candidates {
+			ebuildFileName := filepath.Base(candidate.Path())
+			if _, ok := invalidEbuilds[ebuildFileName]; ok {
+				continue
+			}
+
 			if candidate.Stability() == stabilityTarget {
 				matchingPackages = append(matchingPackages, candidate)
 			}
@@ -585,140 +632,160 @@ func selectBestPackages(atom *dependency.Atom, processor *ebuild.CachedProcessor
 	return nil, fmt.Errorf("no package satisfies %s", atom.String())
 }
 
-func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, startPackageNames []string) (map[string][]string, error) {
-	depsMap := make(map[string][]string)
+func selectBestPackages(atom *dependency.Atom, processor *ebuild.CachedProcessor, s *repository.RepoSet) ([]*packages.Package, error) {
+	candidates, err := selectBestPackagesUsingStability(atom, processor, s)
+	if err != nil {
+		return nil, err
+	}
+
+	var pkgs []*packages.Package
+	if atom.PackageCategory() == "dev-rust" {
+		pkgs, err = filterOutSymlinks(candidates)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// TODO: Is this sorted so we always pick the greatest version?
+		pkgs = []*packages.Package{candidates[0]}
+	}
+
+	return pkgs, nil
+}
+
+func extractDeps(depType string, pkg *packages.Package, provided []*config.Package) ([]string, error) {
+	metadata := pkg.Metadata()
+	rawDeps, err := dependency.Parse(metadata[depType])
+	if err != nil {
+		return nil, err
+	}
+
+	simpleDeps := simplifyDeps(rawDeps, pkg.Uses(), pkg.Name())
+
+	parsedDeps, ok := forceDepsPackages[pkg.Name()]
+	if !ok {
+		parsedDeps, ok = parseSimpleDeps(simpleDeps)
+		if !ok {
+			return nil, fmt.Errorf("cannot simplify deps: %s", simpleDeps.String())
+		}
+	}
+
+	parsedDeps = filterPackages(parsedDeps, provided)
+
+	sort.Strings(parsedDeps)
+
+	if len(parsedDeps) == 0 {
+		parsedDeps = []string{}
+	}
+
+	return parsedDeps, nil
+}
+
+func extractSrcUris(pkg *packages.Package) (map[string]uriInfo, error) {
+	srcUri, ok := pkg.Metadata()["SRC_URI"]
+	_, hasBadSrcUri := badSrcUris[pkg.Name()]
+	if ok && !hasBadSrcUri && srcUri != "" {
+		srcUris, err := dependency.Parse(srcUri)
+		if err != nil {
+			return nil, err
+		}
+
+		srcUris = dependency.ResolveUse(srcUris, pkg.Uses())
+		srcUris = dependency.Simplify(srcUris)
+
+		if len(srcUris.Expr().Children()) > 0 {
+			manifest, err := parseManifest(pkg.Path())
+			if err != nil {
+				return nil, err
+			}
+
+			srcUriInfo, err := parseSimpleUris(srcUris, manifest)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(srcUriInfo) == 0 {
+				srcUriInfo = map[string]uriInfo{}
+			}
+
+			return srcUriInfo, err
+		}
+	}
+
+	return map[string]uriInfo{}, nil
+}
+
+func computeDepsInfo(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, startPackageNames []string) (map[string][]packageInfo, error) {
+	depsInfo := make(map[string][]packageInfo)
 	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
 		if err != nil {
 			return nil, err
 		}
 
-		candidates, err := selectBestPackages(atom, processor, repoSet)
+		pkgs, err := selectBestPackages(atom, processor, repoSet)
 		if err != nil {
 			return nil, err
 		}
 
-		pkg := candidates[0]
+		var allPkgDeps []string
 
-		metadata := pkg.Metadata()
+		for _, pkg := range pkgs {
+			log.Printf("%s-%s:", pkg.Name(), pkg.Version())
 
-		rawDeps, err := dependency.Parse(metadata["RDEPEND"])
-		if err != nil {
-			return nil, err
-		}
-
-		simpleDeps := simplifyDeps(rawDeps, pkg.Uses(), packageName)
-
-		parsedDeps, ok := forceDepsPackages[packageName]
-		if !ok {
-			parsedDeps, ok = parseSimpleDeps(simpleDeps)
-			if !ok {
-				return nil, fmt.Errorf("cannot simplify deps: %s", simpleDeps.String())
+			runtimeDeps, err := extractDeps("RDEPEND", pkg, provided)
+			if err != nil {
+				return nil, err
 			}
-		}
-
-		parsedDeps = filterPackages(parsedDeps, provided)
-
-		log.Printf("R: %s => %s", packageName, strings.Join(parsedDeps, ", "))
-		depsMap[packageName] = parsedDeps
-		return parsedDeps, nil
-	}); err != nil {
-		return nil, err
-	}
-	return depsMap, nil
-}
-
-func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, installPackageNames []string) (map[string]packageInfo, error) {
-	pkgs := make(map[string]packageInfo)
-
-	if err := genericBFS(installPackageNames, func(packageName string) ([]string, error) {
-		var info packageInfo
-
-		atom, err := dependency.ParseAtom(packageName)
-		if err != nil {
-			return nil, err
-		}
-
-		candidates, err := selectBestPackages(atom, processor, repoSet)
-		if err != nil {
-			return nil, err
-		}
-		pkg := candidates[0]
-
-		info.Version = pkg.Version().String()
-
-		metadata := pkg.Metadata()
-
-		rawDeps, err := dependency.Parse(metadata["DEPEND"])
-		if err != nil {
-			return nil, err
-		}
-
-		simpleDeps := simplifyDeps(rawDeps, pkg.Uses(), packageName)
-
-		var parsedDeps []string
-		if _, ok := forceDepsPackages[packageName]; ok {
-			parsedDeps = nil
-		} else {
-			parsedDeps, ok = parseSimpleDeps(simpleDeps)
-			if !ok {
-				return nil, fmt.Errorf("cannot simplify deps: %s", simpleDeps.String())
+			if len(runtimeDeps) > 0 {
+				log.Printf("  R: %s", strings.Join(runtimeDeps, ", "))
 			}
-		}
 
-		parsedDeps = filterPackages(parsedDeps, provided)
+			buildTimeDeps, err := extractDeps("DEPEND", pkg, provided)
+			if err != nil {
+				return nil, err
+			}
+			if len(buildTimeDeps) > 0 {
+				log.Printf("  B: %s", strings.Join(buildTimeDeps, ", "))
+			}
 
-		// Some rust src packages have their dependencies only listed as DEPEND.
-		// They also need to be listed as RDPEND so they get pulled in as
-		// transitive deps.
-		if isRustSrcPackage(pkg) {
-			log.Printf("B & R: %s => %s", packageName, strings.Join(parsedDeps, ", "))
-			info.RuntimeDeps = parsedDeps
-			info.BuildDeps = parsedDeps
-		} else {
-			log.Printf("B: %s => %s", packageName, strings.Join(parsedDeps, ", "))
-			info.BuildDeps = parsedDeps
-		}
+			// Some rust src packages have their dependencies only listed as DEPEND.
+			// They also need to be listed as RDPEND so they get pulled in as
+			// transitive deps.
+			if isRustSrcPackage(pkg) {
+				runtimeDeps = append(runtimeDeps, buildTimeDeps...)
+				runtimeDeps = unique(runtimeDeps)
+			}
 
-		srcDeps, err := computeSrcPackages(pkg, metadata["CROS_WORKON_PROJECT"], metadata["CROS_WORKON_LOCALNAME"], metadata["CROS_WORKON_SUBTREE"])
-		if err != nil {
-			return nil, err
-		}
-		log.Printf("   PROJECT: '%s', LOCALNAME: '%s', SUBTREE: '%s' -> %s", metadata["CROS_WORKON_PROJECT"], metadata["CROS_WORKON_LOCALNAME"], metadata["CROS_WORKON_SUBTREE"], srcDeps)
-		info.LocalSrc = srcDeps
+			srcDeps, err := computeSrcPackages(pkg)
+			if err != nil {
+				return nil, err
+			}
+			if len(srcDeps) > 0 {
+				log.Printf("  S: %s", srcDeps)
+			}
 
-		srcUri, ok := metadata["SRC_URI"]
-		_, hasBadSrcUri := badSrcUris[packageName]
-		if ok && !hasBadSrcUri && srcUri != "" {
-			srcUris, err := dependency.Parse(srcUri)
+			srcUris, err := extractSrcUris(pkg)
 			if err != nil {
 				return nil, err
 			}
 
-			srcUris = dependency.ResolveUse(srcUris, pkg.Uses())
-			srcUris = dependency.Simplify(srcUris)
+			depsInfo[pkg.Name()] = append(depsInfo[pkg.Name()], packageInfo{
+				Version:     pkg.Version().String(),
+				BuildDeps:   buildTimeDeps,
+				LocalSrc:    srcDeps,
+				RuntimeDeps: runtimeDeps,
+				SrcUris:     srcUris,
+			})
 
-			if len(srcUris.Expr().Children()) > 0 {
-				manifest, err := parseManifest(pkg.Path())
-				if err != nil {
-					return nil, err
-				}
-
-				srcUriInfo, err := parseSimpleUris(srcUris, manifest)
-				if err != nil {
-					return nil, err
-				}
-				info.SrcUris = srcUriInfo
-			}
+			allPkgDeps = append(allPkgDeps, buildTimeDeps...)
+			allPkgDeps = append(allPkgDeps, runtimeDeps...)
 		}
 
-		pkgs[packageName] = info
-
-		return parsedDeps, nil
+		return unique(allPkgDeps), nil
 	}); err != nil {
 		return nil, err
 	}
-	return pkgs, nil
+	return depsInfo, nil
 }
 
 var flagBoard = &cli.StringFlag{
@@ -779,19 +846,7 @@ var app = &cli.App{
 			return err
 		}
 
-		runtimeDeps, err := computeRuntimeDeps(defaults.RepoSet, processor, provided, startPackageNames)
-		if err != nil {
-			return err
-		}
-
-		installPackageNames := make([]string, 0, len(runtimeDeps))
-		for packageName := range runtimeDeps {
-			installPackageNames = append(installPackageNames, packageName)
-		}
-		sort.Strings(installPackageNames)
-
-		pkgInfoByPkgName, err := computeBuildDeps(
-			defaults.RepoSet, processor, provided, installPackageNames)
+		pkgInfoByPkgName, err := computeDepsInfo(defaults.RepoSet, processor, provided, startPackageNames)
 		if err != nil {
 			return err
 		}
@@ -802,43 +857,10 @@ var app = &cli.App{
 		}
 		sort.Strings(sortedPackageNames)
 
-		nonNil := func(deps []string) []string {
-			if deps == nil {
-				deps = []string{}
-			}
-			return deps
-		}
-
-		nonNilUri := func(deps map[string]uriInfo) map[string]uriInfo {
-			if deps == nil {
-				deps = map[string]uriInfo{}
-			}
-			return deps
-		}
-
-		infoMap := make(map[string][]*packageInfo)
+		infoMap := make(map[string][]packageInfo)
 		for _, packageName := range sortedPackageNames {
 			info := pkgInfoByPkgName[packageName]
-
-			newRuntimeDeps := append(runtimeDeps[packageName], info.RuntimeDeps...)
-			sort.Strings(newRuntimeDeps)
-
-			var uniqueRuntimeDeps = []string{}
-			var previousDep string
-			for _, dep := range newRuntimeDeps {
-				if dep == previousDep {
-					continue
-				}
-				previousDep = dep
-				uniqueRuntimeDeps = append(uniqueRuntimeDeps, dep)
-			}
-
-			info.BuildDeps = nonNil(info.BuildDeps)
-			info.LocalSrc = nonNil(info.LocalSrc)
-			info.RuntimeDeps = nonNil(uniqueRuntimeDeps)
-			info.SrcUris = nonNilUri(info.SrcUris)
-
-			infoMap[packageName] = []*packageInfo{&info}
+			infoMap[packageName] = info
 		}
 
 		encoder := json.NewEncoder(os.Stdout)

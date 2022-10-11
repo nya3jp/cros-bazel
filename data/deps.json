@@ -873,7 +873,9 @@
         "dev-libs/iniparser"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-libs/iniparser"
+      ],
       "srcUris": {
         "portage-utils-0.63.tar.xz": {
           "uris": [
@@ -1845,7 +1847,9 @@
       "localSrc": [
         "//platform2/chromeos-dbus-bindings:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/cmp"
+      ],
       "srcUris": {}
     }
   ],
@@ -2827,7 +2831,10 @@
         "//platform2/common-mk:src",
         "//platform2/debugd:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome"
+      ],
       "srcUris": {}
     }
   ],
@@ -2962,7 +2969,10 @@
         "//platform2/common-mk:src",
         "//platform2/dlcservice:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome"
+      ],
       "srcUris": {}
     }
   ],
@@ -3386,7 +3396,11 @@
         "//platform2/common-mk:src",
         "//platform2/imageloader:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/imageloader",
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome"
+      ],
       "srcUris": {}
     }
   ],
@@ -4585,7 +4599,10 @@
         "//platform2/common-mk:src",
         "//platform2/permission_broker:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome"
+      ],
       "srcUris": {}
     }
   ],
@@ -4879,7 +4896,11 @@
         "//platform2/common-mk:src",
         "//platform2/runtime_probe:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome",
+        "chromeos-base/runtime_probe"
+      ],
       "srcUris": {}
     }
   ],
@@ -5614,7 +5635,10 @@
         "//platform2:src",
         "//platform2/common-mk:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome"
+      ],
       "srcUris": {}
     }
   ],
@@ -5738,7 +5762,12 @@
         "//platform2/common-mk:src",
         "//platform2/vm_tools/proto:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome",
+        "dev-libs/protobuf",
+        "net-libs/grpc"
+      ],
       "srcUris": {}
     }
   ],
@@ -5972,7 +6001,11 @@
         "dev-go/text"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/net",
+        "dev-go/protobuf-legacy-api",
+        "dev-go/text"
+      ],
       "srcUris": {
         "github.com-golang-appengine-v1.6.7.tar.gz": {
           "uris": [
@@ -6035,7 +6068,9 @@
         "dev-go/ep-pvg"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/ep-pvg"
+      ],
       "srcUris": {
         "github.com-cncf-xds-01c748900fbb8fd467c4f091385123c4715312fb.tar.gz": {
           "uris": [
@@ -6086,7 +6121,16 @@
         "dev-go/testify"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/cncf-xds",
+        "dev-go/ep-pvg",
+        "dev-go/genproto",
+        "dev-go/go-sys",
+        "dev-go/net",
+        "dev-go/protobuf",
+        "dev-go/protobuf-legacy-api",
+        "dev-go/testify"
+      ],
       "srcUris": {
         "github.com-envoyproxy-go-control-plane-v0.10.0.tar.gz": {
           "uris": [
@@ -6110,7 +6154,12 @@
         "dev-go/strcase"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/afero",
+        "dev-go/protobuf",
+        "dev-go/protobuf-legacy-api",
+        "dev-go/strcase"
+      ],
       "srcUris": {
         "github.com-envoyproxy-protoc-gen-validate-v0.6.2.tar.gz": {
           "uris": [
@@ -6160,7 +6209,13 @@
         "dev-go/protoc-gen-go-grpc"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/cmp",
+        "dev-go/gapi",
+        "dev-go/genproto",
+        "dev-go/net",
+        "dev-go/protoc-gen-go-grpc"
+      ],
       "srcUris": {
         "github.com-GoogleCloudPlatform-google-cloud-go-v0.97.0.tar.gz": {
           "uris": [
@@ -6181,7 +6236,9 @@
         "dev-go/net"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/net"
+      ],
       "srcUris": {
         "github.com-GoogleCloudPlatform-google-cloud-go-v0.97.0.tar.gz": {
           "uris": [
@@ -6202,7 +6259,9 @@
         "dev-go/protobuf-legacy-api"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/protobuf-legacy-api"
+      ],
       "srcUris": {
         "github.com-google-go-genproto-43724f9ea8cfe9ecde3dd00c5b763498f9840a03.tar.gz": {
           "uris": [
@@ -6329,7 +6388,20 @@
         "dev-go/yaml"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/cmp",
+        "dev-go/cncf-xds",
+        "dev-go/ep-gcp",
+        "dev-go/genproto",
+        "dev-go/glog",
+        "dev-go/go-sys",
+        "dev-go/net",
+        "dev-go/oauth2",
+        "dev-go/protobuf-legacy-api",
+        "dev-go/uuid",
+        "dev-go/xxhash",
+        "dev-go/yaml"
+      ],
       "srcUris": {
         "github.com-grpc-grpc-go-v1.42.0.tar.gz": {
           "uris": [
@@ -6392,7 +6464,9 @@
         "dev-go/text"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/text"
+      ],
       "srcUris": {
         "go.googlesource.com-net-4f30a5c0130f199e0dfd54e9de49f9367cabf1ad.tar.gz": {
           "uris": [
@@ -6416,7 +6490,12 @@
         "dev-go/yaml"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/gcp",
+        "dev-go/gcp-compute",
+        "dev-go/net",
+        "dev-go/yaml"
+      ],
       "srcUris": {
         "go.googlesource.com-oauth2-d3ed0bb246c8d3c75b63937d9a5eecff9c74d7fe.tar.gz": {
           "uris": [
@@ -6501,7 +6580,9 @@
         "dev-go/protobuf"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-go/protobuf"
+      ],
       "srcUris": {
         "github.com-golang-protobuf-v1.5.2.tar.gz": {
           "uris": [
@@ -6759,7 +6840,21 @@
         "virtual/libintl"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "app-arch/bzip2",
+        "app-arch/xz-utils",
+        "dev-lang/python-exec",
+        "dev-libs/expat",
+        "dev-libs/libffi",
+        "dev-libs/openssl",
+        "sys-apps/util-linux",
+        "sys-libs/gdbm",
+        "sys-libs/ncurses",
+        "sys-libs/readline",
+        "sys-libs/zlib",
+        "virtual/libcrypt",
+        "virtual/libintl"
+      ],
       "srcUris": {
         "Python-3.8.13.tar.xz": {
           "uris": [
@@ -6787,6 +6882,27 @@
       "version": "2.4.6-r4",
       "buildDeps": [],
       "localSrc": [],
+      "runtimeDeps": [
+        "dev-lang/python-exec-conf"
+      ],
+      "srcUris": {
+        "python-exec-2.4.6.tar.bz2": {
+          "uris": [
+            "https://github.com/mgorny/python-exec/releases/download/v2.4.6/python-exec-2.4.6.tar.bz2"
+          ],
+          "size": 87634,
+          "integrity": "sha512-4F6vAbg94ZahCTNjaraxpUiaQhWS30m4tY6r0Ocy3pcPkCdEzToGtatTCm1p/m36jycPuwm5/j30rgTVFoKAUA==",
+          "SHA256": "",
+          "SHA512": "e05eaf01b83de196a10933636ab6b1a5489a421592df49b8b58eabd0e732de970f902744cd3a06b5ab530a6d69fe6dfa8f270fbb09b9fe3df4ae04d516828050"
+        }
+      }
+    }
+  ],
+  "dev-lang/python-exec-conf": [
+    {
+      "version": "2.4.6",
+      "buildDeps": [],
+      "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {
         "python-exec-2.4.6.tar.bz2": {
@@ -6810,7 +6926,11 @@
         "virtual/libiconv"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "app-arch/bzip2",
+        "sys-libs/zlib",
+        "virtual/libiconv"
+      ],
       "srcUris": {
         "boost_1_79_0.tar.bz2": {
           "uris": [
@@ -7875,7 +7995,10 @@
         "//platform2:src",
         "//platform2/common-mk:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome"
+      ],
       "srcUris": {}
     }
   ],
@@ -8022,7 +8145,10 @@
         "//platform2:src",
         "//platform2/common-mk:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/libbrillo",
+        "chromeos-base/libchrome"
+      ],
       "srcUris": {}
     }
   ],
@@ -8291,7 +8417,10 @@
         "dev-libs/openssl"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-lang/python-exec",
+        "dev-libs/openssl"
+      ],
       "srcUris": {
         "M2Crypto-0.35.2.tar.gz": {
           "uris": [
@@ -8411,6 +8540,29 @@
       }
     }
   ],
+  "dev-rust/aligned": [
+    {
+      "version": "0.3.4",
+      "buildDeps": [
+        "dev-rust/as-slice"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/as-slice"
+      ],
+      "srcUris": {
+        "aligned-0.3.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/aligned/0.3.4/download"
+          ],
+          "size": 8353,
+          "integrity": "sha512-xTTB2P3+x+DHEv4usRMbglDAtNj3mLSuG02rkX+aDBgPl9f1LGfny2x/rjRRvNVBBsPuKoV/IqIn0gntlf808g==",
+          "SHA256": "",
+          "SHA512": "c534c1d8fdfec7e0c712fe2eb1131b8250c0b4d8f798b4ae1b4dab917f9a0c180f97d7f52c67e7cb6c7fae3451bcd54106c3ee2a857f22a227d209ed95ff34f2"
+        }
+      }
+    }
+  ],
   "dev-rust/android_log-sys": [
     {
       "version": "0.2.0",
@@ -8418,6 +8570,29 @@
       "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {}
+    }
+  ],
+  "dev-rust/ansi_term": [
+    {
+      "version": "0.11.0",
+      "buildDeps": [
+        "dev-rust/winapi"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/winapi"
+      ],
+      "srcUris": {
+        "ansi_term-0.11.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/ansi_term/0.11.0/download"
+          ],
+          "size": 17087,
+          "integrity": "sha512-pjdGajgHSPk5s68JC4wDM/NVgZJbwD9N2ps/ldM4g2QDz1SHrjr5/2j4JFqDf4qwYaq+V6EmpqLCDy6XLHfR+g==",
+          "SHA256": "",
+          "SHA512": "a637466a380748f939b3af090b8c0333f35581925bc03f4dda9b3f95d338836403cf5487ae3af9ff68f8245a837f8ab061aabe57a126a6a2c20f2e972c77d1fa"
+        }
+      }
     }
   ],
   "dev-rust/anyhow": [
@@ -8441,6 +8616,27 @@
           "SHA512": "9dc8233b87f8229676ad08903cc1507370588d63702c10bff3426d00ce10754744477d5ba3396c94e7128eeef12c647f8f042de8cc6d1943c2882785ac7ebab5"
         }
       }
+    },
+    {
+      "version": "1.0.51",
+      "buildDeps": [
+        "dev-rust/backtrace"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/backtrace"
+      ],
+      "srcUris": {
+        "anyhow-1.0.51.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/anyhow/1.0.51/download"
+          ],
+          "size": 44100,
+          "integrity": "sha512-6OP+68PJa3MBeHUC8AC5lAogNDpGasSBhsmqFw+1Lw2xd2hjBTWotHUHdzOtb/n4Q6O9WuRBXIa/g8rg7QutfA==",
+          "SHA256": "",
+          "SHA512": "e8e3feebc3c96b7301787502f000b9940a20343a466ac48186c9aa170fb52f0db17768630535a8b475077733ad6ff9f843a3bd5ae4415c86bf83cae0ed0bad7c"
+        }
+      }
     }
   ],
   "dev-rust/arbitrary": [
@@ -8450,6 +8646,38 @@
       "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {}
+    },
+    {
+      "version": "0.4.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    }
+  ],
+  "dev-rust/as-slice": [
+    {
+      "version": "0.1.5",
+      "buildDeps": [
+        "dev-rust/generic-array",
+        "dev-rust/stable_deref_trait"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/generic-array",
+        "dev-rust/stable_deref_trait"
+      ],
+      "srcUris": {
+        "as-slice-0.1.5.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/as-slice/0.1.5/download"
+          ],
+          "size": 7986,
+          "integrity": "sha512-raT4qyZdbGqNoPmBWaN53ExPTrbMgnzN8Y/VJTOdOR6kOW3m9DIgkq0A61MVb6Q/kO4N8JFVVUo/beAz5avFjg==",
+          "SHA256": "",
+          "SHA512": "ada4f8ab265d6c6a8da0f98159a379dc4c4f4eb6cc827ccdf18fd525339d391ea4396de6f4322092ad00eb53156fa43f90ee0df09155554a3f6de033e5abc58e"
+        }
+      }
     }
   ],
   "dev-rust/ascii": [
@@ -8616,6 +8844,49 @@
           "SHA512": "df972c09abbdc0b6cb6bb55b1e29c7fed706ece38a62613d9e275bac46a19574a7f96f0152cccb0239efea04ee90083a146b58b15307696c4c81878cd12de28f"
         }
       }
+    },
+    {
+      "version": "1.0.1",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "autocfg-1.0.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/autocfg/1.0.1/download"
+          ],
+          "size": 12908,
+          "integrity": "sha512-Yws0isuYsBLpeATmMl0DyJq8IvIVd2LFkUTATmxzPa9VC9x/D+C587UOFdrowcPEvfzj2AWwLw/JhzEfUzJBmw==",
+          "SHA256": "",
+          "SHA512": "630b348acb98b012e97804e6325d03c89abc22f2157762c59144c04e6c733daf550bdc7f0fe0b9f3b50e15dae8c1c3c4bdfce3d805b02f0fc987311f5332419b"
+        }
+      }
+    },
+    {
+      "version": "0.1.2",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "autocfg-0.1.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/autocfg/0.1.2/download"
+          ],
+          "size": 10444,
+          "integrity": "sha512-D2kvQGLSK+AcMq8s627TiHp9ZYQ+Gm7GlvuqRlF9AuYtVzBV7+XaOmOEfwW8N7JUvy3XUHOLUod09jNS6s2r5A==",
+          "SHA256": "",
+          "SHA512": "0f692f4062d22be01c32af2ceb6ed3887a7d65843e1a6ec696fbaa46517d02e62d573055efe5da3a63847f05bc37b254bf2dd750738b528774f63352eacdabe4"
+        }
+      }
+    }
+  ],
+  "dev-rust/average": [
+    {
+      "version": "0.9.3",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/backtrace": [
@@ -8693,6 +8964,27 @@
           "SHA512": "909b0d45aadb809bea8890d1beaf4df5948eaec83e8fb49c88c7dd43d17cf075b3ceea8a2fade7171651934c6ea4275f6e4231c12181705186e1f1bd45f1f2de"
         }
       }
+    },
+    {
+      "version": "0.2.5",
+      "buildDeps": [
+        "dev-rust/rustc_version"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rustc_version"
+      ],
+      "srcUris": {
+        "bare-metal-0.2.5.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/bare-metal/0.2.5/download"
+          ],
+          "size": 7923,
+          "integrity": "sha512-Y1VsAXohqks39Hif4+Jr3999Dt9P35p/S6ExxgMIz6Rhjw+S3MZzrFCKDbatq58hVzUqIWKsFpp6Besw6b+OjQ==",
+          "SHA256": "",
+          "SHA512": "63556c017a21aa4b37f4789fe3e26bdfdf7d0edf4fdf9a7f4ba131c60308cfa4618f0f92dcc673ac508a0db6adab9f2157352a2162ac169a7a05eb30e9bf8e8d"
+        }
+      }
     }
   ],
   "dev-rust/base64": [
@@ -8710,6 +9002,27 @@
           "integrity": "sha512-mRpymZg52qIy9QjFsk59MiXoom240dDnR4gbEVr55Ai5I3ThY7MeCw0yTBwuV+jjjWaGG2HrCh26h7tYcZQBUQ==",
           "SHA256": "",
           "SHA512": "991a72999839daa232f508c5b24e7d3225e8a26db8d1d0e747881b115af9e408b92374e163b31e0b0d324c1c2e57e8e38d66861b61eb0a1dba87bb5871940151"
+        }
+      }
+    },
+    {
+      "version": "0.10.1",
+      "buildDeps": [
+        "dev-rust/byteorder"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/byteorder"
+      ],
+      "srcUris": {
+        "base64-0.10.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/base64/0.10.1/download"
+          ],
+          "size": 41988,
+          "integrity": "sha512-Z0qMvulaQfdVSZpOO7k+vT+AFAw+ji1EoLc4kO5CN1Tnuoq82SEyaDzVRQH/XRRDjQI6IC6vEndq7L42355VNQ==",
+          "SHA256": "",
+          "SHA512": "674a8cbee95a41f755499a4e3bb93ebd3f80140c3e8e2d44a0b73890ee423754e7ba8abcd92132683cd54501ff5d14438d023a202eaf12776aecbe36df9e5535"
         }
       }
     }
@@ -8745,7 +9058,7 @@
   ],
   "dev-rust/bincode": [
     {
-      "version": "1.0.1-r1",
+      "version": "1.0.1",
       "buildDeps": [
         "dev-rust/byteorder",
         "dev-rust/serde",
@@ -8768,6 +9081,13 @@
           "SHA512": "1294b89089b457ce2bc4d9471ae677d6d06e64eaa01948e9db4ab49fc23638ba79e7aa1d6ca3a0df5fb61bd90cadc811df724053a321ca99d16b8ce650abbd59"
         }
       }
+    },
+    {
+      "version": "0.8.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/bit_field": [
@@ -8914,6 +9234,54 @@
           "SHA512": "d34441ea146ccaf55da4d5c645f8ffbd008eeb3204dafd5961771abc85df52751dfd1af3975fb5c91eb83d9a43da4f3589bc3aa07c8d715906d8158f3092af2d"
         }
       }
+    },
+    {
+      "version": "0.5.6",
+      "buildDeps": [
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "bytes-0.5.6.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/bytes/0.5.6/download"
+          ],
+          "size": 46291,
+          "integrity": "sha512-ocqh9YdU9NLlS4340MoAg+5SgvXk07tbFzUCKTPdLmb7PznHqCIWv3p+KVkWlcLhDItxRMg6xZjjQZPyQloyzA==",
+          "SHA256": "",
+          "SHA512": "a1caa1f58754f4d2e54b8df8d0ca0083ee5282f5e4d3bb5b1735022933dd2e66fb3f39c7a82216bf7a7e29591695c2e10c8b7144c83ac598e34193f2425a32cc"
+        }
+      }
+    },
+    {
+      "version": "0.4.12",
+      "buildDeps": [
+        "dev-rust/byteorder",
+        "dev-rust/either",
+        "dev-rust/iovec",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/byteorder",
+        "dev-rust/either",
+        "dev-rust/iovec",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "bytes-0.4.12.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/bytes/0.4.12/download"
+          ],
+          "size": 46361,
+          "integrity": "sha512-X2A1MuovBMvFMERCL+7RZnvwSGrzmMnI4s57RgGzfhxHIjIBlw+w0X/td/736Jlh4KwFow5syb8TRi2YvFhyUA==",
+          "SHA256": "",
+          "SHA512": "5f603532ea2f04cbc53044422feed1667bf0486af398c9c8e2ce7b4601b37e1c47223201970fb0d17fed77fef7e89961e0ac05a30e6cc9bf13462d98bc587250"
+        }
+      }
     }
   ],
   "dev-rust/cast": [
@@ -8975,6 +9343,23 @@
           "SHA512": "0fb16a8882fd30e86b62c5143b1cb18ab564e84e75bd1f28fd12f24ffdc4a42e0d2e012a99abb606c12efe3c11061ff5bf8e24ab053e550ae083f7d90f6576ff"
         }
       }
+    },
+    {
+      "version": "0.1.10",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "cfg-if-0.1.10.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/cfg-if/0.1.10/download"
+          ],
+          "size": 7933,
+          "integrity": "sha512-nSJha/tKdXcKgooKPN2sZ4cpel/cU+sX4lgRzJTecX8t6L1m1TxdZbocg9iJKu/uWudYz1ah7woMMSD3CyRDOQ==",
+          "SHA256": "",
+          "SHA512": "9d22616bfb4a75770a828a0a3cddac6787297a5fdc53eb17e25811cc94de717f2de8bd66d53c5d65ba1c83d8892aefee5ae758cf56a1ef0a0c3120f70b244339"
+        }
+      }
     }
   ],
   "dev-rust/chromeos-dbus-bindings": [
@@ -8994,7 +9379,7 @@
   ],
   "dev-rust/chrono": [
     {
-      "version": "0.4.19-r3",
+      "version": "0.4.19",
       "buildDeps": [
         "dev-rust/bincode",
         "dev-rust/num-integer",
@@ -9095,6 +9480,92 @@
           "SHA512": "94a594886d4fcc3ef745cea1f98202765aaeaac816d9271f132d4f8c90e6679fd56077e11c621222bac9200552839297f98c7788462d015334090e8772715cb5"
         }
       }
+    },
+    {
+      "version": "3.0.0_beta2",
+      "buildDeps": [
+        "dev-rust/atty",
+        "dev-rust/bitflags",
+        "dev-rust/clap_derive",
+        "dev-rust/indexmap",
+        "dev-rust/lazy_static",
+        "dev-rust/os_str_bytes",
+        "dev-rust/regex",
+        "dev-rust/strsim",
+        "dev-rust/termcolor",
+        "dev-rust/terminal_size",
+        "dev-rust/textwrap",
+        "dev-rust/unicode-width",
+        "dev-rust/vec_map",
+        "dev-rust/yaml-rust"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/atty",
+        "dev-rust/bitflags",
+        "dev-rust/clap_derive",
+        "dev-rust/indexmap",
+        "dev-rust/lazy_static",
+        "dev-rust/os_str_bytes",
+        "dev-rust/regex",
+        "dev-rust/strsim",
+        "dev-rust/termcolor",
+        "dev-rust/terminal_size",
+        "dev-rust/textwrap",
+        "dev-rust/unicode-width",
+        "dev-rust/vec_map",
+        "dev-rust/yaml-rust"
+      ],
+      "srcUris": {
+        "clap-3.0.0_beta2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/clap/3.0.0-beta.2/download"
+          ],
+          "size": 141105,
+          "integrity": "sha512-u1GrLf4G6xECPTkzynplfjyeb6Bky6geJDZFADbco9zCylqbkHhaAELdgj5XrR59x2W3iJKMJJ/RCQYymzPNtw==",
+          "SHA256": "",
+          "SHA512": "bb51ab2dfe06eb11023d3933ca7a657e3c9e6fa064cba81e2436450036dca3dcc2ca5a9b90785a0042dd823e57ad1e7dc765b788928c249fd10906329b33cdb7"
+        }
+      }
+    },
+    {
+      "version": "2.33.3",
+      "buildDeps": [
+        "dev-rust/ansi_term",
+        "dev-rust/atty",
+        "dev-rust/bitflags",
+        "dev-rust/clippy",
+        "dev-rust/strsim",
+        "dev-rust/term_size",
+        "dev-rust/textwrap",
+        "dev-rust/unicode-width",
+        "dev-rust/vec_map",
+        "dev-rust/yaml-rust"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/ansi_term",
+        "dev-rust/atty",
+        "dev-rust/bitflags",
+        "dev-rust/clippy",
+        "dev-rust/strsim",
+        "dev-rust/term_size",
+        "dev-rust/textwrap",
+        "dev-rust/unicode-width",
+        "dev-rust/vec_map",
+        "dev-rust/yaml-rust"
+      ],
+      "srcUris": {
+        "clap-2.33.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/clap/2.33.3/download"
+          ],
+          "size": 201925,
+          "integrity": "sha512-PrD9ZI4uP55f9ppebPDYZzBP4YUjrM0DbyiobeNo5HdAiKaTbBCMzARQksU5/n90lOqWQg6/a0vsFogM6oS+3w==",
+          "SHA256": "",
+          "SHA512": "3eb0fd648e2e3f9e5ff69a5e6cf0d867304fe18523accd036f28a86de368e4774088a6936c108ccc045092c539fe7f7494ea96420ebf6b4bec16880cea84bedf"
+        }
+      }
     }
   ],
   "dev-rust/clap_derive": [
@@ -9124,6 +9595,35 @@
           "integrity": "sha512-fzTBt8Z73b28GxWfzeNmur4381VjfMHxJ0ilHQ7Pic4+aq9e0UCq5lOfEhgqyOLKk8J5DqLchGV0hwZsnXeoaQ==",
           "SHA256": "",
           "SHA512": "7f34c1b7c67bddbdbc1b159fcde366babe37f355637cc1f12748a51d0ecf89ce3e6aaf5ed140aae6539f12182ac8e2ca93c2790ea2dc84657487066c9d77a869"
+        }
+      }
+    },
+    {
+      "version": "3.0.0_beta2",
+      "buildDeps": [
+        "dev-rust/heck",
+        "dev-rust/proc-macro-error",
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/heck",
+        "dev-rust/proc-macro-error",
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn"
+      ],
+      "srcUris": {
+        "clap_derive-3.0.0_beta2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/clap_derive/3.0.0-beta.2/download"
+          ],
+          "size": 23425,
+          "integrity": "sha512-TiYgVX2q5PHakl4OrQ8Yx2WGtZueIonYWpSaCB+I4Je1a/2i7wfIhwTntXBNxY3jpGi/c3BbpkqF1ZED/2DdXw==",
+          "SHA256": "",
+          "SHA512": "4e2620557daae4f1da925e0ead0f18c76586b59b9e2289d85a949a081f88e097b56bfda2ef07c88704e7b5704dc58de3a468bf73705ba64a85d59103ff60dd5f"
         }
       }
     }
@@ -9288,7 +9788,7 @@
   ],
   "dev-rust/cortex-m": [
     {
-      "version": "0.7.3-r1",
+      "version": "0.7.3",
       "buildDeps": [
         "dev-rust/bare-metal",
         "dev-rust/bitfield",
@@ -9311,6 +9811,35 @@
           "integrity": "sha512-OAtjx6Uau0HrbVV7hityj0SA2W5o/g6N0FxtOMvZCuemY+EpC2zUs1EIVQ2HBhis+VjzSwWNkrK42hckMb7GLw==",
           "SHA256": "",
           "SHA512": "380b63c7a51abb41eb6d557b862b728f4480d96e68fe0e8dd05c6d38cbd90ae7a663e1290b6cd4b35108550d870618acf958f34b058d92b2b8da172431bec62f"
+        }
+      }
+    },
+    {
+      "version": "0.6.7",
+      "buildDeps": [
+        "dev-rust/aligned",
+        "dev-rust/bare-metal",
+        "dev-rust/bitfield",
+        "dev-rust/cortex-m",
+        "dev-rust/volatile-register"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/aligned",
+        "dev-rust/bare-metal",
+        "dev-rust/bitfield",
+        "dev-rust/cortex-m",
+        "dev-rust/volatile-register"
+      ],
+      "srcUris": {
+        "cortex-m-0.6.7.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/cortex-m/0.6.7/download"
+          ],
+          "size": 37370,
+          "integrity": "sha512-arPoigcpqPFTR7o0fiY+UsDRk3YHFCBeqEsQEK07GF4JKWdQMeXbeJJrOVfiKU8utN6tvWUgDTEHYU5o/pUrvw==",
+          "SHA256": "",
+          "SHA512": "6ab3e88a0729a8f15347ba347e263e52c0d193760714205ea84b1010ad3b185e0929675031e5db78926b3957e2294f2eb4deadbd65200d3107614e68fe952bbf"
         }
       }
     }
@@ -9338,6 +9867,29 @@
           "SHA512": "934f7c2d09834e500511da78069db1e9b18e5859e11811f25310008a3a2e7cd2c4dfcc37bf7cd83aeb7bfc7f72d6c3ec9b100fe543e6cbcb6d91b230ac9fb1bf"
         }
       }
+    },
+    {
+      "version": "0.6.14",
+      "buildDeps": [
+        "dev-rust/cortex-m-rt-macros",
+        "dev-rust/r0"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/cortex-m-rt-macros",
+        "dev-rust/r0"
+      ],
+      "srcUris": {
+        "cortex-m-rt-0.6.14.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/cortex-m-rt/0.6.14/download"
+          ],
+          "size": 38739,
+          "integrity": "sha512-uXFjSKjxCsf82zpLIPUPfkFYMnrVhhTBS2Dn3EdKVd1BM1mpc3+X7PWpxARuUBCS+74tKP/apZlFkq2912FI7w==",
+          "SHA256": "",
+          "SHA512": "b9716348a8f10ac7fcdb3a4b20f50f7e4158327ad58614c14b60e7dc474a55dd413359a9737f97ecf5a9c4046e501092fbbe2d28ffdaa5994592adbdd76148ef"
+        }
+      }
     }
   ],
   "dev-rust/cortex-m-rt-macros": [
@@ -9363,6 +9915,31 @@
           "integrity": "sha512-xPCMv5ZHQh88NvVLYKYkA5DFiU0Rsa6LlbyzT57VYyvmvVoCraEE6y/rGCafaXic4rMsgRkkZu/HFkkcgbFZ0w==",
           "SHA256": "",
           "SHA512": "c4f08cbf9647421f3c36f54b60a6240390c5894d11b1ae8b95bcb34f9ed5632be6bd5a02ada104eb2feb18269f69789ce2b32c81192466efc716491c81b159d3"
+        }
+      }
+    },
+    {
+      "version": "0.1.8",
+      "buildDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn"
+      ],
+      "srcUris": {
+        "cortex-m-rt-macros-0.1.8.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/cortex-m-rt-macros/0.1.8/download"
+          ],
+          "size": 6169,
+          "integrity": "sha512-D91qSEZiSRrsfIHu4873TovUaHsGKrXE5JOXaHzzrFA1tN/73pYQPPssYsYXp8EQzG//RBzW2z+4+vCKb2ud7Q==",
+          "SHA256": "",
+          "SHA512": "0fdd6a484662491aec7c81eee3cef74e8bd4687b062ab5c4e49397687cf3ac5035b4dffbde96103cfb2c62c617a7c110cc6fff441cd6db3fb8faf08a6f6b9ded"
         }
       }
     }
@@ -9436,6 +10013,15 @@
   "dev-rust/cpp_demangle": [
     {
       "version": "0.3.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    }
+  ],
+  "dev-rust/crates-index": [
+    {
+      "version": "0.5.1",
       "buildDeps": [],
       "localSrc": [],
       "runtimeDeps": [],
@@ -9570,7 +10156,25 @@
       "localSrc": [
         "//platform/crosvm:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-rust/async-task",
+        "dev-rust/async-trait",
+        "dev-rust/data_model",
+        "dev-rust/futures",
+        "dev-rust/intrusive-collections",
+        "dev-rust/io_uring",
+        "dev-rust/libc",
+        "dev-rust/once_cell",
+        "dev-rust/paste",
+        "dev-rust/pin-utils",
+        "dev-rust/remain",
+        "dev-rust/slab",
+        "dev-rust/sync",
+        "dev-rust/sys_util",
+        "dev-rust/tempfile",
+        "dev-rust/thiserror",
+        "media-sound/audio_streams"
+      ],
       "srcUris": {}
     }
   ],
@@ -9766,6 +10370,56 @@
           "integrity": "sha512-P0WwVoBlwyJQzgdu/PKUSh5qTTxVzFOlAxlJ/XCECqGD4BGZ4S+WExwMVIYdgAqXsUDuEIidg+z/fUrhM4NY9Q==",
           "SHA256": "",
           "SHA512": "3f45b0568065c32250ce076efcf2944a1e6a4d3c55cc53a5031949fd70840aa183e01199e12f96131c0c54861d800a97b140ee10889d83ecff7d4ae1338358f5"
+        }
+      }
+    },
+    {
+      "version": "0.8.4",
+      "buildDeps": [
+        "dev-rust/futures",
+        "dev-rust/libc",
+        "dev-rust/libdbus-sys"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/futures",
+        "dev-rust/libc",
+        "dev-rust/libdbus-sys"
+      ],
+      "srcUris": {
+        "dbus-0.8.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/dbus/0.8.4/download"
+          ],
+          "size": 114517,
+          "integrity": "sha512-HpX+ddVHTOdFkX6qldAV13Bq9LN+AQ0mW+JlzDkr0+Do6vA6S57e+rV1BRqa8e6zPY6W0sY8bxbHGtn2tve+jA==",
+          "SHA256": "",
+          "SHA512": "1e95fe75d5474ce745917eaa95d015d7706af4b37e010d265be265cc392bd3e0e8eaf03a4b9edefab575051a9af1eeb33d8e96d2c63c6f16c71ad9f6b6f7be8c"
+        }
+      }
+    },
+    {
+      "version": "0.6.1",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/libdbus-sys",
+        "dev-rust/tempdir"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/libdbus-sys",
+        "dev-rust/tempdir"
+      ],
+      "srcUris": {
+        "dbus-0.6.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/dbus/0.6.1/download"
+          ],
+          "size": 76381,
+          "integrity": "sha512-DnzutVeNZOew5XrmdmfYSNGFgVEQzYDGQqiH5rOQ2zduOptnLkt6K36B1Q4og6sDcM9tNzDauzhimhJHgtYB7Q==",
+          "SHA256": "",
+          "SHA512": "0e7ceeb5578d64e7b0e57ae67667d848d185815110cd80c642a887e6b390db376e3a9b672e4b7a2b7e81d50e2883ab0370cf6d3730dabb38629a124782d601ed"
         }
       }
     }
@@ -10041,6 +10695,13 @@
       "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {}
+    },
+    {
+      "version": "1.0.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/ed25519-compact": [
@@ -10066,6 +10727,29 @@
           "integrity": "sha512-tmimtT4VUTAlnnrkrXUqKKu9j+QUNYMZ8oNnoL9A5UPLNyJYnxLR5agNxCRHSKZuBSmJQKCSkCyFG752CzwENQ==",
           "SHA256": "",
           "SHA512": "b668a6b53e155130259e7ae4ad752a28abbd8fe414358319f28367a0bf40e543cb3722589f12d1e5a80dc4244748a66e05298940a092902c851bbe760b3c0435"
+        }
+      }
+    },
+    {
+      "version": "0.1.9",
+      "buildDeps": [
+        "dev-rust/ed25519",
+        "dev-rust/getrandom"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/ed25519",
+        "dev-rust/getrandom"
+      ],
+      "srcUris": {
+        "ed25519-compact-0.1.9.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/ed25519-compact/0.1.9/download"
+          ],
+          "size": 19732,
+          "integrity": "sha512-V2NjOESBfzWayNotrwkDzGmevlB+5v3PZiaFO+2dLwQqWuWWRqMauIIeUugrXGwhQ5MTtt2k/3xBnYr7ZxL3xA==",
+          "SHA256": "",
+          "SHA512": "5763633844817f359ac8da2daf0903cc699ebe507ee6fdcf6626853bed9d2f042a5ae59646a31ab8821e52e82b5c6c21439313b6dda4ff7c419d8afb6712f7c4"
         }
       }
     }
@@ -10191,6 +10875,35 @@
           "SHA512": "d7db85d2f7d16f7f97b6714e01e342ab6b784c799ef26ee322ec85fcee28a549b6e49a49200ff78eceacd0c682e941f8538a497e2a2a196040769c2365feb566"
         }
       }
+    },
+    {
+      "version": "0.8.3",
+      "buildDeps": [
+        "dev-rust/atty",
+        "dev-rust/humantime",
+        "dev-rust/log",
+        "dev-rust/regex",
+        "dev-rust/termcolor"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/atty",
+        "dev-rust/humantime",
+        "dev-rust/log",
+        "dev-rust/regex",
+        "dev-rust/termcolor"
+      ],
+      "srcUris": {
+        "env_logger-0.8.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/env_logger/0.8.3/download"
+          ],
+          "size": 32543,
+          "integrity": "sha512-f2w8ebj077jR1OS4ecHHikJ/FWaSRM4eyoaa6pvK2VD/pbWfP45FE+CFwtrx9YVzE7N04jj8eLcxu6JkbsiV/w==",
+          "SHA256": "",
+          "SHA512": "7f6c3c79b8f4efb8d1d4e4b879c1c78a427f15669244ce1eca869aea9bcad950ffa5b59f3f8e4513e085c2daf1f5857313b374e238fc78b731bba2646ec895ff"
+        }
+      }
     }
   ],
   "dev-rust/error-chain": [
@@ -10214,6 +10927,27 @@
           "integrity": "sha512-wO4ZoLotef8YQxSNClggReaEZqncQp5fPIo6dbwbbg1t4DrWn86FG8Apfn23eyxoF6E8N+HD1FAe1B24pFS/eQ==",
           "SHA256": "",
           "SHA512": "c0ee19a0ba2d79ff1843148d0a582045e68466a9dc429e5f3c8a3a75bc1b6e0d6de03ad69fce851bc0297e7db77b2c6817a13c37e1c3d4501ed41db8a454bf79"
+        }
+      }
+    },
+    {
+      "version": "0.11.0",
+      "buildDeps": [
+        "dev-rust/backtrace"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/backtrace"
+      ],
+      "srcUris": {
+        "error-chain-0.11.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/error-chain/0.11.0/download"
+          ],
+          "size": 27207,
+          "integrity": "sha512-p8Br5mClVLTFDerK9u8Gmc9ujPI02WEDJMcNrAz/7/FUDfvxDv1BQnhYVRsJXJmNZw8Sh8lFnDUhe9eNiIfGCw==",
+          "SHA256": "",
+          "SHA512": "a7c06be660a554b4c50deacaf6ef0699cf6e8cf234d9610324c70dac0cffeff1540dfbf10efd41427858551b095c998d670f1287c9459c35217bd78d8887c60b"
         }
       }
     }
@@ -10273,7 +11007,11 @@
       "localSrc": [
         "//platform2/featured:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "chromeos-base/featured",
+        "dev-rust/log",
+        "dev-rust/thiserror"
+      ],
       "srcUris": {}
     }
   ],
@@ -10363,11 +11101,40 @@
           "SHA512": "4e34548f6cd4ffaba1ba85f902013463abcbcd47cb3d7119076ff31df0c5c09de28c398f58e9a95d461ec742fc9106ac9b11c3850a5f7c809f1725c8e5f925aa"
         }
       }
+    },
+    {
+      "version": "0.1.1",
+      "buildDeps": [
+        "dev-rust/bitflags",
+        "dev-rust/byteorder",
+        "dev-rust/num_enum",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/bitflags",
+        "dev-rust/byteorder",
+        "dev-rust/num_enum",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "srcUris": {
+        "flexbuffers-0.1.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/flexbuffers/0.1.1/download"
+          ],
+          "size": 24544,
+          "integrity": "sha512-qSkx5oDTYgiaHkf9LDh1bkHZFq7eR5C9p1wk/AzimPzZX2bcAdpTpbKAmV3x83Oiah/CB7Ma4IrX1kPEf/aPcw==",
+          "SHA256": "",
+          "SHA512": "a92931e680d362089a1e47fd2c38756e41d916aede4790bda75c24fc0ce298fcd95f66dc01da53a5b280995df1f373a26a1fc207b31ae08ad7d643c47ff68f73"
+        }
+      }
     }
   ],
   "dev-rust/foreign-types": [
     {
-      "version": "0.3.2-r1",
+      "version": "0.3.2",
       "buildDeps": [
         "dev-rust/foreign-types-shared"
       ],
@@ -10432,6 +11199,15 @@
       }
     }
   ],
+  "dev-rust/fuchsia-zircon": [
+    {
+      "version": "0.3.2",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    }
+  ],
   "dev-rust/futures": [
     {
       "version": "0.3.13",
@@ -10463,6 +11239,23 @@
           "integrity": "sha512-UaV2FIv3B+iwsISP8JmcpSxpTP+AdSt/vRtoW+xyXeF8QG8Ca7gErMoGXCHVcH0JaGUK7M6S28barFP9eYQD1A==",
           "SHA256": "",
           "SHA512": "51a576148bf707e8b0b0848ff0999ca52c694cff80752b7fbd1b685bec725de17c406f026bb804acca065c21d5707d0968650aecce92dbc6daac53fd798403d4"
+        }
+      }
+    },
+    {
+      "version": "0.1.31",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "futures-0.1.31.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/futures/0.1.31/download"
+          ],
+          "size": 157731,
+          "integrity": "sha512-S+cZkmEgHvTc2sWlojenDu4z2PrZqB921zn0/HrTnIf7L0cZ7X56e8V3PFtRGW5KpM7VN1KSGYyNiaA/FpKzQQ==",
+          "SHA256": "",
+          "SHA512": "4be7199261201ef4dcdac5a5a237a70eee33d8fad9a81f76d739f4fc7ad39c87fb2f4719ed7e7a7bc5773c5b51196e4aa4ced5375292198c8d89a03f1692b341"
         }
       }
     }
@@ -10628,7 +11421,7 @@
   ],
   "dev-rust/futures-util": [
     {
-      "version": "0.3.13-r1",
+      "version": "0.3.13",
       "buildDeps": [
         "dev-rust/futures-channel",
         "dev-rust/futures-core",
@@ -10671,6 +11464,79 @@
       }
     }
   ],
+  "dev-rust/generic-array": [
+    {
+      "version": "0.14.4",
+      "buildDeps": [
+        "dev-rust/serde",
+        "dev-rust/typenum",
+        "dev-rust/version_check"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/serde",
+        "dev-rust/typenum",
+        "dev-rust/version_check"
+      ],
+      "srcUris": {
+        "generic-array-0.14.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/generic-array/0.14.4/download"
+          ],
+          "size": 28916,
+          "integrity": "sha512-NKxx/uLNUP94bTm0q6zZ4JCoWYuvTcNrpf7Ptxcc2OT1jlNgy7C68CqH7qJrfcqFs1VVuCu+/gZjXS/Tj3uLQA==",
+          "SHA256": "",
+          "SHA512": "34ac71fee2cd50ff786d39b4abacd9e090a8598baf4dc36ba5fecfb7171cd8e4f58e5360cbb0baf02a87eea26b7dca85b35555b82bbefe06635d2fd38f7b8b40"
+        }
+      }
+    },
+    {
+      "version": "0.13.3",
+      "buildDeps": [
+        "dev-rust/serde",
+        "dev-rust/typenum"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/serde",
+        "dev-rust/typenum"
+      ],
+      "srcUris": {
+        "generic-array-0.13.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/generic-array/0.13.3/download"
+          ],
+          "size": 26956,
+          "integrity": "sha512-1m6oCKrwhckWL6jJalZVvGC0LfdkxdwXIm4KokeS1IIw1Ryd9h229VHUkc0XPaSKXgbV5OAQkBsUw/BEx/OPyw==",
+          "SHA256": "",
+          "SHA512": "d66ea808aaf085c9162fa8c96a5655bc60b42df764c5dc17226e0aa24792d48230d51c9df61db6f551d491cd173da48a5e06d5e4e010901b14c3f044c7f38fcb"
+        }
+      }
+    },
+    {
+      "version": "0.12.4",
+      "buildDeps": [
+        "dev-rust/serde",
+        "dev-rust/typenum"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/serde",
+        "dev-rust/typenum"
+      ],
+      "srcUris": {
+        "generic-array-0.12.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/generic-array/0.12.4/download"
+          ],
+          "size": 18212,
+          "integrity": "sha512-+SACtUmqnbKoD2XFA1fB8PSQpj4QT656Jx4LFtbEPskUbLfzcfAOsVdaG/xxPe0761H56W7ek/LOZuv3jshcuA==",
+          "SHA256": "",
+          "SHA512": "f92002b549aa9db2a80f65c50357c1f0f490a63e104fae7a271e0b16d6c43ec9146cb7f371f00eb1575a1bfc713ded3beb51f9e96ede93f2ce66ebf78ec85cb8"
+        }
+      }
+    }
+  ],
   "dev-rust/getopts": [
     {
       "version": "0.2.21",
@@ -10694,6 +11560,29 @@
           "integrity": "sha512-VRWubMsPA++3g2g/Rs/RdVNCxOg7tnP/iRTH+d6g2uMz+NlwOGXpkmWaNZBn3w6LDiJT3g1LDHcHy+fXNAG7Hw==",
           "SHA256": "",
           "SHA512": "5515ae6ccb0f03efb783683f46cfd1755342c4e83bb673ff8914c7f9dea0dae333f8d9703865e992659a359067df0e8b0e2253de0d4b0c7707cbe7d73401bb1f"
+        }
+      }
+    },
+    {
+      "version": "0.2.18",
+      "buildDeps": [
+        "dev-rust/log",
+        "dev-rust/unicode-width"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/log",
+        "dev-rust/unicode-width"
+      ],
+      "srcUris": {
+        "getopts-0.2.18.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/getopts/0.2.18/download"
+          ],
+          "size": 18416,
+          "integrity": "sha512-aCNu2iZFyS4J/k90CNyPwH1/FDvPwXnSl7MHzuoEIN2ZlYbes3+kYA6SkijbXPLG8SF67MpQC09VNOvZNLbazA==",
+          "SHA256": "",
+          "SHA512": "68236eda2645c92e09fe4f7408dc8fc07d7f143bcfc179d297b307ceea0420dd999586deb37fa4600e929228db5cf2c6f1217aecca500b4f5534ebd934b6dacc"
         }
       }
     }
@@ -10727,6 +11616,70 @@
           "integrity": "sha512-P8omGYu6sanhiftFrWzHx6GJae7W9oykNAei1GP+AElVsdGZwXlKI6U7oh/tth7/htOA0r9Jv9tscFXBHVQwlg==",
           "SHA256": "",
           "SHA512": "3fca26198bbab1a9e189fb45ad6cc7c7a18969eed6f68ca43407a2d463fe004955b1d199c1794a23a53ba21fedb61eff86d380d2bf49bfdb6c7055c11d543096"
+        }
+      }
+    },
+    {
+      "version": "0.2.0",
+      "buildDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/compiler_builtins",
+        "dev-rust/libc",
+        "dev-rust/rustc-std-workspace-core",
+        "dev-rust/stdweb",
+        "dev-rust/wasi",
+        "dev-rust/wasm-bindgen"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/compiler_builtins",
+        "dev-rust/libc",
+        "dev-rust/rustc-std-workspace-core",
+        "dev-rust/stdweb",
+        "dev-rust/wasi",
+        "dev-rust/wasm-bindgen"
+      ],
+      "srcUris": {
+        "getrandom-0.2.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/getrandom/0.2.0/download"
+          ],
+          "size": 26029,
+          "integrity": "sha512-Qao2o5/di8T4qSdieAbz1YqEWAQaxzR/1EbcYoF17I26LAGOgoOaaAy1h6CaI/7j/TV/mZAKQrqvtUlwBivZsQ==",
+          "SHA256": "",
+          "SHA512": "41aa36a39fdd8bc4f8a927627806f3d58a8458041ac7347fd446dc628175ec8dba2c018e82839a680cb587a09a23fee3fd357f99900a42baafb54970062bd9b1"
+        }
+      }
+    },
+    {
+      "version": "0.1.15",
+      "buildDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/libc",
+        "dev-rust/rustc-std-workspace-core",
+        "dev-rust/stdweb",
+        "dev-rust/wasi",
+        "dev-rust/wasm-bindgen"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/libc",
+        "dev-rust/rustc-std-workspace-core",
+        "dev-rust/stdweb",
+        "dev-rust/wasi",
+        "dev-rust/wasm-bindgen"
+      ],
+      "srcUris": {
+        "getrandom-0.1.15.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/getrandom/0.1.15/download"
+          ],
+          "size": 24786,
+          "integrity": "sha512-sm2VWFVAWPilSwP1b0iNteutLVzIT3N+SJ+PUy+EZO+QONEEFz6zCsymHKofmeHOJnvEk8AboWEbgp4KCQzIfw==",
+          "SHA256": "",
+          "SHA512": "b26d9558554058f8a54b03f56f488db5ebad2d5cc84f737e489f8f532f8464ef9038d104173eb30acca61caa1f99e1ce267bc493c01ba1611b829e0a090cc87f"
         }
       }
     }
@@ -10857,11 +11810,32 @@
           "SHA512": "e739445fb07403370fda110dc76b82046e5df0250a5e9898ccd0b33547972d26405527f3e3e9cddcd2caa775c8afcfbfc098cb995ab59c44aca642d6c539594f"
         }
       }
+    },
+    {
+      "version": "0.1.1",
+      "buildDeps": [
+        "dev-rust/byteorder"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/byteorder"
+      ],
+      "srcUris": {
+        "hash32-0.1.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/hash32/0.1.1/download"
+          ],
+          "size": 10967,
+          "integrity": "sha512-V+qQCcY2XealW/HEpRTrmXoWcf5yh3NU+3XehYtTHHjrejyeJHdJHVlakWrE39XpduH+vj4O9rwimeacNziSFQ==",
+          "SHA256": "",
+          "SHA512": "57ea9009c6365de6a55bf1c4a514eb997a1671fe72877354fb75de858b531c78eb7a3c9e2477491d595a916ac4dfd5e976e1febe3e0ef6bc2299e69c37389215"
+        }
+      }
     }
   ],
   "dev-rust/hashbrown": [
     {
-      "version": "0.11.2-r2",
+      "version": "0.11.2",
       "buildDeps": [
         "dev-rust/bumpalo",
         "dev-rust/compiler_builtins",
@@ -10927,6 +11901,33 @@
           "SHA512": "3675e94c245f2e54783f13f48337b3ff986dbe6c52e00eaf14f5ed4cdc917c13c9b3b0242e3aca8231748d7cd8d391c39f813987193ed41a70bf7bb0e2905bdd"
         }
       }
+    },
+    {
+      "version": "0.6.1",
+      "buildDeps": [
+        "dev-rust/as-slice",
+        "dev-rust/generic-array",
+        "dev-rust/hash32",
+        "dev-rust/stable_deref_trait"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/as-slice",
+        "dev-rust/generic-array",
+        "dev-rust/hash32",
+        "dev-rust/stable_deref_trait"
+      ],
+      "srcUris": {
+        "heapless-0.6.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/heapless/0.6.1/download"
+          ],
+          "size": 61144,
+          "integrity": "sha512-vMJIqREN6MKzULJNq0bZSLdFlggSTLx2hG6KMAWVKWHgoPeS25CgtZdJ5G6OVIqK5D9QsHPDXUFYgmwvBfhZog==",
+          "SHA256": "",
+          "SHA512": "bcc248a9110de8c2b350b24dab46d948b7459608124cbc76846e8a3005952961e0a0f792db90a0b59749e46e8e548a8ae43f50b073c35d4158826c2f05f859a2"
+        }
+      }
     }
   ],
   "dev-rust/heapsize": [
@@ -10957,6 +11958,27 @@
           "integrity": "sha512-M72/T/nsxPTXTPBlkOBW9Nlr8NmQ1TgbnaW2VoKySV7XTie0VBnCr6mGwfYgCQnVF1sTeuc87VzIrIaeThvOjw==",
           "SHA256": "",
           "SHA512": "33bdbf4ff9ecc4f4d74cf06590e056f4d96bf0d990d5381b9da5b65682b2495ed74e27b45419c2afa986c1f6200909d5175b137ae73ced5cc8ac869e4e1bce8f"
+        }
+      }
+    },
+    {
+      "version": "0.3.3",
+      "buildDeps": [
+        "dev-rust/unicode-segmentation"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/unicode-segmentation"
+      ],
+      "srcUris": {
+        "heck-0.3.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/heck/0.3.3/download"
+          ],
+          "size": 10260,
+          "integrity": "sha512-s0mOAz9E4DIGQh5WXv7Fsh0TEHtg015EdjMcRObv/XXIH3Z48kUsgi7v1YEgmi/+/SA0d5zKLYtPrEWDu793fw==",
+          "SHA256": "",
+          "SHA512": "b3498e033f44e03206421e565efec5b21d13107b60d35e4476331c44e6effd75c81f7678f2452c822eefd581209a2ffefd2034779cca2d8b4fac4583bbbf777f"
         }
       }
     }
@@ -11041,7 +12063,7 @@
   ],
   "dev-rust/httparse": [
     {
-      "version": "1.3.4-r1",
+      "version": "1.3.4",
       "buildDeps": [],
       "localSrc": [],
       "runtimeDeps": [],
@@ -11080,6 +12102,20 @@
   "dev-rust/hyphenation": [
     {
       "version": "0.8.4",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    },
+    {
+      "version": "0.8.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    },
+    {
+      "version": "0.7.1",
       "buildDeps": [],
       "localSrc": [],
       "runtimeDeps": [],
@@ -11144,7 +12180,7 @@
   ],
   "dev-rust/image": [
     {
-      "version": "0.23.14-r1",
+      "version": "0.23.14",
       "buildDeps": [
         "dev-rust/bytemuck",
         "dev-rust/byteorder",
@@ -11259,6 +12295,29 @@
       }
     }
   ],
+  "dev-rust/instant": [
+    {
+      "version": "0.1.9",
+      "buildDeps": [
+        "dev-rust/cfg-if"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/cfg-if"
+      ],
+      "srcUris": {
+        "instant-0.1.9.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/instant/0.1.9/download"
+          ],
+          "size": 5213,
+          "integrity": "sha512-ORX2fDYp7JMpbVbEzaDPl7KbGnCTCp1UaruVGBOdTC81BiVjpQlOhIQd2x8AsPPfncAIAdlsAZlHZSIe3wPvfA==",
+          "SHA256": "",
+          "SHA512": "3915f67c3629ec93296d56c4cda0cf97b29b1a70930a9d546abb9518139d4c2f35062563a5094e84841ddb1f00b0f3df9dc00801d96c01994765221edf03ef7c"
+        }
+      }
+    }
+  ],
   "dev-rust/intrusive-collections": [
     {
       "version": "0.9.0",
@@ -11297,7 +12356,15 @@
       "localSrc": [
         "//platform/crosvm:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-rust/data_model",
+        "dev-rust/libc",
+        "dev-rust/remain",
+        "dev-rust/sync",
+        "dev-rust/sys_util",
+        "dev-rust/tempfile",
+        "dev-rust/thiserror"
+      ],
       "srcUris": {}
     }
   ],
@@ -11324,6 +12391,29 @@
       }
     }
   ],
+  "dev-rust/iovec": [
+    {
+      "version": "0.1.4",
+      "buildDeps": [
+        "dev-rust/libc"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc"
+      ],
+      "srcUris": {
+        "iovec-0.1.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/iovec/0.1.4/download"
+          ],
+          "size": 8720,
+          "integrity": "sha512-4j/KrCOYB9rqIN3PLN1PuFi6GqlwzmJI9w8Pulv/fr2yckfAmXrA/yeRF4+G/5ZX5HPY9kuGxkR2Pls0dO3RWA==",
+          "SHA256": "",
+          "SHA512": "e23fcaac239807daea20ddcf2cdd4fb858ba1aa970ce6248f70f0fba5bff7ebdb27247c0997ac0ff2791178f86ff9657e473d8f64b86c644763e5b3474edd158"
+        }
+      }
+    }
+  ],
   "dev-rust/itoa": [
     {
       "version": "1.0.1",
@@ -11339,6 +12429,23 @@
           "integrity": "sha512-jnvB6b9PwGhxuf4gyq1OCvllR31yT0yNDio6TYeu35n5Lk5YOmRAzldND7Q/ydai6ArdUqL2QhDGqjtALkJClQ==",
           "SHA256": "",
           "SHA512": "8e7bc1e9bf4fc06871b9fe20caad4e0af965477d724f4c8d0e2a3a4d87aedf99f92e4e583a6440ce574d0fb43fc9d6a2e80add52a2f64210c6aa3b402e424295"
+        }
+      }
+    },
+    {
+      "version": "0.4.7",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "itoa-0.4.7.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/itoa/0.4.7/download"
+          ],
+          "size": 12099,
+          "integrity": "sha512-xh61CqAFka8oaYtFxSjDa9kgiPfNL0U89oahgk9GVikmOL68Roz2f5A0c6UEXyJ3evYjzAUV7zvyUUa4mnxFTw==",
+          "SHA256": "",
+          "SHA512": "c61eb50aa00591af28698b45c528c36bd92088f7cd2f453cf686a1824f4656292638bebc468cf67f903473a5045f22777af623cc0515ef3bf25146b89a7c454f"
         }
       }
     }
@@ -11364,6 +12471,13 @@
           "SHA512": "0feade0f1f0a458bdbcedafce8fc39f44adeb56772ea94a59f16f038a743f506db1405a7c8deae65a6a5c1695bfb363c19aeea1c82c41c7f4d1101469f32e42e"
         }
       }
+    },
+    {
+      "version": "0.1.16",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/jpeg-decoder": [
@@ -11377,7 +12491,7 @@
   ],
   "dev-rust/lazy_static": [
     {
-      "version": "1.4.0-r2",
+      "version": "1.4.0",
       "buildDeps": [
         "dev-rust/spin"
       ],
@@ -11396,6 +12510,15 @@
           "SHA512": "e124c0521ec7c950f3c4a066821918da7a9c6e711115d98009ae7c351928fdddead852e7596fea5937a9c30e4e4ce8eee7099b20248b5d6e3b2494b6a6d88cb8"
         }
       }
+    }
+  ],
+  "dev-rust/lexical-core": [
+    {
+      "version": "0.6.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/libc": [
@@ -11417,6 +12540,27 @@
           "integrity": "sha512-Gf7R7qx/+7427LW+s4FrUkTTAXtyN26E5TLyU+B+57wxD29jau1GF0ZTIy/NtTLCUGvAcL7zFpnbIFct8MRd4w==",
           "SHA256": "",
           "SHA512": "19fed1eeac7ffbbe36ecb5beb3816b5244d3017b72376e84e532f253e07ee7bc310f6f636aed46174653232fcdb532c2506bc070bef31699db20572df0c45de3"
+        }
+      }
+    },
+    {
+      "version": "0.2.106",
+      "buildDeps": [
+        "dev-rust/rustc-std-workspace-core"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rustc-std-workspace-core"
+      ],
+      "srcUris": {
+        "libc-0.2.106.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/libc/0.2.106/download"
+          ],
+          "size": 554765,
+          "integrity": "sha512-joDMQcg3O5Io0dIb9d4/FKqp7U61rtM3BB5WH4IdsNGlk21nY2hEOtIAntaEqo8Md2Le8C3yWokfVyiOfmry7A==",
+          "SHA256": "",
+          "SHA512": "8e80cc41c8373b9228d1d21bf5de3f14aaa9ed4eb5aed337041e561f821db0d1a5936d676368443ad2009ed684aa8f0c7762def02df25a891f57288e7e6af2ec"
         }
       }
     }
@@ -11485,6 +12629,29 @@
           "SHA512": "03dddcaeb9cf1c5ff008a34d73d5d74b672449eeb6814f7aa9ec8c7f06c218f9975cb7a6d3f427cd01ee44c556fc80315cd58b486006e4fc8d06a5a8e81f5956"
         }
       }
+    },
+    {
+      "version": "0.1.3",
+      "buildDeps": [
+        "dev-rust/pkg-config",
+        "sys-apps/dbus"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/pkg-config",
+        "sys-apps/dbus"
+      ],
+      "srcUris": {
+        "libdbus-sys-0.1.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/libdbus-sys/0.1.3/download"
+          ],
+          "size": 8136,
+          "integrity": "sha512-VuplPV5tczI2kox6/qhIioqnAalmXomqynowQjf5sq7JKKICU25i2Hn27sG3maGPMM7/LSbF+MauuzIbiiQdmg==",
+          "SHA256": "",
+          "SHA512": "56ea653d5e6d733236928c7afea8488a8aa701a9665e89aaca7a304237f9b2aec928a202536e62d879f6eec1b799a18f30ceff2d26c5f8c6aebb321b8a241d9a"
+        }
+      }
     }
   ],
   "dev-rust/libusb1-sys": [
@@ -11512,6 +12679,29 @@
           "integrity": "sha512-EYjuKWvglAngbP2omoG0M3QTPleoSRQt1Oy5NNDK0zmEMJS36NlDh2pnvgWA/xmP2tJJKwC9IcjFvteEmuVGpw==",
           "SHA256": "",
           "SHA512": "1188ee296be09409e06cfda89a81b43374133e57a849142dd4ecb934d0cad339843094b7e8d943876a67be0580ff198fdad2492b00bd21c8c5bed7849ae546a7"
+        }
+      }
+    },
+    {
+      "version": "0.3.7",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/pkg-config"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/pkg-config"
+      ],
+      "srcUris": {
+        "libusb1-sys-0.3.7.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/libusb1-sys/0.3.7/download"
+          ],
+          "size": 398668,
+          "integrity": "sha512-HhbvydT3xDpURq8woW/DkW2+OI6k687Z5vw79lunjOXt7mWWPtdA5OM0S7dJN+rvbfghiW9Te+CgjLNeyo6RrA==",
+          "SHA256": "",
+          "SHA512": "1e16efc9d4f7c43a5446af30a16fc3916dbe388ea4ebced9e6fc3bf65ba78ce5edee65963ed740e4e3344bb74937eaef6df821896f537be0a08cb35eca8e91ac"
         }
       }
     }
@@ -11642,6 +12832,31 @@
           "SHA512": "b1a5227fd131edaa70e017f7ddb43af8b4efa58488007b898ca1dfc818a3a441b732b7adbf1270e72a68ee5d2a99a5d48f33b2bca8e2cf78694953d20d27636d"
         }
       }
+    },
+    {
+      "version": "0.4.4",
+      "buildDeps": [
+        "dev-rust/owning_ref",
+        "dev-rust/scopeguard",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/owning_ref",
+        "dev-rust/scopeguard",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "lock_api-0.4.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/lock_api/0.4.4/download"
+          ],
+          "size": 20356,
+          "integrity": "sha512-ZVyKFQO25/gztMYhCeHFAFcnBUhHv/geF9QVn5HAKsl1EtoGc6sifRe8ntA0L+NHYkfa90y8mgtHDmjGSLpwbg==",
+          "SHA256": "",
+          "SHA512": "655c8a1503b6e7f833b4c62109e1c5005727054847bff81e17d4159f91c02ac97512da0673ab227d17bc9ed0342fe3476247daf74cbc9a0b470e68c648ba706e"
+        }
+      }
     }
   ],
   "dev-rust/log": [
@@ -11749,6 +12964,25 @@
       }
     }
   ],
+  "dev-rust/maybe-uninit": [
+    {
+      "version": "2.0.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "maybe-uninit-2.0.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/maybe-uninit/2.0.0/download"
+          ],
+          "size": 11809,
+          "integrity": "sha512-MAb8AJx8dD2RR6QSLmd83rJUb3u0aWOy8maDlhTrkG+ddjwWEET9C/P3tUEkrAc0rJrn9xUbGnpfRcvHOZdkNA==",
+          "SHA256": "",
+          "SHA512": "3006fc009c7c743d9147a4122e677cdeb2546f7bb46963b2f266839614eb906f9d763c161044fd0bf3f7b54124ac0734ac9ae7f7151b1a7a5f45cbc739976434"
+        }
+      }
+    }
+  ],
   "dev-rust/md5": [
     {
       "version": "0.7.0",
@@ -11804,6 +13038,48 @@
           "integrity": "sha512-Eb3ZGFuZ3+6OZZ4FGwnuMBxxQqNyqBF4ZHRaUIXAFUNtLvuxR4GSiG8Jy8ViUp4gnS4zJdlJOKZLx1sdkdK/Pw==",
           "SHA256": "",
           "SHA512": "11bdd9185b99dfee8e659e051b09ee301c7142a372a8117864745a5085c015436d2efbb1478192886f09cbc562529e209d2e3325d94938a64bc75b1d91d2bf3f"
+        }
+      }
+    },
+    {
+      "version": "0.6.4",
+      "buildDeps": [
+        "dev-rust/autocfg"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg"
+      ],
+      "srcUris": {
+        "memoffset-0.6.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/memoffset/0.6.4/download"
+          ],
+          "size": 7664,
+          "integrity": "sha512-v40FtyVxzN7zKpPMRImrTLer1BQV1VVy0d+5gwU6/j6yYV6WjYejJq+QxXArmVkVD5haQYas/WHfm2mnTplxPQ==",
+          "SHA256": "",
+          "SHA512": "bf8d05b72571ccdef32a93cc4489ab4cb7abd41415d55572d1dfb983053afe3eb2615e968d87a326af90c5702b9959150f985a4186acfd61df9b69a74e99713d"
+        }
+      }
+    },
+    {
+      "version": "0.5.6",
+      "buildDeps": [
+        "dev-rust/autocfg"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg"
+      ],
+      "srcUris": {
+        "memoffset-0.5.6.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/memoffset/0.5.6/download"
+          ],
+          "size": 7382,
+          "integrity": "sha512-bfiVLUH2D6CZP7yF0RKhXB9uz+9m2inr2rcfQM2O6HIkAGk7bqAjNE8bXcNRy+go9GWoyr0VA3emKUjO3rXbaw==",
+          "SHA256": "",
+          "SHA512": "6df8952d41f60fa0993fbc85d112a15c1f6ecfef66da29ebdab71f40cd8ee8722400693b6ea023344f1b5dc351cbe828f465a8cabd150377a62948cedeb5db6b"
         }
       }
     }
@@ -11940,6 +13216,52 @@
           "SHA512": "c6eaff99cbfe797dd97e6d29da09a6bbb2a46b3f3ddab7d75fb756950d463545199d13ccb2d51d367a2499d18f88500fce8084b82b2f020865dec0d9d9ccdfbb"
         }
       }
+    },
+    {
+      "version": "0.8.0",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/log"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/log"
+      ],
+      "srcUris": {
+        "mio-0.8.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/mio/0.8.0/download"
+          ],
+          "size": 82954,
+          "integrity": "sha512-t9uPQAxGk3MCoJGpDvBbUBqq+MvZtdikQV4UDlrVT+dFrDJItJpqtCOZ0UXAH7vfCmne/DecqqZ/ZOi3zxYLBw==",
+          "SHA256": "",
+          "SHA512": "b7db8f400c46937302a091a90ef05b501aaaf8cbd9b5d8a4415e140e5ad54fe745ac3248b49a6ab42399d145c01fbbdf0a69defc379caaa67f64e8b7cf160b07"
+        }
+      }
+    },
+    {
+      "version": "0.7.14",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/log"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/log"
+      ],
+      "srcUris": {
+        "mio-0.7.14.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/mio/0.7.14/download"
+          ],
+          "size": 87429,
+          "integrity": "sha512-I0lpHqh6CG+b2N9XOHBenXtZOZCJlI+BC2pxJL7/1E3uNIcDyJtLGvjYSCHcuTKWDcS9nslUNVj1mkDEgG+/2Q==",
+          "SHA256": "",
+          "SHA512": "2349691ea87a086f9bd8df5738705e9d7b59399089948f810b6a7124beffd44dee348703c89b4b1af8d84821dcb932960dc4bd9ec9543558f59a40c4806fbfd9"
+        }
+      }
     }
   ],
   "dev-rust/mp4parse": [
@@ -11989,6 +13311,27 @@
           "integrity": "sha512-rYpXwy8oocoT7VHr+s4V9mGlhXzERw1BQLQcQXeTcwAHyy4dcN/tjfQn2Q0UNIOLfKNv9NqNk1VbDy7KZbCE+A==",
           "SHA256": "",
           "SHA512": "ad8a57c32f28a1ca13ed51ebface15f661a5857cc4470d4140b41c417793730007cb2e1d70dfed8df427d90d1434838b7ca36ff4da8d93555b0f2eca65b084f8"
+        }
+      }
+    },
+    {
+      "version": "0.1.3",
+      "buildDeps": [
+        "dev-rust/nb"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/nb"
+      ],
+      "srcUris": {
+        "nb-0.1.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/nb/0.1.3/download"
+          ],
+          "size": 10112,
+          "integrity": "sha512-U2nkbu+uM7OXwd7DdCFOYFPifw2jzdLmBN7rRCYE8bUjgnLI5J4Eewyy7ypPk027EBzZjAfbJ/S2lfgPTccRMg==",
+          "SHA256": "",
+          "SHA512": "5369e46eefae33b397c1dec374214e6053e27f0da3cdd2e604deeb442604f1b5238272c8e49e047b0cb2ef2a4f934dbb101cd98c07db27f4b695f80f4dc71132"
         }
       }
     }
@@ -12101,6 +13444,35 @@
           "SHA512": "aacf14e84be17edced412e3d256734508426a8acb8352e83a5d9d4f26d640f60a881d8f70fbc6edf1843173af63ec05be7694fcd6c6287d871e40518e2ed04ee"
         }
       }
+    },
+    {
+      "version": "5.1.2",
+      "buildDeps": [
+        "dev-rust/lazy_static",
+        "dev-rust/lexical-core",
+        "dev-rust/memchr",
+        "dev-rust/regex",
+        "dev-rust/version_check"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/lazy_static",
+        "dev-rust/lexical-core",
+        "dev-rust/memchr",
+        "dev-rust/regex",
+        "dev-rust/version_check"
+      ],
+      "srcUris": {
+        "nom-5.1.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/nom/5.1.2/download"
+          ],
+          "size": 136174,
+          "integrity": "sha512-U7jdq2JHVYjvrkbHi1/QhqFMD6UFyE5iX77dbcdNSsBH6fvtcxK3l/Em6cofBWRY2P/gqxPwEX3mhe+LQ/hqyg==",
+          "SHA256": "",
+          "SHA512": "53b8ddab62475588efae46c78b5fd086a14c0fa505c84e625fbedd6dc74d4ac047e9fbed7312b797f126e9ca1f056458d8ffe0ab13f0117de685ef8b43f86aca"
+        }
+      }
     }
   ],
   "dev-rust/num-bigint": [
@@ -12134,6 +13506,72 @@
           "integrity": "sha512-rbsgoUB5NKEp2vJSeEcPdqQLOtwAKZSSfj1X9zcL+Fd2HLEX98cm6YpIfOVXxO9u5mhwKViyHpDDHfTiaTk9AA==",
           "SHA256": "",
           "SHA512": "adbb20a1407934a129daf25278470f76a40b3adc002994927e3d57f7370bf857761cb117f7c726e98a487ce557c4ef6ee668702958b21e90c31df4e269393d00"
+        }
+      }
+    },
+    {
+      "version": "0.3.3",
+      "buildDeps": [
+        "dev-rust/arbitrary",
+        "dev-rust/autocfg",
+        "dev-rust/num-integer",
+        "dev-rust/num-traits",
+        "dev-rust/quickcheck",
+        "dev-rust/rand",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/arbitrary",
+        "dev-rust/autocfg",
+        "dev-rust/num-integer",
+        "dev-rust/num-traits",
+        "dev-rust/quickcheck",
+        "dev-rust/rand",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "num-bigint-0.3.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/num-bigint/0.3.3/download"
+          ],
+          "size": 89493,
+          "integrity": "sha512-xOPvAbTaJOs2dtZxb82oRBjov7DmSqpM/JrmfgigMvVkeAqMA+0UA7aM1xlMsp2sx3jhG8gh6Mn+c3KhqVGG8A==",
+          "SHA256": "",
+          "SHA512": "c4e3ef01b4da24eb3676d6716fcda84418e8bfb0e64aaa4cfc9ae67e08a032f564780a8c03ed1403b68cd7194cb29dacc778e11bc821e8c9fe7372a1a95186f0"
+        }
+      }
+    },
+    {
+      "version": "0.2.6",
+      "buildDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/num-integer",
+        "dev-rust/num-traits",
+        "dev-rust/quickcheck",
+        "dev-rust/quickcheck_macros",
+        "dev-rust/rand",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/num-integer",
+        "dev-rust/num-traits",
+        "dev-rust/quickcheck",
+        "dev-rust/quickcheck_macros",
+        "dev-rust/rand",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "num-bigint-0.2.6.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/num-bigint/0.2.6/download"
+          ],
+          "size": 87275,
+          "integrity": "sha512-GcH/Cub9/GkMz+T+YAjBAuUKub9rH05PBKNI0hfU2dU4WFlFRmtytwcTBTvP1zaF0akH5B0TUmXTML3plnCeuA==",
+          "SHA256": "",
+          "SHA512": "19c1ff0ae6fdfc690ccfe4fe6008c102e50ab9bf6b1f4e4f04a348d217d4d9d538585945466b72b70713053bcfd73685d1a907e41d135265d330bde996709eb8"
         }
       }
     }
@@ -12188,6 +13626,13 @@
           "SHA512": "46b0e05c4f4587121ec300da51cbf02e04ee8f8441eb4dcaab5a2ccee3b40210f1badde56addf053fb876aed3749dfb5f01e757042573fdf99defc77fb265f3e"
         }
       }
+    },
+    {
+      "version": "0.1.37",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/num-rational": [
@@ -12217,6 +13662,35 @@
           "integrity": "sha512-MRQcFHrOFlBc9jAj05nsfWgksc86MRYEGcyO2MnkOSmTkQQZrBE7I5E/cQ7/E/cw0EMo5mMoN1xhwoAQcY+4Nw==",
           "SHA256": "",
           "SHA512": "31141c147ace16505cf63023d399ec7d6824b1cf3a31160419cc8ed8c9e4392993910419ac113b23913f710eff13f730d04328e66328375c61c28010718fb837"
+        }
+      }
+    },
+    {
+      "version": "0.2.4",
+      "buildDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/num-bigint",
+        "dev-rust/num-integer",
+        "dev-rust/num-traits",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/num-bigint",
+        "dev-rust/num-integer",
+        "dev-rust/num-traits",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "num-rational-0.2.4.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/num-rational/0.2.4/download"
+          ],
+          "size": 21694,
+          "integrity": "sha512-BuVfF6HqWP1GWiMuvWh2hskiZp8LVh9khxcWTz/Mj+K7QyE9HmN3FY0lQvYz7y4UgqfDzvgJAyjDT+rPf5vdkw==",
+          "SHA256": "",
+          "SHA512": "06e55f17a1ea58fd465a232ebd687686c922669f0b561f648717164f3fcc8fe2bb43213d1e6377158d2542f633ef2e1482a7c3cef8090328c34feacf7f9bdd93"
         }
       }
     }
@@ -12261,6 +13735,27 @@
           "integrity": "sha512-517CmPpoK+hL9O+2z0ASbakjPvJfB+iHwvp0Ie54eQIEVk5kBsghlGZlH0dCHif2nsppC7nN/JgrZE14zBDePw==",
           "SHA256": "",
           "SHA512": "e75ec298fa682be84bf4efb6cf40126da9233ef25f07e887c2fa7421ee78790204564e6406c8219466651f47421e27f69eca690bb9cdfc982b644d78cc10de3f"
+        }
+      }
+    },
+    {
+      "version": "1.9.0",
+      "buildDeps": [
+        "dev-rust/libc"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc"
+      ],
+      "srcUris": {
+        "num_cpus-1.9.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/num_cpus/1.9.0/download"
+          ],
+          "size": 10599,
+          "integrity": "sha512-jlHyZt+huYN/Z31Bp+2v43aKmg/qVS/15jylKHTRvxdLf6sBixpsEwzDMlnQ/4HjHTkzo3ZTX2PCjW2iBtBcAg==",
+          "SHA256": "",
+          "SHA512": "8e51f266dfa1b9837f677d41a7edafe3768a9a0fea552ff5e63ca52874d1bf174b7fab018b1a6c130cc33259d0ff81e31d3933a376535f63c28d6da206d05c02"
         }
       }
     }
@@ -12417,6 +13912,23 @@
           "SHA512": "cfdb6aa4bcc0f50d4c37eb69867d2deefa70323a7b607e55180b7d417b7188c4f2889417fd04fc51671c65eac75c7d9e7eda06a87dedb846056def66d14eaa46"
         }
       }
+    },
+    {
+      "version": "1.7.2",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "once_cell-1.7.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/once_cell/1.7.2/download"
+          ],
+          "size": 28250,
+          "integrity": "sha512-MM9RJJu3PpiBz7xqVOrXo9twnVYNqNQg/YXPJI5mxye5LoNRt8DGgpE8/xKz+YRoSicqacllxW+DQ5SOtaGU1g==",
+          "SHA256": "",
+          "SHA512": "30cf51249bb73e9881cfbc6a54ead7a3db709d560da8d420fd85cf248e66c727b92e8351b7c0c682913cff12b3f984684a272a69c965c56f8343948eb5a194d6"
+        }
+      }
     }
   ],
   "dev-rust/openssl": [
@@ -12483,7 +13995,7 @@
   ],
   "dev-rust/openssl-src": [
     {
-      "version": "111.0.1-r1",
+      "version": "111.0.1",
       "buildDeps": [
         "dev-libs/openssl"
       ],
@@ -12525,6 +14037,37 @@
           "SHA512": "b17ba906433b212587d6274def3cfc1beba2c50497f5653eb1a3ce767924dbe279f750ab58c77c216de852e2a3aea8c7cb0c2577c67dcbff1b6584c7d55866e0"
         }
       }
+    },
+    {
+      "version": "0.9.66",
+      "buildDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/cc",
+        "dev-rust/libc",
+        "dev-rust/openssl-src",
+        "dev-rust/pkg-config",
+        "dev-rust/vcpkg"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/cc",
+        "dev-rust/libc",
+        "dev-rust/openssl-src",
+        "dev-rust/pkg-config",
+        "dev-rust/vcpkg"
+      ],
+      "srcUris": {
+        "openssl-sys-0.9.66.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/openssl-sys/0.9.66/download"
+          ],
+          "size": 54599,
+          "integrity": "sha512-qy05p2bfaU85hdZ0ldToIL0ZaYdXH7winAA/RB/mG9waq5zTWoPsO+lRjStORj8z8ZuxCekpei1BFP4tHZMqWQ==",
+          "SHA256": "",
+          "SHA512": "ab2d39a766df694f3985d67495d4e820bd196987571fbc229c003f441fe61bdc1aab9cd35a83ec3be9518d2b4e463f33f19bb109e9297a2d4114fe2d1d932a59"
+        }
+      }
     }
   ],
   "dev-rust/os_str_bytes": [
@@ -12550,6 +14093,23 @@
           "integrity": "sha512-0tN0GhGQCSzyUeA10sVafQItmVEhYO1N3MzLRMqF9mT5T4qTenbv+IWBtZPi663atudTAJ8wRqii6/RRQY5B2A==",
           "SHA256": "",
           "SHA512": "d2d3741a1190092cf251e035d2c55a7d022d99512160ed4ddccccb44ca85f664f94f8a937a76eff88581b593e2ebaddab6e753009f3046a8a2ebf451418e41d8"
+        }
+      }
+    },
+    {
+      "version": "2.4.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "os_str_bytes-2.4.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/os_str_bytes/2.4.0/download"
+          ],
+          "size": 14657,
+          "integrity": "sha512-Tgaix/VHDFa99eBq+1/KpAAaKcLNedtu2f+3YhVLogvxHauX7Xyy9Q9TsuEiQbCYi7Igtg9CENTwH7Lw4dGG5g==",
+          "SHA256": "",
+          "SHA512": "4e06a2c7f5470c56bdf5e06afb5fcaa4001a29c2cd79db6ed9ffb762154ba20bf11dab97ed7cb2f50f53b2e12241b0988bb220b60f4210d4f01fb2f0e1d186e6"
         }
       }
     }
@@ -12667,6 +14227,31 @@
           "SHA512": "efa1ebe2f3849a9c6ac484c7e1cdd279640539468bd4d4da6c4c97ae34e86fa3a42818ee4839dea512635fbbd836829dbadd81dc05208614c820d1374139673f"
         }
       }
+    },
+    {
+      "version": "0.11.1",
+      "buildDeps": [
+        "dev-rust/instant",
+        "dev-rust/lock_api",
+        "dev-rust/parking_lot_core"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/instant",
+        "dev-rust/lock_api",
+        "dev-rust/parking_lot_core"
+      ],
+      "srcUris": {
+        "parking_lot-0.11.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/parking_lot/0.11.1/download"
+          ],
+          "size": 39854,
+          "integrity": "sha512-F+OUrItiZWF3oS/P0kbZu1m+RopawXTk1ti0/9BBFJfTzpQ8pd6rGEzr9cG7ype0Jz95vyEMeNf0tvXp1oAmog==",
+          "SHA256": "",
+          "SHA512": "17e394ac8b62656177a12fcfd246d9bb59be468a5ac174e4d6d8b4ffd0411497d3ce943ca5deab184cebf5c1bbca97b4273f79bf210c78d7f4b6f5e9d68026a2"
+        }
+      }
     }
   ],
   "dev-rust/parking_lot_core": [
@@ -12698,6 +14283,39 @@
           "integrity": "sha512-BEPc2GfYvm5dG2/wr44xveY3h4njCGVEK7FfSKyVW+uEerWVS+Qzb6R6rbdHhga9IXt0UTTeUMFkhsJuB/sQtQ==",
           "SHA256": "",
           "SHA512": "0443dcd867d8be6e5d1b6ff0af8e31bde6378789e30865442bb15f48ac955beb847ab5954be4336fa47aadb7478606bd217b745134de50c16486c26e07fb10b5"
+        }
+      }
+    },
+    {
+      "version": "0.8.3",
+      "buildDeps": [
+        "dev-rust/backtrace",
+        "dev-rust/cfg-if",
+        "dev-rust/instant",
+        "dev-rust/libc",
+        "dev-rust/petgraph",
+        "dev-rust/smallvec",
+        "dev-rust/thread-id"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/backtrace",
+        "dev-rust/cfg-if",
+        "dev-rust/instant",
+        "dev-rust/libc",
+        "dev-rust/petgraph",
+        "dev-rust/smallvec",
+        "dev-rust/thread-id"
+      ],
+      "srcUris": {
+        "parking_lot_core-0.8.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/parking_lot_core/0.8.3/download"
+          ],
+          "size": 32147,
+          "integrity": "sha512-HbpafmjuAHkY+yEP8wj3OC7RxU0v5ts2qCRkU0NCRrceZ5XbEHyDyjnCvd9eSifaeXikZLU9QeFQ50TYHnWzQQ==",
+          "SHA256": "",
+          "SHA512": "1dba5a7e68ee007918fb210ff308f7382ed1c54d2fe6db36a8246453434246b71e6795db107c83ca39c2bddf5e4a27da7978a464b53d41e150e744d81e75b341"
         }
       }
     }
@@ -12738,11 +14356,35 @@
           "SHA512": "98af4dfa7c6a3cf0d5aa929c436f9eb1ba1b576a944513f1284e6df2ad06be7cab9eba145d888d50af88f8c970bacc702b323041bec6d4fa1dc34095186c628a"
         }
       }
+    },
+    {
+      "version": "1.0.1",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "percent-encoding-1.0.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/percent-encoding/1.0.1/download"
+          ],
+          "size": 10057,
+          "integrity": "sha512-bohNcXLoytz245BWyfkrcCUvVqgGKvDnkhedz5kDRPR1U8BOL86EhB8g9cKFV9d2hyf2DIYrmHbSnKv/1K0Z6Q==",
+          "SHA256": "",
+          "SHA512": "6e884d7172e8cadcf6e39056c9f92b70252f56a8062af0e792179dcf990344f47553c04e2fce84841f20f5c28557d7768727f60c862b9876d29cabffd4ad19e9"
+        }
+      }
     }
   ],
   "dev-rust/petgraph": [
     {
       "version": "0.6.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    },
+    {
+      "version": "0.5.1",
       "buildDeps": [],
       "localSrc": [],
       "runtimeDeps": [],
@@ -12802,6 +14444,27 @@
           "integrity": "sha512-QrwTxOOcj3FpDbUn2BWISs39LM9fv+pwDG7WAlfoUs3LHEQ+d3RAnlHaU2ErD/CqFlVUuZ/Qy6lz+UqN9SmC2Q==",
           "SHA256": "",
           "SHA512": "42bc13c4e39c8f71690db527d815884acdfd2ccf5fbfea700c6ed60257e852cdcb1c443e7774409e51da53612b0ff0aa165554b99fd0cba973f94a8df52982d9"
+        }
+      }
+    },
+    {
+      "version": "0.3.11-r2",
+      "buildDeps": [
+        "dev-rust/lazy_static"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/lazy_static"
+      ],
+      "srcUris": {
+        "pkg-config-0.3.11.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/pkg-config/0.3.11/download"
+          ],
+          "size": 13227,
+          "integrity": "sha512-xeU6ndd3vOVYif33AoQYRDiWiQ/xIL6y/aXl/MVWJKrvwqwFjCtLyIUZ1IusxHc1GwqxxNSmW05L9mpppBmq5g==",
+          "SHA256": "",
+          "SHA512": "c5e53a9dd777bce55889fdf7028418443896890ff120beb2fda5e5fcc55624aaefc2ac058c2b4bc88519d48bacc477351b0ab1c4d4a65b4e4bf66a69a419aae6"
         }
       }
     }
@@ -13012,6 +14675,69 @@
           "SHA512": "cedb3433c6dfff39b404f8939c67e98303bb89a47e2cfb9659eeda1ca3e3d167800dca482374501632ab6d2283105dbd7560a157b48a351b2d3da059f946be55"
         }
       }
+    },
+    {
+      "version": "1.0.36",
+      "buildDeps": [
+        "dev-rust/unicode-xid"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/unicode-xid"
+      ],
+      "srcUris": {
+        "proc-macro2-1.0.36.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/proc-macro2/1.0.36/download"
+          ],
+          "size": 41411,
+          "integrity": "sha512-8xsPI1avJ0YyHE+Aismvh9IaVlfBA+1rwTg4VeQMr0kkbMjsHt/1jqzxk0JKv8IWMUi3KY5SdxTmXmAvFLLlCg==",
+          "SHA256": "",
+          "SHA512": "f31b0f2356af2746321c4f808ac9af87d21a5657c103ed6bc1383855e40caf49246cc8ec1edff58eacf193424abfc2163148b7298e527714e65e602f14b2e50a"
+        }
+      }
+    },
+    {
+      "version": "1.0.29",
+      "buildDeps": [
+        "dev-rust/unicode-xid"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/unicode-xid"
+      ],
+      "srcUris": {
+        "proc-macro2-1.0.29.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/proc-macro2/1.0.29/download"
+          ],
+          "size": 38772,
+          "integrity": "sha512-s7O3xpiK/rkiCcfgNi9F+cIHYRp0u2O8d0a4b7mrDXT+qeei2byKyUMiXqQ5VAcm/8E3EdxbywVsGCH8mejcYw==",
+          "SHA256": "",
+          "SHA512": "b3b3b7c6988afeb92209c7e0362f45f9c207611a74bb63bc7746b86fb9ab0d74fea9e7a2d9bc8ac943225ea439540726ffc13711dc5bcb056c1821fc99e8dc63"
+        }
+      }
+    },
+    {
+      "version": "0.4.21",
+      "buildDeps": [
+        "dev-rust/unicode-xid"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/unicode-xid"
+      ],
+      "srcUris": {
+        "proc-macro2-0.4.21.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/proc-macro2/0.4.21/download"
+          ],
+          "size": 30813,
+          "integrity": "sha512-ngYD1jTQdIBH28DkxE3OVMuhAm7XaUWwntciJMAVRlzIVB1ARRhfi4z2/zFtrsULxaOtfd9QFaqXETVJflJh7Q==",
+          "SHA256": "",
+          "SHA512": "9e0603d634d0748047dbc0e4c44dce54cba1026ed76945b09ed72224c015465cc8541d4045185f8b8cf6ff316daec50bc5a3ad7ddf5015aa971135497e5261ed"
+        }
+      }
     }
   ],
   "dev-rust/protobuf": [
@@ -13043,7 +14769,7 @@
   ],
   "dev-rust/protobuf-codegen": [
     {
-      "version": "2.24.1-r1",
+      "version": "2.24.1",
       "buildDeps": [
         "dev-rust/protobuf"
       ],
@@ -13144,6 +14870,29 @@
       "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {}
+    },
+    {
+      "version": "1.0.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    },
+    {
+      "version": "0.9.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
+    }
+  ],
+  "dev-rust/quickcheck_macros": [
+    {
+      "version": "0.8.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/quote": [
@@ -13167,6 +14916,27 @@
           "SHA512": "dd6cdaea183b85400531ef01e56657edbec0d8f7c27898c1e591b72dff755fa5875b33ca320bd65be0e9aecfc6a61ec119a4bd1291e9f2057fca642ab5b198c8"
         }
       }
+    },
+    {
+      "version": "0.6.10",
+      "buildDeps": [
+        "dev-rust/proc-macro2"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/proc-macro2"
+      ],
+      "srcUris": {
+        "quote-0.6.10.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/quote/0.6.10/download"
+          ],
+          "size": 15795,
+          "integrity": "sha512-kiUKNmT+hyF17oyKp8T+wSH/5vzsEalXZG+rEpfp6Ua+A5JM4deJcSXNwNSINACsBXdO1Voy+UOhKfqNSKGhYg==",
+          "SHA256": "",
+          "SHA512": "92250a3664fe872175ee8c8aa7c4fec121ffe6fcec11a957646fab1297e9e946be03924ce1d7897125cdc0d4883400ac05774ed55a32f943a129fa8d48a1a162"
+        }
+      }
     }
   ],
   "dev-rust/r0": [
@@ -13184,6 +14954,23 @@
           "integrity": "sha512-Gp0meK+wGxMqvxAFm07CnktP1Cs5EYqRQe0YTiDVAW2mFjqejoDOnIroKxhc9Hw6jAlOw2qug/I/bdyYwHzDpA==",
           "SHA256": "",
           "SHA512": "1a9d2678afb01b132abf10059b4ec29e4b4fd42b39118a9141ed184e20d5016da6163a9e8e80ce9c8ae82b185cf47c3a8c094ec36aae83f23f6ddc98c07cc3a4"
+        }
+      }
+    },
+    {
+      "version": "0.2.2",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "r0-0.2.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/r0/0.2.2/download"
+          ],
+          "size": 7648,
+          "integrity": "sha512-Ljy66CwhsonN3kLDfPxWOgpCRjyXYxL9uoYPD7lBcuyxLpBZzNEcE1ZC84OfdBZKrQqsS2XdcuSbVBt36wWT6Q==",
+          "SHA256": "",
+          "SHA512": "2e3cbae82c21b289cdde42c37cfc563a0a42463c976312fdba860f0fb94172ecb12e9059ccd11c135642f3839f74164aad0aac4b65dd72e49b541b77eb0593e9"
         }
       }
     }
@@ -13246,6 +15033,118 @@
           "SHA512": "77ae0e988e31e12f7d3f2c40814f930eecbc94c4aced827c337be78eeeabf39fde2dc5c4fda059afdc01285ff4afe30393c32694377de004feff16207606558e"
         }
       }
+    },
+    {
+      "version": "0.7.3",
+      "buildDeps": [
+        "dev-rust/getrandom",
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_chacha",
+        "dev-rust/rand_core",
+        "dev-rust/rand_hc",
+        "dev-rust/rand_pcg"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/getrandom",
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_chacha",
+        "dev-rust/rand_core",
+        "dev-rust/rand_hc",
+        "dev-rust/rand_pcg"
+      ],
+      "srcUris": {
+        "rand-0.7.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand/0.7.3/download"
+          ],
+          "size": 112246,
+          "integrity": "sha512-+baO+URvHKLICSxQmQ8VwbTLVSnu6sTfjWl1XgtyU8ZjxYd3XnywpymMMe20RJdd2jSSZ1kwZUH21D0NPPV7fg==",
+          "SHA256": "",
+          "SHA512": "f9b68ef9446f1ca2c8092c50990f15c1b4cb5529eeeac4df8d69755e0b7253c663c587775e7cb0a7298c31edb444975dda34926759306541f6d43d0d3cf57b7e"
+        }
+      }
+    },
+    {
+      "version": "0.6.5",
+      "buildDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/average",
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_chacha",
+        "dev-rust/rand_core",
+        "dev-rust/rand_hc",
+        "dev-rust/rand_isaac",
+        "dev-rust/rand_jitter",
+        "dev-rust/rand_os",
+        "dev-rust/rand_pcg",
+        "dev-rust/rand_xorshift",
+        "dev-rust/rand_xoshiro",
+        "dev-rust/winapi"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/average",
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_chacha",
+        "dev-rust/rand_core",
+        "dev-rust/rand_hc",
+        "dev-rust/rand_isaac",
+        "dev-rust/rand_jitter",
+        "dev-rust/rand_os",
+        "dev-rust/rand_pcg",
+        "dev-rust/rand_xorshift",
+        "dev-rust/rand_xoshiro",
+        "dev-rust/winapi"
+      ],
+      "srcUris": {
+        "rand-0.6.5.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand/0.6.5/download"
+          ],
+          "size": 104814,
+          "integrity": "sha512-LrhL7Slwi4uhCfQym/bxysbK7Z2RsqrxhdaN0u2nPT+3viiX0FlvsoNS55nM+SwWHuRFmdXLQmupw7jHR4MZBA==",
+          "SHA256": "",
+          "SHA512": "2eb84bed29708b8ba109f4329bf6f1cac6caed9d91b2aaf185d68dd2eda73d3fb7be2897d0596fb28352e799ccf92c161ee44599d5cb426ba9c3b8c747831904"
+        }
+      }
+    },
+    {
+      "version": "0.4.2",
+      "buildDeps": [
+        "dev-rust/fuchsia-zircon",
+        "dev-rust/libc",
+        "dev-rust/winapi"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/fuchsia-zircon",
+        "dev-rust/libc",
+        "dev-rust/winapi"
+      ],
+      "srcUris": {
+        "rand-0.4.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand/0.4.2/download"
+          ],
+          "size": 76170,
+          "integrity": "sha512-rG6vnwkU/ZZsg1oE7GRMWo1ipKY0GH1TjOz7cRlVqXcjTcX+SHzU01FRS8DeT1HL0PCaj2qsVqoEZ65esXpPrQ==",
+          "SHA256": "",
+          "SHA512": "ac6eaf9f0914fd966c835a04ec644c5a8d62a4a634187d538cecfb711955a977234dc5fe487cd4d351514bc0de4f51cbd0f09a8f6aac56aa0467ae5eb17a4fad"
+        }
+      }
+    },
+    {
+      "version": "0.3.20",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/rand_chacha": [
@@ -13273,6 +15172,52 @@
           "SHA512": "8198c580b1b9b0429758ffa49cd8138fa3ce724f0dcf73c767ea7e55611d6a2e4c7cad9950896510def500ce4062b594386c947ac3d89425b4e5c9b04d0b8075"
         }
       }
+    },
+    {
+      "version": "0.2.2",
+      "buildDeps": [
+        "dev-rust/ppv-lite86",
+        "dev-rust/rand_core"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/ppv-lite86",
+        "dev-rust/rand_core"
+      ],
+      "srcUris": {
+        "rand_chacha-0.2.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_chacha/0.2.2/download"
+          ],
+          "size": 13267,
+          "integrity": "sha512-HiEXRC5P/dg03L8OoYKecyAsD/kEHVlp2BpZMwJCFF8nU/KlbeL9v/ZfJs8NInx9CLIJSrL5RrdkrviBBqashA==",
+          "SHA256": "",
+          "SHA512": "1e2117442e4ffdd834dcbf0ea1829e73202c0ff9041d5969d81a59330242145f2753f2a56de2fdbff65f26cf0d227c7d08b2094ab2f946b764aef88106a6ac84"
+        }
+      }
+    },
+    {
+      "version": "0.1.1",
+      "buildDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/rand_core_transitional"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/rand_core_transitional"
+      ],
+      "srcUris": {
+        "rand_chacha-0.1.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_chacha/0.1.1/download"
+          ],
+          "size": 11703,
+          "integrity": "sha512-IA05Ni/9bZHP6AY06VHHMjpd+KOCyR46/O8eyxQ6FtxHoX238adGsY5OqL/Ta8Mc6u/20BFuFm+LNOSoUws8Gw==",
+          "SHA256": "",
+          "SHA512": "200d39362ffd6d91cfe80634e951c7323a5df8a382c91e3afcef1ecb143a16dc47a17db7f1a746b18e4ea8bfd36bc31ceaeff6d0116e166f8b34e4a8530b3c1b"
+        }
+      }
     }
   ],
   "dev-rust/rand_core": [
@@ -13298,6 +15243,75 @@
           "SHA512": "0fc31f96ca8ebba8c179367de01458e909265e1d627ec0c5620be7c8e83d2f9570471d6ec2cb2bc4bc531505b02fc31f1165708cc1357906791c87123b06ee87"
         }
       }
+    },
+    {
+      "version": "0.5.1",
+      "buildDeps": [
+        "dev-rust/getrandom",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/getrandom",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "rand_core-0.5.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_core/0.5.1/download"
+          ],
+          "size": 21116,
+          "integrity": "sha512-T3UAs14WXmyBf91npQdF1Ul9JOVUu1VHBQl+NyWHUeh1XE1rimn8teGXdwi6eGILw11kDk4Bj81OiNnb2+vcvw==",
+          "SHA256": "",
+          "SHA512": "4f7500b35e165e6c817fdd67a50745d5497d24e554bb554705097e37258751e8755c4d6b8a69fcb5e1977708ba78620bc35d640e4e018fcd4e88d9dbdbebdcbf"
+        }
+      }
+    },
+    {
+      "version": "0.4.0",
+      "buildDeps": [
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "srcUris": {
+        "rand_core-0.4.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_core/0.4.0/download"
+          ],
+          "size": 20326,
+          "integrity": "sha512-+A522r0zCKEogKmqi3voPbObAneMlbtj+GJIh4mipn4vCNTy3RrYA8Yd8Kn8f2YgqnU7O/OUVCzifIkYmpEYRQ==",
+          "SHA256": "",
+          "SHA512": "f80e76dabd3308a12880a9aa8b7be83db39b02778c95bb63f862488789a2a67e2f08d4f2dd1ad803c61df0a9fc7f6620aa753b3bf394542ce27c89189a911845"
+        }
+      }
+    }
+  ],
+  "dev-rust/rand_core_transitional": [
+    {
+      "version": "0.3.1",
+      "buildDeps": [
+        "dev-rust/rand_core"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rand_core"
+      ],
+      "srcUris": {
+        "rand_core-0.3.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_core/0.3.1/download"
+          ],
+          "size": 15483,
+          "integrity": "sha512-WnrmARJFAr7edg/TF5wrKAWevDtZg7/La4+mL7WN+Vztwa6yc055LYlN+kYggBwTwpcC+cvuZCQxIVddS2uRFA==",
+          "SHA256": "",
+          "SHA512": "5a7ae601124502bede760fd3179c2b28059ebc3b5983bfcb6b8fa62fb58df95cedc1aeb2734e792d894dfa4620801c13c29702f9cbee64243121575d4b6b9114"
+        }
+      }
     }
   ],
   "dev-rust/rand_hc": [
@@ -13321,6 +15335,223 @@
           "SHA512": "582bb44b81c27e698eb57c6f06444b8a7c9d3f7ee73f4e14be8004c4bfd3bbfd9795c69f7294b5e87107e86b90fa3e91ad080964474af81c92705d356e43fbb5"
         }
       }
+    },
+    {
+      "version": "0.2.0",
+      "buildDeps": [
+        "dev-rust/rand_core"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rand_core"
+      ],
+      "srcUris": {
+        "rand_hc-0.2.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_hc/0.2.0/download"
+          ],
+          "size": 11670,
+          "integrity": "sha512-vKGFYSvtXO5Np2+2j+hUEF2idvW/LaRk5ZbVhrkl33mMxpLtiB4nard8NrSwVRkwlmyTZWvhIq0FiZ2HhTUzsA==",
+          "SHA256": "",
+          "SHA512": "bca185612bed5cee4da76fb68fe854105da276f5bf2da464e596d586b925df798cc692ed881e276ab77c36b4b0551930966c93656be122ad05899d87853533b0"
+        }
+      }
+    },
+    {
+      "version": "0.1.0",
+      "buildDeps": [
+        "dev-rust/rand_core_transitional"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rand_core_transitional"
+      ],
+      "srcUris": {
+        "rand_hc-0.1.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_hc/0.1.0/download"
+          ],
+          "size": 11644,
+          "integrity": "sha512-gI2MFn2qZqJgiITV0/FETNsh+MocYeWfyb37UGpjTrsiwBQ8/AV04VMT+CVZ/S0RekaRDro7TrfgBS7CgPXNLw==",
+          "SHA256": "",
+          "SHA512": "808d8c167daa66a2608884d5d3f1444cdb21f8ca1c61e59fc9bdfb506a634ebb22c0143cfc0574e15313f82559fd2d117a46910eba3b4eb7e0052ec280f5cd2f"
+        }
+      }
+    }
+  ],
+  "dev-rust/rand_isaac": [
+    {
+      "version": "0.1.1-r1",
+      "buildDeps": [
+        "dev-rust/rand_core_transitional",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rand_core_transitional",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "srcUris": {
+        "rand_isaac-0.1.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_isaac/0.1.1/download"
+          ],
+          "size": 16020,
+          "integrity": "sha512-no9seavFM1LJcfgYLcqnl5kE1WSe7JAIJiuwqvBYW0xIFzUc2A/6jQfxcv9MgthaCe8mQqCPYI/Gvj4kbtf4Lg==",
+          "SHA256": "",
+          "SHA512": "9e8f6c79abc53352c971f8182dcaa7979904d5649eec9008262bb0aaf0585b4c4817351cd80ffa8d07f172ff4c82d85a09ef2642a08f608fc6be3e246ed7f82e"
+        }
+      }
+    }
+  ],
+  "dev-rust/rand_jitter": [
+    {
+      "version": "0.1.3",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_core",
+        "dev-rust/winapi"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_core",
+        "dev-rust/winapi"
+      ],
+      "srcUris": {
+        "rand_jitter-0.1.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_jitter/0.1.3/download"
+          ],
+          "size": 18341,
+          "integrity": "sha512-pwu1lne8grTwtlSdiQexzeLhUpQ1hmuRYcu+8ornn37apAZ/xkmIACZ/lE2FOUBnC90JPUN8qMyE6ysOptzVUQ==",
+          "SHA256": "",
+          "SHA512": "a70bb59677bc82b4f0b6549d8907b1cde2e1529435866b9161cbbef28ae79f7edaa4067fc6498800267f944d853940670bdd093d437ca8cc84eb2b0ea6dcd551"
+        }
+      }
+    }
+  ],
+  "dev-rust/rand_os": [
+    {
+      "version": "0.1.2",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_core",
+        "dev-rust/stdweb",
+        "dev-rust/wasm-bindgen"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/rand_core",
+        "dev-rust/stdweb",
+        "dev-rust/wasm-bindgen"
+      ],
+      "srcUris": {
+        "rand_os-0.1.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_os/0.1.2/download"
+          ],
+          "size": 18359,
+          "integrity": "sha512-xP/kyNC13PQMobGAS9SRNFxBHJ6xBb4kwDOqena9gIr20G/8sWi61y5a216yQIJ9459IPYAHap8ogxb9UePXkA==",
+          "SHA256": "",
+          "SHA512": "c4ffe4c8d0b5dcf40ca1b1804bd491345c411c9eb105be24c033aa7a76bd808af6d06ffcb168bad72e5adb5eb240827de39f483d80076a9f288316fd51e3d790"
+        }
+      }
+    }
+  ],
+  "dev-rust/rand_pcg": [
+    {
+      "version": "0.2.1",
+      "buildDeps": [
+        "dev-rust/rand_core",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rand_core",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "rand_pcg-0.2.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_pcg/0.2.1/download"
+          ],
+          "size": 11291,
+          "integrity": "sha512-YSwNHNxZH4BzO/gJfiUfAu96fnHK+3Tje2OsaAQ1WARcDJYZYgCtB856qfLTc2QMIOWYrld0k1yLUjUOwglYug==",
+          "SHA256": "",
+          "SHA512": "612c0d1cdc591f80733bf8097e251f02ef7a7e71cafb74e37b63ac68043558045c0c96196200ad07ce7aa9f2d373640c20e598ae5774935c8b52350ec20958ba"
+        }
+      }
+    },
+    {
+      "version": "0.1.2-r1",
+      "buildDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/rand_core",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/autocfg",
+        "dev-rust/rand_core",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "srcUris": {
+        "rand_pcg-0.1.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_pcg/0.1.2/download"
+          ],
+          "size": 10844,
+          "integrity": "sha512-a8aEd4umDC5IeT1HWbQMsNNbC8IMoPw5/f98P4/pCC3XtdXyan8XuvxvNWiSTqwbvkWCCxwrCckXMepUh9dtnA==",
+          "SHA256": "",
+          "SHA512": "6bc684778ba60c2e48793d4759b40cb0d35b0bc20ca0fc39fdff7c3f8fe9082dd7b5d5f26a7f17bafc6f3568924eac1bbe45820b1c2b09c91731ea5487d76d9c"
+        }
+      }
+    }
+  ],
+  "dev-rust/rand_xorshift": [
+    {
+      "version": "0.1.1-r1",
+      "buildDeps": [
+        "dev-rust/rand_core_transitional",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rand_core_transitional",
+        "dev-rust/serde",
+        "dev-rust/serde_derive"
+      ],
+      "srcUris": {
+        "rand_xorshift-0.1.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rand_xorshift/0.1.1/download"
+          ],
+          "size": 8997,
+          "integrity": "sha512-MgVJntJYRGfe20ZBpI88qP7cJjsdlDHTaiUa8LxHAdmc5LUhnVFbmyQhDdPvL6rObvqIaqUPNh4H9T3Q+whB5Q==",
+          "SHA256": "",
+          "SHA512": "3205499ed2584467dedb4641a48f3ca8fedc263b1d9431d36a251af0bc4701d99ce4b5219d515b9b24210dd3ef2faace6efa886aa50f361e07f53dd0fb0841e5"
+        }
+      }
+    }
+  ],
+  "dev-rust/rand_xoshiro": [
+    {
+      "version": "0.1.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/ravif": [
@@ -13334,7 +15565,7 @@
   ],
   "dev-rust/rayon": [
     {
-      "version": "1.5.0-r2",
+      "version": "1.5.0",
       "buildDeps": [
         "dev-rust/autocfg",
         "dev-rust/crossbeam-deque",
@@ -13359,11 +15590,32 @@
           "SHA512": "be15cbc7ad0fadb55e5640c78aa2eeac282872be88c5402338caad0a7ea604d2b8477648dcf7e453e22fbcdfefa915aa4bdbfa75e3d4f7a993fd8d85ed68395a"
         }
       }
+    },
+    {
+      "version": "0.8.2",
+      "buildDeps": [
+        "dev-rust/rayon-core"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rayon-core"
+      ],
+      "srcUris": {
+        "rayon-0.8.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rayon/0.8.2/download"
+          ],
+          "size": 101907,
+          "integrity": "sha512-7YYkhd/vd+bDN1543mF5GBrg/HMV03Ne6YytTeCNLt/6nTpkEXSXrhxfTSh9lK66BpR2nScg7FJj2oUJsSzzrg==",
+          "SHA256": "",
+          "SHA512": "ed862485dfef77e6c3375e78de6179181ae0fc7315d3735ee98cad4de08d2edffa9d3a64117497ae1c5f4d287d94aeba0694769d2720ec5263da8509b12cf3ae"
+        }
+      }
     }
   ],
   "dev-rust/rayon-core": [
     {
-      "version": "1.9.0-r1",
+      "version": "1.9.0",
       "buildDeps": [
         "dev-rust/crossbeam-channel",
         "dev-rust/crossbeam-deque",
@@ -13390,6 +15642,15 @@
           "SHA512": "d05b4c1e7bcb1c4e9238ab08bde39f08f069a08593084f041720694bae8bd524d1761766beb93e97784d7d541bde3e290446344fe129b0e10491405c1577366f"
         }
       }
+    }
+  ],
+  "dev-rust/redox_syscall": [
+    {
+      "version": "0.1.51",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/regex": [
@@ -13522,6 +15783,13 @@
           "SHA512": "2d7632ce04742bd852d8a0159eb3bdcd000f23595726bfed2e9f91da5cb2b0d251613338164950fc9cf1c547de33d1a07744a3c5729ed2d4328002648f6e43a9"
         }
       }
+    },
+    {
+      "version": "0.6.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/riscv-rt": [
@@ -13674,6 +15942,31 @@
           "SHA512": "8cd903f4d574afc37415292299b6fcb2dcd3b0a6050e7452821e7177d8e22cde64171c7cea8f902882075744813dccd1d20dfd5cbd99c02f7a34b2d154e7ffa3"
         }
       }
+    },
+    {
+      "version": "0.4.0",
+      "buildDeps": [
+        "dev-rust/indexmap",
+        "dev-rust/proc-macro2",
+        "dev-rust/syn"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/indexmap",
+        "dev-rust/proc-macro2",
+        "dev-rust/syn"
+      ],
+      "srcUris": {
+        "rtic-syntax-0.4.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rtic-syntax/0.4.0/download"
+          ],
+          "size": 34222,
+          "integrity": "sha512-iT3MyHo3Ngx8oJEGzL7UMMGiFdWAQ5QtTEQNumbUgepBzrBI1QttLIWKQGDcHRgynwtDKAUaaqBk2CJpiMY88Q==",
+          "SHA256": "",
+          "SHA512": "893dccc87a37360c7ca09106ccbed430c1a215d58043942d4c440dba66d481ea41ceb048d50b6d2c858a4060dc1d18329f0b4328051a6aa064d8226988c63cf1"
+        }
+      }
     }
   ],
   "dev-rust/rtt-target": [
@@ -13724,6 +16017,29 @@
           "integrity": "sha512-0x6tAioBK6VNzycixccTMJOnsAxaMEw8WwKYc42wfsAL7s0JWy0iJG9l1DqTDwOfWbygLA/SkaUiAlq/f+RH3A==",
           "SHA256": "",
           "SHA512": "d31ead022a012ba54dcf2722c5c7133093a7b00c5a304c3c5b0298738db07ec00beecd095b2d22246f65d43a930f039f59bca02c0fd291a522025abf7fe447dc"
+        }
+      }
+    },
+    {
+      "version": "0.6.2",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/libusb1-sys"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/libusb1-sys"
+      ],
+      "srcUris": {
+        "rusb-0.6.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rusb/0.6.2/download"
+          ],
+          "size": 35836,
+          "integrity": "sha512-7htX3YjXxguJcx3fKz9d/N9BGV5QVu/s2bFvG8mQK0eLnX/pE+2hPimTVVULyiFNksG/gvRksY3thufnT4IDtA==",
+          "SHA256": "",
+          "SHA512": "ee1b57dd88d7c60b89731ddf2b3f5dfcdf41195e5056efecd9b16f1bc9902b478b9d7fe913eda13e299355550bca214d92c1bf82f464b18ded86e7e74f8203b4"
         }
       }
     }
@@ -13778,7 +16094,7 @@
   ],
   "dev-rust/rustc-serialize": [
     {
-      "version": "0.3.24-r1",
+      "version": "0.3.24",
       "buildDeps": [
         "dev-rust/rand"
       ],
@@ -13845,6 +16161,27 @@
           "integrity": "sha512-9m2nxu/kMdsGzQEYDYS6Z/zTj4zW72k3YpV8AMzCIR8jwIB51/GEd24I8o0tbKO9tfUBb33iRcYZPUciiRuh2w==",
           "SHA256": "",
           "SHA512": "f66da7c6efe431db06cd01180d84ba67fcd38f8cd6ef693762957c00ccc2211f23c08079d7f184776e08f28d2d6ca3bdb5f5016f7de245c6193d4722891ba1db"
+        }
+      }
+    },
+    {
+      "version": "0.2.3",
+      "buildDeps": [
+        "dev-rust/semver"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/semver"
+      ],
+      "srcUris": {
+        "rustc_version-0.2.3.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/rustc_version/0.2.3/download"
+          ],
+          "size": 10210,
+          "integrity": "sha512-Afp6dY3KpPFcGGKKDV7lrd5a3paot93gkI454nspDR6a2yDUTirc03k0HS1KDDSoDcElU6O7TvpHWJiPKJiXeQ==",
+          "SHA256": "",
+          "SHA512": "01fa7a758dcaa4f15c18628a0d5ee5adde5ade96a8b7dde0908e39e27b290d1e9adb20d44e2adcd379341d2d4a0c34a80dc12553a3bb4efa4758988f28989779"
         }
       }
     }
@@ -13972,6 +16309,56 @@
           "SHA512": "8af01b90d00873587f113b30d750bc5af89ad0e24ca6c2d71d2afd7244023e321effd6aa25b6cbfffaf173ae646ff8a701148e6bfd3a625f9d14e37baec65c19"
         }
       }
+    },
+    {
+      "version": "0.9.0",
+      "buildDeps": [
+        "dev-rust/crates-index",
+        "dev-rust/semver-parser",
+        "dev-rust/serde",
+        "dev-rust/serde_derive",
+        "dev-rust/serde_json",
+        "dev-rust/tempdir"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/crates-index",
+        "dev-rust/semver-parser",
+        "dev-rust/serde",
+        "dev-rust/serde_derive",
+        "dev-rust/serde_json",
+        "dev-rust/tempdir"
+      ],
+      "srcUris": {
+        "semver-0.9.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/semver/0.9.0/download"
+          ],
+          "size": 17344,
+          "integrity": "sha512-A6LqVjRW+BLDAXIcNXI3D+STSiLbYAedoN1v+jP6eJ5eJDbvCeYvw14LdCsG+rwpCZLHTu2AQZo1PJ3pRJko3A==",
+          "SHA256": "",
+          "SHA512": "03a2ea563456f812c301721c3572370fe4934a22db60079da0dd6ffa33fa789e5e2436ef09e62fc35e0b742b06fabc290992c74eed80419a353c9de9449928dc"
+        }
+      }
+    }
+  ],
+  "dev-rust/semver-parser": [
+    {
+      "version": "0.7.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "semver-parser-0.7.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/semver-parser/0.7.0/download"
+          ],
+          "size": 10268,
+          "integrity": "sha512-FzIEaOxrmGLVlfNY1wwJrG4J23iF/g6teh5Zb3k1CmMG6L/eW71lEgCKfFRU2hx65V/h47wcH/Aqyd9UwKYSHw==",
+          "SHA256": "",
+          "SHA512": "17320468ec6b9862d595f358d70c09ac6e09db7885fe0ead7a1e596f79350a6306e8bfde5bbd6512008a7c5454da1c7ae55fe1e3bc1c1ff02ac9df54c0a6121f"
+        }
+      }
     }
   ],
   "dev-rust/serde": [
@@ -13995,6 +16382,34 @@
           "SHA512": "d043ccfd6a1dc9a114a1a95530a63ed9342688d31d3aadeec600a9a9d47aad328be35b6f80080400ea4bb3f820ddd18cc5ce1e6ea1db28e02752962061e71019"
         }
       }
+    },
+    {
+      "version": "1.0.125",
+      "buildDeps": [
+        "dev-rust/serde_derive"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/serde_derive"
+      ],
+      "srcUris": {
+        "serde-1.0.125.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/serde/1.0.125/download"
+          ],
+          "size": 75144,
+          "integrity": "sha512-7SgZ1njnQF4tigzBtDVAq/KtiHHu2kmFr143AWpCuTjXQpxOhlzsKuU2TMf74QUqWkbqUbQsPtW5x8GstZasOw==",
+          "SHA256": "",
+          "SHA512": "ed2819d678e7405e2d8a0cc1b43540abf2ad8871eeda4985af5e37016a42b938d7429c4e865cec2ae5364cc7fbe1052a5a46ea51b42c3ed5b9c7c1acb596ac3b"
+        }
+      }
+    },
+    {
+      "version": "0.8.23",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/serde_bytes": [
@@ -14051,6 +16466,31 @@
           "SHA512": "92c99455a5a9ac0fe45eb6ff1ad3ea55db860031fb912ace3755d1d2aad0dd880b2d83add4d41872823bd60557ebe1cb36e898bf0ac975b1093caa9819f7c289"
         }
       }
+    },
+    {
+      "version": "1.0.125",
+      "buildDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn"
+      ],
+      "srcUris": {
+        "serde_derive-1.0.125.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/serde_derive/1.0.125/download"
+          ],
+          "size": 54155,
+          "integrity": "sha512-3U4kfJWBtDcVfzfjVbwzNaOSdBeSCsznLnPW/gWoDhn7MWDHKr7eeELn1UdJwzqUM1/p80aML1YSZ7hj3zaKbw==",
+          "SHA256": "",
+          "SHA512": "dd4e247c9581b437157f37e355bc3335a3927417920acce72e73d6fe05a80e19fb3160c72abede7842e7d54749c33a94335fe9f3468c2f561267b863df368a6f"
+        }
+      }
     }
   ],
   "dev-rust/serde_json": [
@@ -14080,6 +16520,40 @@
           "SHA512": "83987c1a7eddc6adf8ae359c30e2db1fea98edabd6dc49bde840c37a56258fa845612e8ae270a7dca4cfbe9a3532dc55028091e14cdf1dd3b1ceea4bb86a2dd7"
         }
       }
+    },
+    {
+      "version": "1.0.64",
+      "buildDeps": [
+        "dev-rust/indexmap",
+        "dev-rust/itoa",
+        "dev-rust/ryu",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/indexmap",
+        "dev-rust/itoa",
+        "dev-rust/ryu",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "serde_json-1.0.64.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/serde_json/1.0.64/download"
+          ],
+          "size": 115138,
+          "integrity": "sha512-VaRd1MYP2T0tkzH2qOrDn9/s6d3BquReon49+oE1LwjHG/A5BrqZ0P61342Ee2hUfsqo61osdgEeu+jUzVv8LQ==",
+          "SHA256": "",
+          "SHA512": "55a45dd4c60fd93d2d9331f6a8eac39fdfece9ddc1aae45ea27e3dfa81352f08c71bf03906ba99d0feb5df8d847b68547ecaa8eb5a2c76011ebbe8d4cd5bfc2d"
+        }
+      }
+    },
+    {
+      "version": "0.8.6",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/serde_test": [
@@ -14297,6 +16771,29 @@
           "SHA512": "9e6061c8211a4485ab54eb541adf40748e1fc3fdfab0849e38e5fd34fc6cc69ae78bd065b788692385a6b8157b031c2fe373900e13d3e56e94fc08d574edaaad"
         }
       }
+    },
+    {
+      "version": "0.6.14",
+      "buildDeps": [
+        "dev-rust/maybe-uninit",
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/maybe-uninit",
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "smallvec-0.6.14.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/smallvec/0.6.14/download"
+          ],
+          "size": 22855,
+          "integrity": "sha512-S6VjtUKSJSNWbvvgqsnfSZxpS+qbqLoUp0Am1RbgLx+o9UJ3S4BEFQqOJ/AaSxxxxSgLWoL2HVtF8CLtIj85dw==",
+          "SHA256": "",
+          "SHA512": "4ba563b542922523566efbe0aac9df499c694bea9ba8ba14a74026d516e02f1fa8f542774b8044150a8e27f01a4b1c71c5280b5a82f61d5b45f022ed223f3977"
+        }
+      }
     }
   ],
   "dev-rust/smawk": [
@@ -14327,6 +16824,35 @@
           "integrity": "sha512-ZiT7m5M3Y8IuYRSo9yxq8JaZEnFwF91bE/G13xn6obFgN2wS6MgCPENSgfanhk6ALzxMU13oo0X+IGZSEE8s1Q==",
           "SHA256": "",
           "SHA512": "6624fb9b933763c22e6114a8f72c6af0969912717017dd5b13f1b5df19faa1b160376c12e8c8023c435281f6a7864e802f3c4c535de8a345fe206652104f2cd5"
+        }
+      }
+    },
+    {
+      "version": "0.3.9",
+      "buildDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/libc",
+        "dev-rust/redox_syscall",
+        "dev-rust/tempdir",
+        "dev-rust/winapi"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/libc",
+        "dev-rust/redox_syscall",
+        "dev-rust/tempdir",
+        "dev-rust/winapi"
+      ],
+      "srcUris": {
+        "socket2-0.3.9.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/socket2/0.3.9/download"
+          ],
+          "size": 29791,
+          "integrity": "sha512-Umsu8KkoNXwf8+2ZiEKv/+HR51i6SA+SKw/hLLtIzIESeFVPmd5jNF5sErUCe3OESK2/tGp4/VBVXdh+anAeRw==",
+          "SHA256": "",
+          "SHA512": "526b2ef0a928357c1ff3ed998842afffe1d1e758ba480f922b0fe12cbb48cc811278554f99de63345e6c12b5027b738448adbfb46a78fd50555dd87e6a701e47"
         }
       }
     }
@@ -14408,6 +16934,23 @@
           "SHA512": "156b1c471292e8cb874b59129454b56b5e84a0f10b5d064433e0abfc3384c1a594b12b095acd26da350d7f81e6849da9c07c9a506b4aa0ac4808ce3f70b5511c"
         }
       }
+    },
+    {
+      "version": "0.5.2",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "spin-0.5.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/spin/0.5.2/download"
+          ],
+          "size": 12004,
+          "integrity": "sha512-/Ff3kG2it6KYxfiSFeiB6IJ7TZ+TTb8Tgzjg7jASLYRZSDvlZiaPo3S0HWPY2/ZdQuCzIlNbo1yCfX7bIXbyZw==",
+          "SHA256": "",
+          "SHA512": "fc57f7906da2b7a298c5f89215e881e8827b4d9f934dbf138338e0ee30122d8459483be566268fa374b41d63d8dbf65d42e0b322535ba35c827d7edb2176f267"
+        }
+      }
     }
   ],
   "dev-rust/stable_deref_trait": [
@@ -14458,6 +17001,15 @@
           "SHA512": "35ac3c2301347cd0ed2f76fbc65200bc4125e87df170950d8ba146d699b50c8fe5cfa6b640908a5c522f5dde9caf0fe3acec166c516d9dc1523b328dd6217ce2"
         }
       }
+    }
+  ],
+  "dev-rust/stdweb": [
+    {
+      "version": "0.4.20",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/stm32g0": [
@@ -14539,6 +17091,23 @@
           "SHA512": "78b318532addfcf5c1ccc1e14539e258aab9d3cd893cc45d82342549bde838c177d90f13c560671f8f32929af47d0b467db35e6876bd7697d8b3f9e055aeeac1"
         }
       }
+    },
+    {
+      "version": "0.8.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "strsim-0.8.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/strsim/0.8.0/download"
+          ],
+          "size": 9309,
+          "integrity": "sha512-HVWo2UbNVfXzfQaupTZUne2Vc5+ljA8tooWgBBFUwYH2Y2gr3KxkOqGYs+di1pSgTwWNuYXGLr4itcFjJ7ptNA==",
+          "SHA256": "",
+          "SHA512": "1d55a8d946cd55f5f37d06aea536549ded95739fa58c0f2da285a0041154c181f663682bdcac643aa198b3e762d694a04f058db985c62ebe22b5c16327ba6d34"
+        }
+      }
     }
   ],
   "dev-rust/sval": [
@@ -14573,6 +17142,56 @@
           "integrity": "sha512-KP4oqdTpqzYQhQwXBL5vOE6f/xkbGl4R+XZr2tqBo+dCbLx3a71j6mcQMgx0FqYiUG1KjWB9l4r1BtOBZY1L/w==",
           "SHA256": "",
           "SHA512": "28fe28a9d4e9ab3610850c1704be6f384e9fff191b1a5e11f9766bdada81a3e7426cbc776bbd63ea6710320c7416a622506d4a8d607d978af506d381658d4bff"
+        }
+      }
+    },
+    {
+      "version": "1.0.72",
+      "buildDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/unicode-xid"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/unicode-xid"
+      ],
+      "srcUris": {
+        "syn-1.0.72.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/syn/1.0.72/download"
+          ],
+          "size": 232500,
+          "integrity": "sha512-8B4u90/D+Ep1PBw3nCTjxj88V11yq4Zfjn1R9N7kKTrIGXtOEj66qULpGZvwoNgZTlelqmMUvuaVHT1Fjfw9qQ==",
+          "SHA256": "",
+          "SHA512": "f01e2ef74fc3f84a753c1c379c24e3c63f3c575d72ab865f8e7d51f4dee4293ac8197b4e123ebaa942e9199bf0a0d8194e57a5aa6314bee6951d3d458dfc3da9"
+        }
+      }
+    },
+    {
+      "version": "0.15.26-r1",
+      "buildDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/unicode-xid"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/unicode-xid"
+      ],
+      "srcUris": {
+        "syn-0.15.26.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/syn/0.15.26/download"
+          ],
+          "size": 145493,
+          "integrity": "sha512-lH1w3/g//TP9qAZZfVTlclVbVMFgDjV9+RkWX9xxQcb5dis38l+bhQ6Kd3XDO23z/JPz7/ErNrBZ5patkGGbqg==",
+          "SHA256": "",
+          "SHA512": "947d70dff83ffd33fda806597d54e572555b54c1600e357df919165fdc7141c6f9762b37f25f9b850e8a7775c33b6df3fc93f3eff12b36b059e696ad90619baa"
         }
       }
     }
@@ -14739,6 +17358,35 @@
           "SHA512": "fc3e0ef078d2414420e717b66517e9fc668a03b5d0cd0001aed6e477a92f2873877b873159bdf964e4cd670519e5a308bc7357674bd67ac320754221415aa36c"
         }
       }
+    },
+    {
+      "version": "4.0.1-r2",
+      "buildDeps": [
+        "dev-rust/error-chain",
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/time",
+        "dev-rust/unix_socket"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/error-chain",
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/time",
+        "dev-rust/unix_socket"
+      ],
+      "srcUris": {
+        "syslog-4.0.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/syslog/4.0.1/download"
+          ],
+          "size": 7131,
+          "integrity": "sha512-+v8hF/vzdzQxSeMKSzOP3Xmft+S/QlliwlI0I/gyKq518YDkpMQvFJcjlADMYKSc/PZcAMSEM6yVb/F+UgYzQQ==",
+          "SHA256": "",
+          "SHA512": "faff2117fbf377343149e30a4b338fdd799fb7e4bf425962c2523423f8322aae75f180e4a4c42f1497239400cc60a49cfcf65c00c48433ac956ff17e52063341"
+        }
+      }
     }
   ],
   "dev-rust/system_api": [
@@ -14770,6 +17418,31 @@
       "srcUris": {}
     }
   ],
+  "dev-rust/tempdir": [
+    {
+      "version": "0.3.7",
+      "buildDeps": [
+        "dev-rust/rand",
+        "dev-rust/remove_dir_all"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/rand",
+        "dev-rust/remove_dir_all"
+      ],
+      "srcUris": {
+        "tempdir-0.3.7.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/tempdir/0.3.7/download"
+          ],
+          "size": 11468,
+          "integrity": "sha512-5bAvfSYP9ZT8LbvUQeuK36Nu3pN/MsjIErRYFnwOSfXPSTxuv4POgAegrrlwFhaf2n9dKZb+zHL5QJ1vRj2bvg==",
+          "SHA256": "",
+          "SHA512": "e5b02f7d260ff594fc2dbbd441eb8adfa36ede937f32c8c812b458167c0e49f5cf493c6ebf83ce8007a0aeb97016169fda7f5d2996fecc72f9409d6f463d9bbe"
+        }
+      }
+    }
+  ],
   "dev-rust/tempfile": [
     {
       "version": "3.2.0",
@@ -14797,6 +17470,15 @@
           "SHA512": "56d1c5af7cb6863f9eac990354126979534aae7bf298bc8b1c918c7317ce2ba31f53089aaa1ecf8baa4a39d4111d74f4450be82b509b3c2aa0428880029e663a"
         }
       }
+    }
+  ],
+  "dev-rust/term_size": [
+    {
+      "version": "0.3.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/termcolor": [
@@ -14839,6 +17521,13 @@
           "SHA512": "96ec1bc8abd597f01ae59da567036d5d40b422764a4da662e2030c3ef4ce80a983c8b6a4ef1f34d88e649e0b1ea27b206d56a31924bcd2d31ff7e5a2e96d4201"
         }
       }
+    },
+    {
+      "version": "0.1.12",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/termios": [
@@ -14891,6 +17580,56 @@
           "integrity": "sha512-9EJxxULCLxek46RZJV+V5sAtmZ99a8hBTTlz/UrJNTqk70NpMqRTQHOBJpBUY9d2kCcV/qqTKTcfihTxS1p7/Q==",
           "SHA256": "",
           "SHA512": "f44271c542c22f17a4e3a459255f95e6c02d999f7d6bc8414d3973fd4ac9353aa4ef436932a45340738126905463d776902715feaa9329371f8a14f14b5a7bfd"
+        }
+      }
+    },
+    {
+      "version": "0.12.1",
+      "buildDeps": [
+        "dev-rust/hyphenation",
+        "dev-rust/terminal_size",
+        "dev-rust/unicode-width"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/hyphenation",
+        "dev-rust/terminal_size",
+        "dev-rust/unicode-width"
+      ],
+      "srcUris": {
+        "textwrap-0.12.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/textwrap/0.12.1/download"
+          ],
+          "size": 23964,
+          "integrity": "sha512-YHavyGEQ6XjVXN/eQeBeuEfFDaISN9iO7HOHNUfWAexs7cwj2tc4zO6eyW4EiNwmuk0L8DkRBpiodVQdedslwg==",
+          "SHA256": "",
+          "SHA512": "6076afc86110e978d55cdfde41e05eb847c50da21237d88eec73873547d601ec6cedcc23dad738ccee9ec96e0488dc26ba4d0bf039110698a875541d79db25c2"
+        }
+      }
+    },
+    {
+      "version": "0.11.0",
+      "buildDeps": [
+        "dev-rust/hyphenation",
+        "dev-rust/term_size",
+        "dev-rust/unicode-width"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/hyphenation",
+        "dev-rust/term_size",
+        "dev-rust/unicode-width"
+      ],
+      "srcUris": {
+        "textwrap-0.11.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/textwrap/0.11.0/download"
+          ],
+          "size": 17322,
+          "integrity": "sha512-9cD+Tyj/GjoJMejiNbUVekX2eWeYW8x1JBjF7DSB/KRKiuSAAIiImzfozQUz9T08RW1f/Rm3Z7P4Ooe0mi4gmg==",
+          "SHA256": "",
+          "SHA512": "f5c0fe4f28ff1a3a0931e8e235b5157a45f67967985bcc752418c5ec3481fca44a8ae4800088889b37e8cd0533f53d3c456d5ffd19b767b3f83a87b49a2e209a"
         }
       }
     }
@@ -14952,6 +17691,31 @@
       "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {}
+    },
+    {
+      "version": "3.3.0",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/redox_syscall",
+        "dev-rust/winapi"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/redox_syscall",
+        "dev-rust/winapi"
+      ],
+      "srcUris": {
+        "thread-id-3.3.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/thread-id/3.3.0/download"
+          ],
+          "size": 7514,
+          "integrity": "sha512-gevem3gN4fBS37QK+GDCh3zC8KR7/y1NWO2mKbnBh0dXxb/QdydzAbw+Bo46xJ61urjsZgWC9nePFqR9TGw+Gg==",
+          "SHA256": "",
+          "SHA512": "81ebde9b780de1f052dfb40af860c2877cc2f0a47bff2d4d58eda629b9c1874757c5bfd077277301bc3e068e3ac49eb5bab8ec660582f6778f16a47d4c6c3e1a"
+        }
+      }
     }
   ],
   "dev-rust/thread_local": [
@@ -15019,6 +17783,37 @@
           "integrity": "sha512-LdjFfS/CMtigUQnw1B+WT8WHNF7/CmjELCsWkNbaGkhoGI338Dvs4SFI50NLlzxHL7DIX6H4QAU9o7MM9sR+gA==",
           "SHA256": "",
           "SHA512": "2dd8c57d2fc232d8a05109f0d41f964fc587345eff0a68c42c2b1690d6da1a4868188df7f03bece12148e7434b973c472fb0c85fa1f840053da3b30cf6c47e80"
+        }
+      }
+    },
+    {
+      "version": "0.1.44",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/redox_syscall",
+        "dev-rust/rustc-serialize",
+        "dev-rust/wasi",
+        "dev-rust/winapi"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/log",
+        "dev-rust/redox_syscall",
+        "dev-rust/rustc-serialize",
+        "dev-rust/wasi",
+        "dev-rust/winapi"
+      ],
+      "srcUris": {
+        "time-0.1.44.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/time/0.1.44/download"
+          ],
+          "size": 28885,
+          "integrity": "sha512-c2o4Y3vgGToG+jXUK0hzsEoKNdhM0q+Ft/ZTobZ7lQeFdxNLsYe3d3MOc8zmf0N7Rf9ccrjj8fji7TQg6gMkzw==",
+          "SHA256": "",
+          "SHA512": "736a38637be0193a06fa35d42b4873b04a0a35d84cd2af85b7f653a1b67b95078577134bb187b777730e73cce67f437b45ff5c72b8e3f1f8e2ed3420ea0324cf"
         }
       }
     }
@@ -15129,7 +17924,10 @@
       "localSrc": [
         "//third_party/tlsdate:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-rust/chromeos-dbus-bindings",
+        "dev-rust/dbus"
+      ],
       "srcUris": {}
     }
   ],
@@ -15174,6 +17972,13 @@
           "SHA512": "db20c31ee19bfccf91b7f5c6495a1d49ca9492828b0d6d3877fb586fdddce369d6f828e05c04fd826c246235accf05fbfb0819965fc5c99aff23477f0bf71acd"
         }
       }
+    },
+    {
+      "version": "1.15.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/tokio-io": [
@@ -15201,6 +18006,13 @@
           "SHA512": "608341311f4bda9617634a2623033900bde1d6b9fc89ae52131838f033bdbdf8704114193d8409ea0e10bd53d6f7ab63d47e17b7abb41d3f8865ab36fd0532ef"
         }
       }
+    },
+    {
+      "version": "0.1.9",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/tokio-macros": [
@@ -15251,6 +18063,25 @@
           "integrity": "sha512-S4uSEpNLiov48J/JxjIZ872NIaG8XsT0II+oM3Q5Ud21PLmbX6J7m1nSIjzHSnJ01usZYlXkRlC7Yz4kslKQcw==",
           "SHA256": "",
           "SHA512": "4b8b9212934b8a8bf8f09fc9c63219f3bd8d21a1bc5ec4f4208fa833743951ddb53cb99b5fa27b9b59d2223cc74a7274d6eb196255e44650bb633e24b2529073"
+        }
+      }
+    }
+  ],
+  "dev-rust/typenum": [
+    {
+      "version": "1.13.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "typenum-1.13.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/typenum/1.13.0/download"
+          ],
+          "size": 40238,
+          "integrity": "sha512-DNC4hFCaW0olK+0QMJE5NQ/OJLXUu4h/TAdX7RjLJIHjMdfcMvyB9Mq+61hJ6J6l2S6pgVyymF5d9KAirHA94Q==",
+          "SHA256": "",
+          "SHA512": "0cd0b884509a5b4a252bed10309139350fce24b5d4bb887f4c0757ed18cb2481e331d7dc32fc81f4cabeeb5849e89ea5d92ea9815cb2985e5df4a022ac703de1"
         }
       }
     }
@@ -15414,6 +18245,27 @@
           "SHA512": "7459e9d2867308cac80a98d8dd0b0cce797e2830ea5ff55b878f7a37a6f5e1f0bc14340e1a29955298d660ba2be57754a1478d74851b1b90576dd5bc4231729f"
         }
       }
+    },
+    {
+      "version": "0.1.8",
+      "buildDeps": [
+        "dev-rust/smallvec"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/smallvec"
+      ],
+      "srcUris": {
+        "unicode-normalization-0.1.8.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/unicode-normalization/0.1.8/download"
+          ],
+          "size": 71158,
+          "integrity": "sha512-TjJFaJ1hYqIc7bQuB7F546rQNyijewBcLmv/ZEpu/Qa2vSaiCiVYYaAUQanRXEMYV12zAWJIuWoDQ2ISqkFFRw==",
+          "SHA256": "",
+          "SHA512": "4e3245689d6162a21cedb42e07b179e3aad03728a37b005c2e6bff644a6efd06b6bd26a20a255861a01441a9d15c4318575db3016248b96a03436212aa414547"
+        }
+      }
     }
   ],
   "dev-rust/unicode-segmentation": [
@@ -15460,6 +18312,31 @@
           "SHA512": "0f5ec46c57e3b5e50cb8430c89db8d9c129e80ca11a9c398b5312bfe95001e19ca3efbfeb01c3ac09c4ce7e26c6ee1f352f7e114ecef78cefd68c54d2d50f5f4"
         }
       }
+    },
+    {
+      "version": "0.1.8",
+      "buildDeps": [
+        "dev-rust/compiler_builtins",
+        "dev-rust/rustc-std-workspace-core",
+        "dev-rust/rustc-std-workspace-std"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/compiler_builtins",
+        "dev-rust/rustc-std-workspace-core",
+        "dev-rust/rustc-std-workspace-std"
+      ],
+      "srcUris": {
+        "unicode-width-0.1.8.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/unicode-width/0.1.8/download"
+          ],
+          "size": 16732,
+          "integrity": "sha512-Crum2mmBokUeAdk7vUdlLEbrb7B8wCFPMyWfsplFv9XuKzAuiD3cqPaOkhY18iJwG3MQ59oqXiJfhUmA0eR0sA==",
+          "SHA256": "",
+          "SHA512": "0abba6da6981a2451e01d93bbd47652c46eb6fb07cc0214f33259fb29945bfd5ee2b302e883ddca8f68e921635f222701b7310e7da2a5e225f854980d1e474b0"
+        }
+      }
     }
   ],
   "dev-rust/unicode-xid": [
@@ -15479,6 +18356,23 @@
           "SHA512": "92ffd0dd34e3ca235ecf110b38c447d3ec1faa23d76c112457f28d432f92fa6b5f428bc5e1bfd278f361f55426dd96e19ecb0d3eff6cf250892f069c52bd89a8"
         }
       }
+    },
+    {
+      "version": "0.1.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {
+        "unicode-xid-0.1.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/unicode-xid/0.1.0/download"
+          ],
+          "size": 16000,
+          "integrity": "sha512-zFND4hZpODIs/Xxz8fkY8qnEaEasDvVZM9HkTN+vb32it/8Yto41bEe22LpVZe2g20LDR9y96DBoPzQawrGEnQ==",
+          "SHA256": "",
+          "SHA512": "cc5343e2166938322cfd7c73f1f918f2a9c46846ac0ef55933d1e44cdfaf6f7da2b7ff18b68e356c47b6d8ba5565eda0db42c347dcbde830683f341ac2b1849d"
+        }
+      }
     }
   ],
   "dev-rust/uniquote": [
@@ -15488,6 +18382,33 @@
       "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {}
+    }
+  ],
+  "dev-rust/unix_socket": [
+    {
+      "version": "0.5.0",
+      "buildDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/libc",
+        "dev-rust/tempdir"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/cfg-if",
+        "dev-rust/libc",
+        "dev-rust/tempdir"
+      ],
+      "srcUris": {
+        "unix_socket-0.5.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/unix_socket/0.5.0/download"
+          ],
+          "size": 12261,
+          "integrity": "sha512-3NNYnwQkkVQKaRdt3mlEcQ3upzF+0N5pEnJWhkc8oVs03aCmdJAlK8jvXB/9967Ne3aqgaJ6NLPEhwMFyJQS5Q==",
+          "SHA256": "",
+          "SHA512": "dcd3589f042491540a69176dde6944710deea7317ed0de6912725686473ca15b34dda0a67490252bc8ef5c1ffdf7aecd7b76aa81a27a34b3c4870305c89412e5"
+        }
+      }
     }
   ],
   "dev-rust/url": [
@@ -15519,6 +18440,13 @@
           "SHA512": "f9b6ad99d69ff303283b3fd9e98945fbd6cb411a3d141badcbb3a0566723a451375e6dd5d5357e3eb7a1b5b1ee5756a2347c43817db2de6fe35b9004b090e077"
         }
       }
+    },
+    {
+      "version": "2.0.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/utf8parse": [
@@ -15624,7 +18552,7 @@
   ],
   "dev-rust/vcpkg": [
     {
-      "version": "0.2.11-r1",
+      "version": "0.2.11",
       "buildDeps": [],
       "localSrc": [],
       "runtimeDeps": [],
@@ -15637,6 +18565,29 @@
           "integrity": "sha512-1nvCRMgYJxZb+XaAj3n9AvkUmhkAaJjmD/jvEd8tcmV8VryfwUyPkbCRB1zrI8P5aj34G+NFuwGIFnnrR6Dm6Q==",
           "SHA256": "",
           "SHA512": "d67bc244c81827165bf976808f79fd02f9149a19006898e60ff8ef11df2d72657c56bc9fc14c8f91b091075ceb23c3f96a3df81be345bb01881679eb47a0e6e9"
+        }
+      }
+    }
+  ],
+  "dev-rust/vec_map": [
+    {
+      "version": "0.8.2",
+      "buildDeps": [
+        "dev-rust/serde"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/serde"
+      ],
+      "srcUris": {
+        "vec_map-0.8.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/vec_map/0.8.2/download"
+          ],
+          "size": 14466,
+          "integrity": "sha512-Tx71m8LEN+efH4T+AhvOWqjM1YH1APPVd2kT1fF9RbA8zuZPW9A9R2VjGM/JNEofQxEHnUcfpAmo5OlMFDlz+Q==",
+          "SHA256": "",
+          "SHA512": "4f1ef59bc2c437e79f1f84fe021bce5aa8ccd581f500f3d5776913d5f17d45b03ccee64f5bd03d47656318cfc9344a1f4311079d471fa409a8e4e94c143973f9"
         }
       }
     }
@@ -15709,6 +18660,13 @@
       "localSrc": [],
       "runtimeDeps": [],
       "srcUris": {}
+    },
+    {
+      "version": "0.9.0",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/wasm-bindgen": [
@@ -15756,6 +18714,52 @@
           "SHA512": "e47dd6c100e14fc6cc7e70a776eccc45f6f4a119be7284d6da4e4292e0275329cf15d0e3e032881bb12da145383dc9e0802a25353388c8458a14ff56e5430bb8"
         }
       }
+    },
+    {
+      "version": "4.0.2",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/thiserror"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/thiserror"
+      ],
+      "srcUris": {
+        "which-4.0.2.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/which/4.0.2/download"
+          ],
+          "size": 7531,
+          "integrity": "sha512-beQSBjfUSZXwnXWW6UQ8XsVm3ysz9UmGiXrE3AnP2Vleegw6gJLPa43Lmqba8zobX8/Mlby1AQ641sA2XiAF4w==",
+          "SHA256": "",
+          "SHA512": "6de4120637d44995f09d7596e9443c5ec566df2b33f54986897ac4dc09cfd9595e7a0c3a8092cf6b8dcb9aa6daf33a1b5fcfcc95bcb5010eb8d6c0365e2005e3"
+        }
+      }
+    },
+    {
+      "version": "3.1.1",
+      "buildDeps": [
+        "dev-rust/libc",
+        "dev-rust/thiserror"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/libc",
+        "dev-rust/thiserror"
+      ],
+      "srcUris": {
+        "which-3.1.1.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/which/3.1.1/download"
+          ],
+          "size": 8071,
+          "integrity": "sha512-NnfXCeztVKMy5o2ck4VwggWDgwGldtoMTYgElAOoFnbDk5qXzRvsSrJhx+j7YhGVa0ev5dH+6E2cTs9OswGE9Q==",
+          "SHA256": "",
+          "SHA512": "3677d709eced54a332e68d9c9385708205838301a576da0c4d88049403a81676c3939a97cd1bec4ab261c7e8fb6211956b47afe5d1fee84d9c4ecf4eb30184f5"
+        }
+      }
     }
   ],
   "dev-rust/winapi": [
@@ -15798,11 +18802,18 @@
           "SHA512": "7621dc8dfd5e7d4a7a8805b2a7e8319b63b852367655f2359d4e3e8fec6c4fad52d75c46ce1161e4c674eac0780b757ce9d34e664e304d8d2beec7afa0363ea0"
         }
       }
+    },
+    {
+      "version": "0.3.5",
+      "buildDeps": [],
+      "localSrc": [],
+      "runtimeDeps": [],
+      "srcUris": {}
     }
   ],
   "dev-rust/zeroize": [
     {
-      "version": "1.5.1-r1",
+      "version": "1.5.1",
       "buildDeps": [
         "dev-rust/zeroize_derive"
       ],
@@ -15825,7 +18836,7 @@
   ],
   "dev-rust/zeroize_derive": [
     {
-      "version": "1.3.1-r1",
+      "version": "1.3.1",
       "buildDeps": [
         "dev-rust/proc-macro2",
         "dev-rust/quote",
@@ -15848,6 +18859,33 @@
           "integrity": "sha512-BwYZpmTEBGEMrEitSoMeP0SaKwIsXlXJ8Lo7Geyw9zdEWuVXf3y5wxRmHv6xmAFIixWJYanbDPFuY2wt+HWFAw==",
           "SHA256": "",
           "SHA512": "070619a664c404610cac48ad4a831e3f449a2b022c5e55c9f0ba3b19ecb0f737445ae5577f7cb9c314661efeb19801488b158961a9db0cf16e636c2df8758503"
+        }
+      }
+    },
+    {
+      "version": "1.2.0",
+      "buildDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn",
+        "dev-rust/synstructure"
+      ],
+      "localSrc": [],
+      "runtimeDeps": [
+        "dev-rust/proc-macro2",
+        "dev-rust/quote",
+        "dev-rust/syn",
+        "dev-rust/synstructure"
+      ],
+      "srcUris": {
+        "zeroize_derive-1.2.0.crate": {
+          "uris": [
+            "https://crates.io/api/v1/crates/zeroize_derive/1.2.0/download"
+          ],
+          "size": 8887,
+          "integrity": "sha512-+EUbe+XTK6IfWbZc4vRjEav0dPUsLvtOHaGtYOIpPrWhk4SM6rQ6KTD+Tb0yxkQrWIAKp/FvQ8FVR3c7FVfmKA==",
+          "SHA256": "",
+          "SHA512": "f8451b7be5d32ba21f59b65ce2f46311abf474f52c2efb4e1da1ad60e2293eb5a193848ceab43a2930fe4dbd32c6442b58800aa7f16f43c15547773b1557e628"
         }
       }
     }
@@ -15908,7 +18946,9 @@
         "virtual/pkgconfig"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-libs/glib"
+      ],
       "srcUris": {
         "desktop-file-utils-0.22.tar.xz": {
           "uris": [
@@ -15965,7 +19005,9 @@
       "version": "0",
       "buildDeps": [],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-lang/python-exec"
+      ],
       "srcUris": {}
     }
   ],
@@ -16752,7 +19794,9 @@
         "virtual/jpeg"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "virtual/jpeg"
+      ],
       "srcUris": {
         "libyuv-1774.tar.gz": {
           "uris": [
@@ -17062,7 +20106,12 @@
       "localSrc": [
         "//third_party/adhd:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-rust/data_model",
+        "dev-rust/serde",
+        "media-sound/audio_streams",
+        "virtual/bindgen"
+      ],
       "srcUris": {}
     }
   ],
@@ -17080,7 +20129,14 @@
       "localSrc": [
         "//third_party/adhd:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-rust/anyhow",
+        "dev-rust/dbus",
+        "dev-rust/libc",
+        "dev-rust/protobuf",
+        "dev-rust/system_api",
+        "dev-rust/thiserror"
+      ],
       "srcUris": {}
     }
   ],
@@ -17122,7 +20178,17 @@
       "localSrc": [
         "//third_party/adhd:src"
       ],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-rust/anyhow",
+        "dev-rust/async-trait",
+        "dev-rust/cros_async",
+        "dev-rust/data_model",
+        "dev-rust/libc",
+        "dev-rust/serde",
+        "dev-rust/sys_util",
+        "media-sound/audio_streams",
+        "media-sound/cras-sys"
+      ],
       "srcUris": {}
     }
   ],
@@ -19983,7 +23049,9 @@
         "sys-devel/flex"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "sys-devel/binutils-config"
+      ],
       "srcUris": {
         "binutils-2.36.1-patches-3.tar.xz": {
           "uris": [
@@ -20056,7 +23124,9 @@
         "dev-libs/libltdl"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-libs/libltdl"
+      ],
       "srcUris": {
         "libtool-2.4.6.tar.xz": {
           "uris": [
@@ -20714,7 +23784,9 @@
         "sys-libs/readline"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "sys-libs/readline"
+      ],
       "srcUris": {
         "gdbm-1.23.tar.gz": {
           "uris": [
@@ -20942,11 +24014,21 @@
   ],
   "sys-libs/ncurses": [
     {
-      "version": "5.9-r99",
+      "version": "5.9-r7",
       "buildDeps": [],
       "localSrc": [],
       "runtimeDeps": [],
-      "srcUris": {}
+      "srcUris": {
+        "ncurses-5.9.tar.gz": {
+          "uris": [
+            "mirror://gnu/ncurses/ncurses-5.9.tar.gz"
+          ],
+          "size": 2826473,
+          "integrity": "sha512-18XlS21Ni5IR8ABsqHhvdgnRgMwarr9PJefjXhKVl3nPZkRzWaYC2u1iViHKMrDZENZ67z64tv3Dw3OBmoj6oQ==",
+          "SHA256": "9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b",
+          "SHA512": "d7c5e54b6d4d8b9211f0006ca8786f7609d180cc1aaebf4f25e7e35e12959779cf66447359a602daed625621ca32b0d910d67aef3eb8b6fdc3c373819a88faa1"
+        }
+      }
     }
   ],
   "sys-libs/pam": [
@@ -21287,7 +24369,9 @@
   "virtual/chromeos-bootcomplete": [
     {
       "version": "1-r3",
-      "buildDeps": [],
+      "buildDeps": [
+        "chromeos-base/bootcomplete-login"
+      ],
       "localSrc": [],
       "runtimeDeps": [
         "chromeos-base/bootcomplete-login"
@@ -21492,7 +24576,9 @@
   "virtual/libgudev": [
     {
       "version": "215-r3",
-      "buildDeps": [],
+      "buildDeps": [
+        "sys-fs/udev"
+      ],
       "localSrc": [],
       "runtimeDeps": [
         "sys-fs/udev"
@@ -21554,7 +24640,9 @@
   "virtual/logger": [
     {
       "version": "0",
-      "buildDeps": [],
+      "buildDeps": [
+        "app-admin/rsyslog"
+      ],
       "localSrc": [],
       "runtimeDeps": [
         "app-admin/rsyslog"
@@ -21587,7 +24675,9 @@
       "version": "0-r2",
       "buildDeps": [],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "sys-kernel/linux-headers"
+      ],
       "srcUris": {}
     }
   ],
@@ -21768,7 +24858,9 @@
   "virtual/tmpfiles": [
     {
       "version": "0",
-      "buildDeps": [],
+      "buildDeps": [
+        "sys-apps/systemd-tmpfiles"
+      ],
       "localSrc": [],
       "runtimeDeps": [
         "sys-apps/systemd-tmpfiles"
@@ -21790,7 +24882,9 @@
   "virtual/update-policy": [
     {
       "version": "1-r2",
-      "buildDeps": [],
+      "buildDeps": [
+        "chromeos-base/update-policy-chromeos"
+      ],
       "localSrc": [],
       "runtimeDeps": [
         "chromeos-base/update-policy-chromeos"
@@ -21827,7 +24921,9 @@
         "sys-devel/libtool"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-lang/python-exec"
+      ],
       "srcUris": {
         "xcb-proto-1.14.1.tar.xz": {
           "uris": [
@@ -22180,7 +25276,10 @@
         "dev-libs/libxml2"
       ],
       "localSrc": [],
-      "runtimeDeps": [],
+      "runtimeDeps": [
+        "dev-libs/glib",
+        "dev-libs/libxml2"
+      ],
       "srcUris": {
         "shared-mime-info-2.1.tar.xz": {
           "uris": [
