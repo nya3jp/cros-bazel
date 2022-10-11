@@ -87,6 +87,7 @@ type packageGroup struct {
 }
 
 func getSHA256(url string) (string, error) {
+	log.Printf("Trying: %s", url)
 	res, err := http.Get(url)
 	if err != nil {
 		return "", err
