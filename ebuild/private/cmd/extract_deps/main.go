@@ -596,12 +596,12 @@ func computeRuntimeDeps(repoSet *repository.RepoSet, processor *ebuild.CachedPro
 	return depsMap, nil
 }
 
-func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, installPackageNames []string) (map[string][]string, map[string][]string, map[string][]string, map[string]map[string]uriInfo, error) {
-	depsMap := make(map[string][]string)
-	srcDepMap := make(map[string][]string)
-	runtimeDepMap := make(map[string][]string)
-	srcUriMap := make(map[string]map[string]uriInfo)
+func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProcessor, provided []*config.Package, installPackageNames []string) (map[string]packageInfo, error) {
+	pkgs := make(map[string]packageInfo)
+
 	if err := genericBFS(installPackageNames, func(packageName string) ([]string, error) {
+		var info packageInfo
+
 		atom, err := dependency.ParseAtom(packageName)
 		if err != nil {
 			return nil, err
@@ -638,11 +638,11 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 		// transitive deps.
 		if isRustSrcPackage(pkg) {
 			log.Printf("B & R: %s => %s", packageName, strings.Join(parsedDeps, ", "))
-			runtimeDepMap[packageName] = parsedDeps
-			depsMap[packageName] = parsedDeps
+			info.RuntimeDeps = parsedDeps
+			info.BuildDeps = parsedDeps
 		} else {
 			log.Printf("B: %s => %s", packageName, strings.Join(parsedDeps, ", "))
-			depsMap[packageName] = parsedDeps
+			info.BuildDeps = parsedDeps
 		}
 
 		srcDeps, err := computeSrcPackages(pkg, metadata["CROS_WORKON_PROJECT"], metadata["CROS_WORKON_LOCALNAME"], metadata["CROS_WORKON_SUBTREE"])
@@ -650,7 +650,7 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 			return nil, err
 		}
 		log.Printf("   PROJECT: '%s', LOCALNAME: '%s', SUBTREE: '%s' -> %s", metadata["CROS_WORKON_PROJECT"], metadata["CROS_WORKON_LOCALNAME"], metadata["CROS_WORKON_SUBTREE"], srcDeps)
-		srcDepMap[packageName] = srcDeps
+		info.LocalSrc = srcDeps
 
 		srcUri, ok := metadata["SRC_URI"]
 		_, hasBadSrcUri := badSrcUris[packageName]
@@ -673,16 +673,17 @@ func computeBuildDeps(repoSet *repository.RepoSet, processor *ebuild.CachedProce
 				if err != nil {
 					return nil, err
 				}
-				srcUriMap[packageName] = srcUriInfo
+				info.SrcUris = srcUriInfo
 			}
-
 		}
+
+		pkgs[packageName] = info
 
 		return parsedDeps, nil
 	}); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, err
 	}
-	return depsMap, srcDepMap, runtimeDepMap, srcUriMap, nil
+	return pkgs, nil
 }
 
 var flagBoard = &cli.StringFlag{
@@ -700,8 +701,8 @@ type uriInfo struct {
 	Size      int      `json:"size"`
 	Integrity string   `json:"integrity"`
 	// TODO: Remove when we can use integrity
-	SHA256    string   `json:"SHA256"`
-	SHA512    string   `json:"SHA512"`
+	SHA256 string `json:"SHA256"`
+	SHA512 string `json:"SHA512"`
 }
 
 type packageInfo struct {
@@ -753,11 +754,17 @@ var app = &cli.App{
 		}
 		sort.Strings(installPackageNames)
 
-		buildDeps, buildSrcDeps, additionalRuntimeDeps, srcUris, err := computeBuildDeps(
+		pkgInfoByPkgName, err := computeBuildDeps(
 			defaults.RepoSet, processor, provided, installPackageNames)
 		if err != nil {
 			return err
 		}
+
+		var sortedPackageNames []string
+		for packageName := range pkgInfoByPkgName {
+			sortedPackageNames = append(sortedPackageNames, packageName)
+		}
+		sort.Strings(sortedPackageNames)
 
 		nonNil := func(deps []string) []string {
 			if deps == nil {
@@ -774,8 +781,10 @@ var app = &cli.App{
 		}
 
 		infoMap := make(map[string]*packageInfo)
-		for packageName := range buildDeps {
-			newRuntimeDeps := append(runtimeDeps[packageName], additionalRuntimeDeps[packageName]...)
+		for _, packageName := range sortedPackageNames {
+			info := pkgInfoByPkgName[packageName]
+
+			newRuntimeDeps := append(runtimeDeps[packageName], info.RuntimeDeps...)
 			sort.Strings(newRuntimeDeps)
 
 			var uniqueRuntimeDeps = []string{}
@@ -788,12 +797,12 @@ var app = &cli.App{
 				uniqueRuntimeDeps = append(uniqueRuntimeDeps, dep)
 			}
 
-			infoMap[packageName] = &packageInfo{
-				RuntimeDeps: nonNil(uniqueRuntimeDeps),
-				LocalSrc:    nonNil(buildSrcDeps[packageName]),
-				BuildDeps:   nonNil(buildDeps[packageName]),
-				SrcUris:     nonNilUri(srcUris[packageName]),
-			}
+			info.BuildDeps = nonNil(info.BuildDeps)
+			info.LocalSrc = nonNil(info.LocalSrc)
+			info.RuntimeDeps = nonNil(uniqueRuntimeDeps)
+			info.SrcUris = nonNilUri(info.SrcUris)
+
+			infoMap[packageName] = &info
 		}
 
 		encoder := json.NewEncoder(os.Stdout)
