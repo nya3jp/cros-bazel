@@ -50,7 +50,7 @@ var distBaseURLs = []string{
 	"https://storage.googleapis.com/chromeos-localmirror/secureshell/distfiles/",
 	"https://storage.googleapis.com/chromeos-localmirror/secureshell/releases/",
 	"https://storage.googleapis.com/chromium-nodejs/14.15.4/",
-	"https://storage.googleapis.com/chromium-nodejs/16.13.0",
+	"https://storage.googleapis.com/chromium-nodejs/16.13.0/",
 }
 
 // The following packages don't exist in the mirrors above, but instead

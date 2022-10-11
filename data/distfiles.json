@@ -821,7 +821,12 @@
     "sha256": "7cbe4d5fbe433935d18e9c728436c435aba14401648165438ab491e68fad55b5",
     "name": "aarch64_cros_linux_gnu_2021_01_04_014317_tar_xz"
   },
-  "ab9544e24e752d3d17f335fb7b2055062e582d11": null,
+  "ab9544e24e752d3d17f335fb7b2055062e582d11": {
+    "filename": "ab9544e24e752d3d17f335fb7b2055062e582d11",
+    "url": "https://storage.googleapis.com/chromium-nodejs/16.13.0/ab9544e24e752d3d17f335fb7b2055062e582d11",
+    "sha256": "3b5ca150a55f3aadfa18f3a10a4495aaf9653614ba3e460647170fef5287ec4f",
+    "name": "ab9544e24e752d3d17f335fb7b2055062e582d11"
+  },
   "abseil-cpp-20200923.3.tar.gz": {
     "filename": "abseil-cpp-20200923.3.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/abseil-cpp-20200923.3.tar.gz",
