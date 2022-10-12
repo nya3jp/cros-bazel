@@ -10,5 +10,6 @@ def lz4_repositories():
         checksum = CHECKSUM,
         github_user = "lz4",
         github_repo = "lz4",
-        tag = VERSION,
+        strip_prefix = "lz4-{version}".format(version = VERSION),
+        tag = "v{version}".format(version = VERSION),
     )
