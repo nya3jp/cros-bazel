@@ -1,0 +1,25 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "binarypackage",
+    srcs = ["binarypackage.go"],
+    importpath = "cros.local/bazel/ebuild/private/common/portage/binarypackage",
+    visibility = ["//bazel/ebuild:__subpackages__"],
+)
+
+go_test(
+    name = "binarypackage_test",
+    srcs = ["binarypackage_test.go"],
+    data = [
+        "testdata/nano.tar.bz2",
+        "testdata/nano.tbz2",
+    ],
+    deps = [
+        ":binarypackage",
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+    ],
+)

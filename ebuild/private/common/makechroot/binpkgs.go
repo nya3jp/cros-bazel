@@ -11,14 +11,14 @@ import (
 	"strings"
 
 	"cros.local/bazel/ebuild/private/common/fileutil"
-	"cros.local/bazel/ebuild/private/common/portage/xpak"
+	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 )
 
 func CopyBinaryPackages(packagesDir string, packagePaths []string) (atoms []string, err error) {
 	const binaryExt = ".tbz2"
 
 	for _, packagePath := range packagePaths {
-		xp, err := xpak.Read(packagePath)
+		xp, err := binarypackage.ReadXpak(packagePath)
 		if err != nil {
 			return nil, fmt.Errorf("reading %s: %w", filepath.Base(packagePath), err)
 		}

@@ -20,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 
 	"cros.local/bazel/ebuild/private/common/fileutil"
-	"cros.local/bazel/ebuild/private/common/portage/xpak"
+	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
@@ -136,7 +136,7 @@ func preparePackages(installPaths []string, dir fileutil.DualPath) ([]string, er
 	var atoms []string
 
 	for _, installPath := range installPaths {
-		xp, err := xpak.Read(installPath)
+		xp, err := binarypackage.ReadXpak(installPath)
 		if err != nil {
 			return nil, fmt.Errorf("reading %s: %w", filepath.Base(installPath), err)
 		}
