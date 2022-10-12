@@ -57,12 +57,22 @@ func simplifyExpr(expr Expr) Expr {
 		if len(newChildren) == 1 {
 			return newChildren[0]
 		}
+		for _, newChild := range newChildren {
+			if IsConstFalse(newChild) {
+				return ConstFalse
+			}
+		}
 		return NewAllOf(newChildren)
 
 	case *AnyOf:
 		newChildren := simplifyExprs(expr.Children(), IsConstFalse, false)
 		if len(newChildren) == 1 {
 			return newChildren[0]
+		}
+		for _, newChild := range newChildren {
+			if IsConstTrue(newChild) {
+				return ConstTrue
+			}
 		}
 		return NewAnyOf(newChildren)
 
@@ -143,7 +153,7 @@ func simplifyExprs(children []Expr, omit func(Expr) bool, inlineAllOf bool) []Ex
 		if omit != nil && omit(newChild) {
 			continue
 		}
-		if newAllOf, ok := newChild.(*AllOf); ok {
+		if newAllOf, ok := newChild.(*AllOf); ok && inlineAllOf {
 			newChildren = append(newChildren, newAllOf.Children()...)
 		} else {
 			newChildren = append(newChildren, newChild)
