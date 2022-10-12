@@ -49,13 +49,13 @@ func ParsePackageUseList(path string) ([]*PackageUse, error) {
 	return packageUseList, nil
 }
 
-func ParsePackageList(path string) ([]*Package, error) {
+func ParsePackageList(path string) ([]*TargetPackage, error) {
 	lines, err := ParseLines(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var provided []*Package
+	var provided []*TargetPackage
 
 	for _, line := range lines {
 		prefix, ver, err := version.ExtractSuffix(line)
@@ -68,7 +68,7 @@ func ParsePackageList(path string) ([]*Package, error) {
 			return nil, fmt.Errorf("invalid provided package spec: %s", line)
 		}
 		name := strings.TrimSuffix(prefix, hyphen)
-		provided = append(provided, &Package{
+		provided = append(provided, &TargetPackage{
 			Name:    name,
 			Version: ver,
 		})

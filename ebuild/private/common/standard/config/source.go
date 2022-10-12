@@ -10,17 +10,20 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
-type Package struct {
+// TargetPackage represents a package to compute configurations for.
+// It only contains info that can be extracted without evaluating ebuilds
+// because configurations are used to evaluate ebuilds.
+type TargetPackage struct {
 	Name    string
 	Version *version.Version
 }
 
 type Source interface {
 	EvalGlobalVars(env makevars.Vars) ([]makevars.Vars, error)
-	EvalPackageVars(pkg *Package, env makevars.Vars) ([]makevars.Vars, error)
-	UseMasksAndForces(pkg *Package, masks map[string]bool, forces map[string]bool) error
+	EvalPackageVars(pkg *TargetPackage, env makevars.Vars) ([]makevars.Vars, error)
+	UseMasksAndForces(pkg *TargetPackage, masks map[string]bool, forces map[string]bool) error
 	PackageMasks() ([]*dependency.Atom, error)
-	ProvidedPackages() ([]*Package, error)
+	ProvidedPackages() ([]*TargetPackage, error)
 }
 
 type Bundle []Source
@@ -39,7 +42,7 @@ func (ss Bundle) EvalGlobalVars(env makevars.Vars) ([]makevars.Vars, error) {
 	return varsList, nil
 }
 
-func (ss Bundle) EvalPackageVars(pkg *Package, env makevars.Vars) ([]makevars.Vars, error) {
+func (ss Bundle) EvalPackageVars(pkg *TargetPackage, env makevars.Vars) ([]makevars.Vars, error) {
 	var varsList []makevars.Vars
 	for _, s := range ss {
 		subVarsList, err := s.EvalPackageVars(pkg, env)
@@ -51,7 +54,7 @@ func (ss Bundle) EvalPackageVars(pkg *Package, env makevars.Vars) ([]makevars.Va
 	return varsList, nil
 }
 
-func (ss Bundle) UseMasksAndForces(pkg *Package, masks map[string]bool, forces map[string]bool) error {
+func (ss Bundle) UseMasksAndForces(pkg *TargetPackage, masks map[string]bool, forces map[string]bool) error {
 	for _, s := range ss {
 		if err := s.UseMasksAndForces(pkg, masks, forces); err != nil {
 			return err
@@ -72,8 +75,8 @@ func (ss Bundle) PackageMasks() ([]*dependency.Atom, error) {
 	return atoms, nil
 }
 
-func (ss Bundle) ProvidedPackages() ([]*Package, error) {
-	var pkgs []*Package
+func (ss Bundle) ProvidedPackages() ([]*TargetPackage, error) {
+	var pkgs []*TargetPackage
 	for _, s := range ss {
 		subpkgs, err := s.ProvidedPackages()
 		if err != nil {
@@ -86,12 +89,12 @@ func (ss Bundle) ProvidedPackages() ([]*Package, error) {
 
 type HackSource struct {
 	use      string
-	provided []*Package
+	provided []*TargetPackage
 }
 
 var _ Source = &HackSource{}
 
-func NewHackSource(use string, provided []*Package) *HackSource {
+func NewHackSource(use string, provided []*TargetPackage) *HackSource {
 	return &HackSource{
 		use:      use,
 		provided: provided,
@@ -103,11 +106,11 @@ func (s *HackSource) EvalGlobalVars(env makevars.Vars) ([]makevars.Vars, error) 
 	return []makevars.Vars{{"USE": s.use}}, nil
 }
 
-func (s *HackSource) EvalPackageVars(pkg *Package, env makevars.Vars) ([]makevars.Vars, error) {
+func (s *HackSource) EvalPackageVars(pkg *TargetPackage, env makevars.Vars) ([]makevars.Vars, error) {
 	return s.EvalGlobalVars(env)
 }
 
-func (s *HackSource) UseMasksAndForces(pkg *Package, masks map[string]bool, forces map[string]bool) error {
+func (s *HackSource) UseMasksAndForces(pkg *TargetPackage, masks map[string]bool, forces map[string]bool) error {
 	return nil
 }
 
@@ -115,6 +118,6 @@ func (s *HackSource) PackageMasks() ([]*dependency.Atom, error) {
 	return nil, nil
 }
 
-func (s *HackSource) ProvidedPackages() ([]*Package, error) {
-	return append([]*Package(nil), s.provided...), nil
+func (s *HackSource) ProvidedPackages() ([]*TargetPackage, error) {
+	return append([]*TargetPackage(nil), s.provided...), nil
 }

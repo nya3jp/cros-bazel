@@ -12,7 +12,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/makevars"
 )
 
-func computeUseFlags(pkg *config.Package, config config.Source, metadata Metadata) (map[string]bool, error) {
+func computeUseFlags(pkg *config.TargetPackage, config config.Source, metadata Metadata) (map[string]bool, error) {
 	env := make(makevars.Vars)
 	varsList, err := config.EvalPackageVars(pkg, env)
 	if err != nil {

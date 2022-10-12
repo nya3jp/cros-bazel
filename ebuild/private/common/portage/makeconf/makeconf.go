@@ -42,7 +42,7 @@ func (s *UserConfigSource) EvalGlobalVars(env makevars.Vars) ([]makevars.Vars, e
 	return varsList, nil
 }
 
-func (s *UserConfigSource) EvalPackageVars(pkg *config.Package, env makevars.Vars) ([]makevars.Vars, error) {
+func (s *UserConfigSource) EvalPackageVars(pkg *config.TargetPackage, env makevars.Vars) ([]makevars.Vars, error) {
 	varsList, err := s.EvalGlobalVars(env)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (s *UserConfigSource) EvalPackageVars(pkg *config.Package, env makevars.Var
 	return varsList, nil
 }
 
-func (s *UserConfigSource) UseMasksAndForces(pkg *config.Package, masks map[string]bool, forces map[string]bool) error {
+func (s *UserConfigSource) UseMasksAndForces(pkg *config.TargetPackage, masks map[string]bool, forces map[string]bool) error {
 	// TODO: Parse /etc/portage/profile/*.
 	return nil
 }
@@ -80,7 +80,7 @@ func (s *UserConfigSource) PackageMasks() ([]*dependency.Atom, error) {
 	return nil, nil
 }
 
-func (s *UserConfigSource) ProvidedPackages() ([]*config.Package, error) {
+func (s *UserConfigSource) ProvidedPackages() ([]*config.TargetPackage, error) {
 	// TODO: Parse /etc/portage/profile/package.provided.
 	return nil, nil
 }

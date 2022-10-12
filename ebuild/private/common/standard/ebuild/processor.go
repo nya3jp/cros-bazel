@@ -73,7 +73,7 @@ func (p *Processor) Read(path string) (*Info, error) {
 	}, nil
 }
 
-func extractPackage(absPath string) (*config.Package, error) {
+func extractPackage(absPath string) (*config.TargetPackage, error) {
 	const suffix = ".ebuild"
 	if !strings.HasSuffix(absPath, suffix) {
 		return nil, fmt.Errorf("must have suffix %s", suffix)
@@ -95,13 +95,13 @@ func extractPackage(absPath string) (*config.Package, error) {
 		return nil, errors.New("ebuild name mismatch with directory name")
 	}
 
-	return &config.Package{
+	return &config.TargetPackage{
 		Name:    path.Join(categoryName, packageShortName),
 		Version: version,
 	}, nil
 }
 
-func computePackageVars(pkg *config.Package) makevars.Vars {
+func computePackageVars(pkg *config.TargetPackage) makevars.Vars {
 	categoryName := path.Dir(pkg.Name)
 	packageShortName := path.Base(pkg.Name)
 

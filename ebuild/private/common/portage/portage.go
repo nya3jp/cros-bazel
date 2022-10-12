@@ -25,7 +25,7 @@ type Resolver struct {
 	config    config.Bundle
 	processor *ebuild.CachedProcessor
 	masks     []*dependency.Atom
-	provided  []*config.Package
+	provided  []*config.TargetPackage
 }
 
 func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, error) {
@@ -145,6 +145,6 @@ func (r *Resolver) BestPackage(atom *dependency.Atom) (*packages.Package, error)
 	return pkgs[0], nil
 }
 
-func (r *Resolver) ProvidedPackages() []*config.Package {
-	return append([]*config.Package(nil), r.provided...)
+func (r *Resolver) ProvidedPackages() []*config.TargetPackage {
+	return append([]*config.TargetPackage(nil), r.provided...)
 }

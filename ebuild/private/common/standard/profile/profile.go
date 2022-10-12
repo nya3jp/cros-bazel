@@ -135,7 +135,7 @@ type ParsedProfile struct {
 	packageUseMask  []*config.PackageUse
 	packageUseForce []*config.PackageUse
 	packageMasks    []*dependency.Atom
-	provided        []*config.Package
+	provided        []*config.TargetPackage
 }
 
 var _ config.Source = &ParsedProfile{}
@@ -159,7 +159,7 @@ func (p *ParsedProfile) EvalGlobalVars(env makevars.Vars) ([]makevars.Vars, erro
 	return varsList, nil
 }
 
-func (p *ParsedProfile) EvalPackageVars(pkg *config.Package, env makevars.Vars) ([]makevars.Vars, error) {
+func (p *ParsedProfile) EvalPackageVars(pkg *config.TargetPackage, env makevars.Vars) ([]makevars.Vars, error) {
 	var varsList []makevars.Vars
 	for _, parent := range p.parents {
 		subVarsList, err := parent.EvalPackageVars(pkg, env)
@@ -193,7 +193,7 @@ func (p *ParsedProfile) EvalPackageVars(pkg *config.Package, env makevars.Vars) 
 	return varsList, nil
 }
 
-func (p *ParsedProfile) UseMasksAndForces(pkg *config.Package, masks map[string]bool, forces map[string]bool) error {
+func (p *ParsedProfile) UseMasksAndForces(pkg *config.TargetPackage, masks map[string]bool, forces map[string]bool) error {
 	for _, parent := range p.parents {
 		if err := parent.UseMasksAndForces(pkg, masks, forces); err != nil {
 			return err
@@ -244,8 +244,8 @@ func (p *ParsedProfile) PackageMasks() ([]*dependency.Atom, error) {
 	return append(atoms, p.packageMasks...), nil
 }
 
-func (p *ParsedProfile) ProvidedPackages() ([]*config.Package, error) {
-	var provided []*config.Package
+func (p *ParsedProfile) ProvidedPackages() ([]*config.TargetPackage, error) {
+	var provided []*config.TargetPackage
 	for _, parent := range p.parents {
 		pkgs, err := parent.ProvidedPackages()
 		if err != nil {

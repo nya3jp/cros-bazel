@@ -570,7 +570,7 @@ func parseManifest(eBuildPath string) (map[string]manifestEntry, error) {
 	return files, nil
 }
 
-func filterPackages(pkgs []string, provided []*config.Package) []string {
+func filterPackages(pkgs []string, provided []*config.TargetPackage) []string {
 	providedSet := make(map[string]struct{})
 	for _, p := range provided {
 		providedSet[p.Name] = struct{}{}
@@ -663,7 +663,7 @@ func selectBestPackages(resolver *portage.Resolver, atom *dependency.Atom) ([]*p
 	return pkgs, nil
 }
 
-func extractDeps(depType string, pkg *packages.Package, provided []*config.Package) ([]string, error) {
+func extractDeps(depType string, pkg *packages.Package, provided []*config.TargetPackage) ([]string, error) {
 	metadata := pkg.Metadata()
 	rawDeps, err := dependency.Parse(metadata[depType])
 	if err != nil {
@@ -856,9 +856,9 @@ var app = &cli.App{
 
 		rootDir := filepath.Join("/build", board)
 
-		var providedPackages []*config.Package
+		var providedPackages []*config.TargetPackage
 		for _, name := range forceProvided {
-			providedPackages = append(providedPackages, &config.Package{
+			providedPackages = append(providedPackages, &config.TargetPackage{
 				Name:    name,
 				Version: &version.Version{Main: []string{"0"}}, // assume version 0
 			})
