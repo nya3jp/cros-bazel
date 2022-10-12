@@ -55,12 +55,12 @@ type UseConditional struct {
 }
 
 type Value struct {
-	Uri *Uri `parser:"@@"`
+	Uri     *Uri     `parser:"@@"`
 	Package *Package `parser:"| @@"`
 }
 
 type Uri struct {
-	Uri string `parser:"@Uri"`
+	Uri      string  `parser:"@Uri"`
 	FileName *string `parser:"('->' @Value)?"`
 }
 

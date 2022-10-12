@@ -5,8 +5,9 @@
 package dependency_test
 
 import (
-	"github.com/google/go-cmp/cmp"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 )
