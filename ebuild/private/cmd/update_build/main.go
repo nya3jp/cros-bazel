@@ -23,6 +23,7 @@ import (
 	"strings"
 	"text/template"
 
+	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"github.com/urfave/cli"
 )
 
@@ -325,13 +326,24 @@ func packageNameToLabel(name string, overlayDirs []string) (string, error) {
 	return "", fmt.Errorf("%s not found in overlays", name)
 }
 
-func packageNamesToLabels(names []string, overlayDirs []string) ([]string, error) {
+func packageAtomsToLabels(atoms []string, overlayDirs []string) ([]string, error) {
 	var labels []string
-	for _, name := range names {
-		label, err := packageNameToLabel(name, overlayDirs)
+	for _, atromStr := range atoms {
+		atom, err := dependency.ParseAtom(atromStr)
 		if err != nil {
 			return nil, err
 		}
+
+		label, err := packageNameToLabel(atom.PackageName(), overlayDirs)
+		if err != nil {
+			return nil, err
+		}
+
+		if atom.Version() != nil {
+			name := strings.Split(atom.PackageName(), "/")[1]
+			label = fmt.Sprintf("%s:%s-%s", label, name, atom.Version())
+		}
+
 		labels = append(labels, label)
 	}
 	return labels, nil
@@ -427,11 +439,11 @@ var app = &cli.App{
 			// Rewrite package names to labels.
 			for _, pkgInfos := range pkgInfoMap {
 				for _, pkgInfo := range pkgInfos {
-					pkgInfo.BuildDeps, err = packageNamesToLabels(pkgInfo.BuildDeps, overlayDirs)
+					pkgInfo.BuildDeps, err = packageAtomsToLabels(pkgInfo.BuildDeps, overlayDirs)
 					if err != nil {
 						return err
 					}
-					pkgInfo.RuntimeDeps, err = packageNamesToLabels(pkgInfo.RuntimeDeps, overlayDirs)
+					pkgInfo.RuntimeDeps, err = packageAtomsToLabels(pkgInfo.RuntimeDeps, overlayDirs)
 					if err != nil {
 						return err
 					}

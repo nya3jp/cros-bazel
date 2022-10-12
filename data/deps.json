@@ -9845,7 +9845,7 @@
         "dev-rust/aligned",
         "dev-rust/bare-metal",
         "dev-rust/bitfield",
-        "dev-rust/cortex-m",
+        "=dev-rust/cortex-m-0.7.3",
         "dev-rust/volatile-register"
       ],
       "localSrc": [],
@@ -9853,7 +9853,7 @@
         "dev-rust/aligned",
         "dev-rust/bare-metal",
         "dev-rust/bitfield",
-        "dev-rust/cortex-m",
+        "=dev-rust/cortex-m-0.7.3",
         "dev-rust/volatile-register"
       ],
       "srcUris": {
@@ -13342,11 +13342,11 @@
     {
       "version": "0.1.3",
       "buildDeps": [
-        "dev-rust/nb"
+        "=dev-rust/nb-1.0.0"
       ],
       "localSrc": [],
       "runtimeDeps": [
-        "dev-rust/nb"
+        "=dev-rust/nb-1.0.0"
       ],
       "srcUris": {
         "nb-0.1.3.crate": {

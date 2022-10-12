@@ -78,6 +78,18 @@ var (
 		// Some type of transitional ebuild
 		"ncurses-5.9-r99.ebuild": {},
 	}
+
+	// These packages depend on newer versions of them selves (sigh).
+	// In order to avoid a circular dependency we need to specify the
+	// exact version.
+	ebuildDepOverride = map[string]map[string]string{
+		"cortex-m-0.6.7.ebuild": {
+			"dev-rust/cortex-m": "=dev-rust/cortex-m-0.7.3",
+		},
+		"nb-0.1.3.ebuild": {
+			"dev-rust/nb": "=dev-rust/nb-1.0.0",
+		},
+	}
 )
 
 // HACK: Hard-code several USE flags.
@@ -713,6 +725,22 @@ func extractSrcUris(pkg *packages.Package) (map[string]uriInfo, error) {
 	return map[string]uriInfo{}, nil
 }
 
+func applyDepOverrides(pkg *packages.Package, deps []string) []string {
+	overrideMap, ok := ebuildDepOverride[filepath.Base(pkg.Path())]
+	if !ok {
+		return deps
+	}
+
+	for i, packageName := range deps {
+		if override, ok := overrideMap[packageName]; ok {
+			deps[i] = override
+			break
+		}
+	}
+
+	return deps
+}
+
 func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (map[string][]packageInfo, error) {
 	depsInfo := make(map[string][]packageInfo)
 	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
@@ -768,6 +796,12 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (ma
 				return nil, err
 			}
 
+			allPkgDeps = append(allPkgDeps, buildTimeDeps...)
+			allPkgDeps = append(allPkgDeps, runtimeDeps...)
+
+			buildTimeDeps = applyDepOverrides(pkg, buildTimeDeps)
+			runtimeDeps = applyDepOverrides(pkg, runtimeDeps)
+
 			depsInfo[pkg.Name()] = append(depsInfo[pkg.Name()], packageInfo{
 				Version:     pkg.Version().String(),
 				BuildDeps:   buildTimeDeps,
@@ -775,9 +809,6 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (ma
 				RuntimeDeps: runtimeDeps,
 				SrcUris:     srcUris,
 			})
-
-			allPkgDeps = append(allPkgDeps, buildTimeDeps...)
-			allPkgDeps = append(allPkgDeps, runtimeDeps...)
 		}
 
 		return unique(allPkgDeps), nil
