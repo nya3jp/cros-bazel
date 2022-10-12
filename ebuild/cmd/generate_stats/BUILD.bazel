@@ -1,0 +1,22 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "generate_stats_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/ebuild/cmd/generate_stats",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//bazel/ebuild/private/common/depdata",
+        "@com_github_urfave_cli//:cli",
+    ],
+)
+
+go_binary(
+    name = "generate_stats",
+    embed = [":generate_stats_lib"],
+    visibility = ["//visibility:public"],
+)
