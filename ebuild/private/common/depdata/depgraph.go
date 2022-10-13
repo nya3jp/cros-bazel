@@ -4,17 +4,18 @@
 
 package depdata
 
-type PackageInfoMap map[string][]*PackageInfo
+type PackageInfoMap map[string]*PackageInfo
 
 func (g PackageInfoMap) FixupForJSON() {
-	for _, infos := range g {
-		for _, info := range infos {
-			info.FixupForJSON()
-		}
+	for _, info := range g {
+		info.FixupForJSON()
 	}
 }
 
 type PackageInfo struct {
+	Name        string              `json:"name"`
+	MainSlot    string              `json:"mainSlot"`
+	EBuildPath  string              `json:"ebuildPath"`
 	Version     string              `json:"version"`
 	BuildDeps   []string            `json:"buildDeps"`
 	LocalSrc    []string            `json:"localSrc"`

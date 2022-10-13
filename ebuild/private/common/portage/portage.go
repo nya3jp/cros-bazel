@@ -22,10 +22,10 @@ import (
 
 type Resolver struct {
 	repoSet   *repository.RepoSet
-	config    config.Bundle
+	bundle    config.Bundle
 	processor *ebuild.CachedProcessor
 	masks     []*dependency.Atom
-	provided  []*config.TargetPackage
+	provided  map[string][]*config.TargetPackage
 }
 
 func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, error) {
@@ -62,23 +62,28 @@ func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, erro
 		return nil, err
 	}
 
-	config := config.Bundle(append([]config.Source{profile, userConfigSource}, extraSources...))
+	bundle := config.Bundle(append([]config.Source{profile, userConfigSource}, extraSources...))
 
-	processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(config, repoSet.EClassDirs()))
+	processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(bundle, repoSet.EClassDirs()))
 
-	masks, err := config.PackageMasks()
+	masks, err := bundle.PackageMasks()
 	if err != nil {
 		return nil, err
 	}
 
-	provided, err := config.ProvidedPackages()
+	rawProvided, err := bundle.ProvidedPackages()
 	if err != nil {
 		return nil, err
+	}
+
+	provided := make(map[string][]*config.TargetPackage)
+	for _, pkg := range rawProvided {
+		provided[pkg.Name] = append(provided[pkg.Name], pkg)
 	}
 
 	return &Resolver{
 		repoSet:   repoSet,
-		config:    config,
+		bundle:    bundle,
 		processor: processor,
 		masks:     masks,
 		provided:  provided,
@@ -86,7 +91,7 @@ func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, erro
 }
 
 func (r *Resolver) Config() config.Source {
-	return r.config
+	return r.bundle
 }
 
 func (r *Resolver) Packages(atom *dependency.Atom) ([]*packages.Package, error) {
@@ -145,6 +150,15 @@ func (r *Resolver) BestPackage(atom *dependency.Atom) (*packages.Package, error)
 	return pkgs[0], nil
 }
 
-func (r *Resolver) ProvidedPackages() []*config.TargetPackage {
-	return append([]*config.TargetPackage(nil), r.provided...)
+func (r *Resolver) IsProvided(atom *dependency.Atom) bool {
+	for _, pkg := range r.provided[atom.PackageName()] {
+		if atom.Match(&dependency.TargetPackage{
+			Name:    pkg.Name,
+			Version: pkg.Version,
+			Uses:    nil, // USE flags unavailable in package.provided
+		}) {
+			return true
+		}
+	}
+	return false
 }

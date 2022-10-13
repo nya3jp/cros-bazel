@@ -115,38 +115,7 @@ func isRustSrcPackage(pkg *packages.Package) bool {
 	return isRustPackage(pkg) && !isCrosWorkonPackage(pkg) && pkg.Metadata()["HAS_SRC_COMPILE"] == "0"
 }
 
-func genericBFS[Key comparable](start []Key, visitor func(key Key) ([]Key, error)) error {
-	queue := make([]Key, len(start))
-	for i, key := range start {
-		queue[i] = key
-	}
-
-	seen := make(map[Key]struct{})
-	for _, key := range start {
-		seen[key] = struct{}{}
-	}
-
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-
-		nexts, err := visitor(current)
-		if err != nil {
-			return fmt.Errorf("%v: %w", current, err)
-		}
-
-		for _, next := range nexts {
-			if _, ok := seen[next]; ok {
-				continue
-			}
-			queue = append(queue, next)
-			seen[next] = struct{}{}
-		}
-	}
-	return nil
-}
-
-func selectBestPackagesUsingStability(resolver *portage.Resolver, atom *dependency.Atom) ([]*packages.Package, error) {
+func selectBestPackage(resolver *portage.Resolver, atom *dependency.Atom) (*packages.Package, error) {
 	candidates, err := resolver.Packages(atom)
 	if err != nil {
 		return nil, err
@@ -155,7 +124,6 @@ func selectBestPackagesUsingStability(resolver *portage.Resolver, atom *dependen
 	stabilityTargets := []packages.Stability{packages.StabilityTesting, packages.StabilityStable}
 
 	for _, stabilityTarget := range stabilityTargets {
-		var matchingPackages []*packages.Package
 		for _, candidate := range candidates {
 			ebuildFileName := filepath.Base(candidate.Path())
 			if _, ok := invalidEbuilds[ebuildFileName]; ok {
@@ -163,37 +131,14 @@ func selectBestPackagesUsingStability(resolver *portage.Resolver, atom *dependen
 			}
 
 			if candidate.Stability() == stabilityTarget {
-				matchingPackages = append(matchingPackages, candidate)
+				return candidate, nil
 			}
-		}
-		if len(matchingPackages) > 0 {
-			return matchingPackages, nil
 		}
 	}
 	return nil, fmt.Errorf("no package satisfies %s", atom.String())
 }
 
-func selectBestPackages(resolver *portage.Resolver, atom *dependency.Atom) ([]*packages.Package, error) {
-	candidates, err := selectBestPackagesUsingStability(resolver, atom)
-	if err != nil {
-		return nil, err
-	}
-
-	var pkgs []*packages.Package
-	if atom.PackageCategory() == "dev-rust" {
-		pkgs, err = filterOutSymlinks(candidates)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// TODO: Is this sorted so we always pick the greatest version?
-		pkgs = []*packages.Package{candidates[0]}
-	}
-
-	return pkgs, nil
-}
-
-func extractDeps(depType string, pkg *packages.Package, resolver *portage.Resolver) ([]string, error) {
+func extractDeps(depType string, pkg *packages.Package, resolver *portage.Resolver) ([]*dependency.Atom, error) {
 	metadata := pkg.Metadata()
 	deps, err := dependency.Parse(metadata[depType])
 	if err != nil {
@@ -219,80 +164,120 @@ func applyDepOverrides(pkg *packages.Package, deps []string) []string {
 }
 
 func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (depdata.PackageInfoMap, error) {
-	depsInfo := make(depdata.PackageInfoMap)
-	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
-		atom, err := dependency.ParseAtom(packageName)
+	infoMap := make(depdata.PackageInfoMap)
+
+	var dfs func(atom *dependency.Atom) (*depdata.PackageInfo, error) // for recursive calls
+	dfs = func(atom *dependency.Atom) (*depdata.PackageInfo, error) {
+		log.Printf("%s", atom.String())
+
+		pkg, err := selectBestPackage(resolver, atom)
 		if err != nil {
 			return nil, err
 		}
 
-		pkgs, err := selectBestPackages(resolver, atom)
+		pkgID := fmt.Sprintf("%s:%s", pkg.Name(), pkg.MainSlot())
+		if info, ok := infoMap[pkgID]; ok {
+			if info == nil {
+				return nil, fmt.Errorf("circular dependencies involving %s detected", pkgID)
+			}
+			if info.Version != pkg.Version().String() {
+				return nil, fmt.Errorf("inconsistent package selection for %s: got %s, want %s", pkgID, pkg.Version().String(), info.Version)
+			}
+			return info, nil
+		}
+
+		// Temporarily set nil to detect circular dependencies and avoid infinite
+		// recursion.
+		infoMap[pkgID] = nil
+
+		rawRuntimeDeps, err := extractDeps("RDEPEND", pkg, resolver)
 		if err != nil {
 			return nil, err
 		}
 
-		var allPkgDeps []string
-
-		for _, pkg := range pkgs {
-			log.Printf("%s-%s:", pkg.Name(), pkg.Version())
-
-			runtimeDeps, err := extractDeps("RDEPEND", pkg, resolver)
-			if err != nil {
-				return nil, err
-			}
-			if len(runtimeDeps) > 0 {
-				log.Printf("  R: %s", strings.Join(runtimeDeps, ", "))
-			}
-
-			buildTimeDeps, err := extractDeps("DEPEND", pkg, resolver)
-			if err != nil {
-				return nil, err
-			}
-			if len(buildTimeDeps) > 0 {
-				log.Printf("  B: %s", strings.Join(buildTimeDeps, ", "))
-			}
-
-			// Some rust src packages have their dependencies only listed as DEPEND.
-			// They also need to be listed as RDPEND so they get pulled in as
-			// transitive deps.
-			if isRustSrcPackage(pkg) {
-				runtimeDeps = append(runtimeDeps, buildTimeDeps...)
-				runtimeDeps = unique(runtimeDeps)
-			}
-
-			srcDeps, err := srcparse.ExtractLocalPackages(pkg)
-			if err != nil {
-				return nil, err
-			}
-			if len(srcDeps) > 0 {
-				log.Printf("  S: %s", srcDeps)
-			}
-
-			srcURIs, err := srcparse.ExtractURIs(pkg)
-			if err != nil {
-				return nil, err
-			}
-
-			allPkgDeps = append(allPkgDeps, buildTimeDeps...)
-			allPkgDeps = append(allPkgDeps, runtimeDeps...)
-
-			buildTimeDeps = applyDepOverrides(pkg, buildTimeDeps)
-			runtimeDeps = applyDepOverrides(pkg, runtimeDeps)
-
-			depsInfo[pkg.Name()] = append(depsInfo[pkg.Name()], &depdata.PackageInfo{
-				Version:     pkg.Version().String(),
-				BuildDeps:   buildTimeDeps,
-				LocalSrc:    srcDeps,
-				RuntimeDeps: runtimeDeps,
-				SrcUris:     srcURIs,
-			})
+		rawBuildTimeDeps, err := extractDeps("DEPEND", pkg, resolver)
+		if err != nil {
+			return nil, err
 		}
 
-		return unique(allPkgDeps), nil
-	}); err != nil {
-		return nil, err
+		// Some rust src packages have their dependencies only listed as DEPEND.
+		// They also need to be listed as RDPEND so they get pulled in as
+		// transitive deps.
+		if isRustSrcPackage(pkg) {
+			rawRuntimeDeps = append(rawRuntimeDeps, rawBuildTimeDeps...)
+		}
+
+		resolveDeps := func(rawDeps []*dependency.Atom) ([]string, error) {
+			depSet := make(map[string]struct{})
+			for _, rawDep := range rawDeps {
+				info, err := dfs(rawDep)
+				if err != nil {
+					return nil, err
+				}
+				depSet[fmt.Sprintf("%s:%s", info.Name, info.MainSlot)] = struct{}{}
+			}
+
+			var deps []string
+			for dep := range depSet {
+				deps = append(deps, dep)
+			}
+			sort.Strings(deps)
+			return deps, nil
+		}
+
+		runtimeDeps, err := resolveDeps(rawRuntimeDeps)
+		if err != nil {
+			return nil, err
+		}
+		if len(runtimeDeps) > 0 {
+			log.Printf("  R: %s", strings.Join(runtimeDeps, ", "))
+		}
+
+		buildTimeDeps, err := resolveDeps(rawBuildTimeDeps)
+		if err != nil {
+			return nil, err
+		}
+		if len(buildTimeDeps) > 0 {
+			log.Printf("  B: %s", strings.Join(buildTimeDeps, ", "))
+		}
+
+		srcDeps, err := srcparse.ExtractLocalPackages(pkg)
+		if err != nil {
+			return nil, err
+		}
+		if len(srcDeps) > 0 {
+			log.Printf("  S: %s", srcDeps)
+		}
+
+		srcURIs, err := srcparse.ExtractURIs(pkg)
+		if err != nil {
+			return nil, err
+		}
+
+		runtimeDeps = applyDepOverrides(pkg, runtimeDeps)
+		buildTimeDeps = applyDepOverrides(pkg, buildTimeDeps)
+
+		info := &depdata.PackageInfo{
+			Name:        pkg.Name(),
+			MainSlot:    pkg.MainSlot(),
+			EBuildPath:  pkg.Path(),
+			Version:     pkg.Version().String(),
+			BuildDeps:   buildTimeDeps,
+			LocalSrc:    srcDeps,
+			RuntimeDeps: runtimeDeps,
+			SrcUris:     srcURIs,
+		}
+		infoMap[pkgID] = info
+		return info, nil
 	}
-	return depsInfo, nil
+
+	for _, name := range startPackageNames {
+		if _, err := dfs(dependency.NewAtom(name, dependency.OpNone, nil, false, "", nil)); err != nil {
+			return nil, err
+		}
+	}
+
+	return infoMap, nil
 }
 
 var flagBoard = &cli.StringFlag{

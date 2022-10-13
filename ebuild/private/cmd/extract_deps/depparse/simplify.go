@@ -5,151 +5,223 @@
 package depparse
 
 import (
-	"log"
+	"strings"
 
+	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
+	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
 
-// HACK: Hard-code several package info.
-// TODO: Remove these hacks.
-var (
-	knownInstalledPackages = map[string]struct{}{
-		"sys-libs/glibc": {},
+func isKnownUnavailable(atom *dependency.Atom) bool {
+	// TODO: Remove this hack.
+	switch atom.PackageName() {
+	case "dev-lang/python":
+		slot := atom.SlotDep()
+		return slot == "2.7" || slot == "3.7" || slot == "3.8"
+	case "dev-libs/libverto":
+		// dev-libs/libverto is installed with libev, not libevent.
+		useDeps := atom.UseDeps()
+		return len(useDeps) >= 1 && useDeps[0].String() == "libevent"
+	case "dev-python/m2crypto":
+		useDeps := atom.UseDeps()
+		return len(useDeps) >= 1 && strings.HasPrefix(useDeps[0].String(), "python_targets_python3_7")
+	case "media-libs/jpeg":
+		return true
+	default:
+		return false
 	}
-	knownMissingPackages = map[string]struct{}{
-		"app-crypt/heimdal":       {},
-		"app-misc/realpath":       {},
-		"media-libs/jpeg":         {},
-		"net-firewall/nftables":   {},
-		"sys-auth/openpam":        {},
-		"sys-freebsd/freebsd-bin": {},
-		"sys-freebsd/freebsd-lib": {},
-		"sys-fs/eudev":            {},
-		"sys-libs/e2fsprogs-libs": {},
+}
+
+func simplifyDeps(deps *dependency.Deps, pkg *packages.Package, resolver *portage.Resolver) (*dependency.Deps, error) {
+	deps = dependency.ResolveUse(deps, pkg.Uses())
+
+	deps, err := rewritePackageDeps(deps, resolver)
+	if err != nil {
+		return nil, err
 	}
-)
 
-func simplifyDeps(deps *dependency.Deps, use map[string]bool, packageName string) *dependency.Deps {
-	deps = dependency.ResolveUse(deps, use)
+	deps = mergeOverlappedDeps(deps)
 
-	// Rewrite package atoms.
-	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
+	deps = dependency.Simplify(deps)
+
+	return deps, nil
+}
+
+// rewritePackageDeps rewrites package dependency atoms.
+func rewritePackageDeps(deps *dependency.Deps, resolver *portage.Resolver) (*dependency.Deps, error) {
+	return dependency.MapWithError(deps, func(expr dependency.Expr) (dependency.Expr, error) {
 		pkg, ok := expr.(*dependency.Package)
 		if !ok {
-			return expr
+			return expr, nil
 		}
-
-		packageName := pkg.Atom().PackageName()
 
 		// Remove blocks.
 		if pkg.Blocks() > 0 {
-			return dependency.ConstTrue
+			return dependency.ConstTrue, nil
 		}
 
-		// So we have circular dependencies in the rust graph. See:
-		// * src/third_party/chromiumos-overlay/dev-rust/futures-util/futures-util-0.3.13.ebuild
-		// * src/third_party/chromiumos-overlay/dev-rust/hashbrown/hashbrown-0.11.2.ebuild
-		// In order to break it there is an empty package that is used to break the deps. Since
-		// the package is empty we can get away with just dropping the dependency.
-		if pkg.Atom().String() == "~dev-rust/tokio-io-0.1.9" ||
-			pkg.Atom().String() == "~dev-rust/ahash-0.7.0:=" {
-			return dependency.ConstTrue
+		atom := pkg.Atom()
+
+		// HACK: Rewrite certain known unavailable packages.
+		// TODO: Drop these hard-coded hack.
+		if isKnownUnavailable(atom) {
+			return dependency.ConstFalse, nil
 		}
 
-		// Rewrite known packages.
-		if _, installed := knownInstalledPackages[packageName]; installed {
-			return dependency.ConstTrue
-		}
-		if _, missing := knownMissingPackages[packageName]; missing {
-			return dependency.ConstFalse
+		// Remove provided packages.
+		if resolver.IsProvided(atom) {
+			return dependency.ConstTrue, nil
 		}
 
-		// Strip modifiers.
-		atom := dependency.NewAtom(packageName, dependency.OpNone, nil, false, "", nil)
-		return dependency.NewPackage(atom, 0)
-	}))
+		// Remove non-existent packages.
+		candidates, err := resolver.Packages(atom)
+		if err != nil {
+			return nil, err
+		}
+		if len(candidates) == 0 {
+			return dependency.ConstFalse, nil
+		}
 
-	// Unify AnyOf whose children refer to the same package.
-	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
-		anyOf, ok := expr.(*dependency.AnyOf)
-		if !ok {
+		return pkg, nil
+	})
+}
+
+// mergeOverlappedDeps simplifies deps by merging redundantly overlapped
+// package dependencies.
+//
+// Example:
+//
+//	>=dev-libs/openssl-1.0 >=dev-libs/openssl-1.1  ==>  >=dev-libs/openssl-1.1
+func mergeOverlappedDeps(deps *dependency.Deps) *dependency.Deps {
+	deps = dependency.Simplify(deps)
+	return dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
+		var allOf bool
+		var children []dependency.Expr
+		switch expr := expr.(type) {
+		case *dependency.AllOf:
+			allOf = true
+			children = expr.Children()
+		case *dependency.AnyOf:
+			allOf = false
+			children = expr.Children()
+		default:
 			return expr
 		}
 
-		children := anyOf.Children()
-		if len(children) == 0 {
-			return expr
-		}
+		// First, index atoms by package names.
+		originalsMap := make(map[string][]*dependency.Atom)
 
-		pkg0, ok := children[0].(*dependency.Package)
-		if !ok {
-			return expr
-		}
-
-		same := true
-		for _, child := range children {
-			pkg, ok := child.(*dependency.Package)
-			if ok && pkg.Atom().PackageName() == pkg0.Atom().PackageName() {
-				continue
-			}
-			same = false
-			break
-		}
-		if !same {
-			return expr
-		}
-		return pkg0
-	}))
-
-	// Deduplicate occurrences of the same package atom.
-	var alwaysPkgs []dependency.Expr
-	alwaysSet := make(map[string]struct{})
-	for _, expr := range deps.Expr().Children() {
-		pkg, ok := expr.(*dependency.Package)
-		if !ok {
-			continue
-		}
-		alwaysPkgs = append(alwaysPkgs, pkg)
-		alwaysSet[pkg.String()] = struct{}{}
-	}
-	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
-		pkg, ok := expr.(*dependency.Package)
-		if !ok {
-			return expr
-		}
-		if _, ok := alwaysSet[pkg.Atom().PackageName()]; ok {
-			return dependency.ConstTrue
-		}
-		return pkg
-	}))
-	deps = dependency.Simplify(dependency.NewDeps(dependency.NewAllOf(append(alwaysPkgs, deps.Expr()))))
-
-	// Remove trivial AnyOf.
-	deps = dependency.Simplify(dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
-		anyOf, ok := expr.(*dependency.AnyOf)
-		if !ok {
-			return expr
-		}
-		log.Print(anyOf.String())
-		children := anyOf.Children()
-		if len(children) == 0 {
-			return expr
-		}
-		pkg0, ok := children[0].(*dependency.Package)
-		if !ok {
-			return expr
-		}
 		for _, child := range children {
 			pkg, ok := child.(*dependency.Package)
 			if !ok {
-				return expr
+				continue
 			}
-			if pkg.Atom().PackageName() != pkg0.Atom().PackageName() {
-				return expr
-			}
+			atom := pkg.Atom()
+			packageName := atom.PackageName()
+			originalsMap[packageName] = append(originalsMap[packageName], atom)
 		}
-		return pkg0
-	}))
 
-	return deps
+		// Decide which packages to rewrite.
+		rewriteMap := make(map[string]*dependency.Atom)
+
+		for packageName, atoms := range originalsMap {
+			if len(atoms) <= 1 {
+				continue
+			}
+
+			atom0 := atoms[0]
+			// Handle >= operator only (for now).
+			if atom0.VersionOperator() != dependency.OpGreaterEqual {
+				continue
+			}
+			if atom0.Wildcard() {
+				continue
+			}
+
+			// Find atoms with highest/lowest versions.
+			hi, lo, ok := func() (hi, lo *dependency.Atom, ok bool) {
+				matchExceptVersion := func(atom *dependency.Atom) bool {
+					if atom.VersionOperator() != atom0.VersionOperator() {
+						return false
+					}
+					if atom.Wildcard() != atom0.Wildcard() {
+						return false
+					}
+					if atom.SlotDep() != atom0.SlotDep() {
+						return false
+					}
+					if len(atom.UseDeps()) != len(atom0.UseDeps()) {
+						return false
+					}
+					for i, use0 := range atom0.UseDeps() {
+						use := atom.UseDeps()[i]
+						if use.String() != use0.String() {
+							return false
+						}
+					}
+					return true
+				}
+
+				hi, lo = atom0, atom0
+
+				for _, atom := range atoms {
+					if !matchExceptVersion(atom) {
+						return nil, nil, false
+					}
+					if atom.Version().Compare(hi.Version()) > 0 {
+						hi = atom
+					}
+					if atom.Version().Compare(lo.Version()) < 0 {
+						lo = atom
+					}
+				}
+				return hi, lo, true
+			}()
+			if !ok {
+				continue
+			}
+
+			var rewrite *dependency.Atom
+			if allOf {
+				rewrite = hi
+			} else {
+				rewrite = lo
+			}
+			rewriteMap[packageName] = rewrite
+		}
+
+		// Return early if there is no package to rewrite.
+		if len(rewriteMap) == 0 {
+			return expr
+		}
+
+		// Perform actual rewrites.
+		var newChildren []dependency.Expr
+		for _, child := range children {
+			pkg, ok := child.(*dependency.Package)
+			if !ok {
+				newChildren = append(newChildren, child)
+				continue
+			}
+
+			packageName := pkg.Atom().PackageName()
+			rewrite, ok := rewriteMap[packageName]
+			if !ok {
+				newChildren = append(newChildren, child)
+				continue
+			}
+			if rewrite == nil {
+				continue
+			}
+
+			// Rewrite the first occurrence, and drop all others.
+			newChildren = append(newChildren, dependency.NewPackage(rewrite, 0))
+			rewriteMap[packageName] = nil
+		}
+
+		if allOf {
+			return dependency.NewAllOf(newChildren)
+		}
+		return dependency.NewAnyOf(newChildren)
+	})
 }

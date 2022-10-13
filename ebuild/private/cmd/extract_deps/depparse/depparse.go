@@ -6,10 +6,8 @@ package depparse
 
 import (
 	"fmt"
-	"sort"
 
 	"cros.local/bazel/ebuild/private/common/portage"
-	"cros.local/bazel/ebuild/private/common/standard/config"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
@@ -33,54 +31,43 @@ var (
 	}
 )
 
-func parseSimpleDeps(deps *dependency.Deps) ([]string, bool) {
-	nameSet := make(map[string]struct{})
+func parseSimpleDeps(deps *dependency.Deps) ([]*dependency.Atom, bool) {
+	var atoms []*dependency.Atom
 	for _, expr := range deps.Expr().Children() {
 		pkg, ok := expr.(*dependency.Package)
 		if !ok {
 			return nil, false
 		}
-		nameSet[pkg.Atom().PackageName()] = struct{}{}
-	}
-
-	names := make([]string, 0, len(nameSet))
-	for name := range nameSet {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	return names, true
-}
-
-func filterPackages(pkgs []string, provided []*config.TargetPackage) []string {
-	providedSet := make(map[string]struct{})
-	for _, p := range provided {
-		providedSet[p.Name] = struct{}{}
-	}
-
-	var filtered []string
-	for _, pkg := range pkgs {
-		if _, ok := providedSet[pkg]; !ok {
-			filtered = append(filtered, pkg)
+		if pkg.Blocks() != 0 {
+			return nil, false
 		}
+		atoms = append(atoms, pkg.Atom())
 	}
-	return filtered
+	return atoms, true
 }
 
-func Parse(deps *dependency.Deps, pkg *packages.Package, resolver *portage.Resolver) ([]string, error) {
-	simpleDeps := simplifyDeps(deps, pkg.Uses(), pkg.Name())
+func Parse(deps *dependency.Deps, pkg *packages.Package, resolver *portage.Resolver) ([]*dependency.Atom, error) {
+	if forceDeps, ok := forceDepsPackages[pkg.Name()]; ok {
+		var atoms []*dependency.Atom
+		for _, s := range forceDeps {
+			atom, err := dependency.ParseAtom(s)
+			if err != nil {
+				return nil, err
+			}
+			atoms = append(atoms, atom)
+		}
+		return atoms, nil
+	}
 
-	parsedDeps, ok := forceDepsPackages[pkg.Name()]
+	simpleDeps, err := simplifyDeps(deps, pkg, resolver)
+	if err != nil {
+		return nil, fmt.Errorf("failed simplifying deps: %s: %w", deps.String(), err)
+	}
+
+	atoms, ok := parseSimpleDeps(simpleDeps)
 	if !ok {
-		parsedDeps, ok = parseSimpleDeps(simpleDeps)
-		if !ok {
-			return nil, fmt.Errorf("cannot simplify deps: %s", simpleDeps.String())
-		}
+		return nil, fmt.Errorf("failed parsing simplify deps as it is not very simple: %s => %s", deps.String(), simpleDeps.String())
 	}
 
-	parsedDeps = filterPackages(parsedDeps, resolver.ProvidedPackages())
-
-	sort.Strings(parsedDeps)
-
-	return parsedDeps, nil
+	return atoms, nil
 }

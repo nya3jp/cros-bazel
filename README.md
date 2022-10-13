@@ -17,17 +17,32 @@ $ cd src
 
 ## Building
 
-To build a single package (sys-apps/ethtool for example):
+First you need to generate `BUILD.bazel` files for Portage packages.
+Package data needed to generate them are managed in `bazel/data/deps.json`
+and it can be converted to `BUILD.bazel` with the following command:
 
 ```sh
-$ bazel build //third_party/portage-stable/sys-apps/ethtool
+$ bazel run //bazel/ebuild/private/cmd/update_build
 ```
+
+Then you can start building packages. To build sys-apps/ethtool for example:
+
+```sh
+$ bazel build //third_party/portage-stable/sys-apps/ethtool:0
+```
+
+Note that the label "0" is a SLOT identifier. It is typically "0", but it can
+have different values for packages where multiple versions can be installed
+at the same time.
 
 To build all target packages:
 
 ```
 $ bazel build --keep_going //:all_target_packages
 ```
+
+This is basically a short-cut to build
+`//third_party/chromiumos-overlay/virtual/target-os:0`.
 
 ## Directory structure
 

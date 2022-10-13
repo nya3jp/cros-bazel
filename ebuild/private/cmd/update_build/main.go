@@ -20,23 +20,19 @@ import (
 
 	"cros.local/bazel/ebuild/private/cmd/update_build/distfiles"
 	"cros.local/bazel/ebuild/private/common/depdata"
-	"cros.local/bazel/ebuild/private/common/standard/dependency"
 )
 
-const ebuildExt = ".ebuild"
+const (
+	ebuildExt = ".ebuild"
+
+	workspaceDirInChroot = "/mnt/host/source/src"
+)
 
 var overlayRelDirs = []string{
 	// The order matters; the first one has the highest priority.
 	"overlays/overlay-arm64-generic",
 	"third_party/chromiumos-overlay",
 	"third_party/portage-stable",
-}
-
-// TODO: Remove this blocklist.
-var blockedPackages = map[string]struct{}{
-	"fzf":   {}, // tries to access goproxy.io
-	"jlink": {}, // distfile unavailable due to restricted license
-	"shfmt": {}, // tries to access goproxy.io
 }
 
 type ebuildInfo struct {
@@ -52,6 +48,10 @@ type packageGroup struct {
 	Packages    []string
 }
 
+type repositoriesTemplateVars struct {
+	Dists []*distfiles.Entry
+}
+
 var repositoriesTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The ChromiumOS Authors.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -59,7 +59,7 @@ var repositoriesTemplate = template.Must(template.New("").Parse(`# Copyright 202
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 def dependencies():
-{{- range . }}
+{{- range .Dists }}
     http_file(
         name = "{{ .Name }}",
         downloaded_file_path = "{{ .Filename }}",
@@ -69,16 +69,20 @@ def dependencies():
 {{- end }}
 `))
 
-var buildHeaderTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The ChromiumOS Authors.
+type buildTemplateVars struct {
+	EBuilds     []ebuildInfo
+	NameToLabel map[string]string
+}
+
+var buildTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The ChromiumOS Authors.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 load("//bazel/ebuild:defs.bzl", "ebuild")
-`))
 
-var ebuildTemplate = template.Must(template.New("").Parse(`
+{{ range .EBuilds -}}
 ebuild(
-    name = "{{ .PackageName }}",
+    name = "{{ .PackageInfo.MainSlot }}",
     ebuild = "{{ .EBuildName }}",
     category = "{{ .Category }}",
     distfiles = {
@@ -96,35 +100,35 @@ ebuild(
     {{- if .PackageInfo.BuildDeps }}
     build_deps = [
         {{- range .PackageInfo.BuildDeps }}
-        "{{ . }}",
+        "{{ index $.NameToLabel . }}",
         {{- end }}
     ],
     {{- end }}
     {{- if .PackageInfo.RuntimeDeps }}
     runtime_deps = [
         {{- range .PackageInfo.RuntimeDeps }}
-        "{{ . }}",
+        "{{ index $.NameToLabel . }}",
         {{- end }}
     ],
     {{- end }}
     files = glob(["files/**"]),
     visibility = ["//visibility:public"],
 )
+{{ end -}}
 `))
 
-var packageGroupTemplate = template.Must(template.New("").Parse(`
-load("//bazel/ebuild:defs.bzl", "package_set")
-
-package_set(
-    name = "{{ .PackageName }}",
-    deps = [
-        {{- range .Packages }}
-        ":{{ . }}",
-        {{- end }}
-    ],
-    visibility = ["//visibility:public"],
-)
-`))
+// parseChrootPath parses a file path in chroot into a relative path from the
+// workspace root.
+//
+// Examples:
+//
+//	/mnt/host/source/src/platform2/README.md => platform2/README.md
+func parseChrootPath(path string) (string, error) {
+	if !strings.HasPrefix(path, workspaceDirInChroot+"/") {
+		return "", fmt.Errorf("%s is not under %s", path, workspaceDirInChroot)
+	}
+	return path[len(workspaceDirInChroot)+1:], nil
+}
 
 func writeToFile(buildPath string, fn func(f *os.File) error) error {
 	f, err := os.Create(buildPath)
@@ -147,51 +151,9 @@ func generateRepositories(bzlPath string, dists []*distfiles.Entry) error {
 	}
 	defer f.Close()
 
-	return repositoriesTemplate.Execute(f, dists)
-}
-
-func packageNameToLabel(name string, overlayDirs []string) (string, error) {
-	for _, overlayDir := range overlayDirs {
-		fis, err := os.ReadDir(filepath.Join(overlayDir, name))
-		if err != nil {
-			continue
-		}
-		hasEBuild := false
-		for _, fi := range fis {
-			if strings.HasSuffix(fi.Name(), ".ebuild") {
-				hasEBuild = true
-			}
-		}
-		if !hasEBuild {
-			continue
-		}
-		v := strings.Split(overlayDir, "/")
-		return fmt.Sprintf("//%s/%s/%s", v[len(v)-2], v[len(v)-1], name), nil
-	}
-	return "", fmt.Errorf("%s not found in overlays", name)
-}
-
-func packageAtomsToLabels(atoms []string, overlayDirs []string) ([]string, error) {
-	var labels []string
-	for _, atromStr := range atoms {
-		atom, err := dependency.ParseAtom(atromStr)
-		if err != nil {
-			return nil, err
-		}
-
-		label, err := packageNameToLabel(atom.PackageName(), overlayDirs)
-		if err != nil {
-			return nil, err
-		}
-
-		if atom.Version() != nil {
-			name := strings.Split(atom.PackageName(), "/")[1]
-			label = fmt.Sprintf("%s:%s-%s", label, name, atom.Version())
-		}
-
-		labels = append(labels, label)
-	}
-	return labels, nil
+	return repositoriesTemplate.Execute(f, &repositoriesTemplateVars{
+		Dists: dists,
+	})
 }
 
 func getDistEntries(cache *distfiles.Cache, pkgInfo *depdata.PackageInfo) ([]*distfiles.Entry, error) {
@@ -223,20 +185,11 @@ func getDistEntries(cache *distfiles.Cache, pkgInfo *depdata.PackageInfo) ([]*di
 	return dists, nil
 }
 
-func generatePackage(ebuildDir string, pkgInfoMap depdata.PackageInfoMap, cache *distfiles.Cache) ([]*distfiles.Entry, error) {
+func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, nameToLabel map[string]string, cache *distfiles.Cache) ([]*distfiles.Entry, error) {
 	v := strings.Split(ebuildDir, "/")
 	category := v[len(v)-2]
 	packageName := v[len(v)-1]
 	buildPath := filepath.Join(ebuildDir, "BUILD.bazel")
-
-	pkgInfos := pkgInfoMap[fmt.Sprintf("%s/%s", category, packageName)]
-	_, blocked := blockedPackages[packageName]
-	if pkgInfos == nil || blocked {
-		if err := os.Remove(buildPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		return nil, nil
-	}
 
 	log.Printf("Generating: %s", buildPath)
 
@@ -277,44 +230,18 @@ func generatePackage(ebuildDir string, pkgInfoMap depdata.PackageInfoMap, cache 
 	}
 
 	if err := writeToFile(buildPath, func(f *os.File) error {
-		if err := buildHeaderTemplate.Execute(f, nil); err != nil {
-			return err
-		}
-
-		for _, ebuild := range ebuildInfos {
-			if err := ebuildTemplate.Execute(f, ebuild); err != nil {
-				return err
-			}
-		}
-
-		if len(ebuildInfos) > 1 {
-			var targetNames []string
-
-			for _, ebuild := range ebuildInfos {
-				targetNames = append(targetNames, ebuild.PackageName)
-			}
-
-			packageGroup := packageGroup{
-				PackageName: packageName,
-				Packages:    targetNames,
-			}
-			if err := packageGroupTemplate.Execute(f, packageGroup); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return buildTemplate.Execute(f, &buildTemplateVars{
+			EBuilds:     ebuildInfos,
+			NameToLabel: nameToLabel,
+		})
 	}); err != nil {
 		return nil, err
 	}
 	return allDists, nil
 }
 
-func generateOverlay(overlayDir string, pkgInfoMap depdata.PackageInfoMap, cache *distfiles.Cache) error {
-	var overlayDists []*distfiles.Entry
-
-	var ebuildDirs []string
-	if err := filepath.WalkDir(overlayDir, func(path string, d fs.DirEntry, err error) error {
+func cleanOverlay(overlayDir string) error {
+	return filepath.WalkDir(overlayDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -328,17 +255,37 @@ func generateOverlay(overlayDir string, pkgInfoMap depdata.PackageInfoMap, cache
 		}
 		for _, fi := range fis {
 			if strings.HasSuffix(fi.Name(), ebuildExt) {
-				ebuildDirs = append(ebuildDirs, path)
+				if err := os.Remove(filepath.Join(path, "BUILD.bazel")); err != nil && !errors.Is(err, fs.ErrNotExist) {
+					return err
+				}
 				return fs.SkipDir
 			}
 		}
 		return nil
-	}); err != nil {
+	})
+}
+
+func generateOverlay(overlayRelDir string, workspaceDir string, pkgInfoMap depdata.PackageInfoMap, nameToLabel map[string]string, cache *distfiles.Cache) error {
+	overlayDir := filepath.Join(workspaceDir, overlayRelDir)
+	overlayDirInChroot := filepath.Join(workspaceDirInChroot, overlayRelDir)
+
+	if err := cleanOverlay(overlayDir); err != nil {
 		return err
 	}
 
-	for _, ebuildDir := range ebuildDirs {
-		dists, err := generatePackage(ebuildDir, pkgInfoMap, cache)
+	pkgInfoByDir := make(map[string][]*depdata.PackageInfo)
+	for _, info := range pkgInfoMap {
+		if !strings.HasPrefix(info.EBuildPath, overlayDirInChroot+"/") {
+			continue
+		}
+		ebuildDir := filepath.Dir(filepath.Join(overlayDir, info.EBuildPath[len(overlayDirInChroot)+1:]))
+		pkgInfoByDir[ebuildDir] = append(pkgInfoByDir[ebuildDir], info)
+	}
+
+	var overlayDists []*distfiles.Entry
+
+	for ebuildDir, infos := range pkgInfoByDir {
+		dists, err := generatePackage(ebuildDir, infos, nameToLabel, cache)
 		if err != nil {
 			return err
 		}
@@ -353,9 +300,9 @@ func generateOverlay(overlayDir string, pkgInfoMap depdata.PackageInfoMap, cache
 	return nil
 }
 
-func generate(overlayDirs []string, pkgInfoMap depdata.PackageInfoMap, cache *distfiles.Cache) error {
-	for _, overlayDir := range overlayDirs {
-		if err := generateOverlay(overlayDir, pkgInfoMap, cache); err != nil {
+func generate(workspaceDir string, pkgInfoMap depdata.PackageInfoMap, nameToLabel map[string]string, cache *distfiles.Cache) error {
+	for _, overlayRelDir := range overlayRelDirs {
+		if err := generateOverlay(overlayRelDir, workspaceDir, pkgInfoMap, nameToLabel, cache); err != nil {
 			return err
 		}
 	}
@@ -371,39 +318,20 @@ var app = &cli.App{
 		flagPackageInfoFile,
 	},
 	Action: func(c *cli.Context) error {
-		packageInfoPath := c.String(flagPackageInfoFile.Name)
-
 		workspaceDir := os.Getenv("BUILD_WORKSPACE_DIRECTORY")
 
-		var overlayDirs []string
-		for _, overlayRelDir := range overlayRelDirs {
-			overlayDir := filepath.Join(workspaceDir, overlayRelDir)
-			overlayDirs = append(overlayDirs, overlayDir)
+		packageInfoPath := c.String(flagPackageInfoFile.Name)
+		if packageInfoPath == "" {
+			packageInfoPath = filepath.Join(workspaceDir, "bazel/data/deps.json")
 		}
 
 		var pkgInfoMap depdata.PackageInfoMap
-		if packageInfoPath != "" {
-			b, err := os.ReadFile(packageInfoPath)
-			if err != nil {
-				return err
-			}
-			if err := json.Unmarshal(b, &pkgInfoMap); err != nil {
-				return err
-			}
-
-			// Rewrite package names to labels.
-			for _, pkgInfos := range pkgInfoMap {
-				for _, pkgInfo := range pkgInfos {
-					pkgInfo.BuildDeps, err = packageAtomsToLabels(pkgInfo.BuildDeps, overlayDirs)
-					if err != nil {
-						return err
-					}
-					pkgInfo.RuntimeDeps, err = packageAtomsToLabels(pkgInfo.RuntimeDeps, overlayDirs)
-					if err != nil {
-						return err
-					}
-				}
-			}
+		b, err := os.ReadFile(packageInfoPath)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(b, &pkgInfoMap); err != nil {
+			return err
 		}
 
 		cache, err := distfiles.NewCache(filepath.Join(workspaceDir, "bazel/data/distfiles.json"))
@@ -411,7 +339,17 @@ var app = &cli.App{
 			return err
 		}
 
-		return generate(overlayDirs, pkgInfoMap, cache)
+		nameToLabel := make(map[string]string)
+		for name, info := range pkgInfoMap {
+			ebuildRelPath, err := parseChrootPath(info.EBuildPath)
+			if err != nil {
+				return err
+			}
+			ebuildRelDir := filepath.Dir(ebuildRelPath)
+			nameToLabel[name] = fmt.Sprintf("//%s:%s", ebuildRelDir, info.MainSlot)
+		}
+
+		return generate(workspaceDir, pkgInfoMap, nameToLabel, cache)
 	},
 }
 
