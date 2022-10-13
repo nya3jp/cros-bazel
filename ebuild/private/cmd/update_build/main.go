@@ -23,6 +23,7 @@ import (
 	"strings"
 	"text/template"
 
+	"cros.local/bazel/ebuild/private/common/depdata"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"github.com/urfave/cli"
 )
@@ -72,28 +73,12 @@ type distEntry struct {
 	Name     string `json:"name"`
 }
 
-type uriInfo struct {
-	Uris      []string `json:"uris"`
-	Size      int      `json:"size"`
-	Integrity string   `json:"integrity"`
-	SHA256    string   `json:"SHA256"`
-	SHA512    string   `json:"SHA512"`
-}
-
-type packageInfo struct {
-	Version     string             `json:"version"`
-	BuildDeps   []string           `json:"buildDeps"`
-	LocalSrc    []string           `json:"localSrc"`
-	RuntimeDeps []string           `json:"runtimeDeps"`
-	SrcUris     map[string]uriInfo `json:"srcUris"`
-}
-
 type ebuildInfo struct {
 	EBuildName  string
 	PackageName string
 	Category    string
 	Dists       []*distEntry
-	PackageInfo *packageInfo
+	PackageInfo *depdata.PackageInfo
 }
 
 type packageGroup struct {
@@ -128,7 +113,7 @@ func getSHA(url string) (string, string, error) {
 	return sha256HashHex, sha512HashHex, nil
 }
 
-func locateDistFile(filename string, info uriInfo) (*distEntry, error) {
+func locateDistFile(filename string, info *depdata.URIInfo) (*distEntry, error) {
 	// Once we use bazel 6.0 we can just set integrity value on the
 	// http_file.
 	var sha256 string
@@ -349,7 +334,7 @@ func packageAtomsToLabels(atoms []string, overlayDirs []string) ([]string, error
 	return labels, nil
 }
 
-func getDistEntries(cachedDists map[string]*distEntry, distJSONPath string, pkgInfo *packageInfo) ([]*distEntry, error) {
+func getDistEntries(cachedDists map[string]*distEntry, distJSONPath string, pkgInfo *depdata.PackageInfo) ([]*distEntry, error) {
 	var dists []*distEntry
 	for filename, srcInfo := range pkgInfo.SrcUris {
 		// Check the cache first.
@@ -426,7 +411,7 @@ var app = &cli.App{
 			overlayDirs = append(overlayDirs, overlayDir)
 		}
 
-		var pkgInfoMap map[string][]*packageInfo
+		var pkgInfoMap depdata.PackageInfoMap
 		if packageInfoPath != "" {
 			b, err := os.ReadFile(packageInfoPath)
 			if err != nil {

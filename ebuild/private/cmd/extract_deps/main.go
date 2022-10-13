@@ -21,6 +21,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"cros.local/bazel/ebuild/private/common/depdata"
 	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/config"
@@ -118,7 +119,7 @@ var forceProvided = []string{
 func unique(list []string) []string {
 	sort.Strings(list)
 
-	var uniqueRuntimeDeps = []string{}
+	var uniqueRuntimeDeps []string
 	var previousDep string
 	for _, dep := range list {
 		if dep == previousDep {
@@ -287,7 +288,7 @@ func computeSrcPackages(pkg *packages.Package) ([]string, error) {
 
 	splitCrosWorkon := func(value string) []string {
 		if value == "" {
-			return []string{}
+			return nil
 		} else {
 			// The parser will return | concat arrays, so undo that here.
 			return strings.Split(value, "|")
@@ -300,9 +301,8 @@ func computeSrcPackages(pkg *packages.Package) ([]string, error) {
 	if len(projects) == 0 {
 		if additionalSrcPackages, ok := additionalSrcPackages[pkg.Name()]; ok {
 			return additionalSrcPackages, nil
-		} else {
-			return []string{}, nil
 		}
+		return nil, nil
 	}
 
 	localNames := splitCrosWorkon(metadata["CROS_WORKON_LOCALNAME"])
@@ -352,7 +352,7 @@ func computeSrcPackages(pkg *packages.Package) ([]string, error) {
 		}
 
 		if subtree != "" {
-			var newPaths = []string{}
+			var newPaths []string
 
 			for _, path := range paths {
 				if path == "platform/vboot_reference" || path == "third_party/coreboot" {
@@ -424,10 +424,6 @@ func computeSrcPackages(pkg *packages.Package) ([]string, error) {
 		srcDeps = append(srcDeps, additionalSrcPackages...)
 	}
 
-	if len(srcDeps) == 0 {
-		srcDeps = []string{}
-	}
-
 	return srcDeps, nil
 }
 
@@ -457,7 +453,7 @@ type manifestEntry struct {
 	SHA512    string
 }
 
-func parseSimpleUris(deps *dependency.Deps, manifest map[string]manifestEntry) (map[string]uriInfo, error) {
+func parseSimpleUris(deps *dependency.Deps, manifest map[string]manifestEntry) (map[string]*depdata.URIInfo, error) {
 	uriMap := make(map[string][]string)
 	for _, expr := range deps.Expr().Children() {
 		uri, ok := expr.(*dependency.Uri)
@@ -478,14 +474,14 @@ func parseSimpleUris(deps *dependency.Deps, manifest map[string]manifestEntry) (
 		uriMap[fileName] = append(uriMap[fileName], uri.Uri())
 	}
 
-	uriInfoMap := make(map[string]uriInfo)
+	uriInfoMap := make(map[string]*depdata.URIInfo)
 	for fileName, uris := range uriMap {
 		entry, ok := manifest[fileName]
 		if !ok {
 			return nil, fmt.Errorf("Cannot find file %s in Manifest %s", fileName, manifest)
 		}
 
-		uriInfoMap[fileName] = uriInfo{
+		uriInfoMap[fileName] = &depdata.URIInfo{
 			Uris:      uris,
 			Size:      entry.size,
 			Integrity: entry.integrity,
@@ -684,14 +680,10 @@ func extractDeps(depType string, pkg *packages.Package, provided []*config.Targe
 
 	sort.Strings(parsedDeps)
 
-	if len(parsedDeps) == 0 {
-		parsedDeps = []string{}
-	}
-
 	return parsedDeps, nil
 }
 
-func extractSrcUris(pkg *packages.Package) (map[string]uriInfo, error) {
+func extractSrcUris(pkg *packages.Package) (map[string]*depdata.URIInfo, error) {
 	srcUri, ok := pkg.Metadata()["SRC_URI"]
 	_, hasBadSrcUri := badSrcUris[pkg.Name()]
 	if ok && !hasBadSrcUri && srcUri != "" {
@@ -714,15 +706,11 @@ func extractSrcUris(pkg *packages.Package) (map[string]uriInfo, error) {
 				return nil, err
 			}
 
-			if len(srcUriInfo) == 0 {
-				srcUriInfo = map[string]uriInfo{}
-			}
-
 			return srcUriInfo, err
 		}
 	}
 
-	return map[string]uriInfo{}, nil
+	return nil, nil
 }
 
 func applyDepOverrides(pkg *packages.Package, deps []string) []string {
@@ -741,8 +729,8 @@ func applyDepOverrides(pkg *packages.Package, deps []string) []string {
 	return deps
 }
 
-func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (map[string][]packageInfo, error) {
-	depsInfo := make(map[string][]packageInfo)
+func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (depdata.PackageInfoMap, error) {
+	depsInfo := make(depdata.PackageInfoMap)
 	if err := genericBFS(startPackageNames, func(packageName string) ([]string, error) {
 		atom, err := dependency.ParseAtom(packageName)
 		if err != nil {
@@ -802,7 +790,7 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (ma
 			buildTimeDeps = applyDepOverrides(pkg, buildTimeDeps)
 			runtimeDeps = applyDepOverrides(pkg, runtimeDeps)
 
-			depsInfo[pkg.Name()] = append(depsInfo[pkg.Name()], packageInfo{
+			depsInfo[pkg.Name()] = append(depsInfo[pkg.Name()], &depdata.PackageInfo{
 				Version:     pkg.Version().String(),
 				BuildDeps:   buildTimeDeps,
 				LocalSrc:    srcDeps,
@@ -826,23 +814,6 @@ var flagBoard = &cli.StringFlag{
 var flagStart = &cli.StringSliceFlag{
 	Name:     "start",
 	Required: true,
-}
-
-type uriInfo struct {
-	Uris      []string `json:"uris"`
-	Size      int      `json:"size"`
-	Integrity string   `json:"integrity"`
-	// TODO: Remove when we can use integrity
-	SHA256 string `json:"SHA256"`
-	SHA512 string `json:"SHA512"`
-}
-
-type packageInfo struct {
-	Version     string             `json:"version"`
-	BuildDeps   []string           `json:"buildDeps"`
-	LocalSrc    []string           `json:"localSrc"`
-	RuntimeDeps []string           `json:"runtimeDeps"`
-	SrcUris     map[string]uriInfo `json:"srcUris"`
 }
 
 var app = &cli.App{
@@ -870,22 +841,12 @@ var app = &cli.App{
 			return err
 		}
 
-		pkgInfoByPkgName, err := computeDepsInfo(resolver, startPackageNames)
+		infoMap, err := computeDepsInfo(resolver, startPackageNames)
 		if err != nil {
 			return err
 		}
 
-		var sortedPackageNames []string
-		for packageName := range pkgInfoByPkgName {
-			sortedPackageNames = append(sortedPackageNames, packageName)
-		}
-		sort.Strings(sortedPackageNames)
-
-		infoMap := make(map[string][]packageInfo)
-		for _, packageName := range sortedPackageNames {
-			info := pkgInfoByPkgName[packageName]
-			infoMap[packageName] = info
-		}
+		infoMap.FixupForJSON()
 
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "  ")
