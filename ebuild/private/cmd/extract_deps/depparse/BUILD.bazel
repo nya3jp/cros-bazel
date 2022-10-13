@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "depparse",
+    srcs = [
+        "depparse.go",
+        "simplify.go",
+    ],
+    importpath = "cros.local/bazel/ebuild/private/cmd/extract_deps/depparse",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/portage",
+        "//bazel/ebuild/private/common/standard/config",
+        "//bazel/ebuild/private/common/standard/dependency",
+        "//bazel/ebuild/private/common/standard/packages",
+    ],
+)

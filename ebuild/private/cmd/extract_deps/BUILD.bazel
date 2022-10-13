@@ -10,6 +10,8 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/cmd/extract_deps",
     visibility = ["//visibility:private"],
     deps = [
+        "//bazel/ebuild/private/cmd/extract_deps/depparse",
+        "//bazel/ebuild/private/cmd/extract_deps/srcparse",
         "//bazel/ebuild/private/common/depdata",
         "//bazel/ebuild/private/common/portage",
         "//bazel/ebuild/private/common/runfiles",
