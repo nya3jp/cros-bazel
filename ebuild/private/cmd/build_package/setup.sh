@@ -18,18 +18,29 @@ export RESTRICT="fetch"
 export FEATURES="-sandbox -usersandbox"  # TODO: turn on sandbox
 export CCACHE_DISABLE=1
 
-read -ra atoms <<<"${INSTALL_ATOMS_TARGET}"
-if (( ${#atoms[@]} )); then
-  # We need to unmask the -9999 cros-workon ebuilds so we can install them
-  mkdir -p "${ROOT}/etc/portage/package.accept_keywords"
-  printf "%s\n" "${atoms[@]}" \
-    > "${ROOT}/etc/portage/package.accept_keywords/cros-workon"
-  # TODO: emerge is too slow! Find a way to speed up.
-  time emerge --oneshot --usepkgonly --nodeps --noreplace "${atoms[@]}"
-fi
+install_deps() {
+  local -i idx=0
 
-unset BOARD
-unset INSTALL_ATOMS_TARGET
+  while [[ -v "INSTALL_ATOMS_TARGET_${idx}" ]]; do
+    local -a atoms
+    local current_group_var="INSTALL_ATOMS_TARGET_${idx}"
+
+    read -ra atoms <<<"${!current_group_var}"
+    if [[ "${#atoms[@]}" -gt 0 ]]; then
+      # We need to unmask the -9999 cros-workon ebuilds so we can install them
+      mkdir -p "${ROOT}/etc/portage/package.accept_keywords"
+      printf "%s\n" "${atoms[@]}" \
+        >> "${ROOT}/etc/portage/package.accept_keywords/cros-workon"
+      # TODO: emerge is too slow! Find a way to speed up.
+      time emerge --oneshot --usepkgonly --nodeps --noreplace --jobs \
+        "${atoms[@]}"
+    fi
+    unset "${current_group_var}"
+    idx+=1
+  done
+}
+
+install_deps
 
 if [[ $# = 0 ]]; then
   exec bash

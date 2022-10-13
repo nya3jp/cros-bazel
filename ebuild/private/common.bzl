@@ -10,11 +10,21 @@ BinaryPackageInfo = provider(
         "file": """
             File: A binary package file (.tbz2) of this package.
         """,
-        "runtime_deps": """
+        "transitive_runtime_deps_files": """
             Depset[File]: Binary package files (.tbz2) to be installed when
             this package is required in run time.
-            The depset always contains the binary package file of this package
+
+            The depset *always* contains the binary package file of this package
             itself.
+        """,
+
+        "transitive_runtime_deps_targets": """
+            Depset[Target]: Transitive runtime targets to be installed when this
+            package is required at run time.
+        """,
+
+        "direct_runtime_deps_targets": """
+            list[Target]: Direct runtime targets
         """,
     },
 )

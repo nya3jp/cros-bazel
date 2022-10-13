@@ -92,7 +92,8 @@ var flagOverlay = &cli.StringSliceFlag{
 }
 
 var flagInstallTarget = &cli.StringSliceFlag{
-	Name: "install-target",
+	Name:  "install-target",
+	Usage: "<binpkg>[,<binpkg>]+: All binpkgs specified will be installed in parallel",
 }
 
 var flagDistfile = &cli.StringSliceFlag{
@@ -157,6 +158,20 @@ func preparePackages(installPaths []string, dir fileutil.DualPath) ([]string, er
 	}
 
 	return atoms, nil
+}
+
+func preparePackageGroups(installGroups [][]string, dir fileutil.DualPath) ([][]string, error) {
+	var atomGroups [][]string
+
+	for _, installGroup := range installGroups {
+		atoms, err := preparePackages(installGroup, dir)
+		if err != nil {
+			return nil, err
+		}
+		atomGroups = append(atomGroups, atoms)
+	}
+
+	return atomGroups, nil
 }
 
 // The --sdk inputs can be two types:
@@ -256,7 +271,11 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
-		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
+		var targetInstallGroups [][]string
+		for _, targetGroupStr := range c.StringSlice(flagInstallTarget.Name) {
+			targets := strings.Split(targetGroupStr, ",")
+			targetInstallGroups = append(targetInstallGroups, targets)
+		}
 		fileSpecs := c.StringSlice(flagFile.Name)
 		finalOutPath := c.String(flagOutput.Name)
 		login := c.Bool(flagLogin.Name)
@@ -354,7 +373,7 @@ var app = &cli.App{
 			args = append(args, "--overlay="+overlayDir.Inside()+"="+overlay.SquashfsPath)
 		}
 
-		targetInstallAtoms, err := preparePackages(targetInstallPaths, targetPackagesDir)
+		targetInstallAtomGroups, err := preparePackageGroups(targetInstallGroups, targetPackagesDir)
 		if err != nil {
 			return err
 		}
@@ -373,8 +392,11 @@ var app = &cli.App{
 			os.Environ(),
 			"PATH=/usr/sbin:/usr/bin:/sbin:/bin",
 			"BOARD="+board,
-			"INSTALL_ATOMS_TARGET="+strings.Join(targetInstallAtoms, " "),
 		)
+		for i, atomGroup := range targetInstallAtomGroups {
+			installString := fmt.Sprintf("INSTALL_ATOMS_TARGET_%d=%s", i, strings.Join(atomGroup, " "))
+			cmd.Env = append(cmd.Env, installString)
+		}
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

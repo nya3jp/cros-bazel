@@ -8,10 +8,10 @@ def _sdk_impl(ctx):
     pkgs_dir_output = ctx.actions.declare_directory(ctx.attr.name + "_pkgs")
     pkgs_squashfs_output = ctx.actions.declare_file(ctx.attr.name + "_pkgs.squashfs")
     host_installs = depset(
-        transitive = [label[BinaryPackageInfo].runtime_deps for label in ctx.attr.host_deps],
+        transitive = [label[BinaryPackageInfo].transitive_runtime_deps_files for label in ctx.attr.host_deps],
     )
     target_installs = depset(
-        transitive = [label[BinaryPackageInfo].runtime_deps for label in ctx.attr.target_deps],
+        transitive = [label[BinaryPackageInfo].transitive_runtime_deps_files for label in ctx.attr.target_deps],
     )
 
     args = ctx.actions.args()
@@ -51,7 +51,7 @@ def _sdk_impl(ctx):
         SDKInfo(board = ctx.attr.board, files = [
             pkgs_dir_output,
             pkgs_squashfs_output,
-            ctx.file.src
+            ctx.file.src,
         ]),
     ]
 

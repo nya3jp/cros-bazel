@@ -8,6 +8,55 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
 
+def _map_install_group(targets):
+    files = []
+    for target in targets:
+        file = target[BinaryPackageInfo].file
+        files.append(file.path)
+    return ",".join(files)
+
+def _calculate_install_groups(build_deps):
+    seen = {}
+
+    # An ordered list containing a list of deps that can be installed in parallel
+    levels = []
+
+    remaining_targets = build_deps.to_list()
+
+    for _ in range(100):
+        if len(remaining_targets) == 0:
+            break
+
+        satisfied_list = []
+        not_satisfied_list = []
+        for target in remaining_targets:
+            info = target[BinaryPackageInfo]
+
+            all_seen = True
+            for runtime_target in info.direct_runtime_deps_targets:
+                if not seen.get(runtime_target.label):
+                    all_seen = False
+                    break
+
+            if all_seen:
+                satisfied_list.append(target)
+            else:
+                not_satisfied_list.append(target)
+
+        if len(satisfied_list) == 0:
+            fail("Dependency list is unsatisfiable")
+
+        for target in satisfied_list:
+            seen[target.label] = True
+
+        levels.append(satisfied_list)
+        remaining_targets = not_satisfied_list
+
+    if len(remaining_targets) > 0:
+        fail("Too many dependencies")
+
+    return levels
+
 def _ebuild_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
     output = ctx.actions.declare_file(src_basename + ".tbz2")
@@ -56,21 +105,39 @@ def _ebuild_impl(ctx):
         direct_inputs.append(info.squashfs_file)
 
     # TODO: Consider target/host transitions.
-    build_deps = depset(
+    transitive_build_time_deps_files = depset(
         # Pull in runtime dependencies of build-time dependencies.
         # TODO: Revisit this logic to see if we can avoid pulling in transitive
         # dependencies.
-        transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.build_deps],
-        order = "postorder",
-    )
-    runtime_deps = depset(
-        [output],
-        transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.runtime_deps],
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.build_deps],
         order = "postorder",
     )
 
-    args.add_all(build_deps, format_each = "--install-target=%s")
-    transitive_inputs.append(build_deps)
+    transitive_inputs.append(transitive_build_time_deps_files)
+
+    transitive_build_time_deps_targets = depset(
+        ctx.attr.build_deps,
+        # Pull in runtime dependencies of build-time dependencies.
+        # TODO: Revisit this logic to see if we can avoid pulling in transitive
+        # dependencies.
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.build_deps],
+        order = "postorder",
+    )
+
+    install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
+    args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
+
+    transitive_runtime_deps_files = depset(
+        [output],
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.runtime_deps],
+        order = "postorder",
+    )
+
+    transitive_runtime_deps_targets = depset(
+        ctx.attr.runtime_deps,
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.runtime_deps],
+        order = "postorder",
+    )
 
     package_name = "%s/%s" % (ctx.attr.category, paths.split_extension(ctx.file.ebuild.basename)[0])
 
@@ -87,7 +154,9 @@ def _ebuild_impl(ctx):
         DefaultInfo(files = depset([output])),
         BinaryPackageInfo(
             file = output,
-            runtime_deps = runtime_deps,
+            transitive_runtime_deps_files = transitive_runtime_deps_files,
+            transitive_runtime_deps_targets = transitive_runtime_deps_targets,
+            direct_runtime_deps_targets = ctx.attr.runtime_deps,
         ),
     ]
 
@@ -105,8 +174,8 @@ ebuild = rule(
             allow_files = True,
         ),
         "srcs": attr.label_list(
-            doc="src files used by the ebuild",
-            providers = [EbuildSrcInfo]
+            doc = "src files used by the ebuild",
+            providers = [EbuildSrcInfo],
         ),
         "build_deps": attr.label_list(
             providers = [BinaryPackageInfo],

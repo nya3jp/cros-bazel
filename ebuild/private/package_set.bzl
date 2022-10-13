@@ -5,15 +5,24 @@
 load("common.bzl", "BinaryPackageInfo")
 
 def _package_set_impl(ctx):
-    deps = depset(
-        transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.deps],
+    transitive_runtime_deps_files = depset(
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.deps],
         order = "postorder",
     )
+
+    transitive_runtime_deps_targets = depset(
+        ctx.attr.deps,
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.deps],
+        order = "postorder",
+    )
+
     return [
-        DefaultInfo(files = deps),
+        DefaultInfo(files = transitive_runtime_deps_files),
         BinaryPackageInfo(
             file = None,
-            runtime_deps = deps,
+            transitive_runtime_deps_files = transitive_runtime_deps_files,
+            transitive_runtime_deps_targets = transitive_runtime_deps_targets,
+            direct_runtime_deps_targets = ctx.attr.deps,
         ),
     ]
 

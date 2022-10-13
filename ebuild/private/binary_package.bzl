@@ -7,16 +7,25 @@ load("common.bzl", "BinaryPackageInfo")
 def _binary_package_impl(ctx):
     src = ctx.file.src
     # TODO: Consider target/host transitions.
-    runtime_deps = depset(
+    transitive_runtime_deps_files = depset(
         [src],
-        transitive = [dep[BinaryPackageInfo].runtime_deps for dep in ctx.attr.runtime_deps],
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.runtime_deps],
         order = "postorder",
     )
+
+    transitive_runtime_deps_targets = depset(
+        ctx.attr.runtime_deps,
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.runtime_deps],
+        order = "postorder",
+    )
+
     return [
         DefaultInfo(files = depset([src])),
         BinaryPackageInfo(
             file = src,
-            runtime_deps = runtime_deps,
+            transitive_runtime_deps_files = transitive_runtime_deps_files,
+            transitive_runtime_deps_targets = transitive_runtime_deps_targets,
+            direct_runtime_deps_targets = ctx.attr.runtime_deps,
         ),
     ]
 
