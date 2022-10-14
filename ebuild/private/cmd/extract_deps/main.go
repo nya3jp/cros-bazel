@@ -56,6 +56,7 @@ var (
 // TODO: Support USE_EXPAND and remove this hack.
 var forceUse = []string{
 	"elibc_glibc",
+	"input_devices_evdev",
 	"kernel_linux",
 }
 

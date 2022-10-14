@@ -382,6 +382,30 @@
       }
     }
   },
+  "//third_party/chromiumos-overlay/app-misc/evtest:0": {
+    "name": "app-misc/evtest",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/chromiumos-overlay/app-misc/evtest/evtest-1.35.ebuild",
+    "version": "1.35",
+    "buildDeps": [
+      "//third_party/chromiumos-overlay/sys-devel/libtool:2",
+      "//third_party/portage-stable/sys-devel/autoconf:2.5",
+      "//third_party/portage-stable/sys-devel/automake:1.15"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [],
+    "srcUris": {
+      "evtest-1.35.tar.gz": {
+        "uris": [
+          "https://gitlab.freedesktop.org/libevdev/evtest/-/archive/evtest-1.35/evtest-evtest-1.35.tar.gz"
+        ],
+        "size": 20723,
+        "integrity": "sha512-YXdXzAueXD0CNkU8lZCid6j2Oud4DdVlvOSoyp5HkSwP6UBPthsEv0QP6Mmvr/mdixgSZy+DxHxAJzMENoMbWw==",
+        "SHA256": "",
+        "SHA512": "617757cc0b9e5c3d0236453c9590a277a8f63ae7780dd565bce4a8ca9e47912c0fe9404fb61b04bf440fe8c9afaff99d8b1812672f83c47c4027330436831b5b"
+      }
+    }
+  },
   "//third_party/chromiumos-overlay/chromeos-base/aosp-frameworks-ml-nn:0": {
     "name": "chromeos-base/aosp-frameworks-ml-nn",
     "mainSlot": "0",
@@ -21112,6 +21136,7 @@
       "//third_party/chromiumos-overlay/app-i18n/hangul-input:0",
       "//third_party/chromiumos-overlay/app-i18n/japanese-input:0",
       "//third_party/chromiumos-overlay/app-i18n/keyboard-input:0",
+      "//third_party/chromiumos-overlay/app-misc/evtest:0",
       "//third_party/chromiumos-overlay/chromeos-base/bootid-logger:0",
       "//third_party/chromiumos-overlay/chromeos-base/chaps:0",
       "//third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0",
