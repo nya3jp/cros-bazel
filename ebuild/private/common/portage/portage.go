@@ -5,11 +5,14 @@
 package portage
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/bazelbuild/rules_go/go/tools/bazel"
 
 	"cros.local/bazel/ebuild/private/common/portage/makeconf"
 	"cros.local/bazel/ebuild/private/common/portage/portagevars"
@@ -65,7 +68,15 @@ func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, erro
 
 	bundle := config.Bundle(append([]config.Source{profile, userConfigSource}, extraSources...))
 
-	processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(bundle, repoSet.EClassDirs()))
+	verTestPath, ok := bazel.FindBinary("bazel/ebuild/private/cmd/ver_test", "ver_test")
+	if !ok {
+		return nil, errors.New("ver_test not found")
+	}
+
+	// TODO: Create a temporary directory that contains ver_test only.
+	utilsDir := filepath.Dir(verTestPath)
+
+	processor := ebuild.NewCachedProcessor(ebuild.NewProcessor(bundle, repoSet.EClassDirs(), utilsDir))
 
 	masks, err := bundle.PackageMasks()
 	if err != nil {

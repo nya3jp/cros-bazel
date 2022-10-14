@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "ver_test_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/ebuild/private/cmd/ver_test",
+    visibility = ["//visibility:private"],
+    deps = ["//bazel/ebuild/private/common/standard/version"],
+)
+
+go_binary(
+    name = "ver_test",
+    embed = [":ver_test_lib"],
+    visibility = ["//visibility:public"],
+)

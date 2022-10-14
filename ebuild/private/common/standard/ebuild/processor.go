@@ -30,12 +30,14 @@ type Info struct {
 type Processor struct {
 	config     config.Source
 	eclassDirs []string
+	utilsDir   string
 }
 
-func NewProcessor(config config.Source, eclassDirs []string) *Processor {
+func NewProcessor(config config.Source, eclassDirs []string, utilsDir string) *Processor {
 	return &Processor{
 		config:     config,
 		eclassDirs: eclassDirs,
+		utilsDir:   utilsDir,
 	}
 }
 
@@ -57,7 +59,7 @@ func (p *Processor) Read(path string) (*Info, error) {
 
 	env.Merge(computePackageVars(pkg))
 
-	metadata, err := runEBuild(absPath, env, p.eclassDirs)
+	metadata, err := runEBuild(absPath, env, p.eclassDirs, p.utilsDir)
 	if err != nil {
 		return nil, fmt.Errorf("reading ebuild metadata: %s: %w", absPath, err)
 	}
@@ -116,7 +118,7 @@ func computePackageVars(pkg *config.TargetPackage) makevars.Vars {
 	}
 }
 
-func runEBuild(absPath string, env makevars.Vars, eclassDirs []string) (Metadata, error) {
+func runEBuild(absPath string, env makevars.Vars, eclassDirs []string, utilsDir string) (Metadata, error) {
 	tempDir, err := os.MkdirTemp("", "xbuild.*")
 	if err != nil {
 		return nil, err
@@ -132,6 +134,7 @@ func runEBuild(absPath string, env makevars.Vars, eclassDirs []string) (Metadata
 
 	vars := make(makevars.Vars)
 	vars.Merge(env, makevars.Vars{
+		"PATH":                    utilsDir,
 		"__xbuild_in_ebuild":      absPath,
 		"__xbuild_in_eclass_dirs": strings.Join(eclassDirs, "\n") + "\n",
 		"__xbuild_in_output_vars": outPath,
