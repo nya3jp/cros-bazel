@@ -81,6 +81,5 @@ func (s *UserConfigSource) PackageMasks() ([]*dependency.Atom, error) {
 }
 
 func (s *UserConfigSource) ProvidedPackages() ([]*config.TargetPackage, error) {
-	// TODO: Parse /etc/portage/profile/package.provided.
-	return nil, nil
+	return config.ParsePackageList(filepath.Join(s.rootDir, "etc/portage/profile/package.provided"))
 }

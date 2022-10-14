@@ -16,18 +16,10 @@ import (
 // TODO: Remove these hacks.
 var (
 	forceDepsPackages = map[string][]string{
-		"sys-libs/ncurses":              {},
 		"virtual/chromeos-bootcomplete": {"chromeos-base/bootcomplete-login"},
-		"virtual/editor":                {},
-		"virtual/libgudev":              {"sys-fs/udev"},
+		"virtual/editor":                {"app-editors/vim"},
 		"virtual/logger":                {"app-admin/rsyslog"},
-		"virtual/mta":                   {},
-		"virtual/pkgconfig":             {"dev-util/pkgconfig"},
-		"virtual/tmpfiles":              {"sys-apps/systemd-tmpfiles"},
 		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
-		"virtual/yacc":                  {"sys-devel/bison"},
-		// TODO: Figure out why simplifyDeps doesn't compute this correctly
-		"virtual/perl-ExtUtils-MakeMaker": {"dev-lang/perl"},
 	}
 )
 

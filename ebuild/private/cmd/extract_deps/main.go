@@ -61,11 +61,6 @@ var forceUse = []string{
 
 // HACK: Hard-code several packages not to be installed.
 var forceProvided = []string{
-	// TODO: Parse /etc/portage/profile/package.provided and obtain these packages.
-	"sys-devel/gcc",
-	"sys-libs/glibc",
-	"dev-lang/go",
-
 	// This package was used to force rust binary packages to rebuild.
 	// We no longer need this workaround with bazel.
 	"virtual/rust-binaries",
