@@ -5,6 +5,7 @@
 package packages
 
 import (
+	"sort"
 	"strings"
 
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
@@ -16,13 +17,19 @@ type Package struct {
 	path     string
 	metadata ebuild.Metadata
 	target   *dependency.TargetPackage
+	eclasses []string
 }
 
 func NewPackage(path string, metadata ebuild.Metadata, target *dependency.TargetPackage) *Package {
+	eclasses := strings.Split(metadata["USED_ECLASSES"], "|")
+
+	sort.Strings(eclasses)
+
 	return &Package{
 		path:     path,
 		metadata: metadata,
 		target:   target,
+		eclasses: eclasses,
 	}
 }
 
@@ -34,6 +41,7 @@ func (p *Package) Version() *version.Version                { return p.target.Ve
 func (p *Package) Uses() map[string]bool                    { return p.target.Uses }
 func (p *Package) Metadata() ebuild.Metadata                { return p.metadata }
 func (p *Package) TargetPackage() *dependency.TargetPackage { return p.target }
+func (p *Package) Eclasses() []string                       { return p.eclasses }
 
 func (p *Package) Stability() Stability {
 	arch := p.metadata["ARCH"]
@@ -57,8 +65,7 @@ func (p *Package) Stability() Stability {
 }
 
 func (p *Package) UsesEclass(eclass string) bool {
-	eclasses := strings.Split(p.metadata["USED_ECLASSES"], "|")
-	for _, used_eclass := range eclasses {
+	for _, used_eclass := range p.eclasses {
 		if used_eclass == eclass {
 			return true
 		}

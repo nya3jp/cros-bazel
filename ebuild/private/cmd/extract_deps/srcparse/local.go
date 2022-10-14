@@ -12,19 +12,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
 
-// HACK: Hard-code several package info.
-// TODO: Remove these hacks.
-var (
-	additionalSrcPackages = map[string][]string{
-		"app-accessibility/pumpkin":        {"@chromite//:src"},
-		"chromeos-base/libchrome":          {"@chromite//:src"},
-		"chromeos-languagepacks/tts-es-us": {"@chromite//:src"},
-		"chromeos-base/sample-dlc":         {"@chromite//:src"},
-		"dev-libs/modp_b64":                {"@chromite//:src"},
-		"media-sound/sr-bt-dlc":            {"@chromite//:src"},
-	}
-)
-
 func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 	metadata := pkg.Metadata()
 
@@ -37,14 +24,6 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 	}
 
 	projects := splitCrosWorkon(metadata["CROS_WORKON_PROJECT"])
-
-	// Not a cros-workon package
-	if len(projects) == 0 {
-		if additionalSrcPackages, ok := additionalSrcPackages[pkg.Name()]; ok {
-			return additionalSrcPackages, nil
-		}
-		return nil, nil
-	}
 
 	localNames := splitCrosWorkon(metadata["CROS_WORKON_LOCALNAME"])
 
@@ -146,13 +125,6 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 			path = "platform/crosvm-sys_util_core"
 		}
 
-		if pkg.Name() == "sys-apps/mosys" && path == "platform2/common-mk" {
-			// Mosys calls some unsupported qemu testing code in common-mk.
-			// Instead of pulling this in, use the stubbed out version in the
-			// sdk.
-			continue
-		}
-
 		if previousPath == path {
 			// Some packages contain duplicate paths
 			continue
@@ -161,8 +133,10 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 		srcDeps = append(srcDeps, "//"+path+":src")
 	}
 
-	if additionalSrcPackages, ok := additionalSrcPackages[pkg.Name()]; ok {
-		srcDeps = append(srcDeps, additionalSrcPackages...)
+	// The platform eclass calls `platform2.py` which requires chromite
+	// The dlc eclass calls `build_dlc` which lives in chromite
+	if pkg.UsesEclass("platform") || pkg.UsesEclass("dlc") {
+		srcDeps = append(srcDeps, "@chromite//:src")
 	}
 
 	sort.Strings(srcDeps)
