@@ -21,6 +21,7 @@ type PackageInfo struct {
 	LocalSrc    []string            `json:"localSrc"`
 	RuntimeDeps []string            `json:"runtimeDeps"`
 	SrcUris     map[string]*URIInfo `json:"srcUris"`
+	PostDeps    []string            `json:"postDeps,omitempty"`
 }
 
 func (pi *PackageInfo) FixupForJSON() {

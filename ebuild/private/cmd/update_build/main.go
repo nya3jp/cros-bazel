@@ -37,6 +37,7 @@ type ebuildInfo struct {
 	Category    string
 	Dists       []*distfiles.Entry
 	PackageInfo *depdata.PackageInfo
+	PostDeps    []string
 }
 
 type packageGroup struct {
@@ -73,7 +74,7 @@ var buildTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The C
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "ebuild")
+load("//bazel/ebuild:defs.bzl", "ebuild", "package_set")
 
 {{ range .EBuilds -}}
 ebuild(
@@ -107,6 +108,17 @@ ebuild(
     ],
     {{- end }}
     files = glob(["files/**"]),
+    visibility = ["//visibility:public"],
+)
+
+package_set(
+    name = "{{ .PackageInfo.MainSlot }}_package_set",
+    deps = [
+        ":{{ .PackageInfo.MainSlot }}",
+        {{- range .PostDeps }}
+        "{{ . }}",
+        {{- end }}
+    ],
     visibility = ["//visibility:public"],
 )
 {{ end -}}
@@ -167,7 +179,7 @@ func getDistEntries(cache *distfiles.Cache, pkgInfo *depdata.PackageInfo) ([]*di
 	return dists, nil
 }
 
-func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, cache *distfiles.Cache) ([]*distfiles.Entry, error) {
+func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, postDepsMap map[string][]string, cache *distfiles.Cache) ([]*distfiles.Entry, error) {
 	v := strings.Split(ebuildDir, "/")
 	category := v[len(v)-2]
 	packageName := v[len(v)-1]
@@ -185,6 +197,8 @@ func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, cache *d
 	var allDists []*distfiles.Entry
 
 	for _, pkgInfo := range pkgInfos {
+		label := fmt.Sprintf("//%s:%s", filepath.Dir(pkgInfo.EBuildPath), pkgInfo.MainSlot)
+
 		dists, err := getDistEntries(cache, pkgInfo)
 		if err != nil {
 			return nil, err
@@ -205,6 +219,7 @@ func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, cache *d
 			Category:    category,
 			Dists:       dists,
 			PackageInfo: pkgInfo,
+			PostDeps:    postDepsMap[label],
 		}
 
 		ebuildInfos = append(ebuildInfos, ebuild)
@@ -246,7 +261,7 @@ func cleanOverlay(overlayDir string) error {
 	})
 }
 
-func generateOverlay(overlayDir string, workspaceDir string, pkgInfoMap depdata.PackageInfoMap, cache *distfiles.Cache) error {
+func generateOverlay(overlayDir string, workspaceDir string, pkgInfoMap depdata.PackageInfoMap, postDepsMap map[string][]string, cache *distfiles.Cache) error {
 	if err := cleanOverlay(overlayDir); err != nil {
 		return err
 	}
@@ -263,7 +278,7 @@ func generateOverlay(overlayDir string, workspaceDir string, pkgInfoMap depdata.
 	var overlayDists []*distfiles.Entry
 
 	for ebuildDir, infos := range pkgInfoByDir {
-		dists, err := generatePackage(ebuildDir, infos, cache)
+		dists, err := generatePackage(ebuildDir, infos, postDepsMap, cache)
 		if err != nil {
 			return err
 		}
@@ -278,14 +293,55 @@ func generateOverlay(overlayDir string, workspaceDir string, pkgInfoMap depdata.
 	return nil
 }
 
-func generate(workspaceDir string, pkgInfoMap depdata.PackageInfoMap, cache *distfiles.Cache) error {
+func generate(workspaceDir string, pkgInfoMap depdata.PackageInfoMap, postDepsMap map[string][]string, cache *distfiles.Cache) error {
 	for _, overlayRelDir := range overlayRelDirs {
 		overlayDir := filepath.Join(workspaceDir, overlayRelDir)
-		if err := generateOverlay(overlayDir, workspaceDir, pkgInfoMap, cache); err != nil {
+		if err := generateOverlay(overlayDir, workspaceDir, pkgInfoMap, postDepsMap, cache); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func propagatePostDeps(pkgInfoMap depdata.PackageInfoMap) map[string][]string {
+	postDepsMap := make(map[string][]string)
+
+	var dfs func(label string) // for recursive calls
+	dfs = func(label string) {
+		if _, ok := postDepsMap[label]; ok {
+			return
+		}
+
+		info := pkgInfoMap[label]
+
+		postDepSet := make(map[string]struct{})
+		for _, postDep := range info.PostDeps {
+			postDepSet[postDep] = struct{}{}
+		}
+
+		for _, runtimeDep := range info.RuntimeDeps {
+			dfs(runtimeDep)
+			for _, postDep := range postDepsMap[runtimeDep] {
+				postDepSet[postDep] = struct{}{}
+			}
+		}
+
+		// Remove self-dependencies.
+		delete(postDepSet, label)
+
+		var postDeps []string
+		for postDep := range postDepSet {
+			postDeps = append(postDeps, postDep)
+		}
+		sort.Strings(postDeps)
+		postDepsMap[label] = postDeps
+	}
+
+	for label := range pkgInfoMap {
+		dfs(label)
+	}
+
+	return postDepsMap
 }
 
 var flagPackageInfoFile = &cli.StringFlag{
@@ -313,12 +369,14 @@ var app = &cli.App{
 			return err
 		}
 
+		postDepsMap := propagatePostDeps(pkgInfoMap)
+
 		cache, err := distfiles.NewCache(filepath.Join(workspaceDir, "bazel/data/distfiles.json"))
 		if err != nil {
 			return err
 		}
 
-		return generate(workspaceDir, pkgInfoMap, cache)
+		return generate(workspaceDir, pkgInfoMap, postDepsMap, cache)
 	},
 }
 

@@ -154,11 +154,39 @@ func extractDeps(depType string, pkg *packages.Package, resolver *portage.Resolv
 	return depparse.Parse(deps, pkg, resolver)
 }
 
+type delayedPostDepsInfo struct {
+	Label       string
+	RawPostDeps []*dependency.Atom
+}
+
 func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (depdata.PackageInfoMap, error) {
 	infoMap := make(depdata.PackageInfoMap)
+	var delayedPostDeps []*delayedPostDepsInfo
 
-	var dfs func(atom *dependency.Atom) (*depdata.PackageInfo, error) // for recursive calls
-	dfs = func(atom *dependency.Atom) (*depdata.PackageInfo, error) {
+	// resolveAtom and resolveDeps call into each other recursively.
+	var resolveDeps func(rawDeps []*dependency.Atom) ([]string, error)
+	var resolveAtom func(atom *dependency.Atom) (*depdata.PackageInfo, error)
+
+	resolveDeps = func(rawDeps []*dependency.Atom) ([]string, error) {
+		depSet := make(map[string]struct{})
+		for _, rawDep := range rawDeps {
+			info, err := resolveAtom(rawDep)
+			if err != nil {
+				return nil, err
+			}
+			l := fmt.Sprintf("//%s:%s", filepath.Dir(info.EBuildPath), info.MainSlot)
+			depSet[l] = struct{}{}
+		}
+
+		var deps []string
+		for dep := range depSet {
+			deps = append(deps, dep)
+		}
+		sort.Strings(deps)
+		return deps, nil
+	}
+
+	resolveAtom = func(atom *dependency.Atom) (*depdata.PackageInfo, error) {
 		log.Printf("%s", atom.String())
 
 		pkg, err := selectBestPackage(resolver, atom)
@@ -197,30 +225,23 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 			return nil, err
 		}
 
+		rawPostDeps, err := extractDeps("PDEPEND", pkg, resolver)
+		if err != nil {
+			return nil, err
+		}
+		if len(rawPostDeps) > 0 {
+			// Post dependencies are resolved later.
+			delayedPostDeps = append(delayedPostDeps, &delayedPostDepsInfo{
+				Label:       label,
+				RawPostDeps: rawPostDeps,
+			})
+		}
+
 		// Some rust src packages have their dependencies only listed as DEPEND.
 		// They also need to be listed as RDPEND so they get pulled in as
 		// transitive deps.
 		if isRustSrcPackage(pkg) {
 			rawRuntimeDeps = append(rawRuntimeDeps, rawBuildTimeDeps...)
-		}
-
-		resolveDeps := func(rawDeps []*dependency.Atom) ([]string, error) {
-			depSet := make(map[string]struct{})
-			for _, rawDep := range rawDeps {
-				info, err := dfs(rawDep)
-				if err != nil {
-					return nil, err
-				}
-				l := fmt.Sprintf("//%s:%s", filepath.Dir(info.EBuildPath), info.MainSlot)
-				depSet[l] = struct{}{}
-			}
-
-			var deps []string
-			for dep := range depSet {
-				deps = append(deps, dep)
-			}
-			sort.Strings(deps)
-			return deps, nil
 		}
 
 		runtimeDeps, err := resolveDeps(rawRuntimeDeps)
@@ -261,15 +282,31 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 			LocalSrc:    srcDeps,
 			RuntimeDeps: runtimeDeps,
 			SrcUris:     srcURIs,
+			PostDeps:    nil, // maybe set later
 		}
 		infoMap[label] = info
 		return info, nil
 	}
 
+	// Start resolution from start packages.
 	for _, name := range startPackageNames {
-		if _, err := dfs(dependency.NewAtom(name, dependency.OpNone, nil, false, "", nil)); err != nil {
+		if _, err := resolveAtom(dependency.NewAtom(name, dependency.OpNone, nil, false, "", nil)); err != nil {
 			return nil, err
 		}
+	}
+
+	// Resolve post dependencies.
+	for len(delayedPostDeps) > 0 {
+		info := delayedPostDeps[0]
+		delayedPostDeps = delayedPostDeps[1:]
+
+		log.Printf("P: %s", info.Label)
+		// Note: resolveDeps might add to delayedPostDeps.
+		postDeps, err := resolveDeps(info.RawPostDeps)
+		if err != nil {
+			return nil, err
+		}
+		infoMap[info.Label].PostDeps = postDeps
 	}
 
 	return infoMap, nil

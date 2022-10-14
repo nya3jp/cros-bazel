@@ -4478,7 +4478,10 @@
       "//third_party/portage-stable/net-vpn/wireguard-tools:0",
       "//third_party/portage-stable/virtual/tmpfiles:0"
     ],
-    "srcUris": {}
+    "srcUris": {},
+    "postDeps": [
+      "//third_party/chromiumos-overlay/chromeos-base/patchpanel:0"
+    ]
   },
   "//third_party/chromiumos-overlay/chromeos-base/sirenia-rpc-macros:0": {
     "name": "chromeos-base/sirenia-rpc-macros",
@@ -6780,7 +6783,10 @@
         "SHA256": "",
         "SHA512": "1937796736613dcf4105a54e42ecb61f95a1cea74677156f9459aea0f2c95159359e766089632bf364ee6b0d28d661eb9957bce8fecc9d2436378d8d79e8d0a4"
       }
-    }
+    },
+    "postDeps": [
+      "//third_party/portage-stable/app-misc/ca-certificates:0"
+    ]
   },
   "//third_party/chromiumos-overlay/dev-libs/xz-embedded:0": {
     "name": "dev-libs/xz-embedded",
@@ -18162,7 +18168,10 @@
         "SHA256": "",
         "SHA512": "f0ad8f2542c8b1e900f5c3d213466a31dd3785da726d6eb455b6734c71c6e5751b28172203e2f9668e9c8e1512072235ea46a1a5e6a85ec54ccc332adb4e5fbc"
       }
-    }
+    },
+    "postDeps": [
+      "//third_party/chromiumos-overlay/virtual/ttf-fonts:0"
+    ]
   },
   "//third_party/chromiumos-overlay/media-libs/freetype:2": {
     "name": "media-libs/freetype",
@@ -18624,7 +18633,10 @@
         "SHA256": "",
         "SHA512": "aeaf791b14f5a09c0e2079072a157e65132cbff46e608bc0724e6a5827a01da934f5006e2774eb7105f83e607a52cb4987238f4385cf6f5cc86cbe305a556738"
       }
-    }
+    },
+    "postDeps": [
+      "//third_party/portage-stable/net-dialup/ppp-scripts:0"
+    ]
   },
   "//third_party/chromiumos-overlay/net-dialup/xl2tpd:0": {
     "name": "net-dialup/xl2tpd",
@@ -20036,6 +20048,31 @@
       }
     }
   },
+  "//third_party/chromiumos-overlay/sys-apps/hwids:0": {
+    "name": "sys-apps/hwids",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/chromiumos-overlay/sys-apps/hwids/hwids-20150717-r13.ebuild",
+    "version": "20150717-r13",
+    "buildDeps": [
+      "//third_party/portage-stable/virtual/pkgconfig:0",
+      "//third_party/portage-stable/virtual/udev:0"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "//third_party/chromiumos-overlay/sys-apps/hwdata:0"
+    ],
+    "srcUris": {
+      "hwids-20150717.tar.gz": {
+        "uris": [
+          "https://github.com/gentoo/hwids/archive/hwids-20150717.tar.gz"
+        ],
+        "size": 1745565,
+        "integrity": "sha512-Qxo6AkUScZ7V1T8hKR3ii7X5BJh/vripBYNRfiSrz14Z2TEoGfArz/u0LAsW52HkUXV1pgDR2BAvg3PRohgG0A==",
+        "SHA256": "5a4769cd0e57a96c2693e7ec3d48f53e493afae58376a1f7124a08844632d917",
+        "SHA512": "431a3a024512719ed5d53f21291de28bb5f904987fbeb8a90583517e24abcf5e19d9312819f02bcffbb42c0b16e761e4517575a600d1d8102f8373d1a21806d0"
+      }
+    }
+  },
   "//third_party/chromiumos-overlay/sys-apps/iproute2:0": {
     "name": "sys-apps/iproute2",
     "mainSlot": "0",
@@ -20453,7 +20490,10 @@
         "SHA256": "",
         "SHA512": "6eb0dc18e2c25935fabfdfc48b0114be0939158dfdef7b85b395fe2e71042672446af0e68750aae003c9847d10d1f63316fe95d3df738d18f249174292b1b9e1"
       }
-    }
+    },
+    "postDeps": [
+      "//third_party/portage-stable/sys-devel/llvm-common:0"
+    ]
   },
   "//third_party/chromiumos-overlay/sys-firmware/fwupd-peripherals:0": {
     "name": "sys-firmware/fwupd-peripherals",
@@ -20829,7 +20869,10 @@
         "SHA256": "b2f576bb3688e9315f2f49b98e141ac6f964567370e98ebd8fd7332a0a6f9701",
         "SHA512": "35b3946509c7b01660da4370d3c51ff0e6a537dadd9dbb0a039c4f7ed552fd4e02ebac6eb8a788f61f1e3ba99444238d959051dd004c174b027729a80368ac19"
       }
-    }
+    },
+    "postDeps": [
+      "//third_party/chromiumos-overlay/sys-apps/hwids:0"
+    ]
   },
   "//third_party/chromiumos-overlay/sys-kernel/chromeos-kernel-5_15:0": {
     "name": "sys-kernel/chromeos-kernel-5_15",
@@ -21454,6 +21497,18 @@
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/virtual/target-chromium-os:0"
+    ],
+    "srcUris": {}
+  },
+  "//third_party/chromiumos-overlay/virtual/ttf-fonts:0": {
+    "name": "virtual/ttf-fonts",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/chromiumos-overlay/virtual/ttf-fonts/ttf-fonts-1-r3.ebuild",
+    "version": "1-r3",
+    "buildDeps": [],
+    "localSrc": [],
+    "runtimeDeps": [
+      "//third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0"
     ],
     "srcUris": {}
   },
@@ -24326,6 +24381,26 @@
       }
     }
   },
+  "//third_party/portage-stable/net-dialup/ppp-scripts:0": {
+    "name": "net-dialup/ppp-scripts",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/portage-stable/net-dialup/ppp-scripts/ppp-scripts-0.ebuild",
+    "version": "0",
+    "buildDeps": [],
+    "localSrc": [],
+    "runtimeDeps": [],
+    "srcUris": {
+      "ppp-scripts-0.tar.xz": {
+        "uris": [
+          "https://dev.gentoo.org/~pinkbyte/distfiles/ppp-scripts-0.tar.xz"
+        ],
+        "size": 1824,
+        "integrity": "sha512-o25hgLCsyAgbGSYCoqXb52XxuibizKjcgNHbwOQFuGrNb+DPZV+1IMn0U3NSh3PmRUWHb9M3DONRT/2YWJFpcQ==",
+        "SHA256": "41c9c8321ccc5a4b07079164528a83f9194c1640ac26cbf09894c493ab7394da",
+        "SHA512": "a36e6180b0acc8081b192602a2a5dbe765f1ba26e2cca8dc80d1dbc0e405b86acd6fe0cf655fb520c9f45373528773e64545876fd3370ce3514ffd9858916971"
+      }
+    }
+  },
   "//third_party/portage-stable/net-dns/c-ares:0": {
     "name": "net-dns/c-ares",
     "mainSlot": "0",
@@ -25002,7 +25077,10 @@
         "SHA256": "190850cdd6b5302e0a1ba1aaed1bc7074d67d3bd8d04c613f242f7145afa53a6",
         "SHA512": "78c51a7da586c6f23bf40810fd9bcaedc90648e6043c199f347cf5772f9c83ab646f22c2746ba6eddd7df8d6a31b01dc25f5bcb21a53a173aa5549138d14a9ca"
       }
-    }
+    },
+    "postDeps": [
+      "//third_party/portage-stable/sys-apps/coreutils:0"
+    ]
   },
   "//third_party/portage-stable/sys-apps/dmidecode:0": {
     "name": "sys-apps/dmidecode",
@@ -25647,6 +25725,26 @@
       }
     }
   },
+  "//third_party/portage-stable/sys-devel/llvm-common:0": {
+    "name": "sys-devel/llvm-common",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/portage-stable/sys-devel/llvm-common/llvm-common-12.0.1.ebuild",
+    "version": "12.0.1",
+    "buildDeps": [],
+    "localSrc": [],
+    "runtimeDeps": [],
+    "srcUris": {
+      "llvmorg-12.0.1.tar.gz": {
+        "uris": [
+          "https://github.com/llvm/llvm-project/archive/llvmorg-12.0.1.tar.gz"
+        ],
+        "size": 134259748,
+        "integrity": "sha512-brDcGOLCWTX6v9/EiwEUvgk5FY3973uFs5X+LnEEJnJEavDmh1Cq4APJhH0Q0fYzFv6V099zjRjySRdCkrG54Q==",
+        "SHA256": "",
+        "SHA512": "6eb0dc18e2c25935fabfdfc48b0114be0939158dfdef7b85b395fe2e71042672446af0e68750aae003c9847d10d1f63316fe95d3df738d18f249174292b1b9e1"
+      }
+    }
+  },
   "//third_party/portage-stable/sys-devel/m4:0": {
     "name": "sys-devel/m4",
     "mainSlot": "0",
@@ -26117,7 +26215,10 @@
         "SHA256": "",
         "SHA512": "0c5019493b2ac42180ee9c4974a51329a2395a44f5f892c1ca567ec9b43cc3a9bce0212861d4dfb82eb236c5eaa682b27189ce672ed6cafa37d8801d059a944d"
       }
-    }
+    },
+    "postDeps": [
+      "//third_party/portage-stable/sys-auth/pambase:0"
+    ]
   },
   "//third_party/portage-stable/sys-libs/talloc:0": {
     "name": "sys-libs/talloc",

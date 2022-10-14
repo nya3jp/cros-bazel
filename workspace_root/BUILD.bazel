@@ -2,11 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "package_set")
-
-package_set(
+alias(
     name = "all_target_packages",
-    deps = [
-        "//third_party/chromiumos-overlay/virtual/target-os:0",
-    ],
+    actual = "//third_party/chromiumos-overlay/virtual/target-os:0_package_set",
 )
