@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"cros.local/bazel/ebuild/private/common/depdata"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
 
@@ -142,4 +143,79 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 	sort.Strings(srcDeps)
 
 	return srcDeps, nil
+}
+
+var dontIncludeSubTargets = map[string]struct{}{
+	"//platform2": {},
+}
+
+// Not all packages use the same level of SUBTREE, some have deeper targets
+// than others. This results in the packages that have a shallower SUBTREE
+// missing out on the files defined in the deeper tree.
+// To fix this we need to populate targets with the shallow tree with
+// all the additional deeper paths.
+//
+// e.g.,
+// iioservice requires //platform2/iioservice:src
+// cros-camera-libs requires //platform2/iioservice/mojo:src
+//
+// When trying to build iioservice the mojo directory will be missing.
+// So this code will add //platform2/iioservice/mojo:src to iioservice.
+func FixupLocalSource(pkgInfoMap depdata.PackageInfoMap) {
+	srcTargetMap := make(map[string][]*depdata.PackageInfo)
+
+	for _, pkgInfo := range pkgInfoMap {
+		for _, srcTarget := range pkgInfo.LocalSrc {
+			srcTarget = strings.TrimSuffix(srcTarget, ":src")
+			srcTargetMap[srcTarget] = append(srcTargetMap[srcTarget], pkgInfo)
+		}
+	}
+
+	var allSrcTargets []string
+	for srcTarget := range srcTargetMap {
+		allSrcTargets = append(allSrcTargets, srcTarget)
+	}
+
+	sort.Strings(allSrcTargets)
+
+	for i, parentSrcTarget := range allSrcTargets {
+		if _, ok := dontIncludeSubTargets[parentSrcTarget]; ok {
+			continue
+		}
+
+		for j := i + 1; j < len(allSrcTargets); j++ {
+			srcTarget := allSrcTargets[j]
+			if !strings.HasPrefix(srcTarget, parentSrcTarget) {
+				break
+			}
+
+			relativeTarget := strings.TrimPrefix(srcTarget, parentSrcTarget)
+			if !strings.HasPrefix(relativeTarget, "/") {
+				// Make sure we match a path and not just a target that has the same
+				// prefix
+				break
+			}
+
+			fullSrcTarget := fmt.Sprintf("%s:src", srcTarget)
+			for _, pkgInfo := range srcTargetMap[parentSrcTarget] {
+				var found bool
+				// Packages like autotest list a parent and child path in the
+				// LOCALNAME. This will cause dups to get added, so make sure the
+				// target doesn't already exist.
+				for _, srcTarget := range pkgInfo.LocalSrc {
+					if fullSrcTarget == srcTarget {
+						found = true
+						break
+					}
+				}
+
+				if found {
+					continue
+				}
+
+				pkgInfo.LocalSrc = append(pkgInfo.LocalSrc, fullSrcTarget)
+				sort.Strings(pkgInfo.LocalSrc)
+			}
+		}
+	}
 }

@@ -325,6 +325,8 @@ var app = &cli.App{
 			return err
 		}
 
+		srcparse.FixupLocalSource(infoMap)
+
 		infoMap.FixupForJSON()
 
 		encoder := json.NewEncoder(os.Stdout)

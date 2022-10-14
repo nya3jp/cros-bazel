@@ -488,6 +488,7 @@
       "//platform2/common-mk:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
@@ -602,6 +603,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/cryptohome/dbus_bindings:src",
       "//platform2/cryptohome:src",
       "//platform2:src",
       "@chromite//:src"
@@ -708,6 +710,7 @@
       "//platform2/common-mk:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
@@ -916,6 +919,7 @@
       "//platform/dev:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
+      "//platform2/power_manager/dbus_bindings:src",
       "//platform2/power_manager:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1072,6 +1076,7 @@
     "localSrc": [
       "//platform2/common-mk:src",
       "//platform2/init:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1206,7 +1211,9 @@
       "//platform2/common-mk:src",
       "//platform2/libcontainer:src",
       "//platform2/libpasswordprovider:src",
+      "//platform2/login_manager/dbus_bindings:src",
       "//platform2/login_manager:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1370,6 +1377,7 @@
       "//platform2/common-mk:src",
       "//platform2/crash-reporter:src",
       "//platform2/libcrossystem:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1479,6 +1487,7 @@
       "//platform2/common-mk:src",
       "//platform2/iioservice/libiioservice_ipc:src",
       "//platform2/iioservice/mojo:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1523,6 +1532,7 @@
       "//platform2/camera/common:src",
       "//platform2/camera/features:src",
       "//platform2/camera/gpu:src",
+      "//platform2/camera/hal/usb:src",
       "//platform2/camera/hal:src",
       "//platform2/camera/hal_adapter:src",
       "//platform2/camera/include:src",
@@ -1565,6 +1575,7 @@
     "localSrc": [
       "//platform2/common-mk:src",
       "//platform2/cros-disks:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1731,6 +1742,7 @@
     "localSrc": [
       "//platform2/common-mk:src",
       "//platform2/croslog:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1808,6 +1820,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/cryptohome/dbus_bindings:src",
       "//platform2/cryptohome:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1861,6 +1874,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/cryptohome/dbus_bindings:src",
       "//platform2/cryptohome:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
@@ -1910,6 +1924,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/debugd/dbus_bindings:src",
       "//platform2/debugd:src",
       "//platform2:src",
       "@chromite//:src"
@@ -1948,7 +1963,9 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/debugd/dbus_bindings:src",
       "//platform2/debugd:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2073,6 +2090,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/dlcservice/dbus_adaptors:src",
       "//platform2/dlcservice:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2106,7 +2124,9 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/dlcservice/dbus_adaptors:src",
       "//platform2/dlcservice:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2181,6 +2201,7 @@
     "localSrc": [
       "//platform2/common-mk:src",
       "//platform2/dns-proxy:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/shill/dbus/client:src",
       "//platform2/shill/net:src",
@@ -2381,6 +2402,7 @@
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
       "//platform2/hardware_verifier:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2471,6 +2493,7 @@
     "localSrc": [
       "//platform2/common-mk:src",
       "//platform2/hps:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2504,8 +2527,11 @@
     "localSrc": [
       "//aosp/frameworks/native:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice/libiioservice_ipc:src",
+      "//platform2/iioservice/mojo:src",
       "//platform2/iioservice:src",
       "//platform2/libmems:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2645,6 +2671,7 @@
       "//platform2/common-mk:src",
       "//platform2/kerberos:src",
       "//platform2/libpasswordprovider:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2908,6 +2935,7 @@
       "//platform2/common-mk:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -2970,6 +2998,8 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/iioservice/libiioservice_ipc:src",
+      "//platform2/iioservice/mojo:src",
       "//platform2/iioservice:src",
       "//platform2:src",
       "@chromite//:src"
@@ -3078,6 +3108,7 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
+      "//platform2/sirenia/libsirenia/sirenia-rpc-macros:src",
       "//platform2/sirenia/libsirenia:src"
     ],
     "runtimeDeps": [
@@ -3155,6 +3186,7 @@
     "localSrc": [
       "//platform2/common-mk:src",
       "//platform2/lorgnette:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -3255,6 +3287,8 @@
     "localSrc": [
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice/libiioservice_ipc:src",
+      "//platform2/iioservice/mojo:src",
       "//platform2/iioservice:src",
       "//platform2/libmems:src",
       "//platform2/mems_setup:src",
@@ -3289,6 +3323,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2:src",
       "@chromite//:src"
@@ -3372,6 +3407,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/mist:src",
       "//platform2:src",
@@ -3672,6 +3708,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/oobe_config:src",
       "//platform2:src",
@@ -3704,6 +3741,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/p2p:src",
       "//platform2:src",
@@ -3766,6 +3804,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/patchpanel:src",
       "//platform2/shill/net:src",
@@ -3872,6 +3911,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/power_manager/dbus_bindings:src",
       "//platform2/power_manager:src",
       "//platform2:src",
       "@chromite//:src"
@@ -3910,9 +3950,13 @@
     "localSrc": [
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice/libiioservice_ipc:src",
+      "//platform2/iioservice/mojo:src",
       "//platform2/iioservice:src",
       "//platform2/libec:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
+      "//platform2/power_manager/dbus_bindings:src",
       "//platform2/power_manager:src",
       "//platform2/shill/dbus/client:src",
       "//platform2:src",
@@ -4206,6 +4250,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/secanomalyd:src",
       "//platform2:src",
@@ -4270,6 +4315,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/login_manager/dbus_bindings:src",
       "//platform2/login_manager:src",
       "//platform2:src",
       "@chromite//:src"
@@ -4292,6 +4338,9 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/shill/dbus/client:src",
+      "//platform2/shill/dbus_bindings:src",
+      "//platform2/shill/net:src",
       "//platform2/shill:src",
       "//platform2:src",
       "@chromite//:src"
@@ -4316,6 +4365,9 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/shill/dbus/client:src",
+      "//platform2/shill/dbus_bindings:src",
+      "//platform2/shill/net:src",
       "//platform2/shill:src",
       "//platform2:src",
       "@chromite//:src"
@@ -4341,6 +4393,9 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/shill/dbus/client:src",
+      "//platform2/shill/dbus_bindings:src",
+      "//platform2/shill/net:src",
       "//platform2/shill:src",
       "//platform2:src",
       "@chromite//:src"
@@ -4387,7 +4442,11 @@
       "//platform2/chaps:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
+      "//platform2/shill/dbus/client:src",
+      "//platform2/shill/dbus_bindings:src",
+      "//platform2/shill/net:src",
       "//platform2/shill:src",
       "//platform2/vpn-manager:src",
       "//platform2:src",
@@ -4477,6 +4536,11 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
+      "//platform2/sirenia/dbus_bindings:src",
+      "//platform2/sirenia/libsirenia/sirenia-rpc-macros:src",
+      "//platform2/sirenia/libsirenia:src",
+      "//platform2/sirenia/manatee-client:src",
+      "//platform2/sirenia/manatee-runtime:src",
       "//platform2/sirenia:src"
     ],
     "runtimeDeps": [
@@ -4757,6 +4821,7 @@
       "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
       "//platform2/libtpmcrypto:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
@@ -4846,6 +4911,7 @@
       "//platform2/common-mk:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
@@ -4982,6 +5048,7 @@
     ],
     "localSrc": [
       "//platform2/common-mk:src",
+      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
       "//platform2/usb_bouncer:src",
       "//platform2:src",
