@@ -12,7 +12,6 @@ go_library(
     deps = [
         "//bazel/ebuild/private/cmd/update_build/distfiles",
         "//bazel/ebuild/private/common/depdata",
-        "//bazel/ebuild/private/common/standard/dependency",
         "@com_github_urfave_cli//:cli",
     ],
 )

@@ -27,6 +27,8 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
+const workspaceDirInChroot = "/mnt/host/source/src"
+
 // HACK: Hard-code several package info.
 // TODO: Remove these hacks.
 var (
@@ -175,20 +177,26 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 			return nil, err
 		}
 
-		pkgID := fmt.Sprintf("%s:%s", pkg.Name(), pkg.MainSlot())
-		if info, ok := infoMap[pkgID]; ok {
+		path := pkg.Path()
+		if !strings.HasPrefix(path, workspaceDirInChroot+"/") {
+			return nil, fmt.Errorf("%s is not under %s", path, workspaceDirInChroot)
+		}
+		relPath := path[len(workspaceDirInChroot)+1:]
+		label := fmt.Sprintf("//%s:%s", filepath.Dir(relPath), pkg.MainSlot())
+
+		if info, ok := infoMap[label]; ok {
 			if info == nil {
-				return nil, fmt.Errorf("circular dependencies involving %s detected", pkgID)
+				return nil, fmt.Errorf("circular dependencies involving %s detected", label)
 			}
 			if info.Version != pkg.Version().String() {
-				return nil, fmt.Errorf("inconsistent package selection for %s: got %s, want %s", pkgID, pkg.Version().String(), info.Version)
+				return nil, fmt.Errorf("inconsistent package selection for %s: got %s, want %s", label, pkg.Version().String(), info.Version)
 			}
 			return info, nil
 		}
 
 		// Temporarily set nil to detect circular dependencies and avoid infinite
 		// recursion.
-		infoMap[pkgID] = nil
+		infoMap[label] = nil
 
 		rawRuntimeDeps, err := extractDeps("RDEPEND", pkg, resolver)
 		if err != nil {
@@ -214,7 +222,8 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 				if err != nil {
 					return nil, err
 				}
-				depSet[fmt.Sprintf("%s:%s", info.Name, info.MainSlot)] = struct{}{}
+				l := fmt.Sprintf("//%s:%s", filepath.Dir(info.EBuildPath), info.MainSlot)
+				depSet[l] = struct{}{}
 			}
 
 			var deps []string
@@ -260,14 +269,14 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 		info := &depdata.PackageInfo{
 			Name:        pkg.Name(),
 			MainSlot:    pkg.MainSlot(),
-			EBuildPath:  pkg.Path(),
+			EBuildPath:  relPath,
 			Version:     pkg.Version().String(),
 			BuildDeps:   buildTimeDeps,
 			LocalSrc:    srcDeps,
 			RuntimeDeps: runtimeDeps,
 			SrcUris:     srcURIs,
 		}
-		infoMap[pkgID] = info
+		infoMap[label] = info
 		return info, nil
 	}
 

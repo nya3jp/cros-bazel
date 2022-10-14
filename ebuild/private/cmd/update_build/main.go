@@ -22,11 +22,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/depdata"
 )
 
-const (
-	ebuildExt = ".ebuild"
-
-	workspaceDirInChroot = "/mnt/host/source/src"
-)
+const ebuildExt = ".ebuild"
 
 var overlayRelDirs = []string{
 	// The order matters; the first one has the highest priority.
@@ -70,8 +66,7 @@ def dependencies():
 `))
 
 type buildTemplateVars struct {
-	EBuilds     []ebuildInfo
-	NameToLabel map[string]string
+	EBuilds []ebuildInfo
 }
 
 var buildTemplate = template.Must(template.New("").Parse(`# Copyright 2022 The ChromiumOS Authors.
@@ -100,14 +95,14 @@ ebuild(
     {{- if .PackageInfo.BuildDeps }}
     build_deps = [
         {{- range .PackageInfo.BuildDeps }}
-        "{{ index $.NameToLabel . }}",
+        "{{ . }}",
         {{- end }}
     ],
     {{- end }}
     {{- if .PackageInfo.RuntimeDeps }}
     runtime_deps = [
         {{- range .PackageInfo.RuntimeDeps }}
-        "{{ index $.NameToLabel . }}",
+        "{{ . }}",
         {{- end }}
     ],
     {{- end }}
@@ -116,19 +111,6 @@ ebuild(
 )
 {{ end -}}
 `))
-
-// parseChrootPath parses a file path in chroot into a relative path from the
-// workspace root.
-//
-// Examples:
-//
-//	/mnt/host/source/src/platform2/README.md => platform2/README.md
-func parseChrootPath(path string) (string, error) {
-	if !strings.HasPrefix(path, workspaceDirInChroot+"/") {
-		return "", fmt.Errorf("%s is not under %s", path, workspaceDirInChroot)
-	}
-	return path[len(workspaceDirInChroot)+1:], nil
-}
 
 func writeToFile(buildPath string, fn func(f *os.File) error) error {
 	f, err := os.Create(buildPath)
@@ -185,7 +167,7 @@ func getDistEntries(cache *distfiles.Cache, pkgInfo *depdata.PackageInfo) ([]*di
 	return dists, nil
 }
 
-func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, nameToLabel map[string]string, cache *distfiles.Cache) ([]*distfiles.Entry, error) {
+func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, cache *distfiles.Cache) ([]*distfiles.Entry, error) {
 	v := strings.Split(ebuildDir, "/")
 	category := v[len(v)-2]
 	packageName := v[len(v)-1]
@@ -231,8 +213,7 @@ func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, nameToLa
 
 	if err := writeToFile(buildPath, func(f *os.File) error {
 		return buildTemplate.Execute(f, &buildTemplateVars{
-			EBuilds:     ebuildInfos,
-			NameToLabel: nameToLabel,
+			EBuilds: ebuildInfos,
 		})
 	}); err != nil {
 		return nil, err
@@ -265,27 +246,24 @@ func cleanOverlay(overlayDir string) error {
 	})
 }
 
-func generateOverlay(overlayRelDir string, workspaceDir string, pkgInfoMap depdata.PackageInfoMap, nameToLabel map[string]string, cache *distfiles.Cache) error {
-	overlayDir := filepath.Join(workspaceDir, overlayRelDir)
-	overlayDirInChroot := filepath.Join(workspaceDirInChroot, overlayRelDir)
-
+func generateOverlay(overlayDir string, workspaceDir string, pkgInfoMap depdata.PackageInfoMap, cache *distfiles.Cache) error {
 	if err := cleanOverlay(overlayDir); err != nil {
 		return err
 	}
 
 	pkgInfoByDir := make(map[string][]*depdata.PackageInfo)
 	for _, info := range pkgInfoMap {
-		if !strings.HasPrefix(info.EBuildPath, overlayDirInChroot+"/") {
+		ebuildDir := filepath.Dir(filepath.Join(workspaceDir, info.EBuildPath))
+		if !strings.HasPrefix(ebuildDir, overlayDir+"/") {
 			continue
 		}
-		ebuildDir := filepath.Dir(filepath.Join(overlayDir, info.EBuildPath[len(overlayDirInChroot)+1:]))
 		pkgInfoByDir[ebuildDir] = append(pkgInfoByDir[ebuildDir], info)
 	}
 
 	var overlayDists []*distfiles.Entry
 
 	for ebuildDir, infos := range pkgInfoByDir {
-		dists, err := generatePackage(ebuildDir, infos, nameToLabel, cache)
+		dists, err := generatePackage(ebuildDir, infos, cache)
 		if err != nil {
 			return err
 		}
@@ -300,9 +278,10 @@ func generateOverlay(overlayRelDir string, workspaceDir string, pkgInfoMap depda
 	return nil
 }
 
-func generate(workspaceDir string, pkgInfoMap depdata.PackageInfoMap, nameToLabel map[string]string, cache *distfiles.Cache) error {
+func generate(workspaceDir string, pkgInfoMap depdata.PackageInfoMap, cache *distfiles.Cache) error {
 	for _, overlayRelDir := range overlayRelDirs {
-		if err := generateOverlay(overlayRelDir, workspaceDir, pkgInfoMap, nameToLabel, cache); err != nil {
+		overlayDir := filepath.Join(workspaceDir, overlayRelDir)
+		if err := generateOverlay(overlayDir, workspaceDir, pkgInfoMap, cache); err != nil {
 			return err
 		}
 	}
@@ -339,17 +318,7 @@ var app = &cli.App{
 			return err
 		}
 
-		nameToLabel := make(map[string]string)
-		for name, info := range pkgInfoMap {
-			ebuildRelPath, err := parseChrootPath(info.EBuildPath)
-			if err != nil {
-				return err
-			}
-			ebuildRelDir := filepath.Dir(ebuildRelPath)
-			nameToLabel[name] = fmt.Sprintf("//%s:%s", ebuildRelDir, info.MainSlot)
-		}
-
-		return generate(workspaceDir, pkgInfoMap, nameToLabel, cache)
+		return generate(workspaceDir, pkgInfoMap, cache)
 	},
 }
 
