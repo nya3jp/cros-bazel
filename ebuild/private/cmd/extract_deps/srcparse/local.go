@@ -165,5 +165,7 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 		srcDeps = append(srcDeps, additionalSrcPackages...)
 	}
 
+	sort.Strings(srcDeps)
+
 	return srcDeps, nil
 }
