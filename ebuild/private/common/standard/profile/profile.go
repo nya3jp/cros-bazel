@@ -176,9 +176,10 @@ func (p *ParsedProfile) EvalPackageVars(pkg *config.TargetPackage, env makevars.
 	varsList = append(varsList, vars)
 
 	targetPkg := &dependency.TargetPackage{
-		Name:    pkg.Name,
-		Version: pkg.Version,
-		Uses:    nil, // USE dependencies are unavailable
+		Name:     pkg.Name,
+		Version:  pkg.Version,
+		MainSlot: "",  // SLOT unavailable
+		Uses:     nil, // USE dependencies are unavailable
 	}
 	var uses []string
 	for _, pu := range p.packageUse {
@@ -215,9 +216,10 @@ func (p *ParsedProfile) UseMasksAndForces(pkg *config.TargetPackage, masks map[s
 	updateMap(forces, p.useForce)
 
 	targetPkg := &dependency.TargetPackage{
-		Name:    pkg.Name,
-		Version: pkg.Version,
-		Uses:    nil, // USE dependencies are unavailable
+		Name:     pkg.Name,
+		Version:  pkg.Version,
+		MainSlot: "",  // SLOT unavailable
+		Uses:     nil, // USE dependencies are unavailable
 	}
 	for _, pu := range p.packageUseMask {
 		if pu.Atom.Match(targetPkg) {

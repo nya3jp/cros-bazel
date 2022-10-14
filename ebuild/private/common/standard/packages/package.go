@@ -29,15 +29,11 @@ func NewPackage(path string, metadata ebuild.Metadata, target *dependency.Target
 func (p *Package) Path() string                             { return p.path }
 func (p *Package) Name() string                             { return p.target.Name }
 func (p *Package) Category() string                         { return strings.Split(p.target.Name, "/")[0] }
+func (p *Package) MainSlot() string                         { return p.target.MainSlot }
 func (p *Package) Version() *version.Version                { return p.target.Version }
 func (p *Package) Uses() map[string]bool                    { return p.target.Uses }
 func (p *Package) Metadata() ebuild.Metadata                { return p.metadata }
 func (p *Package) TargetPackage() *dependency.TargetPackage { return p.target }
-
-func (p *Package) MainSlot() string {
-	slot := p.metadata["SLOT"]
-	return strings.SplitN(slot, "/", 2)[0]
-}
 
 func (p *Package) Stability() Stability {
 	arch := p.metadata["ARCH"]

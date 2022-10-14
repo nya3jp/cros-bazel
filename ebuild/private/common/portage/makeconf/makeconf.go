@@ -54,9 +54,10 @@ func (s *UserConfigSource) EvalPackageVars(pkg *config.TargetPackage, env makeva
 	}
 
 	targetPkg := &dependency.TargetPackage{
-		Name:    pkg.Name,
-		Version: pkg.Version,
-		Uses:    nil,
+		Name:     pkg.Name,
+		Version:  pkg.Version,
+		MainSlot: "",  // SLOT unavailable
+		Uses:     nil, // USE unavailable
 	}
 	var uses []string
 	for _, pu := range packageUse {

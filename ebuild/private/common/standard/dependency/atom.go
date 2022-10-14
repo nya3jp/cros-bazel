@@ -13,9 +13,10 @@ import (
 )
 
 type TargetPackage struct {
-	Name    string
-	Version *version.Version
-	Uses    map[string]bool
+	Name     string
+	Version  *version.Version
+	MainSlot string
+	Uses     map[string]bool
 }
 
 type VersionOperator string
@@ -138,7 +139,13 @@ func (a *Atom) Match(t *TargetPackage) bool {
 	if t.Name != a.name {
 		return false
 	}
-	// TODO: Consider slot dependency.
+	if a.slotDep != "" && a.slotDep != "*" && a.slotDep != "=" {
+		// TODO: Consider subslot dependencies as well.
+		wantMainSlot := strings.Split(strings.TrimSuffix(a.slotDep, "="), "/")[0]
+		if t.MainSlot != wantMainSlot {
+			return false
+		}
+	}
 	// TODO: Consider use dependency.
 	switch a.op {
 	case OpNone:

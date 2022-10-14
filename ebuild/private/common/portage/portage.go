@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"cros.local/bazel/ebuild/private/common/portage/makeconf"
 	"cros.local/bazel/ebuild/private/common/portage/portagevars"
@@ -109,9 +110,10 @@ func (r *Resolver) Packages(atom *dependency.Atom) ([]*packages.Package, error) 
 		}
 
 		target := &dependency.TargetPackage{
-			Name:    atom.PackageName(),
-			Version: repoPkg.Version,
-			Uses:    info.Uses,
+			Name:     atom.PackageName(),
+			Version:  repoPkg.Version,
+			MainSlot: strings.SplitN(info.Metadata["SLOT"], "/", 2)[0],
+			Uses:     info.Uses,
 		}
 
 		masked := false
@@ -153,9 +155,10 @@ func (r *Resolver) BestPackage(atom *dependency.Atom) (*packages.Package, error)
 func (r *Resolver) IsProvided(atom *dependency.Atom) bool {
 	for _, pkg := range r.provided[atom.PackageName()] {
 		if atom.Match(&dependency.TargetPackage{
-			Name:    pkg.Name,
-			Version: pkg.Version,
-			Uses:    nil, // USE flags unavailable in package.provided
+			Name:     pkg.Name,
+			Version:  pkg.Version,
+			MainSlot: "",  // SLOT unavailable in package.provided
+			Uses:     nil, // USE flags unavailable in package.provided
 		}) {
 			return true
 		}

@@ -11,7 +11,7 @@
       "//third_party/portage-stable/sys-devel/autoconf:2.5",
       "//third_party/portage-stable/sys-devel/automake:1.15",
       "//third_party/portage-stable/virtual/libiconv:0",
-      "//third_party/portage-stable/virtual/libusb:1",
+      "//third_party/portage-stable/virtual/libusb:0",
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [],
@@ -19,7 +19,7 @@
       "//third_party/chromiumos-overlay/net-wireless/bluez:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
       "//third_party/portage-stable/virtual/libiconv:0",
-      "//third_party/portage-stable/virtual/libusb:1"
+      "//third_party/portage-stable/virtual/libusb:0"
     ],
     "srcUris": {
       "brltty-6.3.tar.xz": {
@@ -3093,7 +3093,7 @@
       "//third_party/chromiumos-overlay/media-gfx/sane-backends:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
       "//third_party/portage-stable/media-libs/libpng:0",
-      "//third_party/portage-stable/virtual/jpeg:62",
+      "//third_party/portage-stable/virtual/jpeg:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "localSrc": [
@@ -3111,7 +3111,7 @@
       "//third_party/chromiumos-overlay/media-gfx/sane-backends:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
       "//third_party/portage-stable/media-libs/libpng:0",
-      "//third_party/portage-stable/virtual/jpeg:62",
+      "//third_party/portage-stable/virtual/jpeg:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "srcUris": {}
@@ -5571,7 +5571,7 @@
       "//third_party/chromiumos-overlay/dev-go/protobuf-legacy-api:0",
       "//third_party/chromiumos-overlay/dev-go/uuid:0",
       "//third_party/chromiumos-overlay/dev-go/xxhash:0",
-      "//third_party/chromiumos-overlay/dev-go/yaml:3"
+      "//third_party/chromiumos-overlay/dev-go/yaml:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -5586,7 +5586,7 @@
       "//third_party/chromiumos-overlay/dev-go/protobuf-legacy-api:0",
       "//third_party/chromiumos-overlay/dev-go/uuid:0",
       "//third_party/chromiumos-overlay/dev-go/xxhash:0",
-      "//third_party/chromiumos-overlay/dev-go/yaml:3"
+      "//third_party/chromiumos-overlay/dev-go/yaml:0"
     ],
     "srcUris": {
       "github.com-grpc-grpc-go-v1.42.0.tar.gz": {
@@ -5677,14 +5677,14 @@
       "//third_party/chromiumos-overlay/dev-go/gcp-compute:0",
       "//third_party/chromiumos-overlay/dev-go/gcp:0",
       "//third_party/chromiumos-overlay/dev-go/net:0",
-      "//third_party/chromiumos-overlay/dev-go/yaml:3"
+      "//third_party/chromiumos-overlay/dev-go/yaml:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-go/gcp-compute:0",
       "//third_party/chromiumos-overlay/dev-go/gcp:0",
       "//third_party/chromiumos-overlay/dev-go/net:0",
-      "//third_party/chromiumos-overlay/dev-go/yaml:3"
+      "//third_party/chromiumos-overlay/dev-go/yaml:0"
     ],
     "srcUris": {
       "go.googlesource.com-oauth2-d3ed0bb246c8d3c75b63937d9a5eecff9c74d7fe.tar.gz": {
@@ -6000,6 +6000,28 @@
         "integrity": "sha512-FgYnRfsCQcV7y0ZxAPGuaXu7wBLxwrxRcTRIHtHHgMEeaP1V6bPJf52k+V3m698V/9E8Zl9AO4rUrWNRlszGWw==",
         "SHA256": "",
         "SHA512": "16062745fb0241c57bcb467100f1ae697bbbc012f1c2bc517134481ed1c780c11e68fd55e9b3c97f9da4f95de6ebdf15ffd13c665f403b8ad4ad635196ccc65b"
+      }
+    }
+  },
+  "//third_party/chromiumos-overlay/dev-go/yaml:0": {
+    "name": "dev-go/yaml",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/chromiumos-overlay/dev-go/yaml/yaml-2.4.0-r1.ebuild",
+    "version": "2.4.0-r1",
+    "buildDeps": [
+      "//third_party/chromiumos-overlay/dev-go/check:0"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [],
+    "srcUris": {
+      "github.com-go-yaml-yaml-v2.4.0.tar.gz": {
+        "uris": [
+          "https://github.com/go-yaml/yaml/archive/v2.4.0.tar.gz"
+        ],
+        "size": 73209,
+        "integrity": "sha512-ZAj7LEZBw17lyLLsjkptyJoInzzMtQncRuUxwj0minf1AeSTdT3qLUIyz36IF8Y4gSTnF05NfdXc0QCytXRV0Q==",
+        "SHA256": "",
+        "SHA512": "6408fb2c4641c35ee5c8b2ec8e4a6dc89a089f3cccb509dc46e531c23d268a77f501e493753dea2d4232cf7e8817c6388124e7174e4d7dd5dcd100b2b57455d1"
       }
     }
   },
@@ -17785,7 +17807,7 @@
       "//third_party/portage-stable/media-libs/tiff:0",
       "//third_party/portage-stable/sys-devel/autoconf:2.5",
       "//third_party/portage-stable/sys-devel/automake:1.15",
-      "//third_party/portage-stable/virtual/jpeg:62",
+      "//third_party/portage-stable/virtual/jpeg:0",
       "//third_party/portage-stable/virtual/libusb:1",
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
@@ -17793,7 +17815,7 @@
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
       "//third_party/portage-stable/media-libs/tiff:0",
-      "//third_party/portage-stable/virtual/jpeg:62",
+      "//third_party/portage-stable/virtual/jpeg:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "srcUris": {
@@ -18036,11 +18058,11 @@
     "ebuildPath": "third_party/chromiumos-overlay/media-libs/libyuv/libyuv-1774-r5.ebuild",
     "version": "1774-r5",
     "buildDeps": [
-      "//third_party/portage-stable/virtual/jpeg:62"
+      "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "//third_party/portage-stable/virtual/jpeg:62"
+      "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "srcUris": {
       "libyuv-1774.tar.gz": {
@@ -22394,7 +22416,7 @@
       "//third_party/portage-stable/media-libs/lcms:2",
       "//third_party/portage-stable/media-libs/openjpeg:2",
       "//third_party/portage-stable/sys-libs/zlib:0",
-      "//third_party/portage-stable/virtual/jpeg:62"
+      "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
@@ -22405,7 +22427,7 @@
       "//third_party/portage-stable/media-libs/lcms:2",
       "//third_party/portage-stable/media-libs/openjpeg:2",
       "//third_party/portage-stable/sys-libs/zlib:0",
-      "//third_party/portage-stable/virtual/jpeg:62"
+      "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "srcUris": {
       "poppler-22.03.0.tar.xz": {
@@ -22427,13 +22449,13 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
       "//third_party/portage-stable/sys-libs/zlib:0",
-      "//third_party/portage-stable/virtual/jpeg:62"
+      "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
       "//third_party/portage-stable/sys-libs/zlib:0",
-      "//third_party/portage-stable/virtual/jpeg:62"
+      "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "srcUris": {
       "qpdf-10.6.3.tar.gz": {
@@ -23335,6 +23357,30 @@
         "integrity": "sha512-aQCCcy+71Hq0/71vIdha/s4Pji3tJJgvlJ9K5SvwqYG3Xqm8FKsonglUzeB/MaekwrtlYVqOtbK/plcgMQtvyQ==",
         "SHA256": "",
         "SHA512": "690082732fbbd47ab4ffbd6f21d85afece0f8e2ded24982f949f4ae52bf0a981b75ea9bc14ab289e0954cde07f31a7a4c2bb65615a8eb5b2bfa65720310b6fc9"
+      }
+    }
+  },
+  "//third_party/portage-stable/dev-libs/libusb-compat:0": {
+    "name": "dev-libs/libusb-compat",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/portage-stable/dev-libs/libusb-compat/libusb-compat-0.1.5-r3.ebuild",
+    "version": "0.1.5-r3",
+    "buildDeps": [
+      "//third_party/portage-stable/virtual/libusb:1"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "//third_party/portage-stable/virtual/libusb:1"
+    ],
+    "srcUris": {
+      "libusb-compat-0.1.5.tar.bz2": {
+        "uris": [
+          "mirror://sourceforge/libusb/libusb-compat-0.1.5.tar.bz2"
+        ],
+        "size": 276769,
+        "integrity": "sha512-/mO9HGXmdYioPr/dMpAl7PdfM/h3+4Ddg+tSjfBX77WR4BBBYCf5BUKUUEViKZFm6OKBGnaB+hlnoDuq6biIVw==",
+        "SHA256": "",
+        "SHA512": "fe63bd1c65e67588a83ebfdd329025ecf75f33f877fb80dd83eb528df057efb591e010416027f9054294504562299166e8e2811a7681fa1967a03baae9b88857"
       }
     }
   },
@@ -26085,11 +26131,11 @@
     ],
     "srcUris": {}
   },
-  "//third_party/portage-stable/virtual/jpeg:62": {
+  "//third_party/portage-stable/virtual/jpeg:0": {
     "name": "virtual/jpeg",
-    "mainSlot": "62",
-    "ebuildPath": "third_party/portage-stable/virtual/jpeg/jpeg-62.ebuild",
-    "version": "62",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/portage-stable/virtual/jpeg/jpeg-0-r2.ebuild",
+    "version": "0-r2",
     "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
@@ -26160,6 +26206,18 @@
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/sys-fs/udev:0"
+    ],
+    "srcUris": {}
+  },
+  "//third_party/portage-stable/virtual/libusb:0": {
+    "name": "virtual/libusb",
+    "mainSlot": "0",
+    "ebuildPath": "third_party/portage-stable/virtual/libusb/libusb-0-r2.ebuild",
+    "version": "0-r2",
+    "buildDeps": [],
+    "localSrc": [],
+    "runtimeDeps": [
+      "//third_party/portage-stable/dev-libs/libusb-compat:0"
     ],
     "srcUris": {}
   },
