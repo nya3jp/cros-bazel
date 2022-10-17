@@ -32,6 +32,13 @@ const workspaceDirInChroot = "/mnt/host/source/src"
 // HACK: Hard-code several package info.
 // TODO: Remove these hacks.
 var (
+	forceDepsPackages = map[string][]string{
+		"virtual/chromeos-bootcomplete": {"chromeos-base/bootcomplete-login"},
+		"virtual/editor":                {"app-editors/vim"},
+		"virtual/logger":                {"app-admin/rsyslog"},
+		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
+	}
+
 	invalidEbuilds = map[string]struct{}{
 		// The 9999 ebuild isn't actually functional.
 		"chromeos-lacros-9999.ebuild": {},
@@ -123,6 +130,22 @@ func selectBestPackage(resolver *portage.Resolver, atom *dependency.Atom) (*pack
 }
 
 func extractDeps(depType string, pkg *packages.Package, resolver *portage.Resolver) ([]*dependency.Atom, error) {
+	if forceDeps, ok := forceDepsPackages[pkg.Name()]; ok {
+		if depType != "RDEPEND" {
+			return nil, nil
+		}
+
+		var atoms []*dependency.Atom
+		for _, s := range forceDeps {
+			atom, err := dependency.ParseAtom(s)
+			if err != nil {
+				return nil, err
+			}
+			atoms = append(atoms, atom)
+		}
+		return atoms, nil
+	}
+
 	metadata := pkg.Metadata()
 	deps, err := dependency.Parse(metadata[depType])
 	if err != nil {

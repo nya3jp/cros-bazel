@@ -21105,9 +21105,7 @@
     "mainSlot": "0",
     "ebuildPath": "third_party/chromiumos-overlay/virtual/chromeos-bootcomplete/chromeos-bootcomplete-1-r3.ebuild",
     "version": "1-r3",
-    "buildDeps": [
-      "//third_party/chromiumos-overlay/chromeos-base/bootcomplete-login:0"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/bootcomplete-login:0"
@@ -21464,9 +21462,7 @@
     "mainSlot": "0",
     "ebuildPath": "third_party/chromiumos-overlay/virtual/update-policy/update-policy-1-r2.ebuild",
     "version": "1-r2",
-    "buildDeps": [
-      "//third_party/chromiumos-overlay/chromeos-base/update-policy-chromeos:0"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/update-policy-chromeos:0"
@@ -26319,9 +26315,7 @@
     "mainSlot": "0",
     "ebuildPath": "third_party/portage-stable/virtual/editor/editor-0-r3.ebuild",
     "version": "0-r3",
-    "buildDeps": [
-      "//third_party/portage-stable/app-editors/vim:0"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/portage-stable/app-editors/vim:0"
@@ -26435,9 +26429,7 @@
     "mainSlot": "0",
     "ebuildPath": "third_party/portage-stable/virtual/logger/logger-0.ebuild",
     "version": "0",
-    "buildDeps": [
-      "//third_party/chromiumos-overlay/app-admin/rsyslog:0"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/app-admin/rsyslog:0"
