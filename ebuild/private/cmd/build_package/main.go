@@ -348,11 +348,13 @@ var app = &cli.App{
 		args := []string{
 			runInContainerPath,
 			"--scratch-dir=" + scratchDir,
-			"--overlay=" + bazelBuildDir.Inside() + "=" + bazelBuildDir.Outside(),
+			"--overlay=/=" + rootDir.Outside(),
+			// Even though the ebuildDir is inside the rootDir we need to explicitly
+			// pass it in because the ebuild overlay squashfs gets mounted on top.
+			// If we converted the `overlay` rule to generate using the full root path
+			// in the squashfs files we could mount them at / and remove this
+			// line.
 			"--overlay=" + ebuildDir.Inside() + "=" + ebuildDir.Outside(),
-			"--overlay=" + distDir.Inside() + "=" + distDir.Outside(),
-			"--overlay=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
-			"--overlay=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
 		}
 
 		for _, sdkPath := range sdkPaths {
