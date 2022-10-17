@@ -37,3 +37,11 @@ binary_package(
     src = "@amd64_host_rust_1_62_1//file",
     visibility = ["//visibility:public"],
 )
+
+# x11-libs/libxcb needs this, but it looks missing in SDK and instead pulled in
+# by BDEPEND.
+binary_package(
+    name = "xcb-proto",
+    src = "@amd64_host_xcb_proto_1_14_1//file",
+    visibility = ["//visibility:public"],
+)

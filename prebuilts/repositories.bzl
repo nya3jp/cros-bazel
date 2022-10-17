@@ -107,3 +107,9 @@ def prebuilts_dependencies():
         sha256 = "03af218671910e7f590fe92a0f3ba7d4c076c1390f9f1c9cd2d71b85f50a4744",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-lang/rust-1.62.1.tbz2"],
     )
+    http_file(
+        name = "amd64_host_xcb_proto_1_14_1",
+        downloaded_file_path = "xcb-proto-1.14.1.tbz2",
+        sha256 = "848f74ec91f249c11ca462729ede8136190e8fbdce647782c8d0b2fd2531a2f9",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/x11-base/xcb-proto-1.14.1.tbz2"],
+    )

@@ -27,6 +27,7 @@ sdk(
         "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
         "//bazel/prebuilts/amd64-host:fakeroot",
         "//bazel/prebuilts/amd64-host:meson-format-array",
+        "//bazel/prebuilts/amd64-host:xcb-proto",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",
