@@ -22647,6 +22647,7 @@
       "//third_party/chromiumos-overlay/media-libs/fontconfig:1.0",
       "//third_party/chromiumos-overlay/media-libs/freetype:2",
       "//third_party/chromiumos-overlay/x11-libs/cairo:0",
+      "//third_party/portage-stable/dev-libs/boost:0",
       "//third_party/portage-stable/media-libs/lcms:2",
       "//third_party/portage-stable/media-libs/openjpeg:2",
       "//third_party/portage-stable/sys-libs/zlib:0",
@@ -23922,6 +23923,7 @@
     "ebuildPath": "third_party/portage-stable/dev-python/m2crypto/m2crypto-0.35.2.ebuild",
     "version": "0.35.2",
     "buildDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/chromiumos-overlay/dev-libs/openssl:0"
     ],
     "localSrc": [],
@@ -26710,7 +26712,9 @@
       "//third_party/portage-stable/x11-base/xorg-proto:0"
     ],
     "localSrc": [],
-    "runtimeDeps": [],
+    "runtimeDeps": [
+      "//third_party/portage-stable/x11-base/xorg-proto:0"
+    ],
     "srcUris": {
       "libXau-1.0.9.tar.bz2": {
         "uris": [

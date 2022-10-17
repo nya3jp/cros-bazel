@@ -39,6 +39,22 @@ var (
 		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
 	}
 
+	extraDepsPackages = map[string]map[string][]string{
+		// poppler seems to support building without Boost, but the build fails
+		// without it.
+		"app-text/poppler": {
+			"DEPEND": {"dev-libs/boost"},
+		},
+		// m2crypt fails to build for missing Python.h.
+		"dev-python/m2crypto": {
+			"DEPEND": {"dev-lang/python:3.6"},
+		},
+		// xau.pc contains "Requires: xproto", so it should be listed as RDEPEND.
+		"x11-libs/libXau": {
+			"RDEPEND": {"x11-base/xorg-proto"},
+		},
+	}
+
 	invalidEbuilds = map[string]struct{}{
 		// The 9999 ebuild isn't actually functional.
 		"chromeos-lacros-9999.ebuild": {},
@@ -151,7 +167,21 @@ func extractDeps(depType string, pkg *packages.Package, resolver *portage.Resolv
 	if err != nil {
 		return nil, err
 	}
-	return depparse.Parse(deps, pkg, resolver)
+	parsedDeps, err := depparse.Parse(deps, pkg, resolver)
+	if err != nil {
+		return nil, err
+	}
+
+	extraDeps := extraDepsPackages[pkg.Name()][depType]
+	for _, s := range extraDeps {
+		atom, err := dependency.ParseAtom(s)
+		if err != nil {
+			return nil, err
+		}
+		parsedDeps = append(parsedDeps, atom)
+	}
+
+	return parsedDeps, nil
 }
 
 type delayedPostDepsInfo struct {
