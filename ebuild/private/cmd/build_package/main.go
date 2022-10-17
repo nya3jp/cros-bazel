@@ -291,7 +291,7 @@ var app = &cli.App{
 			return fmt.Errorf("invalid ebuild file name: %w", err)
 		}
 
-		tmpDir, err := os.MkdirTemp("", "build_package.*")
+		tmpDir, err := os.MkdirTemp(".", "build_package.*")
 		if err != nil {
 			return err
 		}

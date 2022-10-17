@@ -116,6 +116,32 @@ built or not.
 $ bazel run //bazel/ebuild/cmd/generate_stats > bazel/data/deps.csv
 ```
 
+### Debugging a failing package
+
+If a package is failing to build, it's sometimes useful to view the package's
+work directory. To do this run:
+
+```
+bazel build --sandbox_debug //your/ebuild
+```
+
+In the build output you will see a `cd` into the `execroot`:
+
+```
+cd /home/rrangel/.cache/bazel/_bazel_rrangel/ca19c0757f7accdebe9bbcbd2cb0838e/sandbox/linux-sandbox/842/execroot/__main__
+```
+
+This directory will contain a directory called `build_package.*`. It contains
+all the artifacts that were generated while building the package.
+
+Build logs can be found in:
+
+    scratch/diff/build/arm64-generic/tmp/portage/logs/
+
+The package work dir can be found in:
+
+    scratch/diff/build/<board>/tmp/portage/<category>/<package>-<version>
+
 ### Debugging an ephemeral CrOS chroot
 
 Sometimes you want to enter an ephemeral CrOS chroot where a package build is
