@@ -35,20 +35,6 @@ var (
 	invalidEbuilds = map[string]struct{}{
 		// The 9999 ebuild isn't actually functional.
 		"chromeos-lacros-9999.ebuild": {},
-		// Some type of transitional ebuild
-		"ncurses-5.9-r99.ebuild": {},
-	}
-
-	// These packages depend on newer versions of them selves (sigh).
-	// In order to avoid a circular dependency we need to specify the
-	// exact version.
-	ebuildDepOverride = map[string]map[string]string{
-		"cortex-m-0.6.7.ebuild": {
-			"dev-rust/cortex-m": "=dev-rust/cortex-m-0.7.3",
-		},
-		"nb-0.1.3.ebuild": {
-			"dev-rust/nb": "=dev-rust/nb-1.0.0",
-		},
 	}
 )
 
@@ -143,22 +129,6 @@ func extractDeps(depType string, pkg *packages.Package, resolver *portage.Resolv
 		return nil, err
 	}
 	return depparse.Parse(deps, pkg, resolver)
-}
-
-func applyDepOverrides(pkg *packages.Package, deps []string) []string {
-	overrideMap, ok := ebuildDepOverride[filepath.Base(pkg.Path())]
-	if !ok {
-		return deps
-	}
-
-	for i, packageName := range deps {
-		if override, ok := overrideMap[packageName]; ok {
-			deps[i] = override
-			break
-		}
-	}
-
-	return deps
 }
 
 func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (depdata.PackageInfoMap, error) {
@@ -258,9 +228,6 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 		if err != nil {
 			return nil, err
 		}
-
-		runtimeDeps = applyDepOverrides(pkg, runtimeDeps)
-		buildTimeDeps = applyDepOverrides(pkg, buildTimeDeps)
 
 		info := &depdata.PackageInfo{
 			Name:        pkg.Name(),

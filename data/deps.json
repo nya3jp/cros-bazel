@@ -6233,7 +6233,7 @@
       "//third_party/portage-stable/sys-devel/autoconf:2.5",
       "//third_party/portage-stable/sys-devel/automake:1.15",
       "//third_party/portage-stable/sys-libs/gdbm:0",
-      "//third_party/portage-stable/sys-libs/ncurses:0",
+      "//third_party/portage-stable/sys-libs/ncurses:5",
       "//third_party/portage-stable/sys-libs/zlib:0",
       "//third_party/portage-stable/virtual/libcrypt:0",
       "//third_party/portage-stable/virtual/libintl:0"
@@ -6248,7 +6248,7 @@
       "//third_party/portage-stable/app-misc/mime-types:0",
       "//third_party/portage-stable/dev-libs/expat:0",
       "//third_party/portage-stable/sys-libs/gdbm:0",
-      "//third_party/portage-stable/sys-libs/ncurses:0",
+      "//third_party/portage-stable/sys-libs/ncurses:5",
       "//third_party/portage-stable/sys-libs/zlib:0",
       "//third_party/portage-stable/virtual/libcrypt:0",
       "//third_party/portage-stable/virtual/libintl:0"
@@ -20968,11 +20968,11 @@
     "ebuildPath": "third_party/chromiumos-overlay/sys-libs/readline/readline-8.1_p1-r1.ebuild",
     "version": "8.1_p1-r1",
     "buildDeps": [
-      "//third_party/portage-stable/sys-libs/ncurses:0"
+      "//third_party/portage-stable/sys-libs/ncurses:5"
     ],
     "localSrc": [],
     "runtimeDeps": [
-      "//third_party/portage-stable/sys-libs/ncurses:0"
+      "//third_party/portage-stable/sys-libs/ncurses:5"
     ],
     "srcUris": {
       "readline-8.1.tar.gz": {
@@ -25587,13 +25587,13 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/sys-libs/readline:0",
       "//third_party/portage-stable/sys-devel/flex:0",
-      "//third_party/portage-stable/sys-libs/ncurses:0",
+      "//third_party/portage-stable/sys-libs/ncurses:5",
       "//third_party/portage-stable/virtual/yacc:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/sys-libs/readline:0",
-      "//third_party/portage-stable/sys-libs/ncurses:0"
+      "//third_party/portage-stable/sys-libs/ncurses:5"
     ],
     "srcUris": {
       "bc-1.07.1.tar.gz": {
@@ -26081,6 +26081,20 @@
       }
     }
   },
+  "//third_party/portage-stable/sys-libs/ncurses:5": {
+    "name": "sys-libs/ncurses",
+    "mainSlot": "5",
+    "ebuildPath": "third_party/portage-stable/sys-libs/ncurses/ncurses-5.9-r99.ebuild",
+    "version": "5.9-r99",
+    "buildDeps": [
+      "//third_party/portage-stable/sys-libs/ncurses:0"
+    ],
+    "localSrc": [],
+    "runtimeDeps": [
+      "//third_party/portage-stable/sys-libs/ncurses:0"
+    ],
+    "srcUris": {}
+  },
   "//third_party/portage-stable/sys-libs/pam:0": {
     "name": "sys-libs/pam",
     "mainSlot": "0",
@@ -26268,13 +26282,13 @@
     "version": "3.3.15-r1",
     "buildDeps": [
       "//third_party/portage-stable/sys-libs/libselinux:0",
-      "//third_party/portage-stable/sys-libs/ncurses:0",
+      "//third_party/portage-stable/sys-libs/ncurses:5",
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/portage-stable/sys-libs/libselinux:0",
-      "//third_party/portage-stable/sys-libs/ncurses:0"
+      "//third_party/portage-stable/sys-libs/ncurses:5"
     ],
     "srcUris": {
       "procps-ng-3.3.15.tar.xz": {
