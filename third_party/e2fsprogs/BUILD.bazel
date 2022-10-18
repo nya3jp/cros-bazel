@@ -1,0 +1,43 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("//bazel/third_party/rules_foreign_cc:standalone_binary.bzl", "foreign_cc_standalone_binary")
+
+# TODO: e2fsprogs doesn't support compiling with a custom fuse. It's hardcoded
+# to invoke the compiler with -lfuse (see FUSE_LIB in the ./configure file).
+# We may deal with this properly later, but for now, we'll just assume that fuse
+# is installed on the host system.
+# If it's not installed on your system, run "sudo apt install fuse3".
+# While this package is compatible with both fuse2 and fuse3, don't install
+# fuse2, as many corp things (such as srcfs) will be uninstalled.
+
+configure_make(
+    name = "e2fsprogs",
+    configure_options = [
+        # Disable all features except fuse2fs, since that's the only one we care
+        # about.
+        "--disable-debugfs",
+        "--disable-imager",
+        "--disable-resizer",
+        "--disable-degfrag",
+        "--disable-fsck",
+        "--disable-e2initrd-helper",
+        "--disable-rpath",
+        "--enable-fuse2fs",
+
+        # By default, these files attempt to output to the host system.
+        "--with-udev-rules-dir=../out/lib/udev/rules.d",
+        "--with-crond-dir=../out/etc/cron.d",
+        "--with-systemd-unit-dir=../out/lib/systemd/system",
+
+        # Optimizations
+        "--enable-lto",
+    ],
+    install_prefix = "out",
+    lib_source = "@e2fsprogs//:all_srcs",
+    out_binaries = ["fuse2fs"],
+    deps = [],
+)
+
+foreign_cc_standalone_binary(
+    name = "fuse2fs",
+    src = ":e2fsprogs",
+)
