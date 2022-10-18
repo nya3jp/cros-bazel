@@ -243,9 +243,7 @@ func continueNamespace(c *cli.Context) error {
 			}
 		case overlaySquashfs:
 			if err := runCommand(
-				"env",
-				fmt.Sprintf("LD_LIBRARY_PATH=%s:%s", os.Getenv("LD_LIBRARY_PATH"), filepath.Join(squashfusePath, "lib")),
-				filepath.Join(squashfusePath, "bin/squashfuse"),
+				squashfusePath,
 				overlay.Source,
 				lowerDir); err != nil {
 				return fmt.Errorf("failed mounting %s: %w", overlay.Source, err)

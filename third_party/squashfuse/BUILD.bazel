@@ -1,7 +1,8 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("//bazel/third_party/rules_foreign_cc:standalone_binary.bzl", "foreign_cc_standalone_binary")
 
 configure_make(
-    name = "squashfuse",
+    name = "squashfuse_make",
     autogen = True,
     configure_in_place = True,
     configure_options = [
@@ -21,9 +22,14 @@ configure_make(
         "libsquashfuse.so",
         "libsquashfuse.so.0",
     ],
-    visibility = ["//bazel/ebuild/private/cmd/run_in_container:__pkg__"],
     deps = [
         "//bazel/third_party/fuse",
         "//bazel/third_party/lz4",
     ],
+)
+
+foreign_cc_standalone_binary(
+    name = "squashfuse",
+    src = ":squashfuse_make",
+    visibility = ["//bazel/ebuild/private/cmd/run_in_container:__pkg__"],
 )
