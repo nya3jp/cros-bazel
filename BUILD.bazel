@@ -9,3 +9,13 @@ gazelle(
     name = "gazelle",
     extra_args = ["bazel/ebuild"],
 )
+
+gazelle(
+    name = "gazelle-update-repos",
+    args = [
+        "-from_file=bazel/go.mod",
+        "-to_macro=bazel/ebuild/deps.bzl%rules_ebuild_go_dependencies",
+        "-prune",
+    ],
+    command = "update-repos",
+)
