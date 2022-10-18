@@ -58,16 +58,11 @@ func ParsePackageList(path string) ([]*TargetPackage, error) {
 	var provided []*TargetPackage
 
 	for _, line := range lines {
-		prefix, ver, err := version.ExtractSuffix(line)
+		name, ver, err := version.ExtractSuffix(line)
 		if err != nil {
 			return nil, fmt.Errorf("invalid provided package spec: %s: %w", line, err)
 		}
 
-		const hyphen = "-"
-		if !strings.HasSuffix(prefix, hyphen) {
-			return nil, fmt.Errorf("invalid provided package spec: %s", line)
-		}
-		name := strings.TrimSuffix(prefix, hyphen)
 		provided = append(provided, &TargetPackage{
 			Name:    name,
 			Version: ver,

@@ -85,14 +85,10 @@ func extractPackage(absPath string) (*config.TargetPackage, error) {
 	packageShortName := filepath.Base(filepath.Dir(absPath))
 	categoryName := filepath.Base(filepath.Dir(filepath.Dir(absPath)))
 
-	packageShortNameAndHyphen, version, err := version.ExtractSuffix(packageShortNameAndVersion)
+	packageShortName2, version, err := version.ExtractSuffix(packageShortNameAndVersion)
 	if err != nil {
 		return nil, err
 	}
-	if !strings.HasSuffix(packageShortNameAndHyphen, "-") {
-		return nil, errors.New("invalid package name")
-	}
-	packageShortName2 := strings.TrimSuffix(packageShortNameAndHyphen, "-")
 	if packageShortName2 != packageShortName {
 		return nil, errors.New("ebuild name mismatch with directory name")
 	}

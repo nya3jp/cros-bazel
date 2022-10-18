@@ -5,7 +5,6 @@
 package dependency_test
 
 import (
-	"strings"
 	"testing"
 
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
@@ -54,7 +53,7 @@ func TestAtomMatch(t *testing.T) {
 			t.Fatalf("BUG: version.ExtractSuffix(%q) failed: %v", tc.target, err)
 		}
 		got := a.Match(&dependency.TargetPackage{
-			Name:     strings.TrimSuffix(prefix, "-"),
+			Name:     prefix,
 			Version:  ver,
 			MainSlot: "",
 			Uses:     nil,

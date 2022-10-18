@@ -34,8 +34,6 @@ const (
 var setupScript []byte
 
 func parseEBuildPath(path string) (packageShortName string, ver *version.Version, err error) {
-	const versionSep = "-"
-
 	if !strings.HasSuffix(path, ebuildExt) {
 		return "", nil, errors.New("ebuild must have .ebuild suffix")
 	}
@@ -44,10 +42,7 @@ func parseEBuildPath(path string) (packageShortName string, ver *version.Version
 	if err != nil {
 		return "", nil, err
 	}
-	if !strings.HasSuffix(rest, versionSep) {
-		return "", nil, errors.New("package name and version must be separated by a hyphen")
-	}
-	packageShortName = filepath.Base(strings.TrimSuffix(rest, versionSep))
+	packageShortName = filepath.Base(rest)
 	return packageShortName, ver, nil
 }
 

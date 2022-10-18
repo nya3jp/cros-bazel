@@ -229,14 +229,7 @@ var (
 	revisionRe = regexp.MustCompile(`-r(\d+)$`)
 )
 
-// ExtractSuffix trims a Portage package version suffix from a string.
-//
-// Examples:
-//
-//	"net-misc/curl-7.78.0-r1" => ("net-misc/curl-", "7.78.0-r1")
-//	"curl-7.78.0-r1" => ("curl-", "7.78.0-r1")
-//	"7.78.0-r1" => ("", "7.78.0-r1")
-func ExtractSuffix(s string) (prefix string, ver *Version, err error) {
+func extractSuffixKeepingHyphen(s string) (prefix string, ver *Version, err error) {
 	revision := ""
 	if m := revisionRe.FindStringSubmatch(s); m != nil {
 		revision = m[1]
@@ -279,9 +272,30 @@ func ExtractSuffix(s string) (prefix string, ver *Version, err error) {
 	return s, v, nil
 }
 
+// ExtractSuffix trims a Portage package version suffix (including a leading
+// hyphen) from a string.
+//
+// Examples:
+//
+//	"net-misc/curl-7.78.0-r1" => ("net-misc/curl", "7.78.0-r1")
+//	"curl-7.78.0-r1" => ("curl", "7.78.0-r1")
+//	"7.78.0-r1" => error
+func ExtractSuffix(s string) (prefix string, ver *Version, err error) {
+	prefix, ver, err = extractSuffixKeepingHyphen(s)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if !strings.HasSuffix(prefix, "-") {
+		return "", nil, errors.New("invalid version: no leading hyphen")
+	}
+	prefix = prefix[:len(prefix)-1]
+	return prefix, ver, nil
+}
+
 // Parse parses a Portage package version string.
 func Parse(s string) (*Version, error) {
-	rest, ver, err := ExtractSuffix(s)
+	rest, ver, err := extractSuffixKeepingHyphen(s)
 	if err != nil {
 		return nil, err
 	}

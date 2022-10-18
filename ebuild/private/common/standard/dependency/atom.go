@@ -98,10 +98,6 @@ func ParseAtom(atomStr string) (*Atom, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", atomStr, err)
 		}
-		if !strings.HasSuffix(rest, "-") {
-			return nil, fmt.Errorf("%s: invalid package name", atomStr)
-		}
-		rest = strings.TrimSuffix(rest, "-")
 	}
 
 	if err := naming.CheckCategoryAndPackage(rest); err != nil {

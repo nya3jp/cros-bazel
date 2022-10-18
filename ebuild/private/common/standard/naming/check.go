@@ -25,7 +25,7 @@ func CheckCategory(s string) error {
 var packageRe = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9+_-]*$`)
 
 func CheckPackage(s string) error {
-	if rest, _, err := version.ExtractSuffix(s); err == nil && strings.HasSuffix(rest, "-") {
+	if _, _, err := version.ExtractSuffix(s); err == nil {
 		return errors.New("invalid package name: version-like suffix")
 	}
 	if !packageRe.MatchString(s) {
