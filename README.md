@@ -22,7 +22,7 @@ Package data needed to generate them are managed in `bazel/data/deps.json`
 and it can be converted to `BUILD.bazel` with the following command:
 
 ```sh
-$ bazel run //bazel/ebuild/private/cmd/update_build
+$ bazel run //bazel/ebuild/cmd/update_build
 ```
 
 Then you can start building packages. To build sys-apps/ethtool for example:
@@ -51,18 +51,27 @@ See [manifest/_bazel.xml] for details on how this repository is organized.
 [manifest/_bazel.xml]: https://team.git.corp.google.com/cros-build-tiger/cros-bazel-manifest/+/refs/heads/main/_bazel.xml
 
 * `src/`
+    * `WORKSPACE.bazel` ... Bazel workspace definitions; symlink to `bazel/workspace_root/WORKSPACE.bazel`
+    * `BUILD.bazel` ... Bazel top-level target definitions; symlink to `bazel/workspace_root/BUILD.bazel`
     * `bazel/` ... contains Bazel-related files
         * `ebuild/`
             * `defs.bzl` ... provides Bazel rules
+            * `cmd` ... commands for development
+                * `extract_deps/` ... extracts dependency graph from ebuilds
+                * `generate_stats/` ... generates package coverage stats
+                * `update_build/` ... generates BUILD files for ebuilds
             * `private/` ... contains programs used by Bazel rules
                 * `cmd/`
                     * `create_squashfs/` ... creates squashfs from a file set; used by `overlay` rule
                     * `run_in_container/` ... runs a program within an unprivileged Linux container; used by other programs such as `build_sdk` and `build_package`
                     * `build_sdk/` ... builds SDK squashfs; used by `sdk` rule
                     * `build_package/` ... builds a Portage binary package; used by `ebuild` rule
-                    * `update_build/` ... generates BUILD files for ebuilds
+                    * `ver_test/` ... implements `ver_test` function in ebuilds
         * `config/` ... contains build configs like which overlays to use
+        * `prebuilts/` ... defines prebuilt binaries
         * `sdk/` ... defines SDK to use
+        * `third_party/` ... contains build rules for third-party softwares needed
+        * `workspace_root/` ... contains `WORKSPACE.bazel` and `BUILD.bazel` to be symlinked to the workspace root
     * `overlays/`
         * `overlay-arm64-generic/` ... a fork of overlay
     * `third_party/`
@@ -73,22 +82,25 @@ See [manifest/_bazel.xml] for details on how this repository is organized.
 
 ## Misc Memo
 
-### Generating BUILD files in overlays
+### Regenerating dependency graph info
 
-Firstly, run `extract_deps` **in CrOS chroot** to extract package dependency
-info from ebuilds.
+When you make changes to ebuilds or to our ebuild analyzer, you need to
+regenerate the dependency graph info stored at `bazel/data/deps.json` so that
+`update_build` generates `BUILD.bazel` files with up-to-date dependency info.
 
-```sh
-$ cros_sdk bazel-5 run //bazel/ebuild/private/cmd/extract_deps -- --board=arm64-generic --start=virtual/target-os > bazel/data/deps.json
-```
-
-Then you can run `generate_build` to update `BUILD` files.
+Run `extract_deps` **in CrOS chroot** to regenerate the dependency graph info.
 
 ```sh
-$ bazel run //bazel/ebuild/private/cmd/update_build -- --package-info-file $PWD/bazel/data/deps.json
+$ cros_sdk bazel-5 run //bazel/ebuild/cmd/extract_deps -- --board=arm64-generic --start=virtual/target-os > bazel/data/deps.json
 ```
 
-### Visualizing the dependency graph
+Then you can run `generate_build` as usual to update `BUILD.bazel` files.
+
+```sh
+$ bazel run //bazel/ebuild/cmd/update_build
+```
+
+### Generating package coverage stats
 
 Firstly, build all packages to generate .tbz2 files.
 
@@ -96,11 +108,12 @@ Firstly, build all packages to generate .tbz2 files.
 $ bazel build --keep_going //:all_target_packages
 ```
 
-Then run `bazel/tools/generate_depgraph.py` to generate a DOT file. It inspects
-`bazel-bin` directory to see if a package was successfully built or not.
+Then run `generate_stats` tool to generate a CSV file describing the package
+coverage. It inspects `bazel-bin` directory to see if a package was successfully
+built or not.
 
 ```sh
-$ bazel/tools/generate_depgraph.py bazel/data/deps.json > bazel/data/deps.dot
+$ bazel run //bazel/ebuild/cmd/generate_stats > bazel/data/deps.csv
 ```
 
 ### Debugging an ephemeral CrOS chroot
@@ -120,4 +133,4 @@ HINT: To debug this build environment, run the Bazel build with --spawn_strategy
 The message is shown without `--spawn_strategy=standalone`, but the printed
 command does not work because Bazel uses a temporary execroot.
 
-Related code is located [here](https://team.git.corp.google.com/cros-build-tiger/cros-bazel/+/refs/heads/main/ebuild/private/cmd/build_package/main.go#190).
+Related code is located [here](https://team.git.corp.google.com/cros-build-tiger/cros-bazel/+/refs/heads/main/ebuild/cmd/build_package/main.go#190).
