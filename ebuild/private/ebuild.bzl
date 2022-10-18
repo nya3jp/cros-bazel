@@ -16,54 +16,46 @@ def _map_install_group(targets):
     return ",".join(files)
 
 def _calculate_install_groups(build_deps):
-    targets = {target.label: target for target in build_deps.to_list()}
-
-    # Dict from a label to a list of labels, representing the dependency graph.
-    forward_deps = {}
-    for source in targets.values():
-        forward_deps[source.label] = [
-            dependency.label
-            for dependency in source[BinaryPackageInfo].transitive_runtime_deps_targets.to_list()
-        ]
-
-    # Dict from a label to a list of labels, representing reverse dependencies.
-    reverse_deps = {}
-    for source in forward_deps.keys():
-        reverse_deps[source] = []
-    for source, dependencies in forward_deps.items():
-        for dependency in dependencies:
-            reverse_deps[dependency].append(source)
-
-    # Dict from a label to the number of unsatisfied dependencies.
-    # It is updated as we decide install groups.
-    blocks = {}
-    for source, dependencies in forward_deps.items():
-        blocks[source] = len(dependencies)
+    seen = {}
 
     # An ordered list containing a list of deps that can be installed in parallel
-    groups = []
+    levels = []
+
+    remaining_targets = build_deps.to_list()
 
     for _ in range(100):
-        if not blocks:
+        if len(remaining_targets) == 0:
             break
 
-        group = [targets[label] for label, count in blocks.items() if count == 0]
-        if not group:
+        satisfied_list = []
+        not_satisfied_list = []
+        for target in remaining_targets:
+            info = target[BinaryPackageInfo]
+
+            all_seen = True
+            for runtime_target in info.direct_runtime_deps_targets:
+                if not seen.get(runtime_target.label):
+                    all_seen = False
+                    break
+
+            if all_seen:
+                satisfied_list.append(target)
+            else:
+                not_satisfied_list.append(target)
+
+        if len(satisfied_list) == 0:
             fail("Dependency list is unsatisfiable")
 
-        for target in group:
-            blocks.pop(target.label)
+        for target in satisfied_list:
+            seen[target.label] = True
 
-        for target in group:
-            for label in reverse_deps[target.label]:
-                blocks[label] -= 1
+        levels.append(satisfied_list)
+        remaining_targets = not_satisfied_list
 
-        groups.append(group)
-
-    if blocks:
+    if len(remaining_targets) > 0:
         fail("Too many dependencies")
 
-    return groups
+    return levels
 
 def _ebuild_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
@@ -113,6 +105,16 @@ def _ebuild_impl(ctx):
         direct_inputs.append(info.squashfs_file)
 
     # TODO: Consider target/host transitions.
+    transitive_build_time_deps_files = depset(
+        # Pull in runtime dependencies of build-time dependencies.
+        # TODO: Revisit this logic to see if we can avoid pulling in transitive
+        # dependencies.
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.build_deps],
+        order = "postorder",
+    )
+
+    transitive_inputs.append(transitive_build_time_deps_files)
+
     transitive_build_time_deps_targets = depset(
         ctx.attr.build_deps,
         # Pull in runtime dependencies of build-time dependencies.
@@ -122,18 +124,12 @@ def _ebuild_impl(ctx):
         order = "postorder",
     )
 
-    transitive_build_time_deps_files = [
-        dep[BinaryPackageInfo].file
-        for dep in transitive_build_time_deps_targets.to_list()
-    ]
-    direct_inputs.extend(transitive_build_time_deps_files)
-
     install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
     args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
 
-    transitive_install_files = depset(
+    transitive_runtime_deps_files = depset(
         [output],
-        transitive = [dep[BinaryPackageInfo].transitive_install_files for dep in ctx.attr.runtime_deps],
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.runtime_deps],
         order = "postorder",
     )
 
@@ -158,8 +154,9 @@ def _ebuild_impl(ctx):
         DefaultInfo(files = depset([output])),
         BinaryPackageInfo(
             file = output,
-            transitive_install_files = transitive_install_files,
+            transitive_runtime_deps_files = transitive_runtime_deps_files,
             transitive_runtime_deps_targets = transitive_runtime_deps_targets,
+            direct_runtime_deps_targets = ctx.attr.runtime_deps,
         ),
     ]
 

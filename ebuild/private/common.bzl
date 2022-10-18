@@ -10,17 +10,21 @@ BinaryPackageInfo = provider(
         "file": """
             File: A binary package file (.tbz2) of this package.
         """,
-        "transitive_install_files": """
-            Depset[File]: Transitive binary package files (.tbz2) to be
-            installed for this package.
-            This depset *always* contains this package itself, but does *not*
-            contain post dependencies.
+        "transitive_runtime_deps_files": """
+            Depset[File]: Binary package files (.tbz2) to be installed when
+            this package is required in run time.
+
+            The depset *always* contains the binary package file of this package
+            itself.
         """,
+
         "transitive_runtime_deps_targets": """
-            Depset[Target]: Transitive runtime targets to be installed *before*
-            this package.
-            This depset *does not* contain this package itself, nor post
-            dependencies.
+            Depset[Target]: Transitive runtime targets to be installed when this
+            package is required at run time.
+        """,
+
+        "direct_runtime_deps_targets": """
+            list[Target]: Direct runtime targets
         """,
     },
 )
@@ -87,3 +91,4 @@ def relative_path_in_package(file):
     if owner == None:
         fail("File does not have an associated owner label")
     return relative_path_in_label(file, owner)
+
