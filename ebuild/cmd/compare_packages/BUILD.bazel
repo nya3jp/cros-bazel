@@ -1,0 +1,34 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "generate_portage_golden_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/ebuild/cmd/generate_portage_golden",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//bazel/ebuild/cmd/generate_portage_golden/equery",
+        "@com_github_urfave_cli//:cli",
+    ],
+)
+
+go_binary(
+    name = "compare_packages",
+    embed = [":compare_packages_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "compare_packages_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/ebuild/cmd/compare_packages",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//bazel/ebuild/cmd/compare_packages/equery",
+        "//bazel/ebuild/cmd/compare_packages/golden",
+        "//bazel/ebuild/private/common/portage",
+        "//bazel/ebuild/private/common/standard/dependency",
+        "//bazel/ebuild/private/common/standard/version",
+        "@com_github_google_go_cmp//cmp",
+        "@com_github_urfave_cli//:cli",
+    ],
+)

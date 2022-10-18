@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "equery",
+    srcs = ["client.go"],
+    importpath = "cros.local/bazel/ebuild/cmd/compare_packages/equery",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/standard/version",
+        "@com_github_alessio_shellescape//:shellescape",
+    ],
+)
