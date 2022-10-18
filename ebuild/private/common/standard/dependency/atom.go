@@ -60,6 +60,10 @@ func NewAtom(packageName string, op VersionOperator, ver *version.Version, wildc
 	}
 }
 
+func NewSimpleAtom(packageName string) *Atom {
+	return NewAtom(packageName, OpNone, nil, false, "", nil)
+}
+
 func ParseAtom(atomStr string) (*Atom, error) {
 	rest := atomStr
 

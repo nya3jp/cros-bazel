@@ -320,7 +320,7 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 
 	// Start resolution from start packages.
 	for _, name := range startPackageNames {
-		if _, err := resolveAtom(dependency.NewAtom(name, dependency.OpNone, nil, false, "", nil)); err != nil {
+		if _, err := resolveAtom(dependency.NewSimpleAtom(name)); err != nil {
 			return nil, err
 		}
 	}
