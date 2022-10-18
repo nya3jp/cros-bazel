@@ -15,7 +15,7 @@ export PORTAGE_CONFIGROOT="${ROOT}"
 export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
 export RESTRICT="fetch"
-export FEATURES="-sandbox -usersandbox"  # TODO: turn on sandbox
+export FEATURES="-sandbox -usersandbox -ipc-sandbox -mount-sandbox -network-sandbox -pid-sandbox"
 export CCACHE_DISABLE=1
 
 install_deps() {
