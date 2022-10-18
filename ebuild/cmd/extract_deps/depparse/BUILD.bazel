@@ -6,7 +6,7 @@ go_library(
         "depparse.go",
         "simplify.go",
     ],
-    importpath = "cros.local/bazel/ebuild/private/cmd/extract_deps/depparse",
+    importpath = "cros.local/bazel/ebuild/cmd/extract_deps/depparse",
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/portage",

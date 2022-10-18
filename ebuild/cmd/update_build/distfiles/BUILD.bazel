@@ -7,7 +7,7 @@ go_library(
         "entry.go",
         "locate.go",
     ],
-    importpath = "cros.local/bazel/ebuild/private/cmd/update_build/distfiles",
+    importpath = "cros.local/bazel/ebuild/cmd/update_build/distfiles",
     visibility = ["//visibility:public"],
     deps = ["//bazel/ebuild/private/common/depdata"],
 )

@@ -18,7 +18,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	"cros.local/bazel/ebuild/private/cmd/update_build/distfiles"
+	"cros.local/bazel/ebuild/cmd/update_build/distfiles"
 	"cros.local/bazel/ebuild/private/common/depdata"
 )
 

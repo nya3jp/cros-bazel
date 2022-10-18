@@ -16,8 +16,8 @@ import (
 
 	"github.com/urfave/cli"
 
-	"cros.local/bazel/ebuild/private/cmd/extract_deps/depparse"
-	"cros.local/bazel/ebuild/private/cmd/extract_deps/srcparse"
+	"cros.local/bazel/ebuild/cmd/extract_deps/depparse"
+	"cros.local/bazel/ebuild/cmd/extract_deps/srcparse"
 	"cros.local/bazel/ebuild/private/common/depdata"
 	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/runfiles"
