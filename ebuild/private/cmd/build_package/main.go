@@ -19,9 +19,9 @@ import (
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
+	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
-	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
@@ -417,7 +417,7 @@ var app = &cli.App{
 }
 
 func main() {
-	runfiles.FixEnv()
+	bazelutil.FixRunfilesEnv()
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("ERROR: %v", err)

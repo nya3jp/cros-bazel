@@ -12,9 +12,9 @@ go_library(
     deps = [
         "//bazel/ebuild/cmd/extract_deps/depparse",
         "//bazel/ebuild/cmd/extract_deps/srcparse",
+        "//bazel/ebuild/private/common/bazelutil",
         "//bazel/ebuild/private/common/depdata",
         "//bazel/ebuild/private/common/portage",
-        "//bazel/ebuild/private/common/runfiles",
         "//bazel/ebuild/private/common/standard/config",
         "//bazel/ebuild/private/common/standard/dependency",
         "//bazel/ebuild/private/common/standard/packages",

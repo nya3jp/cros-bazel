@@ -18,9 +18,9 @@ import (
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli"
 
+	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
-	"cros.local/bazel/ebuild/private/common/runfiles"
 )
 
 //go:embed setup.sh
@@ -348,7 +348,7 @@ func moveSymlinks(outputPath string, squashfsPath string) error {
 }
 
 func main() {
-	runfiles.FixEnv()
+	bazelutil.FixRunfilesEnv()
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("ERROR: %v", err)

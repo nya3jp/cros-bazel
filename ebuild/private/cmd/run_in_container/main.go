@@ -20,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 	"golang.org/x/sys/unix"
 
-	"cros.local/bazel/ebuild/private/common/runfiles"
+	"cros.local/bazel/ebuild/private/common/bazelutil"
 )
 
 func runCommand(name string, args ...string) error {
@@ -354,7 +354,7 @@ func continueNamespace(c *cli.Context) error {
 }
 
 func main() {
-	runfiles.FixEnv()
+	bazelutil.FixRunfilesEnv()
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("ERROR: %v", err)

@@ -14,6 +14,7 @@ go_library(
     deps = [
         "//bazel/ebuild/cmd/compare_packages/equery",
         "//bazel/ebuild/cmd/compare_packages/golden",
+        "//bazel/ebuild/private/common/bazelutil",
         "//bazel/ebuild/private/common/portage",
         "//bazel/ebuild/private/common/standard/dependency",
         "//bazel/ebuild/private/common/standard/version",

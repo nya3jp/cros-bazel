@@ -11,9 +11,9 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/cmd/build_sdk",
     visibility = ["//visibility:private"],
     deps = [
+        "//bazel/ebuild/private/common/bazelutil",
         "//bazel/ebuild/private/common/fileutil",
         "//bazel/ebuild/private/common/makechroot",
-        "//bazel/ebuild/private/common/runfiles",
         "@com_github_urfave_cli//:cli",
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
     ],

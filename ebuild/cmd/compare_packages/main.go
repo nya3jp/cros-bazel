@@ -16,6 +16,7 @@ import (
 
 	"cros.local/bazel/ebuild/cmd/compare_packages/equery"
 	"cros.local/bazel/ebuild/cmd/compare_packages/golden"
+	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/version"
@@ -110,7 +111,7 @@ var app = &cli.App{
 		board := c.String(flagBoard.Name)
 		regenGolden := c.Bool(flagRegenerateGolden.Name)
 
-		workspaceDir := os.Getenv("BUILD_WORKSPACE_DIRECTORY")
+		workspaceDir := bazelutil.WorkspaceDir()
 		goldenPath := filepath.Join(workspaceDir, "bazel", "data", "packages.golden.json")
 
 		if regenGolden {

@@ -15,6 +15,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/depdata"
 )
 
@@ -101,7 +102,7 @@ var app = &cli.App{
 		flagPackageInfoFile,
 	},
 	Action: func(c *cli.Context) error {
-		workspaceDir := os.Getenv("BUILD_WORKSPACE_DIRECTORY")
+		workspaceDir := bazelutil.WorkspaceDir()
 
 		packageInfoPath := c.String(flagPackageInfoFile.Name)
 		if packageInfoPath == "" {

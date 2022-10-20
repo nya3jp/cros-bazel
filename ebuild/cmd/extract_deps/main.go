@@ -17,9 +17,9 @@ import (
 
 	"cros.local/bazel/ebuild/cmd/extract_deps/depparse"
 	"cros.local/bazel/ebuild/cmd/extract_deps/srcparse"
+	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/depdata"
 	"cros.local/bazel/ebuild/private/common/portage"
-	"cros.local/bazel/ebuild/private/common/runfiles"
 	"cros.local/bazel/ebuild/private/common/standard/config"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
@@ -388,7 +388,7 @@ var app = &cli.App{
 }
 
 func main() {
-	runfiles.FixEnv()
+	bazelutil.FixRunfilesEnv()
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("ERROR: %v", err)

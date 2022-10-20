@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
+
+	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 )
 
 const binaryPkgRunfile = "bazel/ebuild/private/common/portage/binarypackage/testdata/nano.tbz2"

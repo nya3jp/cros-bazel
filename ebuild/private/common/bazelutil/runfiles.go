@@ -2,14 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package runfiles
+package bazelutil
 
 import (
 	"fmt"
 	"os"
 )
 
-func FixEnv() {
+// FixRunfilesEnv modifies the current process's environment variables so that
+// functions to locate runfiles in github.com/bazelbuild/rules_go/go/tools/bazel
+// work. Call this function in main if you need to access runfiles.
+func FixRunfilesEnv() {
 	const (
 		envRunfilesDir  = "RUNFILES_DIR"
 		envManifestPath = "RUNFILES_MANIFEST_FILE"
