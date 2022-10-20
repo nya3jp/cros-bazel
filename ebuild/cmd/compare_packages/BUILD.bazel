@@ -1,16 +1,5 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
-go_library(
-    name = "generate_portage_golden_lib",
-    srcs = ["main.go"],
-    importpath = "cros.local/bazel/ebuild/cmd/generate_portage_golden",
-    visibility = ["//visibility:private"],
-    deps = [
-        "//bazel/ebuild/cmd/generate_portage_golden/equery",
-        "@com_github_urfave_cli//:cli",
-    ],
-)
-
 go_binary(
     name = "compare_packages",
     embed = [":compare_packages_lib"],
