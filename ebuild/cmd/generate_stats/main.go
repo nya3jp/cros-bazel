@@ -5,7 +5,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"sort"
@@ -109,12 +108,8 @@ var app = &cli.App{
 			packageInfoPath = filepath.Join(workspaceDir, "bazel/data/deps.json")
 		}
 
-		var pkgInfoMap depdata.PackageInfoMap
-		b, err := os.ReadFile(packageInfoPath)
+		pkgInfoMap, err := depdata.Load(packageInfoPath)
 		if err != nil {
-			return err
-		}
-		if err := json.Unmarshal(b, &pkgInfoMap); err != nil {
 			return err
 		}
 

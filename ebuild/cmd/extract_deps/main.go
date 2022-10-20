@@ -5,7 +5,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
@@ -384,12 +383,7 @@ var app = &cli.App{
 
 		srcparse.FixupLocalSource(infoMap)
 
-		infoMap.FixupForJSON()
-
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.SetIndent("", "  ")
-		encoder.SetEscapeHTML(false)
-		return encoder.Encode(infoMap)
+		return depdata.Save("/dev/stdout", infoMap)
 	},
 }
 
