@@ -13,6 +13,7 @@ go_library(
         "//bazel/ebuild/cmd/extract_deps/depparse",
         "//bazel/ebuild/cmd/extract_deps/srcparse",
         "//bazel/ebuild/private/common/bazelutil",
+        "//bazel/ebuild/private/common/commonflags",
         "//bazel/ebuild/private/common/depdata",
         "//bazel/ebuild/private/common/portage",
         "//bazel/ebuild/private/common/standard/config",

@@ -91,7 +91,7 @@ regenerate the dependency graph info stored at `bazel/data/deps.json` so that
 Run `extract_deps` **in CrOS chroot** to regenerate the dependency graph info.
 
 ```sh
-$ cros_sdk bazel-5 run //bazel/ebuild/cmd/extract_deps -- --board=arm64-generic --start=virtual/target-os > bazel/data/deps.json
+$ cros_sdk bazel-5 run //bazel/ebuild/cmd/extract_deps
 ```
 
 Then you can run `generate_build` as usual to update `BUILD.bazel` files.

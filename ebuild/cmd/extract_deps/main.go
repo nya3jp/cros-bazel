@@ -18,6 +18,7 @@ import (
 	"cros.local/bazel/ebuild/cmd/extract_deps/depparse"
 	"cros.local/bazel/ebuild/cmd/extract_deps/srcparse"
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/commonflags"
 	"cros.local/bazel/ebuild/private/common/depdata"
 	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/standard/config"
@@ -342,23 +343,25 @@ func computeDepsInfo(resolver *portage.Resolver, startPackageNames []string) (de
 }
 
 var flagBoard = &cli.StringFlag{
-	Name:     "board",
-	Required: true,
+	Name:  "board",
+	Value: "arm64-generic",
 }
 
 var flagStart = &cli.StringSliceFlag{
-	Name:     "start",
-	Required: true,
+	Name:  "start",
+	Value: &cli.StringSlice{"virtual/target-os"},
 }
 
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagBoard,
 		flagStart,
+		commonflags.DepsJSON,
 	},
 	Action: func(c *cli.Context) error {
 		board := c.String(flagBoard.Name)
 		startPackageNames := c.StringSlice(flagStart.Name)
+		depsJSONPath := c.String(commonflags.DepsJSON.Name)
 
 		rootDir := filepath.Join("/build", board)
 
@@ -383,7 +386,7 @@ var app = &cli.App{
 
 		srcparse.FixupLocalSource(infoMap)
 
-		return depdata.Save("/dev/stdout", infoMap)
+		return depdata.Save(depsJSONPath, infoMap)
 	},
 }
 

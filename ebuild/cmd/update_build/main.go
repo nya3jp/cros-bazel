@@ -19,6 +19,7 @@ import (
 
 	"cros.local/bazel/ebuild/cmd/update_build/distfiles"
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/commonflags"
 	"cros.local/bazel/ebuild/private/common/depdata"
 )
 
@@ -344,30 +345,25 @@ func propagatePostDeps(pkgInfoMap depdata.PackageInfoMap) map[string][]string {
 	return postDepsMap
 }
 
-var flagPackageInfoFile = &cli.StringFlag{
-	Name: "package-info-file",
-}
-
 var app = &cli.App{
 	Flags: []cli.Flag{
-		flagPackageInfoFile,
+		commonflags.DepsJSON,
+		commonflags.DistfilesJSON,
 	},
 	Action: func(c *cli.Context) error {
+		depsJSONPath := c.String(commonflags.DepsJSON.Name)
+		distfilesJSONPath := c.String(commonflags.DistfilesJSON.Name)
+
 		workspaceDir := bazelutil.WorkspaceDir()
 
-		packageInfoPath := c.String(flagPackageInfoFile.Name)
-		if packageInfoPath == "" {
-			packageInfoPath = filepath.Join(workspaceDir, "bazel/data/deps.json")
-		}
-
-		pkgInfoMap, err := depdata.Load(packageInfoPath)
+		pkgInfoMap, err := depdata.Load(depsJSONPath)
 		if err != nil {
 			return err
 		}
 
 		postDepsMap := propagatePostDeps(pkgInfoMap)
 
-		cache, err := distfiles.NewCache(filepath.Join(workspaceDir, "bazel/data/distfiles.json"))
+		cache, err := distfiles.NewCache(distfilesJSONPath)
 		if err != nil {
 			return err
 		}

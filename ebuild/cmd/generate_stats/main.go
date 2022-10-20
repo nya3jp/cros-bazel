@@ -16,6 +16,7 @@ import (
 	"github.com/urfave/cli"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/commonflags"
 	"cros.local/bazel/ebuild/private/common/depdata"
 )
 
@@ -93,23 +94,16 @@ func printStats(pkgInfoMap depdata.PackageInfoMap, workspaceDir string) error {
 	return nil
 }
 
-var flagPackageInfoFile = &cli.StringFlag{
-	Name: "package-info-file",
-}
-
 var app = &cli.App{
 	Flags: []cli.Flag{
-		flagPackageInfoFile,
+		commonflags.DepsJSON,
 	},
 	Action: func(c *cli.Context) error {
+		depsJSONPath := c.String(commonflags.DepsJSON.Name)
+
 		workspaceDir := bazelutil.WorkspaceDir()
 
-		packageInfoPath := c.String(flagPackageInfoFile.Name)
-		if packageInfoPath == "" {
-			packageInfoPath = filepath.Join(workspaceDir, "bazel/data/deps.json")
-		}
-
-		pkgInfoMap, err := depdata.Load(packageInfoPath)
+		pkgInfoMap, err := depdata.Load(depsJSONPath)
 		if err != nil {
 			return err
 		}
