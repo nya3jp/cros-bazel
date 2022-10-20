@@ -51,7 +51,7 @@ func compareWithPortage(board string, goldenPath string) error {
 		return err
 	}
 
-	resolver, err := portage.NewResolver(filepath.Join("/build", board))
+	resolver, err := portage.NewResolver(filepath.Join("/build", board), portage.NewHackSource())
 	if err != nil {
 		return err
 	}

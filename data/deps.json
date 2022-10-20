@@ -828,6 +828,7 @@
       "//third_party/chromiumos-overlay/media-libs/alsa-lib:0",
       "//third_party/chromiumos-overlay/media-libs/fontconfig:1.0",
       "//third_party/chromiumos-overlay/media-libs/libsync:0",
+      "//third_party/chromiumos-overlay/media-libs/minigbm:0",
       "//third_party/chromiumos-overlay/media-sound/adhd:0",
       "//third_party/chromiumos-overlay/net-print/cups:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
@@ -863,6 +864,7 @@
       "//third_party/chromiumos-overlay/media-libs/alsa-lib:0",
       "//third_party/chromiumos-overlay/media-libs/fontconfig:1.0",
       "//third_party/chromiumos-overlay/media-libs/libsync:0",
+      "//third_party/chromiumos-overlay/media-libs/minigbm:0",
       "//third_party/chromiumos-overlay/media-sound/adhd:0",
       "//third_party/chromiumos-overlay/net-print/cups:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
@@ -17608,9 +17610,15 @@
     "mainSlot": "0",
     "ebuildPath": "third_party/chromiumos-overlay/dev-util/glib-utils/glib-utils-2.72.1.ebuild",
     "version": "2.72.1",
-    "buildDeps": [],
+    "buildDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
+      "//third_party/portage-stable/dev-lang/python-exec:2"
+    ],
     "localSrc": [],
-    "runtimeDeps": [],
+    "runtimeDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
+      "//third_party/portage-stable/dev-lang/python-exec:2"
+    ],
     "srcUris": {
       "glib-2.72.1.tar.xz": {
         "uris": [
@@ -23928,6 +23936,7 @@
     ],
     "localSrc": [],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
       "//third_party/portage-stable/dev-lang/python-exec:2"
     ],
@@ -24042,6 +24051,7 @@
     "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/portage-stable/dev-lang/python-exec:2"
     ],
     "srcUris": {}
@@ -24054,6 +24064,7 @@
     "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/portage-stable/dev-lang/python-exec:2"
     ],
     "srcUris": {
@@ -26635,6 +26646,7 @@
     ],
     "localSrc": [],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/portage-stable/dev-lang/python-exec:2"
     ],
     "srcUris": {

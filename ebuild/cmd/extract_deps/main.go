@@ -21,10 +21,8 @@ import (
 	"cros.local/bazel/ebuild/private/common/commonflags"
 	"cros.local/bazel/ebuild/private/common/depdata"
 	"cros.local/bazel/ebuild/private/common/portage"
-	"cros.local/bazel/ebuild/private/common/standard/config"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
-	"cros.local/bazel/ebuild/private/common/standard/version"
 )
 
 const workspaceDirInChroot = "/mnt/host/source/src"
@@ -60,25 +58,6 @@ var (
 		"chromeos-lacros-9999.ebuild": {},
 	}
 )
-
-// HACK: Hard-code several USE flags.
-// TODO: Support USE_EXPAND and remove this hack.
-var forceUse = []string{
-	"elibc_glibc",
-	"input_devices_evdev",
-	"kernel_linux",
-}
-
-// HACK: Hard-code several packages not to be installed.
-var forceProvided = []string{
-	// This package was used to force rust binary packages to rebuild.
-	// We no longer need this workaround with bazel.
-	"virtual/rust-binaries",
-
-	// This is really a BDEPEND and there is no need to declare it as a
-	// RDEPEND.
-	"virtual/rust",
-}
 
 func unique(list []string) []string {
 	sort.Strings(list)
@@ -365,16 +344,7 @@ var app = &cli.App{
 
 		rootDir := filepath.Join("/build", board)
 
-		var providedPackages []*config.TargetPackage
-		for _, name := range forceProvided {
-			providedPackages = append(providedPackages, &config.TargetPackage{
-				Name:    name,
-				Version: &version.Version{Main: []string{"0"}}, // assume version 0
-			})
-		}
-		hackSource := config.NewHackSource(strings.Join(forceUse, " "), providedPackages)
-
-		resolver, err := portage.NewResolver(rootDir, hackSource)
+		resolver, err := portage.NewResolver(rootDir, portage.NewHackSource())
 		if err != nil {
 			return err
 		}

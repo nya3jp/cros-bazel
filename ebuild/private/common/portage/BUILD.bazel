@@ -16,7 +16,10 @@ go_test(
 
 go_library(
     name = "portage",
-    srcs = ["portage.go"],
+    srcs = [
+        "hack.go",
+        "portage.go",
+    ],
     data = [
         "//bazel/ebuild/private/cmd/ver_test",
     ],
@@ -31,6 +34,7 @@ go_library(
         "//bazel/ebuild/private/common/standard/ebuild",
         "//bazel/ebuild/private/common/standard/makevars",
         "//bazel/ebuild/private/common/standard/packages",
+        "//bazel/ebuild/private/common/standard/version",
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
     ],
 )
