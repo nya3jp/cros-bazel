@@ -19,7 +19,7 @@ set -e
 
 export LD_LIBRARY_PATH={EXTRA_LIBRARIES}:${LD_LIBRARY_PATH:-}
 
-exec $(rlocation __main__/{BINARY_LOCATION}) "$@"
+exec $(rlocation {WORKSPACE_NAME}/{BINARY_LOCATION}) "$@"
 """
 
 def _foreign_cc_standalone_binary_impl(ctx):
@@ -43,16 +43,18 @@ def _foreign_cc_standalone_binary_impl(ctx):
     deps = []
     for artifact in artifacts:
         deps.append(artifact.gen_dir)
-        lib_paths.append("$(rlocation __main__/{artifact_dir}/{lib_dir})".format(
+        lib_paths.append("$(rlocation {workspace_name}/{artifact_dir}/{lib_dir})".format(
             artifact_dir = artifact.gen_dir.short_path,
             lib_dir = artifact.lib_dir_name,
+            workspace_name = ctx.workspace_name,
         ))
 
     ctx.actions.write(
         output = out,
         content = BASH_FILE_CONTENTS
             .replace("{BINARY_LOCATION}", exe.short_path)
-            .replace("{EXTRA_LIBRARIES}", ":".join(lib_paths)),
+            .replace("{EXTRA_LIBRARIES}", ":".join(lib_paths))
+            .replace("{WORKSPACE_NAME}", ctx.workspace_name),
         is_executable = True,
     )
 
