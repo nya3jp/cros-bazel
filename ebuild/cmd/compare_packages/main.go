@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"cros.local/bazel/ebuild/cmd/compare_packages/equery"
 	"cros.local/bazel/ebuild/cmd/compare_packages/golden"

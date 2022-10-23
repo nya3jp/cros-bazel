@@ -17,7 +17,7 @@ import (
 	"syscall"
 
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
@@ -123,7 +123,7 @@ var app = &cli.App{
 		flagInternalContinue,
 	},
 	Before: func(c *cli.Context) error {
-		if len(c.Args()) == 0 {
+		if c.Args().Len() == 0 {
 			return errors.New("positional arguments missing")
 		}
 		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name)); err != nil {
@@ -188,7 +188,7 @@ func continueNamespace(c *cli.Context) error {
 		return err
 	}
 	keepHostMount := c.Bool(flagKeepHostMount.Name)
-	args := []string(c.Args())
+	args := c.Args().Slice()
 
 	squashfusePath, err := bazel.Runfile("bazel/third_party/squashfuse/squashfuse")
 	if err != nil {

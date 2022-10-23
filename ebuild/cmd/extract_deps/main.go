@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"cros.local/bazel/ebuild/cmd/extract_deps/depparse"
 	"cros.local/bazel/ebuild/cmd/extract_deps/srcparse"
@@ -328,7 +328,7 @@ var flagBoard = &cli.StringFlag{
 
 var flagStart = &cli.StringSliceFlag{
 	Name:  "start",
-	Value: &cli.StringSlice{"virtual/target-os"},
+	Value: cli.NewStringSlice("virtual/target-os"),
 }
 
 var app = &cli.App{

@@ -9,7 +9,7 @@ go_library(
     srcs = ["main.go"],
     importpath = "cros.local/bazel/ebuild/private/cmd/create_squashfs",
     visibility = ["//visibility:private"],
-    deps = ["@com_github_urfave_cli//:cli"],
+    deps = ["@com_github_urfave_cli_v2//:cli"],
 )
 
 go_binary(

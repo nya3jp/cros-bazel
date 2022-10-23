@@ -14,7 +14,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var flagOutput = &cli.StringFlag{
@@ -34,7 +34,7 @@ var app = &cli.App{
 	Action: func(c *cli.Context) error {
 		outputPath := c.String(flagOutput.Name)
 		specsFile := c.String(flagSpecsFrom.Name)
-		specs := []string(c.Args())
+		specs := c.Args().Slice()
 
 		if specsFile != "" {
 			b, err := os.ReadFile(specsFile)

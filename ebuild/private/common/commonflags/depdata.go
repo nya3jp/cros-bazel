@@ -7,7 +7,7 @@ package commonflags
 import (
 	"path/filepath"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 )

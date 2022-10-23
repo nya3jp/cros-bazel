@@ -17,7 +17,7 @@ import (
 
 	"github.com/alessio/shellescape"
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
