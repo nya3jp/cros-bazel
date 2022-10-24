@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "hooks",
+    srcs = ["hooks_amd64.go"],
+    importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/hooks",
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@io_bazel_rules_go//go/platform:amd64": [
+            "//bazel/ebuild/private/cmd/fakefs/logging",
+            "//bazel/ebuild/private/cmd/fakefs/ptracearch",
+            "//bazel/ebuild/private/cmd/fakefs/tracee",
+            "//bazel/ebuild/private/cmd/fakefs/tracer",
+            "@org_golang_x_sys//unix",
+        ],
+        "//conditions:default": [],
+    }),
+)

@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "fakefs_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/ebuild/private/cmd/fakefs",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//bazel/ebuild/private/cmd/fakefs/hooks",
+        "//bazel/ebuild/private/cmd/fakefs/logging",
+        "//bazel/ebuild/private/cmd/fakefs/tracee",
+        "//bazel/ebuild/private/cmd/fakefs/tracer",
+        "@com_github_urfave_cli_v2//:cli",
+    ],
+)
+
+go_binary(
+    name = "fakefs",
+    embed = [":fakefs_lib"],
+    visibility = ["//visibility:public"],
+)

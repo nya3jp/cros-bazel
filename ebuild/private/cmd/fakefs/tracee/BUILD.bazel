@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "tracee",
+    srcs = ["tracee.go"],
+    importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/tracee",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/cmd/fakefs/syscallabi",
+        "@com_github_elastic_go_seccomp_bpf//:go-seccomp-bpf",
+        "@org_golang_x_sys//unix",
+    ],
+)
