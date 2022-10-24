@@ -2,11 +2,16 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "syscallabi",
-    srcs = ["name_amd64.go"],
+    srcs = [
+        "name_amd64.go",
+        "syscall.go",
+        "syscall_amd64.go",
+    ],
     importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/syscallabi",
     visibility = ["//visibility:public"],
     deps = select({
         "@io_bazel_rules_go//go/platform:amd64": [
+            "//bazel/ebuild/private/cmd/fakefs/ptracearch",
             "@org_golang_x_sys//unix",
         ],
         "//conditions:default": [],

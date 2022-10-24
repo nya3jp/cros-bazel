@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "fakefs",
+    srcs = [
+        "fakefs.go",
+        "xattrdata.go",
+    ],
+    importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/fakefs",
+    visibility = ["//visibility:public"],
+    deps = ["@org_golang_x_sys//unix"],
+)
+
+go_library(
+    name = "fsop",
+    srcs = [
+        "fsop.go",
+        "xattrdata.go",
+    ],
+    importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/fsop",
+    visibility = ["//visibility:public"],
+    deps = ["@org_golang_x_sys//unix"],
+)
