@@ -17,6 +17,16 @@ def e2fsprogs_repositories():
             # some point.
             # https://github.com/tytso/e2fsprogs/pull/124
             "//bazel/third_party/e2fsprogs:patches/support_offsets.patch",
+
+            # fuse2fs respects permissions when chowning, so a non-sudo user
+            # is unable to set an arbitrary uid / gid as owner.
+            # This is precisely what we need to do in order to create a chromeos
+            # image in userspace, so we patch fuse_get_context to make it think
+            # we're always running as root. This should give us full control
+            # over the mounted partition.
+            # This should not create security issues, as the process is still
+            # running in userspace.
+            "//bazel/third_party/e2fsprogs:patches/fake_sudo.patch",
         ],
         tag = "v%s" % VERSION,
     )
