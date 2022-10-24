@@ -1,14 +1,6 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("//bazel/third_party/rules_foreign_cc:standalone_binary.bzl", "foreign_cc_standalone_binary")
 
-# TODO: e2fsprogs doesn't support compiling with a custom fuse. It's hardcoded
-# to invoke the compiler with -lfuse (see FUSE_LIB in the ./configure file).
-# We may deal with this properly later, but for now, we'll just assume that fuse
-# is installed on the host system.
-# If it's not installed on your system, run "sudo apt install fuse3".
-# While this package is compatible with both fuse2 and fuse3, don't install
-# fuse2, as many corp things (such as srcfs) will be uninstalled.
-
 configure_make(
     name = "e2fsprogs",
     configure_options = [
@@ -34,7 +26,7 @@ configure_make(
     install_prefix = "out",
     lib_source = "@e2fsprogs//:all_srcs",
     out_binaries = ["fuse2fs"],
-    deps = [],
+    deps = ["//bazel/third_party/fuse"],
 )
 
 foreign_cc_standalone_binary(
