@@ -21,6 +21,10 @@ locale-gen --jobs 1
 # TODO: Consider using fakeroot-like approach to emulate file permissions.
 sed -i -e '/dir_mode_map = {/,/}/s/False/True/' /usr/lib/python3.6/site-packages/portage/package/ebuild/config.py
 
+# HACK: Allow FEATURES=fakeroot even if UID is 0.
+# TODO: Find a better way.
+sed -i "s/fakeroot = fakeroot and uid != 0/fakeroot = fakeroot/" /usr/lib/python3.6/site-packages/portage/package/ebuild/doebuild.py
+
 read -ra atoms <<<"${INSTALL_ATOMS_HOST}"
 if (( ${#atoms[@]} )); then
   # TODO: emerge is too slow! Find a way to speed up.

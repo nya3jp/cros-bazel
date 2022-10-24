@@ -15,7 +15,7 @@ export PORTAGE_CONFIGROOT="${ROOT}"
 export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
 export RESTRICT="fetch"
-export FEATURES="-sandbox -usersandbox -ipc-sandbox -mount-sandbox -network-sandbox -pid-sandbox"
+export FEATURES="fakeroot -sandbox -usersandbox -ipc-sandbox -mount-sandbox -network-sandbox -pid-sandbox"
 export CCACHE_DISABLE=1
 
 install_deps() {
@@ -31,8 +31,11 @@ install_deps() {
       mkdir -p "${ROOT}/etc/portage/package.accept_keywords"
       printf "%s\n" "${atoms[@]}" \
         >> "${ROOT}/etc/portage/package.accept_keywords/cros-workon"
+      # Use fakeroot on installing build dependencies since some files might
+      # have non-root ownership or special permissions. Hopefully this does not
+      # affect the result of building the package.
       # TODO: emerge is too slow! Find a way to speed up.
-      time emerge --oneshot --usepkgonly --nodeps --noreplace --jobs \
+      time fakeroot emerge --oneshot --usepkgonly --nodeps --noreplace --jobs \
         "${atoms[@]}"
     fi
     unset "${current_group_var}"
