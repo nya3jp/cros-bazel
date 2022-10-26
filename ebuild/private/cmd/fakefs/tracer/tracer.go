@@ -215,10 +215,7 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 	}
 
 	// signal-delivery-stop.
-	thread.Logger.Printf("* %s", unix.SignalName(ws.StopSignal()))
-	if ws.StopSignal() == unix.SIGSTOP {
-		return continueActionIgnore, nil
-	}
+	thread.Logger.Printf("* %s", unix.SignalName(stopSignal))
 	return continueActionInject, nil
 }
 
