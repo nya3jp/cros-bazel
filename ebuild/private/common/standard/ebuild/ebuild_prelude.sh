@@ -114,6 +114,10 @@ EXPORT_FUNCTIONS() {
   : # TODO: Implement
 }
 
+# HACK: This variable has been removed upstream, but we still have some packages
+# that use it.
+export XORG_BASE_INDIVIDUAL_URI="https://www.x.org/releases/individual"
+
 ver_cut() {
   local range="$1"
   local version="$2"

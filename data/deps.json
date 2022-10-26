@@ -21662,7 +21662,17 @@
     ],
     "localSrc": [],
     "runtimeDeps": [],
-    "srcUris": {}
+    "srcUris": {
+      "xkeyboard-config-2.27.tar.bz2": {
+        "uris": [
+          "https://www.x.org/releases/individual/data/xkeyboard-config/xkeyboard-config-2.27.tar.bz2"
+        ],
+        "size": 1664454,
+        "integrity": "sha512-rikXdGH50sbOHFbAuLFHYA4/Ds0V6HVMlTGBFwLZoDCjH0Jnmoip+3Br7EWJdMM37ioBgPIlc3AsqnGE65QBfg==",
+        "SHA256": "",
+        "SHA512": "ae29177461f9d2c6ce1c56c0b8b147600e3f0ecd15e8754c9531811702d9a030a31f42679a88a9fb706bec458974c337ee2a0180f22573702caa7184eb94017e"
+      }
+    }
   },
   "//third_party/portage-stable/app-admin/sudo:0": {
     "name": "app-admin/sudo",

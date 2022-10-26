@@ -19,14 +19,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
 
-// HACK: Hard-code several package info.
-// TODO: Remove these hacks.
-var (
-	badSrcURIs = map[string]struct{}{
-		"x11-misc/xkeyboard-config": {},
-	}
-)
-
 type manifestEntry struct {
 	Size      int
 	Integrity string
@@ -149,8 +141,7 @@ func parseManifest(eBuildPath string) (map[string]*manifestEntry, error) {
 
 func ExtractURIs(pkg *packages.Package) (map[string]*depdata.URIInfo, error) {
 	srcURI, ok := pkg.Metadata()["SRC_URI"]
-	_, hasBadSrcURI := badSrcURIs[pkg.Name()]
-	if ok && !hasBadSrcURI && srcURI != "" {
+	if ok && srcURI != "" {
 		srcURIs, err := dependency.Parse(srcURI)
 		if err != nil {
 			return nil, err
