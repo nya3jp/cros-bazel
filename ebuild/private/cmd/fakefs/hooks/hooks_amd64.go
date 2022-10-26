@@ -183,10 +183,6 @@ func (Hook) SyscallList() []int {
 		unix.SYS_LSTAT,
 		unix.SYS_STATX,
 		unix.SYS_NEWFSTATAT,
-		// chmod
-		unix.SYS_CHMOD,
-		unix.SYS_FCHMOD,
-		unix.SYS_FCHMODAT,
 		// chown
 		unix.SYS_CHOWN,
 		unix.SYS_LCHOWN,
