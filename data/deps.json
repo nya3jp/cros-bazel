@@ -8997,10 +8997,12 @@
     "version": "9999",
     "buildDeps": [
       "//third_party/chromiumos-overlay/dev-rust/assertions:0",
+      "//third_party/chromiumos-overlay/dev-rust/cfg-if:1.0.0",
       "//third_party/chromiumos-overlay/dev-rust/libc:0.2.124",
       "//third_party/chromiumos-overlay/dev-rust/remain:0.2.1",
       "//third_party/chromiumos-overlay/dev-rust/serde:1.0.136",
       "//third_party/chromiumos-overlay/dev-rust/thiserror:1.0.30",
+      "//third_party/chromiumos-overlay/dev-rust/winapi:0.3.9",
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
@@ -9008,10 +9010,12 @@
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/assertions:0",
+      "//third_party/chromiumos-overlay/dev-rust/cfg-if:1.0.0",
       "//third_party/chromiumos-overlay/dev-rust/libc:0.2.124",
       "//third_party/chromiumos-overlay/dev-rust/remain:0.2.1",
       "//third_party/chromiumos-overlay/dev-rust/serde:1.0.136",
-      "//third_party/chromiumos-overlay/dev-rust/thiserror:1.0.30"
+      "//third_party/chromiumos-overlay/dev-rust/thiserror:1.0.30",
+      "//third_party/chromiumos-overlay/dev-rust/winapi:0.3.9"
     ],
     "srcUris": {}
   },
@@ -11949,11 +11953,13 @@
     "version": "0.4.4",
     "buildDeps": [
       "//third_party/chromiumos-overlay/dev-rust/adler:1.0.2",
+      "//third_party/chromiumos-overlay/dev-rust/autocfg:1.1.0",
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/adler:1.0.2",
+      "//third_party/chromiumos-overlay/dev-rust/autocfg:1.1.0",
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "srcUris": {
