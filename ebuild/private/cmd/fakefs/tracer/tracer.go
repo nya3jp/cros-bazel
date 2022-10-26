@@ -71,6 +71,8 @@ func startTracee(args []string) (pid int, err error) {
 	return pid, nil
 }
 
+// waitNextStop waits for a next ptrace-stop event of any traced thread.
+// It calls os.Exit directly if the last thread of rootPid exits.
 func waitNextStop(rootPid int, index *threadStateIndex, globalLogger *logging.GlobalLogger) (*threadState, unix.WaitStatus, error) {
 	for {
 		var ws unix.WaitStatus
@@ -128,6 +130,7 @@ const (
 	continueActionListen
 )
 
+// processStop processes a thread in a ptrace-stop state.
 func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *threadStateIndex) (continueAction, error) {
 	stopSignal := ws.StopSignal()
 
@@ -172,10 +175,16 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 			return continueActionSyscall, nil
 
 		case unix.PTRACE_EVENT_CLONE, unix.PTRACE_EVENT_FORK, unix.PTRACE_EVENT_VFORK:
-			// Do nothing.
+			// A new thread was born, but do nothing. We will get notified for
+			// the initial PTRACE_EVENT_STOP event of the new thread anyway, and
+			// the order of notification is not guaranteed, i.e. whether we will
+			// get PTRACE_EVENT_{CLONE,FORK,VFORK} first or PTRACE_EVENT_STOP
+			// first is undetermined.
 			return continueActionIgnore, nil
 
 		case unix.PTRACE_EVENT_EXEC:
+			// execve(2) terminates all threads except for the leader thread
+			// implicitly.
 			if thread.Tid != thread.Pid {
 				return continueActionIgnore, fmt.Errorf("PTRACE_EVENT_EXEC: expected tid (%d) == pid (%d)", thread.Tid, thread.Pid)
 			}

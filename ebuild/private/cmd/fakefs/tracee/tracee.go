@@ -41,6 +41,8 @@ func Run(args []string, hook Hook) error {
 	}
 
 	// Stop the process to give the tracee a chance to call PTRACE_SEIZE.
+	// Note that we don't use PTRACE_TRACEME since PTRACE_SEIZE has improved
+	// behavior.
 	pid := unix.Getpid()
 	unix.Kill(pid, unix.SIGSTOP)
 
