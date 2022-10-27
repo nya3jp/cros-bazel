@@ -36,6 +36,12 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2"],
     )
     http_file(
+        name = "arm64_generic_chromeos_icu_107_0_5257_r1",
+        downloaded_file_path = "chrome-icu-107.0.5257.0_rc-r1.tbz2",
+        sha256 = "a11edea1e2ba319559921a225e4949a54267e15f10527aecc11f79155d10077e",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/chromeos-base/chrome-icu-107.0.5257.0_rc-r1.tbz2"],
+    )
+    http_file(
         name = "amd64_host_binutils_2_36_1_r8",
         downloaded_file_path = "binutils-2.36.1-r8.tbz2",
         sha256 = "c790efb90da825d0c169c34e191290826e03e21031c6c993e1d337b8b9c7d042",
