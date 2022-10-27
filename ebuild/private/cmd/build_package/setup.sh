@@ -15,7 +15,7 @@ export PORTAGE_CONFIGROOT="${ROOT}"
 export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
 export RESTRICT="fetch"
-export FEATURES="fakeroot -sandbox -usersandbox -ipc-sandbox -mount-sandbox -network-sandbox -pid-sandbox"
+export FEATURES="-sandbox -usersandbox -ipc-sandbox -mount-sandbox -network-sandbox -pid-sandbox"
 export CCACHE_DISABLE=1
 
 install_deps() {
@@ -44,6 +44,8 @@ install_deps() {
 }
 
 install_deps
+
+export FEATURES="${FEATURES} fakeroot"
 
 if [[ $# = 0 ]]; then
   exec bash
