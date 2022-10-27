@@ -8816,7 +8816,7 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
-      "//platform/crosvm:src"
+      "//platform/crosvm-sys_util_core:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/async-task:4.0.3",
@@ -9007,7 +9007,7 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
-      "//platform/crosvm:src"
+      "//platform/crosvm-sys_util_core:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/assertions:0",
@@ -11111,7 +11111,7 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
-      "//platform/crosvm:src"
+      "//platform/crosvm-sys_util_core:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/data_model:0",
