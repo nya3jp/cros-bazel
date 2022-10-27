@@ -4871,6 +4871,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/protofiles:0",
+      "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
