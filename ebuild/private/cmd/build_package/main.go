@@ -169,11 +169,12 @@ func preparePackageGroups(installGroups [][]string, dir fileutil.DualPath) ([][]
 	return atomGroups, nil
 }
 
-// The --sdk inputs can be two types:
+// The --sdk inputs can be three types:
 //  1. A symlink to a directory or symlink to a file in the real execroot
 //  2. A directory tree with symlinks pointing to the files in the real exec root
+//  3. A path to a file in the real execroot.
 //
-// This function undose the latter case. Bazel should be giving us a symlink to
+// This function undoes case two. Bazel should be giving us a symlink to
 // the directory, instead of creating a symlink tree. We don't want to use the
 // symlink tree because that would require bind mounting the whole execroot
 // inside the container. Otherwise we couldn't resolve the symlinks.
@@ -200,7 +201,7 @@ func resolveSdkPaths(sdkPath string) (string, error) {
 	}
 
 	if !info.IsDir() {
-		return "", fmt.Errorf("Can't resolve sdk path %s %s", info.Mode(), sdkPath)
+		return sdkPath, nil
 	}
 
 	done := fmt.Errorf("Done")
@@ -220,13 +221,12 @@ func resolveSdkPaths(sdkPath string) (string, error) {
 			return err
 		}
 
-		if fileInfo.Mode().Type()&fs.ModeSymlink == 0 {
-			return fmt.Errorf("Expected %s to be a symlink", path)
-		}
-
-		target, err := os.Readlink(path)
-		if err != nil {
-			return err
+		target := path
+		if fileInfo.Mode().Type()&fs.ModeSymlink != 0 {
+			target, err = os.Readlink(path)
+			if err != nil {
+				return err
+			}
 		}
 
 		insidePath := strings.TrimPrefix(path, sdkPath)
