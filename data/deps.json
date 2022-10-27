@@ -19506,9 +19506,11 @@
     "ebuildPath": "third_party/chromiumos-overlay/sci-libs/tensorflow/tensorflow-2.8.0-r10.ebuild",
     "version": "2.8.0-r10",
     "buildDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
       "//third_party/chromiumos-overlay/virtual/opengles:0",
       "//third_party/chromiumos-overlay/x11-drivers/opengles-headers:0",
+      "//third_party/portage-stable/dev-lang/python-exec:2",
       "//third_party/portage-stable/dev-libs/flatbuffers:0",
       "//third_party/portage-stable/dev-libs/libpcre:3",
       "//third_party/portage-stable/dev-libs/protobuf:0",
@@ -19520,9 +19522,11 @@
     ],
     "localSrc": [],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
       "//third_party/chromiumos-overlay/virtual/opengles:0",
       "//third_party/chromiumos-overlay/x11-drivers/opengles-headers:0",
+      "//third_party/portage-stable/dev-lang/python-exec:2",
       "//third_party/portage-stable/dev-libs/flatbuffers:0",
       "//third_party/portage-stable/dev-libs/libpcre:3",
       "//third_party/portage-stable/dev-libs/protobuf:0",
