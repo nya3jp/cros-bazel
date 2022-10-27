@@ -26500,7 +26500,9 @@
     "version": "215-r3",
     "buildDeps": [],
     "localSrc": [],
-    "runtimeDeps": [],
+    "runtimeDeps": [
+      "//third_party/portage-stable/dev-libs/libgudev:0"
+    ],
     "srcUris": {}
   },
   "//third_party/portage-stable/virtual/libiconv:0": {

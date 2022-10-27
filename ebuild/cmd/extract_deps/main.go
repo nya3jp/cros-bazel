@@ -35,6 +35,7 @@ var (
 		"virtual/editor":                {"app-editors/vim"},
 		"virtual/logger":                {"app-admin/rsyslog"},
 		"virtual/update-policy":         {"chromeos-base/update-policy-chromeos"},
+		"virtual/libgudev":              {"dev-libs/libgudev"},
 	}
 
 	extraDepsPackages = map[string]map[string][]string{
