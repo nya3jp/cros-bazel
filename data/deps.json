@@ -15921,7 +15921,7 @@
       "//third_party/portage-stable/sys-libs/libcap:0"
     ],
     "localSrc": [
-      "//platform/crosvm:src"
+      "//platform/crosvm-sys_util_core:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/android_log-sys:0.2.0",
