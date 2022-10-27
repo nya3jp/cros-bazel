@@ -1,0 +1,25 @@
+#!/bin/bash
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+set -eu -o pipefail
+
+# Drop bazel arg
+if [[ "$#" -gt 1 ]]; then
+    shift 1
+fi
+
+# Add users go path before trying
+if GO="$(command -v go)"; then
+    PATH="${PATH}:$("$GO" env GOPATH)/bin"
+fi
+
+if BAZELISK="$(command -v bazelisk)"; then
+    exec "${BAZELISK}" "$@"
+fi
+
+echo "Bazlisk was not found. Please install using the following command:" 1>&2
+echo "> go install github.com/bazelbuild/bazelisk@latest" 1>&2
+
+exit 1

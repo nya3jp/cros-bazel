@@ -15,6 +15,14 @@ $ repo sync -c -j 4
 $ cd src
 ```
 
+## Installing host dependencies
+
+```sh
+sudo apt install squashfs-tools
+
+go install github.com/bazelbuild/bazelisk@latest
+```
+
 ## Building
 
 First you need to generate `BUILD.bazel` files for Portage packages.
