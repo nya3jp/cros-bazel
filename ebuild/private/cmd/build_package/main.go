@@ -88,7 +88,7 @@ var flagOverlay = &cli.StringSliceFlag{
 
 var flagInstallTarget = &cli.StringSliceFlag{
 	Name:  "install-target",
-	Usage: "<binpkg>[,<binpkg>]+: All binpkgs specified will be installed in parallel",
+	Usage: "<binpkg>[:<binpkg>]+: All binpkgs specified will be installed in parallel",
 }
 
 var flagDistfile = &cli.StringSliceFlag{
@@ -268,7 +268,7 @@ var app = &cli.App{
 		}
 		var targetInstallGroups [][]string
 		for _, targetGroupStr := range c.StringSlice(flagInstallTarget.Name) {
-			targets := strings.Split(targetGroupStr, ",")
+			targets := strings.Split(targetGroupStr, ":")
 			targetInstallGroups = append(targetInstallGroups, targets)
 		}
 		fileSpecs := c.StringSlice(flagFile.Name)

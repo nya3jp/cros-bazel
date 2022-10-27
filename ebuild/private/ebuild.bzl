@@ -13,7 +13,7 @@ def _map_install_group(targets):
     for target in targets:
         file = target[BinaryPackageInfo].file
         files.append(file.path)
-    return ",".join(files)
+    return ":".join(files)
 
 def _calculate_install_groups(build_deps):
     seen = {}
