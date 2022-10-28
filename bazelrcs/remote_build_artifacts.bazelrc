@@ -1,0 +1,6 @@
+# See go/cros-bazel-rbe-config
+
+build --remote_cache=grpcs://remotebuildexecution.googleapis.com
+build --google_default_credentials=true
+build --host_platform_remote_properties_override='properties:{name:"cache-silo-key" value:"cros-bazel-prototype"}'
+build --remote_instance_name=projects/chromeos-bot/instances/cros-bazel-prototype

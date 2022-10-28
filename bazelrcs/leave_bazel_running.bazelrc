@@ -1,0 +1,11 @@
+# By default, if bazel hasn't been executed for 3 hours, bazel is shut down.
+# This can cause the next build to be slower.
+
+# Pros:
+# * Increased build performance
+
+# Cons
+# * Increased RAM usage while bazel is running in the background.
+
+# 259200=3 days, so it will stay on over the weekend.
+startup --max_idle_secs=259200

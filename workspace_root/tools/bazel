@@ -10,11 +10,19 @@ if GO="$(command -v go)"; then
     PATH="${PATH}:$("$GO" env GOPATH)/bin"
 fi
 
-if BAZELISK="$(command -v bazelisk)"; then
-    exec "${BAZELISK}" "$@"
+# Allow users to create a bazelrc file shared between all chromiumos checkouts.
+# ~/.bazelrc is also shared between all chromiumos checkouts, but it also has
+# non-chromiumos stuff.
+ARGS=()
+if [ -e "$HOME/.chromiumos.bazelrc" ]; then
+  ARGS+=("--bazelrc=$HOME/.chromiumos.bazelrc")
 fi
 
-echo "Bazlisk was not found. Please install using the following command:" 1>&2
+if BAZELISK="$(command -v bazelisk)"; then
+    exec "${BAZELISK}" "${ARGS[@]}" "$@"
+fi
+
+echo "Bazelisk was not found. Please install using the following command:" 1>&2
 echo "> go install github.com/bazelbuild/bazelisk@latest" 1>&2
 
 exit 1
