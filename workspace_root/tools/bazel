@@ -5,11 +5,6 @@
 
 set -eu -o pipefail
 
-# Drop bazel arg
-if [[ "$#" -gt 1 ]]; then
-    shift 1
-fi
-
 # Add users go path before trying
 if GO="$(command -v go)"; then
     PATH="${PATH}:$("$GO" env GOPATH)/bin"
