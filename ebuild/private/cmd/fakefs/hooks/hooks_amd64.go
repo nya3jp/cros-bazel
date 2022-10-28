@@ -80,10 +80,10 @@ func dirfdPath(tid int, dfd int) string {
 	return fmt.Sprintf("/proc/%d/fd/%d", tid, dfd)
 }
 
-func blockSyscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger, err error) func(regs *ptracearch.Regs) {
+func blockSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger, err error) func(regs *ptracearch.Regs) {
 	errno, ok := err.(unix.Errno)
 	if err != nil && !ok {
-		logger.Printf("! %s: %v", syscallabi.Name(int(regs.Orig_rax)), err)
+		logger.Errorf(tid, "%s: %v", syscallabi.Name(int(regs.Orig_rax)), err)
 		errno = unix.ENOTRECOVERABLE
 	}
 
@@ -124,7 +124,7 @@ func openat(tid int, dfd int, filename string, flags int) (fd int, err error) {
 	return fd, nil
 }
 
-func simulateFstatat(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger, dfd int, filename string, statbuf uintptr, flags int) func(regs *ptracearch.Regs) {
+func simulateFstatat(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, statbuf uintptr, flags int) func(regs *ptracearch.Regs) {
 	return blockSyscall(tid, regs, logger, func() error {
 		fd, err := openat(tid, dfd, filename, flags)
 		if err != nil {
@@ -141,7 +141,7 @@ func simulateFstatat(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogge
 	}())
 }
 
-func simulateStatx(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger, dfd int, filename string, flags int, mask int, statxbuf uintptr) func(regs *ptracearch.Regs) {
+func simulateStatx(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, flags int, mask int, statxbuf uintptr) func(regs *ptracearch.Regs) {
 	return blockSyscall(tid, regs, logger, func() error {
 		fd, err := openat(tid, dfd, filename, flags)
 		if err != nil {
@@ -158,7 +158,7 @@ func simulateStatx(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger,
 	}())
 }
 
-func simulateFchownat(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger, dfd int, filename string, user int, group int, flags int) func(regs *ptracearch.Regs) {
+func simulateFchownat(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, user int, group int, flags int) func(regs *ptracearch.Regs) {
 	return blockSyscall(tid, regs, logger, func() error {
 		fd, err := openat(tid, dfd, filename, flags)
 		if err != nil {
@@ -191,7 +191,7 @@ func (Hook) SyscallList() []int {
 	}
 }
 
-func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger) func(regs *ptracearch.Regs) {
+func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs *ptracearch.Regs) {
 	switch regs.Orig_rax {
 	case unix.SYS_STAT:
 		args := syscallabi.ParseStatArgs(regs)
@@ -199,7 +199,7 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Printf("# stat(%q)", filename)
+		logger.Infof(tid, "stat(%q)", filename)
 		return simulateFstatat(tid, regs, logger, unix.AT_FDCWD, filename, args.Statbuf, unix.AT_SYMLINK_FOLLOW)
 
 	case unix.SYS_LSTAT:
@@ -208,12 +208,12 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Printf("# lstat(%q)", filename)
+		logger.Infof(tid, "lstat(%q)", filename)
 		return simulateFstatat(tid, regs, logger, unix.AT_FDCWD, filename, args.Statbuf, unix.AT_SYMLINK_NOFOLLOW)
 
 	case unix.SYS_FSTAT:
 		args := syscallabi.ParseFstatArgs(regs)
-		logger.Printf("# fstat(%q)", args.Fd)
+		logger.Infof(tid, "fstat(%d)", args.Fd)
 		return simulateFstatat(tid, regs, logger, args.Fd, "", args.Statbuf, unix.AT_EMPTY_PATH)
 
 	case unix.SYS_NEWFSTATAT:
@@ -222,7 +222,7 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Printf("# newfstatat(%d, %q, %#x)", args.Dfd, filename, args.Flag)
+		logger.Infof(tid, "newfstatat(%d, %q, %#x)", args.Dfd, filename, args.Flag)
 		return simulateFstatat(tid, regs, logger, args.Dfd, filename, args.Statbuf, args.Flag)
 
 	case unix.SYS_STATX:
@@ -231,7 +231,7 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Printf("# statx(%d, %q, %#x, %#x)", args.Dfd, filename, args.Flags, args.Mask)
+		logger.Infof(tid, "statx(%d, %q, %#x, %#x)", args.Dfd, filename, args.Flags, args.Mask)
 		return simulateStatx(tid, regs, logger, args.Dfd, filename, args.Flags, args.Mask, args.Buffer)
 
 	case unix.SYS_CHOWN:
@@ -240,7 +240,7 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Printf("# chown(%q, %d, %d)", filename, args.Owner, args.Group)
+		logger.Infof(tid, "chown(%q, %d, %d)", filename, args.Owner, args.Group)
 		return simulateFchownat(tid, regs, logger, unix.AT_FDCWD, filename, args.Owner, args.Group, unix.AT_SYMLINK_FOLLOW)
 
 	case unix.SYS_LCHOWN:
@@ -249,12 +249,12 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Printf("# lchown(%q, %d, %d)", filename, args.Owner, args.Group)
+		logger.Infof(tid, "lchown(%q, %d, %d)", filename, args.Owner, args.Group)
 		return simulateFchownat(tid, regs, logger, unix.AT_FDCWD, filename, args.Owner, args.Group, unix.AT_SYMLINK_NOFOLLOW)
 
 	case unix.SYS_FCHOWN:
 		args := syscallabi.ParseFchownArgs(regs)
-		logger.Printf("# fchown(%d, %d, %d)", args.Fd, args.Owner, args.Group)
+		logger.Infof(tid, "fchown(%d, %d, %d)", args.Fd, args.Owner, args.Group)
 		return simulateFchownat(tid, regs, logger, args.Fd, "", args.Owner, args.Group, unix.AT_EMPTY_PATH)
 
 	case unix.SYS_FCHOWNAT:
@@ -263,7 +263,7 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Printf("# fchownat(%d, %q, %d, %d, %#x)", args.Dfd, filename, args.User, args.Group, args.Flag)
+		logger.Infof(tid, "fchownat(%d, %q, %d, %d, %#x)", args.Dfd, filename, args.User, args.Group, args.Flag)
 		return simulateFchownat(tid, regs, logger, args.Dfd, filename, args.User, args.Group, args.Flag)
 
 	case unix.SYS_CHMOD, unix.SYS_FCHMOD, unix.SYS_FCHMODAT:

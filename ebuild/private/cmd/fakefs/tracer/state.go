@@ -8,8 +8,6 @@ import (
 	"sort"
 
 	"golang.org/x/sys/unix"
-
-	"cros.local/bazel/ebuild/private/cmd/fakefs/logging"
 )
 
 type threadState struct {
@@ -17,7 +15,6 @@ type threadState struct {
 	Pid             int
 	CurrentSyscall  int
 	SyscallExitHook func(regs *unix.PtraceRegsAmd64)
-	Logger          *logging.ThreadLogger
 }
 
 type threadStateIndex struct {

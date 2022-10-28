@@ -16,7 +16,7 @@ import (
 )
 
 type Hook interface {
-	Syscall(tid int, regs *ptracearch.Regs, logger *logging.ThreadLogger) func(regs *ptracearch.Regs)
+	Syscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs *ptracearch.Regs)
 }
 
 func startTracee(args []string) (pid int, err error) {
@@ -73,7 +73,7 @@ func startTracee(args []string) (pid int, err error) {
 
 // waitNextStop waits for a next ptrace-stop event of any traced thread.
 // It calls os.Exit directly if the last thread of rootPid exits.
-func waitNextStop(rootPid int, index *threadStateIndex, globalLogger *logging.GlobalLogger) (*threadState, unix.WaitStatus, error) {
+func waitNextStop(rootPid int, index *threadStateIndex, logger *logging.Logger) (*threadState, unix.WaitStatus, error) {
 	for {
 		var ws unix.WaitStatus
 		tid, err := unix.Wait4(-1, &ws, unix.WALL, nil)
@@ -93,16 +93,15 @@ func waitNextStop(rootPid int, index *threadStateIndex, globalLogger *logging.Gl
 				Pid:             pid,
 				CurrentSyscall:  -1,
 				SyscallExitHook: nil,
-				Logger:          globalLogger.ForThread(&logging.Thread{Tid: tid, Pid: pid}),
 			}
 			index.Put(thread)
-			thread.Logger.Printf("* thread born")
+			logger.Infof(tid, "* thread born")
 		}
 
 		// Process finished processes.
 		if ws.Exited() || ws.Signaled() {
 			index.Remove(thread)
-			thread.Logger.Printf("* thread exited (%d)", exitCode(ws))
+			logger.Infof(tid, "* thread exited (%d)", exitCode(ws))
 
 			// If this is the last thread in the root process, terminate
 			// the tracer itself with the same exit code.
@@ -131,7 +130,7 @@ const (
 )
 
 // processStop processes a thread in a ptrace-stop state.
-func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *threadStateIndex) (continueAction, error) {
+func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *threadStateIndex, logger *logging.Logger) (continueAction, error) {
 	stopSignal := ws.StopSignal()
 
 	if stopSignal == unix.SIGTRAP|0x80 {
@@ -144,8 +143,6 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 		if thread.CurrentSyscall < 0 {
 			return continueActionIgnore, fmt.Errorf("syscall-stop but no current syscall")
 		}
-
-		thread.Logger.FinishSyscall(int64(regs.Rax))
 
 		if thread.SyscallExitHook != nil {
 			thread.SyscallExitHook(&regs)
@@ -169,8 +166,7 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 
 			nr := int(regs.Orig_rax)
 			thread.CurrentSyscall = nr
-			thread.SyscallExitHook = hook.Syscall(thread.Tid, &regs, thread.Logger)
-			thread.Logger.StartSyscall(nr)
+			thread.SyscallExitHook = hook.Syscall(thread.Tid, &regs, logger)
 
 			return continueActionSyscall, nil
 
@@ -188,12 +184,12 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 			if thread.Tid != thread.Pid {
 				return continueActionIgnore, fmt.Errorf("PTRACE_EVENT_EXEC: expected tid (%d) == pid (%d)", thread.Tid, thread.Pid)
 			}
-			thread.Logger.Printf("* exec")
+			logger.Infof(thread.Tid, "* exec")
 
 			for _, siblingThread := range index.GetByPid(thread.Pid) {
 				if siblingThread.Tid != thread.Tid {
 					index.Remove(siblingThread)
-					siblingThread.Logger.Printf("* thread gone (exec)")
+					logger.Infof(siblingThread.Tid, "* thread gone (exec)")
 				}
 			}
 			thread.CurrentSyscall = -1
@@ -206,7 +202,7 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 				return continueActionIgnore, nil
 			}
 			// group-stop.
-			thread.Logger.Printf("* group-stop (%s)", unix.SignalName(stopSignal))
+			logger.Infof(thread.Tid, "* group-stop (%s)", unix.SignalName(stopSignal))
 			return continueActionListen, nil
 
 		default:
@@ -215,11 +211,11 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 	}
 
 	// signal-delivery-stop.
-	thread.Logger.Printf("* %s", unix.SignalName(stopSignal))
+	logger.Infof(thread.Tid, "* %s", unix.SignalName(stopSignal))
 	return continueActionInject, nil
 }
 
-func Run(origArgs []string, hook Hook, globalLogger *logging.GlobalLogger) error {
+func Run(origArgs []string, hook Hook, logger *logging.Logger) error {
 	rootPid, err := startTracee(origArgs)
 	if err != nil {
 		return err
@@ -228,12 +224,12 @@ func Run(origArgs []string, hook Hook, globalLogger *logging.GlobalLogger) error
 	index := newThreadStateIndex()
 
 	for {
-		thread, ws, err := waitNextStop(rootPid, index, globalLogger)
+		thread, ws, err := waitNextStop(rootPid, index, logger)
 		if err != nil {
 			return err
 		}
 
-		action, err := processStop(thread, ws, hook, index)
+		action, err := processStop(thread, ws, hook, index, logger)
 		if err != nil {
 			return err
 		}

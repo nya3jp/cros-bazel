@@ -60,7 +60,7 @@ var app = &cli.App{
 		if runTracee {
 			return tracee.Run(c.Args().Slice(), hook)
 		}
-		return tracer.Run(os.Args, hook, logging.New(verbose))
+		return tracer.Run(os.Args, hook, logging.NewLogger(verbose))
 	},
 }
 

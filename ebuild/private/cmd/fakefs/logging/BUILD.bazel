@@ -5,5 +5,4 @@ go_library(
     srcs = ["logging.go"],
     importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/logging",
     visibility = ["//visibility:public"],
-    deps = ["//bazel/ebuild/private/cmd/fakefs/syscallabi"],
 )
