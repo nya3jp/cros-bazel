@@ -14,22 +14,22 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const xattrKeyOwnership = "user.fakefs.ownership"
+const xattrKeyOverride = "user.fakefs.override"
 
-func readOwnershipData(f *os.File) (*ownershipData, error) {
+func readOverrideData(f *os.File) (*overrideData, error) {
 	buf := make([]byte, 64)
-	size, err := unix.Fgetxattr(int(f.Fd()), xattrKeyOwnership, buf)
+	size, err := unix.Fgetxattr(int(f.Fd()), xattrKeyOverride, buf)
 	if err == unix.ENODATA {
-		return defaultOwnershipData, nil
+		return defaultOverrideData, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return parseOwnershipData(buf[:size])
+	return parseOverrideData(buf[:size])
 }
 
-func writeOwnershipData(f *os.File, data *ownershipData) error {
-	return unix.Fsetxattr(int(f.Fd()), xattrKeyOwnership, data.Marshal(), 0)
+func writeOverrideData(f *os.File, data *overrideData) error {
+	return unix.Fsetxattr(int(f.Fd()), xattrKeyOverride, data.Marshal(), 0)
 }
 
 // upgradeFd upgrades a file descriptor opened with O_PATH to a regular file
@@ -40,7 +40,7 @@ func upgradeFd(fd int) (*os.File, error) {
 
 // Fstat returns stat_t for a given file descriptor.
 // If a file pointed by fd is a regular file or a directory, it considers xattrs
-// to override file metadata. Otherwise default ownership is applied.
+// to override file metadata. Otherwise default override is applied.
 // fd can be a file descriptor opened with O_PATH.
 func Fstat(fd int, stat *unix.Stat_t) error {
 	// Use fstatat(2) instead of fstat(2) to support file descriptors opened
@@ -49,7 +49,7 @@ func Fstat(fd int, stat *unix.Stat_t) error {
 		return err
 	}
 
-	var data *ownershipData
+	var data *overrideData
 	switch stat.Mode & unix.S_IFMT {
 	case unix.S_IFREG, unix.S_IFDIR:
 		f, err := upgradeFd(fd)
@@ -58,13 +58,13 @@ func Fstat(fd int, stat *unix.Stat_t) error {
 		}
 		defer f.Close()
 
-		data, err = readOwnershipData(f)
+		data, err = readOverrideData(f)
 		if err != nil {
 			return err
 		}
 
 	default:
-		data = defaultOwnershipData
+		data = defaultOverrideData
 	}
 
 	stat.Uid = uint32(data.Uid)
@@ -74,7 +74,7 @@ func Fstat(fd int, stat *unix.Stat_t) error {
 
 // Fstatx returns statx_t for a given file descriptor.
 // If a file pointed by fd is a regular file or a directory, it considers xattrs
-// to override file metadata. Otherwise default ownership is applied.
+// to override file metadata. Otherwise default override is applied.
 // fd can be a file descriptor opened with O_PATH.
 func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 	// Always request the mode field.
@@ -87,7 +87,7 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 		return err
 	}
 
-	var data *ownershipData
+	var data *overrideData
 	switch statx.Mode & unix.S_IFMT {
 	case unix.S_IFREG, unix.S_IFDIR:
 		f, err := upgradeFd(fd)
@@ -96,13 +96,13 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 		}
 		defer f.Close()
 
-		data, err = readOwnershipData(f)
+		data, err = readOverrideData(f)
 		if err != nil {
 			return err
 		}
 
 	default:
-		data = defaultOwnershipData
+		data = defaultOverrideData
 	}
 
 	if statx.Mask&unix.STATX_UID != 0 {
@@ -116,8 +116,7 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 
 // Fchown changes ownership of a given file.
 // If a file pointed by fd is a regular file or a directory, it sets xattrs
-// to override file metadata. Otherwise it fails if non-root ownership is being
-// requested.
+// to override file metadata. Otherwise it fails if ownership is being changed.
 // fd can be a file descriptor opened with O_PATH.
 func Fchown(fd int, uid int, gid int) error {
 	// TODO: Consider locking the file to avoid races.
@@ -142,17 +141,17 @@ func Fchown(fd int, uid int, gid int) error {
 		}
 		defer f.Close()
 
-		data := &ownershipData{
+		data := &overrideData{
 			Uid: uid,
 			Gid: gid,
 		}
-		if err := writeOwnershipData(f, data); err != nil {
+		if err := writeOverrideData(f, data); err != nil {
 			return err
 		}
 
 	default:
 		if uid != 0 || gid != 0 {
-			return errors.New("cannot set non-root ownership to non-regular files")
+			return errors.New("cannot change ownership of non-regular files")
 		}
 	}
 	return nil
