@@ -5,6 +5,7 @@
 package tracer
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -91,7 +92,6 @@ func waitNextStop(rootPid int, index *threadStateIndex, logger *logging.Logger) 
 			thread = &threadState{
 				Tid:             tid,
 				Pid:             pid,
-				CurrentSyscall:  -1,
 				SyscallExitHook: nil,
 			}
 			index.Put(thread)
@@ -135,20 +135,16 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 
 	if stopSignal == unix.SIGTRAP|0x80 {
 		// syscall-exit-stop.
+		if thread.SyscallExitHook == nil {
+			return continueActionIgnore, errors.New("unexpected syscall-exit-stop")
+		}
+
 		var regs ptracearch.Regs
 		if err := ptracearch.GetRegs(thread.Tid, &regs); err != nil {
 			return continueActionIgnore, nil
 		}
 
-		if thread.CurrentSyscall < 0 {
-			return continueActionIgnore, fmt.Errorf("syscall-stop but no current syscall")
-		}
-
-		if thread.SyscallExitHook != nil {
-			thread.SyscallExitHook(&regs)
-		}
-
-		thread.CurrentSyscall = -1
+		thread.SyscallExitHook(&regs)
 		thread.SyscallExitHook = nil
 		return continueActionIgnore, nil
 	}
@@ -164,10 +160,10 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 				return continueActionIgnore, nil
 			}
 
-			nr := int(regs.Orig_rax)
-			thread.CurrentSyscall = nr
 			thread.SyscallExitHook = hook.Syscall(thread.Tid, &regs, logger)
-
+			if thread.SyscallExitHook == nil {
+				return continueActionIgnore, nil
+			}
 			return continueActionSyscall, nil
 
 		case unix.PTRACE_EVENT_CLONE, unix.PTRACE_EVENT_FORK, unix.PTRACE_EVENT_VFORK:
@@ -192,8 +188,6 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 					logger.Infof(siblingThread.Tid, "* thread gone (exec)")
 				}
 			}
-			thread.CurrentSyscall = -1
-			thread.SyscallExitHook = nil
 			return continueActionIgnore, nil
 
 		case unix.PTRACE_EVENT_STOP:

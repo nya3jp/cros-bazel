@@ -13,7 +13,6 @@ import (
 type threadState struct {
 	Tid             int
 	Pid             int
-	CurrentSyscall  int
 	SyscallExitHook func(regs *unix.PtraceRegsAmd64)
 }
 
