@@ -15,11 +15,6 @@ type overrideData struct {
 	Gid int
 }
 
-var defaultOverrideData = &overrideData{
-	Uid: 0,
-	Gid: 0,
-}
-
 func parseOverrideData(b []byte) (*overrideData, error) {
 	v := strings.Split(string(b), ":")
 	if len(v) != 2 {

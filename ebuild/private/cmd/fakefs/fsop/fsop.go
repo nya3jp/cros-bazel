@@ -16,11 +16,13 @@ import (
 
 const xattrKeyOverride = "user.fakefs.override"
 
+var errNoOverride = errors.New("no override")
+
 func readOverrideData(f *os.File) (*overrideData, error) {
 	buf := make([]byte, 64)
 	size, err := unix.Fgetxattr(int(f.Fd()), xattrKeyOverride, buf)
 	if err == unix.ENODATA {
-		return defaultOverrideData, nil
+		return nil, errNoOverride
 	}
 	if err != nil {
 		return nil, err
@@ -40,7 +42,7 @@ func upgradeFd(fd int) (*os.File, error) {
 
 // Fstat returns stat_t for a given file descriptor.
 // If a file pointed by fd is a regular file or a directory, it considers xattrs
-// to override file metadata. Otherwise default override is applied.
+// to override file metadata. Otherwise it behaves like normal fstat(2).
 // fd can be a file descriptor opened with O_PATH.
 func Fstat(fd int, stat *unix.Stat_t) error {
 	// Use fstatat(2) instead of fstat(2) to support file descriptors opened
@@ -49,7 +51,6 @@ func Fstat(fd int, stat *unix.Stat_t) error {
 		return err
 	}
 
-	var data *overrideData
 	switch stat.Mode & unix.S_IFMT {
 	case unix.S_IFREG, unix.S_IFDIR:
 		f, err := upgradeFd(fd)
@@ -58,23 +59,26 @@ func Fstat(fd int, stat *unix.Stat_t) error {
 		}
 		defer f.Close()
 
-		data, err = readOverrideData(f)
+		data, err := readOverrideData(f)
+		if err == errNoOverride {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
 
-	default:
-		data = defaultOverrideData
-	}
+		stat.Uid = uint32(data.Uid)
+		stat.Gid = uint32(data.Gid)
+		return nil
 
-	stat.Uid = uint32(data.Uid)
-	stat.Gid = uint32(data.Gid)
-	return nil
+	default:
+		return nil
+	}
 }
 
 // Fstatx returns statx_t for a given file descriptor.
 // If a file pointed by fd is a regular file or a directory, it considers xattrs
-// to override file metadata. Otherwise default override is applied.
+// to override file metadata. Otherwise it behaves like normal statx(2).
 // fd can be a file descriptor opened with O_PATH.
 func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 	// Always request the mode field.
@@ -87,7 +91,6 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 		return err
 	}
 
-	var data *overrideData
 	switch statx.Mode & unix.S_IFMT {
 	case unix.S_IFREG, unix.S_IFDIR:
 		f, err := upgradeFd(fd)
@@ -96,22 +99,25 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 		}
 		defer f.Close()
 
-		data, err = readOverrideData(f)
+		data, err := readOverrideData(f)
+		if err == errNoOverride {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
 
-	default:
-		data = defaultOverrideData
-	}
+		if statx.Mask&unix.STATX_UID != 0 {
+			statx.Uid = uint32(data.Uid)
+		}
+		if statx.Mask&unix.STATX_GID != 0 {
+			statx.Gid = uint32(data.Gid)
+		}
+		return nil
 
-	if statx.Mask&unix.STATX_UID != 0 {
-		statx.Uid = uint32(data.Uid)
+	default:
+		return nil
 	}
-	if statx.Mask&unix.STATX_GID != 0 {
-		statx.Gid = uint32(data.Gid)
-	}
-	return nil
 }
 
 // Fchown changes ownership of a given file.
@@ -150,7 +156,7 @@ func Fchown(fd int, uid int, gid int) error {
 		}
 
 	default:
-		if uid != 0 || gid != 0 {
+		if uid != int(stat.Uid) || gid != int(stat.Gid) {
 			return errors.New("cannot change ownership of non-regular files")
 		}
 	}
