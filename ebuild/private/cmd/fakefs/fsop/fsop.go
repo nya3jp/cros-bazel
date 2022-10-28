@@ -9,7 +9,6 @@ package fsop
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"golang.org/x/sys/unix"
 )
@@ -18,9 +17,9 @@ const xattrKeyOverride = "user.fakefs.override"
 
 var errNoOverride = errors.New("no override")
 
-func readOverrideData(f *os.File) (*overrideData, error) {
+func readOverrideData(fd int) (*overrideData, error) {
 	buf := make([]byte, 64)
-	size, err := unix.Fgetxattr(int(f.Fd()), xattrKeyOverride, buf)
+	size, err := unix.Fgetxattr(fd, xattrKeyOverride, buf)
 	if err == unix.ENODATA {
 		return nil, errNoOverride
 	}
@@ -30,49 +29,62 @@ func readOverrideData(f *os.File) (*overrideData, error) {
 	return parseOverrideData(buf[:size])
 }
 
-func writeOverrideData(f *os.File, data *overrideData) error {
-	return unix.Fsetxattr(int(f.Fd()), xattrKeyOverride, data.Marshal(), 0)
+func writeOverrideData(fd int, data *overrideData) error {
+	return unix.Fsetxattr(fd, xattrKeyOverride, data.Marshal(), 0)
 }
 
 // upgradeFd upgrades a file descriptor opened with O_PATH to a regular file
 // descriptor.
-func upgradeFd(fd int) (*os.File, error) {
-	return os.Open(fmt.Sprintf("/proc/self/fd/%d", fd))
+func upgradeFd(fd int) (int, error) {
+	return unix.Open(fmt.Sprintf("/proc/self/fd/%d", fd), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+}
+
+// HasOverride returns if a file has an override xattr.
+// If the file does not exist, it is considered that an override xattr is
+// missing.
+func HasOverride(path string, followSymlinks bool) bool {
+	var err error
+	if followSymlinks {
+		_, err = unix.Getxattr(path, xattrKeyOverride, nil)
+	} else {
+		_, err = unix.Lgetxattr(path, xattrKeyOverride, nil)
+	}
+	return err == nil || err == unix.ERANGE
 }
 
 // Fstat returns stat_t for a given file descriptor.
 // If a file pointed by fd is a regular file or a directory, it considers xattrs
 // to override file metadata. Otherwise it behaves like normal fstat(2).
 // fd can be a file descriptor opened with O_PATH.
-func Fstat(fd int, stat *unix.Stat_t) error {
+func Fstat(fd int, stat *unix.Stat_t) (overridden bool, err error) {
 	// Use fstatat(2) instead of fstat(2) to support file descriptors opened
 	// with O_PATH.
 	if err := unix.Fstatat(fd, "", stat, unix.AT_EMPTY_PATH); err != nil {
-		return err
+		return false, err
 	}
 
 	switch stat.Mode & unix.S_IFMT {
 	case unix.S_IFREG, unix.S_IFDIR:
-		f, err := upgradeFd(fd)
+		ufd, err := upgradeFd(fd)
 		if err != nil {
-			return err
+			return false, err
 		}
-		defer f.Close()
+		defer unix.Close(ufd)
 
-		data, err := readOverrideData(f)
+		data, err := readOverrideData(ufd)
 		if err == errNoOverride {
-			return nil
+			return false, nil
 		}
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		stat.Uid = uint32(data.Uid)
 		stat.Gid = uint32(data.Gid)
-		return nil
+		return true, nil
 
 	default:
-		return nil
+		return false, nil
 	}
 }
 
@@ -80,7 +92,7 @@ func Fstat(fd int, stat *unix.Stat_t) error {
 // If a file pointed by fd is a regular file or a directory, it considers xattrs
 // to override file metadata. Otherwise it behaves like normal statx(2).
 // fd can be a file descriptor opened with O_PATH.
-func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
+func Fstatx(fd int, mask int, statx *unix.Statx_t) (overridden bool, err error) {
 	// Always request the mode field.
 	// It is fine for statx(2) to return non-requested fields and thus its
 	// mask field differs from the requested mask.
@@ -88,23 +100,23 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 
 	// TODO: Pass through AT_STATX_* flags.
 	if err := unix.Statx(fd, "", unix.AT_EMPTY_PATH, mask|unix.STATX_MODE, statx); err != nil {
-		return err
+		return false, err
 	}
 
 	switch statx.Mode & unix.S_IFMT {
 	case unix.S_IFREG, unix.S_IFDIR:
-		f, err := upgradeFd(fd)
+		ufd, err := upgradeFd(fd)
 		if err != nil {
-			return err
+			return false, err
 		}
-		defer f.Close()
+		defer unix.Close(ufd)
 
-		data, err := readOverrideData(f)
+		data, err := readOverrideData(ufd)
 		if err == errNoOverride {
-			return nil
+			return false, nil
 		}
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		if statx.Mask&unix.STATX_UID != 0 {
@@ -113,10 +125,10 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) error {
 		if statx.Mask&unix.STATX_GID != 0 {
 			statx.Gid = uint32(data.Gid)
 		}
-		return nil
+		return true, nil
 
 	default:
-		return nil
+		return false, nil
 	}
 }
 
@@ -128,7 +140,7 @@ func Fchown(fd int, uid int, gid int) error {
 	// TODO: Consider locking the file to avoid races.
 	// TODO: Avoid upgrading the file descriptor twice.
 	var stat unix.Stat_t
-	if err := Fstat(fd, &stat); err != nil {
+	if _, err := Fstat(fd, &stat); err != nil {
 		return err
 	}
 
@@ -141,17 +153,17 @@ func Fchown(fd int, uid int, gid int) error {
 
 	switch stat.Mode & unix.S_IFMT {
 	case unix.S_IFREG, unix.S_IFDIR:
-		f, err := upgradeFd(fd)
+		ufd, err := upgradeFd(fd)
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer unix.Close(ufd)
 
 		data := &overrideData{
 			Uid: uid,
 			Gid: gid,
 		}
-		if err := writeOverrideData(f, data); err != nil {
+		if err := writeOverrideData(ufd, data); err != nil {
 			return err
 		}
 

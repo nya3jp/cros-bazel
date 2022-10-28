@@ -7,6 +7,7 @@ package hooks
 import (
 	"fmt"
 	"math"
+	"path/filepath"
 	"reflect"
 	"unsafe"
 
@@ -101,6 +102,16 @@ func blockSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger, err er
 // openat opens a file with arguments intercepted for a tracee thread.
 // It returns a file descriptor opened with O_PATH.
 func openat(tid int, dfd int, filename string, flags int) (fd int, err error) {
+	oflags := unix.O_PATH | unix.O_CLOEXEC
+	if flags&unix.AT_SYMLINK_NOFOLLOW != 0 {
+		oflags |= unix.O_NOFOLLOW
+	}
+
+	// If the file path is absolute, no need to resolve dfd.
+	if filepath.IsAbs(filename) {
+		return unix.Open(filename, oflags, 0)
+	}
+
 	path := dirfdPath(tid, dfd)
 	dirfd, err := unix.Open(path, unix.O_PATH|unix.O_CLOEXEC, 0)
 	if err != nil {
@@ -109,11 +120,6 @@ func openat(tid int, dfd int, filename string, flags int) (fd int, err error) {
 
 	if filename == "" && flags&unix.AT_EMPTY_PATH != 0 {
 		return dirfd, nil
-	}
-
-	oflags := unix.O_PATH | unix.O_CLOEXEC
-	if flags&unix.AT_SYMLINK_NOFOLLOW != 0 {
-		oflags |= unix.O_NOFOLLOW
 	}
 
 	fd, err = unix.Openat(dirfd, filename, oflags, 0)
@@ -125,37 +131,61 @@ func openat(tid int, dfd int, filename string, flags int) (fd int, err error) {
 }
 
 func simulateFstatat(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, statbuf uintptr, flags int) func(regs *ptracearch.Regs) {
-	return blockSyscall(tid, regs, logger, func() error {
-		fd, err := openat(tid, dfd, filename, flags)
-		if err != nil {
-			return err
+	// If the file path is absolute, no need to resolve dfd.
+	if filepath.IsAbs(filename) {
+		if !fsop.HasOverride(filename, flags&unix.AT_SYMLINK_NOFOLLOW == 0) {
+			return nil
 		}
-		defer unix.Close(fd)
+	}
 
-		var stat unix.Stat_t
-		if err := fsop.Fstat(fd, &stat); err != nil {
-			return err
-		}
+	fd, err := openat(tid, dfd, filename, flags)
+	if err != nil {
+		// Pass through the system call if the target file fails to open.
+		return nil
+	}
+	defer unix.Close(fd)
 
-		return writeData(tid, statbuf, &stat)
-	}())
+	var stat unix.Stat_t
+	overridden, err := fsop.Fstat(fd, &stat)
+	if err != nil {
+		return blockSyscall(tid, regs, logger, err)
+	}
+	if !overridden {
+		// Pass through the system call if the file has no override.
+		return nil
+	}
+
+	err = writeData(tid, statbuf, &stat)
+	return blockSyscall(tid, regs, logger, err)
 }
 
 func simulateStatx(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, flags int, mask int, statxbuf uintptr) func(regs *ptracearch.Regs) {
-	return blockSyscall(tid, regs, logger, func() error {
-		fd, err := openat(tid, dfd, filename, flags)
-		if err != nil {
-			return err
+	// If the file path is absolute, no need to resolve dfd.
+	if filepath.IsAbs(filename) {
+		if !fsop.HasOverride(filename, flags&unix.AT_SYMLINK_NOFOLLOW == 0) {
+			return nil
 		}
-		defer unix.Close(fd)
+	}
 
-		var statx unix.Statx_t
-		if err := fsop.Fstatx(fd, mask, &statx); err != nil {
-			return err
-		}
+	fd, err := openat(tid, dfd, filename, flags)
+	if err != nil {
+		// Pass through the system call if the target file fails to open.
+		return nil
+	}
+	defer unix.Close(fd)
 
-		return writeData(tid, statxbuf, &statx)
-	}())
+	var statx unix.Statx_t
+	overridden, err := fsop.Fstatx(fd, mask, &statx)
+	if err != nil {
+		return blockSyscall(tid, regs, logger, err)
+	}
+	if !overridden {
+		// Pass through the system call if the file has no override.
+		return nil
+	}
+
+	err = writeData(tid, statxbuf, &statx)
+	return blockSyscall(tid, regs, logger, err)
 }
 
 func simulateFchownat(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, user int, group int, flags int) func(regs *ptracearch.Regs) {
