@@ -1,2 +1,1 @@
 common --experimental_enable_bzlmod
-common --allow_yanked_versions=protobuf@3.19.2,zlib@1.2.12

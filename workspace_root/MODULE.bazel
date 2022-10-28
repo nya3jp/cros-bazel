@@ -2,11 +2,11 @@
 # very meaningful.
 module(name = "chromiumos", version = "0.1")
 
+bazel_dep(name = "protobuf", version = "3.19.6")
 bazel_dep(name = "rules_foreign_cc", version = "0.9.0")
+bazel_dep(name = "rules_pkg", version = "0.7.0")
 bazel_dep(name = "rules_python", version = "0.4.0")
+bazel_dep(name = "zlib", version = "1.2.13")
 
-# When we update to bazel 6, we will update the following packages:
-# * rules_pkg appears to fail to build because of a bug in bazel itself.
-#   However, experimentation reveals that this resolves itself with bazel 6.
-# * rules_go and gazelle both require the repo_name attribute, which is only
-#   supported in bazel 6.
+# Skip rules_go and gazelle, as they are both marked as
+# "highly experimental, subject to change at any time"
