@@ -38,7 +38,8 @@ sdk(
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
-        "//bazel/prebuilts/amd64-host:rust"
+        "//bazel/prebuilts/amd64-host:hps-sdk",
+        "//bazel/prebuilts/amd64-host:rust",
     ],
     target_deps = [
         "//bazel/prebuilts/arm64-generic/sys-kernel:linux-headers",

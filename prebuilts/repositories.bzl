@@ -120,6 +120,12 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-lang/rust-1.62.1.tbz2"],
     )
     http_file(
+        name = "amd64_host_hps_sdk_0_0_0_r4",
+        downloaded_file_path = "hps-sdk-0.0.1-r4.tbz2",
+        sha256 = "3b96735cadcfb285f2f2c740e0c6bb595be60853b57649d15e4c815f72fdef7c",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-embedded/hps-sdk-0.0.1-r4.tbz2"],
+    )
+    http_file(
         name = "amd64_host_xcb_proto_1_14_1",
         downloaded_file_path = "xcb-proto-1.14.1.tbz2",
         sha256 = "848f74ec91f249c11ca462729ede8136190e8fbdce647782c8d0b2fd2531a2f9",

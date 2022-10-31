@@ -27,6 +27,13 @@ binary_package(
     visibility = ["//visibility:public"],
 )
 
+# Needed for hps-firmware
+binary_package(
+    name = "hps-sdk",
+    src = "@amd64_host_hps_sdk_0_0_0_r4//file",
+    visibility = ["//visibility:public"],
+)
+
 # x11-libs/libxcb needs this, but it looks missing in SDK and instead pulled in
 # by BDEPEND.
 binary_package(
