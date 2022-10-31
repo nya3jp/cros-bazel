@@ -412,6 +412,7 @@
     "ebuildPath": "third_party/chromiumos-overlay/chromeos-base/aosp-frameworks-ml-nn/aosp-frameworks-ml-nn-9999.ebuild",
     "version": "9999",
     "buildDeps": [
+      "//third_party/chromiumos-overlay/chromeos-base/chromeos-config-tools:0",
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/nnapi:0",
@@ -430,6 +431,7 @@
       "@chromite//:src"
     ],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/chromeos-base/chromeos-config-tools:0",
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/nnapi:0",
@@ -2402,6 +2404,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
       "//third_party/chromiumos-overlay/chromeos-base/runtime_probe-client:0",
+      "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/chromeos-base/vboot_reference:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
@@ -4443,9 +4446,11 @@
       "//third_party/chromiumos-overlay/chromeos-base/nsswitch:0",
       "//third_party/chromiumos-overlay/chromeos-base/patchpanel-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/power_manager-client:0",
+      "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-net:0",
       "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
+      "//third_party/chromiumos-overlay/chromeos-base/vboot_reference:0",
       "//third_party/chromiumos-overlay/chromeos-base/vpn-manager:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/chromiumos-overlay/net-dialup/ppp:0",
@@ -4483,7 +4488,9 @@
       "//third_party/chromiumos-overlay/chromeos-base/minijail:0",
       "//third_party/chromiumos-overlay/chromeos-base/nsswitch:0",
       "//third_party/chromiumos-overlay/chromeos-base/patchpanel-client:0",
+      "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-net:0",
+      "//third_party/chromiumos-overlay/chromeos-base/vboot_reference:0",
       "//third_party/chromiumos-overlay/net-dialup/ppp:0",
       "//third_party/chromiumos-overlay/net-firewall/conntrack-tools:0",
       "//third_party/chromiumos-overlay/net-misc/dhcpcd:0",
@@ -5026,7 +5033,8 @@
       "//third_party/portage-stable/app-arch/xz-utils:0",
       "//third_party/portage-stable/dev-libs/expat:0",
       "//third_party/portage-stable/dev-libs/protobuf:0",
-      "//third_party/portage-stable/net-misc/curl:0"
+      "//third_party/portage-stable/net-misc/curl:0",
+      "//third_party/portage-stable/sys-fs/e2fsprogs:0"
     ],
     "localSrc": [
       "//aosp/system/update_engine:src",
@@ -5053,7 +5061,8 @@
       "//third_party/portage-stable/app-arch/bzip2:0",
       "//third_party/portage-stable/dev-libs/expat:0",
       "//third_party/portage-stable/dev-libs/protobuf:0",
-      "//third_party/portage-stable/net-misc/curl:0"
+      "//third_party/portage-stable/net-misc/curl:0",
+      "//third_party/portage-stable/sys-fs/e2fsprogs:0"
     ],
     "srcUris": {}
   },
@@ -11696,6 +11705,7 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/crosvm-base:0",
       "//third_party/chromiumos-overlay/chromeos-base/libsirenia:0",
+      "//third_party/chromiumos-overlay/chromeos-base/manatee-runtime:0",
       "//third_party/chromiumos-overlay/dev-rust/anyhow:1.0.56",
       "//third_party/chromiumos-overlay/dev-rust/chromeos-dbus-bindings:0",
       "//third_party/chromiumos-overlay/dev-rust/dbus:0.9.3",
