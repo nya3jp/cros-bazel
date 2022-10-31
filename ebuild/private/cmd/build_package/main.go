@@ -33,17 +33,41 @@ const (
 //go:embed setup.sh
 var setupScript []byte
 
-func parseEBuildPath(path string) (packageShortName string, ver *version.Version, err error) {
+type ebuildPathInfo struct {
+	overlay     string
+	category    string
+	packageName string
+	version     *version.Version
+}
+
+// Expects path to be in the following form:
+// <overlay>/<category>/<packageName>/<packageName>-<version>.ebuild
+// i.e., third_party/chromiumos-overlay/app-accessibility/brltty/brltty-6.3-r6.ebuild
+func parseEBuildPath(path string) (*ebuildPathInfo, error) {
 	if !strings.HasSuffix(path, ebuildExt) {
-		return "", nil, errors.New("ebuild must have .ebuild suffix")
+		return nil, errors.New("ebuild must have .ebuild suffix")
 	}
 
 	rest, ver, err := version.ExtractSuffix(strings.TrimSuffix(path, ebuildExt))
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	packageShortName = filepath.Base(rest)
-	return packageShortName, ver, nil
+
+	info := ebuildPathInfo{
+		version: ver,
+	}
+
+	parts := strings.Split(rest, string(os.PathSeparator))
+
+	if len(parts) < 4 {
+		return nil, fmt.Errorf("Unable to parse ebuild path: %s", path)
+	}
+
+	info.packageName = parts[len(parts)-2]
+	info.category = parts[len(parts)-3]
+	info.overlay = filepath.Join(parts[0 : len(parts)-3]...)
+
+	return &info, nil
 }
 
 func baseNoExt(path string) string {
@@ -63,11 +87,6 @@ func copyFile(src, dst string) error {
 
 var flagEBuild = &cli.StringFlag{
 	Name:     "ebuild",
-	Required: true,
-}
-
-var flagCategory = &cli.StringFlag{
-	Name:     "category",
 	Required: true,
 }
 
@@ -246,7 +265,6 @@ func resolveSdkPaths(sdkPath string) (string, error) {
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagEBuild,
-		flagCategory,
 		flagBoard,
 		flagSDK,
 		flagOverlay,
@@ -258,7 +276,6 @@ var app = &cli.App{
 	},
 	Action: func(c *cli.Context) error {
 		originalEBuildPath := c.String(flagEBuild.Name)
-		category := c.String(flagCategory.Name)
 		board := c.String(flagBoard.Name)
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
 		sdkPaths := c.StringSlice(flagSDK.Name)
@@ -286,7 +303,7 @@ var app = &cli.App{
 			return errors.New("run_in_container not found")
 		}
 
-		packageShortName, _, err := parseEBuildPath(originalEBuildPath)
+		ebuildInfo, err := parseEBuildPath(originalEBuildPath)
 		if err != nil {
 			return fmt.Errorf("invalid ebuild file name: %w", err)
 		}
@@ -303,8 +320,7 @@ var app = &cli.App{
 		rootDir := fileutil.NewDualPath(filepath.Join(tmpDir, "root"), "/")
 		bazelBuildDir := rootDir.Add("mnt/host/bazel-build")
 		sourceDir := rootDir.Add("mnt/host/source")
-		// TODO: Choose a right overlay.
-		ebuildDir := sourceDir.Add(overlays[0].MountDir, category, packageShortName)
+		ebuildDir := sourceDir.Add("src", ebuildInfo.overlay, ebuildInfo.category, ebuildInfo.packageName)
 		distDir := rootDir.Add("var/cache/distfiles")
 		hostPackagesDir := rootDir.Add("var/lib/portage/pkgs")
 		targetPackagesDir := rootDir.Add("build").Add(board).Add("packages")
@@ -407,7 +423,7 @@ var app = &cli.App{
 		if !login {
 			// TODO: Normalize timestamps in the archive.
 			binaryOutPath := targetPackagesDir.Add(
-				category,
+				ebuildInfo.category,
 				strings.TrimSuffix(filepath.Base(originalEBuildPath), ebuildExt)+binaryExt)
 			if err := copyFile(filepath.Join(diffDir, binaryOutPath.Inside()), finalOutPath); err != nil {
 				return err

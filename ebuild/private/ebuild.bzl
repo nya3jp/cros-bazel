@@ -65,7 +65,6 @@ def _ebuild_impl(ctx):
     args = ctx.actions.args()
     args.add_all([
         "--ebuild=" + ctx.file.ebuild.path,
-        "--category=" + ctx.attr.category,
         "--output=" + output.path,
         "--board=" + sdk.board,
     ])
@@ -139,15 +138,13 @@ def _ebuild_impl(ctx):
         order = "postorder",
     )
 
-    package_name = "%s/%s" % (ctx.attr.category, paths.split_extension(ctx.file.ebuild.basename)[0])
-
     ctx.actions.run(
         inputs = depset(direct_inputs, transitive = transitive_inputs),
         outputs = [output],
         executable = ctx.executable._build_package,
         arguments = [args],
         mnemonic = "Ebuild",
-        progress_message = "Building " + package_name,
+        progress_message = "Building " + ctx.file.ebuild.basename,
     )
 
     return [
@@ -166,9 +163,6 @@ ebuild = rule(
         "ebuild": attr.label(
             mandatory = True,
             allow_single_file = [".ebuild"],
-        ),
-        "category": attr.string(
-            mandatory = True,
         ),
         "distfiles": attr.label_keyed_string_dict(
             allow_files = True,

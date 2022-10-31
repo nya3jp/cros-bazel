@@ -86,7 +86,6 @@ load("//bazel/ebuild:defs.bzl", "ebuild", "package_set")
 ebuild(
     name = "{{ .PackageInfo.MainSlot }}",
     ebuild = "{{ .EBuildName }}",
-    category = "{{ .Category }}",
     distfiles = {
         {{- range .Dists }}
         "@{{ .Name }}//file": "{{ .Filename }}",
@@ -113,7 +112,7 @@ ebuild(
         {{- end }}
     ],
     {{- end }}
-    files = glob(["files/**"]),
+    files = glob(["files/**", "*.bashrc"]),
     visibility = ["//visibility:public"],
 )
 
