@@ -22,6 +22,16 @@ import (
 	"cros.local/bazel/ebuild/private/cmd/fakefs/syscallabi"
 )
 
+// sysIsFakefsRunning is a fake system call number that fakefs intercepts to
+// allow tracees to check if they are running under fakefs.
+const sysIsFakefsRunning = 1000042
+
+// IsFakefsRunning returns whether the current process is being traced by fakefs.
+func IsFakefsRunning() bool {
+	_, _, errno := unix.Syscall6(sysIsFakefsRunning, 0, 0, 0, 0, 0, 0)
+	return errno == 0
+}
+
 const backdoorKey = 0x20221107
 
 func readCString(tid int, ptr uintptr) (string, error) {
@@ -290,6 +300,11 @@ func SeccompBPF() ([]bpf.Instruction, error) {
 		bpf.LoadAbsolute{Off: 4 + 4 + 8 + 8*5, Size: 4},
 		bpf.JumpIf{Cond: bpf.JumpEqual, Val: backdoorKey, SkipFalse: 1},
 		bpf.RetConstant{Val: uint32(seccomp.ActionAllow)},
+
+		// Intercept SysIsFakefsRunning.
+		bpf.LoadAbsolute{Off: 0, Size: 4},
+		bpf.JumpIf{Cond: bpf.JumpEqual, Val: sysIsFakefsRunning, SkipFalse: 1},
+		bpf.RetConstant{Val: uint32(seccomp.ActionTrace)},
 	}
 
 	// TODO: Drop the dependency to go-seccomp-bpf and construct BPF program
@@ -424,6 +439,10 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		}
 		logger.Infof(tid, "slow: fchownat(%d, %q, %d, %d, %#x)", args.Dfd, filename, args.User, args.Group, args.Flag)
 		return simulateFchownat(tid, regs, logger, args.Dfd, filename, args.User, args.Group, args.Flag)
+
+	case sysIsFakefsRunning:
+		// Respond to the fake system call with success.
+		return blockSyscallAndReturn(tid, regs, 0)
 
 	default:
 		return nil

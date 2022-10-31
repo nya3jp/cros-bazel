@@ -224,6 +224,10 @@ func processStop(thread *threadState, ws unix.WaitStatus, index *threadStateInde
 }
 
 func Run(origArgs, args []string, preloadPath string, verbose bool) error {
+	if hooks.IsFakefsRunning() {
+		return errors.New("nested fakefs is not supported")
+	}
+
 	logger := logging.NewLogger(verbose, args)
 
 	rootPid, err := startTracee(origArgs, preloadPath, verbose)
