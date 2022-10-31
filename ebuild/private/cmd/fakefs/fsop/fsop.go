@@ -20,7 +20,7 @@ var errNoOverride = errors.New("no override")
 func readOverrideData(fd int) (*overrideData, error) {
 	buf := make([]byte, 64)
 	size, err := unix.Fgetxattr(fd, xattrKeyOverride, buf)
-	if err == unix.ENODATA {
+	if err == unix.ENODATA || err == unix.ENOTSUP {
 		return nil, errNoOverride
 	}
 	if err != nil {
@@ -49,7 +49,7 @@ func HasOverride(path string, followSymlinks bool) bool {
 	} else {
 		_, err = unix.Lgetxattr(path, xattrKeyOverride, nil)
 	}
-	return err == nil || err == unix.ERANGE
+	return err == nil || err == unix.ERANGE || err == unix.ENOTSUP
 }
 
 // Fstat returns stat_t for a given file descriptor.
