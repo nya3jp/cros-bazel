@@ -415,6 +415,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/nnapi:0",
+      "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/chromiumos-overlay/dev-libs/libtextclassifier:0",
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
@@ -432,6 +433,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/nnapi:0",
+      "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0",
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
       "//third_party/chromiumos-overlay/sci-libs/tensorflow:0"
     ],
@@ -575,6 +577,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/croslog:0",
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
+      "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
@@ -599,6 +602,7 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
@@ -1363,6 +1367,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libcrossystem:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
       "//third_party/chromiumos-overlay/chromeos-base/minijail:0",
+      "//third_party/chromiumos-overlay/chromeos-base/protofiles:0",
       "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
@@ -1373,6 +1378,7 @@
       "//third_party/portage-stable/dev-libs/protobuf:0",
       "//third_party/portage-stable/dev-libs/re2:0",
       "//third_party/portage-stable/net-misc/curl:0",
+      "//third_party/portage-stable/sys-apps/keyutils:0",
       "//third_party/portage-stable/sys-libs/zlib:0"
     ],
     "localSrc": [
@@ -1523,6 +1529,7 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/chromiumos-overlay/media-libs/cros-camera-hal-usb:0",
       "//third_party/chromiumos-overlay/media-libs/libsync:0",
+      "//third_party/chromiumos-overlay/media-libs/libyuv:0",
       "//third_party/chromiumos-overlay/media-libs/minigbm:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
       "//third_party/chromiumos-overlay/virtual/cros-camera-hal-configs:0",
@@ -1784,7 +1791,7 @@
       "//third_party/portage-stable/sys-libs/libcap:0"
     ],
     "localSrc": [
-      "//platform/crosvm:src"
+      "//platform/crosvm-base:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/cfg-if:1.0.0",
@@ -2490,6 +2497,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
+      "//third_party/portage-stable/app-arch/xz-utils:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "localSrc": [
@@ -2505,6 +2513,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
+      "//third_party/portage-stable/app-arch/xz-utils:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "srcUris": {}
@@ -2906,8 +2915,10 @@
       "@chromite//:src"
     ],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/chromeos-base/chromeos-ec-headers:0",
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
-      "//third_party/chromiumos-overlay/chromeos-base/libchrome:0"
+      "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
+      "//third_party/chromiumos-overlay/chromeos-base/power_manager-client:0"
     ],
     "srcUris": {}
   },
@@ -2931,6 +2942,9 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
+      "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
+      "//third_party/chromiumos-overlay/chromeos-base/tpm_manager-client:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
@@ -2995,6 +3009,7 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
@@ -4116,6 +4131,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/libec:0",
+      "//third_party/chromiumos-overlay/chromeos-base/power_manager-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
@@ -4200,6 +4216,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/libec:0",
+      "//third_party/chromiumos-overlay/chromeos-base/power_manager-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/chromeos-base/vboot_reference:0",
@@ -4363,6 +4380,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-net:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
@@ -4378,7 +4396,8 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/shill-client:0",
-      "//third_party/chromiumos-overlay/chromeos-base/shill-net:0"
+      "//third_party/chromiumos-overlay/chromeos-base/shill-net:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0"
     ],
     "srcUris": {}
   },
@@ -4786,6 +4805,7 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
@@ -4884,7 +4904,8 @@
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
-      "//third_party/chromiumos-overlay/chromeos-base/libchrome:0"
+      "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
+      "//third_party/chromiumos-overlay/chromeos-base/session_manager-client:0"
     ],
     "srcUris": {}
   },
@@ -8796,6 +8817,7 @@
     "ebuildPath": "third_party/chromiumos-overlay/dev-rust/cros_async/cros_async-9999.ebuild",
     "version": "9999",
     "buildDeps": [
+      "//third_party/chromiumos-overlay/dev-rust/anyhow:1.0.56",
       "//third_party/chromiumos-overlay/dev-rust/async-task:4.0.3",
       "//third_party/chromiumos-overlay/dev-rust/async-trait:0.1.36",
       "//third_party/chromiumos-overlay/dev-rust/data_model:0",
@@ -8819,6 +8841,7 @@
       "//platform/crosvm-sys_util_core:src"
     ],
     "runtimeDeps": [
+      "//third_party/chromiumos-overlay/dev-rust/anyhow:1.0.56",
       "//third_party/chromiumos-overlay/dev-rust/async-task:4.0.3",
       "//third_party/chromiumos-overlay/dev-rust/async-trait:0.1.36",
       "//third_party/chromiumos-overlay/dev-rust/data_model:0",
@@ -15860,7 +15883,7 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
-      "//platform/crosvm:src"
+      "//platform/crosvm-sync:src"
     ],
     "runtimeDeps": [],
     "srcUris": {}
