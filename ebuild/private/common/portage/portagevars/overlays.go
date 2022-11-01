@@ -13,3 +13,11 @@ import (
 func Overlays(vars makevars.Vars) []string {
 	return append([]string{vars["PORTDIR"]}, strings.Fields(vars["PORTDIR_OVERLAY"])...)
 }
+
+func BinaryPackageDir(vars makevars.Vars) string {
+	pkgDir := vars["PKGDIR"]
+	if pkgDir != "" {
+		return pkgDir
+	}
+	return "/var/lib/portage/pkgs"
+}

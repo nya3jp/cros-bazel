@@ -175,3 +175,18 @@ The message is shown without `--spawn_strategy=standalone`, but the printed
 command does not work because Bazel uses a temporary execroot.
 
 Related code is located [here](https://team.git.corp.google.com/cros-build-tiger/cros-bazel/+/refs/heads/main/ebuild/cmd/build_package/main.go#190).
+
+### Comparing binary packages
+
+Use `cros_sdk` to enter the standard CrOS chroot, and run `setup_board` and
+`build_packages` to build packages for `arm64-generic`. Binary packages will be
+saved to `/build/arm64-generic/packages`.
+
+Also follow [the building section](#building) to build packages with Bazel.
+
+Then run the following command to compare binary packages from the two
+implementations.
+
+```sh
+$ bazel run //bazel/ebuild/cmd/compare_packages
+```

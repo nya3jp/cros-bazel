@@ -25,6 +25,7 @@ import (
 )
 
 type Resolver struct {
+	pkgDir    string
 	repoSet   *repository.RepoSet
 	bundle    config.Bundle
 	processor *ebuild.CachedProcessor
@@ -41,6 +42,7 @@ func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, erro
 	}
 
 	overlays := portagevars.Overlays(bootEnv)
+	pkgDir := portagevars.BinaryPackageDir(bootEnv)
 
 	repoSet, err := repository.NewRepoSet(overlays)
 	if err != nil {
@@ -94,6 +96,7 @@ func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, erro
 	}
 
 	return &Resolver{
+		pkgDir:    pkgDir,
 		repoSet:   repoSet,
 		bundle:    bundle,
 		processor: processor,
@@ -104,6 +107,10 @@ func NewResolver(rootDir string, extraSources ...config.Source) (*Resolver, erro
 
 func (r *Resolver) Config() config.Source {
 	return r.bundle
+}
+
+func (r *Resolver) BinaryPackageDir() string {
+	return r.pkgDir
 }
 
 func (r *Resolver) Packages(atom *dependency.Atom) ([]*packages.Package, error) {
