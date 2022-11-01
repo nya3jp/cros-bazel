@@ -9,6 +9,7 @@ import (
 	"math"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -58,20 +59,26 @@ func readCString(tid int, ptr uintptr) (string, error) {
 	}
 }
 
-func writeData[T any](tid int, ptr uintptr, data *T) error {
+func writeBytes(tid int, ptr uintptr, data []byte) error {
 	// Use process_vm_writev(2) instead of ptrace(2) with PTRACE_POKEDATA
 	// for much better efficiency.
-	size := unsafe.Sizeof(*data)
+	if len(data) == 0 {
+		return nil
+	}
 	localIov := []unix.Iovec{{
-		Base: (*byte)(unsafe.Pointer(data)),
-		Len:  uint64(size),
+		Base: &data[0],
+		Len:  uint64(len(data)),
 	}}
 	remoteIov := []unix.RemoteIovec{{
 		Base: ptr,
-		Len:  int(size),
+		Len:  int(len(data)),
 	}}
 	_, err := unix.ProcessVMWritev(tid, localIov, remoteIov, 0)
 	return err
+}
+
+func writeStruct[T any](tid int, ptr uintptr, data *T) error {
+	return writeBytes(tid, ptr, unsafe.Slice((*byte)(unsafe.Pointer(data)), unsafe.Sizeof(*data)))
 }
 
 func dirfdPath(tid int, dfd int) string {
@@ -81,22 +88,37 @@ func dirfdPath(tid int, dfd int) string {
 	return fmt.Sprintf("/proc/%d/fd/%d", tid, dfd)
 }
 
+// rewritePerThreadPaths rewrites file paths specific to threads.
+// TODO: Improve the method to reduce false negatives.
+func rewritePerThreadPaths(tid int, path string) string {
+	path = filepath.Clean(path)
+
+	// /proc/self/ -> /proc/$tid/
+	const procSelf = "/proc/self/"
+	if strings.HasPrefix(path, procSelf) {
+		path = fmt.Sprintf("/proc/%d/%s", tid, path[len(procSelf):])
+	}
+	return path
+}
+
+func blockSyscallAndReturn(tid int, regs *ptracearch.Regs, ret uint64) func(regs *ptracearch.Regs) {
+	// Set the syscall number to -1, which should always fail with ENOSYS.
+	regs.Orig_rax = math.MaxUint64
+	_ = ptracearch.SetRegs(tid, regs)
+
+	return func(regs *ptracearch.Regs) {
+		regs.Rax = ret
+		_ = ptracearch.SetRegs(tid, regs)
+	}
+}
+
 func blockSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger, err error) func(regs *ptracearch.Regs) {
 	errno, ok := err.(unix.Errno)
 	if err != nil && !ok {
 		logger.Errorf(tid, "%s: %v", syscallabi.Name(int(regs.Orig_rax)), err)
 		errno = unix.ENOTRECOVERABLE
 	}
-
-	// Set the syscall number to -1, which should always fail with ENOSYS.
-	regs.Orig_rax = math.MaxUint64
-	_ = ptracearch.SetRegs(tid, regs)
-
-	return func(regs *ptracearch.Regs) {
-		// Override the system call return value with errno.
-		regs.Rax = -uint64(errno)
-		_ = ptracearch.SetRegs(tid, regs)
-	}
+	return blockSyscallAndReturn(tid, regs, -uint64(errno))
 }
 
 // openat opens a file with arguments intercepted for a tracee thread.
@@ -115,7 +137,7 @@ func openat(tid int, dfd int, filename string, flags int) (fd int, err error) {
 	path := dirfdPath(tid, dfd)
 	dirfd, err := unix.Open(path, unix.O_PATH|unix.O_CLOEXEC, 0)
 	if err != nil {
-		return -1, err
+		return -1, unix.EBADF
 	}
 
 	if filename == "" && flags&unix.AT_EMPTY_PATH != 0 {
@@ -131,6 +153,8 @@ func openat(tid int, dfd int, filename string, flags int) (fd int, err error) {
 }
 
 func simulateFstatat(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, statbuf uintptr, flags int) func(regs *ptracearch.Regs) {
+	filename = rewritePerThreadPaths(tid, filename)
+
 	// If the file path is absolute, no need to resolve dfd.
 	if filepath.IsAbs(filename) {
 		if !fsop.HasOverride(filename, flags&unix.AT_SYMLINK_NOFOLLOW == 0) {
@@ -155,11 +179,13 @@ func simulateFstatat(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd
 		return nil
 	}
 
-	err = writeData(tid, statbuf, &stat)
+	err = writeStruct(tid, statbuf, &stat)
 	return blockSyscall(tid, regs, logger, err)
 }
 
 func simulateStatx(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, flags int, mask int, statxbuf uintptr) func(regs *ptracearch.Regs) {
+	filename = rewritePerThreadPaths(tid, filename)
+
 	// If the file path is absolute, no need to resolve dfd.
 	if filepath.IsAbs(filename) {
 		if !fsop.HasOverride(filename, flags&unix.AT_SYMLINK_NOFOLLOW == 0) {
@@ -184,8 +210,52 @@ func simulateStatx(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd i
 		return nil
 	}
 
-	err = writeData(tid, statxbuf, &statx)
+	err = writeStruct(tid, statxbuf, &statx)
 	return blockSyscall(tid, regs, logger, err)
+}
+
+func simulateListxattr(tid int, regs *ptracearch.Regs, logger *logging.Logger, filename string, list uintptr, size int, followSymlinks bool) func(regs *ptracearch.Regs) {
+	filename = rewritePerThreadPaths(tid, filename)
+	if !filepath.IsAbs(filename) {
+		filename = fmt.Sprintf("/proc/%d/cwd/%s", tid, filename)
+	}
+	if !fsop.HasOverride(filename, followSymlinks) {
+		return nil
+	}
+
+	data, actualSize, err := fsop.Listxattr(filename, size, followSymlinks)
+	if err != nil {
+		return blockSyscall(tid, regs, logger, err)
+	}
+
+	if err := writeBytes(tid, list, data); err != nil {
+		return blockSyscall(tid, regs, logger, err)
+	}
+
+	return blockSyscallAndReturn(tid, regs, uint64(actualSize))
+}
+
+func simulateFlistxattr(tid int, regs *ptracearch.Regs, logger *logging.Logger, fd int, list uintptr, size int) func(regs *ptracearch.Regs) {
+	nfd, err := unix.Open(fmt.Sprintf("/proc/%d/fd/%d", tid, fd), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	if err != nil {
+		return blockSyscall(tid, regs, logger, unix.EBADF)
+	}
+	defer unix.Close(nfd)
+
+	if !fsop.FHasOverride(nfd) {
+		return nil
+	}
+
+	data, actualSize, err := fsop.Flistxattr(nfd, size)
+	if err != nil {
+		return blockSyscall(tid, regs, logger, err)
+	}
+
+	if err := writeBytes(tid, list, data); err != nil {
+		return blockSyscall(tid, regs, logger, err)
+	}
+
+	return blockSyscallAndReturn(tid, regs, uint64(actualSize))
 }
 
 func simulateFchownat(tid int, regs *ptracearch.Regs, logger *logging.Logger, dfd int, filename string, user int, group int, flags int) func(regs *ptracearch.Regs) {
@@ -213,6 +283,10 @@ func (Hook) SyscallList() []int {
 		unix.SYS_LSTAT,
 		unix.SYS_STATX,
 		unix.SYS_NEWFSTATAT,
+		// listxattr
+		unix.SYS_LISTXATTR,
+		unix.SYS_LLISTXATTR,
+		unix.SYS_FLISTXATTR,
 		// chown
 		unix.SYS_CHOWN,
 		unix.SYS_LCHOWN,
@@ -264,6 +338,29 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func
 		logger.Infof(tid, "statx(%d, %q, %#x, %#x)", args.Dfd, filename, args.Flags, args.Mask)
 		return simulateStatx(tid, regs, logger, args.Dfd, filename, args.Flags, args.Mask, args.Buffer)
 
+	case unix.SYS_LISTXATTR:
+		args := syscallabi.ParseListxattrArgs(regs)
+		filename, err := readCString(tid, args.Pathname)
+		if err != nil {
+			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
+		}
+		logger.Infof(tid, "listxattr(%q, %d)", filename, args.Size)
+		return simulateListxattr(tid, regs, logger, filename, args.List, args.Size, true)
+
+	case unix.SYS_LLISTXATTR:
+		args := syscallabi.ParseLlistxattrArgs(regs)
+		filename, err := readCString(tid, args.Pathname)
+		if err != nil {
+			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
+		}
+		logger.Infof(tid, "llistxattr(%q, %d)", filename, args.Size)
+		return simulateListxattr(tid, regs, logger, filename, args.List, args.Size, false)
+
+	case unix.SYS_FLISTXATTR:
+		args := syscallabi.ParseFlistxattrArgs(regs)
+		logger.Infof(tid, "flistxattr(%d, %d)", args.Fd, args.Size)
+		return simulateFlistxattr(tid, regs, logger, args.Fd, args.List, args.Size)
+
 	case unix.SYS_CHOWN:
 		args := syscallabi.ParseChownArgs(regs)
 		filename, err := readCString(tid, args.Filename)
@@ -295,13 +392,6 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func
 		}
 		logger.Infof(tid, "fchownat(%d, %q, %d, %d, %#x)", args.Dfd, filename, args.User, args.Group, args.Flag)
 		return simulateFchownat(tid, regs, logger, args.Dfd, filename, args.User, args.Group, args.Flag)
-
-	case unix.SYS_CHMOD, unix.SYS_FCHMOD, unix.SYS_FCHMODAT:
-		return func(regs *ptracearch.Regs) {
-			// Pretend to succeed.
-			regs.Rax = 0
-			_ = ptracearch.SetRegs(tid, regs)
-		}
 
 	default:
 		return nil

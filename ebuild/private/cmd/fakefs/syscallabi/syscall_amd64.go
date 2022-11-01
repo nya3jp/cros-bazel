@@ -43,3 +43,15 @@ func ParseFchownArgs(regs *ptracearch.Regs) FchownArgs {
 func ParseFchownatArgs(regs *ptracearch.Regs) FchownatArgs {
 	return FchownatArgs{int(int32(regs.Rdi)), uintptr(regs.Rsi), int(int32(regs.Rdx)), int(int32(regs.R10)), int(int32(regs.R8))}
 }
+
+func ParseListxattrArgs(regs *ptracearch.Regs) ListxattrArgs {
+	return ListxattrArgs{uintptr(regs.Rdi), uintptr(regs.Rsi), int(regs.Rdx)}
+}
+
+func ParseLlistxattrArgs(regs *ptracearch.Regs) LlistxattrArgs {
+	return LlistxattrArgs{uintptr(regs.Rdi), uintptr(regs.Rsi), int(regs.Rdx)}
+}
+
+func ParseFlistxattrArgs(regs *ptracearch.Regs) FlistxattrArgs {
+	return FlistxattrArgs{int(int32(regs.Rdi)), uintptr(regs.Rsi), int(regs.Rdx)}
+}

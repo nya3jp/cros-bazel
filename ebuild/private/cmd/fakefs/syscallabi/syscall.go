@@ -77,3 +77,27 @@ type FchownatArgs struct {
 	Group    int
 	Flag     int
 }
+
+// ListxattrArgs contains arguments to listxattr(2).
+// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/third_party/kernel/v5.15/fs/xattr.c;l=817
+type ListxattrArgs struct {
+	Pathname uintptr
+	List     uintptr
+	Size     int
+}
+
+// LlistxattrArgs contains arguments to llistxattr(2).
+// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/third_party/kernel/v5.15/fs/xattr.c;l=823
+type LlistxattrArgs struct {
+	Pathname uintptr
+	List     uintptr
+	Size     int
+}
+
+// FlistxattrArgs contains arguments to flistxattr(2).
+// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/third_party/kernel/v5.15/fs/xattr.c;l=29
+type FlistxattrArgs struct {
+	Fd   int
+	List uintptr
+	Size int
+}

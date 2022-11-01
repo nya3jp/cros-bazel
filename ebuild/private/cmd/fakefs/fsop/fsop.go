@@ -52,6 +52,12 @@ func HasOverride(path string, followSymlinks bool) bool {
 	return err == nil || err == unix.ERANGE
 }
 
+// FHasOverride returns if a file has an override xattr.
+func FHasOverride(fd int) bool {
+	_, err := unix.Fgetxattr(fd, xattrKeyOverride, nil)
+	return err == nil || err == unix.ERANGE
+}
+
 // Fstat returns stat_t for a given file descriptor.
 // If a file pointed by fd is a regular file or a directory, it considers xattrs
 // to override file metadata. Otherwise it behaves like normal fstat(2).
@@ -130,6 +136,56 @@ func Fstatx(fd int, mask int, statx *unix.Statx_t) (overridden bool, err error) 
 	default:
 		return false, nil
 	}
+}
+
+func doListxattr(cap int, listxattr func([]byte) (int, error)) (keys []byte, size int, err error) {
+	unfiltered := make([]byte, cap)
+	size, err = listxattr(unfiltered)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// If cap is 0, listxattr(2) family returns the required size without storing
+	// results.
+	if cap == 0 {
+		return nil, size, nil
+	}
+
+	unfiltered = unfiltered[:size]
+
+	var filtered []byte
+	var key []byte
+	for _, b := range unfiltered {
+		if b != 0 {
+			key = append(key, b)
+			continue
+		}
+		if string(key) != xattrKeyOverride {
+			filtered = append(filtered, append(key, 0)...)
+		}
+		key = nil
+	}
+	if len(key) > 0 {
+		return nil, 0, fmt.Errorf("listxattr result not null-terminated")
+	}
+	return filtered, len(filtered), nil
+}
+
+// Listxattr enumerates xattrs of a file, hiding fakefs-specific entries.
+func Listxattr(path string, cap int, followSymlinks bool) (keys []byte, size int, err error) {
+	return doListxattr(cap, func(buf []byte) (int, error) {
+		if followSymlinks {
+			return unix.Listxattr(path, buf)
+		}
+		return unix.Llistxattr(path, buf)
+	})
+}
+
+// Flistxattr enumerates xattrs of a file, hiding fakefs-specific entries.
+func Flistxattr(fd int, cap int) (keys []byte, size int, err error) {
+	return doListxattr(cap, func(buf []byte) (int, error) {
+		return unix.Flistxattr(fd, buf)
+	})
 }
 
 // Fchown changes ownership of a given file.
