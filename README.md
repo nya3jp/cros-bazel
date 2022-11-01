@@ -103,10 +103,10 @@ When you make changes to ebuilds or to our ebuild analyzer, you need to
 regenerate the dependency graph info stored at `bazel/data/deps.json` so that
 `update_build` generates `BUILD.bazel` files with up-to-date dependency info.
 
-Run `extract_deps` **in CrOS chroot** to regenerate the dependency graph info.
+Run `extract_deps` to regenerate the dependency graph info.
 
 ```sh
-$ cros_sdk bazel-5 run //bazel/ebuild/cmd/extract_deps
+$ bazel run //bazel/ebuild/cmd/extract_deps
 ```
 
 Then you can run `generate_build` as usual to update `BUILD.bazel` files.

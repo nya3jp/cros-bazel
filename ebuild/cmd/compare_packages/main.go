@@ -5,7 +5,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"cros.local/bazel/ebuild/cmd/compare_packages/equery"
 	"cros.local/bazel/ebuild/cmd/compare_packages/golden"
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/fakechroot"
 	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/version"
@@ -101,15 +101,13 @@ var app = &cli.App{
 		flagBoard,
 		flagRegenerateGolden,
 	},
-	Before: func(ctx *cli.Context) error {
-		if _, err := os.Stat("/etc/cros_chroot_version"); err != nil {
-			return errors.New("this program must be run in chroot")
-		}
-		return nil
-	},
 	Action: func(c *cli.Context) error {
 		board := c.String(flagBoard.Name)
 		regenGolden := c.Bool(flagRegenerateGolden.Name)
+
+		if err := fakechroot.Enter(); err != nil {
+			return err
+		}
 
 		workspaceDir := bazelutil.WorkspaceDir()
 		goldenPath := filepath.Join(workspaceDir, "bazel", "data", "packages.golden.json")

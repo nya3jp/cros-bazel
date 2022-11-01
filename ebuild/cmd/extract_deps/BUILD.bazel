@@ -15,6 +15,7 @@ go_library(
         "//bazel/ebuild/private/common/bazelutil",
         "//bazel/ebuild/private/common/commonflags",
         "//bazel/ebuild/private/common/depdata",
+        "//bazel/ebuild/private/common/fakechroot",
         "//bazel/ebuild/private/common/portage",
         "//bazel/ebuild/private/common/standard/dependency",
         "//bazel/ebuild/private/common/standard/packages",

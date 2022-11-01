@@ -20,6 +20,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/commonflags"
 	"cros.local/bazel/ebuild/private/common/depdata"
+	"cros.local/bazel/ebuild/private/common/fakechroot"
 	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/standard/dependency"
 	"cros.local/bazel/ebuild/private/common/standard/packages"
@@ -342,6 +343,10 @@ var app = &cli.App{
 		board := c.String(flagBoard.Name)
 		startPackageNames := c.StringSlice(flagStart.Name)
 		depsJSONPath := c.String(commonflags.DepsJSON.Name)
+
+		if err := fakechroot.Enter(); err != nil {
+			return err
+		}
 
 		rootDir := filepath.Join("/build", board)
 
