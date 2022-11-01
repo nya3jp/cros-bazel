@@ -49,7 +49,7 @@ func HasOverride(path string, followSymlinks bool) bool {
 	} else {
 		_, err = unix.Lgetxattr(path, xattrKeyOverride, nil)
 	}
-	return err == nil || err == unix.ERANGE || err == unix.ENOTSUP
+	return err == nil || err == unix.ERANGE
 }
 
 // Fstat returns stat_t for a given file descriptor.
