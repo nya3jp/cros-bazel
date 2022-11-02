@@ -198,3 +198,20 @@ implementations.
 ```sh
 $ bazel run //bazel/ebuild/cmd/compare_packages
 ```
+
+### Handling packages that contain BUILD or BUILD.bazel files
+
+Some ebuild packages use `bazel` as their build system, so they will contain
+`BUILD` or `BUILD.bazel` files in their src tree. This poses a problem because
+by default we `glob(['*'])` the src tree and provide it as an input to the
+ebuild. `glob` doesn't traverse into sub-packages (i.e., folders with `BUILD`
+files).
+
+To work around this you can:
+1) Manually specify a `filegroup` in the sub-package that contains all the src
+   for that sub-package and include it as part of the package's root `:src`
+   target.
+2) Tell `bazel` to ignore the `BUILD` files so that glob works correctly. To do
+   this you can use the `./bazel/tools/regenerate_ignore_list` script. Modify
+   the script to add your project and then execute the script from the workspace
+   root. This will update the `bazel/.bazelrc-BUILD-ignore`.

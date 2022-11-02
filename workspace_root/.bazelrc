@@ -9,6 +9,8 @@
 # Bzlmod is the new dependency management system in bazel.
 common --experimental_enable_bzlmod
 
+# Used to ignore BUILD files
+try-import %workspace%/bazel/.bazelrc-BUILD-ignore
 
 # Aspect-Recommended bazel flags for all projects
 # Docs for these flags: https://bazel.build/reference/command-line-reference

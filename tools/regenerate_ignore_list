@@ -1,0 +1,42 @@
+#!/bin/bash
+#
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Regenerates the  --deleted_packages command line.
+#
+# Some packages have BUILD and BUILD.bazel files, but are still built using
+# the ebuild rule. We need to "delete" these packages from bazel's point of view
+# so that we can `glob(["*"])` the src and pass it into the ebuild rule.
+
+set -eu -o pipefail
+
+PROJECTS=(
+	chromium/src/third_party/shell-encryption
+	third_party/adhd
+	third_party/rust_crates
+	third_party/webrtc-apm
+)
+
+if [[ ! -e WORKSPACE.bazel ]]; then
+	echo "WORKSPACE.bazel not found, please run from the workspace root." >&2
+	exit 1
+fi
+
+exec 3> ./bazel/.bazelrc-BUILD-ignore
+
+declare -a PACKAGES=()
+
+printf "common --deleted_packages " >&3
+for PROJECT in "${PROJECTS[@]}"; do
+	readarray -t -O "${#PACKAGES[@]}" PACKAGES < <(
+		find "${PROJECT}" -mindepth 2 -name BUILD -or -name BUILD.bazel | \
+			sed -E -e 's/^/\/\//' -e 's/\/[^/]+$//'
+	)
+done
+
+(
+	IFS=","
+	echo "${PACKAGES[*]}"
+) >&3
