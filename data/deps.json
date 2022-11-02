@@ -18390,6 +18390,7 @@
     "buildDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/featured:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
+      "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/chromiumos-overlay/dev-libs/libevent:0",
       "//third_party/portage-stable/dev-libs/iniparser:0",
       "//third_party/portage-stable/dev-libs/protobuf:0"
@@ -18413,6 +18414,7 @@
     "version": "9999",
     "buildDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
+      "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/chromiumos-overlay/media-libs/alsa-lib:0",
       "//third_party/chromiumos-overlay/media-libs/speex:0",
       "//third_party/chromiumos-overlay/media-libs/webrtc-apm:0",
