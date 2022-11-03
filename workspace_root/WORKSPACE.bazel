@@ -4,6 +4,12 @@
 workspace(name = "chromiumos")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+
+# See https://github.com/bazelbuild/bazel/issues/16644
+# This allows intellij users to sync bazel targets and thus get proper debugger
+# support, code completion, and cross-references.
+http_archive(name = "intellij_aspect")
+
 load("//bazel/toolchains:toolchain_repositories.bzl", "toolchain_repositories")
 
 toolchain_repositories()
