@@ -7,7 +7,8 @@ set -eu -o pipefail
 
 # Add users go path before trying
 if GO="$(command -v go)"; then
-    PATH="${PATH}:$("$GO" env GOPATH)/bin"
+    # Add /bin to every entry in gopath.
+    PATH="${PATH}:$("$GO" env GOPATH | sed 's/:/\/bin:/g')/bin"
 fi
 
 # Allow users to create a bazelrc file shared between all chromiumos checkouts.
