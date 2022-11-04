@@ -75,8 +75,8 @@ def _ebuild_impl(ctx):
     ]
     transitive_inputs = []
 
-    args.add_all(sdk.files, format_each = "--sdk=%s", expand_directories = False)
-    direct_inputs.extend(sdk.files)
+    args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
+    direct_inputs.extend(sdk.layers)
 
     for file in ctx.attr.files:
         args.add_all(file.files, map_each = _format_file_arg)

@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "sdk")
+load("//bazel/ebuild:defs.bzl", "sdk_from_archive", "sdk_update")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_tar(
@@ -20,10 +20,17 @@ pkg_tar(
     extension = "tar.gz",
 )
 
-sdk(
-    name = "sdk",
-    src = "@cros-sdk-2022.08.22.085953//:root",
+sdk_from_archive(
+    name = "base_sdk",
     board = "arm64-generic",
+    src = "@cros-sdk-2022.08.22.085953//file",
+    # This rule just extracts an archive, do not bother dispatching to remotes.
+    tags = ["no-remote"],
+)
+
+sdk_update(
+    name = "sdk",
+    base = ":base_sdk",
     host_deps = [
         "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
         "//bazel/prebuilts/amd64-host:meson-format-array",

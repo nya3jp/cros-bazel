@@ -58,8 +58,10 @@ SDKInfo = provider(
         "board": """
             str: A board name.
         """,
-        "files": """
-            File[]: Squashfs image files(.squashfs) or directory.
+        "layers": """
+            File[]: A list of files each of which represents a file system layer
+            of the SDK. A layer file can be a directory, a symbolic link index
+            file (.symindex), or a squashfs image file (.squashfs).
             The order matters; the first image must be overlayed on top of the
             second image, and so on.
         """,

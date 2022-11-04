@@ -7,7 +7,6 @@ package main
 import (
 	_ "embed"
 	"errors"
-	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -17,10 +16,12 @@ import (
 
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
+	"cros.local/bazel/ebuild/private/common/symindex"
 )
 
 //go:embed setup.sh
@@ -28,16 +29,19 @@ var setupScript []byte
 
 var flagInput = &cli.StringSliceFlag{
 	Name:     "input",
+	Usage:    "A path to a file representing a file system layer",
 	Required: true,
 }
 
 var flagOutputDir = &cli.StringFlag{
 	Name:     "output-dir",
+	Usage:    "A path to a directory to write non-symlink files under",
 	Required: true,
 }
 
-var flagOutputSquashfs = &cli.StringFlag{
-	Name:     "output-squashfs",
+var flagOutputSymindex = &cli.StringFlag{
+	Name:     "output-symindex",
+	Usage:    "A path to write a symindex file to",
 	Required: true,
 }
 
@@ -67,7 +71,7 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagInput,
 		flagOutputDir,
-		flagOutputSquashfs,
+		flagOutputSymindex,
 		flagBoard,
 		flagOverlay,
 		flagInstallHost,
@@ -77,7 +81,7 @@ var app = &cli.App{
 	Action: func(c *cli.Context) error {
 		inputPaths := c.StringSlice(flagInput.Name)
 		outputDirPath := c.String(flagOutputDir.Name)
-		outputSquashfsPath := c.String(flagOutputSquashfs.Name)
+		outputSymindexPath := c.String(flagOutputSymindex.Name)
 		board := c.String(flagBoard.Name)
 		overlays, err := makechroot.ParseOverlaySpecs(c.StringSlice(flagOverlay.Name))
 		if err != nil {
@@ -94,7 +98,7 @@ var app = &cli.App{
 
 		// We use the output directory as our tmp space. This way we can avoid copying
 		// the output artifacts and instead just move them.
-		tmpDir, err := os.MkdirTemp(outputDirPath, "build_sdk.*")
+		tmpDir, err := os.MkdirTemp(outputDirPath, "sdk_update.*")
 		if err != nil {
 			return err
 		}
@@ -178,11 +182,7 @@ var app = &cli.App{
 		// Some of the folders in the overlayfs workdir have 000 permissions.
 		// We need to grant rw permissions to the directories so `os.RemoveAll`
 		// doesn't fail.
-		if err := fixChmod(tmpDir); err != nil {
-			return err
-		}
-
-		if err := os.RemoveAll(tmpDir); err != nil {
+		if err := removeAllWithChmod(tmpDir); err != nil {
 			return err
 		}
 
@@ -198,10 +198,12 @@ var app = &cli.App{
 			"var/cache",
 		} {
 			path := filepath.Join(outputDirPath, exclude)
-			os.RemoveAll(path)
+			if err := removeAllWithChmod(path); err != nil {
+				return err
+			}
 		}
 
-		if err := moveSymlinks(outputDirPath, outputSquashfsPath); err != nil {
+		if err := symindex.Generate(outputDirPath, outputSymindexPath); err != nil {
 			return err
 		}
 
@@ -211,20 +213,28 @@ var app = &cli.App{
 
 // Move the contents of the diff dir into the output path
 func moveDiffDir(diffDir string, outputPath string) error {
-	diffDirHandle, err := os.Open(diffDir)
-	if err != nil {
-		return err
-	}
-	defer diffDirHandle.Close()
-
-	filesInfo, err := diffDirHandle.Readdir(0)
+	es, err := os.ReadDir(diffDir)
 	if err != nil {
 		return err
 	}
 
-	for _, fileInfo := range filesInfo {
-		src := filepath.Join(diffDir, fileInfo.Name())
-		dest := filepath.Join(outputPath, fileInfo.Name())
+	for _, e := range es {
+		src := filepath.Join(diffDir, e.Name())
+		dest := filepath.Join(outputPath, e.Name())
+
+		if e.IsDir() {
+			// For directories, we need o+w (S_IWUSR) permission to rename.
+			fi, err := e.Info()
+			if err != nil {
+				return err
+			}
+			if perm := fi.Mode().Perm(); perm&unix.S_IWUSR == 0 {
+				if err := os.Chmod(src, perm|unix.S_IWUSR); err != nil {
+					return err
+				}
+			}
+		}
+
 		if err := os.Rename(src, dest); err != nil {
 			return err
 		}
@@ -233,9 +243,10 @@ func moveDiffDir(diffDir string, outputPath string) error {
 	return nil
 }
 
-// Ensure we have o+rwx to each directory. Otherwise os.RemoveAll() fails.
-func fixChmod(path string) error {
-	err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
+// removeAllWithChmod calls os.RemoveAll after ensuring we have o+rwx to each
+// directory.
+func removeAllWithChmod(path string) error {
+	if err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -258,93 +269,11 @@ func fixChmod(path string) error {
 		}
 
 		return nil
-	})
-
-	return err
-}
-
-// Until https://github.com/bazelbuild/bazel/issues/15454 is fixed we
-// cant use absolute paths in symlinks or symlinks that point to the base layer.
-// As a work around we extract all the absolute and dangling symlinks into
-// their own layer.
-func moveSymlinks(outputPath string, squashfsPath string) error {
-	var symlinks []string
-
-	err := filepath.Walk(outputPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.Mode()&fs.ModeSymlink == 0 {
-			return nil
-		}
-
-		pointsTo, err := os.Readlink(path)
-		if err != nil {
-			return err
-		}
-
-		if strings.HasPrefix(pointsTo, "/") {
-			symlinks = append(symlinks, path)
-			return nil
-		}
-
-		parentDir := filepath.Dir(path)
-		absolutePath := filepath.Join(parentDir, pointsTo)
-
-		if !strings.HasPrefix(absolutePath, outputPath) {
-			return fmt.Errorf("Symlink %s points to %s which is below the output base %s", path, pointsTo, outputPath)
-		}
-
-		if _, err := os.Stat(absolutePath); err == nil {
-			// Symlink points to a file on this layer, leave it
-			return nil
-		} else if errors.Is(err, fs.ErrNotExist) {
-			// Symlink is pointing to something in the base layer
-			symlinks = append(symlinks, path)
-			return nil
-		} else {
-			// Some unknown stat error
-			return err
-		}
-
-		return nil
-	})
-
-	args := []string{"/usr/bin/mksquashfs"}
-	for _, symlink := range symlinks {
-		args = append(args, strings.TrimPrefix(symlink, outputPath+"/"))
-	}
-	absoluteSquashfsPath, err := filepath.Abs(squashfsPath)
-	if err != nil {
-		return err
-	}
-	args = append(args,
-		absoluteSquashfsPath,
-		"-all-time",
-		"0",
-		// TODO: Avoid -all-root.
-		"-all-root",
-		"-no-strip",
-	)
-
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = outputPath
-
-	if err := cmd.Run(); err != nil {
+	}); err != nil {
 		return err
 	}
 
-	// Clear the symlinks from the output directory
-	for _, symlink := range symlinks {
-		if err := os.Remove(symlink); err != nil {
-			return err
-		}
-	}
-
-	return err
+	return os.RemoveAll(path)
 }
 
 func main() {

@@ -5,25 +5,27 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_library(
-    name = "build_sdk_lib",
+    name = "sdk_update_lib",
     srcs = ["main.go"],
     embedsrcs = ["setup.sh"],
-    importpath = "cros.local/bazel/ebuild/private/cmd/build_sdk",
+    importpath = "cros.local/bazel/ebuild/private/cmd/sdk_update",
     visibility = ["//visibility:private"],
     deps = [
         "//bazel/ebuild/private/common/bazelutil",
         "//bazel/ebuild/private/common/fileutil",
         "//bazel/ebuild/private/common/makechroot",
+        "//bazel/ebuild/private/common/symindex",
         "@com_github_urfave_cli_v2//:cli",
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@org_golang_x_sys//unix",
     ],
 )
 
 go_binary(
-    name = "build_sdk",
+    name = "sdk_update",
     data = [
         "//bazel/ebuild/private/cmd/run_in_container",
     ],
-    embed = [":build_sdk_lib"],
+    embed = [":sdk_update_lib"],
     visibility = ["//visibility:public"],
 )

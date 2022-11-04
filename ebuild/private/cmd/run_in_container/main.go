@@ -7,6 +7,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -21,6 +22,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/symindex"
 )
 
 func runCommand(name string, args ...string) error {
@@ -34,6 +36,7 @@ type overlayType int
 
 const (
 	overlayDir overlayType = iota
+	overlaySymindex
 	overlaySquashfs
 )
 
@@ -67,10 +70,12 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 		var overlayType overlayType
 		if fileInfo.IsDir() {
 			overlayType = overlayDir
+		} else if strings.HasSuffix(outside, symindex.Ext) {
+			overlayType = overlaySymindex
 		} else if strings.HasSuffix(outside, ".squashfs") {
 			overlayType = overlaySquashfs
 		} else {
-			return nil, fmt.Errorf("Unsupported file type: %s", outside)
+			return nil, fmt.Errorf("unsupported file type: %s", outside)
 		}
 
 		mounts = append(mounts, overlayInfo{
@@ -80,6 +85,80 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 		})
 	}
 	return mounts, nil
+}
+
+// resolveOverlaySourcePath translates an overlay source path by possibly
+// following symlinks.
+//
+// The --overlay inputs can be three types:
+//  1. A path to a real file/directory.
+//  2. A symlink to a file/directory.
+//  3. A directory tree with symlinks pointing to real files.
+//
+// This function undoes the case 3. Bazel should be giving us a symlink to
+// the directory, instead of creating a symlink tree. We don't want to use the
+// symlink tree because that would require bind mounting the whole execroot
+// inside the container. Otherwise we couldn't resolve the symlinks.
+//
+// This method will find the first symlink in the symlink forest which will be
+// pointing to the real execroot. It then calculates the folder that should have
+// been passed in by bazel.
+func resolveOverlaySourcePath(inputPath string) (string, error) {
+	info, err := os.Lstat(inputPath)
+	if err != nil {
+		return "", err
+	}
+
+	if info.Mode()&fs.ModeSymlink != 0 {
+		// Resolve the symlink so we always return an absolute path.
+		pointsTo, err := filepath.EvalSymlinks(inputPath)
+		if err != nil {
+			return "", err
+		}
+		return pointsTo, nil
+	}
+
+	if !info.IsDir() {
+		return inputPath, nil
+	}
+
+	done := errors.New("done")
+
+	var resolvedInputPath string
+	err = filepath.WalkDir(inputPath, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		fileInfo, err := info.Info()
+		if err != nil {
+			return err
+		}
+
+		target := path
+		if fileInfo.Mode().Type()&fs.ModeSymlink != 0 {
+			target, err = os.Readlink(path)
+			if err != nil {
+				return err
+			}
+		}
+
+		insidePath := strings.TrimPrefix(path, inputPath)
+
+		resolvedInputPath = strings.TrimSuffix(target, insidePath)
+
+		return done
+	})
+
+	if err != nil && err != done {
+		return "", err
+	}
+
+	return resolvedInputPath, nil
 }
 
 var flagStagingDir = &cli.StringFlag{
@@ -96,9 +175,9 @@ var flagChdir = &cli.StringFlag{
 
 var flagOverlay = &cli.StringSliceFlag{
 	Name: "overlay",
-	Usage: "<inside>=<outside dir | <file>.squashfs>. " +
-		"Mounts the outside dir or .squashfs file inside the " +
-		"container at the specified inside path. " +
+	Usage: "<inside>=<outside>. " +
+		"Mounts a file system layer found at an outside path to a directory " +
+		"inside the container at the specified inside path. " +
 		"This option can be specified multiple times. The earlier " +
 		"overlays are mounted as the higher layer, and the later " +
 		"overlays are mounted as the lower layer.",
@@ -181,7 +260,6 @@ func continueNamespace(c *cli.Context) error {
 		return err
 	}
 
-	//squashfusePath := c.String(flagSquashfuse.Name)
 	chdir := c.String(flagChdir.Name)
 	overlays, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name))
 	if err != nil {
@@ -231,22 +309,32 @@ func continueNamespace(c *cli.Context) error {
 	// Set up lower directories.
 	lowerDirsByMountDir := make(map[string][]string)
 	for i, overlay := range overlays {
+		sourcePath, err := resolveOverlaySourcePath(overlay.Source)
+		if err != nil {
+			return err
+		}
+
 		lowerDir := filepath.Join(lowersDir, strconv.Itoa(i))
 		lowerDirsByMountDir[overlay.Target] = append(lowerDirsByMountDir[overlay.Target], lowerDir)
 		if err := os.MkdirAll(lowerDir, 0o755); err != nil {
 			return err
 		}
+
 		switch overlay.Type {
 		case overlayDir:
-			if err := unix.Mount(overlay.Source, lowerDir, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
-				return fmt.Errorf("failed bind-mounting %s: %w", overlay.Source, err)
+			if err := unix.Mount(sourcePath, lowerDir, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
+				return fmt.Errorf("failed bind-mounting %s: %w", sourcePath, err)
+			}
+		case overlaySymindex:
+			if err := symindex.Expand(sourcePath, lowerDir); err != nil {
+				return fmt.Errorf("failed expanding %s: %w", sourcePath, err)
 			}
 		case overlaySquashfs:
 			if err := runCommand(
 				squashfusePath,
-				overlay.Source,
+				sourcePath,
 				lowerDir); err != nil {
-				return fmt.Errorf("failed mounting %s: %w", overlay.Source, err)
+				return fmt.Errorf("failed mounting %s: %w", sourcePath, err)
 			}
 		default:
 			return fmt.Errorf("BUG: unknown overlay type %d", overlay.Type)
