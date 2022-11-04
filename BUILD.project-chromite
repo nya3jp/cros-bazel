@@ -40,5 +40,6 @@ ebuild_src(
         # Contains utf-8 characters
         "third_party/swarming.client/example/**"
     ]),
+    mount_path = "chromite",
     visibility = ["//visibility:public"],
 )

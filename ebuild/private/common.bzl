@@ -71,13 +71,13 @@ SDKInfo = provider(
 EbuildSrcInfo = provider(
     "Source files used by an ebuild",
     fields = {
-        "squashfs_file": """
-            File: A squashfs image (.squashfs) that contains src files for this
+        "file": """
+            File: A .squashfs that contains src files for this
             ebuild.
         """,
-        "src_path": """
-            str: The patch where the src files came from. It will be mounted
-            relative to /mnt/host/source so it mirrors the external repo.
+        "mount_path": """
+            str: The patch where the src files will be mounted. It is relative
+            to /mnt/host/source.
         """,
     },
 )
