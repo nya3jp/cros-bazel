@@ -1,0 +1,17 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "tar",
+    srcs = [
+        "tar.go",
+    ],
+    deps = [
+        "@com_github_klauspost_compress//zstd:go_default_library",
+    ],
+    importpath = "cros.local/bazel/ebuild/private/common/tar",
+    visibility = ["//visibility:public"],
+)

@@ -8,6 +8,7 @@ require (
 	github.com/bazelbuild/rules_go v0.35.0
 	github.com/elastic/go-seccomp-bpf v1.2.0
 	github.com/google/go-cmp v0.5.8
+	github.com/klauspost/compress v1.15.12
 	github.com/urfave/cli/v2 v2.20.3
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
 	mvdan.cc/sh/v3 v3.5.1

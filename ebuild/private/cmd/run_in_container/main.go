@@ -23,6 +23,7 @@ import (
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/symindex"
+	"cros.local/bazel/ebuild/private/common/tar"
 )
 
 func runCommand(name string, args ...string) error {
@@ -38,6 +39,7 @@ const (
 	overlayDir overlayType = iota
 	overlaySymindex
 	overlaySquashfs
+	overlayTar
 )
 
 type overlayInfo struct {
@@ -74,6 +76,8 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 			overlayType = overlaySymindex
 		} else if strings.HasSuffix(outside, ".squashfs") {
 			overlayType = overlaySquashfs
+		} else if tar.IsTar(outside) {
+			overlayType = overlayTar
 		} else {
 			return nil, fmt.Errorf("unsupported file type: %s", outside)
 		}
@@ -285,8 +289,9 @@ func continueNamespace(c *cli.Context) error {
 	lowersDir := filepath.Join(stageDir, "lowers")
 	diffDir := filepath.Join(stageDir, "diff")
 	workDir := filepath.Join(stageDir, "work")
+	tarDir := filepath.Join(stageDir, "tar")
 
-	for _, dir := range []string{rootDir, baseDir, lowersDir, diffDir, workDir} {
+	for _, dir := range []string{rootDir, baseDir, lowersDir, diffDir, workDir, tarDir} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return err
 		}
@@ -315,7 +320,6 @@ func continueNamespace(c *cli.Context) error {
 		}
 
 		lowerDir := filepath.Join(lowersDir, strconv.Itoa(i))
-		lowerDirsByMountDir[overlay.Target] = append(lowerDirsByMountDir[overlay.Target], lowerDir)
 		if err := os.MkdirAll(lowerDir, 0o755); err != nil {
 			return err
 		}
@@ -336,9 +340,22 @@ func continueNamespace(c *cli.Context) error {
 				lowerDir); err != nil {
 				return fmt.Errorf("failed mounting %s: %w", sourcePath, err)
 			}
+		case overlayTar:
+			// We use a dedicated directory for the extracted artifacts instead of
+			// putting them in the lower directory because the lower directory is a
+			// tmpfs mount and we don't want to use up all the RAM.
+			lowerDir = filepath.Join(tarDir, strconv.Itoa(i))
+			if err := os.MkdirAll(lowerDir, 0o755); err != nil {
+				return err
+			}
+			if err := tar.Extract(overlay.Source, lowerDir); err != nil {
+				return fmt.Errorf("failed to extract %s: %w", overlay.Source, err)
+			}
 		default:
 			return fmt.Errorf("BUG: unknown overlay type %d", overlay.Type)
 		}
+
+		lowerDirsByMountDir[overlay.Target] = append(lowerDirsByMountDir[overlay.Target], lowerDir)
 	}
 
 	// Ensure mountpoints to exist in base.
