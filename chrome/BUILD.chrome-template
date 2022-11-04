@@ -1,0 +1,19 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/ebuild:defs.bzl", "ebuild_tar_src")
+
+ebuild_tar_src(
+    name = "src",
+    src = "src.tar.zst",
+    mount_path = "/home/root/chrome_root",
+    visibility = ["//visibility:public"],
+)
+
+ebuild_tar_src(
+    name = "src-internal",
+    src = "src-internal.tar.zst",
+    mount_path = "/home/root/chrome_root",
+    visibility = ["//visibility:public"],
+)

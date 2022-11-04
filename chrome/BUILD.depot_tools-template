@@ -1,0 +1,12 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# By only exposing the file we don't need to depend on CIPD, vpython, cache
+# files, etc. This does mean that we don't track them as part of the hash
+# though so things won't be rebuilt if one of those changes. Since we only
+# use this as part of a repository rule to fetch code, it shouldn't be a big
+# deal.
+exports_files([
+    "gclient.wrapper.sh"
+])

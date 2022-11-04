@@ -47,6 +47,10 @@ load("//bazel/sdk:repositories.bzl", "cros_sdk_repositories")
 
 cros_sdk_repositories()
 
+load("//bazel/chrome:repositories.bzl", "cros_chrome_repositories")
+
+cros_chrome_repositories()
+
 new_local_repository(
     name = "chromite",
     build_file = "//bazel:BUILD.project-chromite",
