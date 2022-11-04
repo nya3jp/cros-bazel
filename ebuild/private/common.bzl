@@ -72,7 +72,7 @@ EbuildSrcInfo = provider(
     "Source files used by an ebuild",
     fields = {
         "file": """
-            File: A .squashfs that contains src files for this
+            File: A .squashfs or tar.* that contains src files for this
             ebuild.
         """,
         "mount_path": """
