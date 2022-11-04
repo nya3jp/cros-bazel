@@ -102,6 +102,9 @@ var flagSDK = &cli.StringSliceFlag{
 var flagOverlay = &cli.StringSliceFlag{
 	Name:     "overlay",
 	Required: true,
+	Usage: "<inside path>=<squashfs file | directory | tar.*>: " +
+		"Mounts the file or directory at the specified path. " +
+		"Inside path can be absolute or relative to /mnt/host/source/.",
 }
 
 var flagInstallTarget = &cli.StringSliceFlag{
@@ -139,7 +142,7 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
 		}
 		overlays = append(overlays, overlayInfo{
-			MountDir:     strings.Trim(v[0], "/"),
+			MountDir:     strings.TrimSuffix(v[0], "/"),
 			SquashfsPath: v[1],
 		})
 	}
@@ -303,8 +306,13 @@ var app = &cli.App{
 		}
 
 		for _, overlay := range overlays {
-			overlayDir := sourceDir.Add(overlay.MountDir)
-			args = append(args, "--overlay="+overlayDir.Inside()+"="+overlay.SquashfsPath)
+			var overlayDir string
+			if filepath.IsAbs(overlay.MountDir) {
+				overlayDir = overlay.MountDir
+			} else {
+				overlayDir = sourceDir.Add(overlay.MountDir).Inside()
+			}
+			args = append(args, "--overlay="+overlayDir+"="+overlay.SquashfsPath)
 		}
 
 		targetInstallAtomGroups, err := preparePackageGroups(targetInstallGroups, targetPackagesDir)
