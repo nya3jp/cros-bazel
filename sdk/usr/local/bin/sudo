@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+#
+# Simple sudo wrapper to be used in a rootless container
+
+
+if [[ $# -eq 0 ]]; then
+	echo "Usage: sudo <cmd>" >&2
+	exit 1
+fi
+
+if [[ "$1" == -- ]]; then
+	:
+elif [[ "$1" == -* ]]; then
+	echo "sudo arguments are not supported!" >&2
+	exit 1
+fi
+
+exec "$@"
