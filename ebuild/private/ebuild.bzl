@@ -157,7 +157,7 @@ def _ebuild_impl(ctx):
         ),
     ]
 
-ebuild = rule(
+_ebuild = rule(
     implementation = _ebuild_impl,
     attrs = {
         "ebuild": attr.label(
@@ -195,3 +195,9 @@ ebuild = rule(
         ),
     },
 )
+
+def ebuild(*, tags=[], **kwargs):
+    # Disable sandbox to avoid creating a symlink forest.
+    # This does not affect hermeticity since ebuild runs in a container.
+    tags = ["no-sandbox"] + tags
+    _ebuild(tags=tags, **kwargs)

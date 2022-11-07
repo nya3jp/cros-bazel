@@ -106,7 +106,7 @@ def _sdk_update_impl(ctx):
         ),
     ]
 
-sdk_update = rule(
+_sdk_update = rule(
     implementation = _sdk_update_impl,
     attrs = {
         "base": attr.label(
@@ -133,3 +133,9 @@ sdk_update = rule(
         ),
     },
 )
+
+def sdk_update(*, tags=[], **kwargs):
+    # Disable sandbox to avoid creating a symlink forest.
+    # This does not affect hermeticity since sdk_update runs in a container.
+    tags = ["no-sandbox"] + tags
+    _sdk_update(tags=tags, **kwargs)
