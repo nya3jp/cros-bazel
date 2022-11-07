@@ -134,6 +134,11 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 		srcDeps = append(srcDeps, "//"+path+":src")
 	}
 
+	if pkg.UsesEclass("chromium-source") {
+		// TODO: We need use flags to add src-internal
+		srcDeps = append(srcDeps, "@chrome//:src")
+	}
+
 	// The platform eclass calls `platform2.py` which requires chromite
 	// The dlc eclass calls `build_dlc` which lives in chromite
 	if pkg.UsesEclass("platform") || pkg.UsesEclass("dlc") {

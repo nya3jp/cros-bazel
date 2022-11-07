@@ -749,7 +749,9 @@
       "//third_party/chromiumos-overlay/net-print/cups:0",
       "//third_party/chromiumos-overlay/x11-libs/libdrm:0"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "@chrome//:src"
+    ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/x11-libs/libxkbcommon:0",
       "//third_party/chromiumos-overlay/x11-misc/xkeyboard-config:0"
@@ -854,7 +856,9 @@
       "//third_party/portage-stable/sys-libs/pam:0",
       "//third_party/portage-stable/virtual/udev:0"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "@chrome//:src"
+    ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/app-accessibility/brltty:0",
       "//third_party/chromiumos-overlay/app-accessibility/espeak-ng:0",
