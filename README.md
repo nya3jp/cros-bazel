@@ -41,10 +41,10 @@ and it can be converted to `BUILD.bazel` with the following command:
 $ bazel run //bazel/ebuild/cmd/update_build
 ```
 
-Then you can start building packages. To build sys-apps/ethtool for example:
+Then you can start building packages. To build sys-apps/attr for example:
 
 ```sh
-$ bazel build //third_party/portage-stable/sys-apps/ethtool:0
+$ bazel build //third_party/portage-stable/sys-apps/attr:0
 ```
 
 Note that the label "0" is a SLOT identifier. It is typically "0", but it can
