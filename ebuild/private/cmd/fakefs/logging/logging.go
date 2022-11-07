@@ -7,15 +7,21 @@ package logging
 import (
 	"fmt"
 	"os"
+
+	"github.com/alessio/shellescape"
 )
 
 type Logger struct {
-	verbose bool
+	verbose    bool
+	args       []string
+	intercepts uint64
 }
 
-func NewLogger(verbose bool) *Logger {
+func NewLogger(verbose bool, args []string) *Logger {
 	return &Logger{
-		verbose: verbose,
+		verbose:    verbose,
+		args:       args,
+		intercepts: 0,
 	}
 }
 
@@ -33,4 +39,12 @@ func (l *Logger) Infof(tid int, format string, args ...interface{}) {
 
 func (l *Logger) Errorf(tid int, format string, args ...interface{}) {
 	l.printf(tid, format, args...)
+}
+
+func (l *Logger) RecordIntercept() {
+	l.intercepts++
+}
+
+func (l *Logger) PrintStats() {
+	fmt.Fprintf(os.Stderr, "[fakefs] intercepted %d syscalls: %s\n", l.intercepts, shellescape.QuoteCommand(l.args))
 }

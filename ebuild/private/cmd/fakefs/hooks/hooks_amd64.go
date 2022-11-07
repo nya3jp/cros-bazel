@@ -12,6 +12,8 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/elastic/go-seccomp-bpf"
+	"golang.org/x/net/bpf"
 	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/cmd/fakefs/fsop"
@@ -19,6 +21,8 @@ import (
 	"cros.local/bazel/ebuild/private/cmd/fakefs/ptracearch"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/syscallabi"
 )
+
+const backdoorKey = 0x20221107
 
 func readCString(tid int, ptr uintptr) (string, error) {
 	// Use process_vm_readv(2) instead of ptrace(2) with PTRACE_PEEKDATA
@@ -268,24 +272,57 @@ func simulateFchownat(tid int, regs *ptracearch.Regs, logger *logging.Logger, df
 	}())
 }
 
-func SyscallList() []int {
-	return []int{
-		// stat
-		unix.SYS_STAT,
-		unix.SYS_FSTAT,
-		unix.SYS_LSTAT,
-		unix.SYS_STATX,
-		unix.SYS_NEWFSTATAT,
-		// listxattr
-		unix.SYS_LISTXATTR,
-		unix.SYS_LLISTXATTR,
-		unix.SYS_FLISTXATTR,
-		// chown
-		unix.SYS_CHOWN,
-		unix.SYS_LCHOWN,
-		unix.SYS_FCHOWN,
-		unix.SYS_FCHOWNAT,
+func SeccompBPF() ([]bpf.Instruction, error) {
+	// TODO: Drop the dependency to go-seccomp-bpf and construct BPF program
+	// by ourselves. The library is not very useful when we need non-trivial
+	// BPF programs.
+	policy := seccomp.Policy{
+		DefaultAction: seccomp.ActionAllow,
+		Syscalls: []seccomp.SyscallGroup{{
+			Action: seccomp.ActionTrace,
+			Names: []string{
+				// stat
+				"stat",
+				"fstat",
+				"lstat",
+				"statx",
+				"newfstatat",
+				// listxattr
+				"listxattr",
+				"llistxattr",
+				"flistxattr",
+				// chown
+				"chown",
+				"lchown",
+				"fchown",
+				"fchownat",
+			},
+		}},
 	}
+
+	program, err := policy.Assemble()
+	if err != nil {
+		return nil, err
+	}
+
+	// Seccomp BPF program inspects the following packet.
+	//
+	//   struct seccomp_data {
+	//     int   nr;
+	//     __u32 arch;
+	//     __u64 instruction_pointer;
+	//     __u64 args[6];
+	//   };
+	//
+	// See man 2 seccomp for details.
+	program = append([]bpf.Instruction{
+		// Pass through system calls if the 6th argument is backdoorKey.
+		bpf.LoadAbsolute{Off: 4 + 4 + 8 + 8*5, Size: 4},
+		bpf.JumpIf{Cond: bpf.JumpEqual, Val: backdoorKey, SkipFalse: 1},
+		bpf.RetConstant{Val: uint32(seccomp.ActionAllow)},
+	}, program...)
+
+	return program, nil
 }
 
 func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs *ptracearch.Regs) {
@@ -296,7 +333,7 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "stat(%q)", filename)
+		logger.Infof(tid, "slow: stat(%q)", filename)
 		return simulateFstatat(tid, regs, logger, unix.AT_FDCWD, filename, args.Statbuf, unix.AT_SYMLINK_FOLLOW)
 
 	case unix.SYS_LSTAT:
@@ -305,12 +342,12 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "lstat(%q)", filename)
+		logger.Infof(tid, "slow: lstat(%q)", filename)
 		return simulateFstatat(tid, regs, logger, unix.AT_FDCWD, filename, args.Statbuf, unix.AT_SYMLINK_NOFOLLOW)
 
 	case unix.SYS_FSTAT:
 		args := syscallabi.ParseFstatArgs(regs)
-		logger.Infof(tid, "fstat(%d)", args.Fd)
+		logger.Infof(tid, "slow: fstat(%d)", args.Fd)
 		return simulateFstatat(tid, regs, logger, args.Fd, "", args.Statbuf, unix.AT_EMPTY_PATH)
 
 	case unix.SYS_NEWFSTATAT:
@@ -319,7 +356,7 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "newfstatat(%d, %q, %#x)", args.Dfd, filename, args.Flag)
+		logger.Infof(tid, "slow: newfstatat(%d, %q, %#x)", args.Dfd, filename, args.Flag)
 		return simulateFstatat(tid, regs, logger, args.Dfd, filename, args.Statbuf, args.Flag)
 
 	case unix.SYS_STATX:
@@ -328,7 +365,7 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "statx(%d, %q, %#x, %#x)", args.Dfd, filename, args.Flags, args.Mask)
+		logger.Infof(tid, "slow: statx(%d, %q, %#x, %#x)", args.Dfd, filename, args.Flags, args.Mask)
 		return simulateStatx(tid, regs, logger, args.Dfd, filename, args.Flags, args.Mask, args.Buffer)
 
 	case unix.SYS_LISTXATTR:
@@ -337,7 +374,7 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "listxattr(%q, %d)", filename, args.Size)
+		logger.Infof(tid, "slow: listxattr(%q, %d)", filename, args.Size)
 		return simulateListxattr(tid, regs, logger, filename, args.List, args.Size, true)
 
 	case unix.SYS_LLISTXATTR:
@@ -346,12 +383,12 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "llistxattr(%q, %d)", filename, args.Size)
+		logger.Infof(tid, "slow: llistxattr(%q, %d)", filename, args.Size)
 		return simulateListxattr(tid, regs, logger, filename, args.List, args.Size, false)
 
 	case unix.SYS_FLISTXATTR:
 		args := syscallabi.ParseFlistxattrArgs(regs)
-		logger.Infof(tid, "flistxattr(%d, %d)", args.Fd, args.Size)
+		logger.Infof(tid, "slow: flistxattr(%d, %d)", args.Fd, args.Size)
 		return simulateFlistxattr(tid, regs, logger, args.Fd, args.List, args.Size)
 
 	case unix.SYS_CHOWN:
@@ -360,7 +397,7 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "chown(%q, %d, %d)", filename, args.Owner, args.Group)
+		logger.Infof(tid, "slow: chown(%q, %d, %d)", filename, args.Owner, args.Group)
 		return simulateFchownat(tid, regs, logger, unix.AT_FDCWD, filename, args.Owner, args.Group, unix.AT_SYMLINK_FOLLOW)
 
 	case unix.SYS_LCHOWN:
@@ -369,12 +406,12 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "lchown(%q, %d, %d)", filename, args.Owner, args.Group)
+		logger.Infof(tid, "slow: lchown(%q, %d, %d)", filename, args.Owner, args.Group)
 		return simulateFchownat(tid, regs, logger, unix.AT_FDCWD, filename, args.Owner, args.Group, unix.AT_SYMLINK_NOFOLLOW)
 
 	case unix.SYS_FCHOWN:
 		args := syscallabi.ParseFchownArgs(regs)
-		logger.Infof(tid, "fchown(%d, %d, %d)", args.Fd, args.Owner, args.Group)
+		logger.Infof(tid, "slow: fchown(%d, %d, %d)", args.Fd, args.Owner, args.Group)
 		return simulateFchownat(tid, regs, logger, args.Fd, "", args.Owner, args.Group, unix.AT_EMPTY_PATH)
 
 	case unix.SYS_FCHOWNAT:
@@ -383,7 +420,7 @@ func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs
 		if err != nil {
 			return blockSyscall(tid, regs, logger, fmt.Errorf("failed to read filename: %w", err))
 		}
-		logger.Infof(tid, "fchownat(%d, %q, %d, %d, %#x)", args.Dfd, filename, args.User, args.Group, args.Flag)
+		logger.Infof(tid, "slow: fchownat(%d, %q, %d, %d, %#x)", args.Dfd, filename, args.User, args.Group, args.Flag)
 		return simulateFchownat(tid, regs, logger, args.Dfd, filename, args.User, args.Group, args.Flag)
 
 	default:

@@ -6,7 +6,6 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/cmd/fakefs",
     visibility = ["//visibility:private"],
     deps = [
-        "//bazel/ebuild/private/cmd/fakefs/logging",
         "//bazel/ebuild/private/cmd/fakefs/tracee",
         "//bazel/ebuild/private/cmd/fakefs/tracer",
         "@com_github_urfave_cli_v2//:cli",
@@ -29,4 +28,10 @@ go_test(
     deps = [
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
     ],
+)
+
+alias(
+    name = "fakefs_preload",
+    actual = "//bazel/ebuild/private/cmd/fakefs/preload:fakefs_preload",
+    visibility = ["//visibility:public"],
 )

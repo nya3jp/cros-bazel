@@ -17,7 +17,14 @@ import (
 	"cros.local/bazel/ebuild/private/cmd/fakefs/ptracearch"
 )
 
-func startTracee(args []string) (pid int, err error) {
+func startTracee(args []string, preloadPath string, verbose bool) (pid int, err error) {
+	// Ensure the preload library exists first.
+	if preloadPath != "" {
+		if _, err := os.Stat(preloadPath); err != nil {
+			return 0, err
+		}
+	}
+
 	// Don't use args[0] as the command path as callers (such as Portage!)
 	// might have set some fancy strings.
 	exe, err := os.Executable()
@@ -29,6 +36,13 @@ func startTracee(args []string) (pid int, err error) {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	if preloadPath != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("LD_PRELOAD=%s", preloadPath))
+	}
+	if verbose {
+		cmd.Env = append(cmd.Env, "FAKEFS_VERBOSE=1")
+	}
 	if err := cmd.Start(); err != nil {
 		return 0, err
 	}
@@ -103,6 +117,7 @@ func waitNextStop(rootPid int, index *threadStateIndex, logger *logging.Logger) 
 			// If this is the last thread in the root process, terminate
 			// the tracer itself with the same exit code.
 			if thread.Pid == rootPid && len(index.GetByPid(rootPid)) == 0 {
+				logger.PrintStats()
 				os.Exit(exitCode(ws))
 			}
 			continue
@@ -152,6 +167,7 @@ func processStop(thread *threadState, ws unix.WaitStatus, index *threadStateInde
 		switch trapCause {
 		case unix.PTRACE_EVENT_SECCOMP:
 			// syscall-entry-stop.
+			logger.RecordIntercept()
 			var regs ptracearch.Regs
 			if err := ptracearch.GetRegs(thread.Tid, &regs); err != nil {
 				return continueActionIgnore, nil
@@ -206,8 +222,10 @@ func processStop(thread *threadState, ws unix.WaitStatus, index *threadStateInde
 	return continueActionInject, nil
 }
 
-func Run(origArgs []string, logger *logging.Logger) error {
-	rootPid, err := startTracee(origArgs)
+func Run(origArgs, args []string, preloadPath string, verbose bool) error {
+	logger := logging.NewLogger(verbose, args)
+
+	rootPid, err := startTracee(origArgs, preloadPath, verbose)
 	if err != nil {
 		return err
 	}

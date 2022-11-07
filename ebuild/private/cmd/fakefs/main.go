@@ -11,7 +11,6 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"cros.local/bazel/ebuild/private/cmd/fakefs/logging"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/tracee"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/tracer"
 )
@@ -26,6 +25,11 @@ var flagVerbose = &cli.BoolFlag{
 	Name:    "verbose",
 	Aliases: []string{"v"},
 	Usage:   "enable verbose logging",
+}
+
+var flagPreload = &cli.StringFlag{
+	Name:  "preload",
+	Usage: "shared library to be added to LD_PRELOAD",
 }
 
 var flagCompatS = &cli.StringFlag{
@@ -44,20 +48,23 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagTracee,
 		flagVerbose,
+		flagPreload,
 		flagCompatS,
 		flagCompatI,
 	},
 	Action: func(c *cli.Context) error {
 		runTracee := c.Bool(flagTracee.Name)
+		preloadPath := c.String(flagPreload.Name)
 		verbose := c.Bool(flagVerbose.Name)
-		if c.Args().Len() == 0 {
+		args := c.Args().Slice()
+		if len(args) == 0 {
 			cli.ShowAppHelpAndExit(c, 1)
 		}
 
 		if runTracee {
-			return tracee.Run(c.Args().Slice())
+			return tracee.Run(args)
 		}
-		return tracer.Run(os.Args, logging.NewLogger(verbose))
+		return tracer.Run(os.Args, args, preloadPath, verbose)
 	},
 }
 

@@ -15,6 +15,7 @@ pkg_tar(
         "//bazel/sdk/mnt/host/source/src/platform2/common-mk",
         "//bazel/sdk/run/lock",
         "//bazel/sdk/usr/bin",
+        "//bazel/sdk/usr/lib64",
         "//bazel/sdk/usr/local/bin",
     ],
     extension = "tar.gz",
