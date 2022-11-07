@@ -27,7 +27,6 @@ const ebuildExt = ".ebuild"
 
 var manuallyCreatedBuildFiles = map[string]struct{}{
 	"chromeos-fonts": {},
-	"chrome-icu":     {},
 }
 
 var overlayRelDirs = []string{
