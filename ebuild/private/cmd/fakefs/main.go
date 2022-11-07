@@ -11,7 +11,6 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"cros.local/bazel/ebuild/private/cmd/fakefs/hooks"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/logging"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/tracee"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/tracer"
@@ -55,12 +54,10 @@ var app = &cli.App{
 			cli.ShowAppHelpAndExit(c, 1)
 		}
 
-		hook := hooks.New()
-
 		if runTracee {
-			return tracee.Run(c.Args().Slice(), hook)
+			return tracee.Run(c.Args().Slice())
 		}
-		return tracer.Run(os.Args, hook, logging.NewLogger(verbose))
+		return tracer.Run(os.Args, logging.NewLogger(verbose))
 	},
 }
 

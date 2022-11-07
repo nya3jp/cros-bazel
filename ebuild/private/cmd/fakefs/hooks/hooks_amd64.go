@@ -18,8 +18,6 @@ import (
 	"cros.local/bazel/ebuild/private/cmd/fakefs/logging"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/ptracearch"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/syscallabi"
-	"cros.local/bazel/ebuild/private/cmd/fakefs/tracee"
-	"cros.local/bazel/ebuild/private/cmd/fakefs/tracer"
 )
 
 func readCString(tid int, ptr uintptr) (string, error) {
@@ -270,12 +268,7 @@ func simulateFchownat(tid int, regs *ptracearch.Regs, logger *logging.Logger, df
 	}())
 }
 
-type Hook struct{}
-
-var _ tracee.Hook = Hook{}
-var _ tracer.Hook = Hook{}
-
-func (Hook) SyscallList() []int {
+func SyscallList() []int {
 	return []int{
 		// stat
 		unix.SYS_STAT,
@@ -295,7 +288,7 @@ func (Hook) SyscallList() []int {
 	}
 }
 
-func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs *ptracearch.Regs) {
+func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs *ptracearch.Regs) {
 	switch regs.Orig_rax {
 	case unix.SYS_STAT:
 		args := syscallabi.ParseStatArgs(regs)
@@ -396,8 +389,4 @@ func (Hook) Syscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func
 	default:
 		return nil
 	}
-}
-
-func New() Hook {
-	return Hook{}
 }

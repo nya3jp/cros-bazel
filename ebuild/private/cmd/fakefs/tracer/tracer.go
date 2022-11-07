@@ -12,13 +12,10 @@ import (
 
 	"golang.org/x/sys/unix"
 
+	"cros.local/bazel/ebuild/private/cmd/fakefs/hooks"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/logging"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/ptracearch"
 )
-
-type Hook interface {
-	Syscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs *ptracearch.Regs)
-}
 
 func startTracee(args []string) (pid int, err error) {
 	// Don't use args[0] as the command path as callers (such as Portage!)
@@ -130,7 +127,7 @@ const (
 )
 
 // processStop processes a thread in a ptrace-stop state.
-func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *threadStateIndex, logger *logging.Logger) (continueAction, error) {
+func processStop(thread *threadState, ws unix.WaitStatus, index *threadStateIndex, logger *logging.Logger) (continueAction, error) {
 	stopSignal := ws.StopSignal()
 
 	if stopSignal == unix.SIGTRAP|0x80 {
@@ -160,7 +157,7 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 				return continueActionIgnore, nil
 			}
 
-			thread.SyscallExitHook = hook.Syscall(thread.Tid, &regs, logger)
+			thread.SyscallExitHook = hooks.OnSyscall(thread.Tid, &regs, logger)
 			if thread.SyscallExitHook == nil {
 				return continueActionIgnore, nil
 			}
@@ -209,7 +206,7 @@ func processStop(thread *threadState, ws unix.WaitStatus, hook Hook, index *thre
 	return continueActionInject, nil
 }
 
-func Run(origArgs []string, hook Hook, logger *logging.Logger) error {
+func Run(origArgs []string, logger *logging.Logger) error {
 	rootPid, err := startTracee(origArgs)
 	if err != nil {
 		return err
@@ -223,7 +220,7 @@ func Run(origArgs []string, hook Hook, logger *logging.Logger) error {
 			return err
 		}
 
-		action, err := processStop(thread, ws, hook, index, logger)
+		action, err := processStop(thread, ws, index, logger)
 		if err != nil {
 			return err
 		}

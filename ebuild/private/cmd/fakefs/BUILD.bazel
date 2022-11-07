@@ -6,7 +6,6 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/cmd/fakefs",
     visibility = ["//visibility:private"],
     deps = [
-        "//bazel/ebuild/private/cmd/fakefs/hooks",
         "//bazel/ebuild/private/cmd/fakefs/logging",
         "//bazel/ebuild/private/cmd/fakefs/tracee",
         "//bazel/ebuild/private/cmd/fakefs/tracer",

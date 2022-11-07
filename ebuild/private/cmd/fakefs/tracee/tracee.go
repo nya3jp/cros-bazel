@@ -11,16 +11,13 @@ import (
 	seccomp "github.com/elastic/go-seccomp-bpf"
 	"golang.org/x/sys/unix"
 
+	"cros.local/bazel/ebuild/private/cmd/fakefs/hooks"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/syscallabi"
 )
 
-type Hook interface {
-	SyscallList() []int
-}
-
-func Run(args []string, hook Hook) error {
+func Run(args []string) error {
 	var names []string
-	for _, nr := range hook.SyscallList() {
+	for _, nr := range hooks.SyscallList() {
 		names = append(names, syscallabi.Name(nr))
 	}
 

@@ -11,8 +11,6 @@ go_library(
             "//bazel/ebuild/private/cmd/fakefs/logging",
             "//bazel/ebuild/private/cmd/fakefs/ptracearch",
             "//bazel/ebuild/private/cmd/fakefs/syscallabi",
-            "//bazel/ebuild/private/cmd/fakefs/tracee",
-            "//bazel/ebuild/private/cmd/fakefs/tracer",
             "@org_golang_x_sys//unix",
         ],
         "//conditions:default": [],
