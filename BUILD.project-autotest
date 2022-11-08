@@ -11,6 +11,7 @@ ebuild_src(
         "bin/**",
         "BLUETOOTH_OWNERS",
         "cli/**",
+        "client/**",
         "common.py",
         "contrib/**",
         "CTS_OWNERS",

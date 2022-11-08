@@ -823,6 +823,7 @@
       "//third_party/chromiumos-overlay/app-accessibility/espeak-ng:0",
       "//third_party/chromiumos-overlay/app-accessibility/googletts:0",
       "//third_party/chromiumos-overlay/app-misc/edid-decode:0",
+      "//third_party/chromiumos-overlay/chromeos-base/autotest:0",
       "//third_party/chromiumos-overlay/chromeos-base/chrome-icu:0",
       "//third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0",
       "//third_party/chromiumos-overlay/chromeos-base/gestures:0",
