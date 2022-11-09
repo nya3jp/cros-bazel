@@ -97,6 +97,9 @@ def _sdk_update_impl(ctx):
         execution_requirements = {
             # Send SIGTERM instead of SIGKILL on user interruption.
             "supports-graceful-termination": "",
+            # Disable sandbox to avoid creating a symlink forest.
+            # This does not affect hermeticity since sdk_update runs in a container.
+            "no-sandbox": "",
         },
         mnemonic = "SdkUpdate",
         progress_message = "Updating SDK",
@@ -110,7 +113,7 @@ def _sdk_update_impl(ctx):
         ),
     ]
 
-_sdk_update = rule(
+sdk_update = rule(
     implementation = _sdk_update_impl,
     attrs = {
         "base": attr.label(
@@ -137,9 +140,3 @@ _sdk_update = rule(
         ),
     },
 )
-
-def sdk_update(*, tags=[], **kwargs):
-    # Disable sandbox to avoid creating a symlink forest.
-    # This does not affect hermeticity since sdk_update runs in a container.
-    tags = ["no-sandbox"] + tags
-    _sdk_update(tags=tags, **kwargs)
