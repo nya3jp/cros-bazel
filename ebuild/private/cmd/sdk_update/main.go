@@ -7,7 +7,6 @@ package main
 import (
 	_ "embed"
 	"errors"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -182,7 +181,7 @@ var app = &cli.App{
 		// Some of the folders in the overlayfs workdir have 000 permissions.
 		// We need to grant rw permissions to the directories so `os.RemoveAll`
 		// doesn't fail.
-		if err := removeAllWithChmod(tmpDir); err != nil {
+		if err := fileutil.RemoveAllWithChmod(tmpDir); err != nil {
 			return err
 		}
 
@@ -198,7 +197,7 @@ var app = &cli.App{
 			"var/cache",
 		} {
 			path := filepath.Join(outputDirPath, exclude)
-			if err := removeAllWithChmod(path); err != nil {
+			if err := fileutil.RemoveAllWithChmod(path); err != nil {
 				return err
 			}
 		}
@@ -241,39 +240,6 @@ func moveDiffDir(diffDir string, outputPath string) error {
 	}
 
 	return nil
-}
-
-// removeAllWithChmod calls os.RemoveAll after ensuring we have o+rwx to each
-// directory.
-func removeAllWithChmod(path string) error {
-	if err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() {
-			return nil
-		}
-
-		fileInfo, err := info.Info()
-		if err != nil {
-			return err
-		}
-
-		if fileInfo.Mode().Perm()&0700 == 0700 {
-			return nil
-		}
-
-		if err := os.Chmod(path, 0700); err != nil {
-			return err
-		}
-
-		return nil
-	}); err != nil {
-		return err
-	}
-
-	return os.RemoveAll(path)
 }
 
 func main() {

@@ -9,6 +9,7 @@ go_library(
     srcs = [
         "copy.go",
         "dualpath.go",
+        "remove.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/common/fileutil",
     visibility = ["//visibility:public"],
