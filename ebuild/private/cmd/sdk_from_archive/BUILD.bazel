@@ -10,6 +10,7 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/cmd/sdk_from_archive",
     visibility = ["//visibility:private"],
     deps = [
+        "//bazel/ebuild/private/common/cliutil",
         "//bazel/ebuild/private/common/symindex",
         "@com_github_urfave_cli_v2//:cli",
     ],

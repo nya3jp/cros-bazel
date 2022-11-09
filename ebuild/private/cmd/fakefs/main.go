@@ -5,7 +5,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"runtime"
 
@@ -13,6 +12,7 @@ import (
 
 	"cros.local/bazel/ebuild/private/cmd/fakefs/tracee"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/tracer"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 )
 
 var flagTracee = &cli.BoolFlag{
@@ -71,8 +71,5 @@ var app = &cli.App{
 func main() {
 	// Lock the main thread to avoid confusing ptrace(2).
 	runtime.LockOSThread()
-
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("FATAL: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }

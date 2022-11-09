@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//bazel/ebuild/private/cmd/fakefs/tracee",
         "//bazel/ebuild/private/cmd/fakefs/tracer",
+        "//bazel/ebuild/private/common/cliutil",
         "@com_github_urfave_cli_v2//:cli",
     ],
 )

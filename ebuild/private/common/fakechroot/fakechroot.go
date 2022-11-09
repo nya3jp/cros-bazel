@@ -20,6 +20,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 )
 
 const rootDirEnvName = "FAKECHROOT_ROOT_DIR"
@@ -67,9 +68,9 @@ func enterNamespace() error {
 			// We're going to exit, deferred calls will not run.
 			os.RemoveAll(newRootDir)
 			if status.Signaled() {
-				os.Exit(int(status.Signal()) + 128)
+				return cliutil.ExitCode(int(status.Signal()) + 128)
 			}
-			os.Exit(status.ExitStatus())
+			return cliutil.ExitCode(status.ExitStatus())
 		}
 	}
 	return fmt.Errorf("fork: %w", err)
@@ -164,10 +165,8 @@ func continueNamespace(newRootDir string) error {
 // file paths on the system, e.g. Bazel runfiles.
 //
 // This function internally re-executes the current executable as a subprocess
-// to enter new namespaces. It calls os.Exit when a subprocess exits, which
-// means that the process exits without running deferred functions calls.
-// To avoid leaking deferred function calls, call this function very early in
-// your program before needing to clean something up.
+// to enter new namespaces. Call this function very early in your program before
+// allocating significant amount of resources.
 func Enter() error {
 	if _, err := os.Stat("/etc/cros_chroot_version"); err == nil {
 		return errors.New("this program must run outside CrOS chroot")

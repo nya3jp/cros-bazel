@@ -19,6 +19,7 @@ import (
 
 	"cros.local/bazel/ebuild/cmd/update_build/distfiles"
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/commonflags"
 	"cros.local/bazel/ebuild/private/common/depdata"
 )
@@ -384,7 +385,5 @@ var app = &cli.App{
 }
 
 func main() {
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("ERROR: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }

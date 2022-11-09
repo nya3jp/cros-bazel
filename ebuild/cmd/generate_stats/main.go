@@ -16,6 +16,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/commonflags"
 	"cros.local/bazel/ebuild/private/common/depdata"
 )
@@ -116,7 +117,5 @@ var app = &cli.App{
 }
 
 func main() {
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("ERROR: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }

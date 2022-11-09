@@ -6,12 +6,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 
 	"github.com/urfave/cli/v2"
 
+	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/symindex"
 )
 
@@ -64,7 +64,5 @@ var app = &cli.App{
 }
 
 func main() {
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("ERROR: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }

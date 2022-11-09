@@ -12,6 +12,7 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//bazel/ebuild/private/common/bazelutil",
+        "//bazel/ebuild/private/common/cliutil",
         "//bazel/ebuild/private/common/fileutil",
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/symindex",

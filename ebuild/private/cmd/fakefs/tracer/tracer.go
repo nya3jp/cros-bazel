@@ -15,6 +15,7 @@ import (
 	"cros.local/bazel/ebuild/private/cmd/fakefs/hooks"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/logging"
 	"cros.local/bazel/ebuild/private/cmd/fakefs/ptracearch"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 )
 
 func startTracee(args []string, preloadPath string, verbose bool) (pid int, err error) {
@@ -84,7 +85,7 @@ func startTracee(args []string, preloadPath string, verbose bool) (pid int, err 
 }
 
 // waitNextStop waits for a next ptrace-stop event of any traced thread.
-// It calls os.Exit directly if the last thread of rootPid exits.
+// It returns cliutil.ExitCode if the last thread of rootPid exits.
 func waitNextStop(rootPid int, index *threadStateIndex, logger *logging.Logger) (*threadState, unix.WaitStatus, error) {
 	for {
 		var ws unix.WaitStatus
@@ -118,7 +119,7 @@ func waitNextStop(rootPid int, index *threadStateIndex, logger *logging.Logger) 
 			// the tracer itself with the same exit code.
 			if thread.Pid == rootPid && len(index.GetByPid(rootPid)) == 0 {
 				logger.PrintStats()
-				os.Exit(exitCode(ws))
+				return nil, 0, cliutil.ExitCode(exitCode(ws))
 			}
 			continue
 		}

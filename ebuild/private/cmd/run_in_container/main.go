@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,6 +21,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/symindex"
 	"cros.local/bazel/ebuild/private/common/tar"
 )
@@ -250,9 +250,9 @@ func enterNamespace(c *cli.Context) error {
 	if cmd.ProcessState != nil {
 		if status, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
 			if status.Signaled() {
-				os.Exit(int(status.Signal()) + 128)
+				return cliutil.ExitCode(int(status.Signal()) + 128)
 			}
-			os.Exit(status.ExitStatus())
+			return cliutil.ExitCode(status.ExitStatus())
 		}
 	}
 	return fmt.Errorf("fork: %w", err)
@@ -460,8 +460,5 @@ func continueNamespace(c *cli.Context) error {
 
 func main() {
 	bazelutil.FixRunfilesEnv()
-
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("ERROR: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 	"cros.local/bazel/ebuild/private/common/standard/version"
@@ -344,7 +345,7 @@ var app = &cli.App{
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
 			if err, ok := err.(*exec.ExitError); ok {
-				os.Exit(err.ExitCode())
+				return cliutil.ExitCode(err.ExitCode())
 			}
 			return err
 		}
@@ -365,8 +366,5 @@ var app = &cli.App{
 
 func main() {
 	bazelutil.FixRunfilesEnv()
-
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("ERROR: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }

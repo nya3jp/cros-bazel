@@ -15,6 +15,8 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v2"
+
+	"cros.local/bazel/ebuild/private/common/cliutil"
 )
 
 var flagOutput = &cli.StringFlag{
@@ -149,7 +151,5 @@ func processFile(w *tar.Writer, spec string) error {
 }
 
 func main() {
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("ERROR: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }

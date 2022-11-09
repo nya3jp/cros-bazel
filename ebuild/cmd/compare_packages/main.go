@@ -26,6 +26,7 @@ import (
 	"cros.local/bazel/ebuild/cmd/compare_packages/equery"
 	"cros.local/bazel/ebuild/cmd/compare_packages/golden"
 	"cros.local/bazel/ebuild/private/common/bazelutil"
+	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/fakechroot"
 	"cros.local/bazel/ebuild/private/common/portage"
 	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
@@ -302,7 +303,5 @@ var app = &cli.App{
 }
 
 func main() {
-	if err := app.Run(os.Args); err != nil {
-		log.Fatalf("ERROR: %v", err)
-	}
+	cliutil.Exit(app.Run(os.Args))
 }
