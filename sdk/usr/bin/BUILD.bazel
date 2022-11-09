@@ -6,13 +6,31 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 
 pkg_files(
     name = "bin",
+    srcs = [
+        "//bazel/ebuild/private/cmd/fakefs",
+        # Intentionally depend on the .py file instead of the library to avoid
+        # including stuff like the python runtime.
+        "fake_sudo.py",
+    ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "usr/bin",
-    srcs = ["//bazel/ebuild/private/cmd/fakefs"],
     renames = {
         "//bazel/ebuild/private/cmd/fakefs": "fakeroot",
+        "fake_sudo.py": "sudo",
     },
     visibility = ["//bazel/sdk:__subpackages__"],
+)
+
+py_library(
+    name = "fake_sudo",
+    srcs = ["fake_sudo.py"],
+)
+
+py_test(
+    name = "fake_sudo_test",
+    size = "small",
+    srcs = ["fake_sudo_test.py"],
+    deps = [":fake_sudo"],
 )
