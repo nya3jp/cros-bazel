@@ -5,18 +5,21 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
 
 	"github.com/alessio/shellescape"
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/cliutil"
@@ -204,6 +207,11 @@ var app = &cli.App{
 		flagLogin,
 	},
 	Action: func(c *cli.Context) error {
+		// We need "supports-graceful-termination" execution requirement in the
+		// build action to let Bazel send SIGTERM instead of SIGKILL.
+		ctx, cancel := signal.NotifyContext(context.Background(), unix.SIGINT, unix.SIGTERM)
+		defer cancel()
+
 		originalEBuildPath := c.String(flagEBuild.Name)
 		board := c.String(flagBoard.Name)
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
@@ -330,7 +338,7 @@ var app = &cli.App{
 		if !login {
 			args = append(args, "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
 		}
-		cmd := exec.Command(args[0], args[1:]...)
+		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 		cmd.Env = append(
 			os.Environ(),
 			"PATH=/usr/sbin:/usr/bin:/sbin:/bin",

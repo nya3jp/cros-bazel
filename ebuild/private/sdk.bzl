@@ -94,6 +94,10 @@ def _sdk_update_impl(ctx):
         outputs = outputs,
         executable = ctx.executable._sdk_update,
         arguments = [args],
+        execution_requirements = {
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+        },
         mnemonic = "SdkUpdate",
         progress_message = "Updating SDK",
     )

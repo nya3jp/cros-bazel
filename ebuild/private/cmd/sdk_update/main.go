@@ -5,10 +5,12 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"errors"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
 
@@ -78,6 +80,11 @@ var app = &cli.App{
 		flagInstallTarball,
 	},
 	Action: func(c *cli.Context) error {
+		// We need "supports-graceful-termination" execution requirement in the
+		// build action to let Bazel send SIGTERM instead of SIGKILL.
+		ctx, cancel := signal.NotifyContext(context.Background(), unix.SIGINT, unix.SIGTERM)
+		defer cancel()
+
 		inputPaths := c.StringSlice(flagInput.Name)
 		outputDirPath := c.String(flagOutputDir.Name)
 		outputSymindexPath := c.String(flagOutputSymindex.Name)
@@ -159,7 +166,7 @@ var app = &cli.App{
 
 		args = append(args, scriptPath.Inside())
 
-		cmd := exec.Command(args[0], args[1:]...)
+		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 		cmd.Env = append(
 			os.Environ(),
 			"PATH=/usr/sbin:/usr/bin:/sbin:/bin",

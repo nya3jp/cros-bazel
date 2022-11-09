@@ -140,6 +140,10 @@ def _ebuild_impl(ctx):
         outputs = [output],
         executable = ctx.executable._build_package,
         arguments = [args],
+        execution_requirements = {
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+        },
         mnemonic = "Ebuild",
         progress_message = "Building " + ctx.file.ebuild.basename,
     )
