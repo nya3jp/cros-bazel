@@ -28,7 +28,6 @@ exec 3> ./bazel/.bazelrc-BUILD-ignore
 
 declare -a PACKAGES=()
 
-printf "common --deleted_packages " >&3
 for PROJECT in "${PROJECTS[@]}"; do
 	readarray -t -O "${#PACKAGES[@]}" PACKAGES < <(
 		find "${PROJECT}" -mindepth 2 -name BUILD -or -name BUILD.bazel | \
@@ -36,7 +35,13 @@ for PROJECT in "${PROJECTS[@]}"; do
 	)
 done
 
-(
-	IFS=","
-	echo "${PACKAGES[*]}"
-) >&3
+
+for cmd in build query
+do
+	printf "${cmd} --deleted_packages " >&3
+
+	(
+		IFS=","
+		echo "${PACKAGES[*]}"
+	) >&3
+done
