@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 // Maximize glibc compatibility.
-// TODO: Compile this code with CrOS SDK.
+// TODO: Compile this code with CrOS SDK and get rid of this hack.
 __asm__(".symver __errno_location,__errno_location@GLIBC_2.2.5");
 __asm__(".symver dlsym,dlsym@GLIBC_2.2.5");
 __asm__(".symver fgetxattr,fgetxattr@GLIBC_2.3");
@@ -72,8 +72,8 @@ static bool fd_has_no_override(int fd) {
   return result;
 }
 
-static int backdoor_fstatat(int dirfd, const char* pathname,
-                            struct stat* statbuf, int flags) {
+static int backdoor_fstatat(int dirfd, const char* pathname, void* statbuf,
+                            int flags) {
   if (g_verbose) {
     fprintf(stderr, "[fakefs %d] fast: fstatat(%d, \"%s\", 0x%x)\n", gettid(),
             dirfd, pathname, flags);
@@ -100,7 +100,7 @@ static int backdoor_statx(int dirfd, const char* pathname, int flags,
   return ret;
 }
 
-static int wrap_fstatat(int dirfd, const char* pathname, struct stat* statbuf,
+static int wrap_fstatat(int dirfd, const char* pathname, void* statbuf,
                         int flags) {
   if (pathname == NULL || statbuf == NULL) {
     errno = EFAULT;
@@ -123,7 +123,7 @@ static int wrap_fstatat(int dirfd, const char* pathname, struct stat* statbuf,
 }
 
 static int wrap_statx(int dirfd, const char* pathname, int flags,
-                      unsigned int mask, struct statx* statxbuf) {
+                      unsigned int mask, void* statxbuf) {
   if (pathname == NULL || statxbuf == NULL) {
     errno = EFAULT;
     return -1;

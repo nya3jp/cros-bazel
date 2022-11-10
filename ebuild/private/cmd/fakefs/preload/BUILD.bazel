@@ -11,6 +11,7 @@ cc_binary(
     ],
     linkopts = [
         # Force linking to shared objects even if there are static archives.
+        # TODO: Compile this code with CrOS SDK and get rid of this hack.
         "-l:libdl.so.2",
         "-l:libpthread.so.0",
     ],

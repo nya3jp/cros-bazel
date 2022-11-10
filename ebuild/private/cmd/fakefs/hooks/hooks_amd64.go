@@ -273,6 +273,25 @@ func simulateFchownat(tid int, regs *ptracearch.Regs, logger *logging.Logger, df
 }
 
 func SeccompBPF() ([]bpf.Instruction, error) {
+	// Seccomp BPF program inspects the following packet.
+	//
+	//   struct seccomp_data {
+	//     int   nr;
+	//     __u32 arch;
+	//     __u64 instruction_pointer;
+	//     __u64 args[6];
+	//   };
+	//
+	// See man 2 seccomp for details.
+	backdoorProgram := []bpf.Instruction{
+		// Pass through system calls if the 6th argument is backdoorKey.
+		// We don't bother to check arch and __X32_SYSCALL_BIT because it's
+		// about passing through syscalls regardless of the syscall number.
+		bpf.LoadAbsolute{Off: 4 + 4 + 8 + 8*5, Size: 4},
+		bpf.JumpIf{Cond: bpf.JumpEqual, Val: backdoorKey, SkipFalse: 1},
+		bpf.RetConstant{Val: uint32(seccomp.ActionAllow)},
+	}
+
 	// TODO: Drop the dependency to go-seccomp-bpf and construct BPF program
 	// by ourselves. The library is not very useful when we need non-trivial
 	// BPF programs.
@@ -300,29 +319,12 @@ func SeccompBPF() ([]bpf.Instruction, error) {
 		}},
 	}
 
-	program, err := policy.Assemble()
+	traceProgram, err := policy.Assemble()
 	if err != nil {
 		return nil, err
 	}
 
-	// Seccomp BPF program inspects the following packet.
-	//
-	//   struct seccomp_data {
-	//     int   nr;
-	//     __u32 arch;
-	//     __u64 instruction_pointer;
-	//     __u64 args[6];
-	//   };
-	//
-	// See man 2 seccomp for details.
-	program = append([]bpf.Instruction{
-		// Pass through system calls if the 6th argument is backdoorKey.
-		bpf.LoadAbsolute{Off: 4 + 4 + 8 + 8*5, Size: 4},
-		bpf.JumpIf{Cond: bpf.JumpEqual, Val: backdoorKey, SkipFalse: 1},
-		bpf.RetConstant{Val: uint32(seccomp.ActionAllow)},
-	}, program...)
-
-	return program, nil
+	return append(backdoorProgram, traceProgram...), nil
 }
 
 func OnSyscall(tid int, regs *ptracearch.Regs, logger *logging.Logger) func(regs *ptracearch.Regs) {
