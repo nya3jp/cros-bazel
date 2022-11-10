@@ -194,6 +194,7 @@ var app = &cli.App{
 
 		for _, exclude := range []string{
 			filepath.Join("build", board, "tmp"),
+			filepath.Join("build", board, "var/cache"),
 			hostPackagesDir.Inside(),
 			targetPackagesDir.Inside(),
 			"run",
