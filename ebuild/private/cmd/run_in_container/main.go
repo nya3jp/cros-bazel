@@ -445,6 +445,13 @@ func continueNamespace(c *cli.Context) error {
 		}
 	}
 
+	// These are absolute paths that are no longer valid after we pivot.
+	for _, envVarName := range []string{"RUNFILES_DIR", "RUNFILES_MANIFEST_FILE"} {
+		if err := os.Unsetenv(envVarName); err != nil {
+			return fmt.Errorf("Failed to unset %s: %w", envVarName, err)
+		}
+	}
+
 	// Proceed to run the user command.
 	if err := os.Chdir(chdir); err != nil {
 		return fmt.Errorf("chdir: %w", err)
