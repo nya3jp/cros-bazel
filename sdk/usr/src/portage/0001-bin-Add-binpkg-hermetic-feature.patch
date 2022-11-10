@@ -1,0 +1,157 @@
+From 2d9f7f9cabe5308e8f732e19649668fa3eb4ccf2 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Wed, 9 Nov 2022 14:44:32 -0700
+Subject: [PATCH 1/2] bin: Add binpkg-hermetic feature
+
+This feature will strip all timestamps from the binpkg resulting in
+a hermetic build.
+
+BUG=none
+TEST=emerge libftdi twice and compare the binpkgs
+
+Change-Id: Ie88deacdbfc006705c973a9c1cdf726cb5bba514
+---
+ bin/misc-functions.sh                  | 23 ++++++++++++++++++++++-
+ bin/phase-functions.sh                 |  7 ++++++-
+ bin/save-ebuild-env.sh                 |  7 +++++++
+ lib/portage/const.py                   |  1 +
+ lib/portage/dbapi/vartree.py           |  3 +++
+ lib/portage/package/ebuild/doebuild.py |  5 ++++-
+ 6 files changed, 43 insertions(+), 3 deletions(-)
+
+diff --git a/usr/lib64/portage/python3.6/misc-functions.sh b/usr/lib64/portage/python3.6/misc-functions.sh
+index 3df7df653..ddbe92c87 100755
+--- a/usr/lib64/portage/python3.6/misc-functions.sh
++++ b/usr/lib64/portage/python3.6/misc-functions.sh
+@@ -187,6 +187,16 @@ install_qa_check() {
+ 			echo "${arch:3};${obj};${soname};${rpath};${needed}" >> "${PORTAGE_BUILDDIR}"/build-info/NEEDED.ELF.2
+ 		done }
+ 
++		if has binpkg-hermetic ${FEATURES}; then
++			local needed
++			for needed in "$PORTAGE_BUILDDIR"/build-info/NEEDED{,.ELF.2}
++			do
++				if [[ -f "${needed}" ]]; then
++					sort -o "${needed}" "${needed}"
++				fi
++			done
++		fi
++
+ 		[ -n "${QA_SONAME_NO_SYMLINK}" ] && \
+ 			echo "${QA_SONAME_NO_SYMLINK}" > \
+ 			"${PORTAGE_BUILDDIR}"/build-info/QA_SONAME_NO_SYMLINK
+@@ -456,6 +466,17 @@ __dyn_package() {
+ 	local tar_options=""
+ 	[[ $PORTAGE_VERBOSE = 1 ]] && tar_options+=" -v"
+ 	has xattr ${FEATURES} && [[ $(tar --help 2> /dev/null) == *--xattrs* ]] && tar_options+=" --xattrs"
++
++	# See https://reproducible-builds.org/docs/archives/
++	local -a hermetic_args=()
++	if has binpkg-hermetic ${FEATURES}; then
++		hermetic_args+=(
++			"--format=pax"
++			"--sort=name"
++			"--mtime=1970-01-01 00:00:00"
++			"--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime"
++		)
++	fi
+ 	# Sandbox is disabled in case the user wants to use a symlink
+ 	# for $PKGDIR and/or $PKGDIR/All.
+ 	export SANDBOX_ON="0"
+@@ -475,7 +496,7 @@ __dyn_package() {
+ 
+ 	[ -z "${PORTAGE_COMPRESSION_COMMAND}" ] && \
+         die "PORTAGE_COMPRESSION_COMMAND is unset"
+-	tar $tar_options -cf - $PORTAGE_BINPKG_TAR_OPTS -C "${D}" . | \
++	tar $tar_options "${hermetic_args[@]}" -cf - $PORTAGE_BINPKG_TAR_OPTS -C "${D}" . | \
+ 		$PORTAGE_COMPRESSION_COMMAND > "$PORTAGE_BINPKG_TMPFILE"
+ 	assert "failed to pack binary package: '$PORTAGE_BINPKG_TMPFILE'"
+ 	PYTHONPATH=${PORTAGE_PYTHONPATH:-${PORTAGE_PYM_PATH}} \
+diff --git a/usr/lib64/portage/python3.6/phase-functions.sh b/usr/lib64/portage/python3.6/phase-functions.sh
+index 82daedd08..0a0c3037a 100644
+--- a/usr/lib64/portage/python3.6/phase-functions.sh
++++ b/usr/lib64/portage/python3.6/phase-functions.sh
+@@ -708,7 +708,12 @@ __dyn_install() {
+ 
+ 	# Use safe cwd, avoiding unsafe import for bug #469338.
+ 	cd "${PORTAGE_PYM_PATH}"
+-	__save_ebuild_env --exclude-init-phases | __filter_readonly_variables \
++	local -a exclude_hermetic=()
++	if has binpkg-hermetic ${FEATURES}; then
++		exclude_hermetic+=("--exclude-non-hermetic")
++	fi
++	__save_ebuild_env --exclude-init-phases "${exclude_hermetic[@]}" \
++		| __filter_readonly_variables \
+ 		--filter-path --filter-sandbox --allow-extra-vars > \
+ 		"${PORTAGE_BUILDDIR}"/build-info/environment
+ 	assert "__save_ebuild_env failed"
+diff --git a/usr/lib64/portage/python3.6/save-ebuild-env.sh b/usr/lib64/portage/python3.6/save-ebuild-env.sh
+index cd8602ae0..232b16689 100644
+--- a/usr/lib64/portage/python3.6/save-ebuild-env.sh
++++ b/usr/lib64/portage/python3.6/save-ebuild-env.sh
+@@ -10,6 +10,9 @@
+ # be excluded from the output. These function are not needed for installation
+ # or removal of the packages, and can therefore be safely excluded.
+ #
++# --exclude-non-hermetic causes EPOCHREALTIME EPOCHSECONDS SRANDOM to be
++# excluded from the output.
++#
+ __save_ebuild_env() {
+ 	(
+ 	if has --exclude-init-phases $* ; then
+@@ -26,6 +29,10 @@ __save_ebuild_env() {
+ 		fi
+ 	fi
+ 
++	if has --exclude-non-hermetic $* ; then
++		unset EPOCHREALTIME EPOCHSECONDS SRANDOM
++	fi
++
+ 	# misc variables inherited from the calling environment
+ 	unset COLORTERM DISPLAY EDITOR LESS LESSOPEN LOGNAME LS_COLORS PAGER \
+ 		TERM TERMCAP USER ftp_proxy http_proxy no_proxy
+diff --git a/usr/lib64/python3.6/site-packages/portage/const.py b/usr/lib64/python3.6/site-packages/portage/const.py
+index ac5a3c646..eca983668 100644
+--- a/usr/lib64/python3.6/site-packages/portage/const.py
++++ b/usr/lib64/python3.6/site-packages/portage/const.py
+@@ -127,6 +127,7 @@ SUPPORTED_FEATURES       = frozenset([
+ 	"binpkg-dostrip",
+ 	"binpkg-logs",
+ 	"binpkg-multi-instance",
++	"binpkg-hermetic",
+ 	"buildpkg",
+ 	"buildsyspkg",
+ 	"candy",
+diff --git a/usr/lib64/python3.6/site-packages/portage/dbapi/vartree.py b/usr/lib64/python3.6/site-packages/portage/dbapi/vartree.py
+index d38d8a502..e327c204f 100644
+--- a/usr/lib64/python3.6/site-packages/portage/dbapi/vartree.py
++++ b/usr/lib64/python3.6/site-packages/portage/dbapi/vartree.py
+@@ -4798,6 +4798,9 @@ class dblink(object):
+ 		else:
+ 			mergelist = stufftomerge[:]
+ 
++		if "binpkg-hermetic" in self.settings.features:
++			mergelist.sort()
++
+ 		while mergelist:
+ 
+ 			relative_path = mergelist.pop()
+diff --git a/usr/lib64/python3.6/site-packages/portage/package/ebuild/doebuild.py b/usr/lib64/python3.6/site-packages/portage/package/ebuild/doebuild.py
+index db39caa56..1dbffd3dd 100644
+--- a/usr/lib64/python3.6/site-packages/portage/package/ebuild/doebuild.py
++++ b/usr/lib64/python3.6/site-packages/portage/package/ebuild/doebuild.py
+@@ -1993,7 +1993,10 @@ def _post_src_install_write_metadata(settings):
+ 		'BUILD_TIME'), encoding=_encodings['fs'], errors='strict'),
+ 		mode='w', encoding=_encodings['repo.content'],
+ 		errors='strict') as f:
+-		f.write("%.0f\n" % (time.time(),))
++		if 'binpkg-hermetic' in settings.features:
++			f.write("0\n")
++		else:
++			f.write("%.0f\n" % (time.time(),))
+ 
+ 	use = frozenset(settings['PORTAGE_USE'].split())
+ 	for k in _vdb_use_conditional_keys:
+-- 
+2.38.1.431.g37b22c650d-goog
+
