@@ -24,15 +24,20 @@ pkg_tar(
 
 sdk_from_archive(
     name = "base_sdk",
-    board = "arm64-generic",
     src = "@cros-sdk-2022.08.22.085953//file",
+    board = "arm64-generic",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
+    # Required for testing mountsdk.
+    visibility = ["//bazel/ebuild/private/common/mountsdk:__pkg__"],
 )
 
 sdk_update(
     name = "sdk",
     base = ":base_sdk",
+    extra_tarballs = [
+        ":extra_tarball",
+    ],
     host_deps = [
         "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
         "//bazel/prebuilts/amd64-host:meson-format-array",
@@ -55,9 +60,6 @@ sdk_update(
         "//bazel/prebuilts/arm64-generic/sys-libs:gcc-libs",
         "//bazel/prebuilts/arm64-generic/sys-libs:libcxx",
         "//bazel/prebuilts/arm64-generic/sys-libs:llvm-libunwind",
-    ],
-    extra_tarballs = [
-        ":extra_tarball",
     ],
     visibility = ["//visibility:public"],
 )

@@ -236,7 +236,8 @@ var app = &cli.App{
 }
 
 func enterNamespace(c *cli.Context) error {
-	dumbInitPath, err := bazel.Runfile("external/dumb_init/file/downloaded")
+	// should be dumb_init/file/downloaded after switching to rlocation.
+	dumbInitPath, err := bazel.Runfile("file/downloaded")
 	if err != nil {
 		return err
 	}
