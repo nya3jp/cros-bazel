@@ -13,7 +13,8 @@ common --experimental_enable_bzlmod
 try-import %workspace%/bazel/.bazelrc-BUILD-ignore
 
 # Prevent writing to the remote cache if source files change during the build.
-common --experimental_guard_against_concurrent_changes
+build --experimental_guard_against_concurrent_changes
+query --experimental_guard_against_concurrent_changes
 
 # Aspect-Recommended bazel flags for all projects
 # Docs for these flags: https://bazel.build/reference/command-line-reference
