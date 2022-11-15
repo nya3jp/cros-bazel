@@ -5,6 +5,7 @@ module(name = "chromiumos", version = "0.1")
 bazel_dep(name = "protobuf", version = "3.19.6")
 bazel_dep(name = "rules_foreign_cc", version = "0.9.0")
 bazel_dep(name = "rules_pkg", version = "0.7.0")
+bazel_dep(name = "rules_proto", version = "4.0.0")
 bazel_dep(name = "rules_python", version = "0.4.0")
 bazel_dep(name = "zlib", version = "1.2.13")
 

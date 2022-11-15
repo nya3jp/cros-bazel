@@ -12,6 +12,7 @@ require (
 	github.com/urfave/cli/v2 v2.20.3
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
+	google.golang.org/grpc v1.50.1
 	mvdan.cc/sh/v3 v3.5.1
 )
 

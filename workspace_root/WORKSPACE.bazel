@@ -10,6 +10,15 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 # support, code completion, and cross-references.
 http_archive(name = "intellij_aspect")
 
+load("//bazel/ebuild:repositories.bzl", "rules_ebuild_repositories")
+
+rules_ebuild_repositories()
+
+load("//bazel/ebuild:deps.bzl", "rules_ebuild_dependencies")
+
+# gazelle:repository_macro bazel/ebuild/deps.bzl%rules_ebuild_go_dependencies
+rules_ebuild_dependencies()
+
 load("//bazel/toolchains:toolchain_repositories.bzl", "toolchain_repositories")
 
 toolchain_repositories()
@@ -21,15 +30,6 @@ third_party_repositories()
 load("//bazel/toolchains:register_toolchains.bzl", "load_toolchains")
 
 load_toolchains()
-
-load("//bazel/ebuild:repositories.bzl", "rules_ebuild_repositories")
-
-rules_ebuild_repositories()
-
-load("//bazel/ebuild:deps.bzl", "rules_ebuild_dependencies")
-
-# gazelle:repository_macro bazel/ebuild/deps.bzl%rules_ebuild_go_dependencies
-rules_ebuild_dependencies()
 
 load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
 
