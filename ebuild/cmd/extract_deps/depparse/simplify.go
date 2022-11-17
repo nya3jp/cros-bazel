@@ -40,7 +40,7 @@ func simplifyDeps(deps *dependency.Deps, pkg *packages.Package, resolver *portag
 		return nil, err
 	}
 
-	deps = mergeOverlappedDeps(deps)
+	deps = pickAnyOfDeps(deps)
 
 	deps = dependency.Simplify(deps)
 
@@ -86,142 +86,19 @@ func rewritePackageDeps(deps *dependency.Deps, resolver *portage.Resolver) (*dep
 	})
 }
 
-// mergeOverlappedDeps simplifies deps by merging redundantly overlapped
-// package dependencies.
-//
-// Example:
-//
-//	>=dev-libs/openssl-1.0 >=dev-libs/openssl-1.1  ==>  >=dev-libs/openssl-1.1
-func mergeOverlappedDeps(deps *dependency.Deps) *dependency.Deps {
+// pickAnyOfDeps resolves any-of dependencies by picking the first child.
+func pickAnyOfDeps(deps *dependency.Deps) *dependency.Deps {
 	deps = dependency.Simplify(deps)
 	return dependency.Map(deps, func(expr dependency.Expr) dependency.Expr {
-		var allOf bool
-		var children []dependency.Expr
-		switch expr := expr.(type) {
-		case *dependency.AllOf:
-			allOf = true
-			children = expr.Children()
-		case *dependency.AnyOf:
-			allOf = false
-			children = expr.Children()
-		default:
+		anyOf, ok := expr.(*dependency.AnyOf)
+		if !ok {
 			return expr
 		}
 
-		// First, index atoms by package names.
-		originalsMap := make(map[string][]*dependency.Atom)
-
-		for _, child := range children {
-			pkg, ok := child.(*dependency.Package)
-			if !ok {
-				continue
-			}
-			atom := pkg.Atom()
-			packageName := atom.PackageName()
-			originalsMap[packageName] = append(originalsMap[packageName], atom)
-		}
-
-		// Decide which packages to rewrite.
-		rewriteMap := make(map[string]*dependency.Atom)
-
-		for packageName, atoms := range originalsMap {
-			if len(atoms) <= 1 {
-				continue
-			}
-
-			atom0 := atoms[0]
-			// Handle >= operator only (for now).
-			if atom0.VersionOperator() != dependency.OpGreaterEqual {
-				continue
-			}
-			if atom0.Wildcard() {
-				continue
-			}
-
-			// Find atoms with highest/lowest versions.
-			hi, lo, ok := func() (hi, lo *dependency.Atom, ok bool) {
-				matchExceptVersion := func(atom *dependency.Atom) bool {
-					if atom.VersionOperator() != atom0.VersionOperator() {
-						return false
-					}
-					if atom.Wildcard() != atom0.Wildcard() {
-						return false
-					}
-					if atom.SlotDep() != atom0.SlotDep() {
-						return false
-					}
-					if len(atom.UseDeps()) != len(atom0.UseDeps()) {
-						return false
-					}
-					for i, use0 := range atom0.UseDeps() {
-						use := atom.UseDeps()[i]
-						if use.String() != use0.String() {
-							return false
-						}
-					}
-					return true
-				}
-
-				hi, lo = atom0, atom0
-
-				for _, atom := range atoms {
-					if !matchExceptVersion(atom) {
-						return nil, nil, false
-					}
-					if atom.Version().Compare(hi.Version()) > 0 {
-						hi = atom
-					}
-					if atom.Version().Compare(lo.Version()) < 0 {
-						lo = atom
-					}
-				}
-				return hi, lo, true
-			}()
-			if !ok {
-				continue
-			}
-
-			var rewrite *dependency.Atom
-			if allOf {
-				rewrite = hi
-			} else {
-				rewrite = lo
-			}
-			rewriteMap[packageName] = rewrite
-		}
-
-		// Return early if there is no package to rewrite.
-		if len(rewriteMap) == 0 {
+		children := anyOf.Children()
+		if len(children) == 0 {
 			return expr
 		}
-
-		// Perform actual rewrites.
-		var newChildren []dependency.Expr
-		for _, child := range children {
-			pkg, ok := child.(*dependency.Package)
-			if !ok {
-				newChildren = append(newChildren, child)
-				continue
-			}
-
-			packageName := pkg.Atom().PackageName()
-			rewrite, ok := rewriteMap[packageName]
-			if !ok {
-				newChildren = append(newChildren, child)
-				continue
-			}
-			if rewrite == nil {
-				continue
-			}
-
-			// Rewrite the first occurrence, and drop all others.
-			newChildren = append(newChildren, dependency.NewPackage(rewrite, 0))
-			rewriteMap[packageName] = nil
-		}
-
-		if allOf {
-			return dependency.NewAllOf(newChildren)
-		}
-		return dependency.NewAnyOf(newChildren)
+		return children[0]
 	})
 }

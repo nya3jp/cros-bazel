@@ -12,19 +12,19 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
 
-func parseSimpleDeps(deps *dependency.Deps) ([]*dependency.Atom, bool) {
+func parseSimpleDeps(deps *dependency.Deps) ([]*dependency.Atom, error) {
 	var atoms []*dependency.Atom
 	for _, expr := range deps.Expr().Children() {
 		pkg, ok := expr.(*dependency.Package)
 		if !ok {
-			return nil, false
+			return nil, fmt.Errorf("found non-package top-level dep: %s", expr.String())
 		}
 		if pkg.Blocks() != 0 {
-			return nil, false
+			return nil, fmt.Errorf("found block dep: %s", pkg.String())
 		}
 		atoms = append(atoms, pkg.Atom())
 	}
-	return atoms, true
+	return atoms, nil
 }
 
 func Parse(deps *dependency.Deps, pkg *packages.Package, resolver *portage.Resolver) ([]*dependency.Atom, error) {
@@ -33,9 +33,9 @@ func Parse(deps *dependency.Deps, pkg *packages.Package, resolver *portage.Resol
 		return nil, fmt.Errorf("failed simplifying deps: %s: %w", deps.String(), err)
 	}
 
-	atoms, ok := parseSimpleDeps(simpleDeps)
-	if !ok {
-		return nil, fmt.Errorf("failed parsing simplify deps as it is not very simple: %s => %s", deps.String(), simpleDeps.String())
+	atoms, err := parseSimpleDeps(simpleDeps)
+	if err != nil {
+		return nil, fmt.Errorf("failed parsing simplified deps as it is not very simple:\noriginal deps: %s\nsimplified deps: %s\n%v", deps.String(), simpleDeps.String(), err)
 	}
 
 	return atoms, nil
