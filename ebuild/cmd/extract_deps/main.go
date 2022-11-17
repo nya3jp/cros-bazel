@@ -331,7 +331,7 @@ var flagBoard = &cli.StringFlag{
 
 var flagStart = &cli.StringSliceFlag{
 	Name:  "start",
-	Value: cli.NewStringSlice("virtual/target-os"),
+	Value: cli.NewStringSlice("virtual/target-os", "virtual/target-os-dev", "virtual/target-os-test"),
 }
 
 var app = &cli.App{
