@@ -250,7 +250,6 @@ __xbuild_source_eclass() {
   local path="$2"
 
   local saved_ECLASS="${ECLASS}"
-  local saved_INHERITED="${INHERITED}"
 
   local saved_IUSE="${IUSE}"
   unset IUSE
@@ -268,15 +267,14 @@ __xbuild_source_eclass() {
   unset IDEPEND
 
   ECLASS="${name}"
-  INHERITED=""
 
   source "${path}"
 
-  unset ECLASS INHERITED
+  unset ECLASS
   if [[ -n "${saved_ECLASS}" ]]; then
     ECLASS="${saved_ECLASS}"
   fi
-  INHERITED="${saved_INHERITED} ${name}"
+  INHERITED="${INHERITED} ${name}"
 
   __xbuild_eclass_IUSE="${__xbuild_eclass_IUSE} ${IUSE}"
   IUSE="${saved_IUSE}"
