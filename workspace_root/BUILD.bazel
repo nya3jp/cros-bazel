@@ -942,3 +942,9 @@ filegroup(
         "//third_party/portage-stable/x11-misc/shared-mime-info:0",
     ],
 )
+
+filegroup(
+    name = "scripts",
+    srcs = glob(["scripts/**"]),
+    visibility = ["//bazel/ebuild/private/cmd/build_image:__pkg__"],
+)
