@@ -1,0 +1,21 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//go:defs.bzl", "go_grpc_library")
+
+package(default_visibility = [
+    "//bazel/ebuild/private/common/host_container_comms:__subpackages__",
+])
+
+proto_library(
+    name = "host_service_proto",
+    srcs = ["host_service.proto"],
+)
+
+go_grpc_library(
+    name = "host_service_go",
+    importpath = "cros.local/bazel/ebuild/private/common/host_container_comms/host_service",
+    protos = [":host_service_proto"],
+)
