@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -192,6 +193,16 @@ var flagKeepHostMount = &cli.BoolFlag{
 	Name: "keep-host-mount",
 }
 
+var flagSameNetwork = &cli.BoolFlag{
+	Name:  "same-network",
+	Usage: "If true, uses the existing network namespace instead of creating one.",
+}
+
+var flagPidFile = &cli.StringFlag{
+	Name:  "pid-file",
+	Usage: "If provided, writes the pid of dumb_init to this file.",
+}
+
 var flagInternalContinue = &cli.BoolFlag{
 	Name:   "internal-continue",
 	Hidden: true,
@@ -203,6 +214,8 @@ var app = &cli.App{
 		flagChdir,
 		flagOverlay,
 		flagKeepHostMount,
+		flagSameNetwork,
+		flagPidFile,
 		flagInternalContinue,
 	},
 	Before: func(c *cli.Context) error {
@@ -233,8 +246,12 @@ func enterNamespace(c *cli.Context) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	var cloneFlags uintptr = syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWIPC
+	if !c.Bool(flagSameNetwork.Name) {
+		cloneFlags |= syscall.CLONE_NEWNET
+	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Cloneflags: syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNET | syscall.CLONE_NEWIPC,
+		Cloneflags: cloneFlags,
 		UidMappings: []syscall.SysProcIDMap{{
 			ContainerID: 0,
 			HostID:      os.Getuid(),
@@ -246,7 +263,33 @@ func enterNamespace(c *cli.Context) error {
 			Size:        1,
 		}},
 	}
-	err = cmd.Run()
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+	pidFile := c.String(flagPidFile.Name)
+	if pidFile != "" {
+		// Write to a temporary file first to ensure that the file is atomically
+		// created.
+		f, err := os.CreateTemp(filepath.Dir(pidFile), ".pidfile.")
+		if err != nil {
+			return err
+		}
+		defer os.Remove(f.Name())
+		f.Write([]byte(strconv.Itoa(cmd.Process.Pid)))
+		if err := f.Close(); err != nil {
+			return err
+		}
+		if err := os.Rename(f.Name(), pidFile); err != nil {
+			return err
+		}
+	}
+	err = cmd.Wait()
+	if pidFile != "" {
+		if rmErr := os.Remove(pidFile); rmErr != nil {
+			log.Printf("Failed to remove pid file: %v", rmErr)
+		}
+	}
 	if cmd.ProcessState != nil {
 		if status, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
 			if status.Signaled() {
@@ -277,9 +320,11 @@ func continueNamespace(c *cli.Context) error {
 		return err
 	}
 
-	// Enable the loopback networking.
-	if err := runCommand("/usr/sbin/ifconfig", "lo", "up"); err != nil {
-		return err
+	if !c.Bool(flagSameNetwork.Name) {
+		// Enable the loopback networking.
+		if err := runCommand("/usr/sbin/ifconfig", "lo", "up"); err != nil {
+			return err
+		}
 	}
 
 	// We keep all the directories in the stage dir to keep relative file
