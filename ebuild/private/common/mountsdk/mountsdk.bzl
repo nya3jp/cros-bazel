@@ -67,6 +67,52 @@ def _calculate_install_groups(build_deps):
 
     return levels
 
+def _install_deps(ctx, progress_message_name, transitive_build_time_deps_files, transitive_build_time_deps_targets):
+    """Creates an action which builds an overlay in which the build dependencies are installed."""
+    output_root = ctx.actions.declare_directory(ctx.attr.name + "-deps")
+    output_symindex = ctx.actions.declare_file(ctx.attr.name + "-deps.symindex")
+    sdk = ctx.attr._sdk[SDKInfo]
+
+    args = ctx.actions.args()
+    args.add_all([
+        "--board=" + sdk.board,
+        "--output-dir=" + output_root.path,
+        "--output-symindex=" + output_symindex.path,
+    ])
+
+    direct_inputs = [
+        ctx.executable._install_deps,
+    ]
+    transitive_inputs = [transitive_build_time_deps_files]
+
+    args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
+    direct_inputs.extend(sdk.layers)
+
+    overlays = ctx.attr._overlays[OverlaySetInfo].overlays
+    for overlay in overlays:
+        args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
+        direct_inputs.append(overlay.squashfs_file)
+
+    install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
+    args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
+
+    ctx.actions.run(
+        inputs = depset(direct_inputs, transitive = transitive_inputs),
+        outputs = [output_root, output_symindex],
+        executable = ctx.executable._install_deps,
+        arguments = [args],
+        execution_requirements = {
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+            # Disable sandbox to avoid creating a symlink forest.
+            # This does not affect hermeticity since ebuild runs in a container.
+            "no-sandbox": "",
+        },
+        mnemonic = "InstallDeps",
+        progress_message = "Installing dependencies for " + progress_message_name,
+    )
+    return output_root, output_symindex
+
 def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, extra_providers = []):
     sdk = ctx.attr._sdk[SDKInfo]
     args.add_all([
@@ -113,8 +159,6 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         order = "postorder",
     )
 
-    transitive_inputs.append(transitive_build_time_deps_files)
-
     transitive_build_time_deps_targets = depset(
         ctx.attr.build_deps,
         # Pull in runtime dependencies of build-time dependencies.
@@ -124,8 +168,15 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         order = "postorder",
     )
 
-    install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
-    args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
+    deps_directory, deps_symindex = _install_deps(
+        ctx,
+        progress_message_name,
+        transitive_build_time_deps_files,
+        transitive_build_time_deps_targets,
+    )
+    args.add(deps_directory.path, format = "--sdk=%s")
+    args.add(deps_symindex.path, format = "--sdk=%s")
+    transitive_inputs.append(depset([deps_directory, deps_symindex]))
 
     transitive_runtime_deps_files = depset(
         [binpkg_output_file],

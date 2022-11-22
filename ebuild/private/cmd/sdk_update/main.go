@@ -181,7 +181,7 @@ var app = &cli.App{
 			return err
 		}
 
-		if err := moveDiffDir(diffDir, outputDirPath); err != nil {
+		if err := fileutil.MoveDirContents(diffDir, outputDirPath); err != nil {
 			return err
 		}
 
@@ -216,38 +216,6 @@ var app = &cli.App{
 
 		return nil
 	},
-}
-
-// Move the contents of the diff dir into the output path
-func moveDiffDir(diffDir string, outputPath string) error {
-	es, err := os.ReadDir(diffDir)
-	if err != nil {
-		return err
-	}
-
-	for _, e := range es {
-		src := filepath.Join(diffDir, e.Name())
-		dest := filepath.Join(outputPath, e.Name())
-
-		if e.IsDir() {
-			// For directories, we need o+w (S_IWUSR) permission to rename.
-			fi, err := e.Info()
-			if err != nil {
-				return err
-			}
-			if perm := fi.Mode().Perm(); perm&unix.S_IWUSR == 0 {
-				if err := os.Chmod(src, perm|unix.S_IWUSR); err != nil {
-					return err
-				}
-			}
-		}
-
-		if err := os.Rename(src, dest); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func main() {

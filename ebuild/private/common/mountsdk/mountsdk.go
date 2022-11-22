@@ -44,6 +44,7 @@ type Config struct {
 
 	RunInContainerExtraArgs []string
 	loginMode               loginMode
+	MainScript              []byte
 }
 
 type MountedSDK struct {
@@ -105,12 +106,17 @@ func RunInSDK(cfg *Config, action Action) error {
 		args = append(args, fmt.Sprintf("--bind-mount=%s=%s", bindMount.MountPath, bindMount.Source))
 	}
 
-	setupPath := bazelBuildDir.Add("setup.sh")
-	if err := os.WriteFile(setupPath.Outside(), setupScript, 0o755); err != nil {
+	runScriptPath := bazelBuildDir.Add("run.sh")
+	if err := os.WriteFile(runScriptPath.Outside(), cfg.MainScript, 0o755); err != nil {
 		return err
 	}
 
-	args = append(args, setupPath.Inside())
+	setupScriptPath := bazelBuildDir.Add("setup.sh")
+	if err := os.WriteFile(setupScriptPath.Outside(), setupScript, 0o755); err != nil {
+		return err
+	}
+
+	args = append(args, setupScriptPath.Inside())
 	sdk.args = args
 	sdk.env = append(os.Environ(), "PATH=/usr/sbin:/usr/bin:/sbin:/bin")
 	if cfg.loginMode != loginNever {

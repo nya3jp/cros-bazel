@@ -9,8 +9,12 @@ go_library(
     srcs = [
         "copy.go",
         "dualpath.go",
+        "move.go",
         "remove.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/common/fileutil",
     visibility = ["//visibility:public"],
+    deps = [
+        "@org_golang_x_sys//unix",
+    ],
 )

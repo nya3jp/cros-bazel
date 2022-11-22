@@ -5,4 +5,7 @@ go_library(
     srcs = ["symindex.go"],
     importpath = "cros.local/bazel/ebuild/private/common/symindex",
     visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/fileutil",
+    ],
 )

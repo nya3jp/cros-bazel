@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"cros.local/bazel/ebuild/private/common/fileutil"
 )
 
 // Ext is a file name extension added to symindex files.
@@ -48,7 +50,7 @@ func Generate(rootDir string, indexPath string) error {
 			return err
 		}
 
-		if err := os.Remove(path); err != nil {
+		if err := fileutil.RemoveWithChmod(path); err != nil {
 			return err
 		}
 

@@ -32,6 +32,9 @@ const (
 	binaryExt = ".tbz2"
 )
 
+//go:embed run.sh
+var runScript []byte
+
 var flagBoard = &cli.StringFlag{
 	Name:     "board",
 	Required: true,
@@ -135,7 +138,6 @@ var app = &cli.App{
 		flagEBuild,
 		flagFile,
 		flagDistfile,
-		mountsdk.FlagInstallTarget,
 		flagOutput,
 		flagOutputFile,
 		flagXpak,
@@ -146,7 +148,6 @@ var app = &cli.App{
 		ebuildSource := c.String(flagEBuild.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
-		installTargetsUnparsed := c.StringSlice(mountsdk.FlagInstallTarget.Name)
 
 		xpakSpecs, err := binarypackage.ParseXpakSpecs(c.StringSlice(flagXpak.Name))
 		if err != nil {
@@ -168,6 +169,8 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
+
+		cfg.MainScript = runScript
 
 		ebuildMetadata, err := ParseEbuildMetadata(ebuildSource)
 		if err != nil {
@@ -205,11 +208,6 @@ var app = &cli.App{
 
 		targetPackagesDir := filepath.Join("/build", board, "packages")
 
-		installTargetsEnv, err := mountsdk.AddInstallTargetsToConfig(installTargetsUnparsed, targetPackagesDir, cfg)
-		if err != nil {
-			return err
-		}
-
 		if err := mountsdk.RunInSDK(cfg, func(s *mountsdk.MountedSDK) error {
 			overlayEbuildPath := s.RootDir.Add(ebuildFile.MountPath)
 			for _, dir := range []string{targetPackagesDir, "/var/lib/portage/pkgs"} {
@@ -219,7 +217,7 @@ var app = &cli.App{
 			}
 
 			cmd := s.Command(ctx, "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
-			cmd.Env = append(append(cmd.Env, installTargetsEnv...), fmt.Sprintf("BOARD=%s", board))
+			cmd.Env = append(cmd.Env, fmt.Sprintf("BOARD=%s", board))
 
 			if err := cmd.Run(); err != nil {
 				return err
