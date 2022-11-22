@@ -10,8 +10,8 @@ import (
 )
 
 type OverlayInfo struct {
-	MountDir     string
-	SquashfsPath string
+	MountDir  string
+	ImagePath string
 }
 
 func ParseOverlaySpecs(specs []string) ([]OverlayInfo, error) {
@@ -21,9 +21,13 @@ func ParseOverlaySpecs(specs []string) ([]OverlayInfo, error) {
 		if len(v) != 2 {
 			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
 		}
+		mountDir := v[0]
+		if mountDir != "/" {
+			mountDir = strings.TrimSuffix(mountDir, "/")
+		}
 		overlays = append(overlays, OverlayInfo{
-			MountDir:     strings.Trim(v[0], "/"),
-			SquashfsPath: v[1],
+			MountDir:  mountDir,
+			ImagePath: v[1],
 		})
 	}
 	return overlays, nil

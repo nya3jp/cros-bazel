@@ -19,6 +19,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/fileutil",
+        "//bazel/ebuild/private/common/makechroot",
         "@com_github_urfave_cli_v2//:cli",
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
     ],

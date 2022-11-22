@@ -1,10 +1,13 @@
+// Copyright 2022 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 package mountsdk
 
 import (
-	"fmt"
 	"path/filepath"
-	"strings"
 
+	"cros.local/bazel/ebuild/private/common/makechroot"
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,15 +36,14 @@ func GetMountConfigFromCLI(c *cli.Context) (*Config, error) {
 		cfg.Overlays = append(cfg.Overlays, MappedDualPath{HostPath: sdk, SDKPath: "/"})
 	}
 
-	for _, spec := range c.StringSlice(flagOverlay.Name) {
-		v := strings.Split(spec, "=")
-		if len(v) != 2 {
-			return nil, fmt.Errorf("invalid Overlay spec: %s", spec)
-		}
-
+	overlays, err := makechroot.ParseOverlaySpecs(c.StringSlice(flagOverlay.Name))
+	if err != nil {
+		return nil, err
+	}
+	for _, spec := range overlays {
 		overlay := MappedDualPath{
-			HostPath: v[1],
-			SDKPath:  strings.TrimSuffix(v[0], "/"),
+			HostPath: spec.ImagePath,
+			SDKPath:  spec.MountDir,
 		}
 		if !filepath.IsAbs(overlay.SDKPath) {
 			overlay.SDKPath = filepath.Join(SourceDir, overlay.SDKPath)

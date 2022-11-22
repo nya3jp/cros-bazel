@@ -23,6 +23,7 @@ import (
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/cliutil"
+	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/symindex"
 	"cros.local/bazel/ebuild/private/common/tar"
 )
@@ -50,15 +51,14 @@ type overlayInfo struct {
 }
 
 func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
-	var mounts []overlayInfo
-	for _, spec := range specs {
-		v := strings.Split(spec, "=")
-		if len(v) != 2 {
-			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
-		}
+	overlays, err := makechroot.ParseOverlaySpecs(specs)
+	if err != nil {
+		return nil, err
+	}
 
-		inside := "/" + strings.Trim(v[0], "/")
-		outside := v[1]
+	var mounts []overlayInfo
+	for _, overlay := range overlays {
+		outside := overlay.ImagePath
 
 		outside, err := filepath.EvalSymlinks(outside)
 		if err != nil {
@@ -84,7 +84,7 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 		}
 
 		mounts = append(mounts, overlayInfo{
-			Target: inside,
+			Target: overlay.MountDir,
 			Source: outside,
 			Type:   overlayType,
 		})

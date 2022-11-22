@@ -12,6 +12,7 @@ go_library(
     deps = [
         "//bazel/ebuild/private/common/bazelutil",
         "//bazel/ebuild/private/common/cliutil",
+        "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/symindex",
         "//bazel/ebuild/private/common/tar",
         "@com_github_urfave_cli_v2//:cli",

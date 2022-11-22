@@ -161,7 +161,7 @@ var app = &cli.App{
 
 		for _, overlay := range overlays {
 			overlayDir := sourceDir.Add(overlay.MountDir)
-			args = append(args, "--overlay="+overlayDir.Inside()+"="+overlay.SquashfsPath)
+			args = append(args, "--overlay="+overlayDir.Inside()+"="+overlay.ImagePath)
 		}
 
 		args = append(args, scriptPath.Inside())
