@@ -28,8 +28,11 @@ sdk_from_archive(
     board = "arm64-generic",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
-    # Required for testing mountsdk.
-    visibility = ["//bazel/ebuild/private/common/mountsdk:__pkg__"],
+    # Required for testing various things requiring running in a container.
+    visibility = [
+        "//bazel/ebuild/private/common/hostcontainercomms/host:__pkg__",
+        "//bazel/ebuild/private/common/mountsdk:__pkg__",
+    ],
 )
 
 sdk_update(

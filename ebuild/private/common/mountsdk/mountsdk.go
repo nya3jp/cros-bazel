@@ -54,6 +54,8 @@ type Config struct {
 	// For example, if you specify an overlay for /dir, but you want /dir/subdir
 	// to come from the host, add /dir/subdir to Remounts.
 	Remounts []string
+
+	RunInContainerExtraArgs []string
 }
 
 type MountedSDK struct {
@@ -99,11 +101,12 @@ func RunInSDK(cfg *Config, action Action) error {
 		}
 	}
 
-	args := []string{
+	args := append([]string{
 		runInContainerPath,
 		"--scratch-dir=" + scratchDir,
 		"--overlay=/=" + sdk.RootDir.Outside(),
-	}
+	},
+		cfg.RunInContainerExtraArgs...)
 
 	for _, remount := range cfg.Remounts {
 		if !filepath.IsAbs(remount) {

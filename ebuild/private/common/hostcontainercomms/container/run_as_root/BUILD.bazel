@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "run_as_root_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/ebuild/private/common/hostcontainercomms/container/run_as_root",
+    visibility = ["//visibility:private"],
+    deps = ["//bazel/ebuild/private/common/hostcontainercomms/container"],
+)
+
+go_binary(
+    name = "run_as_root",
+    embed = [":run_as_root_lib"],
+    visibility = ["//visibility:public"],
+)
