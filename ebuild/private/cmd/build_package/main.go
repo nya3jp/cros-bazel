@@ -17,7 +17,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
-	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
@@ -47,11 +46,6 @@ var flagFile = &cli.StringSliceFlag{
 
 var flagDistfile = &cli.StringSliceFlag{
 	Name: "distfile",
-}
-
-var flagInstallTarget = &cli.StringSliceFlag{
-	Name:  "install-target",
-	Usage: "<binpkg>[:<binpkg>]+: All binpkgs specified will be installed in parallel",
 }
 
 var flagOutput = &cli.StringFlag{
@@ -97,46 +91,13 @@ func ParseEbuildMetadata(path string) (*EbuildMetadata, error) {
 	return &info, nil
 }
 
-func preparePackages(installPaths []string, dir string) (mounts []makechroot.BindMount, atoms []string, err error) {
-	for _, installPath := range installPaths {
-		xp, err := binarypackage.ReadXpak(installPath)
-		if err != nil {
-			return nil, nil, fmt.Errorf("reading %s: %w", filepath.Base(installPath), err)
-		}
-		category := strings.TrimSpace(string(xp["CATEGORY"]))
-		pf := strings.TrimSpace(string(xp["PF"]))
-
-		mounts = append(mounts, makechroot.BindMount{
-			Source:    installPath,
-			MountPath: filepath.Join(dir, category, pf+binaryExt),
-		})
-
-		atoms = append(atoms, fmt.Sprintf("=%s/%s", category, pf))
-	}
-
-	return mounts, atoms, nil
-}
-
-func preparePackageGroups(installGroups [][]string, dir string) (mounts []makechroot.BindMount, atomGroups [][]string, err error) {
-	for _, installGroup := range installGroups {
-		packageMounts, atoms, err := preparePackages(installGroup, dir)
-		if err != nil {
-			return nil, nil, err
-		}
-		mounts = append(mounts, packageMounts...)
-		atomGroups = append(atomGroups, atoms)
-	}
-
-	return mounts, atomGroups, nil
-}
-
 var app = &cli.App{
 	Flags: append(mountsdk.CLIFlags,
 		flagBoard,
 		flagEBuild,
 		flagFile,
 		flagDistfile,
-		flagInstallTarget,
+		mountsdk.FlagInstallTarget,
 		flagOutput,
 	),
 	Action: func(c *cli.Context) error {
@@ -145,7 +106,7 @@ var app = &cli.App{
 		ebuildSource := c.String(flagEBuild.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
-		installTargetsUnparsed := c.StringSlice(flagInstallTarget.Name)
+		installTargetsUnparsed := c.StringSlice(mountsdk.FlagInstallTarget.Name)
 
 		// We need "supports-graceful-termination" execution requirement in the
 		// build action to let Bazel send SIGTERM instead of SIGKILL.
@@ -192,18 +153,12 @@ var app = &cli.App{
 			})
 		}
 
-		var targetInstallGroups [][]string
-		for _, targetGroupStr := range installTargetsUnparsed {
-			targets := strings.Split(targetGroupStr, ":")
-			targetInstallGroups = append(targetInstallGroups, targets)
-		}
-
 		targetPackagesDir := filepath.Join("/build", board, "packages")
-		packageMounts, targetInstallAtomGroups, err := preparePackageGroups(targetInstallGroups, targetPackagesDir)
+
+		installTargetsEnv, err := mountsdk.AddInstallTargetsToConfig(installTargetsUnparsed, targetPackagesDir, cfg)
 		if err != nil {
 			return err
 		}
-		cfg.BindMounts = append(cfg.BindMounts, packageMounts...)
 
 		if err := mountsdk.RunInSDK(cfg, func(s *mountsdk.MountedSDK) error {
 			overlayEbuildPath := s.RootDir.Add(ebuildFile.MountPath)
@@ -214,13 +169,7 @@ var app = &cli.App{
 			}
 
 			cmd := s.Command(ctx, "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
-			cmd.Env = append(cmd.Env, fmt.Sprintf("BOARD=%s", board))
-
-			for i, atomGroup := range targetInstallAtomGroups {
-				cmd.Env = append(cmd.Env,
-					fmt.Sprintf("INSTALL_ATOMS_TARGET_%d=%s", i,
-						strings.Join(atomGroup, " ")))
-			}
+			cmd.Env = append(append(cmd.Env, installTargetsEnv...), fmt.Sprintf("BOARD=%s", board))
 
 			if err := cmd.Run(); err != nil {
 				return err
