@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "cros.local/bazel/ebuild/private/common/host_container_comms/host_service";
+option go_package = "cros.local/bazel/ebuild/private/common/hostcontainercomms/host_service";
 
 message ExecuteAsRootRequest {
   // Specifically don't bother with stdin, as we are only trying to support

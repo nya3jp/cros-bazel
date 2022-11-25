@@ -31,9 +31,7 @@ go_binary(
 go_test(
     name = "build_package_test",
     size = "small",
-    srcs = [
-        "build_package_test.go",
-    ],
+    srcs = ["build_package_test.go"],
     deps = [
         ":build_package_lib",
         "//bazel/ebuild/private/common/standard/version",
