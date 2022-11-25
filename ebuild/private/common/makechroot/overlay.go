@@ -6,8 +6,21 @@ package makechroot
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
+
+	"cros.local/bazel/ebuild/private/common/symindex"
+	"cros.local/bazel/ebuild/private/common/tar"
+)
+
+type OverlayType int
+
+const (
+	OverlayDir OverlayType = iota
+	OverlaySymindex
+	OverlaySquashfs
+	OverlayTar
 )
 
 type OverlayInfo struct {
@@ -57,4 +70,28 @@ func ParseBindMountSpec(specs []string) ([]BindMount, error) {
 		mounts = append(mounts, BindMount{MountPath: overlay.MountDir, Source: path})
 	}
 	return mounts, nil
+}
+
+func DetectOverlayType(imagePath string) (OverlayType, error) {
+	imagePath, err := filepath.EvalSymlinks(imagePath)
+	if err != nil {
+		return -1, err
+	}
+
+	fileInfo, err := os.Stat(imagePath)
+	if err != nil {
+		return -1, err
+	}
+
+	if fileInfo.IsDir() {
+		return OverlayDir, nil
+	} else if strings.HasSuffix(imagePath, symindex.Ext) {
+		return OverlaySymindex, nil
+	} else if strings.HasSuffix(imagePath, ".squashfs") {
+		return OverlaySquashfs, nil
+	} else if tar.IsTar(imagePath) {
+		return OverlayTar, nil
+	} else {
+		return -1, fmt.Errorf("unsupported file type: %s", imagePath)
+	}
 }

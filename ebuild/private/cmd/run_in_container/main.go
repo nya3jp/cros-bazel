@@ -35,19 +35,10 @@ func runCommand(name string, args ...string) error {
 	return cmd.Run()
 }
 
-type overlayType int
-
-const (
-	overlayDir overlayType = iota
-	overlaySymindex
-	overlaySquashfs
-	overlayTar
-)
-
 type overlayInfo struct {
 	Target string
 	Source string
-	Type   overlayType
+	Type   makechroot.OverlayType
 }
 
 func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
@@ -58,34 +49,13 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 
 	var mounts []overlayInfo
 	for _, overlay := range overlays {
-		outside := overlay.ImagePath
-
-		outside, err := filepath.EvalSymlinks(outside)
+		overlayType, err := makechroot.DetectOverlayType(overlay.ImagePath)
 		if err != nil {
 			return nil, err
 		}
-
-		fileInfo, err := os.Stat(outside)
-		if err != nil {
-			return nil, err
-		}
-
-		var overlayType overlayType
-		if fileInfo.IsDir() {
-			overlayType = overlayDir
-		} else if strings.HasSuffix(outside, symindex.Ext) {
-			overlayType = overlaySymindex
-		} else if strings.HasSuffix(outside, ".squashfs") {
-			overlayType = overlaySquashfs
-		} else if tar.IsTar(outside) {
-			overlayType = overlayTar
-		} else {
-			return nil, fmt.Errorf("unsupported file type: %s", outside)
-		}
-
 		mounts = append(mounts, overlayInfo{
 			Target: overlay.MountDir,
-			Source: outside,
+			Source: overlay.ImagePath,
 			Type:   overlayType,
 		})
 	}
@@ -413,22 +383,22 @@ func continueNamespace(c *cli.Context) error {
 		}
 
 		switch overlay.Type {
-		case overlayDir:
+		case makechroot.OverlayDir:
 			if err := unix.Mount(sourcePath, lowerDir, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
 				return fmt.Errorf("failed bind-mounting %s: %w", sourcePath, err)
 			}
-		case overlaySymindex:
+		case makechroot.OverlaySymindex:
 			if err := symindex.Expand(sourcePath, lowerDir); err != nil {
 				return fmt.Errorf("failed expanding %s: %w", sourcePath, err)
 			}
-		case overlaySquashfs:
+		case makechroot.OverlaySquashfs:
 			if err := runCommand(
 				squashfusePath,
 				sourcePath,
 				lowerDir); err != nil {
 				return fmt.Errorf("failed mounting %s: %w", sourcePath, err)
 			}
-		case overlayTar:
+		case makechroot.OverlayTar:
 			// We use a dedicated directory for the extracted artifacts instead of
 			// putting them in the lower directory because the lower directory is a
 			// tmpfs mount and we don't want to use up all the RAM.
