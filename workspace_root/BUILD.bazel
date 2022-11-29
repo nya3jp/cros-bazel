@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/ebuild:defs.bzl", "ebuild_src")
+
 alias(
     name = "all_target_packages",
     actual = "//third_party/chromiumos-overlay/virtual/target-os:0_package_set",
@@ -943,8 +945,14 @@ filegroup(
     ],
 )
 
-filegroup(
-    name = "scripts",
-    srcs = glob(["scripts/**"]),
+ebuild_src(
+    name = "scripts_src",
+    srcs = glob(
+        ["scripts/**"],
+        exclude = ["scripts/.git/**"],
+    ),
+    # Our mount path should be scripts, but because the glob starts with
+    # scripts, the squashfs contains a root directory called scripts.
+    mount_path = "",
     visibility = ["//bazel/ebuild/private/cmd/build_image:__pkg__"],
 )
