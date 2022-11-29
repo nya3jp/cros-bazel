@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"cros.local/bazel/ebuild/private/common/hostcontainercomms/host"
+	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/mountsdk"
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 )
@@ -27,22 +28,22 @@ func TestRunInSdk(t *testing.T) {
 	}
 
 	cfg := mountsdk.Config{
-		Overlays: []mountsdk.MappedDualPath{
+		Overlays: []makechroot.OverlayInfo{
 			{
-				HostPath: getRunfile("bazel/sdk/sdk"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/sdk"),
+				MountDir:  "/",
 			},
 			{
-				HostPath: getRunfile("bazel/sdk/sdk.symindex"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/sdk.symindex"),
+				MountDir:  "/",
 			},
 			{
-				HostPath: getRunfile("bazel/sdk/base_sdk"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/base_sdk"),
+				MountDir:  "/",
 			},
 			{
-				HostPath: getRunfile("bazel/sdk/base_sdk.symindex"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/base_sdk.symindex"),
+				MountDir:  "/",
 			},
 		},
 	}

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/mountsdk"
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 )
@@ -33,9 +34,9 @@ func RunInSDKWithServer(ctx context.Context, cfg *mountsdk.Config, action mounts
 			return err
 		}
 
-		cfg.CopyToSDK = append(cfg.CopyToSDK, mountsdk.MappedDualPath{
-			HostPath: hostPath,
-			SDKPath:  file.sdkPath,
+		cfg.BindMounts = append(cfg.BindMounts, makechroot.BindMount{
+			Source:    hostPath,
+			MountPath: file.sdkPath,
 		})
 	}
 	temp, err := os.MkdirTemp("", "build_image_pid")
