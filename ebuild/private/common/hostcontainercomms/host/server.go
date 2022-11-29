@@ -11,10 +11,11 @@ import (
 	"strings"
 
 	pb "cros.local/bazel/ebuild/private/common/hostcontainercomms/host_service"
+	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 )
 
-const sigKillExitCode = 137
+const sigKillExitCode = int32(128 + unix.SIGKILL)
 
 type Server struct {
 	pb.UnimplementedHostServiceServer
@@ -39,7 +40,6 @@ func (s *Server) ExecuteAsRoot(ctx context.Context, req *pb.ExecuteAsRootRequest
 	// still work.
 	cmd := exec.Command("/usr/bin/sudo", append([]string{"nsenter", "--target", strconv.Itoa(pid), "--mount", "--ipc", "--pid", "--", req.Name}, req.Args...)...)
 
-	resp := &pb.ExecuteAsRootResponse{}
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -49,9 +49,12 @@ func (s *Server) ExecuteAsRoot(ctx context.Context, req *pb.ExecuteAsRootRequest
 	if err := cmd.Run(); err != nil {
 		log.Printf("Command execution failed: %v", err)
 	}
-	resp.Stdout = stdout.Bytes()
-	resp.Stderr = stderr.Bytes()
-	resp.ExitCode = int32(cmd.ProcessState.ExitCode())
+
+	resp := &pb.ExecuteAsRootResponse{
+		Stdout:   stdout.Bytes(),
+		Stderr:   stderr.Bytes(),
+		ExitCode: int32(cmd.ProcessState.ExitCode()),
+	}
 	if len(resp.Stdout) != 0 {
 		log.Printf("Stdout: %s", string(resp.Stdout))
 	}
@@ -72,9 +75,8 @@ func StartServer(ctx context.Context, pidFile string) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	var opts []grpc.ServerOption
 	// TODO: Consider using grpc credentials in the future.
-	grpcServer := grpc.NewServer(opts...)
+	grpcServer := grpc.NewServer()
 	server := &Server{listener: lis, grpcServer: grpcServer, pidFile: pidFile}
 	pb.RegisterHostServiceServer(grpcServer, server)
 	go func() {

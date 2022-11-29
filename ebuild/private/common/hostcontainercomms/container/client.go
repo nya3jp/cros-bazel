@@ -16,8 +16,7 @@ func NewClient() (pb.HostServiceClient, *grpc.ClientConn, error) {
 		return nil, nil, err
 	}
 
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	conn, err := grpc.Dial(string(address), opts...)
 	if err != nil {

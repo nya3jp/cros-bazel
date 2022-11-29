@@ -52,7 +52,7 @@ func RunInSDKWithServer(ctx context.Context, cfg *mountsdk.Config, action mounts
 	}
 	defer server.Close()
 
-	return mountsdk.RunInSDK(ctx, cfg, func(s *mountsdk.MountedSDK) error {
+	return mountsdk.RunInSDK(cfg, func(s *mountsdk.MountedSDK) error {
 		cmd := s.Command(ctx, PrepClientFile, strconv.Itoa(os.Getuid()), strconv.Itoa(os.Getgid()), fmt.Sprintf("localhost:%d", server.Port()))
 		if err := cmd.Run(); err != nil {
 			return err
