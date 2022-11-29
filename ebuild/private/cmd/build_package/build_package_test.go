@@ -1,4 +1,4 @@
-package buildpackage_test
+package build_package_test
 
 import (
 	"testing"
