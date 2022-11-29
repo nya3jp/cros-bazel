@@ -23,6 +23,8 @@ go_library(
     ],
 )
 
+# Direct gazelle to stop deleting this binary.
+# keep
 go_binary(
     name = "build_package",
     embed = [":build_package_lib"],
