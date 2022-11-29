@@ -50,3 +50,9 @@ go_test(
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
     ],
 )
+
+sh_binary(
+    name = "create_debug_file",
+    srcs = ["create_debug_file.sh"],
+    visibility = ["//visibility:public"],
+)

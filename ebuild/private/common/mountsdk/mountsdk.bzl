@@ -5,6 +5,16 @@
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildSrcInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
+MountSDKDebugInfo = provider(
+    "Information required to create a debug target for a mountsdk target",
+    fields = dict(
+        executable = "The binary to be debugged",
+        executable_runfiles = "The runfiles for the executable binary",
+        args = "The arguments this package is being run with",
+        inputs = "The inputs required to build this package",
+    ),
+)
+
 def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
 
@@ -129,8 +139,9 @@ def mountsdk_generic(ctx, progress_message_name, inputs, output, args):
         order = "postorder",
     )
 
+    builder_inputs = depset(direct_inputs, transitive = transitive_inputs)
     ctx.actions.run(
-        inputs = depset(direct_inputs, transitive = transitive_inputs),
+        inputs = builder_inputs,
         outputs = [output],
         executable = ctx.executable._builder,
         arguments = [args],
@@ -152,6 +163,12 @@ def mountsdk_generic(ctx, progress_message_name, inputs, output, args):
             transitive_runtime_deps_files = transitive_runtime_deps_files,
             transitive_runtime_deps_targets = transitive_runtime_deps_targets,
             direct_runtime_deps_targets = ctx.attr.runtime_deps,
+        ),
+        MountSDKDebugInfo(
+            executable = ctx.executable._builder,
+            executable_runfiles = ctx.attr._builder[DefaultInfo].default_runfiles,
+            args = args,
+            inputs = builder_inputs,
         ),
     ]
 
@@ -181,3 +198,48 @@ COMMON_ATTRS = dict(
         default = Label("//bazel/sdk"),
     ),
 )
+
+def _mountsdk_debug_impl(ctx):
+    debug_info = ctx.attr.target[MountSDKDebugInfo]
+
+    wrapper = ctx.actions.declare_file(ctx.label.name)
+
+    args = ctx.actions.args()
+    args.add_all([wrapper, debug_info.executable])
+    ctx.actions.run(
+        executable = ctx.executable._create_debug_script,
+        arguments = [args, debug_info.args],
+        outputs = [wrapper],
+    )
+
+    runfiles = ctx.runfiles(transitive_files=debug_info.inputs).merge_all([
+        debug_info.executable_runfiles,
+        ctx.attr._bash_runfiles[DefaultInfo].default_runfiles,
+    ])
+
+    return [DefaultInfo(
+        files = depset([wrapper]),
+        runfiles = runfiles,
+        executable = wrapper,
+    )]
+
+_mountsdk_debug = rule(
+    implementation = _mountsdk_debug_impl,
+    attrs = dict(
+        target = attr.label(
+            providers = [MountSDKDebugInfo],
+            mandatory = True,
+        ),
+        _bash_runfiles = attr.label(default = "@bazel_tools//tools/bash/runfiles"),
+        _create_debug_script = attr.label(
+            default = "//bazel/ebuild/private/common/mountsdk:create_debug_file",
+            executable = True,
+            cfg = "exec",
+        ),
+    ),
+    executable = True,
+)
+
+def debuggable_mountsdk(name, orig_rule, **kwargs):
+    orig_rule(name = name, **kwargs)
+    _mountsdk_debug(name = name + "_debug", target = name)

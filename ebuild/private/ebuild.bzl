@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "COMMON_ATTRS", "mountsdk_generic")
+load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "COMMON_ATTRS", "debuggable_mountsdk", "mountsdk_generic")
 
 def _ebuild_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
@@ -20,7 +20,7 @@ def _ebuild_impl(ctx):
         args = args,
     )
 
-ebuild = rule(
+_ebuild = rule(
     implementation = _ebuild_impl,
     attrs = dict(
         ebuild = attr.label(
@@ -35,3 +35,6 @@ ebuild = rule(
         **COMMON_ATTRS
     ),
 )
+
+def ebuild(name, **kwargs):
+    debuggable_mountsdk(name = name, orig_rule = _ebuild, **kwargs)
