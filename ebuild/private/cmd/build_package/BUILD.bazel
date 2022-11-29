@@ -13,6 +13,7 @@ go_library(
         "//bazel/ebuild/private/common/bazelutil",
         "//bazel/ebuild/private/common/cliutil",
         "//bazel/ebuild/private/common/fileutil",
+        "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/mountsdk",
         "//bazel/ebuild/private/common/portage/binarypackage",
         "//bazel/ebuild/private/common/standard/version",
@@ -35,7 +36,6 @@ go_test(
     deps = [
         ":build_package_lib",
         "//bazel/ebuild/private/common/standard/version",
-        "@com_github_google_go_cmp//cmp:go_default_library",
-        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@com_github_google_go_cmp//cmp",
     ],
 )

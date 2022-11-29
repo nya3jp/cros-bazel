@@ -33,7 +33,10 @@ func GetMountConfigFromCLI(c *cli.Context) (*Config, error) {
 	cfg := Config{}
 
 	for _, sdk := range c.StringSlice(flagSDK.Name) {
-		cfg.Overlays = append(cfg.Overlays, MappedDualPath{HostPath: sdk, SDKPath: "/"})
+		cfg.Overlays = append(cfg.Overlays, makechroot.OverlayInfo{
+			ImagePath: sdk,
+			MountDir:  "/",
+		})
 	}
 
 	overlays, err := makechroot.ParseOverlaySpecs(c.StringSlice(flagOverlay.Name))
@@ -41,12 +44,12 @@ func GetMountConfigFromCLI(c *cli.Context) (*Config, error) {
 		return nil, err
 	}
 	for _, spec := range overlays {
-		overlay := MappedDualPath{
-			HostPath: spec.ImagePath,
-			SDKPath:  spec.MountDir,
+		overlay := makechroot.OverlayInfo{
+			ImagePath: spec.ImagePath,
+			MountDir:  spec.MountDir,
 		}
-		if !filepath.IsAbs(overlay.SDKPath) {
-			overlay.SDKPath = filepath.Join(SourceDir, overlay.SDKPath)
+		if !filepath.IsAbs(overlay.MountDir) {
+			overlay.MountDir = filepath.Join(SourceDir, overlay.MountDir)
 		}
 		cfg.Overlays = append(cfg.Overlays, overlay)
 	}

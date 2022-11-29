@@ -6,6 +6,7 @@ package makechroot
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
@@ -31,4 +32,29 @@ func ParseOverlaySpecs(specs []string) ([]OverlayInfo, error) {
 		})
 	}
 	return overlays, nil
+}
+
+type BindMount struct {
+	MountPath string
+	Source    string
+}
+
+func ParseBindMountSpec(specs []string) ([]BindMount, error) {
+	// Bind-mounts work the same as overlay, so we can just use their parsing
+	// mechanism.
+	overlays, err := ParseOverlaySpecs(specs)
+	if err != nil {
+		return nil, fmt.Errorf("invalid bind-mount: %v", err)
+	}
+
+	var mounts []BindMount
+	for _, overlay := range overlays {
+		path, err := filepath.Abs(overlay.ImagePath)
+		if err != nil {
+			return nil, err
+		}
+
+		mounts = append(mounts, BindMount{MountPath: overlay.MountDir, Source: path})
+	}
+	return mounts, nil
 }

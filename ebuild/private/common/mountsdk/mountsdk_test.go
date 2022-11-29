@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/mountsdk"
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 )
@@ -23,56 +24,69 @@ func TestRunInSdk(t *testing.T) {
 		return path
 	}
 
+	helloFile := filepath.Join(t.TempDir(), "hello")
+	if err := os.WriteFile(helloFile, []byte("hello"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
 	// These values were obtained by looking at an invocation of build_package.
 	portageStable := filepath.Join(mountsdk.SourceDir, "src/third_party/portage-stable")
 	ebuildFile := filepath.Join(portageStable, "mypkg/mypkg.ebuild")
 	cfg := mountsdk.Config{
-		Overlays: []mountsdk.MappedDualPath{
+		Overlays: []makechroot.OverlayInfo{
 			{
-				HostPath: getRunfile("bazel/sdk/sdk"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/sdk"),
+				MountDir:  "/",
 			},
 			{
-				HostPath: getRunfile("bazel/sdk/sdk.symindex"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/sdk.symindex"),
+				MountDir:  "/",
 			},
 			{
-				HostPath: getRunfile("bazel/sdk/base_sdk"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/base_sdk"),
+				MountDir:  "/",
 			},
 			{
-				HostPath: getRunfile("bazel/sdk/base_sdk.symindex"),
-				SDKPath:  "/",
+				ImagePath: getRunfile("bazel/sdk/base_sdk.symindex"),
+				MountDir:  "/",
 			},
 			{
-				HostPath: getRunfile("overlays/overlay-arm64-generic/overlay-arm64-generic.squashfs"),
-				SDKPath:  filepath.Join(mountsdk.SourceDir, "src/overlays/overlay-arm64-generic"),
+				ImagePath: getRunfile("overlays/overlay-arm64-generic/overlay-arm64-generic.squashfs"),
+				MountDir:  filepath.Join(mountsdk.SourceDir, "src/overlays/overlay-arm64-generic"),
 			},
 			{
-				HostPath: getRunfile("third_party/eclass-overlay/eclass-overlay.squashfs"),
-				SDKPath:  filepath.Join(mountsdk.SourceDir, "src/third_party/eclass-overlay"),
+				ImagePath: getRunfile("third_party/eclass-overlay/eclass-overlay.squashfs"),
+				MountDir:  filepath.Join(mountsdk.SourceDir, "src/third_party/eclass-overlay"),
 			},
 			{
-				HostPath: getRunfile("third_party/chromiumos-overlay/chromiumos-overlay.squashfs"),
-				SDKPath:  filepath.Join(mountsdk.SourceDir, "src/third_party/chromiumos-overlay"),
+				ImagePath: getRunfile("third_party/chromiumos-overlay/chromiumos-overlay.squashfs"),
+				MountDir:  filepath.Join(mountsdk.SourceDir, "src/third_party/chromiumos-overlay"),
 			},
 			{
-				HostPath: getRunfile("third_party/portage-stable/portage-stable.squashfs"),
-				SDKPath:  portageStable,
+				ImagePath: getRunfile("third_party/portage-stable/portage-stable.squashfs"),
+				MountDir:  portageStable,
+			},
+		},
+		BindMounts: []makechroot.BindMount{
+			{
+				Source:    getRunfile("bazel/ebuild/private/common/mountsdk/testdata/mypkg.ebuild"),
+				MountPath: ebuildFile,
+			},
+			{
+				Source:    helloFile,
+				MountPath: "/hello",
 			},
 		},
 		Remounts: []string{filepath.Join(portageStable, "mypkg")},
-		CopyToSDK: []mountsdk.MappedDualPath{
-			{
-				HostPath: getRunfile("bazel/ebuild/private/common/mountsdk/testdata/mypkg.ebuild"),
-				SDKPath:  ebuildFile,
-			},
-		},
 	}
 
 	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
 		if err := s.Command(ctx, "false").Run(); err == nil {
 			t.Error("The command 'false' unexpectedly succeeded")
+		}
+
+		if err := s.Command(ctx, "/bin/bash", "-c", "echo world > /hello").Run(); err == nil {
+			t.Error("Writing to the mount '/hello' succeeded, but it should be read-only")
 		}
 
 		outPkg := s.RootDir.Add("build/arm64-generic/packages/mypkg")
@@ -100,6 +114,14 @@ func TestRunInSdk(t *testing.T) {
 		hostOutFile := filepath.Join(s.DiffDir, outFile.Inside())
 		if _, err := os.Stat(hostOutFile); err != nil {
 			t.Errorf("Expected %s to exist: %v", hostOutFile, err)
+		}
+
+		contents, err := os.ReadFile(helloFile)
+		if err != nil {
+			return err
+		}
+		if string(contents) != "hello" {
+			t.Error("Chroot unexpectedly wrote to a mount that should be read-only")
 		}
 		return nil
 	}); err != nil {

@@ -16,6 +16,7 @@ import (
 
 	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
+	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 	"github.com/urfave/cli/v2"
@@ -96,45 +97,37 @@ func ParseEbuildMetadata(path string) (*EbuildMetadata, error) {
 	return &info, nil
 }
 
-func preparePackages(installPaths []string, dir fileutil.DualPath) ([]string, error) {
-	var atoms []string
-
+func preparePackages(installPaths []string, dir string) (mounts []makechroot.BindMount, atoms []string, err error) {
 	for _, installPath := range installPaths {
 		xp, err := binarypackage.ReadXpak(installPath)
 		if err != nil {
-			return nil, fmt.Errorf("reading %s: %w", filepath.Base(installPath), err)
+			return nil, nil, fmt.Errorf("reading %s: %w", filepath.Base(installPath), err)
 		}
 		category := strings.TrimSpace(string(xp["CATEGORY"]))
 		pf := strings.TrimSpace(string(xp["PF"]))
 
-		categoryDir := dir.Add(category)
-		if err := os.MkdirAll(categoryDir.Outside(), 0o755); err != nil {
-			return nil, err
-		}
-
-		copyPath := categoryDir.Add(pf + binaryExt)
-		if err := fileutil.Copy(installPath, copyPath.Outside()); err != nil {
-			return nil, err
-		}
+		mounts = append(mounts, makechroot.BindMount{
+			Source:    installPath,
+			MountPath: filepath.Join(dir, category, pf+binaryExt),
+		})
 
 		atoms = append(atoms, fmt.Sprintf("=%s/%s", category, pf))
 	}
 
-	return atoms, nil
+	return mounts, atoms, nil
 }
 
-func preparePackageGroups(installGroups [][]string, dir fileutil.DualPath) ([][]string, error) {
-	var atomGroups [][]string
-
+func preparePackageGroups(installGroups [][]string, dir string) (mounts []makechroot.BindMount, atomGroups [][]string, err error) {
 	for _, installGroup := range installGroups {
-		atoms, err := preparePackages(installGroup, dir)
+		packageMounts, atoms, err := preparePackages(installGroup, dir)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
+		mounts = append(mounts, packageMounts...)
 		atomGroups = append(atomGroups, atoms)
 	}
 
-	return atomGroups, nil
+	return mounts, atomGroups, nil
 }
 
 var app = &cli.App{
@@ -149,7 +142,7 @@ var app = &cli.App{
 	Action: func(c *cli.Context) error {
 		finalOutPath := c.String(flagOutput.Name)
 		board := c.String(flagBoard.Name)
-		ebuildHostPath := c.String(flagEBuild.Name)
+		ebuildSource := c.String(flagEBuild.Name)
 		fileSpecs := c.StringSlice(flagFile.Name)
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
 		installTargetsUnparsed := c.StringSlice(flagInstallTarget.Name)
@@ -165,26 +158,26 @@ var app = &cli.App{
 			return err
 		}
 
-		ebuildMetadata, err := ParseEbuildMetadata(ebuildHostPath)
+		ebuildMetadata, err := ParseEbuildMetadata(ebuildSource)
 		if err != nil {
 			return fmt.Errorf("invalid ebuild file name: %w", err)
 		}
 
-		ebuildFile := mountsdk.MappedDualPath{
-			HostPath: ebuildHostPath,
-			SDKPath:  filepath.Join(mountsdk.SourceDir, "src", ebuildMetadata.Overlay, ebuildMetadata.Category, ebuildMetadata.PackageName, filepath.Base(ebuildHostPath)),
+		ebuildFile := makechroot.BindMount{
+			Source:    ebuildSource,
+			MountPath: filepath.Join(mountsdk.SourceDir, "src", ebuildMetadata.Overlay, ebuildMetadata.Category, ebuildMetadata.PackageName, filepath.Base(ebuildSource)),
 		}
-		cfg.Remounts = append(cfg.Remounts, filepath.Dir(ebuildFile.SDKPath))
+		cfg.Remounts = append(cfg.Remounts, filepath.Dir(ebuildFile.MountPath))
 
-		cfg.CopyToSDK = append(cfg.CopyToSDK, ebuildFile)
+		cfg.BindMounts = append(cfg.BindMounts, ebuildFile)
 		for _, fileSpec := range fileSpecs {
 			v := strings.SplitN(fileSpec, "=", 2)
 			if len(v) < 2 {
 				return errors.New("invalid file cfg")
 			}
-			cfg.CopyToSDK = append(cfg.CopyToSDK, mountsdk.MappedDualPath{
-				HostPath: v[1],
-				SDKPath:  filepath.Join(filepath.Dir(ebuildFile.SDKPath), v[0]),
+			cfg.BindMounts = append(cfg.BindMounts, makechroot.BindMount{
+				Source:    v[1],
+				MountPath: filepath.Join(filepath.Dir(ebuildFile.MountPath), v[0]),
 			})
 		}
 
@@ -193,9 +186,9 @@ var app = &cli.App{
 			if len(v) < 2 {
 				return errors.New("invalid distfile cfg")
 			}
-			cfg.CopyToSDK = append(cfg.CopyToSDK, mountsdk.MappedDualPath{
-				HostPath: v[1],
-				SDKPath:  filepath.Join("/var/cache/distfiles", v[0]),
+			cfg.BindMounts = append(cfg.BindMounts, makechroot.BindMount{
+				Source:    v[1],
+				MountPath: filepath.Join("/var/cache/distfiles", v[0]),
 			})
 		}
 
@@ -205,19 +198,19 @@ var app = &cli.App{
 			targetInstallGroups = append(targetInstallGroups, targets)
 		}
 
+		targetPackagesDir := filepath.Join("/build", board, "packages")
+		packageMounts, targetInstallAtomGroups, err := preparePackageGroups(targetInstallGroups, targetPackagesDir)
+		if err != nil {
+			return err
+		}
+		cfg.BindMounts = append(cfg.BindMounts, packageMounts...)
+
 		if err := mountsdk.RunInSDK(cfg, func(s *mountsdk.MountedSDK) error {
-			overlayEbuildPath := s.RootDir.Add(ebuildFile.SDKPath)
-			targetPackagesDir := s.RootDir.Add("build").Add(board).Add("packages")
-			hostPackagesDir := s.RootDir.Add("var/lib/portage/pkgs")
-			for _, dir := range []fileutil.DualPath{targetPackagesDir, hostPackagesDir} {
-				if err := os.MkdirAll(dir.Outside(), 0o755); err != nil {
+			overlayEbuildPath := s.RootDir.Add(ebuildFile.MountPath)
+			for _, dir := range []string{targetPackagesDir, "/var/lib/portage/pkgs"} {
+				if err := os.MkdirAll(s.RootDir.Add(dir).Outside(), 0o755); err != nil {
 					return err
 				}
-			}
-
-			targetInstallAtomGroups, err := preparePackageGroups(targetInstallGroups, targetPackagesDir)
-			if err != nil {
-				return err
 			}
 
 			cmd := s.Command(ctx, "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
@@ -234,11 +227,11 @@ var app = &cli.App{
 			}
 
 			// TODO: Normalize timestamps in the archive.
-			binaryOutPath := targetPackagesDir.Add(
+			binaryOutPath := filepath.Join(targetPackagesDir,
 				ebuildMetadata.Category,
-				strings.TrimSuffix(filepath.Base(ebuildHostPath), ebuildExt)+binaryExt)
+				strings.TrimSuffix(filepath.Base(ebuildSource), ebuildExt)+binaryExt)
 
-			return fileutil.Copy(filepath.Join(s.DiffDir, binaryOutPath.Inside()), finalOutPath)
+			return fileutil.Copy(filepath.Join(s.DiffDir, binaryOutPath), finalOutPath)
 		}); err != nil {
 			if err, ok := err.(*exec.ExitError); ok {
 				return cliutil.ExitCode(err.ExitCode())

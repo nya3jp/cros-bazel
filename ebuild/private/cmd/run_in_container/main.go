@@ -129,7 +129,9 @@ func resolveOverlaySourcePath(inputPath string) (string, error) {
 
 	done := errors.New("done")
 
-	var resolvedInputPath string
+	// In the case that the directory is empty, we still want the returned path to
+	// be valid.
+	resolvedInputPath := inputPath
 	err = filepath.WalkDir(inputPath, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -189,6 +191,12 @@ var flagOverlay = &cli.StringSliceFlag{
 	Required: true,
 }
 
+var flagBindMount = &cli.StringSliceFlag{
+	Name: "bind-mount",
+	Usage: "<mountpoint>=<source>. " +
+		"Mounts a file contained at source to the mountpoint specified",
+}
+
 var flagKeepHostMount = &cli.BoolFlag{
 	Name: "keep-host-mount",
 }
@@ -213,6 +221,7 @@ var app = &cli.App{
 		flagStagingDir,
 		flagChdir,
 		flagOverlay,
+		flagBindMount,
 		flagKeepHostMount,
 		flagSameNetwork,
 		flagPidFile,
@@ -223,6 +232,9 @@ var app = &cli.App{
 			return errors.New("positional arguments missing")
 		}
 		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name)); err != nil {
+			return err
+		}
+		if _, err := makechroot.ParseBindMountSpec(c.StringSlice(flagBindMount.Name)); err != nil {
 			return err
 		}
 		return nil
@@ -310,6 +322,10 @@ func continueNamespace(c *cli.Context) error {
 
 	chdir := c.String(flagChdir.Name)
 	overlays, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name))
+	if err != nil {
+		return err
+	}
+	bindMounts, err := makechroot.ParseBindMountSpec(c.StringSlice(flagBindMount.Name))
 	if err != nil {
 		return err
 	}
@@ -477,6 +493,25 @@ func continueNamespace(c *cli.Context) error {
 	}
 	if err := unix.Mount("/sys", filepath.Join(rootDir, "sys"), "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
 		return fmt.Errorf("bind-mounting /sys: %w", err)
+	}
+
+	for _, mount := range bindMounts {
+		target := filepath.Join(rootDir, mount.MountPath)
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return err
+		}
+		// When bind-mounting a file, the destination file must exist.
+		if err := os.WriteFile(target, []byte{}, 0755); err != nil {
+			return err
+		}
+		// Unfortunately, the unix.MS_RDONLY flag is ignored for bind-mounts.
+		// Thus, we mount a bind-mount, then remount it as readonly.
+		if err := unix.Mount(mount.Source, target, "", unix.MS_BIND, ""); err != nil {
+			return fmt.Errorf("failed bind-mounting file %s: %w", mount.Source, err)
+		}
+		if err := unix.Mount("", target, "", unix.MS_REMOUNT|unix.MS_BIND|unix.MS_RDONLY, ""); err != nil {
+			return fmt.Errorf("failed remounting file %s as read-only: %w", mount.Source, err)
+		}
 	}
 
 	// Execute pivot_root.
