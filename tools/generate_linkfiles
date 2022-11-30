@@ -1,0 +1,27 @@
+#!/usr/bin/env -S jq --raw-output -f
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Usage: bazel/tools/generate_linkfiles bazel/data/deps.json
+#
+# This will print out a list of <linkfile /> tags. They can be copy/pasted
+# into the _bazel.xml manifest file.
+
+to_entries |
+map(.value.localSrc) |
+flatten |
+unique |
+map(select(. | startswith("@") == false )) |
+map({
+        src: (
+                if . == "//third_party/systemd:src" then "BUILD.project-systemd"
+                elif . == "//third_party/llvm-project:src" then "BUILD.project-llvm"
+                elif . == "//third_party/autotest/files:src" then "BUILD.project-autotest"
+                else "BUILD.project-template"
+                end
+        ),
+        dest: ("src/" + capture("^//(?<path>[^:]+):src$").path + "/BUILD.bazel")
+}) |
+map("<linkfile src=\"" + .src + "\" dest=\"" + .dest + "\" />") |
+.[]
