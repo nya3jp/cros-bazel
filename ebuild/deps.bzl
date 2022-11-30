@@ -2,10 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 # Don't modify this directly, as any modifications here will be deleted the next
 # time someone regenerates this file. Instead, update bazel/go.mod and then run:
@@ -46,12 +46,6 @@ def rules_ebuild_go_dependencies():
         importpath = "github.com/alessio/shellescape",
         sum = "h1:V7yhSDDn8LP4lc4jS8pFkt0zCnzVJlG5JXy9BVKJUX0=",
         version = "v1.4.1",
-    )
-    go_repository(
-        name = "com_github_bazelbuild_rules_go",
-        importpath = "github.com/bazelbuild/rules_go",
-        sum = "h1:ViPR65vOrg74JKntAUFY6qZkheBKGB6to7wFd8gCRU4=",
-        version = "v0.35.0",
     )
     go_repository(
         name = "com_github_burntsushi_toml",
@@ -131,7 +125,6 @@ def rules_ebuild_go_dependencies():
         sum = "h1:YClS/PImqYbn+UILDnqxQCZ3RehC9N318SU3kElDUEM=",
         version = "v1.15.12",
     )
-
     go_repository(
         name = "com_github_kr_pretty",
         importpath = "github.com/kr/pretty",
@@ -228,7 +221,6 @@ def rules_ebuild_go_dependencies():
         sum = "h1:DS/BukOZWp8s6p4Dt/tOaJaTQyPyOoCcrjroHuCeLzY=",
         version = "v1.50.1",
     )
-
     go_repository(
         name = "org_golang_google_protobuf",
         importpath = "google.golang.org/protobuf",
