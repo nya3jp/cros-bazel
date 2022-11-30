@@ -13,6 +13,12 @@ import (
 	"cros.local/bazel/ebuild/private/common/standard/packages"
 )
 
+var (
+	chromiteEbuilds = map[string]struct{}{
+		"dev-libs/gobject-introspection": {},
+	}
+)
+
 func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 	metadata := pkg.Metadata()
 
@@ -141,7 +147,7 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 
 	// The platform eclass calls `platform2.py` which requires chromite
 	// The dlc eclass calls `build_dlc` which lives in chromite
-	if pkg.UsesEclass("platform") || pkg.UsesEclass("dlc") {
+	if _, ok := chromiteEbuilds[pkg.Name()]; ok || pkg.UsesEclass("platform") || pkg.UsesEclass("dlc") {
 		srcDeps = append(srcDeps, "@chromite//:src")
 	}
 
