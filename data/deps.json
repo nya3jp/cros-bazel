@@ -2406,6 +2406,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libhwsec:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
       "//third_party/chromiumos-overlay/chromeos-base/secure-erase-file:0",
+      "//third_party/chromiumos-overlay/chromeos-base/shill-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/tpm_manager:0",
       "//third_party/chromiumos-overlay/chromeos-base/vboot_reference:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
@@ -2439,6 +2440,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libhwsec:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
       "//third_party/chromiumos-overlay/chromeos-base/secure-erase-file:0",
+      "//third_party/chromiumos-overlay/chromeos-base/shill-client:0",
       "//third_party/chromiumos-overlay/chromeos-base/tpm_manager:0",
       "//third_party/chromiumos-overlay/dev-libs/glib:2",
       "//third_party/chromiumos-overlay/dev-libs/openssl:0",
@@ -2872,6 +2874,7 @@
     "ebuildPath": "third_party/chromiumos-overlay/chromeos-base/ec-devutils/ec-devutils-9999.ebuild",
     "version": "9999",
     "buildDeps": [
+      "//third_party/chromiumos-overlay/dev-embedded/libftdi:1",
       "//third_party/chromiumos-overlay/sys-apps/flashmap:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
@@ -2880,6 +2883,7 @@
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/ec-utils:0",
+      "//third_party/chromiumos-overlay/dev-embedded/libftdi:1",
       "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/chromiumos-overlay/sys-apps/flashmap:0",
       "//third_party/chromiumos-overlay/sys-apps/flashrom:0",
@@ -3491,6 +3495,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
@@ -3506,6 +3511,7 @@
       "//third_party/chromiumos-overlay/chromeos-base/libbrillo:0",
       "//third_party/chromiumos-overlay/chromeos-base/libchrome:0",
       "//third_party/chromiumos-overlay/chromeos-base/metrics:0",
+      "//third_party/chromiumos-overlay/chromeos-base/system_api:0",
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "srcUris": {}
@@ -10159,7 +10165,9 @@
       "//third_party/portage-stable/virtual/pkgconfig:0",
       "//third_party/portage-stable/x11-misc/shared-mime-info:0"
     ],
-    "localSrc": [],
+    "localSrc": [
+      "@chromite//:src"
+    ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-lang/python:3.6",
       "//third_party/chromiumos-overlay/dev-libs/glib:2",
@@ -34532,13 +34540,15 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
       "//third_party/chromiumos-overlay/sys-apps/iproute2:0",
       "//third_party/portage-stable/sys-apps/net-tools:0",
+      "//third_party/portage-stable/sys-libs/zlib:0",
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0",
       "//third_party/chromiumos-overlay/sys-apps/iproute2:0",
-      "//third_party/portage-stable/sys-apps/net-tools:0"
+      "//third_party/portage-stable/sys-apps/net-tools:0",
+      "//third_party/portage-stable/sys-libs/zlib:0"
     ],
     "srcUris": {
       "dhcp-4.4.1.tar.gz": {
