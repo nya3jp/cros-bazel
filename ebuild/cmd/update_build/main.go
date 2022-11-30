@@ -160,7 +160,9 @@ func getDistEntries(cache *distfiles.Cache, pkgInfo *depdata.PackageInfo) ([]*di
 	for filename, srcInfo := range pkgInfo.SrcUris {
 		// Check the cache first.
 		if dist, ok := cache.Get(filename); ok {
-			dists = append(dists, dist)
+			if dist != nil {
+				dists = append(dists, dist)
+			}
 			continue
 		}
 
@@ -170,7 +172,7 @@ func getDistEntries(cache *distfiles.Cache, pkgInfo *depdata.PackageInfo) ([]*di
 			log.Fatalf("WARNING: unable to locate distfile %s: %v", filename, err)
 			// TODO: Do we want to support negative caching?
 			continue
-		} else {
+		} else if dist != nil {
 			dists = append(dists, dist)
 		}
 

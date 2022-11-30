@@ -39,6 +39,7 @@ var distBaseURLs = []string{
 // build isn't dependent on external hosts.
 var manualDistfileMap = map[string]string{
 	"iproute2-5.16.0.tar.gz": "http://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.gz",
+	"pyftdi-0.54.0.tar.gz": "https://files.pythonhosted.org/packages/source/p/pyftdi/pyftdi-0.54.0.tar.gz",
 }
 
 func getSHA(url string) (string, string, error) {
@@ -89,6 +90,10 @@ func Locate(filename string, info *depdata.URIInfo) (*Entry, error) {
 				parsedURI.Path = filepath.Join(parsedURI.Host, parsedURI.Path)
 				parsedURI.Host = "commondatastorage.googleapis.com"
 				uri = parsedURI.String()
+			} else if parsedURI.Scheme == "cipd" {
+				// Don't return an error since it's fatal and we want to keep it that
+				// way.
+				return nil, nil
 			}
 
 			if _, ok := allowedHosts[parsedURI.Host]; !ok {

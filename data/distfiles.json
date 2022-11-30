@@ -9534,6 +9534,7 @@
     "sha256": "02fe8e590861d88f83060dd39cda5ccaa60b2da1d21d0f95499301b186beaabc",
     "name": "gobject_introspection_1_72_0_tar_xz"
   },
+  "goldctl-2021.03.31-arm64.zip": null,
   "google-apitools-0.5.31.tar.gz": {
     "filename": "google-apitools-0.5.31.tar.gz",
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/google-apitools-0.5.31.tar.gz",
@@ -16201,6 +16202,12 @@
     "url": "https://commondatastorage.googleapis.com/chromeos-mirror/gentoo/distfiles/pyflakes-2.0.0.tar.gz",
     "sha256": "9a7662ec724d0120012f6e29d6248ae3727d821bba522a0e6b356eff19126a49",
     "name": "pyflakes_2_0_0_tar_gz"
+  },
+  "pyftdi-0.54.0.tar.gz": {
+    "filename": "pyftdi-0.54.0.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/source/p/pyftdi/pyftdi-0.54.0.tar.gz",
+    "sha256": "8df9af22077d17533d2f95b508b1d87959877627ea5dc2369056e90a3b5a232d",
+    "name": "pyftdi_0_54_0_tar_gz"
   },
   "pygit2-1.2.1.tar.gz": {
     "filename": "pygit2-1.2.1.tar.gz",
