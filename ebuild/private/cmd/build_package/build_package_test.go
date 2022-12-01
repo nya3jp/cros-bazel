@@ -1,9 +1,12 @@
-package build_package_test
+// Copyright 2022 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package main
 
 import (
 	"testing"
 
-	bp "cros.local/bazel/ebuild/private/cmd/build_package"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 	"github.com/google/go-cmp/cmp"
 )
@@ -18,12 +21,12 @@ func TestParseEbuildMetadata(t *testing.T) {
 	}
 	for _, tc := range []struct {
 		path    string
-		want    *bp.EbuildMetadata
+		want    *EbuildMetadata
 		wantErr bool
 	}{
 		{
 			path: "third_party/chromiumos-overlay/dev-lang/python/python-3.7.9-r1.ebuild",
-			want: &bp.EbuildMetadata{
+			want: &EbuildMetadata{
 				Overlay:     "third_party/chromiumos-overlay",
 				Category:    "dev-lang",
 				PackageName: "python",
@@ -33,7 +36,7 @@ func TestParseEbuildMetadata(t *testing.T) {
 		// TODO: this currently fails with absolute paths.
 		//{
 		//	path: "/absolute/path/to/third_party/chromiumos-overlay/dev-lang/python/python-3.7.9-r1.ebuild",
-		//	want: &bp.EbuildMetadata{
+		//	want: &EbuildMetadata{
 		//		Overlay:     "third_party/chromiumos-overlay",
 		//		Category:    "dev-lang",
 		//		PackageName: "python",
@@ -45,7 +48,7 @@ func TestParseEbuildMetadata(t *testing.T) {
 			wantErr: true,
 		},
 	} {
-		got, err := bp.ParseEbuildMetadata(tc.path)
+		got, err := ParseEbuildMetadata(tc.path)
 		if err != nil && !tc.wantErr {
 			t.Errorf("ParseEbuildMetadata(%s) returned unexpected error: %v", tc.path, err)
 		}
