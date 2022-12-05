@@ -259,22 +259,30 @@ func enterNamespace(c *cli.Context) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	var cloneFlags uintptr = syscall.CLONE_NEWUSER | syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWIPC
+	var cloneFlags uintptr = syscall.CLONE_NEWNS | syscall.CLONE_NEWPID | syscall.CLONE_NEWIPC
 	if !c.Bool(flagSameNetwork.Name) {
 		cloneFlags |= syscall.CLONE_NEWNET
 	}
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Cloneflags: cloneFlags,
-		UidMappings: []syscall.SysProcIDMap{{
-			ContainerID: 0,
-			HostID:      os.Getuid(),
-			Size:        1,
-		}},
-		GidMappings: []syscall.SysProcIDMap{{
-			ContainerID: 0,
-			HostID:      os.Getgid(),
-			Size:        1,
-		}},
+	// If this script is running as root, it's assumed that the user wants to do
+	// things requiring root privileges inside the container. However, mapping 0
+	// to 0 is not the same as no user namespace. If you map 0 to 0, you will no
+	// longer be able to execute commands requiring root, and won't be able to
+	// access files owned by other users.
+	if os.Getuid() != 0 {
+		cloneFlags |= syscall.CLONE_NEWUSER
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Cloneflags: cloneFlags,
+			UidMappings: []syscall.SysProcIDMap{{
+				ContainerID: 0,
+				HostID:      os.Getuid(),
+				Size:        1,
+			}},
+			GidMappings: []syscall.SysProcIDMap{{
+				ContainerID: 0,
+				HostID:      os.Getgid(),
+				Size:        1,
+			}},
+		}
 	}
 	err = cmd.Start()
 	if err != nil {
@@ -290,6 +298,10 @@ func enterNamespace(c *cli.Context) error {
 		}
 		defer os.Remove(f.Name())
 		f.Write([]byte(strconv.Itoa(cmd.Process.Pid)))
+		// Ensure that if we're running as root, a regular user can see this.
+		if err := f.Chmod(0666); err != nil {
+			return err
+		}
 		if err := f.Close(); err != nil {
 			return err
 		}
