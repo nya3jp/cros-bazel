@@ -82,6 +82,12 @@ var app = &cli.App{
 
 			cmd := s.Command(c.Context, args[0], args[1:]...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("BOARD=%s", board))
+			// I have no idea why, but I happened to be trying to run this in a nested
+			// namespace initially, and when I tried to remove it, discovered that
+			// run_in_container only works inside a mount namespace if you're running
+			// as sudo.
+			cmd.Args = append([]string{"/usr/bin/sudo", "--preserve-env", "unshare", "--mount", "--"}, cmd.Args...)
+			cmd.Path = cmd.Args[0]
 			if err := cmd.Run(); err != nil {
 				return fmt.Errorf("Failed to run %s: %v", strings.Join(args, " "), err)
 			}
