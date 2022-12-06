@@ -8,6 +8,18 @@ load("//bazel/ebuild/private:build_image.bzl", "build_image")
 go_library(
     name = "build_image_lib",
     srcs = ["main.go"],
+    data = [
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gdb",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:glibc",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:go",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libcxx",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
+    ],
     importpath = "cros.local/bazel/ebuild/private/cmd/build_image",
     visibility = ["//visibility:private"],
     deps = [
@@ -17,7 +29,7 @@ go_library(
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/mountsdk",
         "@com_github_urfave_cli_v2//:cli",
-        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@io_bazel_rules_go//go/runfiles:go_default_library",
         "@org_golang_x_sys//unix",
     ],
 )
