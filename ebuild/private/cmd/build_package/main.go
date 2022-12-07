@@ -60,8 +60,9 @@ var flagOutput = &cli.StringFlag{
 
 var flagXpak = &cli.StringSliceFlag{
 	Name: "xpak",
-	Usage: "<XPAK key>=<output file>: Write the XPAK key from the binpkg " +
-		"to the specified file.",
+	Usage: "<XPAK key>=[?]<output file>: Write the XPAK key from the binpkg " +
+		"to the specified file. If =? is used then an empty file is created if " +
+		"XPAK key doesn't exist.",
 }
 
 var flagOutputFile = &cli.StringSliceFlag{

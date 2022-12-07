@@ -40,7 +40,7 @@ def _ebuild_impl(ctx):
     for xpak_file in ["NEEDED", "REQUIRES", "PROVIDES"]:
         file = ctx.actions.declare_file(paths.join(src_basename, "xpak", xpak_file))
         xpak_outputs.append(file)
-        args.add("--xpak=%s=%s" % (xpak_file, file.path))
+        args.add("--xpak=%s=?%s" % (xpak_file, file.path))
 
     header_outputs = _ebuild_declare_outputs(
         ctx,

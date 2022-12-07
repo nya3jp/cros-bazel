@@ -17,19 +17,28 @@ import (
 type XpakSpec struct {
 	XpakHeader string
 	TargetPath string
+	Optional   bool
 }
 
-// Spec format: <XPAK key>=<outside path>
+// Spec format: <XPAK key>=[?]<outside path>
+// If =? is used, an empty file is written if the key doesn't exist
 func ParseXpakSpecs(specs []string) ([]XpakSpec, error) {
 	var xpakSpecs []XpakSpec
 	for _, spec := range specs {
-		v := strings.Split(spec, "=")
-		if len(v) != 2 {
-			return nil, fmt.Errorf("invalid xpak spec: %s", spec)
+		optional := false
+		v := strings.Split(spec, "=?")
+		if len(v) == 2 {
+			optional = true
+		} else {
+			v = strings.Split(spec, "=")
+			if len(v) != 2 {
+				return nil, fmt.Errorf("invalid xpak spec: %s", spec)
+			}
 		}
 		xpakSpecs = append(xpakSpecs, XpakSpec{
 			XpakHeader: v[0],
 			TargetPath: v[1],
+			Optional:   optional,
 		})
 	}
 	return xpakSpecs, nil
@@ -48,7 +57,11 @@ func ExtractXpakFiles(binPkg *File, xpakSpecs []XpakSpec) error {
 	for _, xpakSpec := range xpakSpecs {
 		xpakValue, ok := xpakHeader[xpakSpec.XpakHeader]
 		if !ok {
-			return fmt.Errorf("XPAK key %s not found in header", xpakSpec.XpakHeader)
+			if xpakSpec.Optional {
+				xpakValue = nil
+			} else {
+				return fmt.Errorf("XPAK key %s not found in header", xpakSpec.XpakHeader)
+			}
 		}
 
 		err := os.WriteFile(xpakSpec.TargetPath, xpakValue, 0666)
