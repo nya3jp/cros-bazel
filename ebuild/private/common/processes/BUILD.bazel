@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "processes",
+    srcs = ["processes.go"],
+    importpath = "cros.local/bazel/ebuild/private/common/processes",
+    visibility = ["//visibility:public"],
+    deps = ["@org_golang_x_sys//unix"],
+)
