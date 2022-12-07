@@ -75,6 +75,7 @@ func RunInSDK(cfg *Config, action Action) error {
 	sdk.DiffDir = filepath.Join(scratchDir, "diff")
 	sdk.RootDir = fileutil.NewDualPath(filepath.Join(tmpDir, "root"), "/")
 	bazelBuildDir := sdk.RootDir.Add("mnt/host/bazel-build")
+	controlChannelPath := bazelBuildDir.Add("control")
 
 	if err := os.MkdirAll(bazelBuildDir.Outside(), 0o755); err != nil {
 		return err
@@ -106,6 +107,13 @@ func RunInSDK(cfg *Config, action Action) error {
 		args = append(args, fmt.Sprintf("--bind-mount=%s=%s", bindMount.MountPath, bindMount.Source))
 	}
 
+	if cfg.loginMode != loginNever {
+		// Named pipes created using `mkfifo` use the inode number as the address.
+		// We need to bind mount the control fifo on top of the overlayfs mounts to
+		// prevent overlayfs from interfering with the device/inode lookup.
+		args = append(args, fmt.Sprintf("--bind-mount=%s=%s", controlChannelPath.Inside(), controlChannelPath.Outside()))
+	}
+
 	runScriptPath := bazelBuildDir.Add("run.sh")
 	if err := os.WriteFile(runScriptPath.Outside(), cfg.MainScript, 0o755); err != nil {
 		return err
@@ -121,6 +129,12 @@ func RunInSDK(cfg *Config, action Action) error {
 	sdk.env = append(os.Environ(), "PATH=/usr/sbin:/usr/bin:/sbin:/bin")
 	if cfg.loginMode != loginNever {
 		sdk.env = append(sdk.env, fmt.Sprintf("_LOGIN_MODE=%s", cfg.loginMode))
+
+		stopControl, err := StartControlChannel(controlChannelPath.Outside())
+		if err != nil {
+			return err
+		}
+		defer stopControl()
 	}
 	return action(&sdk)
 }

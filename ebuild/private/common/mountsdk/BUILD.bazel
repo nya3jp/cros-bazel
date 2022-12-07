@@ -9,6 +9,7 @@ go_library(
     name = "mountsdk",
     srcs = [
         "cli.go",
+        "control.go",
         "install_target.go",
         "mountsdk.go",
     ],
@@ -24,6 +25,7 @@ go_library(
         "//bazel/ebuild/private/common/portage/binarypackage",
         "@com_github_urfave_cli_v2//:cli",
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@org_golang_x_sys//unix",
     ],
 )
 
