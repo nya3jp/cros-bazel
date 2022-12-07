@@ -49,6 +49,7 @@ go_test(
     deps = [
         ":mountsdk",
         "//bazel/ebuild/private/common/makechroot",
+        "//bazel/ebuild/private/common/processes",
         "@io_bazel_rules_go//go/tools/bazel:go_default_library",
     ],
 )

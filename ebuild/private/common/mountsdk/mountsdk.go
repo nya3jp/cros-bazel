@@ -5,7 +5,6 @@
 package mountsdk
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
 	"os"
@@ -139,9 +138,9 @@ func RunInSDK(cfg *Config, action Action) error {
 	return action(&sdk)
 }
 
-func (s *MountedSDK) Command(ctx context.Context, name string, args ...string) *exec.Cmd {
+func (s *MountedSDK) Command(name string, args ...string) *exec.Cmd {
 
-	cmd := exec.CommandContext(ctx, s.args[0], append(append(append([]string(nil), s.args[1:]...), name), args...)...)
+	cmd := exec.Command(s.args[0], append(append(append([]string(nil), s.args[1:]...), name), args...)...)
 	cmd.Env = append(cmd.Env, s.env...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

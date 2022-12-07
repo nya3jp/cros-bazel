@@ -19,6 +19,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
+	"cros.local/bazel/ebuild/private/common/processes"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
@@ -217,10 +218,10 @@ var app = &cli.App{
 				}
 			}
 
-			cmd := s.Command(ctx, "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
+			cmd := s.Command("ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
 			cmd.Env = append(cmd.Env, fmt.Sprintf("BOARD=%s", board))
 
-			if err := cmd.Run(); err != nil {
+			if err := processes.Run(ctx, cmd); err != nil {
 				return err
 			}
 

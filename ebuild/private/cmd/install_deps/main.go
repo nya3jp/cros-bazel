@@ -19,6 +19,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/mountsdk"
+	"cros.local/bazel/ebuild/private/common/processes"
 	"cros.local/bazel/ebuild/private/common/symindex"
 )
 
@@ -87,10 +88,10 @@ var app = &cli.App{
 			}
 
 			// TODO: Revisit MountedSDK's API to avoid passing an empty command here.
-			cmd := s.Command(ctx, "")
+			cmd := s.Command("")
 			cmd.Env = append(append(cmd.Env, installTargetsEnv...), fmt.Sprintf("BOARD=%s", board))
 
-			if err := cmd.Run(); err != nil {
+			if err := processes.Run(ctx, cmd); err != nil {
 				return err
 			}
 

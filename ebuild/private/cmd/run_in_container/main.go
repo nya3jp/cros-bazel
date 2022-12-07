@@ -23,6 +23,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
+	"cros.local/bazel/ebuild/private/common/processes"
 	"cros.local/bazel/ebuild/private/common/symindex"
 	"cros.local/bazel/ebuild/private/common/tar"
 )
@@ -252,7 +253,7 @@ func enterNamespace(c *cli.Context) error {
 			}},
 		}
 	}
-	err = cmd.Run()
+	err = processes.Run(c.Context, cmd)
 	if cmd.ProcessState != nil {
 		if status, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
 			if status.Signaled() {

@@ -16,6 +16,7 @@ import (
 
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
+	"cros.local/bazel/ebuild/private/common/processes"
 	"github.com/bazelbuild/rules_go/go/runfiles"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
@@ -137,7 +138,7 @@ var app = &cli.App{
 			},
 				c.Args().Slice()...)
 
-			cmd := s.Command(c.Context, args[0], args[1:]...)
+			cmd := s.Command(args[0], args[1:]...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("BOARD=%s", board))
 			// I have no idea why, but I happened to be trying to run this in a nested
 			// namespace initially, and when I tried to remove it, discovered that
@@ -145,7 +146,7 @@ var app = &cli.App{
 			// as sudo.
 			cmd.Args = append([]string{"/usr/bin/sudo", "--preserve-env", "unshare", "--mount", "--"}, cmd.Args...)
 			cmd.Path = cmd.Args[0]
-			if err := cmd.Run(); err != nil {
+			if err := processes.Run(ctx, cmd); err != nil {
 				return fmt.Errorf("Failed to run %s: %v", strings.Join(args, " "), err)
 			}
 

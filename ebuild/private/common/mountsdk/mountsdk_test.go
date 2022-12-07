@@ -10,6 +10,7 @@ import (
 
 	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/mountsdk"
+	"cros.local/bazel/ebuild/private/common/processes"
 	"github.com/bazelbuild/rules_go/go/tools/bazel"
 )
 
@@ -81,11 +82,11 @@ func TestRunInSdk(t *testing.T) {
 	}
 
 	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
-		if err := s.Command(ctx, "false").Run(); err == nil {
+		if err := processes.Run(ctx, s.Command("false")); err == nil {
 			t.Error("The command 'false' unexpectedly succeeded")
 		}
 
-		if err := s.Command(ctx, "/bin/bash", "-c", "echo world > /hello").Run(); err == nil {
+		if err := processes.Run(ctx, s.Command("/bin/bash", "-c", "echo world > /hello")); err == nil {
 			t.Error("Writing to the mount '/hello' succeeded, but it should be read-only")
 		}
 
@@ -96,18 +97,18 @@ func TestRunInSdk(t *testing.T) {
 		outFile := outPkg.Add("mpkg.tbz2")
 
 		for _, cmd := range []*exec.Cmd{
-			s.Command(ctx, "true"),
+			s.Command("true"),
 			// Check we're in the SDK by using a binary unlikely
 			// to be on the host machine.
-			s.Command(ctx, "test", "-f", "/usr/bin/ebuild"),
+			s.Command("test", "-f", "/usr/bin/ebuild"),
 			// Confirm that overlays were loaded in to the SDK.
-			s.Command(ctx, "test", "-d", filepath.Join(portageStable, "eclass")),
-			s.Command(ctx, "test", "-d", outPkg.Inside()),
-			s.Command(ctx, "test", "-f", ebuildFile),
-			s.Command(ctx, "grep", "EBUILD_CONTENTS", ebuildFile),
-			s.Command(ctx, "touch", outFile.Inside()),
+			s.Command("test", "-d", filepath.Join(portageStable, "eclass")),
+			s.Command("test", "-d", outPkg.Inside()),
+			s.Command("test", "-f", ebuildFile),
+			s.Command("grep", "EBUILD_CONTENTS", ebuildFile),
+			s.Command("touch", outFile.Inside()),
 		} {
-			if err := cmd.Run(); err != nil {
+			if err := processes.Run(ctx, cmd); err != nil {
 				t.Errorf("Failed to run %s: %v", strings.Join(cmd.Args, " "), err)
 			}
 		}
