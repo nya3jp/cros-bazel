@@ -6,9 +6,16 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "binarypackage",
-    srcs = ["binarypackage.go"],
+    srcs = [
+        "binarypackage.go",
+        "helpers.go",
+    ],
     importpath = "cros.local/bazel/ebuild/private/common/portage/binarypackage",
     visibility = ["//bazel/ebuild:__subpackages__"],
+    deps = [
+        "//bazel/ebuild/private/common/tar",
+        "@com_github_klauspost_compress//zstd",
+    ],
 )
 
 go_test(
