@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+
 	"os"
 	"os/exec"
 	"os/signal"
@@ -17,6 +18,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
+	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 	"cros.local/bazel/ebuild/private/common/standard/version"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
@@ -51,6 +53,42 @@ var flagDistfile = &cli.StringSliceFlag{
 var flagOutput = &cli.StringFlag{
 	Name:     "output",
 	Required: true,
+}
+
+var flagXpak = &cli.StringSliceFlag{
+	Name: "xpak",
+	Usage: "<XPAK key>=<output file>: Write the XPAK key from the binpkg " +
+		"to the specified file.",
+}
+
+var flagOutputFile = &cli.StringSliceFlag{
+	Name: "output-file",
+	Usage: "<inside path>=<outside path>: Extracts a file from the binpkg " +
+		"and writes it to the outside path",
+}
+
+func extractBinaryPackageFiles(binPkgPath string,
+	xpakSpecs []binarypackage.XpakSpec,
+	outputFileSpecs []binarypackage.OutputFileSpec) error {
+	if len(xpakSpecs) == 0 && len(outputFileSpecs) == 0 {
+		return nil
+	}
+
+	binPkg, err := binarypackage.BinaryPackage(binPkgPath)
+	if err != nil {
+		return err
+	}
+	defer binPkg.Close()
+
+	if err = binarypackage.ExtractXpakFiles(binPkg, xpakSpecs); err != nil {
+		return err
+	}
+
+	if err = binarypackage.ExtractOutFiles(binPkg, outputFileSpecs); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type EbuildMetadata struct {
@@ -99,6 +137,8 @@ var app = &cli.App{
 		flagDistfile,
 		mountsdk.FlagInstallTarget,
 		flagOutput,
+		flagOutputFile,
+		flagXpak,
 	),
 	Action: func(c *cli.Context) error {
 		finalOutPath := c.String(flagOutput.Name)
@@ -107,6 +147,16 @@ var app = &cli.App{
 		fileSpecs := c.StringSlice(flagFile.Name)
 		distfileSpecs := c.StringSlice(flagDistfile.Name)
 		installTargetsUnparsed := c.StringSlice(mountsdk.FlagInstallTarget.Name)
+
+		xpakSpecs, err := binarypackage.ParseXpakSpecs(c.StringSlice(flagXpak.Name))
+		if err != nil {
+			return err
+		}
+
+		outputFileSpecs, err := binarypackage.ParseOutputFileSpecs(c.StringSlice(flagOutputFile.Name))
+		if err != nil {
+			return err
+		}
 
 		// We need "supports-graceful-termination" execution requirement in the
 		// build action to let Bazel send SIGTERM instead of SIGKILL.
@@ -180,7 +230,15 @@ var app = &cli.App{
 				ebuildMetadata.Category,
 				strings.TrimSuffix(filepath.Base(ebuildSource), ebuildExt)+binaryExt)
 
-			return fileutil.Copy(filepath.Join(s.DiffDir, binaryOutPath), finalOutPath)
+			if err := fileutil.Copy(filepath.Join(s.DiffDir, binaryOutPath), finalOutPath); err != nil {
+				return err
+			}
+
+			if err := extractBinaryPackageFiles(finalOutPath, xpakSpecs, outputFileSpecs); err != nil {
+				return err
+			}
+
+			return nil
 		}); err != nil {
 			if err, ok := err.(*exec.ExitError); ok {
 				return cliutil.ExitCode(err.ExitCode())
