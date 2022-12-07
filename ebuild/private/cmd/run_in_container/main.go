@@ -448,10 +448,27 @@ func continueNamespace(c *cli.Context) error {
 		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 			return err
 		}
-		// When bind-mounting a file, the destination file must exist.
-		if err := os.WriteFile(target, []byte{}, 0755); err != nil {
-			return err
+
+		// When bind-mounting, the destination must exist.
+		_, err := os.Stat(target)
+		if errors.Is(err, os.ErrNotExist) {
+			srcStat, err := os.Stat(mount.Source)
+			if err != nil {
+				return fmt.Errorf("stat %s failed: %w", mount.Source, err)
+			}
+			if srcStat.IsDir() {
+				if err := os.Mkdir(target, 0755); err != nil {
+					return fmt.Errorf("mkdir %s failed: %w", target, err)
+				}
+			} else {
+				if err := os.WriteFile(target, []byte{}, 0755); err != nil {
+					return fmt.Errorf("touch %s failed: %w", target, err)
+				}
+			}
+		} else if err != nil {
+			return fmt.Errorf("stat %s failed: %w", target, err)
 		}
+
 		// Unfortunately, the unix.MS_RDONLY flag is ignored for bind-mounts.
 		// Thus, we mount a bind-mount, then remount it as readonly.
 		if err := unix.Mount(mount.Source, target, "", unix.MS_BIND, ""); err != nil {
