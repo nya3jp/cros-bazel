@@ -67,10 +67,10 @@ def _calculate_install_groups(build_deps):
 
     return levels
 
-def mountsdk_generic(ctx, progress_message_name, inputs, output, args):
+def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, extra_providers = []):
     sdk = ctx.attr._sdk[SDKInfo]
     args.add_all([
-        "--output=" + output.path,
+        "--output=" + binpkg_output_file.path,
         "--board=" + sdk.board,
     ])
 
@@ -128,7 +128,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, output, args):
     args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
 
     transitive_runtime_deps_files = depset(
-        [output],
+        [binpkg_output_file],
         transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.runtime_deps],
         order = "postorder",
     )
@@ -142,7 +142,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, output, args):
     builder_inputs = depset(direct_inputs, transitive = transitive_inputs)
     ctx.actions.run(
         inputs = builder_inputs,
-        outputs = [output],
+        outputs = outputs,
         executable = ctx.executable._builder,
         arguments = [args],
         execution_requirements = {
@@ -157,9 +157,9 @@ def mountsdk_generic(ctx, progress_message_name, inputs, output, args):
     )
 
     return [
-        DefaultInfo(files = depset([output])),
+        DefaultInfo(files = depset(outputs)),
         BinaryPackageInfo(
-            file = output,
+            file = binpkg_output_file,
             transitive_runtime_deps_files = transitive_runtime_deps_files,
             transitive_runtime_deps_targets = transitive_runtime_deps_targets,
             direct_runtime_deps_targets = ctx.attr.runtime_deps,
@@ -170,7 +170,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, output, args):
             args = args,
             inputs = builder_inputs,
         ),
-    ]
+    ] + extra_providers
 
 COMMON_ATTRS = dict(
     distfiles = attr.label_keyed_string_dict(
@@ -212,7 +212,7 @@ def _mountsdk_debug_impl(ctx):
         outputs = [wrapper],
     )
 
-    runfiles = ctx.runfiles(transitive_files=debug_info.inputs).merge_all([
+    runfiles = ctx.runfiles(transitive_files = debug_info.inputs).merge_all([
         debug_info.executable_runfiles,
         ctx.attr._bash_runfiles[DefaultInfo].default_runfiles,
     ])
