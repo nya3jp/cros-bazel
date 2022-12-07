@@ -6,7 +6,8 @@ def _build_image_impl(ctx):
         ctx,
         progress_message_name = ctx.label.name,
         inputs = [],
-        output = output,
+        binpkg_output_file = output,
+        outputs = [output],
         args = ctx.actions.args(),
     )
 
