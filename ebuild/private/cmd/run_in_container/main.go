@@ -254,7 +254,21 @@ func enterNamespace(c *cli.Context) error {
 		return err
 	}
 
-	args := append([]string{os.Args[0], "--" + flagInternalContinue.Name}, os.Args[1:]...)
+	// --single-child tells dumb-init to not create a new SID. A new SID doesn't
+	// have a controlling terminal, so running `bash` won't work correctly.
+	// By omitting the new SID creation, the init processes will inherit the
+	// current (outside) SID and PGID. This is desirable because then the parent
+	// shell can correctly perform job control (Ctrl+Z) on all the processes.
+	// It also tells dumb-init to only forward signals to the child, instead of
+	// the child's PGID, this is undesirable, but not really a problem in
+	// practice. The other processes we run are `squashfsfuse`, and these create
+	// their own SID's, so we were never forwarding the signals to those processes
+	// in the first place. Honestly, I'm not sure if we really even want signal
+	// forwarding. Instead our `init` processes should only handle
+	// `SIGINT`/`SIGTERM`, perform a `kill -TERM -1` to notify all the processes
+	// in the PID namespace to shut down cleanly, then wait for all processes
+	// to exit.
+	args := append([]string{"--single-child", os.Args[0], "--" + flagInternalContinue.Name}, os.Args[1:]...)
 	cmd := exec.Command(dumbInitPath, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

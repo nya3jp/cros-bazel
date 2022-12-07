@@ -5,6 +5,7 @@
 package mountsdk
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"cros.local/bazel/ebuild/private/common/makechroot"
@@ -24,9 +25,25 @@ var flagOverlay = &cli.StringSliceFlag{
 		"Inside path can be absolute or relative to /mnt/host/source/.",
 }
 
+var flagLogin = &cli.StringFlag{
+	Name: "login",
+	Usage: "--login=before-deps|before|after|after-fail " +
+		"logs in to the SDK before installing deps, before building, after building, or " +
+		"after failing to build respectively.",
+	Action: func(c *cli.Context, value string) error {
+		mode := loginMode(value)
+		if mode != loginNever && mode != loginBeforeDeps && mode != loginBefore && mode != loginAfter && mode != loginAfterFail {
+			return fmt.Errorf("invalid login mode: got %q; want one of %q, %q, %q, or %q",
+				mode, loginBeforeDeps, loginBefore, loginAfter, loginAfterFail)
+		}
+		return nil
+	},
+}
+
 var CLIFlags = []cli.Flag{
 	flagSDK,
 	flagOverlay,
+	flagLogin,
 }
 
 func GetMountConfigFromCLI(c *cli.Context) (*Config, error) {
@@ -53,5 +70,7 @@ func GetMountConfigFromCLI(c *cli.Context) (*Config, error) {
 		}
 		cfg.Overlays = append(cfg.Overlays, overlay)
 	}
+
+	cfg.loginMode = loginMode(c.String(flagLogin.Name))
 	return &cfg, nil
 }

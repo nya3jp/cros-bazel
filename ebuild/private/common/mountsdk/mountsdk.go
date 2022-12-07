@@ -24,6 +24,16 @@ type Action = func(s *MountedSDK) error
 
 const SourceDir = "/mnt/host/source"
 
+type loginMode string
+
+const (
+	loginNever      loginMode = ""
+	loginBeforeDeps loginMode = "before-deps"
+	loginBefore     loginMode = "before"
+	loginAfter      loginMode = "after"
+	loginAfterFail  loginMode = "after-fail"
+)
+
 type Config struct {
 	Overlays   []makechroot.OverlayInfo
 	BindMounts []makechroot.BindMount
@@ -33,6 +43,7 @@ type Config struct {
 	Remounts []string
 
 	RunInContainerExtraArgs []string
+	loginMode               loginMode
 }
 
 type MountedSDK struct {
@@ -102,6 +113,9 @@ func RunInSDK(cfg *Config, action Action) error {
 	args = append(args, setupPath.Inside())
 	sdk.args = args
 	sdk.env = append(os.Environ(), "PATH=/usr/sbin:/usr/bin:/sbin:/bin")
+	if cfg.loginMode != loginNever {
+		sdk.env = append(sdk.env, fmt.Sprintf("_LOGIN_MODE=%s", cfg.loginMode))
+	}
 	return action(&sdk)
 }
 
