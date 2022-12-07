@@ -114,3 +114,59 @@ func Extract(src string, dest string) error {
 
 	return fn(src, dest)
 }
+
+// files defines the src files inside the tarball and where to extract them to.
+// files will be mutated and be left containing the files that didn't get
+// extracted.
+func ExtractFiles(r io.Reader, files map[string]string) error {
+	tarReader := tar.NewReader(r)
+
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return fmt.Errorf("failed decoding tar: %w", err)
+		}
+
+		switch header.Typeflag {
+		case tar.TypeReg:
+			outPath, fileNameMatches := files[header.Name]
+			if !fileNameMatches {
+				continue
+			}
+			delete(files, header.Name)
+
+			outFile, err := os.OpenFile(outPath, os.O_CREATE|os.O_WRONLY, fs.FileMode(header.Mode).Perm())
+			if err != nil {
+				return fmt.Errorf("failed to open %s with mode: %o: %w", outPath, header.Mode, err)
+			}
+			_, err = io.Copy(outFile, tarReader)
+			outFile.Close() // Close the file regardless of Copy's outcome
+			if err != nil {
+				return fmt.Errorf("failed to write %s: %w", outPath, err)
+			}
+		case tar.TypeSymlink:
+			_, fileNameMatches := files[header.Name]
+			if !fileNameMatches {
+				continue
+			}
+
+			// We can only use relative symlinks to keep bazel happy. Let's ignore
+			// them for now.
+			return fmt.Errorf("symlinks are not currently supported %s -> %s", header.Name, header.Linkname)
+		case tar.TypeDir:
+			// We only extract files for now
+			continue
+		default:
+			return fmt.Errorf("Unknown tar type %#x", tar.TypeDir)
+		}
+	}
+
+	if len(files) > 0 {
+		return fmt.Errorf("Failed to extract: %v", files)
+	}
+
+	return nil
+}
