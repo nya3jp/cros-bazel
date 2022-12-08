@@ -35,6 +35,8 @@ var flagOutput = &cli.StringFlag{
 	Required: true,
 }
 
+const mainScript = "/mnt/host/bazel-build/build_image.sh"
+
 type resourceMount struct {
 	resource  string
 	mountPath string
@@ -70,6 +72,10 @@ var app = &cli.App{
 			{
 				mountPath: filepath.Join("/build", board, "etc/portage/profile/package.provided"),
 				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
+			},
+			{
+				mountPath: mainScript,
+				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh",
 			},
 		}
 
@@ -118,7 +124,7 @@ var app = &cli.App{
 		// AddInstallTargetsToConfig returns a set of environment variables for the
 		// packages you want to install. We want to drop this to avoid calling
 		// emerge on every package which we know is already installed.
-		_, err = mountsdk.AddInstallTargetsToConfig(installTargetsUnparsed, targetPackagesDir, cfg)
+		env, err := mountsdk.AddInstallTargetsToConfig(installTargetsUnparsed, targetPackagesDir, cfg)
 		if err != nil {
 			return err
 		}
@@ -147,22 +153,19 @@ var app = &cli.App{
 			}
 
 			args := append([]string{
-				// TODO: build_image has some exponential backoff for stuff like
-				// mounting, which makes it impossible to debug because it never fails.
-				// For now, we'll set a timeout which we'll remove later.
-				"timeout",
-				"60",
-				filepath.Join(mountsdk.SourceDir, "chromite/bin/build_image"),
+				mainScript,
 				fmt.Sprintf("--board=%s", board),
-				// TODO: at some point, we should, instead of always building a test
-				// image, take in some flags that allow us to choose the type of image
-				//to build.
-				"test",
+				// TODO: at some point, we should support a variety of image types
+				"base",
 			},
 				c.Args().Slice()...)
 
 			cmd := s.Command(args[0], args[1:]...)
-			cmd.Env = append(cmd.Env, fmt.Sprintf("BOARD=%s", board))
+			cmd.Env = append(cmd.Env, append(env,
+				fmt.Sprintf("BOARD=%s", board),
+				"SKIP_EMERGE_DEPS=1",
+				fmt.Sprintf("HOST_UID=%d", os.Getuid()),
+				fmt.Sprintf("HOST_GID=%d", os.Getgid()))...)
 			// I have no idea why, but I happened to be trying to run this in a nested
 			// namespace initially, and when I tried to remove it, discovered that
 			// run_in_container only works inside a mount namespace if you're running
@@ -173,8 +176,7 @@ var app = &cli.App{
 				return fmt.Errorf("Failed to run %s: %v", strings.Join(args, " "), err)
 			}
 
-			// TODO: get the path once we have a successful build.
-			path := "/built_image"
+			path := filepath.Join("/mnt/host/source/src/build/images/", board, "latest/chromiumos_base_image.bin")
 			return fileutil.Copy(filepath.Join(s.DiffDir, path), finalOutPath)
 		}); err != nil {
 			if err, ok := err.(*exec.ExitError); ok {
