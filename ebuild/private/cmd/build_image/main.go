@@ -21,7 +21,6 @@ import (
 	"golang.org/x/sys/unix"
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
-	"cros.local/bazel/ebuild/private/common/hostcontainercomms/host"
 	"cros.local/bazel/ebuild/private/common/mountsdk"
 )
 
@@ -122,7 +121,7 @@ var app = &cli.App{
 			return err
 		}
 
-		if err := host.RunInSDKWithServer(ctx, cfg, func(s *mountsdk.MountedSDK) error {
+		if err := mountsdk.RunInSDK(cfg, func(s *mountsdk.MountedSDK) error {
 			args := append([]string{
 				// TODO: build_image has some exponential backoff for stuff like
 				// mounting, which makes it impossible to debug because it never fails.
