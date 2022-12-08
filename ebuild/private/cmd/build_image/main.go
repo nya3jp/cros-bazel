@@ -123,6 +123,28 @@ var app = &cli.App{
 		}
 
 		if err := mountsdk.RunInSDK(cfg, func(s *mountsdk.MountedSDK) error {
+			// setup_board.sh creates emerge-{board} and portageq-{board}, both of
+			// which are used by build_image.sh
+			boardTemplatePath, err := runfiles.Rlocation("chromiumos/bazel/ebuild/private/cmd/build_image/container_files/board_script.sh")
+			if err != nil {
+				return err
+			}
+			boardScriptTemplate, err := os.ReadFile(boardTemplatePath)
+			if err != nil {
+				return err
+			}
+			// TODO: stop hardcoding aarch64-cros-linux-gnu.
+			boardScript := strings.ReplaceAll(
+				strings.ReplaceAll(string(boardScriptTemplate), "${BOARD}", board),
+				"${CHOST}", "aarch64-cros-linux-gnu")
+
+			if err := s.WriteFile(fmt.Sprintf("/usr/bin/emerge-%s", board), []byte(strings.ReplaceAll(boardScript, "${COMMAND}", "emerge --root-deps")), 0755); err != nil {
+				return err
+			}
+			if err := s.WriteFile(fmt.Sprintf("/usr/bin/portageq-%s", board), []byte(strings.ReplaceAll(boardScript, "${COMMAND}", "portageq")), 0755); err != nil {
+				return err
+			}
+
 			args := append([]string{
 				// TODO: build_image has some exponential backoff for stuff like
 				// mounting, which makes it impossible to debug because it never fails.

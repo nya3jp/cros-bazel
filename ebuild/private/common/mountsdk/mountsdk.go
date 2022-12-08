@@ -147,3 +147,11 @@ func (s *MountedSDK) Command(name string, args ...string) *exec.Cmd {
 	cmd.Stderr = os.Stderr
 	return cmd
 }
+
+func (s *MountedSDK) WriteFile(path string, data []byte, perm os.FileMode) error {
+	realPath := filepath.Join(s.RootDir.Outside(), path)
+	if err := os.MkdirAll(filepath.Dir(realPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(realPath, data, perm)
+}
