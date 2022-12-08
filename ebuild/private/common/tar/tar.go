@@ -148,14 +148,22 @@ func ExtractFiles(r io.Reader, files map[string]string) error {
 				return fmt.Errorf("failed to write %s: %w", outPath, err)
 			}
 		case tar.TypeSymlink:
-			_, fileNameMatches := files[header.Name]
+			outPath, fileNameMatches := files[header.Name]
 			if !fileNameMatches {
 				continue
 			}
+			delete(files, header.Name)
 
-			// We can only use relative symlinks to keep bazel happy. Let's ignore
-			// them for now.
-			return fmt.Errorf("symlinks are not currently supported %s -> %s", header.Name, header.Linkname)
+			// bazel only supports relative symlinks that point to existing files.
+			// Let's limit this to symlinks that point to files in the same directory
+			// for now.
+			if strings.Contains(header.Linkname, "/") {
+				return fmt.Errorf("symlinks paths separators are currently supported %s -> %s", header.Name, header.Linkname)
+			}
+
+			if err = os.Symlink(header.Linkname, outPath); err != nil {
+				return fmt.Errorf("failed to create symlink %s -> %s: %w", outPath, header.Linkname, err)
+			}
 		case tar.TypeDir:
 			// We only extract files for now
 			continue
