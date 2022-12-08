@@ -70,6 +70,54 @@ var flagOutputFile = &cli.StringSliceFlag{
 		"and writes it to the outside path",
 }
 
+var flagSysrootFile = &cli.StringSliceFlag{
+	Name: "sysroot-file",
+	Usage: "<inside path>=<outside path>: Copies the outside file into the " +
+		"sysroot.",
+}
+
+type sysrootFileSpec struct {
+	SysrootPath string
+	SrcPath     string
+}
+
+// Spec format: <inside path>=<outside path>
+func parseSysrootFileSpecs(specs []string) ([]sysrootFileSpec, error) {
+	var sysrootFiles []sysrootFileSpec
+	for _, spec := range specs {
+		v := strings.Split(spec, "=")
+		if len(v) != 2 {
+			return nil, fmt.Errorf("invalid sysroot spec: %s", spec)
+		}
+		if !filepath.IsAbs(v[0]) {
+			return nil, fmt.Errorf("invalid sysroot spec: %s, %s must be absolute", spec, v[0])
+		}
+		sysrootFiles = append(sysrootFiles, sysrootFileSpec{
+			SysrootPath: v[0],
+			SrcPath:     v[1],
+		})
+	}
+	return sysrootFiles, nil
+}
+
+func installSysrootFiles(sysrootFiles []sysrootFileSpec, sysroot string) error {
+	for _, sysrootFileSpec := range sysrootFiles {
+		// TODO: Maybe we can hard link or bindmount the files to save the copy
+		// cost?
+		dest := filepath.Join(sysroot, sysrootFileSpec.SysrootPath)
+		destDir := filepath.Dir(dest)
+		if err := os.MkdirAll(destDir, 0o755); err != nil {
+			return err
+		}
+
+		if err := fileutil.Copy(sysrootFileSpec.SrcPath, dest); err != nil {
+			return fmt.Errorf("Failed to copy %s to %s: %w", sysrootFileSpec.SrcPath, dest, err)
+		}
+	}
+
+	return nil
+}
+
 func extractBinaryPackageFiles(binPkgPath string,
 	xpakSpecs []binarypackage.XpakSpec,
 	outputFileSpecs []binarypackage.OutputFileSpec) error {
@@ -141,6 +189,7 @@ var app = &cli.App{
 		flagOutput,
 		flagOutputFile,
 		flagXpak,
+		flagSysrootFile,
 	),
 	Action: func(c *cli.Context) error {
 		finalOutPath := c.String(flagOutput.Name)
@@ -155,6 +204,11 @@ var app = &cli.App{
 		}
 
 		outputFileSpecs, err := binarypackage.ParseOutputFileSpecs(c.StringSlice(flagOutputFile.Name))
+		if err != nil {
+			return err
+		}
+
+		sysrtootFileSpecs, err := parseSysrootFileSpecs(c.StringSlice(flagSysrootFile.Name))
 		if err != nil {
 			return err
 		}
@@ -221,6 +275,12 @@ var app = &cli.App{
 				if err := os.MkdirAll(s.RootDir.Add(dir).Outside(), 0o755); err != nil {
 					return err
 				}
+			}
+
+			sysroot := s.RootDir.Add("build").Add(board).Outside()
+
+			if err := installSysrootFiles(sysrtootFileSpecs, sysroot); err != nil {
+				return err
 			}
 
 			cmd := s.Command(mainScript, "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
