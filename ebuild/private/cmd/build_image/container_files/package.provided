@@ -1,0 +1,13 @@
+# These would be created by setup_board
+sys-devel/gcc-10.2.0-r28
+sys-libs/glibc-2.33-r17
+dev-lang/go-1.18-r2
+
+# We only have chrome-icu-9999. This is normally fine, but if we use a
+# chromeos-chrome prebuilt, then it depends upon a real chrome-icu.
+chromeos-base/chrome-icu-107.0.5257.0_rc
+
+# Required from floss
+virtual/rust-binaries-1-r5
+
+chromeos-base/chromeos-fonts-0.0.1-r52

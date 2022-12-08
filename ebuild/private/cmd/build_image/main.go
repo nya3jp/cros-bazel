@@ -25,11 +25,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/mountsdk"
 )
 
-const edbChromeOSContents = `LIBC_VERSION="2.33-r17"
-LIBCXX_VERSION="15.0_pre458507-r6"
-LIBGCC_VERSION="10.2.0-r28"
-IMPLICIT_SYSROOT_DEPS="yes"`
-
 var flagBoard = &cli.StringFlag{
 	Name:     "board",
 	Required: true,
@@ -38,6 +33,11 @@ var flagBoard = &cli.StringFlag{
 var flagOutput = &cli.StringFlag{
 	Name:     "output",
 	Required: true,
+}
+
+type resourceMount struct {
+	resource  string
+	mountPath string
 }
 
 var app = &cli.App{
@@ -62,24 +62,20 @@ var app = &cli.App{
 			return err
 		}
 
+		resourceMounts := []resourceMount{
+			{
+				mountPath: filepath.Join("/build", board, "var/cache/edb/chromeos"),
+				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos",
+			},
+			{
+				mountPath: filepath.Join("/build", board, "etc/portage/profile/package.provided"),
+				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
+			},
+		}
+
 		// base_image_util calls install_libc_for_abi, which expects certain
 		// cross-compilation tools to be stored at specific locations.
 		// TODO: Once we can build with custom use flags, stop hardcoding aarch64.
-		versionFile, err := os.CreateTemp("", "edb_chromeos")
-		if err != nil {
-			return err
-		}
-		// This may be called twice, but that's fine.
-		defer versionFile.Close()
-		if _, err := versionFile.WriteString(edbChromeOSContents); err != nil {
-			return err
-		}
-		if err := versionFile.Close(); err != nil {
-			return err
-		}
-		cfg.BindMounts = append(cfg.BindMounts, makechroot.BindMount{
-			Source:    versionFile.Name(),
-			MountPath: "/build/arm64-generic/var/cache/edb/chromeos"})
 
 		// It's possible not all of these packages are needed. I may remove some
 		// later if we find out they're never needed throughout the whole
@@ -96,20 +92,25 @@ var app = &cli.App{
 			"amd64_host_linux_headers_4_14_r56/file/linux-headers-4.14-r56.tbz2",
 			"amd64_host_llvm_libunwind_15_0_pre458507_r4/file/llvm-libunwind-15.0_pre458507-r4.tbz2",
 		} {
-
-			path, err := runfiles.Rlocation(resource)
-			if err != nil {
-				return err
-			}
 			// TODO: install_libc hardcodes arm64 to also install the arm32 packages.
 			// This is required only if nacl is used.
 			// For now, install_libc succeeds if we comment out this hardcoding.
 			// Once we can build with custom use flags, we can then support this
 			// properly.
 			// https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/scripts/build_library/base_image_util.sh;l=272-278;drc=cdaf1eab71d4e607239ccc9db877ff2a22f8568e
+			resourceMounts = append(resourceMounts, resourceMount{
+				mountPath: filepath.Join("/var/lib/portage/pkgs/cross-aarch64-cros-linux-gnu", filepath.Base(resource)),
+				resource:  resource})
+		}
+
+		for _, resourceMount := range resourceMounts {
+			path, err := runfiles.Rlocation(resourceMount.resource)
+			if err != nil {
+				return err
+			}
 			cfg.BindMounts = append(cfg.BindMounts, makechroot.BindMount{
 				Source:    path,
-				MountPath: filepath.Join("/var/lib/portage/pkgs/cross-aarch64-cros-linux-gnu", filepath.Base(path)),
+				MountPath: resourceMount.mountPath,
 			})
 		}
 
