@@ -20,12 +20,14 @@ install_deps() {
       mkdir -p "${ROOT}/etc/portage/package.accept_keywords"
       printf "%s\n" "${atoms[@]}" \
         >> "${ROOT}/etc/portage/package.accept_keywords/cros-workon"
-      # Use fakeroot on installing build dependencies since some files might
-      # have non-root ownership or special permissions. Hopefully this does not
-      # affect the result of building the package.
-      # TODO: emerge is too slow! Find a way to speed up.
-      time fakeroot emerge --oneshot --usepkgonly --nodeps --noreplace --jobs \
-        "${atoms[@]}"
+      if [[ ! -v "SKIP_EMERGE_DEPS" ]]; then
+        # Use fakeroot on installing build dependencies since some files might
+        # have non-root ownership or special permissions. Hopefully this does not
+        # affect the result of building the package.
+        # TODO: emerge is too slow! Find a way to speed up.
+        time fakeroot emerge --oneshot --usepkgonly --nodeps --noreplace --jobs \
+          "${atoms[@]}"
+      fi
     fi
     unset "${current_group_var}"
     idx+=1
