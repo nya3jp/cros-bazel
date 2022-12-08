@@ -27,14 +27,14 @@ var flagOverlay = &cli.StringSliceFlag{
 
 var flagLogin = &cli.StringFlag{
 	Name: "login",
-	Usage: "--login=before-deps|before|after|after-fail " +
+	Usage: "--login=before|after|after-fail " +
 		"logs in to the SDK before installing deps, before building, after building, or " +
 		"after failing to build respectively.",
 	Action: func(c *cli.Context, value string) error {
 		mode := loginMode(value)
-		if mode != loginNever && mode != loginBeforeDeps && mode != loginBefore && mode != loginAfter && mode != loginAfterFail {
-			return fmt.Errorf("invalid login mode: got %q; want one of %q, %q, %q, or %q",
-				mode, loginBeforeDeps, loginBefore, loginAfter, loginAfterFail)
+		if mode != loginNever && mode != loginBefore && mode != loginAfter && mode != loginAfterFail {
+			return fmt.Errorf("invalid login mode: got %q; want one of %q, %q, or %q",
+				mode, loginBefore, loginAfter, loginAfterFail)
 		}
 		return nil
 	},

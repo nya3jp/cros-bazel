@@ -26,11 +26,10 @@ const SourceDir = "/mnt/host/source"
 type loginMode string
 
 const (
-	loginNever      loginMode = ""
-	loginBeforeDeps loginMode = "before-deps"
-	loginBefore     loginMode = "before"
-	loginAfter      loginMode = "after"
-	loginAfterFail  loginMode = "after-fail"
+	loginNever     loginMode = ""
+	loginBefore    loginMode = "before"
+	loginAfter     loginMode = "after"
+	loginAfterFail loginMode = "after-fail"
 )
 
 type Config struct {
