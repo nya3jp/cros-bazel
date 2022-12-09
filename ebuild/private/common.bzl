@@ -82,6 +82,27 @@ EbuildSrcInfo = provider(
     },
 )
 
+EbuildLibraryInfo = provider(
+    "Ebuild library info",
+    fields = {
+        "strip_prefix": """
+            str: The prefix to strip off the files when installing into the sdk.
+        """,
+        "headers": """
+            Depset[File]: Headers provided by the package.
+        """,
+        "pkg_configs": """
+            Depset[File]: .pc files provided by the package.
+        """,
+        "shared_libs": """
+            Depset[File]: .so files provided by the package.
+        """,
+        "static_libs": """
+            Depset[File]: .a files provided by the package.
+        """,
+    },
+)
+
 def _workspace_root(label):
     return paths.join("..", label.workspace_name) if label.workspace_name else ""
 

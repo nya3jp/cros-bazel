@@ -3,7 +3,11 @@
 # found in the LICENSE file.
 
 load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "COMMON_ATTRS", "debuggable_mountsdk", "mountsdk_generic")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+
+def _format_input_file_arg(strip_prefix, file):
+    return "--sysroot-file=%s=%s" % (file.path.removeprefix(strip_prefix), file.path)
 
 def _ebuild_basename(ctx):
     return ctx.file.ebuild.basename.rsplit(".", 1)[0]
@@ -21,11 +25,21 @@ def _ebuild_declare_outputs(ctx, args, file_type, allowed_extensions = None):
         if allowed_extensions and extension not in allowed_extensions:
             fail("%s must be of file type %s, got %s" % (inside_path, allowed_extensions, extension))
 
-        file = ctx.actions.declare_file(paths.join(basename, "files", file_type, file_name))
+        file = ctx.actions.declare_file(paths.join(basename, "files", inside_path[1:]))
         outputs.append(file)
         args.add("--output-file=%s=%s" % (inside_path, file.path))
 
     return outputs
+
+def _ebuild_calculate_inputs(ctx, args):
+    inputs = []
+
+    for shared_lib_dep in ctx.attr.shared_lib_deps:
+        lib_info = shared_lib_dep[EbuildLibraryInfo]
+        deps = depset(transitive=[lib_info.headers ,lib_info.pkg_configs ,lib_info.shared_libs])
+
+        args.add_all(deps, allow_closure = True,
+            map_each = lambda file: _format_input_file_arg(lib_info.strip_prefix, file))
 
 def _ebuild_impl(ctx):
     src_basename = _ebuild_basename(ctx)
@@ -35,6 +49,8 @@ def _ebuild_impl(ctx):
     args.add_all([
         "--ebuild=" + ctx.file.ebuild.path,
     ])
+
+    _ebuild_calculate_inputs(ctx, args)
 
     xpak_outputs = []
     for xpak_file in ["NEEDED", "REQUIRES", "PROVIDES"]:
@@ -71,12 +87,23 @@ def _ebuild_impl(ctx):
         static_libs = depset(static_lib_outputs),
     )
 
+    # TODO: Only generate this if we have files specified
+    library_info = EbuildLibraryInfo(
+        strip_prefix = paths.join(binpkg_output_file.path.rsplit(".", 1)[0], "files"),
+        headers = output_group_info.headers,
+        pkg_configs = output_group_info.pkg_configs,
+        shared_libs = output_group_info.shared_libs,
+        static_libs = output_group_info.static_libs,
+    )
+
     outputs = ([binpkg_output_file] +
                xpak_outputs +
                header_outputs +
                pkg_config_outputs +
                shared_lib_outputs +
                static_lib_outputs)
+
+    # TODO: Create CCInfo so we can start using rules_cc
 
     return mountsdk_generic(
         ctx,
@@ -85,7 +112,7 @@ def _ebuild_impl(ctx):
         binpkg_output_file = binpkg_output_file,
         outputs = outputs,
         args = args,
-        extra_providers = [output_group_info],
+        extra_providers = [output_group_info, library_info],
         install_deps = True,
     )
 
@@ -123,6 +150,12 @@ _ebuild = rule(
             doc = """
             The path inside the binpkg that contains static libraries.
             """,
+        ),
+        shared_lib_deps = attr.label_list(
+            doc = """
+            The shared libraries this target will link against.
+            """,
+            providers = [EbuildLibraryInfo],
         ),
         _builder = attr.label(
             executable = True,
