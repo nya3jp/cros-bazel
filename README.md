@@ -192,6 +192,15 @@ implementations.
 $ bazel run //bazel/ebuild/cmd/compare_packages
 ```
 
+### Extracting binary packages
+
+In case you need to extract the contents of a binary package so you can easily
+inspect it, you can use the `xpak split` CLI.
+
+```sh
+bazel run //bazel/ebuild/cmd/xpak:xpak -- split --extract libffi-3.1-r8.tbz2 libusb-0-r2.tbz2
+```
+
 ### Handling packages that contain BUILD or BUILD.bazel files
 
 Some ebuild packages use `bazel` as their build system, so they will contain
