@@ -128,11 +128,6 @@ _ebuild = rule(
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/build_package"),
         ),
-        _install_deps = attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//bazel/ebuild/private/cmd/install_deps"),
-        ),
         **COMMON_ATTRS
     ),
 )

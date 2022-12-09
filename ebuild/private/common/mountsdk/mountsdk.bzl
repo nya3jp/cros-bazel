@@ -248,6 +248,11 @@ COMMON_ATTRS = dict(
         providers = [SDKInfo],
         default = Label("//bazel/sdk"),
     ),
+    _install_deps = attr.label(
+        executable = True,
+        cfg = "exec",
+        default = Label("//bazel/ebuild/private/cmd/install_deps"),
+    ),
 )
 
 def _mountsdk_debug_impl(ctx):
