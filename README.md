@@ -60,13 +60,6 @@ $ bazel build --keep_going //:all_target_packages
 This is basically a short-cut to build
 `//third_party/chromiumos-overlay/virtual/target-os:0`.
 
-To build only the packages that were already working (to detect if you have any
-regressions in your CL), run:
-
-```
-bazel build --keep_going //:working_packages
-```
-
 ## Directory structure
 
 See [manifest/_bazel.xml] for details on how this repository is organized.
