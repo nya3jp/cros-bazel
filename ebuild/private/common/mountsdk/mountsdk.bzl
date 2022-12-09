@@ -89,7 +89,7 @@ def _install_deps(ctx, progress_message_name, transitive_build_time_deps_files, 
     args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
     direct_inputs.extend(sdk.layers)
 
-    overlays = ctx.attr._overlays[OverlaySetInfo].overlays
+    overlays = ctx.attr.overlays[OverlaySetInfo].overlays
     for overlay in overlays:
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
@@ -141,7 +141,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         args.add("--distfile=%s=%s" % (distfile_name, file.path))
         direct_inputs.append(file)
 
-    overlays = ctx.attr._overlays[OverlaySetInfo].overlays
+    overlays = ctx.attr.overlays[OverlaySetInfo].overlays
     for overlay in overlays:
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
@@ -246,7 +246,7 @@ COMMON_ATTRS = dict(
     files = attr.label_list(
         allow_files = True,
     ),
-    _overlays = attr.label(
+    overlays = attr.label(
         providers = [OverlaySetInfo],
         default = "//bazel/config:overlays",
     ),

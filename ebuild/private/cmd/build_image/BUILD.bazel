@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("//bazel/ebuild:defs.bzl", "overlay_set")
 load("//bazel/ebuild/private:build_image.bzl", "build_image")
 
 go_library(
@@ -41,6 +42,18 @@ go_binary(
     visibility = ["//visibility:public"],
 )
 
+overlay_set(
+    name = "overlays_build_image",
+    overlays = [
+        "//overlays/overlay-arm64-generic",
+        "//third_party/eclass-overlay",
+        "//third_party/chromiumos-overlay:package-provided",
+        "//third_party/chromiumos-overlay",
+        "//third_party/portage-stable",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 build_image(
     name = "build_image_demo",
     srcs = [
@@ -59,4 +72,5 @@ build_image(
         "//third_party/portage-stable/sys-auth/pambase:0",
         "//third_party/portage-stable/sys-devel/llvm-common:0",
     ],
+    overlays = ":overlays_build_image",
 )
