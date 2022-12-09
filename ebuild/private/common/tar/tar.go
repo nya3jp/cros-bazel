@@ -178,3 +178,46 @@ func ExtractFiles(r io.Reader, files map[string]string) error {
 
 	return nil
 }
+
+type FileListItem struct {
+	// tar.TypeReg, tar.TypeLink, etc
+	Type byte
+	Path string
+}
+
+func ListFilesZstd(r io.Reader) ([]FileListItem, error) {
+	decoder, err := zstd.NewReader(r, zstd.WithDecoderConcurrency(0))
+	if err != nil {
+		return nil, err
+	}
+	defer decoder.Close()
+
+	return ListFiles(decoder)
+}
+
+func ListFiles(r io.Reader) ([]FileListItem, error) {
+	tarReader := tar.NewReader(r)
+
+	var items []FileListItem
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, fmt.Errorf("failed decoding tar: %w", err)
+		}
+
+		switch header.Typeflag {
+		case tar.TypeReg, tar.TypeLink, tar.TypeSymlink:
+			items = append(items, FileListItem{header.Typeflag, header.Name})
+		case tar.TypeDir:
+			// We don't list directories
+			continue
+		default:
+			return nil, fmt.Errorf("Unknown tar type %#x", tar.TypeDir)
+		}
+	}
+
+	return items, nil
+}
