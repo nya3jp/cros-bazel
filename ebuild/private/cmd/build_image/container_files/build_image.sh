@@ -3,6 +3,8 @@
 # Some scripts call build_dlc, which is in the chromite bin directory.
 export PATH="$PATH:/mnt/host/source/chromite/bin"
 
+SKIP_EMERGE_DEPS=1 /mnt/host/bazel-build/install_deps.sh
+
 /mnt/host/source/chromite/bin/build_image "$@"
 RC=$?
 

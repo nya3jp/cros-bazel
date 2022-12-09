@@ -114,7 +114,7 @@ def _install_deps(ctx, progress_message_name, transitive_build_time_deps_files, 
     )
     return output_root, output_symindex
 
-def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, extra_providers = []):
+def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, extra_providers = [], install_deps = False):
     sdk = ctx.attr._sdk[SDKInfo]
     args.add_all([
         "--output=" + binpkg_output_file.path,
@@ -169,15 +169,20 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         order = "postorder",
     )
 
-    deps_directory, deps_symindex = _install_deps(
-        ctx,
-        progress_message_name,
-        transitive_build_time_deps_files,
-        transitive_build_time_deps_targets,
-    )
-    args.add(deps_directory.path, format = "--sdk=%s")
-    args.add(deps_symindex.path, format = "--sdk=%s")
-    transitive_inputs.append(depset([deps_directory, deps_symindex]))
+    if install_deps:
+        deps_directory, deps_symindex = _install_deps(
+            ctx,
+            progress_message_name,
+            transitive_build_time_deps_files,
+            transitive_build_time_deps_targets,
+        )
+        args.add(deps_directory.path, format = "--sdk=%s")
+        args.add(deps_symindex.path, format = "--sdk=%s")
+        transitive_inputs.append(depset([deps_directory, deps_symindex]))
+    else:
+        transitive_inputs.append(transitive_build_time_deps_files)
+        install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
+        args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
 
     transitive_runtime_deps_files = depset(
         [binpkg_output_file],

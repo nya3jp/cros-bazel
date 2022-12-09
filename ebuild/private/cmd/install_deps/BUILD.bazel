@@ -29,3 +29,8 @@ go_binary(
     embed = [":install_deps_lib"],
     visibility = ["//visibility:public"],
 )
+
+exports_files(
+    ["install_deps.sh"],
+    visibility = ["//visibility:public"],
+)

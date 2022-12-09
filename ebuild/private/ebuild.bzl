@@ -86,6 +86,7 @@ def _ebuild_impl(ctx):
         outputs = outputs,
         args = args,
         extra_providers = [output_group_info],
+        install_deps = True,
     )
 
 _ebuild = rule(

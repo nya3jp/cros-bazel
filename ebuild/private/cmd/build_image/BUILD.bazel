@@ -19,6 +19,7 @@ go_library(
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
         "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
+        "//bazel/ebuild/private/cmd/install_deps:install_deps.sh",
     ] + glob(["container_files/*"]),
     importpath = "cros.local/bazel/ebuild/private/cmd/build_image",
     visibility = ["//visibility:private"],

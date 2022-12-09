@@ -74,6 +74,10 @@ var app = &cli.App{
 				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
 			},
 			{
+				mountPath: "/mnt/host/bazel-build/install_deps.sh",
+				resource:  "chromiumos/bazel/ebuild/private/cmd/install_deps/install_deps.sh",
+			},
+			{
 				mountPath: mainScript,
 				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh",
 			},
@@ -163,7 +167,6 @@ var app = &cli.App{
 			cmd := s.Command(args[0], args[1:]...)
 			cmd.Env = append(cmd.Env, append(env,
 				fmt.Sprintf("BOARD=%s", board),
-				"SKIP_EMERGE_DEPS=1",
 				fmt.Sprintf("HOST_UID=%d", os.Getuid()),
 				fmt.Sprintf("HOST_GID=%d", os.Getgid()))...)
 			// I have no idea why, but I happened to be trying to run this in a nested
