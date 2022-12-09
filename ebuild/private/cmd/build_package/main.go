@@ -5,10 +5,8 @@
 package main
 
 import (
-	_ "embed"
 	"errors"
 	"fmt"
-
 	"os"
 	"os/exec"
 	"os/signal"
@@ -21,6 +19,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
 	"cros.local/bazel/ebuild/private/common/processes"
 	"cros.local/bazel/ebuild/private/common/standard/version"
+	"github.com/bazelbuild/rules_go/go/runfiles"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
 
@@ -33,8 +32,7 @@ const (
 	binaryExt = ".tbz2"
 )
 
-//go:embed run.sh
-var runScript []byte
+const mainScript = "/mnt/host/bazel-build/build_package.sh"
 
 var flagBoard = &cli.StringFlag{
 	Name:     "board",
@@ -172,7 +170,14 @@ var app = &cli.App{
 			return err
 		}
 
-		cfg.MainScript = runScript
+		runScript, err := runfiles.Rlocation("chromiumos/bazel/ebuild/private/cmd/build_package/build_package.sh")
+		if err != nil {
+			return err
+		}
+		cfg.BindMounts = append(cfg.BindMounts, makechroot.BindMount{
+			Source:    runScript,
+			MountPath: mainScript,
+		})
 
 		ebuildMetadata, err := ParseEbuildMetadata(ebuildSource)
 		if err != nil {
@@ -218,7 +223,7 @@ var app = &cli.App{
 				}
 			}
 
-			cmd := s.Command("ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
+			cmd := s.Command(mainScript, "ebuild", "--skip-manifest", overlayEbuildPath.Inside(), "clean", "package")
 			cmd.Env = append(cmd.Env, fmt.Sprintf("BOARD=%s", board))
 
 			if err := processes.Run(ctx, cmd); err != nil {

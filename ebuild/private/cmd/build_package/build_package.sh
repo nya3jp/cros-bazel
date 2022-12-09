@@ -21,26 +21,4 @@ fi
 
 export FEATURES="${FEATURES} fakeroot"
 
-if [[ "${LOGIN_MODE}" == "before" ]]; then
-  invoke-bash
-fi
-
-if [[ $# = 0 ]]; then
-  exec bash
-elif [[ -z "${LOGIN_MODE}" ]]; then
-  exec "$@"
-fi
-
-if "$@"; then
-  RC=0
-else
-  RC="$?"
-fi
-
-if [[ "${LOGIN_MODE}" == "after" ]]; then
-  invoke-bash
-elif [[ "${LOGIN_MODE}" == "after-fail" && "$RC" -ne 0 ]]; then
-  invoke-bash
-fi
-
-exit $RC
+exec "$@"

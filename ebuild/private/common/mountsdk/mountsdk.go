@@ -43,7 +43,6 @@ type Config struct {
 
 	RunInContainerExtraArgs []string
 	loginMode               loginMode
-	MainScript              []byte
 }
 
 type MountedSDK struct {
@@ -111,11 +110,6 @@ func RunInSDK(cfg *Config, action Action) error {
 		// We need to bind mount the control fifo on top of the overlayfs mounts to
 		// prevent overlayfs from interfering with the device/inode lookup.
 		args = append(args, fmt.Sprintf("--bind-mount=%s=%s", controlChannelPath.Inside(), controlChannelPath.Outside()))
-	}
-
-	runScriptPath := bazelBuildDir.Add("run.sh")
-	if err := os.WriteFile(runScriptPath.Outside(), cfg.MainScript, 0o755); err != nil {
-		return err
 	}
 
 	setupScriptPath := bazelBuildDir.Add("setup.sh")

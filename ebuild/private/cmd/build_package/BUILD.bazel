@@ -7,7 +7,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 go_library(
     name = "build_package_lib",
     srcs = ["main.go"],
-    embedsrcs = ["run.sh"],
+    data = [":build_package.sh"],
     importpath = "cros.local/bazel/ebuild/private/cmd/build_package",
     visibility = ["//visibility:private"],
     deps = [
@@ -20,6 +20,7 @@ go_library(
         "//bazel/ebuild/private/common/processes",
         "//bazel/ebuild/private/common/standard/version",
         "@com_github_urfave_cli_v2//:cli",
+        "@io_bazel_rules_go//go/runfiles:go_default_library",
         "@org_golang_x_sys//unix",
     ],
 )

@@ -5,13 +5,14 @@
 package main
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 
+	"cros.local/bazel/ebuild/private/common/makechroot"
+	"github.com/bazelbuild/rules_go/go/runfiles"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
 
@@ -23,12 +24,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/symindex"
 )
 
-const (
-	binaryExt = ".tbz2"
-)
-
-//go:embed run.sh
-var runScript []byte
+const mainScript = "/mnt/host/bazel-build/install_deps.sh"
 
 var flagBoard = &cli.StringFlag{
 	Name:     "board",
@@ -71,7 +67,14 @@ var app = &cli.App{
 			return err
 		}
 
-		cfg.MainScript = runScript
+		runScript, err := runfiles.Rlocation("chromiumos/bazel/ebuild/private/cmd/install_deps/install_deps.sh")
+		if err != nil {
+			return err
+		}
+		cfg.BindMounts = append(cfg.BindMounts, makechroot.BindMount{
+			Source:    runScript,
+			MountPath: mainScript,
+		})
 
 		targetPackagesDir := filepath.Join("/build", board, "packages")
 
@@ -87,8 +90,7 @@ var app = &cli.App{
 				}
 			}
 
-			// TODO: Revisit MountedSDK's API to avoid passing an empty command here.
-			cmd := s.Command("")
+			cmd := s.Command(mainScript)
 			cmd.Env = append(append(cmd.Env, installTargetsEnv...), fmt.Sprintf("BOARD=%s", board))
 
 			if err := processes.Run(ctx, cmd); err != nil {
