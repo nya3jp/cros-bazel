@@ -37,6 +37,25 @@ var app = &cli.App{
 					cCtx.Args().Slice())
 			},
 		},
+		{
+			Name:    "extract-metadata",
+			Aliases: []string{"e"},
+			Usage: "Extracts the metadata required to generate detailed bazel rules." +
+				" This metadata will be parsed as part of extract_deps and used to generate a" +
+				" fine grained dep graph.",
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "write",
+					Aliases: []string{"w"},
+					Usage:   "Write the extracted metadata back to the ebuild repository.",
+				},
+			},
+			Action: func(cCtx *cli.Context) error {
+				return extractMetadataCmd(cCtx.Context,
+					cCtx.Bool("write"),
+					cCtx.Args().Slice())
+			},
+		},
 	},
 }
 
