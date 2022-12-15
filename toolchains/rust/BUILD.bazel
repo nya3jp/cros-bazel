@@ -1,7 +1,16 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 rust_binary(
     name = "hello_world",
     srcs = ["hello_world.rs"],
     deps = [],
+)
+
+rust_binary(
+    name = "hello_crate",
+    srcs = ["hello_crate.rs"],
+    deps = [
+        "//bazel/crates:env_logger",
+        "//bazel/crates:log",
+    ],
 )

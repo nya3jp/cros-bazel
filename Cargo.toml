@@ -1,0 +1,11 @@
+[package]
+name = "chromiumos"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "bazel/toolchains/rust/hello_world.rs"
+
+[dependencies]
+log = "0.4.17"
+env_logger = "0.9.3"

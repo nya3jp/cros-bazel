@@ -1,7 +1,7 @@
 load("//bazel/third_party:github_archive.bzl", "github_archive")
 
-RULES_VERSION = "0.14.0"
-CHECKSUM = "2625a71dafa42fb63348bcb04498cb9e83be6ea0e99e0359863345dc1cfd65fb"
+RULES_VERSION = "0.15.0"
+CHECKSUM = "d541276e940ee84ab7f1531cc332f8f7320036a15c77379d5634e43fa4ed5f96"
 
 def rust_repositories():
     github_archive(
