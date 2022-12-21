@@ -5,7 +5,7 @@
 use anyhow::{Error, Result};
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_till},
+    bytes::complete::{tag, take_till1},
     character::complete::multispace0,
     combinator::{eof, map, map_res, opt, verify},
     sequence::{preceded, tuple},
@@ -31,22 +31,24 @@ impl<'i> DependencyParserCommon<'i, UriAtomDependency> for UriDependencyParser {
     fn expression(input: &str) -> IResult<&str, UriDependency> {
         let (input, _) = multispace0(input)?;
         alt((
+            // Prefer matches with composite dependencies since URIs/filenames
+            // consist of arbitrary characters.
+            Self::all_of,
+            Self::any_of,
+            Self::use_conditional,
             map(Self::uri, |(url, filename)| {
                 Dependency::Leaf(UriAtomDependency::Uri(url, filename.map(|s| s.to_owned())))
             }),
             map(Self::filename, |filename| {
                 Dependency::Leaf(UriAtomDependency::Filename(filename.to_owned()))
             }),
-            Self::all_of,
-            Self::any_of,
-            Self::use_conditional,
         ))(input)
     }
 }
 
 impl UriDependencyParser {
     fn uri(input: &str) -> IResult<&str, (Url, Option<&str>)> {
-        let (input, url) = map_res(take_till(char::is_whitespace), Url::parse)(input)?;
+        let (input, url) = map_res(take_till1(char::is_whitespace), Url::parse)(input)?;
         let (input, filename) = opt(preceded(
             tuple((multispace0, tag("->"), multispace0)),
             Self::filename,
@@ -55,7 +57,8 @@ impl UriDependencyParser {
     }
 
     fn filename(input: &str) -> IResult<&str, &str> {
-        verify(take_till(char::is_whitespace), |s: &str| !s.contains('/'))(input)
+        // Avoid matching with a closing parenthesis.
+        verify(take_till1(char::is_whitespace), |s: &str| s != ")")(input)
     }
 
     fn full(input: &str) -> IResult<&str, UriDependency> {
@@ -72,5 +75,68 @@ impl DependencyParser<UriDependency> for UriDependencyParser {
     fn parse(input: &str) -> Result<UriDependency> {
         let (_, deps) = UriDependencyParser::full(input).map_err(|err| err.to_owned())?;
         Ok(deps)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn test_parse_empty() -> Result<()> {
+        let deps = UriDependency::from_str("")?;
+        assert_eq!(UriDependency::new_constant(true), deps);
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_whitespace() -> Result<()> {
+        let deps = UriDependency::from_str(" \r \n \t ")?;
+        assert_eq!(UriDependency::new_constant(true), deps);
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_atoms() -> Result<()> {
+        let deps = UriDependency::from_str("https://www.google.com/robots.txt kitten.jpg")?;
+        assert_eq!(
+            UriDependency::new_composite(CompositeDependency::AllOf {
+                children: vec![
+                    UriDependency::Leaf(UriAtomDependency::Uri(
+                        Url::parse("https://www.google.com/robots.txt")?,
+                        None
+                    )),
+                    UriDependency::Leaf(UriAtomDependency::Filename("kitten.jpg".to_owned()))
+                ]
+            }),
+            deps
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_composite() -> Result<()> {
+        let deps = UriDependency::from_str("|| ( foo? ( bar ) )")?;
+        assert_eq!(
+            UriDependency::new_composite(CompositeDependency::AllOf {
+                children: vec![UriDependency::new_composite(CompositeDependency::AnyOf {
+                    children: vec![UriDependency::new_composite(
+                        CompositeDependency::UseConditional {
+                            name: "foo".to_owned(),
+                            expect: true,
+                            child: UriDependency::new_composite(CompositeDependency::AllOf {
+                                children: vec![UriDependency::Leaf(UriAtomDependency::Filename(
+                                    "bar".to_owned()
+                                ))],
+                            }),
+                        }
+                    ),],
+                }),],
+            }),
+            deps
+        );
+        Ok(())
     }
 }

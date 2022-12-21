@@ -28,7 +28,7 @@ pub trait Predicate<T: ?Sized> {
 ///
 /// See the following section in the PMS for the detailed specification:
 /// https://projects.gentoo.org/pms/8/pms.html#x1-730008.2
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Dependency<L> {
     /// Leaf dependency that is specific to the actual dependency type.
     Leaf(L),
@@ -39,7 +39,7 @@ pub enum Dependency<L> {
 
 /// Composite dependency expression that contains zero or more dependencies
 /// recursively.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CompositeDependency<L> {
     /// All-of dependencies: satisfied when all of child dependencies are
     /// satisfied.
