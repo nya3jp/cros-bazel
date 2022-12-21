@@ -8,8 +8,10 @@ default-run = "alchemist"
 
 [dependencies]
 anyhow = { version = "1.0.66", features = ["backtrace"] }
+base64 = "0.20.0"
 clap = { version = "4.0.29", features = ["derive"] }
 colored = "2.0.0"
+hex = "0.4.3"
 itertools = "0.10.5"
 lazy_static = "1.4.0"
 nix = "0.26.1"

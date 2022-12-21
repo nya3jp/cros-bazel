@@ -10,6 +10,7 @@ use anyhow::{bail, Result};
 use itertools::Itertools;
 
 pub mod package;
+pub mod uri;
 
 fn parse_simplified_dependency<L: Clone + Display + Eq + Hash>(
     deps: Dependency<L>,
