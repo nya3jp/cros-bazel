@@ -10,8 +10,8 @@ use super::{CompositeDependency, Dependency};
 
 /// Elides USE conditions (`foo? ( ... )`) from a dependency expression by
 /// assigning USE flag values.
-pub fn elide_use_conditions<L>(deps: Dependency<L>, use_map: &UseMap) -> Dependency<L> {
-    deps.map_tree(|d| {
+pub fn elide_use_conditions<L>(deps: Dependency<L>, use_map: &UseMap) -> Option<Dependency<L>> {
+    deps.flat_map_tree(|d| {
         match d {
             Dependency::Composite(composite) => {
                 match *composite {
@@ -24,20 +24,15 @@ pub fn elide_use_conditions<L>(deps: Dependency<L>, use_map: &UseMap) -> Depende
                         // TODO: Check if this is a right behavior.
                         let value = *use_map.get(&name).unwrap_or(&false);
                         if value == expect {
-                            child
+                            Some(child)
                         } else {
-                            // TODO: Remove the expression rather than replacing it with
-                            // the constant true.
-                            // The current behavior does not match Portage's.
-                            // For example, "|| ( foo? ( a/b ) )" should be considered
-                            // unsatisfiable when foo is unset.
-                            Dependency::new_constant(true)
+                            None
                         }
                     }
-                    other => Dependency::Composite(Box::new(other)),
+                    other => Some(Dependency::Composite(Box::new(other))),
                 }
             }
-            other => other,
+            other => Some(other),
         }
     })
 }

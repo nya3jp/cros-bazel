@@ -21,7 +21,7 @@ fn simplify_dependency(
     use_map: &UseMap,
     resolver: &Resolver,
 ) -> Result<PackageDependency> {
-    let deps = elide_use_conditions(deps, use_map);
+    let deps = elide_use_conditions(deps, use_map).unwrap_or_default();
 
     // Rewrite atoms.
     let deps = deps.try_map_tree_par(|dep| -> Result<PackageDependency> {

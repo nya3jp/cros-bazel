@@ -18,7 +18,7 @@ pub fn translate_uri_dependencies(
     deps: UriDependency,
     use_map: &UseMap,
 ) -> Result<Vec<UriAtomDependency>> {
-    let deps = elide_use_conditions(deps, &use_map);
+    let deps = elide_use_conditions(deps, &use_map).unwrap_or_default();
     let deps = simplify(deps);
     parse_simplified_dependency(deps)
 }

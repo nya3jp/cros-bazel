@@ -9,15 +9,34 @@ pub mod uri;
 
 use std::{convert::Infallible, fmt::Display, str::FromStr};
 
+use itertools::Itertools;
 use rayon::prelude::*;
 
 use crate::data::UseMap;
 
 use self::parser::{DependencyParser, DependencyParserType};
 
-/// Trait for a matcher function.
+/// General-purpose predicate with two-valued logic.
+///
+/// Leaf dependencies should implement this logic so that they can be used with
+/// [`Dependency`].
 pub trait Predicate<T: ?Sized> {
     fn matches(&self, target: &T) -> bool;
+}
+
+/// Similar to [`Predicate`], but uses three-valued logic.
+///
+/// Composite dependencies return three-valued logic. When a dependency
+/// returns [`None`], it should be treated as if the dependency does not
+/// exist from the first place.
+///
+/// Notably, USE-conditional dependency returns [`None`] when its USE flag
+/// precondition is not satisfied.
+///
+/// For example, `|| ( foo? ( a/b ) )` should be considered unsatisfiable
+/// when `foo` is unset.
+pub trait ThreeValuedPredicate<T: ?Sized> {
+    fn matches(&self, target: &T) -> Option<bool>;
 }
 
 /// Generic dependency expression.
@@ -96,32 +115,56 @@ impl<L> Dependency<L> {
     }
 
     pub fn try_map_tree<E>(self, mut f: impl FnMut(Self) -> Result<Self, E>) -> Result<Self, E> {
-        self.try_map_tree_impl(&mut f)
+        Ok(self.try_flat_map_tree(move |d| Ok(Some(f(d)?)))?.unwrap())
     }
 
-    fn try_map_tree_impl<E>(self, f: &mut impl FnMut(Self) -> Result<Self, E>) -> Result<Self, E> {
+    // TODO: Support [`Iterator`] in general, instead of [`Option`] only.
+    pub fn flat_map_tree(self, mut f: impl FnMut(Self) -> Option<Self>) -> Option<Self> {
+        self.try_flat_map_tree(move |d| Result::<Option<Self>, Infallible>::Ok(f(d)))
+            .unwrap()
+    }
+
+    // TODO: Support [`Iterator`] in general, instead of [`Option`] only.
+    pub fn try_flat_map_tree<E>(
+        self,
+        mut f: impl FnMut(Self) -> Result<Option<Self>, E>,
+    ) -> Result<Option<Self>, E> {
+        self.try_flat_map_tree_impl(&mut f)
+    }
+
+    fn try_flat_map_tree_impl<E>(
+        self,
+        f: &mut impl FnMut(Self) -> Result<Option<Self>, E>,
+    ) -> Result<Option<Self>, E> {
         let tree = match self {
             Self::Composite(composite) => Self::new_composite(match *composite {
                 CompositeDependency::AllOf { children } => CompositeDependency::AllOf {
                     children: children
                         .into_iter()
-                        .map(|child| child.try_map_tree_impl(f))
+                        .map(|child| child.try_flat_map_tree_impl(f))
+                        .flatten_ok()
                         .collect::<Result<Vec<_>, E>>()?,
                 },
                 CompositeDependency::AnyOf { children } => CompositeDependency::AnyOf {
                     children: children
                         .into_iter()
-                        .map(|child| child.try_map_tree_impl(f))
+                        .map(|child| child.try_flat_map_tree_impl(f))
+                        .flatten_ok()
                         .collect::<Result<Vec<_>, E>>()?,
                 },
                 CompositeDependency::UseConditional {
                     name,
                     expect,
                     child,
-                } => CompositeDependency::UseConditional {
-                    name,
-                    expect,
-                    child: child.try_map_tree_impl(f)?,
+                } => match child.try_flat_map_tree_impl(f)? {
+                    None => {
+                        return Ok(None);
+                    }
+                    Some(child) => CompositeDependency::UseConditional {
+                        name,
+                        expect,
+                        child,
+                    },
                 },
             }),
             Self::Leaf(leaf) => Self::Leaf(leaf),
@@ -176,6 +219,13 @@ impl<L: Send> Dependency<L> {
     }
 }
 
+impl<L> Default for Dependency<L> {
+    /// The default value of [`Dependency`] is the constant true.
+    fn default() -> Self {
+        Self::new_constant(true)
+    }
+}
+
 impl<L: Display> Display for Dependency<L> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -210,18 +260,22 @@ impl<L: Display> Display for Dependency<L> {
     }
 }
 
-impl<T: AsRef<UseMap>, L: Predicate<T>> Predicate<T> for Dependency<L> {
-    fn matches(&self, target: &T) -> bool {
+impl<T: AsRef<UseMap>, L: Predicate<T>> ThreeValuedPredicate<T> for Dependency<L> {
+    fn matches(&self, target: &T) -> Option<bool> {
         match self {
-            Self::Leaf(leaf) => leaf.matches(target),
+            Self::Leaf(leaf) => Some(leaf.matches(target)),
             Self::Composite(composite) => {
                 match &**composite {
-                    CompositeDependency::AllOf { children } => {
-                        children.iter().all(|child| child.matches(target))
-                    }
-                    CompositeDependency::AnyOf { children } => {
-                        children.iter().any(|child| child.matches(target))
-                    }
+                    CompositeDependency::AllOf { children } => Some(
+                        children
+                            .iter()
+                            .all(|child| child.matches(target) != Some(false)),
+                    ),
+                    CompositeDependency::AnyOf { children } => Some(
+                        children
+                            .iter()
+                            .any(|child| child.matches(target) == Some(true)),
+                    ),
                     CompositeDependency::UseConditional {
                         name,
                         expect,
@@ -232,11 +286,7 @@ impl<T: AsRef<UseMap>, L: Predicate<T>> Predicate<T> for Dependency<L> {
                         // Assume that a USE flag is unset when it is not declared in IUSE.
                         let value = *value.unwrap_or(&false);
                         if value != *expect {
-                            // TODO: Ignore the expression rather than returning true.
-                            // The current behavior does not match Portage's.
-                            // For example, "|| ( foo? ( a/b ) )" should be considered
-                            // unsatisfiable when foo is unset.
-                            true
+                            None
                         } else {
                             child.matches(target)
                         }
