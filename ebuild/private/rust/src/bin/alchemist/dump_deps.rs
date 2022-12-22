@@ -5,6 +5,7 @@
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fs::read_to_string,
+    iter::{repeat, zip},
     path::Path,
     sync::{Arc, Mutex},
 };
@@ -35,6 +36,7 @@ struct PackageDataUnresolved {
     build_deps: Vec<PackageSlotKey>,
     runtime_deps: Vec<PackageSlotKey>,
     unresolved_post_deps: Vec<PackageAtomDependency>,
+    pub local_sources: Vec<String>,
     remote_sources: Vec<RemoteSourceData>,
 }
 
@@ -46,6 +48,7 @@ pub struct PackageData {
     pub build_deps: Vec<PackageSlotKey>,
     pub runtime_deps: Vec<PackageSlotKey>,
     pub post_deps: Vec<PackageSlotKey>,
+    pub local_sources: Vec<String>,
     pub remote_sources: Vec<RemoteSourceData>,
 }
 
@@ -155,6 +158,218 @@ fn extract_package_dependencies(
     translate_package_dependency(deps, &details.use_map, resolver)
 }
 
+fn get_cros_workon_array_variable(
+    details: &PackageDetails,
+    name: &str,
+    projects: usize,
+) -> Result<Vec<String>> {
+    let raw_values = match details.vars.get(name) {
+        None => {
+            bail!("{} not defined", name);
+        }
+        Some(BashValue::Scalar(value)) => vec![value.clone()],
+        Some(BashValue::IndexedArray(values)) => values.clone(),
+        Some(other) => {
+            bail!("Invalid {} value: {:?}", name, other);
+        }
+    };
+
+    // If the number of elements is 1, repeat the same value for the number of
+    // projects.
+    let extended_values = if raw_values.len() == 1 {
+        repeat(raw_values[0].clone()).take(projects).collect()
+    } else {
+        raw_values
+    };
+    Ok(extended_values)
+}
+
+fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<String>> {
+    let projects = match details.vars.get("CROS_WORKON_PROJECT") {
+        None => {
+            // This is not a cros-workon package.
+            return Ok(Vec::new());
+        }
+        Some(BashValue::Scalar(project)) => vec![project.clone()],
+        Some(BashValue::IndexedArray(projects)) => projects.clone(),
+        others => {
+            bail!("Invalid CROS_WORKON_PROJECT value: {:?}", others)
+        }
+    };
+
+    let local_names =
+        get_cros_workon_array_variable(details, "CROS_WORKON_LOCALNAME", projects.len())?;
+    let subtrees = get_cros_workon_array_variable(details, "CROS_WORKON_SUBTREE", projects.len())?;
+
+    let is_chromeos_base = details.package_name.starts_with("chromeos-base/");
+
+    let mut source_paths = Vec::<String>::new();
+
+    for (local_name, subtree) in zip(local_names, subtrees) {
+        // CROS_WORKON_LOCALNAME points to file paths relative to src/ if the
+        // package is in the chromeos-base category; otherwise they're relative
+        // to src/third_party/.
+        let local_path = if local_name == "chromiumos-assets" {
+            // HACK: chromiumos-assets ebuild is incorrect.
+            // TODO: Fix the ebuild and remove this hack.
+            "platform/chromiumos-assets".to_owned()
+        } else if is_chromeos_base {
+            local_name
+        } else if let Some(clean_path) = local_name.strip_prefix("../") {
+            clean_path.to_owned()
+        } else {
+            format!("third_party/{}", local_name)
+        };
+
+        // Consider CROS_WORKON_SUBTREE for platform2 packages only.
+        if subtree.is_empty() || !local_path.starts_with("platform2") {
+            // HACK: We need a pinned version of crosvm for sys_util_core, so we
+            // can't use the default location.
+            // TODO: Inspect CROS_WORKON_MANUAL_UPREV to detect pinned packages
+            // automatically and remove this hack.
+            if details.package_name == "dev-rust/sys_util_core" && local_path == "platform/crosvm" {
+                source_paths.push("platform/crosvm-sys_util_core".to_owned());
+            } else {
+                source_paths.push(local_path);
+            }
+        } else {
+            let subtree_local_paths = subtree.split_ascii_whitespace().flat_map(|subtree_path| {
+                // TODO: Remove these special cases.
+                match subtree_path {
+                    // Use the platform2 src package instead.
+                    ".gn" => Some(local_path.clone()),
+                    // We really don't need .clang-format to build...
+                    ".clang-format" => None,
+                    // We don't have a sub-package for platform2/chromeos-config.
+                    "chromeos-config/cros_config_host" => {
+                        Some(format!("{}/chromeos-config", &local_path))
+                    }
+                    _ => Some(format!("{}/{}", &local_path, &subtree_path)),
+                }
+            });
+            source_paths.extend(subtree_local_paths);
+        }
+    }
+
+    let mut source_labels = source_paths
+        .into_iter()
+        .map(|path| format!("//{}:src", path))
+        .collect_vec();
+
+    // Kernel packages need extra eclasses.
+    // TODO: Remove this hack.
+    if projects
+        .iter()
+        .any(|p| p == "chromiumos/third_party/kernel")
+    {
+        source_labels.push("//third_party/chromiumos-overlay/eclass/cros-kernel:src".to_owned());
+    }
+
+    Ok(source_labels)
+}
+
+fn extract_local_sources(details: &PackageDetails) -> Result<Vec<String>> {
+    let mut source_labels = extract_cros_workon_sources(details)?;
+
+    // Chromium packages need its source code.
+    // TODO: Remove this hack.
+    if details.inherited.contains("chromium-source") {
+        // TODO: We need USE flags to add src-internal.
+        source_labels.push("@chrome//:src".to_owned());
+    }
+
+    // The platform eclass calls `platform2.py` which requires chromite.
+    // The dlc eclass calls `build_dlc` which lives in chromite.
+    // dev-libs/gobject-introspection calls `platform2_test.py` which lives in
+    // chromite.
+    // TODO: Remove this hack.
+    if details.inherited.contains("platform")
+        || details.inherited.contains("dlc")
+        || details.package_name == "dev-libs/gobject-introspection"
+    {
+        source_labels.push("@chromite//:src".to_owned());
+    }
+
+    source_labels.sort();
+    source_labels.dedup();
+
+    Ok(source_labels)
+}
+
+fn fixup_local_sources(graph: &mut HashMap<PackageSlotKey, PackageData>) {
+    // Not all packages use the same level of SUBTREE, some have deeper targets
+    // than others. This results in the packages that have a shallower SUBTREE
+    // missing out on the files defined in the deeper tree.
+    // To fix this we need to populate targets with the shallow tree with
+    // all the additional deeper paths.
+    //
+    // e.g.,
+    // iioservice requires //platform2/iioservice:src
+    // cros-camera-libs requires //platform2/iioservice/mojo:src
+    //
+    // When trying to build iioservice the mojo directory will be missing.
+    // So this code will add //platform2/iioservice/mojo:src to iioservice.
+
+    let all_packages: Vec<String> = graph
+        .values()
+        .flat_map(|data| &data.local_sources)
+        .filter_map(|label| label.strip_suffix(":src"))
+        .sorted()
+        .dedup()
+        .map(|package| package.to_owned())
+        .collect();
+
+    let child_packages_map: BTreeMap<&str, Vec<&str>> = {
+        let mut child_packages_map: BTreeMap<&str, Vec<&str>> = all_packages
+            .iter()
+            .map(|package| (package.as_str(), Vec::new()))
+            .collect();
+        let mut parent_packages_stack = Vec::<&str>::new();
+
+        for current_package in all_packages.iter() {
+            while let Some(last_parent_package) = parent_packages_stack.pop() {
+                if current_package.starts_with(&format!("{}/", last_parent_package)) {
+                    parent_packages_stack.push(last_parent_package);
+                    break;
+                }
+            }
+
+            for parent_package in parent_packages_stack.iter() {
+                child_packages_map
+                    .get_mut(*parent_package)
+                    .unwrap()
+                    .push(current_package);
+            }
+
+            if current_package != "//platform2" {
+                parent_packages_stack.push(current_package);
+            }
+        }
+
+        child_packages_map
+    };
+
+    for (_, data) in graph.iter_mut() {
+        let local_sources = std::mem::take(&mut data.local_sources);
+        let local_sources = local_sources
+            .into_iter()
+            .flat_map(|old_label| {
+                let mut new_labels = vec![old_label.clone()];
+                if let Some(old_package) = old_label.strip_suffix(":src") {
+                    if let Some(packages) = child_packages_map.get(old_package) {
+                        new_labels
+                            .extend(packages.iter().map(|package| format!("{}:src", *package)));
+                    }
+                }
+                new_labels
+            })
+            .sorted()
+            .dedup()
+            .collect();
+        data.local_sources = local_sources;
+    }
+}
+
 struct DistEntry {
     pub filename: String,
     pub size: u64,
@@ -256,6 +471,17 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<RemoteSourceDa
     Ok(sources)
 }
 
+fn is_rust_source_package(details: &PackageDetails) -> bool {
+    let is_rust_package = details.inherited.contains("cros-rust");
+    let is_cros_workon_package = details.inherited.contains("cros-workon");
+    let has_src_compile = match details.vars.get("HAS_SRC_COMPILE") {
+        Some(BashValue::Scalar(s)) if s == "1" => true,
+        _ => false,
+    };
+
+    is_rust_package && !is_cros_workon_package && !has_src_compile
+}
+
 fn select_package(
     resolver: &Resolver,
     selection: &Mutex<HashMap<PackageSlotKey, PackageDataUnresolved>>,
@@ -311,6 +537,21 @@ fn select_package(
         )?;
     let runtime_deps = select_packages(resolver, selection, &path, unresolved_runtime_deps)?;
 
+    // Some Rust source packages have their dependencies only listed as DEPEND.
+    // They also need to be listed as RDPEND so they get pulled in as transitive
+    // deps.
+    // TODO: Fix ebuilds and remove this hack.
+    let runtime_deps = if is_rust_source_package(&details) {
+        runtime_deps
+            .into_iter()
+            .chain(build_deps.clone().into_iter())
+            .sorted()
+            .dedup()
+            .collect()
+    } else {
+        runtime_deps
+    };
+
     let unresolved_post_deps =
         extract_package_dependencies(resolver, &*details, DependencyKind::Post).with_context(
             || {
@@ -321,7 +562,15 @@ fn select_package(
             },
         )?;
 
-    // Extract source URIs.
+    // Extract local source labels.
+    let local_sources = extract_local_sources(&details).with_context(|| {
+        format!(
+            "Resolving local source dependencies for {}-{}",
+            &details.package_name, &details.version
+        )
+    })?;
+
+    // Extract remote source URIs.
     let remote_sources = extract_remote_sources(&*details).with_context(|| {
         format!(
             "Resolving remote source dependencies for {}-{}",
@@ -348,6 +597,7 @@ fn select_package(
                 build_deps,
                 runtime_deps,
                 unresolved_post_deps,
+                local_sources,
                 remote_sources,
             };
             eprintln!(
@@ -392,6 +642,7 @@ fn resolve_package(
         build_deps: unresolved.build_deps,
         runtime_deps: unresolved.runtime_deps,
         post_deps,
+        local_sources: unresolved.local_sources,
         remote_sources: unresolved.remote_sources,
     })
 }
@@ -439,7 +690,9 @@ fn analyze_dependency_graph(
         }
     }
 
-    let resolution = resolution.into_inner().unwrap();
+    let mut resolution = resolution.into_inner().unwrap();
+
+    fixup_local_sources(&mut resolution);
 
     eprintln!("Selected {} packages", resolution.len());
 
@@ -467,6 +720,10 @@ struct PackageInfo {
     /// "//third_party/chromiumos-overlay/app-accessibility/brltty:0".
     #[serde(rename = "buildDeps")]
     build_deps: Vec<String>,
+    /// Labels of Bazel ebuild_src targets this package depends on, e.g.
+    /// "//platform/empty-project:src", "@chromite//:src".
+    #[serde(rename = "localSrc")]
+    local_src: Vec<String>,
     /// Run-time dependencies in the form of Bazel labels, e.g.
     /// "//third_party/chromiumos-overlay/app-accessibility/brltty:0".
     #[serde(rename = "runtimeDeps")]
@@ -564,6 +821,7 @@ pub fn dump_deps_main(resolver: &Resolver, starts: Vec<PackageAtomDependency>) -
                     .map(|key| label_map.get(key).unwrap().clone())
                     .sorted()
                     .collect(),
+                local_src: data.local_sources.clone(),
                 src_uris: data
                     .remote_sources
                     .iter()
