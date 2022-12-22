@@ -2,6 +2,11 @@ load("//bazel/toolchains/rust:update_crates.bzl", "generate_cargo_toml", "update
 load("//bazel/toolchains/rust:local_crates.bzl", "LOCAL_CRATES")
 load("@rules_rust//crate_universe:defs.bzl", "crate")
 
+py_binary(
+    name = "cargo_init",
+    srcs = ["cargo_init.py"],
+)
+
 sh_binary(
     name = "update_crates_custom_bazel",
     srcs = ["//bazel/toolchains/rust:update_crates_custom_bazel.sh"],
