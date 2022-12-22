@@ -137,6 +137,19 @@ enum DependencyKind {
     Post,
 }
 
+fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'static str {
+    match (details.package_name.as_str(), kind) {
+        // poppler seems to support building without Boost, but the build fails
+        // without it.
+        ("app-text/poppler", DependencyKind::Build) => "dev-libs/boost",
+        // m2crypt fails to build for missing Python.h.
+        ("dev-python/m2crypto", DependencyKind::Build) => "dev-lang/python:3.6",
+        // xau.pc contains "Requires: xproto", so it should be listed as RDEPEND.
+        ("x11-libs/libXau", DependencyKind::Run) => "x11-base/xorg-proto",
+        _ => "",
+    }
+}
+
 fn extract_package_dependencies(
     resolver: &Resolver,
     details: &PackageDetails,
@@ -154,7 +167,11 @@ fn extract_package_dependencies(
         Some(other) => bail!("Incorrect value for {}: {:?}", var_name, other),
     };
 
-    let deps = raw_deps.parse::<PackageDependency>()?;
+    let raw_extra_deps = get_extra_dependencies(details, kind);
+
+    let joined_raw_deps = format!("{} {}", raw_deps, raw_extra_deps);
+    let deps = joined_raw_deps.parse::<PackageDependency>()?;
+
     translate_package_dependency(deps, &details.use_map, resolver)
 }
 

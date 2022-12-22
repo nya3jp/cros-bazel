@@ -8,7 +8,10 @@ mod dump_package;
 use std::{env::current_dir, path::PathBuf};
 
 use alchemist::{
-    dependency::package::PackageAtomDependency, fakechroot::enter_fake_chroot, resolver::Resolver,
+    config::{ConfigNode, ConfigNodeValue, PackageMaskKind, PackageMaskUpdate, ProvidedPackage},
+    dependency::package::PackageAtomDependency,
+    fakechroot::enter_fake_chroot,
+    resolver::Resolver,
 };
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
@@ -59,6 +62,40 @@ fn default_source_dir() -> Result<PathBuf> {
     );
 }
 
+fn build_override_configs() -> Vec<ConfigNode> {
+    let source = PathBuf::from("<override>");
+    vec![
+        // HACK: Mask chromeos-base/chromeos-lacros-9999 as it's not functional.
+        // TODO: Fix the ebuild and remove this hack.
+        ConfigNode {
+            source: source.clone(),
+            value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
+                kind: PackageMaskKind::Mask,
+                atom: "=chromeos-base/chromeos-lacros-9999".parse().unwrap(),
+            }]),
+        },
+        // HACK: Provide packages that are not interesting to install.
+        // TODO: Remove this hack.
+        ConfigNode {
+            source: source.clone(),
+            value: ConfigNodeValue::ProvidedPackages(vec![
+                // This package was used to force rust binary packages to rebuild.
+                // We no longer need this workaround with bazel.
+                ProvidedPackage {
+                    package_name: "virtual/rust-binaries".to_owned(),
+                    version: "0".parse().unwrap(),
+                },
+                // This is really a BDEPEND and there is no need to declare it as a
+                // RDEPEND.
+                ProvidedPackage {
+                    package_name: "virtual/rust".to_owned(),
+                    version: "0".parse().unwrap(),
+                },
+            ]),
+        },
+    ]
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -74,6 +111,7 @@ fn main() -> Result<()> {
         &root_dir,
         &tools_dir,
         alchemist::ebuild::Stability::Unstable,
+        build_override_configs(),
     )?;
 
     match args.command {

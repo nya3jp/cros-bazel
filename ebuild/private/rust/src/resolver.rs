@@ -8,7 +8,7 @@ use rayon::prelude::*;
 use std::{path::Path, sync::Arc};
 
 use crate::{
-    config::{site::SiteSettings, ConfigBundle, ConfigSource, ProvidedPackage},
+    config::{site::SiteSettings, ConfigBundle, ConfigNode, ConfigSource, ProvidedPackage},
     data::Vars,
     dependency::{package::PackageAtomDependency, Predicate},
     ebuild::{CachedEBuildEvaluator, EBuildEvaluator, PackageDetails, Stability},
@@ -47,7 +47,12 @@ impl Resolver {
     ///
     /// `accept_stability` specifies the minimum stability required for a
     /// package to be returned by `find_packages` and `find_best_package`.
-    pub fn load(root_dir: &Path, tools_dir: &Path, accept_stability: Stability) -> Result<Self> {
+    pub fn load(
+        root_dir: &Path,
+        tools_dir: &Path,
+        accept_stability: Stability,
+        override_configs: Vec<ConfigNode>,
+    ) -> Result<Self> {
         let repos = RepositorySet::load(root_dir)?;
         let profile = Profile::load_default(root_dir, &repos)?;
 
@@ -59,6 +64,7 @@ impl Resolver {
         let all_nodes = profile_nodes
             .into_iter()
             .chain(site_settings_nodes.into_iter())
+            .chain(override_configs)
             .collect();
         let config = ConfigBundle::new(env, all_nodes);
 

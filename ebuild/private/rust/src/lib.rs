@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 pub mod bash;
-pub(crate) mod config;
+pub mod config;
 pub mod data;
 pub mod dependency;
 pub mod ebuild;
