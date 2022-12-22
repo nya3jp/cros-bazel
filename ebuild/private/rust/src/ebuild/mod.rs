@@ -8,7 +8,7 @@ use anyhow::{anyhow, bail, Result};
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf, MAIN_SEPARATOR},
     sync::{Arc, Mutex},
 };
@@ -107,6 +107,7 @@ pub struct PackageDetails {
     pub stability: Stability,
     pub masked: bool,
     pub ebuild_path: PathBuf,
+    pub inherited: HashSet<String>,
 }
 
 impl PackageDetails {
@@ -206,6 +207,16 @@ impl EBuildEvaluator {
             use_map: &use_map,
         });
 
+        let raw_inherited = match vars.get("INHERITED") {
+            None => "",
+            Some(BashValue::Scalar(s)) => s.as_str(),
+            other => bail!("Invalid INHERITED value: {:?}", other),
+        };
+        let inherited: HashSet<String> = raw_inherited
+            .split_ascii_whitespace()
+            .map(|s| s.to_owned())
+            .collect();
+
         Ok(PackageDetails {
             package_name,
             version,
@@ -214,6 +225,7 @@ impl EBuildEvaluator {
             use_map,
             stability,
             masked,
+            inherited,
             ebuild_path: ebuild_path.to_owned(),
         })
     }
