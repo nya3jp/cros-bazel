@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+pub mod analyze;
 pub mod bash;
 pub mod config;
 pub mod data;
@@ -11,5 +12,4 @@ pub mod fakechroot;
 pub(crate) mod profile;
 pub(crate) mod repository;
 pub mod resolver;
-pub mod translate;
 pub mod version;
