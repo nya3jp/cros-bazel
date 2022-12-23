@@ -1,0 +1,49 @@
+load("@//bazel/ebuild:defs.bzl", "ebuild", "package_set")
+
+{{ for ebuild in ebuilds -}}
+ebuild(
+    name = "{ ebuild.version }",
+    ebuild = "{ ebuild.ebuild_name }",
+    distfiles = \{
+        {{- for dist in ebuild.dists }}
+        "@{ dist.repository_name }//file": "{ dist.filename }",
+        {{- endfor }}
+    },
+    {{- if ebuild.sources }}
+    # TODO: Generate srcs. Currently this is broken.
+    # srcs = [
+    #     {{- for source in ebuild.sources }}
+    #     "{ source }",
+    #     {{- endfor }}
+    # ],
+    {{- endif }}
+    {{- if ebuild.build_deps }}
+    build_deps = [
+        {{- for dep in ebuild.build_deps }}
+        "{ dep }",
+        {{- endfor }}
+    ],
+    {{- endif }}
+    {{- if ebuild.runtime_deps }}
+    runtime_deps = [
+        {{- for dep in ebuild.runtime_deps }}
+        "{ dep }",
+        {{- endfor }}
+    ],
+    {{- endif }}
+    files = glob(["files/**", "*.bashrc"]),
+    visibility = ["//visibility:public"],
+)
+
+package_set(
+    name = "{ ebuild.version }_package_set",
+    deps = [
+        ":{ ebuild.version }",
+        {{- for dep in ebuild.post_deps }}
+        "{ dep }",
+        {{- endfor }}
+    ],
+    visibility = ["//visibility:public"],
+)
+
+{{ endfor }}

@@ -4,6 +4,7 @@
 
 mod dump_deps;
 mod dump_package;
+mod generate_repo;
 
 use std::{env::current_dir, path::PathBuf};
 
@@ -22,6 +23,7 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use dump_deps::dump_deps_main;
 use dump_package::dump_package_main;
+use generate_repo::generate_repo_main;
 
 #[derive(Parser)]
 #[command(name = "alchemist")]
@@ -52,6 +54,12 @@ enum Commands {
     DumpPackage {
         /// Package names.
         packages: Vec<String>,
+    },
+    /// Generates a Bazel repository containing overlays and packages.
+    GenerateRepo {
+        /// Output directory path.
+        #[arg(short = 'o', long, value_name = "PATH")]
+        output_dir: PathBuf,
     },
 }
 
@@ -109,7 +117,7 @@ fn main() -> Result<()> {
         Some(s) => PathBuf::from(s),
         None => default_source_dir()?,
     };
-    enter_fake_chroot(&source_dir)?;
+    let translator = enter_fake_chroot(&source_dir)?;
 
     let root_dir = PathBuf::from("/build").join(&args.board);
 
@@ -157,6 +165,9 @@ fn main() -> Result<()> {
                 .map(|raw| raw.parse::<PackageAtomDependency>())
                 .collect::<Result<Vec<_>>>()?;
             dump_package_main(&resolver, atoms)?;
+        }
+        Commands::GenerateRepo { output_dir } => {
+            generate_repo_main(&repos, &evaluator, &resolver, &translator, &output_dir)?;
         }
     }
 
