@@ -159,7 +159,7 @@ impl Repository {
 
     /// Scans the repository and returns ebuild file paths for the specified
     /// package.
-    pub fn scan_ebuilds(&self, package_name: &str) -> Result<Vec<PathBuf>> {
+    pub fn find_ebuilds(&self, package_name: &str) -> Result<Vec<PathBuf>> {
         let mut paths = Vec::<PathBuf>::new();
         match self.location.base_dir.join(package_name).read_dir() {
             Err(err) => {
@@ -180,6 +180,35 @@ impl Repository {
                 Ok(paths)
             }
         }
+    }
+
+    /// Scans the repository and returns all ebuild file paths.
+    pub fn find_all_ebuilds(&self) -> Result<Vec<PathBuf>> {
+        let mut ebuild_paths = Vec::<PathBuf>::new();
+
+        // Find */*/*.ebuild.
+        // TODO: Consider categories listed in `profiles/categories`.
+        for category_entry in self.location.base_dir.read_dir()? {
+            let category_path = category_entry?.path();
+            if !category_path.is_dir() {
+                continue;
+            }
+            for package_entry in category_path.read_dir()? {
+                let package_path = package_entry?.path();
+                if !package_path.is_dir() {
+                    continue;
+                }
+                for ebuild_entry in package_path.read_dir()? {
+                    let ebuild_path = ebuild_entry?.path();
+                    // TODO: Consider filtering by file name stems.
+                    if ebuild_path.extension() == Some(OsStr::new("ebuild")) {
+                        ebuild_paths.push(ebuild_path);
+                    }
+                }
+            }
+        }
+
+        Ok(ebuild_paths)
     }
 }
 
@@ -272,10 +301,19 @@ impl RepositorySet {
 
     /// Scans the repositories and returns ebuild file paths for the specified
     /// package.
-    pub fn scan_ebuilds(&self, package_name: &str) -> Result<Vec<PathBuf>> {
+    pub fn find_ebuilds(&self, package_name: &str) -> Result<Vec<PathBuf>> {
         let mut paths = Vec::<PathBuf>::new();
         for repo in self.repos.values() {
-            paths.extend(repo.scan_ebuilds(package_name)?);
+            paths.extend(repo.find_ebuilds(package_name)?);
+        }
+        Ok(paths)
+    }
+
+    /// Scans the repositories and returns all ebuild file paths.
+    pub fn find_all_ebuilds(&self) -> Result<Vec<PathBuf>> {
+        let mut paths = Vec::<PathBuf>::new();
+        for repo in self.repos.values() {
+            paths.extend(repo.find_all_ebuilds()?);
         }
         Ok(paths)
     }

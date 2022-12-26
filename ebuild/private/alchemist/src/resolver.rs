@@ -56,7 +56,7 @@ impl<'a> PackageResolver<'a> {
 
     /// Finds all packages matching the specified [`PackageAtomDependency`].
     pub fn find_packages(&self, atom: &PackageAtomDependency) -> Result<Vec<Arc<PackageDetails>>> {
-        let ebuild_paths = self.repos.scan_ebuilds(atom.package_name())?;
+        let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
 
         let mut packages = ebuild_paths
             .into_par_iter()
