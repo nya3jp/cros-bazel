@@ -25,12 +25,12 @@ pub(crate) fn parse_set_output(output: &str) -> Result<BashVars> {
 mod parser {
     use nom::{
         branch::alt,
-        bytes::complete::{tag, take_while, take_while1},
+        bytes::complete::{tag, take, take_while, take_while1},
         character::{
             complete::{anychar, multispace0, multispace1, none_of},
             is_alphabetic, is_alphanumeric,
         },
-        combinator::{eof, fail, opt},
+        combinator::{eof, map, map_res, opt, verify},
         multi::{many0, many1, separated_list0},
         sequence::{delimited, pair, preceded},
         IResult,
@@ -117,11 +117,38 @@ mod parser {
         Ok((input, ss.into_iter().collect()))
     }
 
+    fn dollar_quoted_char(input: &str) -> IResult<&str, char> {
+        alt((
+            // Named escapes.
+            map(tag("\\a"), |_| '\x07'),
+            map(tag("\\b"), |_| '\x08'),
+            map(tag("\\e"), |_| '\x1b'),
+            map(tag("\\E"), |_| '\x1b'),
+            map(tag("\\f"), |_| '\x0c'),
+            map(tag("\\n"), |_| '\x0a'),
+            map(tag("\\r"), |_| '\x0d'),
+            map(tag("\\t"), |_| '\x09'),
+            map(tag("\\v"), |_| '\x0b'),
+            map(tag("\\\\"), |_| '\\'),
+            map(tag("\\'"), |_| '\''),
+            map(tag("\\\""), |_| '"'),
+            map(tag("\\?"), |_| '?'),
+            // \nnn where nnn is a 3-digit octal number.
+            // It is the only general escape method bash uses in the set output
+            // (e.g. \xHH is not used).
+            map_res(preceded(tag("\\"), take(3usize)), |s| {
+                u8::from_str_radix(s, 8).map(|b| b as char)
+            }),
+            verify(
+                map(take(1usize), |s: &str| s.chars().next().unwrap()),
+                |c| *c != '\'',
+            ),
+        ))(input)
+    }
+
     fn dollar_quoted(input: &str) -> IResult<&str, String> {
-        // TODO: Support strings escaped as $'...'. It appears when an array
-        // variable contain special characters such as newlines.
-        let (input, _): (_, ()) = delimited(tag("$'"), fail, tag("'"))(input)?;
-        Ok((input, String::new()))
+        let (input, ss) = delimited(tag("$'"), many0(dollar_quoted_char), tag("'"))(input)?;
+        Ok((input, ss.into_iter().collect()))
     }
 
     fn word(input: &str) -> IResult<&str, String> {
@@ -232,6 +259,46 @@ mod tests {
         assert_eq!(
             vars,
             BashVars::from_iter([("IFS".to_owned(), BashValue::Scalar("$".to_owned())),])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_set_output_dollar_quoted() -> Result<()> {
+        let vars = parse_set_output(
+            r#"TEXT=$'foo\a\b\e\E\f\n\r\t\v\\\'\"\?\001bar'
+"#,
+        )?;
+        assert_eq!(
+            vars,
+            BashVars::from_iter([(
+                "TEXT".to_owned(),
+                BashValue::Scalar(
+                    "foo\x07\x08\x1b\x1b\x0c\x0a\x0d\x09\x0b\\'\"?\x01bar".to_owned()
+                )
+            ),])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_set_output_verbatim_utf8() -> Result<()> {
+        let vars = parse_set_output("TEXT=🐈'🐈'\"🐈\"$'🐈'\n")?;
+        assert_eq!(
+            vars,
+            BashVars::from_iter([("TEXT".to_owned(), BashValue::Scalar("🐈🐈🐈🐈".to_owned())),])
+        );
+        Ok(())
+    }
+
+    // TODO: Enable this test after supporting escaped UTF-8.
+    #[ignore]
+    #[test]
+    fn test_parse_set_output_dollar_quoted_utf8() -> Result<()> {
+        let vars = parse_set_output(r#"TEXT=$'\360\237\220\210'\n"#)?;
+        assert_eq!(
+            vars,
+            BashVars::from_iter([("TEXT".to_owned(), BashValue::Scalar("🐈".to_owned())),])
         );
         Ok(())
     }
