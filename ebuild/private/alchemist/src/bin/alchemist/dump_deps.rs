@@ -15,7 +15,7 @@ use alchemist::{
     data::PackageSlotKey,
     dependency::package::PackageAtomDependency,
     ebuild::PackageDetails,
-    resolver::Resolver,
+    resolver::PackageResolver,
 };
 use anyhow::{bail, Result};
 use itertools::Itertools;
@@ -104,7 +104,7 @@ fn select_package(
     selection: &Mutex<UnresolvedPackageMap>,
     path: &SearchPath,
     atom: &PackageAtomDependency,
-    resolver: &Resolver,
+    resolver: &PackageResolver,
 ) -> Result<Option<PackageSlotKey>> {
     let path = path.try_push(atom)?;
 
@@ -178,7 +178,7 @@ fn select_packages_parallel(
     selection: &Mutex<UnresolvedPackageMap>,
     path: &SearchPath,
     atoms: impl IntoParallelIterator<Item = PackageAtomDependency>,
-    resolver: &Resolver,
+    resolver: &PackageResolver,
 ) -> Result<Vec<PackageSlotKey>> {
     Ok(atoms
         .into_par_iter()
@@ -195,7 +195,7 @@ fn resolve_package(
     selection: &Mutex<UnresolvedPackageMap>,
     path: &SearchPath,
     unresolved: UnresolvedPackage,
-    resolver: &Resolver,
+    resolver: &PackageResolver,
 ) -> Result<SelectedPackage> {
     let post_deps =
         select_packages_parallel(selection, path, unresolved.unresolved_post_deps, resolver)?;
@@ -215,7 +215,7 @@ fn resolve_package(
 /// to other packages.
 fn select_packages(
     starts: impl IntoIterator<Item = PackageAtomDependency>,
-    resolver: &Resolver,
+    resolver: &PackageResolver,
 ) -> Result<SelectedPackageMap> {
     let starts = starts.into_iter().collect_vec();
 
@@ -353,7 +353,10 @@ fn compute_label_map(graph: &PackageMap) -> HashMap<PackageSlotKey, String> {
 }
 
 /// The entry point of "dump-deps" subcommand.
-pub fn dump_deps_main(resolver: &Resolver, starts: Vec<PackageAtomDependency>) -> Result<()> {
+pub fn dump_deps_main(
+    resolver: &PackageResolver,
+    starts: Vec<PackageAtomDependency>,
+) -> Result<()> {
     let selected_packages = select_packages(starts, resolver)?;
 
     // Extract source info in parallel.

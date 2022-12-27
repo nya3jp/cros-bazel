@@ -228,6 +228,40 @@ pub trait ConfigSource {
     fn evaluate_configs(&self, env: &mut Vars) -> Vec<ConfigNode>;
 }
 
+impl<S: ConfigSource + ?Sized> ConfigSource for Box<S> {
+    fn evaluate_configs(&self, env: &mut Vars) -> Vec<ConfigNode> {
+        (**self).evaluate_configs(env)
+    }
+}
+
+/// An implementation of [`ConfigSource`] that simply returns [`ConfigNode`]s
+/// that are set on its constructor.
+///
+/// This is useful for overriding configurations for hacks.
+pub struct SimpleConfigSource {
+    nodes: Vec<ConfigNode>,
+}
+
+impl SimpleConfigSource {
+    pub fn new(nodes: Vec<ConfigNode>) -> Self {
+        Self { nodes }
+    }
+}
+
+impl ConfigSource for SimpleConfigSource {
+    fn evaluate_configs(&self, env: &mut Vars) -> Vec<ConfigNode> {
+        for node in self.nodes.iter() {
+            match &node.value {
+                ConfigNodeValue::Vars(vars) => {
+                    env.extend(vars.clone());
+                }
+                _ => {}
+            }
+        }
+        self.nodes.clone()
+    }
+}
+
 /// A collection of [`ConfigNode`]s, providing access to the configurations
 /// computed from them.
 #[derive(Clone, Debug)]
@@ -241,6 +275,15 @@ pub struct ConfigBundle {
 }
 
 impl ConfigBundle {
+    pub fn from_sources<S: ConfigSource, I: IntoIterator<Item = S>>(sources: I) -> Self {
+        let mut env = Vars::new();
+        let nodes = sources
+            .into_iter()
+            .flat_map(|source| source.evaluate_configs(&mut env))
+            .collect();
+        Self::new(env, nodes)
+    }
+
     pub fn new(profile_env: Vars, nodes: Vec<ConfigNode>) -> Self {
         let mut ebuild_env = profile_env.clone();
         unset_ebuild_vars(&mut ebuild_env);

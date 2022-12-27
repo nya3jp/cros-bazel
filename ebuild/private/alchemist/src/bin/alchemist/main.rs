@@ -8,10 +8,16 @@ mod dump_package;
 use std::{env::current_dir, path::PathBuf};
 
 use alchemist::{
-    config::{ConfigNode, ConfigNodeValue, PackageMaskKind, PackageMaskUpdate, ProvidedPackage},
+    config::{
+        site::SiteSettings, ConfigBundle, ConfigNode, ConfigNodeValue, ConfigSource,
+        PackageMaskKind, PackageMaskUpdate, ProvidedPackage, SimpleConfigSource,
+    },
     dependency::package::PackageAtomDependency,
+    ebuild::{CachedEBuildEvaluator, EBuildEvaluator},
     fakechroot::enter_fake_chroot,
-    resolver::Resolver,
+    profile::Profile,
+    repository::RepositorySet,
+    resolver::PackageResolver,
 };
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
@@ -62,9 +68,9 @@ fn default_source_dir() -> Result<PathBuf> {
     );
 }
 
-fn build_override_configs() -> Vec<ConfigNode> {
+fn build_override_config_source() -> SimpleConfigSource {
     let source = PathBuf::from("<override>");
-    vec![
+    let nodes = vec![
         // HACK: Mask chromeos-base/chromeos-lacros-9999 as it's not functional.
         // TODO: Fix the ebuild and remove this hack.
         ConfigNode {
@@ -93,7 +99,8 @@ fn build_override_configs() -> Vec<ConfigNode> {
                 },
             ]),
         },
-    ]
+    ];
+    SimpleConfigSource::new(nodes)
 }
 
 fn main() -> Result<()> {
@@ -106,13 +113,36 @@ fn main() -> Result<()> {
     enter_fake_chroot(&source_dir)?;
 
     let root_dir = PathBuf::from("/build").join(&args.board);
+
+    // Load repositories.
+    let repos = RepositorySet::load(&root_dir)?;
+
+    // Load configurations.
+    let profile = Profile::load_default(&root_dir, &repos)?;
+    let site_settings = SiteSettings::load(&root_dir)?;
+    let override_source = build_override_config_source();
+    let config = ConfigBundle::from_sources(vec![
+        // The order matters.
+        Box::new(profile) as Box<dyn ConfigSource>,
+        Box::new(site_settings) as Box<dyn ConfigSource>,
+        Box::new(override_source) as Box<dyn ConfigSource>,
+    ]);
+
+    // Set up the ebuild evaluator.
     let tools_dir = std::env::current_exe()?.parent().unwrap().to_owned();
-    let resolver = Resolver::load(
-        &root_dir,
+    // TODO: Avoid cloning ConfigBundle.
+    let evaluator = CachedEBuildEvaluator::new(EBuildEvaluator::new(
+        repos.clone(),
+        config.clone(),
         &tools_dir,
+    ));
+
+    let resolver = PackageResolver::new(
+        &repos,
+        &config,
+        &evaluator,
         alchemist::ebuild::Stability::Unstable,
-        build_override_configs(),
-    )?;
+    );
 
     match args.command {
         Commands::DumpDeps { packages } => {

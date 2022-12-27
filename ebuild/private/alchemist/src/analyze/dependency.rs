@@ -14,7 +14,7 @@ use crate::{
         CompositeDependency, Dependency,
     },
     ebuild::PackageDetails,
-    resolver::{FindBestPackageError, Resolver},
+    resolver::{FindBestPackageError, PackageResolver},
 };
 
 /// Analyzed package dependencies of a package. It is returned by
@@ -47,7 +47,7 @@ enum DependencyKind {
 fn parse_dependencies(
     deps: PackageDependency,
     use_map: &UseMap,
-    resolver: &Resolver,
+    resolver: &PackageResolver,
 ) -> Result<Vec<PackageAtomDependency>> {
     let orig_deps = deps.clone();
 
@@ -123,7 +123,7 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
 fn extract_dependencies(
     details: &PackageDetails,
     kind: DependencyKind,
-    resolver: &Resolver,
+    resolver: &PackageResolver,
 ) -> Result<Vec<PackageAtomDependency>> {
     let var_name = match kind {
         DependencyKind::Build => "DEPEND",
@@ -161,7 +161,7 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
 /// its dependencies as a list of [`PackageAtomDependency`].
 pub fn analyze_dependencies(
     details: &PackageDetails,
-    resolver: &Resolver,
+    resolver: &PackageResolver,
 ) -> Result<PackageDependencies> {
     let build_deps = extract_dependencies(&*details, DependencyKind::Build, resolver)
         .with_context(|| {

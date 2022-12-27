@@ -5,14 +5,12 @@
 use anyhow::Result;
 use itertools::Itertools;
 use rayon::prelude::*;
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 use crate::{
-    config::{site::SiteSettings, ConfigBundle, ConfigNode, ConfigSource, ProvidedPackage},
-    data::Vars,
+    config::{ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtomDependency, Predicate},
-    ebuild::{CachedEBuildEvaluator, EBuildEvaluator, PackageDetails, Stability},
-    profile::Profile,
+    ebuild::{CachedEBuildEvaluator, PackageDetails, Stability},
     repository::RepositorySet,
 };
 
@@ -28,58 +26,32 @@ pub enum FindBestPackageError {
     Other(#[from] anyhow::Error),
 }
 
-/// A convenient wrapper of various types, such as [`RepositorySet`] and
-/// [`EBuildEvaluator`], to provide handy access to Portage tree information.
+/// Answers queries related to Portage packages.
 #[derive(Debug)]
-pub struct Resolver {
-    config: ConfigBundle,
-    repos: RepositorySet,
-    evaluator: CachedEBuildEvaluator,
+pub struct PackageResolver<'a> {
+    repos: &'a RepositorySet,
+    config: &'a ConfigBundle,
+    evaluator: &'a CachedEBuildEvaluator,
     accept_stability: Stability,
 }
 
-impl Resolver {
-    /// Constructs a new [`Resolver`] by loading configurations from the
-    /// specified configuration root directory.
-    ///
-    /// `tools_dir` is a path to the directory containing tool binaries needed
-    /// to evaluate ebuilds, such as `ver_test`.
+impl<'a> PackageResolver<'a> {
+    /// Constructs a new [`Resolver`].
     ///
     /// `accept_stability` specifies the minimum stability required for a
     /// package to be returned by `find_packages` and `find_best_package`.
-    pub fn load(
-        root_dir: &Path,
-        tools_dir: &Path,
+    pub fn new(
+        repos: &'a RepositorySet,
+        config: &'a ConfigBundle,
+        evaluator: &'a CachedEBuildEvaluator,
         accept_stability: Stability,
-        override_configs: Vec<ConfigNode>,
-    ) -> Result<Self> {
-        let repos = RepositorySet::load(root_dir)?;
-        let profile = Profile::load_default(root_dir, &repos)?;
-
-        let site_settings = SiteSettings::load(root_dir)?;
-
-        let mut env = Vars::new();
-        let profile_nodes = profile.evaluate_configs(&mut env);
-        let site_settings_nodes = site_settings.evaluate_configs(&mut env);
-        let all_nodes = profile_nodes
-            .into_iter()
-            .chain(site_settings_nodes.into_iter())
-            .chain(override_configs)
-            .collect();
-        let config = ConfigBundle::new(env, all_nodes);
-
-        // TODO: Avoid cloning ConfigBundle.
-        let evaluator = CachedEBuildEvaluator::new(EBuildEvaluator::new(
-            repos.clone(),
-            config.clone(),
-            tools_dir,
-        ));
-        Ok(Self {
-            config,
+    ) -> Self {
+        Self {
             repos,
+            config,
             evaluator,
             accept_stability,
-        })
+        }
     }
 
     /// Finds all packages matching the specified [`PackageAtomDependency`].
@@ -129,8 +101,8 @@ impl Resolver {
     ///
     /// Portage allows pretending a missing package as "provided" by configuring
     /// `package.provided`. This method allows accessing the list.
-    pub fn find_provided_packages<'a>(
-        &'a self,
+    pub fn find_provided_packages(
+        &self,
         atom: &'a PackageAtomDependency,
     ) -> impl Iterator<Item = &'a ProvidedPackage> {
         self.config
