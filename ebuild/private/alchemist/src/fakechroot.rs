@@ -5,7 +5,6 @@
 use std::{
     fs::{create_dir, create_dir_all, read_dir},
     io::ErrorKind,
-    iter::once,
     os::unix::fs::symlink,
     path::{Path, PathBuf},
 };
@@ -18,9 +17,63 @@ use nix::{
 };
 use walkdir::WalkDir;
 
+/// Describes a symlink to create in the fake chroot.
+#[derive(Clone, Debug)]
 struct SymlinkPlan {
-    pub source: PathBuf,
-    pub target: PathBuf,
+    // Both paths must be absolute.
+    source: PathBuf,
+    target: PathBuf,
+}
+
+#[derive(Clone, Debug)]
+pub struct PathTranslator {
+    plans: Vec<SymlinkPlan>,
+}
+
+impl PathTranslator {
+    fn new(plans: Vec<SymlinkPlan>) -> Self {
+        Self { plans }
+    }
+
+    pub fn translate(&self, path: impl AsRef<Path>) -> PathBuf {
+        let path = path.as_ref();
+        for plan in self.plans.iter() {
+            if let Ok(rest) = path.strip_prefix(&plan.source) {
+                if rest.to_string_lossy().is_empty() {
+                    return plan.target.clone();
+                }
+                return plan.target.join(rest);
+            }
+        }
+        path.to_owned()
+    }
+}
+
+static SOURCE_MOUNT_PATH: &str = "/mnt/host/source";
+static SIMPLE_SYMLINK_RELATIVE_PATHS: &[&str] = &[
+    "build",
+    "etc/make.conf",
+    "etc/make.conf.board_setup",
+    "etc/make.conf.host_setup",
+    "etc/make.conf.user",
+    "etc/portage",
+];
+
+fn build_symlink_plans(source_dir: &Path) -> Vec<SymlinkPlan> {
+    let mut plans = vec![SymlinkPlan {
+        source: PathBuf::from(SOURCE_MOUNT_PATH),
+        target: source_dir.to_owned(),
+    }];
+    let chroot_dir = source_dir.join("chroot");
+    plans.extend(
+        SIMPLE_SYMLINK_RELATIVE_PATHS
+            .iter()
+            .map(|rel_path| SymlinkPlan {
+                source: PathBuf::from("/").join(rel_path),
+                target: chroot_dir.join(rel_path),
+            }),
+    );
+    plans
 }
 
 /// Enters a fake CrOS chroot.
@@ -35,12 +88,15 @@ struct SymlinkPlan {
 /// This function requires the current process to be single-threaded for
 /// unshare(2) calls to succeed. Make sure to call this function early in your
 /// program, before starting threads.
-pub fn enter_fake_chroot(source_dir: impl AsRef<Path>) -> Result<()> {
+///
+/// It returns [`PathTranslator`] that can be used to translate file paths in
+/// the fake chroot to the original paths.
+pub fn enter_fake_chroot(source_dir: impl AsRef<Path>) -> Result<PathTranslator> {
     let old_root_name = ".old-root";
     let root_dir = PathBuf::from("/");
 
-    let source_dir = source_dir.as_ref();
-    let chroot_dir = source_dir.join("chroot");
+    // Canonicalize `source_dir` so it can be used in symlinks.
+    let source_dir = source_dir.as_ref().canonicalize()?;
 
     // Enter a new namespace.
     let uid = getuid();
@@ -70,36 +126,21 @@ pub fn enter_fake_chroot(source_dir: impl AsRef<Path>) -> Result<()> {
     .with_context(|| format!("mount(2) failed on mounting tmpfs"))?;
 
     // Create symlinks to overriding files in chroot.
-    let simple_symlink_paths = &[
-        "build",
-        "etc/make.conf",
-        "etc/make.conf.board_setup",
-        "etc/make.conf.host_setup",
-        "etc/make.conf.user",
-        "etc/portage",
-    ];
+    let plans = build_symlink_plans(&source_dir);
 
-    let plans = once(SymlinkPlan {
-        source: new_root_dir.join("mnt/host/source"),
-        target: source_dir.to_owned(),
-    })
-    .chain(simple_symlink_paths.iter().map(|path| SymlinkPlan {
-        source: new_root_dir.join(path),
-        target: chroot_dir.join(path),
-    }));
-
-    for plan in plans {
-        create_dir_all(plan.source.parent().unwrap()).with_context(|| {
+    for plan in plans.iter() {
+        let new_root_source_path = new_root_dir.join(plan.source.strip_prefix("/").unwrap());
+        create_dir_all(new_root_source_path.parent().unwrap()).with_context(|| {
             format!(
                 "Creating directories: {}",
-                plan.source.parent().unwrap().to_string_lossy()
+                new_root_source_path.parent().unwrap().to_string_lossy()
             )
         })?;
-        symlink(&plan.target, &plan.source).with_context(|| {
+        symlink(&plan.target, &new_root_source_path).with_context(|| {
             format!(
                 "Creating symlink: {} -> {}",
                 plan.target.to_string_lossy(),
-                plan.source.to_string_lossy()
+                new_root_source_path.to_string_lossy()
             )
         })?;
     }
@@ -164,5 +205,45 @@ pub fn enter_fake_chroot(source_dir: impl AsRef<Path>) -> Result<()> {
     // Finally, call pivot_root(2).
     pivot_root(new_root_dir, &new_root_dir.join(old_root_name))?;
 
-    Ok(())
+    Ok(PathTranslator::new(plans))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_path_translator() {
+        let plans = build_symlink_plans(&PathBuf::from("/home/cros"));
+        let translator = PathTranslator::new(plans);
+
+        let translate = |s: &str| {
+            translator
+                .translate(PathBuf::from(s))
+                .to_string_lossy()
+                .to_string()
+        };
+
+        assert_eq!("/etc/passwd", translate("/etc/passwd"));
+        assert_eq!(
+            "/home/cros/src/BUILD.bazel",
+            translate("/home/cros/src/BUILD.bazel")
+        );
+        assert_eq!(
+            "/home/cros/chroot/etc/make.conf",
+            translate("/etc/make.conf")
+        );
+        assert_eq!(
+            "/home/cros/chroot/etc/portage/make.conf",
+            translate("/etc/portage/make.conf")
+        );
+        assert_eq!(
+            "/home/cros/chroot/build/arm64-generic/etc/make.conf",
+            translate("/build/arm64-generic/etc/make.conf")
+        );
+        assert_eq!(
+            "/home/cros/src/BUILD.bazel",
+            translate("/mnt/host/source/src/BUILD.bazel")
+        );
+    }
 }
