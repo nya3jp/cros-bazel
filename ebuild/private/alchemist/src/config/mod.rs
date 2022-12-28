@@ -108,7 +108,7 @@ pub enum UseUpdateKind {
 /// Represents the targets of a USE flag update entry.
 ///
 /// This is a field of [`UseUpdate`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UseUpdateFilter {
     /// Specifies the packages affected by this update.
     /// If it is [None], the update applies to all packages.
@@ -134,7 +134,7 @@ pub struct UseUpdateFilter {
 ///   flags.
 ///
 /// This struct represents an entry of these updates in a common format.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UseUpdate {
     pub kind: UseUpdateKind,
     pub filter: UseUpdateFilter,
@@ -156,7 +156,7 @@ pub enum PackageMaskKind {
 ///
 /// A package can be masked by `package.mask` and `package.unmask`.
 /// This struct represents an entry of these updates in a common format.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PackageMaskUpdate {
     pub kind: PackageMaskKind,
     pub atom: PackageAtomDependency,
@@ -166,7 +166,7 @@ pub struct PackageMaskUpdate {
 ///
 /// A package can be pretended as provided by `package.provided`.
 /// This struct represents such an entry.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProvidedPackage {
     pub package_name: String,
     pub version: Version,
@@ -182,7 +182,7 @@ impl ProvidedPackage {
 }
 
 /// Configurations provided by a [`ConfigNode`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ConfigNodeValue {
     /// Provides variables from a `make.conf`-style configuration file.
     /// This contains variable values just as they're defined in a file, which
@@ -201,7 +201,7 @@ pub enum ConfigNodeValue {
 /// Portage configurations can be represented as an ordered list of
 /// configuration nodes, which can be evaluated by processing each node in the
 /// order. [`ConfigNode`] represents a single entry in the list.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ConfigNode {
     /// Path to the file that provided this configuration node.
     pub source: PathBuf,
