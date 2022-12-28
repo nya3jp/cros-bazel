@@ -218,26 +218,7 @@ impl ConfigSource for MakeConf {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{fs::File, io::Write, path::PathBuf};
-
-    fn write_files<
-        'a,
-        P: AsRef<Path> + 'a,
-        D: AsRef<str> + 'a,
-        I: IntoIterator<Item = &'a (P, D)>,
-    >(
-        dir: impl AsRef<Path>,
-        files: I,
-    ) -> Result<()> {
-        let dir = dir.as_ref();
-        for (path, content) in files.into_iter() {
-            let path = path.as_ref();
-            let content = content.as_ref();
-            let mut file = File::create(dir.join(path))?;
-            file.write_all(content.as_bytes())?;
-        }
-        Ok(())
-    }
+    use crate::testutils::write_files;
 
     const MANY_ASSIGN: &str = r#"
 USE="foo"
@@ -255,8 +236,10 @@ USE="${USE} bar"
     #[test]
     fn test_many_assign_evaluation() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        write_files(&dir, &[("make.conf", MANY_ASSIGN)])?;
-        let conf = MakeConf::load(&PathBuf::from("make.conf"), (&dir).as_ref(), false, false)?;
+        let dir = dir.as_ref();
+
+        write_files(dir, [("make.conf", MANY_ASSIGN)])?;
+        let conf = MakeConf::load(&PathBuf::from("make.conf"), dir, false, false)?;
 
         assert_eq!(
             HashMap::from_iter([(
@@ -281,8 +264,10 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
     #[test]
     fn test_25_laughs_evaluation() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        write_files(&dir, &[("make.conf", TWENTY_FIVE_LAUGHS)])?;
-        let conf = MakeConf::load(&PathBuf::from("make.conf"), (&dir).as_ref(), false, false)?;
+        let dir = dir.as_ref();
+
+        write_files(dir, [("make.conf", TWENTY_FIVE_LAUGHS)])?;
+        let conf = MakeConf::load(&PathBuf::from("make.conf"), dir, false, false)?;
 
         assert_eq!(
             HashMap::from_iter([(
@@ -297,9 +282,11 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
     #[test]
     fn test_unresolved_expansion() -> Result<()> {
         let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
         write_files(
-            &dir,
-            &[(
+            dir,
+            [(
                 "make.conf",
                 r#"
                     USE="${USE} foo"
@@ -307,7 +294,7 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
                 "#,
             )],
         )?;
-        let conf = MakeConf::load(&PathBuf::from("make.conf"), (&dir).as_ref(), false, false)?;
+        let conf = MakeConf::load(&PathBuf::from("make.conf"), dir, false, false)?;
 
         assert_eq!(
             HashMap::from_iter([(
@@ -325,7 +312,7 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
     fn write_source_files(dir: &Path) -> Result<()> {
         write_files(
             dir,
-            &[
+            [
                 (
                     "make.conf",
                     r#"
@@ -351,8 +338,10 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
     #[test]
     fn test_allow_source_disabled() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        write_source_files(dir.as_ref())?;
-        MakeConf::load(&PathBuf::from("make.conf"), (&dir).as_ref(), false, false)
+        let dir = dir.as_ref();
+
+        write_source_files(dir)?;
+        MakeConf::load(&PathBuf::from("make.conf"), dir, false, false)
             .expect_err("MakeConf::load should fail");
         Ok(())
     }
@@ -360,8 +349,10 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
     #[test]
     fn test_allow_source_enabled() -> Result<()> {
         let dir = tempfile::tempdir()?;
-        write_source_files(dir.as_ref())?;
-        let conf = MakeConf::load(&PathBuf::from("make.conf"), (&dir).as_ref(), true, false)?;
+        let dir = dir.as_ref();
+
+        write_source_files(dir)?;
+        let conf = MakeConf::load(&PathBuf::from("make.conf"), dir, true, false)?;
 
         assert_eq!(
             HashMap::from_iter([(
