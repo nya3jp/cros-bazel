@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -17,4 +18,11 @@ go_library(
     deps = [
         "@org_golang_x_sys//unix",
     ],
+)
+
+rust_library_crate(name = "fileutil_rust")
+
+rust_crate_test(
+    name = "fileutil_rust_test",
+    crate = ":fileutil_rust",
 )

@@ -1,3 +1,4 @@
+load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -5,4 +6,11 @@ go_library(
     srcs = ["exit.go"],
     importpath = "cros.local/bazel/ebuild/private/common/cliutil",
     visibility = ["//visibility:public"],
+)
+
+rust_library_crate(name = "cliutil_rust")
+
+rust_crate_test(
+    name = "cliutil_rust_test",
+    crate = ":cliutil_rust",
 )

@@ -1,3 +1,4 @@
+load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -8,4 +9,11 @@ go_library(
     deps = [
         "//bazel/ebuild/private/common/fileutil",
     ],
+)
+
+rust_library_crate(name = "symindex_rust")
+
+rust_crate_test(
+    name = "symindex_rust_test",
+    crate = ":symindex_rust",
 )

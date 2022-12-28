@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -18,4 +19,11 @@ go_library(
         "//bazel/ebuild/private/common/symindex",
         "//bazel/ebuild/private/common/tar",
     ],
+)
+
+rust_library_crate(name = "makechroot_rust")
+
+rust_crate_test(
+    name = "makechroot_rust_test",
+    crate = ":makechroot_rust",
 )
