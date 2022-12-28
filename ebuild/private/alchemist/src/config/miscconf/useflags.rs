@@ -146,3 +146,140 @@ pub fn load_use_configs(dir: &Path) -> Result<Vec<ConfigNode>> {
     .into_iter()
     .concat())
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use crate::testutils::write_files;
+
+    use super::*;
+
+    #[test]
+    fn test_load_use_configs() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                ("package.use", "pkg/a foo -bar baz"),
+                ("use.mask", "foo -bar baz"),
+                ("use.stable.mask", "foo -bar baz"),
+                ("package.use.mask", "pkg/b foo -bar baz"),
+                ("package.use.stable.mask", "pkg/c foo -bar baz"),
+                ("use.force", "foo -bar baz"),
+                ("use.stable.force", "foo -bar baz"),
+                ("package.use.force", "pkg/d foo -bar baz"),
+                ("package.use.stable.force", "pkg/e foo -bar baz"),
+            ],
+        )?;
+
+        let nodes = load_use_configs(dir)?;
+        assert_eq!(
+            vec![
+                ConfigNode {
+                    source: dir.join("package.use"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Set,
+                        filter: UseUpdateFilter {
+                            atom: Some(PackageAtomDependency::from_str("pkg/a").unwrap()),
+                            stable_only: false,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("use.mask"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Mask,
+                        filter: UseUpdateFilter {
+                            atom: None,
+                            stable_only: false,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("use.stable.mask"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Mask,
+                        filter: UseUpdateFilter {
+                            atom: None,
+                            stable_only: true,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("package.use.mask"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Mask,
+                        filter: UseUpdateFilter {
+                            atom: Some(PackageAtomDependency::from_str("pkg/b").unwrap()),
+                            stable_only: false,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("package.use.stable.mask"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Mask,
+                        filter: UseUpdateFilter {
+                            atom: Some(PackageAtomDependency::from_str("pkg/c").unwrap()),
+                            stable_only: true,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("use.force"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Force,
+                        filter: UseUpdateFilter {
+                            atom: None,
+                            stable_only: false,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("use.stable.force"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Force,
+                        filter: UseUpdateFilter {
+                            atom: None,
+                            stable_only: true,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("package.use.force"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Force,
+                        filter: UseUpdateFilter {
+                            atom: Some(PackageAtomDependency::from_str("pkg/d").unwrap()),
+                            stable_only: false,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("package.use.stable.force"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Force,
+                        filter: UseUpdateFilter {
+                            atom: Some(PackageAtomDependency::from_str("pkg/e").unwrap()),
+                            stable_only: true,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+            ],
+            nodes
+        );
+        Ok(())
+    }
+}

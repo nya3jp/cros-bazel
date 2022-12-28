@@ -62,3 +62,116 @@ impl ConfigSource for SiteSettings {
             .collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use crate::{
+        config::{
+            ConfigNodeValue, PackageMaskKind, PackageMaskUpdate, ProvidedPackage, UseUpdate,
+            UseUpdateFilter, UseUpdateKind,
+        },
+        dependency::package::PackageAtomDependency,
+        testutils::write_files,
+        version::Version,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_load() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                ("etc/make.conf", "USE=a"),
+                ("etc/portage/make.conf", "USE=b"),
+                ("etc/portage/profile/package.mask", "pkg/x"),
+                ("etc/portage/profile/package.use", "pkg/x foo -bar baz"),
+                ("etc/portage/profile/package.provided", "pkg/x-1.0.0"),
+                ("etc/portage/package.mask", "pkg/x"),
+                ("etc/portage/package.use", "pkg/x foo -bar baz"),
+                ("etc/portage/package.provided", "pkg/x-1.0.0"),
+            ],
+        )?;
+
+        let site_settings = SiteSettings::load(dir)?;
+        let mut env = Vars::new();
+        let nodes = site_settings.evaluate_configs(&mut env);
+
+        assert_eq!(Vars::from_iter([("USE".to_owned(), "b".to_owned())]), env);
+        assert_eq!(
+            vec![
+                ConfigNode {
+                    source: dir.join("etc/make.conf"),
+                    value: ConfigNodeValue::Vars(Vars::from_iter([(
+                        "USE".to_owned(),
+                        "a".to_owned()
+                    )])),
+                },
+                ConfigNode {
+                    source: dir.join("etc/portage/make.conf"),
+                    value: ConfigNodeValue::Vars(Vars::from_iter([(
+                        "USE".to_owned(),
+                        "b".to_owned()
+                    )])),
+                },
+                ConfigNode {
+                    source: dir.join("etc/portage/profile/package.mask"),
+                    value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
+                        kind: PackageMaskKind::Mask,
+                        atom: PackageAtomDependency::from_str("pkg/x").unwrap(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("etc/portage/profile/package.use"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Set,
+                        filter: UseUpdateFilter {
+                            atom: Some(PackageAtomDependency::from_str("pkg/x").unwrap()),
+                            stable_only: false,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("etc/portage/profile/package.provided"),
+                    value: ConfigNodeValue::ProvidedPackages(vec![ProvidedPackage {
+                        package_name: "pkg/x".to_owned(),
+                        version: Version::try_new("1.0.0").unwrap(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("etc/portage/package.mask"),
+                    value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
+                        kind: PackageMaskKind::Mask,
+                        atom: PackageAtomDependency::from_str("pkg/x").unwrap(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("etc/portage/package.use"),
+                    value: ConfigNodeValue::Uses(vec![UseUpdate {
+                        kind: UseUpdateKind::Set,
+                        filter: UseUpdateFilter {
+                            atom: Some(PackageAtomDependency::from_str("pkg/x").unwrap()),
+                            stable_only: false,
+                        },
+                        use_tokens: "foo -bar baz".to_owned(),
+                    }]),
+                },
+                ConfigNode {
+                    source: dir.join("etc/portage/package.provided"),
+                    value: ConfigNodeValue::ProvidedPackages(vec![ProvidedPackage {
+                        package_name: "pkg/x".to_owned(),
+                        version: Version::try_new("1.0.0").unwrap(),
+                    }]),
+                },
+            ],
+            nodes
+        );
+        Ok(())
+    }
+}

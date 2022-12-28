@@ -333,7 +333,34 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
         )
     }
 
-    // TODO: Write unit tests for directories.
+    #[test]
+    fn test_directory() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                ("make.conf/a.conf", "USE=\"$USE a\""),
+                ("make.conf/b.conf", "USE=\"$USE b\""),
+                ("make.conf/c.conf", "USE=\"$USE c\""),
+            ],
+        )?;
+
+        let conf = MakeConf::load(&PathBuf::from("make.conf"), dir, false, false)?;
+
+        assert_eq!(
+            HashMap::from_iter([(
+                "USE".to_owned(),
+                RVal::from_iter([
+                    Value::UnresolvedExpansion("USE".to_owned()),
+                    Value::Literal(" a b c".to_owned()),
+                ])
+            )]),
+            conf.values
+        );
+        Ok(())
+    }
 
     #[test]
     fn test_allow_source_disabled() -> Result<()> {
@@ -367,5 +394,22 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
         Ok(())
     }
 
-    // TODO: Write unit tests for allow_missing.
+    #[test]
+    fn test_allow_missing_disabled() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        MakeConf::load(&PathBuf::from("make.conf"), dir, false, false)
+            .expect_err("MakeConf::load() did not fail");
+        Ok(())
+    }
+
+    #[test]
+    fn test_allow_missing_enabled() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        MakeConf::load(&PathBuf::from("make.conf"), dir, false, true)?;
+        Ok(())
+    }
 }

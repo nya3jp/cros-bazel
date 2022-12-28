@@ -38,3 +38,47 @@ pub fn load_provided_packages_config(dir: &Path) -> Result<Vec<ConfigNode>> {
         value: ConfigNodeValue::ProvidedPackages(packages),
     }])
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::testutils::write_files;
+
+    use super::*;
+
+    #[test]
+    fn test_load_provided_packages_config() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [(
+                "package.provided",
+                r#"
+                    # this is a comment line
+                    pkg/a-1.0.0
+                    pkg/b-2.0.0
+                "#,
+            )],
+        )?;
+
+        let nodes = load_provided_packages_config(dir)?;
+        assert_eq!(
+            vec![ConfigNode {
+                source: dir.join("package.provided"),
+                value: ConfigNodeValue::ProvidedPackages(vec![
+                    ProvidedPackage {
+                        package_name: "pkg/a".to_owned(),
+                        version: Version::try_new("1.0.0").unwrap(),
+                    },
+                    ProvidedPackage {
+                        package_name: "pkg/b".to_owned(),
+                        version: Version::try_new("2.0.0").unwrap(),
+                    },
+                ]),
+            }],
+            nodes
+        );
+        Ok(())
+    }
+}
