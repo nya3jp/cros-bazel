@@ -25,7 +25,7 @@ package(default_visibility = ["//visibility:public"])
 # ])
 
 rust_library(
-    name = "libc",
+    name = "crossbeam_utils",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -51,13 +51,15 @@ rust_library(
         ],
     }),
     crate_features = [
+        "default",
+        "std",
     ],
     crate_root = "src/lib.rs",
     data = select_with_or({
         "//conditions:default": [
         ],
     }),
-    edition = "2015",
+    edition = "2018",
     proc_macro_deps = [
     ] + select({
         "//conditions:default": [
@@ -82,18 +84,19 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "0.2.138",
+    version = "0.8.14",
     deps = [
     ] + select({
         "//conditions:default": [
-            "@update_crates__libc-0.2.138//:build_script_build",
+            "@update_crates__cfg-if-1.0.0//:cfg_if",
+            "@update_crates__crossbeam-utils-0.8.14//:build_script_build",
         ],
     }),
 )
 
 cargo_build_script(
     # See comment associated with alias. Do not change this name
-    name = "libc_build_script",
+    name = "crossbeam-utils_build_script",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -112,6 +115,8 @@ cargo_build_script(
         ],
     }),
     crate_features = [
+        "default",
+        "std",
     ],
     crate_name = "build_script_build",
     crate_root = "build.rs",
@@ -128,7 +133,7 @@ cargo_build_script(
         "//conditions:default": [
         ],
     }),
-    edition = "2015",
+    edition = "2018",
     proc_macro_deps = [
     ] + select({
         "//conditions:default": [
@@ -157,7 +162,7 @@ cargo_build_script(
         "//conditions:default": [
         ],
     }),
-    version = "0.2.138",
+    version = "0.8.14",
     visibility = ["//visibility:private"],
     deps = [
     ] + select({
@@ -173,7 +178,7 @@ alias(
     # of `cargo_build_script` (rule) without losing out on having certain
     # Cargo environment variables set.
     name = "build_script_build",
-    actual = "libc_build_script",
+    actual = "crossbeam-utils_build_script",
     tags = [
         "manual",
     ],

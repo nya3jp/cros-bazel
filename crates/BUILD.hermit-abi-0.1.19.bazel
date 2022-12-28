@@ -82,7 +82,7 @@ rust_library(
     deps = [
     ] + select({
         "//conditions:default": [
-            "@update_crates__libc-0.2.138//:libc",
+            "@update_crates__libc-0.2.139//:libc",
         ],
     }),
 )
