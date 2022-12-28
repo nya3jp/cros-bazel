@@ -9,13 +9,12 @@ use std::{env::current_dir, path::PathBuf};
 
 use alchemist::{
     config::{
-        site::SiteSettings, ConfigBundle, ConfigNode, ConfigNodeValue, ConfigSource,
-        PackageMaskKind, PackageMaskUpdate, ProvidedPackage, SimpleConfigSource,
+        bundle::ConfigBundle, profile::Profile, site::SiteSettings, ConfigNode, ConfigNodeValue,
+        ConfigSource, PackageMaskKind, PackageMaskUpdate, ProvidedPackage, SimpleConfigSource,
     },
     dependency::package::PackageAtomDependency,
     ebuild::{CachedEBuildEvaluator, EBuildEvaluator},
     fakechroot::enter_fake_chroot,
-    profile::Profile,
     repository::RepositorySet,
     resolver::PackageResolver,
 };

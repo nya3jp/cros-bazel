@@ -16,7 +16,7 @@ use std::{
 };
 
 use crate::{
-    config::{site::SiteSettings, ConfigBundle, ConfigSource},
+    config::{bundle::ConfigBundle, site::SiteSettings, ConfigSource},
     data::Vars,
 };
 

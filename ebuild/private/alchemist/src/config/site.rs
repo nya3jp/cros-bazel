@@ -9,8 +9,12 @@ use anyhow::{Context, Result};
 use crate::data::Vars;
 
 use super::{
-    makeconf::MakeConf, pkgconf::load_package_configs, providedconf::load_provided_packages_config,
-    useconf::load_use_configs, ConfigNode, ConfigSource,
+    makeconf::MakeConf,
+    miscconf::{
+        mask::load_package_configs, provided::load_provided_packages_config,
+        useflags::load_use_configs,
+    },
+    ConfigNode, ConfigSource,
 };
 
 pub struct SiteSettings {

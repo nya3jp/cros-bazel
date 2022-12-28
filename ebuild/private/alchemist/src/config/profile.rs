@@ -8,9 +8,12 @@ use std::{fs::read_to_string, io::ErrorKind, path::Path};
 
 use crate::{
     config::{
-        makeconf::MakeConf, pkgconf::load_package_configs,
-        providedconf::load_provided_packages_config, useconf::load_use_configs, ConfigNode,
-        ConfigSource,
+        makeconf::MakeConf,
+        miscconf::{
+            mask::load_package_configs, provided::load_provided_packages_config,
+            useflags::load_use_configs,
+        },
+        ConfigNode, ConfigSource,
     },
     data::Vars,
     repository::RepositorySet,

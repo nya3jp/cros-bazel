@@ -9,7 +9,6 @@ pub mod data;
 pub mod dependency;
 pub mod ebuild;
 pub mod fakechroot;
-pub mod profile;
 pub mod repository;
 pub mod resolver;
 #[cfg(test)]

@@ -15,7 +15,7 @@ use std::{
 
 use crate::{
     bash::{BashValue, BashVars},
-    config::ConfigBundle,
+    config::bundle::ConfigBundle,
     data::{IUseMap, PackageSlotKey, Slot, UseMap},
     dependency::package::PackageRef,
     repository::RepositorySet,

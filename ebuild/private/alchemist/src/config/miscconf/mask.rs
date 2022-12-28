@@ -6,9 +6,10 @@ use anyhow::{Context, Result};
 use itertools::Itertools;
 use std::{fs::read_to_string, path::Path};
 
-use crate::dependency::package::PackageAtomDependency;
-
-use super::{ConfigNode, ConfigNodeValue, PackageMaskKind, PackageMaskUpdate};
+use crate::{
+    config::{ConfigNode, ConfigNodeValue, PackageMaskKind, PackageMaskUpdate},
+    dependency::package::PackageAtomDependency,
+};
 
 fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<ConfigNode>> {
     if !source.exists() {

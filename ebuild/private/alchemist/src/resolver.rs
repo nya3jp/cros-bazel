@@ -8,7 +8,7 @@ use rayon::prelude::*;
 use std::sync::Arc;
 
 use crate::{
-    config::{ConfigBundle, ProvidedPackage},
+    config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtomDependency, Predicate},
     ebuild::{CachedEBuildEvaluator, PackageDetails, Stability},
     repository::RepositorySet,

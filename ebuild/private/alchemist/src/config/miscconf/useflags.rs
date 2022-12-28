@@ -6,9 +6,10 @@ use anyhow::{Context, Result};
 use itertools::Itertools;
 use std::{fs::read_to_string, path::Path};
 
-use crate::dependency::package::PackageAtomDependency;
-
-use super::{ConfigNode, ConfigNodeValue, UseUpdate, UseUpdateFilter, UseUpdateKind};
+use crate::{
+    config::{ConfigNode, ConfigNodeValue, UseUpdate, UseUpdateFilter, UseUpdateKind},
+    dependency::package::PackageAtomDependency,
+};
 
 fn load_wildcard_use_config(
     source: &Path,
