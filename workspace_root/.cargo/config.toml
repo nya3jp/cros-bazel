@@ -1,0 +1,5 @@
+# This isn't used by bazel, but is required in order for cargo to build the
+# bazel package "runfiles".
+
+[env]
+RULES_RUST_RUNFILES_WORKSPACE_NAME = "chromiumos"

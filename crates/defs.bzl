@@ -291,23 +291,20 @@ def aliases(
 ###############################################################################
 
 _NORMAL_DEPENDENCIES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
         _COMMON_CONDITION: {
             "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
             "base64": "@update_crates__base64-0.20.0//:base64",
             "clap": "@update_crates__clap-4.0.32//:clap",
             "colored": "@update_crates__colored-2.0.0//:colored",
-            "env_logger": "@update_crates__env_logger-0.9.3//:env_logger",
             "hex": "@update_crates__hex-0.4.3//:hex",
             "itertools": "@update_crates__itertools-0.10.5//:itertools",
             "lazy_static": "@update_crates__lazy_static-1.4.0//:lazy_static",
-            "log": "@update_crates__log-0.4.17//:log",
             "nix": "@update_crates__nix-0.26.1//:nix",
             "nom": "@update_crates__nom-7.1.1//:nom",
             "nom-regex": "@update_crates__nom-regex-0.2.0//:nom_regex",
             "nom_locate": "@update_crates__nom_locate-4.0.0//:nom_locate",
             "once_cell": "@update_crates__once_cell-1.16.0//:once_cell",
-            "proptest": "@update_crates__proptest-1.0.0//:proptest",
             "rayon": "@update_crates__rayon-1.6.1//:rayon",
             "regex": "@update_crates__regex-1.7.0//:regex",
             "rpds": "@update_crates__rpds-0.12.0//:rpds",
@@ -320,65 +317,175 @@ _NORMAL_DEPENDENCIES = {
             "walkdir": "@update_crates__walkdir-2.3.2//:walkdir",
         },
     },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
+        _COMMON_CONDITION: {
+            "env_logger": "@update_crates__env_logger-0.9.3//:env_logger",
+            "log": "@update_crates__log-0.4.17//:log",
+            "runfiles": "@update_crates__runfiles-0.1.0//:runfiles",
+        },
+    },
 }
 
 _NORMAL_ALIASES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+        _COMMON_CONDITION: {
+        },
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
         _COMMON_CONDITION: {
         },
     },
 }
 
 _NORMAL_DEV_DEPENDENCIES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+        _COMMON_CONDITION: {
+            "proptest": "@update_crates__proptest-1.0.0//:proptest",
+        },
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _NORMAL_DEV_ALIASES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+        _COMMON_CONDITION: {
+        },
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _PROC_MACRO_DEPENDENCIES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
         _COMMON_CONDITION: {
             "strum_macros": "@update_crates__strum_macros-0.24.3//:strum_macros",
         },
     },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
+    },
 }
 
 _PROC_MACRO_ALIASES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _PROC_MACRO_DEV_DEPENDENCIES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _PROC_MACRO_DEV_ALIASES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+        _COMMON_CONDITION: {
+        },
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _BUILD_DEPENDENCIES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _BUILD_ALIASES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _BUILD_PROC_MACRO_DEPENDENCIES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
 _BUILD_PROC_MACRO_ALIASES = {
-    "bazel/toolchains/rust": {
+    "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/toolchains/rust/examples/hello_world": {
+    },
+    "bazel/toolchains/rust/examples/local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_local_crate": {
+    },
+    "bazel/toolchains/rust/examples/use_third_party_crate": {
     },
 }
 
@@ -1234,6 +1341,16 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/rpds/0.12.0/download"],
         strip_prefix = "rpds-0.12.0",
         build_file = Label("@chromiumos//bazel/crates:BUILD.rpds-0.12.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_crates__runfiles-0.1.0",
+        sha256 = "b966e2656ad15fd22e76d2bcb8b7f88e5cb2ee5071539b19aa751423169f35e0",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/runfiles/0.1.0/download"],
+        strip_prefix = "runfiles-0.1.0",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.runfiles-0.1.0.bazel"),
     )
 
     maybe(

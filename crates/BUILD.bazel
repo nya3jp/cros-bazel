@@ -136,6 +136,12 @@ alias(
 )
 
 alias(
+    name = "runfiles",
+    actual = "@update_crates__runfiles-0.1.0//:runfiles",
+    tags = ["manual"],
+)
+
+alias(
     name = "serde",
     actual = "@update_crates__serde-1.0.152//:serde",
     tags = ["manual"],

@@ -1,0 +1,11 @@
+load("//bazel/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test", "rust_library_crate")
+
+rust_library_crate(
+    name = "local_crate",
+    visibility = ["//bazel/toolchains/rust/examples/use_local_crate:__pkg__"],
+)
+
+rust_crate_test(
+    name = "local_crate_test",
+    crate = ":local_crate",
+)
