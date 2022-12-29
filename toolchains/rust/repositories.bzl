@@ -10,4 +10,7 @@ def rust_repositories():
         github_user = "bazelbuild",
         github_repo = "rules_rust",
         tag = RULES_VERSION,
+        patches = [
+            "//bazel/toolchains/rust:patches/fix-update-crates.patch",
+        ],
     )
