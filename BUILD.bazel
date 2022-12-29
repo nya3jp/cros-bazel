@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("@bazel_gazelle//:def.bzl", "gazelle")
-load("@rules_rust//crate_universe:defs.bzl", "crates_vendor")
 
 # gazelle:prefix cros.local/bazel
 gazelle(
@@ -19,9 +18,4 @@ gazelle(
         "-prune",
     ],
     command = "update-repos",
-)
-
-crates_vendor(
-    name = "update_crates",
-    manifests = [":Cargo.toml"],
 )

@@ -27,6 +27,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "alchemist"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "clap",
+ "colored",
+ "hex",
+ "itertools",
+ "lazy_static",
+ "nix",
+ "nom",
+ "nom-regex",
+ "nom_locate",
+ "once_cell",
+ "proptest",
+ "rayon",
+ "regex",
+ "rpds",
+ "serde",
+ "serde_json",
+ "strum",
+ "strum_macros",
+ "tempfile",
+ "thiserror",
+ "url",
+ "walkdir",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -126,38 +156,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "chromiumos"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "clap",
- "colored",
- "env_logger",
- "hex",
- "itertools",
- "lazy_static",
- "log",
- "nix",
- "nom",
- "nom-regex",
- "nom_locate",
- "once_cell",
- "proptest",
- "rayon",
- "regex",
- "rpds",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "tempfile",
- "thiserror",
- "url",
- "walkdir",
-]
 
 [[package]]
 name = "clap"
@@ -338,6 +336,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
+name = "hello_world"
+version = "0.1.0"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -431,15 +433,19 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.138"
+version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
+checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
 name = "linux-raw-sys"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
+
+[[package]]
+name = "local_crate"
+version = "0.1.0"
 
 [[package]]
 name = "log"
@@ -763,6 +769,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "runfiles"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b966e2656ad15fd22e76d2bcb8b7f88e5cb2ee5071539b19aa751423169f35e0"
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -982,6 +994,22 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+]
+
+[[package]]
+name = "use_local_crate"
+version = "0.1.0"
+dependencies = [
+ "local_crate",
+]
+
+[[package]]
+name = "use_third_party_crate"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "log",
+ "runfiles",
 ]
 
 [[package]]

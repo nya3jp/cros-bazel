@@ -1,3 +1,4 @@
+load("@rules_rust//crate_universe:defs.bzl", "crates_vendor")
 load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 rust_binary(
@@ -13,4 +14,10 @@ rust_binary(
         "//bazel/crates:env_logger",
         "//bazel/crates:log",
     ],
+)
+
+crates_vendor(
+    name = "update_crates",
+    manifests = [":Cargo.toml"],
+    vendor_path = "//bazel/crates",
 )
