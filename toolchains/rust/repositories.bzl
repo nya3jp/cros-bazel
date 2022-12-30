@@ -12,5 +12,7 @@ def rust_repositories():
         tag = RULES_VERSION,
         patches = [
             "//bazel/toolchains/rust:patches/fix-update-crates.patch",
+            "//bazel/toolchains/rust:patches/override-bazel.patch",
+            "//bazel/toolchains/rust:patches/home-directory-env.patch",
         ],
     )

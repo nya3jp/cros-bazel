@@ -2,11 +2,23 @@ load("//bazel/toolchains/rust:update_crates.bzl", "generate_cargo_toml", "update
 load("//bazel/toolchains/rust:local_crates.bzl", "LOCAL_CRATES")
 load("@rules_rust//crate_universe:defs.bzl", "crate")
 
+sh_binary(
+    name = "update_crates_custom_bazel",
+    srcs = ["//bazel/toolchains/rust:update_crates_custom_bazel.sh"],
+    data = [
+        "//:tools/bazel",
+    ],
+    deps = [
+        "@bazel_tools//tools/bash/runfiles",
+    ],
+)
+
 update_crates(
     name = "update_crates",
     annotations = dict(runfiles = [crate.annotation(
         rustc_env = dict(RULES_RUST_RUNFILES_WORKSPACE_NAME = "chromiumos"),
     )]),
+    bazel = ":update_crates_custom_bazel",
     crates = LOCAL_CRATES,
     root_manifest = "//:generated_manifest",
     cargo_lockfile = "//:Cargo.lock",

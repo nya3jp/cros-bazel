@@ -34,3 +34,5 @@ generate_cargo_toml(
     tmpl = "//bazel/toolchains/rust:Cargo_template.toml",
     visibility = ["//bazel/toolchains/rust:__pkg__"],
 )
+
+exports_files(["tools/bazel"])
