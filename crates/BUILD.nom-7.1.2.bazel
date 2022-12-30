@@ -20,7 +20,7 @@ package(default_visibility = ["//visibility:public"])
 # ])
 
 rust_library(
-    name = "nom_locate",
+    name = "nom",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -80,13 +80,12 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "4.0.0",
+    version = "7.1.2",
     deps = [
     ] + select({
         "//conditions:default": [
-            "@update_crates__bytecount-0.6.3//:bytecount",
             "@update_crates__memchr-2.5.0//:memchr",
-            "@update_crates__nom-7.1.2//:nom",
+            "@update_crates__minimal-lexical-0.2.1//:minimal_lexical",
         ],
     }),
 )

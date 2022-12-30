@@ -1,14 +1,9 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use anyhow::{bail, Result};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+pub fn split_key_value(spec: &str) -> Result<(&str, &str)> {
+    let v: Vec<_> = spec.split("=").collect();
+    if v.len() != 2 {
+        bail!("invalid spec: {:?}", spec);
     }
+    return Ok((v[0], v[1]));
 }

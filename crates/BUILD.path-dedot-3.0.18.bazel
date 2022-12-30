@@ -16,11 +16,11 @@ load(
 package(default_visibility = ["//visibility:public"])
 
 # licenses([
-#     "TODO",  # MIT OR Apache-2.0
+#     "TODO",  # MIT
 # ])
 
 rust_library(
-    name = "once_cell",
+    name = "path_dedot",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -46,10 +46,6 @@ rust_library(
         ],
     }),
     crate_features = [
-        "alloc",
-        "default",
-        "race",
-        "std",
     ],
     crate_root = "src/lib.rs",
     data = select_with_or({
@@ -81,10 +77,11 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "1.16.0",
+    version = "3.0.18",
     deps = [
     ] + select({
         "//conditions:default": [
+            "@update_crates__once_cell-1.17.0//:once_cell",
         ],
     }),
 )

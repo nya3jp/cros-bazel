@@ -301,10 +301,10 @@ _NORMAL_DEPENDENCIES = {
             "itertools": "@update_crates__itertools-0.10.5//:itertools",
             "lazy_static": "@update_crates__lazy_static-1.4.0//:lazy_static",
             "nix": "@update_crates__nix-0.26.1//:nix",
-            "nom": "@update_crates__nom-7.1.1//:nom",
+            "nom": "@update_crates__nom-7.1.2//:nom",
             "nom-regex": "@update_crates__nom-regex-0.2.0//:nom_regex",
             "nom_locate": "@update_crates__nom_locate-4.0.0//:nom_locate",
-            "once_cell": "@update_crates__once_cell-1.16.0//:once_cell",
+            "once_cell": "@update_crates__once_cell-1.17.0//:once_cell",
             "rayon": "@update_crates__rayon-1.6.1//:rayon",
             "regex": "@update_crates__regex-1.7.0//:regex",
             "rpds": "@update_crates__rpds-0.12.0//:rpds",
@@ -323,10 +323,18 @@ _NORMAL_DEPENDENCIES = {
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
+        },
     },
     "bazel/ebuild/private/common/fileutil": {
     },
     "bazel/ebuild/private/common/makechroot": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
+            "path-absolutize": "@update_crates__path-absolutize-3.0.14//:path_absolutize",
+            "runfiles": "@update_crates__runfiles-0.1.0//:runfiles",
+        },
     },
     "bazel/ebuild/private/common/mountsdk": {
     },
@@ -363,10 +371,14 @@ _NORMAL_ALIASES = {
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/common/fileutil": {
     },
     "bazel/ebuild/private/common/makechroot": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/common/mountsdk": {
     },
@@ -1296,12 +1308,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "update_crates__nom-7.1.1",
-        sha256 = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36",
+        name = "update_crates__nom-7.1.2",
+        sha256 = "e5507769c4919c998e69e49c839d9dc6e693ede4cc4290d6ad8b41d4f09c548c",
         type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/nom/7.1.1/download"],
-        strip_prefix = "nom-7.1.1",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.nom-7.1.1.bazel"),
+        urls = ["https://crates.io/api/v1/crates/nom/7.1.2/download"],
+        strip_prefix = "nom-7.1.2",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.nom-7.1.2.bazel"),
     )
 
     maybe(
@@ -1346,22 +1358,22 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "update_crates__object-0.30.0",
-        sha256 = "239da7f290cfa979f43f85a8efeee9a8a76d0827c356d37f9d3d7254d6b537fb",
+        name = "update_crates__object-0.30.1",
+        sha256 = "8d864c91689fdc196779b98dba0aceac6118594c2df6ee5d943eb6a8df4d107a",
         type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/object/0.30.0/download"],
-        strip_prefix = "object-0.30.0",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.object-0.30.0.bazel"),
+        urls = ["https://crates.io/api/v1/crates/object/0.30.1/download"],
+        strip_prefix = "object-0.30.1",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.object-0.30.1.bazel"),
     )
 
     maybe(
         http_archive,
-        name = "update_crates__once_cell-1.16.0",
-        sha256 = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860",
+        name = "update_crates__once_cell-1.17.0",
+        sha256 = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66",
         type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/once_cell/1.16.0/download"],
-        strip_prefix = "once_cell-1.16.0",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.once_cell-1.16.0.bazel"),
+        urls = ["https://crates.io/api/v1/crates/once_cell/1.17.0/download"],
+        strip_prefix = "once_cell-1.17.0",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.once_cell-1.17.0.bazel"),
     )
 
     maybe(
@@ -1372,6 +1384,26 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/os_str_bytes/6.4.1/download"],
         strip_prefix = "os_str_bytes-6.4.1",
         build_file = Label("@chromiumos//bazel/crates:BUILD.os_str_bytes-6.4.1.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_crates__path-absolutize-3.0.14",
+        sha256 = "0f1d4993b16f7325d90c18c3c6a3327db7808752db8d208cea0acee0abd52c52",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/path-absolutize/3.0.14/download"],
+        strip_prefix = "path-absolutize-3.0.14",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.path-absolutize-3.0.14.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_crates__path-dedot-3.0.18",
+        sha256 = "9a81540d94551664b72b72829b12bd167c73c9d25fbac0e04fafa8023f7e4901",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/path-dedot/3.0.18/download"],
+        strip_prefix = "path-dedot-3.0.18",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.path-dedot-3.0.18.bazel"),
     )
 
     maybe(

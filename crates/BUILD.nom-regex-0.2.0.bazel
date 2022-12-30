@@ -83,7 +83,7 @@ rust_library(
     deps = [
     ] + select({
         "//conditions:default": [
-            "@update_crates__nom-7.1.1//:nom",
+            "@update_crates__nom-7.1.2//:nom",
             "@update_crates__regex-1.7.0//:regex",
         ],
     }),

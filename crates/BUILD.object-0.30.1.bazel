@@ -16,11 +16,11 @@ load(
 package(default_visibility = ["//visibility:public"])
 
 # licenses([
-#     "TODO",  # MIT
+#     "TODO",  # Apache-2.0 OR MIT
 # ])
 
 rust_library(
-    name = "nom",
+    name = "object",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -46,9 +46,13 @@ rust_library(
         ],
     }),
     crate_features = [
-        "alloc",
-        "default",
-        "std",
+        "archive",
+        "coff",
+        "elf",
+        "macho",
+        "pe",
+        "read_core",
+        "unaligned",
     ],
     crate_root = "src/lib.rs",
     data = select_with_or({
@@ -80,12 +84,11 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "7.1.1",
+    version = "0.30.1",
     deps = [
     ] + select({
         "//conditions:default": [
             "@update_crates__memchr-2.5.0//:memchr",
-            "@update_crates__minimal-lexical-0.2.1//:minimal_lexical",
         ],
     }),
 )

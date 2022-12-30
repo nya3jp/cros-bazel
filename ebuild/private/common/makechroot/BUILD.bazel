@@ -5,6 +5,8 @@
 load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
+package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
+
 go_library(
     name = "makechroot",
     srcs = [
@@ -21,9 +23,16 @@ go_library(
     ],
 )
 
-rust_library_crate(name = "makechroot_rust")
+rust_library_crate(
+    name = "makechroot_rust",
+    crate_name = "makechroot",
+    deps = [
+        "//bazel/ebuild/private/common/cliutil:cliutil_rust",
+    ]
+)
 
 rust_crate_test(
     name = "makechroot_rust_test",
     crate = ":makechroot_rust",
+    data = glob(["testdata/*"]),
 )
