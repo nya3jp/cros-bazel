@@ -233,13 +233,18 @@ var app = &cli.App{
 			MountPath: mainScript,
 		})
 
-		ebuildMetadata, err := ParseEbuildMetadata(ebuildSource)
+		v := strings.SplitN(ebuildSource, "=", 2)
+		if len(v) < 2 {
+			return errors.New("invalid ebuild cfg")
+		}
+
+		ebuildMetadata, err := ParseEbuildMetadata(v[0])
 		if err != nil {
 			return fmt.Errorf("invalid ebuild file name: %w", err)
 		}
 
 		ebuildFile := makechroot.BindMount{
-			Source:    ebuildSource,
+			Source:    v[1],
 			MountPath: filepath.Join(mountsdk.SourceDir, "src", ebuildMetadata.Overlay, ebuildMetadata.Category, ebuildMetadata.PackageName, filepath.Base(ebuildSource)),
 		}
 		cfg.Remounts = append(cfg.Remounts, filepath.Dir(ebuildFile.MountPath))
