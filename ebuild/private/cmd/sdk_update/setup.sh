@@ -51,10 +51,14 @@ fi
 
 # Install libc to sysroot.
 # Logic borrowed from chromite/lib/toolchain.py.
-# TODO: Stop hard-coding aarch64-cros-linux-gnu.
-rm -rf /tmp/libc
-mkdir -p /tmp/libc
-tar -I "zstd -f" -x -f "/var/lib/portage/pkgs/cross-aarch64-cros-linux-gnu/glibc-"*.tbz2 -C /tmp/libc
-mkdir -p "/build/${BOARD}" "/build/${BOARD}/usr/lib/debug"
-rsync --archive --hard-links "/tmp/libc/usr/aarch64-cros-linux-gnu/" "/build/${BOARD}/"
-rsync --archive --hard-links "/tmp/libc/usr/lib/debug/usr/aarch64-cros-linux-gnu/" "/build/${BOARD}/usr/lib/debug/"
+# TODO: Can we install just the primary tool chain, or do we need them all?
+while read -r TOOLCHAIN
+do
+  rm -rf /tmp/libc
+  mkdir -p /tmp/libc
+
+  tar -I "zstd -f" -x -f "${TOOLCHAIN}" -C /tmp/libc
+  mkdir -p "/build/${BOARD}" "/build/${BOARD}/usr/lib/debug"
+  rsync --archive --hard-links /tmp/libc/usr/*-cros-linux-gnu/ "/build/${BOARD}/"
+  rsync --archive --hard-links /tmp/libc/usr/lib/debug/usr/*-cros-linux-gnu/ "/build/${BOARD}/usr/lib/debug/"
+done < <(find /var/lib/portage/pkgs -path "*/cross-*-cros-linux-gnu/glibc-*.tbz2")

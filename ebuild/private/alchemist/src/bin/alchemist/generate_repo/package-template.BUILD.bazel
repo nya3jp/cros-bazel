@@ -32,6 +32,8 @@ ebuild(
     ],
     {{- endif }}
     files = glob(["files/**", "*.bashrc"]),
+    # TODO: Generate the SDK target
+    sdk = "@//bazel/sdk:{ board }",
     visibility = ["//visibility:public"],
 )
 

@@ -212,7 +212,8 @@ impl EBuildEntry {
 }
 
 #[derive(Serialize)]
-struct BuildTemplateContext {
+struct BuildTemplateContext<'a> {
+    board: &'a str,
     ebuilds: Vec<EBuildEntry>,
 }
 
@@ -227,11 +228,13 @@ static PACKAGE_BUILD_TEMPLATE: &str = include_str!("package-template.BUILD.bazel
 static REPOSITORIES_TEMPLATE: &str = include_str!("repositories-template.bzl");
 
 fn generate_package_build_file(
+    board: &str,
     packages_in_dir: &PackagesInDir,
     out: &Path,
     resolver: &PackageResolver,
 ) -> Result<()> {
     let context = BuildTemplateContext {
+        board: board,
         ebuilds: packages_in_dir
             .packages
             .iter()
@@ -250,6 +253,7 @@ fn generate_package_build_file(
 }
 
 fn generate_package(
+    board: &str,
     packages_in_dir: PackagesInDir<'_>,
     package_output_dir: &Path,
     translator: &PathTranslator,
@@ -288,6 +292,7 @@ fn generate_package(
 
     // Generate `BUILD.bazel`.
     generate_package_build_file(
+        board,
         &packages_in_dir,
         &package_output_dir.join("BUILD.bazel"),
         resolver,
@@ -418,6 +423,7 @@ fn join_by_package_dir<'a>(
 
 /// The entry point of "generate-repo" subcommand.
 pub fn generate_repo_main(
+    board: &str,
     repos: &RepositorySet,
     evaluator: &CachedEBuildEvaluator,
     resolver: &PackageResolver,
@@ -444,7 +450,7 @@ pub fn generate_repo_main(
         .into_par_iter()
         .try_for_each(|(relative_output_dir, packages_in_dir)| {
             let package_dir = output_dir.join(relative_output_dir);
-            generate_package(packages_in_dir, &package_dir, translator, resolver)
+            generate_package(board, packages_in_dir, &package_dir, translator, resolver)
         })?;
 
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;

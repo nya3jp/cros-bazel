@@ -42,14 +42,12 @@ go_binary(
     visibility = ["//visibility:public"],
 )
 
+# build_image is relying on emerge to install the binpkgs this means we need
+# a fully functional portage environment.
 overlay_set(
     name = "overlays_build_image",
     overlays = [
-        "//overlays/overlay-arm64-generic",
-        "//third_party/eclass-overlay",
         "//third_party/chromiumos-overlay:package-provided",
-        "//third_party/chromiumos-overlay",
-        "//third_party/portage-stable",
     ],
     visibility = ["//visibility:public"],
 )
@@ -73,4 +71,5 @@ build_image(
         "//third_party/portage-stable/sys-devel/llvm-common:0",
     ],
     overlays = ":overlays_build_image",
+    sdk = "//bazel/sdk:arm64-generic"
 )

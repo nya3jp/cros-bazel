@@ -2,15 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "sdk_from_archive", "sdk_update")
+load("//bazel/ebuild:defs.bzl", "sdk_from_archive", "sdk", "overlay_set")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_tar(
     name = "extra_tarball",
     srcs = [
-        "//bazel/sdk/build/arm64-generic/build/bin",
-        "//bazel/sdk/build/arm64-generic/etc",
-        "//bazel/sdk/build/arm64-generic/usr/share/aclocal",
         "//bazel/sdk/etc",
         "//bazel/sdk/mnt/host/source/src/platform2/common-mk",
         "//bazel/sdk/run/lock",
@@ -25,7 +22,6 @@ pkg_tar(
 sdk_from_archive(
     name = "base_sdk",
     src = "@cros-sdk-2022.08.22.085953//file",
-    board = "arm64-generic",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
     # Required for testing various things requiring running in a container.
@@ -35,11 +31,36 @@ sdk_from_archive(
     ],
 )
 
-sdk_update(
-    name = "sdk",
+# arm64-generic
+
+pkg_tar(
+    name = "arm64-generic_tarball",
+    srcs = [
+        "//bazel/sdk/build/arm64-generic/build/bin",
+        "//bazel/sdk/build/arm64-generic/etc",
+        "//bazel/sdk/build/arm64-generic/usr/share/aclocal",
+    ],
+    extension = "tar.gz",
+)
+
+overlay_set(
+    name = "arm64-generic_overlays",
+    overlays = [
+        "//overlays/overlay-arm64-generic",
+        "//third_party/eclass-overlay",
+        "//third_party/chromiumos-overlay",
+        "//third_party/portage-stable",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+sdk(
+    name = "arm64-generic",
     base = ":base_sdk",
+    board = "arm64-generic",
     extra_tarballs = [
         ":extra_tarball",
+        ":arm64-generic_tarball",
     ],
     host_deps = [
         "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
@@ -64,5 +85,68 @@ sdk_update(
         "//bazel/prebuilts/arm64-generic/sys-libs:libcxx",
         "//bazel/prebuilts/arm64-generic/sys-libs:llvm-libunwind",
     ],
+    overlays = ":arm64-generic_overlays",
+    visibility = ["//visibility:public"],
+)
+
+# amd64-generic
+
+pkg_tar(
+    name = "amd64-generic_tarball",
+    srcs = [
+        # Skip adding the helper wrappers and see what happens
+        # "//bazel/sdk/build/amd64-generic/build/bin",
+        "//bazel/sdk/build/amd64-generic/etc",
+        "//bazel/sdk/build/amd64-generic/usr/share/aclocal",
+    ],
+    extension = "tar.gz",
+)
+
+overlay_set(
+    name = "amd64-generic_overlays",
+    overlays = [
+        "//overlays/overlay-amd64-generic",
+        "//third_party/eclass-overlay",
+        "//third_party/chromiumos-overlay",
+        "//third_party/portage-stable",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# TODO: Have alchemist generate this
+sdk(
+    name = "amd64-generic",
+    base = ":base_sdk",
+    board = "amd64-generic",
+    extra_tarballs = [
+        ":extra_tarball",
+        ":amd64-generic_tarball",
+    ],
+    host_deps = [
+        # Should we consider adding BDEPEND support to remove these 3?
+        "//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
+        "//bazel/prebuilts/amd64-host:meson-format-array",
+        "//bazel/prebuilts/amd64-host:xcb-proto",
+        # TODO: Parse the toolchain.conf and generate an SDK with all the appropriate toolchains
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:binutils",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:gcc",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:gdb",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:glibc",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:go",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:libcxx",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:libxcrypt",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:linux-headers",
+        "//bazel/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:llvm-libunwind",
+        "//bazel/prebuilts/amd64-host:hps-sdk",
+        "//bazel/prebuilts/amd64-host:rust",
+    ],
+    target_deps = [
+        # TODO: Actually build these
+        "//bazel/prebuilts/amd64-generic/sys-kernel:linux-headers",
+        "//bazel/prebuilts/amd64-generic/sys-libs:gcc-libs",
+        "//bazel/prebuilts/amd64-generic/sys-libs:libcxx",
+        "//bazel/prebuilts/amd64-generic/sys-libs:llvm-libunwind",
+    ],
+    overlays = ":amd64-generic_overlays",
     visibility = ["//visibility:public"],
 )

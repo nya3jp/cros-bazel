@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildSrcInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildSrcInfo", "SDKInfo", "relative_path_in_package")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
 MountSDKDebugInfo = provider(
@@ -72,7 +72,7 @@ def _install_deps(ctx, progress_message_name, transitive_build_time_deps_files, 
     """Creates an action which builds an overlay in which the build dependencies are installed."""
     output_root = ctx.actions.declare_directory(ctx.attr.name + "-deps")
     output_symindex = ctx.actions.declare_file(ctx.attr.name + "-deps.symindex")
-    sdk = ctx.attr._sdk[SDKInfo]
+    sdk = ctx.attr.sdk[SDKInfo]
 
     args = ctx.actions.args()
     args.add_all([
@@ -89,8 +89,7 @@ def _install_deps(ctx, progress_message_name, transitive_build_time_deps_files, 
     args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
     direct_inputs.extend(sdk.layers)
 
-    overlays = ctx.attr.overlays[OverlaySetInfo].overlays
-    for overlay in overlays:
+    for overlay in sdk.overlays.overlays:
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
 
@@ -115,7 +114,7 @@ def _install_deps(ctx, progress_message_name, transitive_build_time_deps_files, 
     return output_root, output_symindex
 
 def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, extra_providers = [], install_deps = False):
-    sdk = ctx.attr._sdk[SDKInfo]
+    sdk = ctx.attr.sdk[SDKInfo]
     args.add_all([
         "--output=" + binpkg_output_file.path,
         "--board=" + sdk.board,
@@ -141,8 +140,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         args.add("--distfile=%s=%s" % (distfile_name, file.path))
         direct_inputs.append(file)
 
-    overlays = ctx.attr.overlays[OverlaySetInfo].overlays
-    for overlay in overlays:
+    for overlay in sdk.overlays.overlays:
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
 
@@ -246,13 +244,9 @@ COMMON_ATTRS = dict(
     files = attr.label_list(
         allow_files = True,
     ),
-    overlays = attr.label(
-        providers = [OverlaySetInfo],
-        default = "//bazel/config:overlays",
-    ),
-    _sdk = attr.label(
+    sdk = attr.label(
         providers = [SDKInfo],
-        default = Label("//bazel/sdk"),
+        mandatory = True,
     ),
     _install_deps = attr.label(
         executable = True,

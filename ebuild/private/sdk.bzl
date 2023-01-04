@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKInfo")
+load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKBaseInfo", "SDKInfo")
 
 def _sdk_from_archive_impl(ctx):
     output_root = ctx.actions.declare_directory(ctx.attr.name)
@@ -29,8 +29,7 @@ def _sdk_from_archive_impl(ctx):
 
     return [
         DefaultInfo(files = depset(outputs)),
-        SDKInfo(
-            board = ctx.attr.board,
+        SDKBaseInfo(
             layers = [output_root, output_symindex],
         )
     ]
@@ -42,9 +41,6 @@ sdk_from_archive = rule(
             mandatory = True,
             allow_single_file = True,
         ),
-        "board": attr.string(
-            mandatory = True,
-        ),
         "_sdk_from_archive": attr.label(
             executable = True,
             cfg = "exec",
@@ -53,8 +49,8 @@ sdk_from_archive = rule(
     },
 )
 
-def _sdk_update_impl(ctx):
-    base_sdk = ctx.attr.base[SDKInfo]
+def _sdk_impl(ctx):
+    base_sdk = ctx.attr.base[SDKBaseInfo]
 
     output_root = ctx.actions.declare_directory(ctx.attr.name)
     output_symindex = ctx.actions.declare_file(ctx.attr.name + ".symindex")
@@ -68,7 +64,7 @@ def _sdk_update_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--board=" + base_sdk.board,
+        "--board=" + ctx.attr.board,
         "--output-dir=" + output_root.path,
         "--output-symindex=" + output_symindex.path,
     ])
@@ -78,7 +74,7 @@ def _sdk_update_impl(ctx):
     args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
 
     overlay_inputs = []
-    for overlay in ctx.attr._overlays[OverlaySetInfo].overlays:
+    for overlay in ctx.attr.overlays[OverlaySetInfo].overlays:
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         overlay_inputs.append(overlay.squashfs_file)
 
@@ -108,17 +104,21 @@ def _sdk_update_impl(ctx):
     return [
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
-            board = base_sdk.board,
+            board = ctx.attr.board,
             layers = [output_root, output_symindex] + base_sdk.layers,
+            overlays = ctx.attr.overlays[OverlaySetInfo],
         ),
     ]
 
-sdk_update = rule(
-    implementation = _sdk_update_impl,
+sdk = rule(
+    implementation = _sdk_impl,
     attrs = {
         "base": attr.label(
             mandatory = True,
-            providers = [SDKInfo],
+            providers = [SDKBaseInfo],
+        ),
+        "board": attr.string(
+            mandatory = True,
         ),
         "host_deps": attr.label_list(
             providers = [BinaryPackageInfo],
@@ -129,14 +129,14 @@ sdk_update = rule(
         "extra_tarballs": attr.label_list(
             allow_files = True,
         ),
+        "overlays": attr.label(
+            providers = [OverlaySetInfo],
+            mandatory = True,
+        ),
         "_sdk_update": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/sdk_update"),
-        ),
-        "_overlays": attr.label(
-            providers = [OverlaySetInfo],
-            default = "//bazel/config:overlays",
         ),
     },
 )

@@ -52,8 +52,21 @@ OverlaySetInfo = provider(
     },
 )
 
+SDKBaseInfo = provider(
+    "ChromiumOS SDK",
+    fields = {
+        "layers": """
+            File[]: A list of files each of which represents a file system layer
+            of the SDK. A layer file can be a directory, a symbolic link index
+            file (.symindex), or a squashfs image file (.squashfs).
+            The order matters; the first image must be overlayed on top of the
+            second image, and so on.
+        """,
+    },
+)
+
 SDKInfo = provider(
-    "ChromiumOS SDK info",
+    "ChromiumOS Board SDK info",
     fields = {
         "board": """
             str: A board name.
@@ -65,6 +78,11 @@ SDKInfo = provider(
             The order matters; the first image must be overlayed on top of the
             second image, and so on.
         """,
+        "overlays": """
+            OverlaySetInfo: The set of overlays that makeup the board. This will
+            generally contain the overlay-<board> or overlay-<board>-private
+            overlay and all the parents of that overlay.
+        """
     },
 )
 

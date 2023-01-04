@@ -44,6 +44,7 @@ type ebuildInfo struct {
 	Dists       []*distfiles.Entry
 	PackageInfo *depdata.PackageInfo
 	PostDeps    []string
+	Sdk         string
 }
 
 type packageGroup struct {
@@ -113,6 +114,7 @@ ebuild(
     ],
     {{- end }}
     files = glob(["files/**", "*.bashrc"]),
+    sdk = "//bazel/sdk:{{ .Sdk }}",
     visibility = ["//visibility:public"],
 )
 
@@ -231,6 +233,8 @@ func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, postDeps
 			Dists:       dists,
 			PackageInfo: pkgInfo,
 			PostDeps:    postDepsMap[label],
+			// TODO: Stop hard coding this
+			Sdk: "arm64-generic",
 		}
 
 		ebuildInfos = append(ebuildInfos, ebuild)

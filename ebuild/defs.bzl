@@ -8,7 +8,7 @@ load("//bazel/ebuild/private:ebuild_src.bzl", _ebuild_src = "ebuild_src")
 load("//bazel/ebuild/private:ebuild_tar_src.bzl", _ebuild_tar_src = "ebuild_tar_src")
 load("//bazel/ebuild/private:overlay.bzl", _overlay = "overlay", _overlay_set = "overlay_set")
 load("//bazel/ebuild/private:package_set.bzl", _package_set = "package_set")
-load("//bazel/ebuild/private:sdk.bzl", _sdk_from_archive = "sdk_from_archive", _sdk_update = "sdk_update")
+load("//bazel/ebuild/private:sdk.bzl", _sdk_from_archive = "sdk_from_archive", _sdk = "sdk")
 
 binary_package = _binary_package
 ebuild = _ebuild
@@ -18,4 +18,4 @@ overlay = _overlay
 overlay_set = _overlay_set
 package_set = _package_set
 sdk_from_archive = _sdk_from_archive
-sdk_update = _sdk_update
+sdk = _sdk

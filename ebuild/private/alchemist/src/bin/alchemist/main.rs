@@ -167,7 +167,14 @@ fn main() -> Result<()> {
             dump_package_main(&resolver, atoms)?;
         }
         Commands::GenerateRepo { output_dir } => {
-            generate_repo_main(&repos, &evaluator, &resolver, &translator, &output_dir)?;
+            generate_repo_main(
+                &args.board,
+                &repos,
+                &evaluator,
+                &resolver,
+                &translator,
+                &output_dir,
+            )?;
         }
     }
 
