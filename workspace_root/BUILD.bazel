@@ -6,6 +6,10 @@ load("//bazel/ebuild:defs.bzl", "ebuild_src")
 load("//bazel/toolchains/rust:local_crates.bzl", "LOCAL_CRATES")
 load("//bazel/toolchains/rust:update_crates.bzl", "generate_cargo_toml")
 
+exports_files([
+    "Cargo.lock",
+])
+
 alias(
     name = "all_target_packages",
     actual = "//third_party/chromiumos-overlay/virtual/target-os:0_package_set",

@@ -9,6 +9,7 @@ update_crates(
     )]),
     crates = LOCAL_CRATES,
     root_manifest = "//:generated_manifest",
+    cargo_lockfile = "//:Cargo.lock",
     vendor_path = "//bazel/crates",
 )
 
