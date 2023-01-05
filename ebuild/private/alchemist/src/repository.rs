@@ -235,12 +235,12 @@ impl RepositorySet {
         };
 
         let primary_repo_dir = bootstrap_config
-            .ebuild_env()
+            .env()
             .get("PORTDIR")
             .map(|v| v.clone())
             .ok_or_else(|| anyhow!("PORTDIR is not defined in system configs"))?;
         let secondary_repo_dirs = bootstrap_config
-            .ebuild_env()
+            .env()
             .get("PORTDIR_OVERLAY")
             .map(|v| v.clone())
             .unwrap_or_default();

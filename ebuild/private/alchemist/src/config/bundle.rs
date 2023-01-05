@@ -68,6 +68,8 @@ const BUILTIN_INCREMENTAL_VARIABLES_EXCEPT_USE: &[BuiltinIncrementalVariable] = 
 
 /// Merges incremental variable tokens as defined in PMS.
 /// https://projects.gentoo.org/pms/8/pms.html#x1-560005.3.1
+///
+/// Returned tokens are sorted.
 fn merge_incremental_tokens<'s, I: IntoIterator<Item = &'s str>>(
     iter: I,
 ) -> impl Iterator<Item = &'s str> {
@@ -91,8 +93,7 @@ fn merge_incremental_tokens<'s, I: IntoIterator<Item = &'s str>>(
 #[derive(Clone, Debug)]
 pub struct ConfigBundle {
     nodes: Vec<ConfigNode>,
-    profile_env: Vars,
-    ebuild_env: Vars,
+    env: Vars,
     incremental_variables: HashMap<String, Vec<String>>,
     use_expand_values: Vec<String>,
     provided_packages: Vec<ProvidedPackage>,
@@ -108,13 +109,16 @@ impl ConfigBundle {
         Self::new(env, nodes)
     }
 
-    pub fn new(profile_env: Vars, nodes: Vec<ConfigNode>) -> Self {
-        let mut ebuild_env = profile_env.clone();
-        unset_ebuild_vars(&mut ebuild_env);
-
+    pub fn new(mut env: Vars, nodes: Vec<ConfigNode>) -> Self {
         // Compute incremental variables that are not specific to packages
         // (i.e. all except USE).
         let incremental_variables = Self::compute_general_incremental_variables(&nodes);
+
+        env.extend(
+            incremental_variables
+                .iter()
+                .map(|(key, tokens)| (key.clone(), tokens.join(" "))),
+        );
 
         // Compute USE flags originated from USE_EXPAND/USE_EXPAND_UNPREFIXED.
         let use_expand_prefixed = incremental_variables
@@ -148,18 +152,24 @@ impl ConfigBundle {
 
         Self {
             nodes,
-            profile_env,
-            ebuild_env,
+            env,
             incremental_variables,
             use_expand_values,
             provided_packages,
         }
     }
 
-    /// Returns environment variables to be set by default on evaluating
-    /// ebuilds.
-    pub fn ebuild_env(&self) -> &Vars {
-        &self.ebuild_env
+    /// Returns variables defined by underlying sources.
+    ///
+    /// Incremental variables are already resolved. Use [`compute_use_map`] to
+    /// compute USE flags for a package, instead of reading `USE` variable with
+    /// this method, since `USE` flags can vary by packages and thus it makes
+    /// little sense to compute "global USE flags".
+    ///
+    /// This is often called as "profile variables", even though they can be
+    /// defined in non-profile sources such as make.conf.
+    pub fn env(&self) -> &Vars {
+        &self.env
     }
 
     /// Computes USE flags of a package.
@@ -272,7 +282,7 @@ impl ConfigBundle {
 
         for expand_token in use_expand_prefixed.intersection(&use_expand_implicit) {
             for token in self
-                .profile_env
+                .env
                 .get(&format!("USE_EXPAND_VALUES_{}", *expand_token))
                 .map(|s| &**s)
                 .unwrap_or_default()
@@ -287,7 +297,7 @@ impl ConfigBundle {
 
         for expand_token in use_expand_unprefixed.intersection(&use_expand_implicit) {
             for token in self
-                .profile_env
+                .env
                 .get(&format!("USE_EXPAND_VALUES_{}", *expand_token))
                 .map(|s| &**s)
                 .unwrap_or_default()
@@ -455,34 +465,5 @@ impl ConfigBundle {
                 }))
                 .flat_map(|s| s.split_ascii_whitespace()),
         )
-    }
-}
-
-fn unset_ebuild_vars(env: &mut Vars) {
-    // See the following spec for the list of variables to unset.
-    // https://projects.gentoo.org/pms/8/pms.html#x1-10900011.1
-    let env_unset = env
-        .get("ENV_UNSET")
-        .map(|s| &**s)
-        .unwrap_or_default()
-        .to_owned();
-
-    let vars_to_unset = [
-        // USE is unavailable on metadata generation.
-        "USE",
-        // Built-in variables to clear.
-        "GZIP",
-        "BZIP",
-        "BZIP2",
-        "CDPATH",
-        "GREP_OPTIONS",
-        "GREP_COLOR",
-        "GLOBIGNORE",
-    ]
-    .into_iter()
-    .chain(env_unset.split_ascii_whitespace());
-
-    for name in vars_to_unset {
-        env.remove(name);
     }
 }

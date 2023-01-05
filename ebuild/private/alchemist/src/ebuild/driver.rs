@@ -83,13 +83,15 @@ impl EBuildDriver {
     pub(super) fn evaluate_metadata(
         &self,
         ebuild_path: &Path,
-        env: &Vars,
         eclass_dirs: Vec<&Path>,
     ) -> Result<BashVars> {
+        // We don't need to provide profile variables to the ebuild environment
+        // because PMS requires ebuild metadata to be defined independently of
+        // profiles.
+        // https://projects.gentoo.org/pms/8/pms.html#x1-600007.1
         let path_info = PackagePathInfo::try_from(ebuild_path)?;
-        let mut env = env.clone();
-        env.extend(path_info.to_vars());
-        run_ebuild(ebuild_path, &mut env, eclass_dirs, &self.tools_dir)
+        let env = path_info.to_vars();
+        run_ebuild(ebuild_path, &env, eclass_dirs, &self.tools_dir)
     }
 }
 

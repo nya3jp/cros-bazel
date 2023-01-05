@@ -60,11 +60,7 @@ impl Stability {
     /// Computes the stability of a package according to variables defined by
     /// profiles and ebuild/eclasses.
     fn compute(vars: &BashVars, config: &ConfigBundle) -> Self {
-        let arch = config
-            .ebuild_env()
-            .get("ARCH")
-            .map(|s| &**s)
-            .unwrap_or_default();
+        let arch = config.env().get("ARCH").map(|s| &**s).unwrap_or_default();
 
         let mut default_stability = Stability::Unknown;
 
@@ -173,11 +169,9 @@ impl EBuildEvaluator {
         let package_name = [category_name, short_package_name].join("/");
 
         // Drive the ebuild to read its metadata.
-        let vars = self.driver.evaluate_metadata(
-            ebuild_path,
-            self.config.ebuild_env(),
-            repo.eclass_dirs().collect_vec(),
-        )?;
+        let vars = self
+            .driver
+            .evaluate_metadata(ebuild_path, repo.eclass_dirs().collect_vec())?;
 
         // Compute additional information needed to fill in PackageDetails.
         let stability = Stability::compute(&vars, &self.config);
