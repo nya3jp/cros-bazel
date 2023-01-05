@@ -5,6 +5,7 @@
 package fileutil
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -32,6 +33,14 @@ func RemoveWithChmod(path string) error {
 // RemoveAllWithChmod calls os.RemoveAll after ensuring we have o+rwx to each
 // directory so that we can remove all files.
 func RemoveAllWithChmod(path string) error {
+	// Make sure the directory exists before trying to walk it.
+	_, err := os.Lstat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
 	if err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err

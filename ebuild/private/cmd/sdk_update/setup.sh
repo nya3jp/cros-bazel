@@ -73,6 +73,9 @@ rsync --archive --hard-links "/tmp/libc/usr/lib/debug/usr/aarch64-cros-linux-gnu
 # Deleting the files causes a "special" delete marker to be created by overlayfs
 # this isn't supported by bazel. So instead we just truncate the files.
 for root in '' "/build/$BOARD"; do
+  if [[ ! -d "$root"/var/db/pkg ]]; then
+    continue
+  fi
   find "$root"/var/db/pkg/ -name environment.bz2 -exec truncate -s 0 '{}' +
   echo '0' > /tmp/zero
   find "$root"/var/db/pkg/ -name COUNTER -exec cp /tmp/zero '{}' \;
