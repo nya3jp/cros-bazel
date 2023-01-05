@@ -87,14 +87,28 @@ mod tests {
     #[test]
     fn test_parse_empty() -> Result<()> {
         let deps = UriDependency::from_str("")?;
-        assert_eq!(UriDependency::new_constant(true), deps);
+        assert!(
+            match deps.check_constant() {
+                Some((true, _)) => true,
+                _ => false,
+            },
+            "deps = {}",
+            deps
+        );
         Ok(())
     }
 
     #[test]
     fn test_parse_whitespace() -> Result<()> {
         let deps = UriDependency::from_str(" \r \n \t ")?;
-        assert_eq!(UriDependency::new_constant(true), deps);
+        assert!(
+            match deps.check_constant() {
+                Some((true, _)) => true,
+                _ => false,
+            },
+            "deps = {}",
+            deps
+        );
         Ok(())
     }
 

@@ -53,7 +53,10 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
                         let children = children
                             .into_iter()
                             // Drop the constant true.
-                            .filter(|d| d.is_constant() != Some(true))
+                            .filter(|d| match d.check_constant() {
+                                Some((true, _)) => false,
+                                _ => true,
+                            })
                             // Merge nested all-of.
                             .flat_map(|d| match d {
                                 Dependency::Composite(composite) => match *composite {
@@ -63,8 +66,15 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
                                 other => vec![other],
                             })
                             .collect_vec();
-                        if children.iter().any(|d| d.is_constant() == Some(false)) {
-                            Dependency::new_constant(false)
+                        let first_constant_false = children
+                            .iter()
+                            .flat_map(|child| match child.check_constant() {
+                                Some((false, reason)) => Some(reason),
+                                _ => None,
+                            })
+                            .next();
+                        if let Some(reason) = first_constant_false {
+                            Dependency::new_constant(false, reason)
                         } else if children.len() == 1 {
                             children.into_iter().next().unwrap()
                         } else {
@@ -75,10 +85,20 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
                         let children = children
                             .into_iter()
                             // Drop the constant false.
-                            .filter(|d| d.is_constant() != Some(false))
+                            .filter(|d| match d.check_constant() {
+                                Some((false, _)) => false,
+                                _ => true,
+                            })
                             .collect_vec();
-                        if children.iter().any(|d| d.is_constant() == Some(true)) {
-                            Dependency::new_constant(true)
+                        let first_constant_true = children
+                            .iter()
+                            .flat_map(|child| match child.check_constant() {
+                                Some((true, reason)) => Some(reason),
+                                _ => None,
+                            })
+                            .next();
+                        if let Some(reason) = first_constant_true {
+                            Dependency::new_constant(true, reason)
                         } else if children.len() == 1 {
                             children.into_iter().next().unwrap()
                         } else {
@@ -113,6 +133,12 @@ pub fn parse_simplified_dependency<L: Clone + Display + Eq + Hash>(
                     })
                     .collect::<Result<Vec<_>>>()?;
                 Ok(atoms.into_iter().unique().collect())
+            }
+            CompositeDependency::Constant {
+                value: false,
+                reason,
+            } => {
+                bail!("Unsatisfiable dependency: {}", reason);
             }
             other => bail!(
                 "Found a non-atom dependency after simplification: {}",

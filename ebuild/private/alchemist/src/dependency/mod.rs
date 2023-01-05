@@ -62,11 +62,13 @@ pub enum Dependency<L> {
 pub enum CompositeDependency<L> {
     /// All-of dependencies: satisfied when all of child dependencies are
     /// satisfied.
-    /// If an all-of dependency has no child, it is considered constant true.
+    /// If an all-of dependency has no child, it is considered constant true,
+    /// but prefer `Constant` because it can also carry a debug message.
     AllOf { children: Vec<Dependency<L>> },
     /// Any-of dependencies: satisfied when any one of child dependencies are
     /// satisfied.
-    /// If an any-of dependency has no child, it is considered constant false.
+    /// If an any-of dependency has no child, it is considered constant false,
+    /// but prefer `Constant` because it can also carry a debug message.
     AnyOf { children: Vec<Dependency<L>> },
     /// USE conditional dependencies: the child dependency is evaluated only
     /// when a certain USE flag has an expected value.
@@ -75,6 +77,9 @@ pub enum CompositeDependency<L> {
         expect: bool,
         child: Dependency<L>,
     },
+    /// The constant value with a reason for debugging. This is preferred over
+    /// `AllOf`/`AnyOf` with no children for better debuggability.
+    Constant { value: bool, reason: String },
 }
 
 impl<L> Dependency<L> {
@@ -83,24 +88,27 @@ impl<L> Dependency<L> {
     }
 
     /// Creates a dependency expression representing a constant boolean.
-    pub fn new_constant(b: bool) -> Self {
-        if b {
-            Self::new_composite(CompositeDependency::AllOf {
-                children: Vec::new(),
-            })
-        } else {
-            Self::new_composite(CompositeDependency::AnyOf {
-                children: Vec::new(),
-            })
-        }
+    pub fn new_constant(value: bool, reason: &str) -> Self {
+        Self::new_composite(CompositeDependency::Constant {
+            value,
+            reason: reason.to_owned(),
+        })
     }
 
     /// Checks if a dependency expression represents a constant boolean.
-    pub fn is_constant(&self) -> Option<bool> {
+    ///
+    /// If it is a constant, returns a pair of the constant value and a message
+    /// describing why it is evaluated to a constant value.
+    pub fn check_constant(&self) -> Option<(bool, &str)> {
         match self {
             Self::Composite(composite) => match &**composite {
-                CompositeDependency::AllOf { children } if children.is_empty() => Some(true),
-                CompositeDependency::AnyOf { children } if children.is_empty() => Some(false),
+                CompositeDependency::AllOf { children } if children.is_empty() => {
+                    Some((true, "Unknown"))
+                }
+                CompositeDependency::AnyOf { children } if children.is_empty() => {
+                    Some((false, "Unknown"))
+                }
+                CompositeDependency::Constant { value, reason } => Some((*value, reason.as_str())),
                 _ => None,
             },
             _ => None,
@@ -166,8 +174,9 @@ impl<L> Dependency<L> {
                         child,
                     },
                 },
+                constant @ CompositeDependency::Constant { .. } => constant,
             }),
-            Self::Leaf(leaf) => Self::Leaf(leaf),
+            leaf @ Self::Leaf(_) => leaf,
         };
         f(tree)
     }
@@ -213,8 +222,9 @@ impl<L: Send> Dependency<L> {
                     expect,
                     child: child.try_map_tree_par_impl(f)?,
                 },
+                constant @ CompositeDependency::Constant { .. } => constant,
             }),
-            Self::Leaf(leaf) => Self::Leaf(leaf),
+            leaf @ Self::Leaf(_) => leaf,
         })
     }
 }
@@ -222,7 +232,7 @@ impl<L: Send> Dependency<L> {
 impl<L> Default for Dependency<L> {
     /// The default value of [`Dependency`] is the constant true.
     fn default() -> Self {
-        Self::new_constant(true)
+        Self::new_constant(true, "No dependency")
     }
 }
 
@@ -254,6 +264,13 @@ impl<L: Display> Display for Dependency<L> {
                         write!(f, "!")?;
                     }
                     write!(f, "{}? {}", name, child)
+                }
+                CompositeDependency::Constant { value, .. } => {
+                    if *value {
+                        write!(f, "( )")
+                    } else {
+                        write!(f, "|| ( )")
+                    }
                 }
             },
         }
@@ -291,6 +308,7 @@ impl<T: AsRef<UseMap>, L: Predicate<T>> ThreeValuedPredicate<T> for Dependency<L
                             child.matches(target)
                         }
                     }
+                    CompositeDependency::Constant { value, .. } => Some(*value),
                 }
             }
         }

@@ -49,8 +49,6 @@ fn parse_dependencies(
     use_map: &UseMap,
     resolver: &PackageResolver,
 ) -> Result<Vec<PackageAtomDependency>> {
-    let orig_deps = deps.clone();
-
     let deps = elide_use_conditions(deps, use_map).unwrap_or_default();
 
     // Rewrite atoms.
@@ -59,18 +57,27 @@ fn parse_dependencies(
             Dependency::Leaf(atom) => {
                 // Remove blocks.
                 if atom.block() != PackageBlock::None {
-                    return Ok(Dependency::new_constant(true));
+                    return Ok(Dependency::new_constant(
+                        true,
+                        &format!("Package block {} is ignored", atom.to_string()),
+                    ));
                 }
 
                 // Remove provided packages.
                 if let Some(_) = resolver.find_provided_packages(&atom).next() {
-                    return Ok(Dependency::new_constant(true));
+                    return Ok(Dependency::new_constant(
+                        true,
+                        &format!("Package {} is in package.provided", atom.to_string()),
+                    ));
                 }
 
                 // Remove non-existent packages.
                 match resolver.find_best_package(&atom) {
                     Err(FindBestPackageError::NotFound) => {
-                        return Ok(Dependency::new_constant(false));
+                        return Ok(Dependency::new_constant(
+                            false,
+                            &format!("No package satisfies {}", atom.to_string()),
+                        ));
                     }
                     res => {
                         res?;
@@ -98,12 +105,7 @@ fn parse_dependencies(
 
     let deps = simplify(deps);
 
-    parse_simplified_dependency(deps.clone()).with_context(|| {
-        format!(
-            "Failed to simplify dependencies\nOriginal: {}\nSimplified: {}",
-            &orig_deps, &deps
-        )
-    })
+    parse_simplified_dependency(deps.clone())
 }
 
 // TODO: Remove this hack.

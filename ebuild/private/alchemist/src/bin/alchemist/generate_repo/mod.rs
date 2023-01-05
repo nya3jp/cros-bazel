@@ -370,11 +370,11 @@ fn analyze_packages(
             })();
             match result {
                 Ok(package) => Some(package),
-                Err(_err) => {
-                    // TODO: Generate BUILD.bazel even if analysis failed.
+                Err(err) => {
                     println!(
-                        "WARNING: Analysis failed: {}",
-                        details.ebuild_path.to_string_lossy()
+                        "WARNING: {}: Analysis failed: {:#}",
+                        details.ebuild_path.to_string_lossy(),
+                        err
                     );
                     None
                 }
