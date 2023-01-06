@@ -5,6 +5,8 @@
 load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
+package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
+
 go_library(
     name = "binarypackage",
     srcs = [
@@ -32,9 +34,10 @@ go_test(
     ],
 )
 
-rust_library_crate(name = "binarypackage_rust")
+rust_library_crate(name = "binarypackage_rust", crate_name = "binarypackage", deps = ["//bazel/ebuild/private/common/cliutil:cliutil_rust"])
 
 rust_crate_test(
     name = "binarypackage_rust_test",
     crate = ":binarypackage_rust",
+    data = glob(["testdata/*"]),
 )

@@ -16,11 +16,11 @@ load(
 package(default_visibility = ["//visibility:public"])
 
 # licenses([
-#     "TODO",  # Unlicense OR MIT
+#     "TODO",  # MIT
 # ])
 
 rust_library(
-    name = "byteorder",
+    name = "zstd",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -46,8 +46,10 @@ rust_library(
         ],
     }),
     crate_features = [
+        "arrays",
         "default",
-        "std",
+        "legacy",
+        "zdict_builder",
     ],
     crate_root = "src/lib.rs",
     data = select_with_or({
@@ -79,10 +81,11 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "1.4.3",
+    version = "0.12.1+zstd.1.5.2",
     deps = [
     ] + select({
         "//conditions:default": [
+            "@update_crates__zstd-safe-6.0.2-zstd.1.5.2//:zstd_safe",
         ],
     }),
 )

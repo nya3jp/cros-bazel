@@ -16,11 +16,11 @@ load(
 package(default_visibility = ["//visibility:public"])
 
 # licenses([
-#     "TODO",  # Unlicense OR MIT
+#     "TODO",  # MIT
 # ])
 
 rust_library(
-    name = "byteorder",
+    name = "bytes",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -46,15 +46,13 @@ rust_library(
         ],
     }),
     crate_features = [
-        "default",
-        "std",
     ],
     crate_root = "src/lib.rs",
     data = select_with_or({
         "//conditions:default": [
         ],
     }),
-    edition = "2018",
+    edition = "2015",
     proc_macro_deps = [
     ] + select({
         "//conditions:default": [
@@ -79,10 +77,12 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "1.4.3",
+    version = "0.4.12",
     deps = [
     ] + select({
         "//conditions:default": [
+            "@update_crates__byteorder-1.4.3//:byteorder",
+            "@update_crates__iovec-0.1.4//:iovec",
         ],
     }),
 )

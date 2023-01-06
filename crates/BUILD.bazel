@@ -40,6 +40,12 @@ alias(
 )
 
 alias(
+    name = "bytes",
+    actual = "@update_crates__bytes-0.4.12//:bytes",
+    tags = ["manual"],
+)
+
+alias(
     name = "clap",
     actual = "@update_crates__clap-4.0.32//:clap",
     tags = ["manual"],
@@ -172,6 +178,12 @@ alias(
 )
 
 alias(
+    name = "tar",
+    actual = "@update_crates__tar-0.4.38//:tar",
+    tags = ["manual"],
+)
+
+alias(
     name = "tempfile",
     actual = "@update_crates__tempfile-3.3.0//:tempfile",
     tags = ["manual"],
@@ -198,6 +210,12 @@ alias(
 alias(
     name = "walkdir",
     actual = "@update_crates__walkdir-2.3.2//:walkdir",
+    tags = ["manual"],
+)
+
+alias(
+    name = "zstd",
+    actual = "@update_crates__zstd-0.12.1-zstd.1.5.2//:zstd",
     tags = ["manual"],
 )
 

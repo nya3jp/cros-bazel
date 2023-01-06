@@ -13,6 +13,7 @@ members = [
 # List third-party deps here.
 anyhow = { version = "1.0.66", features = ["backtrace"] }
 base64 = "0.20.0"
+bytes = "0.4.12"
 clap = { version = "4.0.29", features = ["derive"] }
 colored = "2.0.0"
 env_logger = "0.9.3"
@@ -20,7 +21,7 @@ hex = "0.4.3"
 itertools = "0.10.5"
 lazy_static = "1.4.0"
 log = "0.4.17"
-nix = "0.26.1"
+nix = { version = "0.26.1", features = ["fs", "ioctl"] }
 nom = "7.1.1"
 nom_locate = "4.0.0"
 nom-regex = "0.2.0"
@@ -35,8 +36,10 @@ serde = { version = "1.0.149", features = ["derive"] }
 serde_json = "1.0.89"
 strum = "0.24.1"
 strum_macros = "0.24.3"
+tar = "0.4.38"
 tempfile = "3.3.0"
 thiserror = "1.0.37"
 tinytemplate = "1.2.1"
 url = "2.3.1"
 walkdir = "2.3.2"
+zstd = "0.12.1"

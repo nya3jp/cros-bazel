@@ -6,22 +6,26 @@
 #     bazel run @@//bazel/toolchains/rust:update_crates
 ###############################################################################
 
+load(
+    "@rules_rust//cargo:defs.bzl",
+    "cargo_build_script",
+)
+
 # buildifier: disable=bzl-visibility
 load("@rules_rust//crate_universe/private:selects.bzl", "select_with_or")
 load(
     "@rules_rust//rust:defs.bzl",
-    "rust_binary",
     "rust_library",
 )
 
 package(default_visibility = ["//visibility:public"])
 
 # licenses([
-#     "TODO",  # MIT OR Apache-2.0
+#     "TODO",  # MIT/Apache-2.0
 # ])
 
 rust_library(
-    name = "cc",
+    name = "zstd_safe",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -47,8 +51,10 @@ rust_library(
         ],
     }),
     crate_features = [
-        "jobserver",
-        "parallel",
+        "arrays",
+        "legacy",
+        "std",
+        "zdict_builder",
     ],
     crate_root = "src/lib.rs",
     data = select_with_or({
@@ -80,17 +86,20 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "1.0.78",
+    version = "6.0.2+zstd.1.5.2",
     deps = [
     ] + select({
         "//conditions:default": [
-            "@update_crates__jobserver-0.1.25//:jobserver",
+            "@update_crates__libc-0.2.139//:libc",
+            "@update_crates__zstd-safe-6.0.2-zstd.1.5.2//:build_script_build",
+            "@update_crates__zstd-sys-2.0.4-zstd.1.5.2//:zstd_sys",
         ],
     }),
 )
 
-rust_binary(
-    name = "gcc-shim__bin",
+cargo_build_script(
+    # See comment associated with alias. Do not change this name
+    name = "zstd-safe_build_script",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -102,7 +111,21 @@ rust_binary(
         "//conditions:default": {
         },
     }),
-    compile_data = glob(
+    build_script_env = {
+    },
+    compile_data = select_with_or({
+        "//conditions:default": [
+        ],
+    }),
+    crate_features = [
+        "arrays",
+        "legacy",
+        "std",
+        "zdict_builder",
+    ],
+    crate_name = "build_script_build",
+    crate_root = "build.rs",
+    data = glob(
         include = ["**"],
         exclude = [
             "**/* *",
@@ -112,15 +135,6 @@ rust_binary(
             "WORKSPACE",
         ],
     ) + select_with_or({
-        "//conditions:default": [
-        ],
-    }),
-    crate_features = [
-        "jobserver",
-        "parallel",
-    ],
-    crate_root = "src/bin/gcc-shim.rs",
-    data = select_with_or({
         "//conditions:default": [
         ],
     }),
@@ -149,12 +163,28 @@ rust_binary(
         "noclippy",
         "norustfmt",
     ],
-    version = "1.0.78",
-    deps = [
-        ":cc",
-    ] + select({
+    tools = select_with_or({
         "//conditions:default": [
-            "@update_crates__jobserver-0.1.25//:jobserver",
         ],
     }),
+    version = "6.0.2+zstd.1.5.2",
+    visibility = ["//visibility:private"],
+    deps = [
+    ] + select({
+        "//conditions:default": [
+        ],
+    }),
+)
+
+alias(
+    # Because `cargo_build_script` does some invisible target name mutating to
+    # determine the package and crate name for a build script, the Bazel
+    # target name of any build script cannot be the Cargo canonical name
+    # of `cargo_build_script` (rule) without losing out on having certain
+    # Cargo environment variables set.
+    name = "build_script_build",
+    actual = "zstd-safe_build_script",
+    tags = [
+        "manual",
+    ],
 )
