@@ -34,4 +34,5 @@ def rust_crate_test(name, crate, size = "small", **kwargs):
             proc_macro_dev = True,
         ),
         size = size,
+        **kwargs
     )
