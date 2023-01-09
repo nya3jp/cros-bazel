@@ -5,6 +5,8 @@
 load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
+package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
+
 go_library(
     name = "mountsdk",
     srcs = [
@@ -60,9 +62,35 @@ sh_binary(
     visibility = ["//visibility:public"],
 )
 
-rust_library_crate(name = "mountsdk_rust")
+rust_library_crate(
+    name = "mountsdk_rust",
+    crate_name = "mountsdk",
+    data = [
+        "setup.sh",
+        "//bazel/ebuild/private/cmd/run_in_container",
+    ],
+    deps = [
+        "//bazel/ebuild/private/common/fileutil:fileutil_rust",
+        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+        "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+    ],
+)
 
+# If adding test data, do not depend on anything built by build_package.
+# eg. //third_party/portage-stable/category/pkg:0
+# If you do so, if there's a problem with the mountsdk library, the test will
+# be unable to build (and therefore you can't even run the test).
 rust_crate_test(
     name = "mountsdk_rust_test",
     crate = ":mountsdk_rust",
+    data = [
+        "testdata/mypkg.ebuild",
+        "//bazel/sdk",
+        "//bazel/sdk:base_sdk",
+        "//overlays/overlay-arm64-generic",
+        "//third_party/chromiumos-overlay",
+        "//third_party/eclass-overlay",
+        "//third_party/portage-stable",
+    ],
+    deps = ["//bazel/ebuild/private/common/processes:processes_rust"],
 )

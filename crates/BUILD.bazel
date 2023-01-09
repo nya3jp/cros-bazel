@@ -160,6 +160,12 @@ alias(
 )
 
 alias(
+    name = "scopeguard",
+    actual = "@update_crates__scopeguard-1.1.0//:scopeguard",
+    tags = ["manual"],
+)
+
+alias(
     name = "serde",
     actual = "@update_crates__serde-1.0.152//:serde",
     tags = ["manual"],
@@ -227,7 +233,7 @@ alias(
 
 alias(
     name = "zstd",
-    actual = "@update_crates__zstd-0.12.1-zstd.1.5.2//:zstd",
+    actual = "@update_crates__zstd-0.12.2-zstd.1.5.2//:zstd",
     tags = ["manual"],
 )
 

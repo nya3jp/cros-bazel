@@ -6,3 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+fileutil = { path = "../../common/fileutil" }
+makechroot = { path = "../../common/makechroot" }
+binarypackage = { path = "../../common/portage/binarypackage" }
+
+anyhow.workspace = true
+libc.workspace = true
+nix.workspace = true
+runfiles.workspace = true
+scopeguard.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+processes.workspace = true

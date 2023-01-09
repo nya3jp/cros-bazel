@@ -19,7 +19,7 @@ def rust_library_crate(name, deps = [], **kwargs):
 def rust_binary_crate(name, **kwargs):
     _rust_crate(name, rule = rust_binary, **kwargs)
 
-def rust_crate_test(name, crate, size = "small", **kwargs):
+def rust_crate_test(name, crate, size = "small", deps = [], **kwargs):
     rust_test(
         name = name,
         crate = crate,
@@ -29,7 +29,7 @@ def rust_crate_test(name, crate, size = "small", **kwargs):
         ),
         deps = all_crate_deps(
             normal_dev = True,
-        ),
+        ) + deps,
         proc_macro_deps = all_crate_deps(
             proc_macro_dev = True,
         ),

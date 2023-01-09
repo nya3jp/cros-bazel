@@ -341,6 +341,15 @@ _NORMAL_DEPENDENCIES = {
         },
     },
     "bazel/ebuild/private/common/mountsdk": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
+            "libc": "@update_crates__libc-0.2.139//:libc",
+            "nix": "@update_crates__nix-0.26.1//:nix",
+            "runfiles": "@update_crates__runfiles-0.1.0//:runfiles",
+            "scopeguard": "@update_crates__scopeguard-1.1.0//:scopeguard",
+            "strum": "@update_crates__strum-0.24.1//:strum",
+            "tempfile": "@update_crates__tempfile-3.3.0//:tempfile",
+        },
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
         _COMMON_CONDITION: {
@@ -348,7 +357,7 @@ _NORMAL_DEPENDENCIES = {
             "bytes": "@update_crates__bytes-0.4.12//:bytes",
             "nix": "@update_crates__nix-0.26.1//:nix",
             "tar": "@update_crates__tar-0.4.38//:tar",
-            "zstd": "@update_crates__zstd-0.12.1-zstd.1.5.2//:zstd",
+            "zstd": "@update_crates__zstd-0.12.2-zstd.1.5.2//:zstd",
         },
     },
     "bazel/ebuild/private/common/processes": {
@@ -407,6 +416,8 @@ _NORMAL_ALIASES = {
         },
     },
     "bazel/ebuild/private/common/mountsdk": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
         _COMMON_CONDITION: {
@@ -528,6 +539,9 @@ _PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/common/makechroot": {
     },
     "bazel/ebuild/private/common/mountsdk": {
+        _COMMON_CONDITION: {
+            "strum_macros": "@update_crates__strum_macros-0.24.3//:strum_macros",
+        },
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
@@ -1441,12 +1455,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "update_crates__object-0.30.1",
-        sha256 = "8d864c91689fdc196779b98dba0aceac6118594c2df6ee5d943eb6a8df4d107a",
+        name = "update_crates__object-0.30.2",
+        sha256 = "2b8c786513eb403643f2a88c244c2aaa270ef2153f55094587d0c48a3cf22a83",
         type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/object/0.30.1/download"],
-        strip_prefix = "object-0.30.1",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.object-0.30.1.bazel"),
+        urls = ["https://crates.io/api/v1/crates/object/0.30.2/download"],
+        strip_prefix = "object-0.30.2",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.object-0.30.2.bazel"),
     )
 
     maybe(
@@ -2181,12 +2195,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "update_crates__zstd-0.12.1-zstd.1.5.2",
-        sha256 = "5c947d2adc84ff9a59f2e3c03b81aa4128acf28d6ad7d56273f7e8af14e47bea",
+        name = "update_crates__zstd-0.12.2-zstd.1.5.2",
+        sha256 = "e9262a83dc741c0b0ffec209881b45dbc232c21b02a2b9cb1adb93266e41303d",
         type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/zstd/0.12.1+zstd.1.5.2/download"],
-        strip_prefix = "zstd-0.12.1+zstd.1.5.2",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.zstd-0.12.1+zstd.1.5.2.bazel"),
+        urls = ["https://crates.io/api/v1/crates/zstd/0.12.2+zstd.1.5.2/download"],
+        strip_prefix = "zstd-0.12.2+zstd.1.5.2",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.zstd-0.12.2+zstd.1.5.2.bazel"),
     )
 
     maybe(

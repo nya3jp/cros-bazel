@@ -81,7 +81,7 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "0.12.1+zstd.1.5.2",
+    version = "0.12.2+zstd.1.5.2",
     deps = [
     ] + select({
         "//conditions:default": [
