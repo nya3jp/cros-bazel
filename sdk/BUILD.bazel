@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "sdk_from_archive", "sdk", "overlay_set")
+load("//bazel/ebuild:defs.bzl", "sdk_from_archive", "sdk", "sdk_update", "overlay_set")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_tar(
@@ -55,7 +55,7 @@ overlay_set(
 )
 
 sdk(
-    name = "arm64-generic",
+    name = "arm64-generic-base",
     base = ":base_sdk",
     board = "arm64-generic",
     extra_tarballs = [
@@ -79,15 +79,22 @@ sdk(
         "//bazel/prebuilts/amd64-host:hps-sdk",
         "//bazel/prebuilts/amd64-host:rust",
     ],
-    target_deps = [
-        "//bazel/prebuilts/arm64-generic/sys-kernel:linux-headers",
-        "//bazel/prebuilts/arm64-generic/sys-libs:gcc-libs",
-        "//bazel/prebuilts/arm64-generic/sys-libs:libcxx",
-        "//bazel/prebuilts/arm64-generic/sys-libs:llvm-libunwind",
-    ],
     overlays = ":arm64-generic_overlays",
     visibility = ["//visibility:public"],
 )
+
+sdk_update(
+    name = "arm64-generic",
+    base = ":arm64-generic-base",
+    target_deps = [
+        "//third_party/chromiumos-overlay/sys-kernel/linux-headers:0",
+        "//third_party/chromiumos-overlay/sys-libs/gcc-libs:0",
+        "//third_party/chromiumos-overlay/sys-libs/libcxx:0",
+        "//third_party/chromiumos-overlay/sys-libs/llvm-libunwind:0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 
 # amd64-generic
 
@@ -115,7 +122,7 @@ overlay_set(
 
 # TODO: Have alchemist generate this
 sdk(
-    name = "amd64-generic",
+    name = "amd64-generic-base",
     base = ":base_sdk",
     board = "amd64-generic",
     extra_tarballs = [
@@ -140,13 +147,18 @@ sdk(
         "//bazel/prebuilts/amd64-host:hps-sdk",
         "//bazel/prebuilts/amd64-host:rust",
     ],
-    target_deps = [
-        # TODO: Actually build these
-        "//bazel/prebuilts/amd64-generic/sys-kernel:linux-headers",
-        "//bazel/prebuilts/amd64-generic/sys-libs:gcc-libs",
-        "//bazel/prebuilts/amd64-generic/sys-libs:libcxx",
-        "//bazel/prebuilts/amd64-generic/sys-libs:llvm-libunwind",
-    ],
     overlays = ":amd64-generic_overlays",
+    visibility = ["//visibility:public"],
+)
+
+sdk_update(
+    name = "amd64-generic",
+    base = ":amd64-generic-base",
+    target_deps = [
+        "//third_party/chromiumos-overlay/sys-kernel/linux-headers:0",
+        "//third_party/chromiumos-overlay/sys-libs/gcc-libs:0",
+        "//third_party/chromiumos-overlay/sys-libs/libcxx:0",
+        "//third_party/chromiumos-overlay/sys-libs/llvm-libunwind:0",
+    ],
     visibility = ["//visibility:public"],
 )

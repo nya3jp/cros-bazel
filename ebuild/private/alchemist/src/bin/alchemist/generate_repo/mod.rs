@@ -46,6 +46,14 @@ static ALLOWED_MIRRORS: &[&str] = &[
     "https://storage.googleapis.com/",
 ];
 
+// Packages that are used to bootstrap the board's SDK
+static PRIMORDIAL_PACKAGES: &[&str] = &[
+    "sys-kernel/linux-headers",
+    "sys-libs/gcc-libs",
+    "sys-libs/libcxx",
+    "sys-libs/llvm-libunwind",
+];
+
 struct Package {
     details: Arc<PackageDetails>,
     dependencies: PackageDependencies,
@@ -142,10 +150,11 @@ struct EBuildEntry {
     build_deps: Vec<String>,
     runtime_deps: Vec<String>,
     post_deps: Vec<String>,
+    sdk: String,
 }
 
 impl EBuildEntry {
-    fn try_new(package: &Package, resolver: &PackageResolver) -> Result<Self> {
+    fn try_new(board: &str, package: &Package, resolver: &PackageResolver) -> Result<Self> {
         let ebuild_name = package
             .details
             .ebuild_path
@@ -199,6 +208,17 @@ impl EBuildEntry {
         let runtime_deps = resolve_dependencies(&package.dependencies.runtime_deps)?;
         let post_deps = resolve_dependencies(&package.dependencies.post_deps)?;
 
+        let sdk = if PRIMORDIAL_PACKAGES
+            .iter()
+            .any(|v| v == &package.details.package_name)
+        {
+            // The primordial packages need to use the -base SDK because they are used
+            // as inputs to the final board SDK.
+            format!("{}-base", board)
+        } else {
+            board.to_owned()
+        };
+
         Ok(Self {
             ebuild_name,
             version,
@@ -207,13 +227,13 @@ impl EBuildEntry {
             build_deps,
             runtime_deps,
             post_deps,
+            sdk,
         })
     }
 }
 
 #[derive(Serialize)]
-struct BuildTemplateContext<'a> {
-    board: &'a str,
+struct BuildTemplateContext {
     ebuilds: Vec<EBuildEntry>,
 }
 
@@ -234,11 +254,10 @@ fn generate_package_build_file(
     resolver: &PackageResolver,
 ) -> Result<()> {
     let context = BuildTemplateContext {
-        board: board,
         ebuilds: packages_in_dir
             .packages
             .iter()
-            .map(|package| EBuildEntry::try_new(*package, resolver))
+            .map(|package| EBuildEntry::try_new(board, *package, resolver))
             .collect::<Result<_>>()?,
     };
 

@@ -5,65 +5,12 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 def prebuilts_dependencies():
-    http_file(
-        name = "arm64_generic_linux_headers_4_14_r56",
-        downloaded_file_path = "linux-headers-4.14-r56.tbz2",
-        sha256 = "267cd8b40682a42079b9942a78b533a9bcfffffa1229cff795f3738010fce140",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/sys-kernel/linux-headers-4.14-r56.tbz2"],
-    )
-    http_file(
-        name = "arm64_generic_gcc_libs_10_2_0_r4",
-        downloaded_file_path = "gcc-libs-10.2.0-r4.tbz2",
-        sha256 = "750e4c73763d1d60bc69d90dc76d5f8096332757072fafd0fd30865f17708390",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/sys-libs/gcc-libs-10.2.0-r4.tbz2"],
-    )
-    http_file(
-        name = "arm64_generic_libcxx_15_0_pre458507_r6",
-        downloaded_file_path = "libcxx-15.0_pre458507-r6.tbz2",
-        sha256 = "538878dd3557fb041749254196a58775c1e1b3dec321b6f0729df655750701ae",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/sys-libs/libcxx-15.0_pre458507-r6.tbz2"],
-    )
-    http_file(
-        name = "arm64_generic_llvm_libunwind_15_0_pre458507_r4",
-        downloaded_file_path = "llvm-libunwind-15.0_pre458507-r4.tbz2",
-        sha256 = "ffdac376ff4b1989cc97fcec9d7ff21dc30e352877b41c16e78958ec21df26ad",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/sys-libs/llvm-libunwind-15.0_pre458507-r4.tbz2"],
-    )
+    # TODO: Delete chromeos-fonts
     http_file(
         name = "arm64_generic_chromeos_fonts_0_0_1_r52",
         downloaded_file_path = "chromeos-fonts-0.0.1-r52.tbz2",
         sha256 = "40128c1465aa6ca717561be8acda996478cc41aa414fda18d64cbaa37509c02c",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2"],
-    )
-    http_file(
-        name = "amd64_generic_linux_headers_4_14_r56",
-        downloaded_file_path = "linux-headers-4.14-r56.tbz2",
-        sha256 = "3f1f8ae7ce78a15f11f38df00068452fe8f750be3dbd190983e0fc5f0587138a",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/sys-kernel/linux-headers-4.14-r56.tbz2"],
-    )
-    http_file(
-        name = "amd64_generic_gcc_libs_10_2_0_r4",
-        downloaded_file_path = "gcc-libs-10.2.0-r4.tbz2",
-        sha256 = "28cf07eb2687a6974d33d60a6fe0b5c3f120c253be8bffa22df9754d9ce3e568",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/sys-libs/gcc-libs-10.2.0-r4.tbz2"],
-    )
-    http_file(
-        name = "amd64_generic_libcxx_15_0_pre458507_r6",
-        downloaded_file_path = "libcxx-15.0_pre458507-r6.tbz2",
-        sha256 = "cc074f98f2f89c0f2da358f45254b10732ff6ebc28069517499ead4741e1a17a",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/sys-libs/libcxx-15.0_pre458507-r6.tbz2"],
-    )
-    http_file(
-        name = "amd64_generic_llvm_libunwind_15_0_pre458507_r4",
-        downloaded_file_path = "llvm-libunwind-15.0_pre458507-r4.tbz2",
-        sha256 = "70822337cc68add1acad1a0b8717da2ef8d683121749051bdeae2a0413d7cf52",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/sys-libs/llvm-libunwind-15.0_pre458507-r4.tbz2"],
-    )
-    http_file(
-        name = "arm64_generic_chromeos_icu_107_0_5257_r1",
-        downloaded_file_path = "chrome-icu-107.0.5257.0_rc-r1.tbz2",
-        sha256 = "a11edea1e2ba319559921a225e4949a54267e15f10527aecc11f79155d10077e",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/chromeos-base/chrome-icu-107.0.5257.0_rc-r1.tbz2"],
     )
     http_file(
         name = "amd64_host_cross_aarch64_cros_linux_gnu_binutils_2_36_1_r8",

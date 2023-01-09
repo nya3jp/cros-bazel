@@ -37,6 +37,14 @@ var overlayRelDirs = []string{
 	"third_party/portage-stable",
 }
 
+// Packages that are used to bootstrap the board's SDK
+var primordialPackages = map[string]struct{}{
+	"sys-kernel/linux-headers": {},
+	"sys-libs/gcc-libs":        {},
+	"sys-libs/libcxx":          {},
+	"sys-libs/llvm-libunwind":  {},
+}
+
 type ebuildInfo struct {
 	EBuildName  string
 	PackageName string
@@ -226,6 +234,11 @@ func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, postDeps
 			localPackageName = fmt.Sprintf("%s-%s", packageName, pkgInfo.Version)
 		}
 
+		var sdkSuffix string
+		if _, ok := primordialPackages[pkgInfo.Name]; ok {
+			sdkSuffix = "-base"
+		}
+
 		ebuild := ebuildInfo{
 			EBuildName:  ebuildName,
 			PackageName: localPackageName,
@@ -234,7 +247,7 @@ func generatePackage(ebuildDir string, pkgInfos []*depdata.PackageInfo, postDeps
 			PackageInfo: pkgInfo,
 			PostDeps:    postDepsMap[label],
 			// TODO: Stop hard coding this
-			Sdk: "arm64-generic",
+			Sdk: "arm64-generic" + sdkSuffix,
 		}
 
 		ebuildInfos = append(ebuildInfos, ebuild)
