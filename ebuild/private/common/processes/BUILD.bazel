@@ -1,6 +1,8 @@
 load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
+package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
+
 go_library(
     name = "processes",
     srcs = ["processes.go"],
@@ -9,7 +11,7 @@ go_library(
     deps = ["@org_golang_x_sys//unix"],
 )
 
-rust_library_crate(name = "processes_rust")
+rust_library_crate(name = "processes_rust", crate_name = "processes")
 
 rust_crate_test(
     name = "processes_rust_test",

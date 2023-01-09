@@ -352,6 +352,12 @@ _NORMAL_DEPENDENCIES = {
         },
     },
     "bazel/ebuild/private/common/processes": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
+            "libc": "@update_crates__libc-0.2.139//:libc",
+            "nix": "@update_crates__nix-0.26.1//:nix",
+            "signal-hook": "@update_crates__signal-hook-0.3.14//:signal_hook",
+        },
     },
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
@@ -407,6 +413,8 @@ _NORMAL_ALIASES = {
         },
     },
     "bazel/ebuild/private/common/processes": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
@@ -1809,6 +1817,26 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/serde_json/1.0.91/download"],
         strip_prefix = "serde_json-1.0.91",
         build_file = Label("@chromiumos//bazel/crates:BUILD.serde_json-1.0.91.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_crates__signal-hook-0.3.14",
+        sha256 = "a253b5e89e2698464fc26b545c9edceb338e18a89effeeecfea192c3025be29d",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/signal-hook/0.3.14/download"],
+        strip_prefix = "signal-hook-0.3.14",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.signal-hook-0.3.14.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_crates__signal-hook-registry-1.4.0",
+        sha256 = "e51e73328dc4ac0c7ccbda3a494dfa03df1de2f46018127f60c693f2648455b0",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/signal-hook-registry/1.4.0/download"],
+        strip_prefix = "signal-hook-registry-1.4.0",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.signal-hook-registry-1.4.0.bazel"),
     )
 
     maybe(
