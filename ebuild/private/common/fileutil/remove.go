@@ -68,5 +68,22 @@ func RemoveAllWithChmod(path string) error {
 		return err
 	}
 
-	return os.RemoveAll(path)
+	// Ensure we have o+rwx on the parent directory so we can unlink any files
+	parent := filepath.Dir(path)
+	stat, err := os.Stat(parent)
+	if err != nil {
+		return err
+	}
+
+	if err := os.Chmod(parent, 0700); err != nil {
+		return err
+	}
+
+	if err := os.RemoveAll(path); err != nil {
+		return err
+	}
+	if err := os.Chmod(parent, stat.Mode()); err != nil {
+		return err
+	}
+	return nil
 }
