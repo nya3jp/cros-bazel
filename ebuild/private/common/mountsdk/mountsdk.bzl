@@ -68,11 +68,17 @@ def _calculate_install_groups(build_deps):
 
     return levels
 
-def _install_deps(ctx, progress_message_name, transitive_build_time_deps_files, transitive_build_time_deps_targets):
+def create_layer(
+        ctx,
+        progress_message_name,
+        transitive_build_time_deps_files,
+        transitive_build_time_deps_targets,
+        sdk = None,
+        suffix = "-deps"):
     """Creates an action which builds an overlay in which the build dependencies are installed."""
-    output_root = ctx.actions.declare_directory(ctx.attr.name + "-deps")
-    output_symindex = ctx.actions.declare_file(ctx.attr.name + "-deps.symindex")
-    sdk = ctx.attr.sdk[SDKInfo]
+    output_root = ctx.actions.declare_directory(ctx.attr.name + suffix)
+    output_symindex = ctx.actions.declare_file(ctx.attr.name + suffix + ".symindex")
+    sdk = sdk if sdk else ctx.attr.sdk[SDKInfo]
 
     args = ctx.actions.args()
     args.add_all([
@@ -168,7 +174,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
     )
 
     if install_deps:
-        deps_directory, deps_symindex = _install_deps(
+        deps_directory, deps_symindex = create_layer(
             ctx,
             progress_message_name,
             transitive_build_time_deps_files,

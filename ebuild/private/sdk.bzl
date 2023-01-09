@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKBaseInfo", "SDKInfo")
+load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "create_layer")
 
 def _sdk_from_archive_impl(ctx):
     output_root = ctx.actions.declare_directory(ctx.attr.name)
@@ -31,7 +32,7 @@ def _sdk_from_archive_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKBaseInfo(
             layers = [output_root, output_symindex],
-        )
+        ),
     ]
 
 sdk_from_archive = rule(
@@ -137,6 +138,58 @@ sdk = rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/sdk_update"),
+        ),
+    },
+)
+
+def _sdk_update_impl(ctx):
+    sdk = ctx.attr.base[SDKInfo]
+
+    transitive_build_time_deps_files = depset(
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.target_deps],
+        order = "postorder",
+    )
+
+    transitive_build_time_deps_targets = depset(
+        ctx.attr.target_deps,
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.target_deps],
+        order = "postorder",
+    )
+
+    output_root, output_symindex = create_layer(
+        ctx,
+        "toolchain libraries",
+        transitive_build_time_deps_files,
+        transitive_build_time_deps_targets,
+        sdk = sdk,
+        suffix = "",
+    )
+
+    outputs = [output_root, output_symindex]
+
+    return [
+        DefaultInfo(files = depset(outputs)),
+        SDKInfo(
+            board = sdk.board,
+            layers = outputs + sdk.layers,
+            overlays = sdk.overlays,
+        ),
+    ]
+
+sdk_update = rule(
+    implementation = _sdk_update_impl,
+    attrs = {
+        "base": attr.label(
+            mandatory = True,
+            providers = [SDKInfo],
+        ),
+        "target_deps": attr.label_list(
+            providers = [BinaryPackageInfo],
+        ),
+        "_install_deps": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/install_deps"),
         ),
     },
 )
