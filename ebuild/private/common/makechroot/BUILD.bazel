@@ -11,6 +11,7 @@ go_library(
     name = "makechroot",
     srcs = [
         "binpkgs.go",
+        "cleanup.go",
         "overlay.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/common/makechroot",

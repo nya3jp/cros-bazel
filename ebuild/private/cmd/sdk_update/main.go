@@ -192,22 +192,8 @@ var app = &cli.App{
 			return err
 		}
 
-		for _, exclude := range []string{
-			filepath.Join("build", board, "tmp"),
-			filepath.Join("build", board, "var/cache"),
-			hostPackagesDir.Inside(),
-			targetPackagesDir.Inside(),
-			"run",
-			"stage",
-			"tmp",
-			"var/tmp",
-			"var/log",
-			"var/cache",
-		} {
-			path := filepath.Join(outputDirPath, exclude)
-			if err := fileutil.RemoveAllWithChmod(path); err != nil {
-				return err
-			}
+		if err := makechroot.CleanLayer(board, outputDirPath); err != nil {
+			return err
 		}
 
 		if err := symindex.Generate(outputDirPath, outputSymindexPath); err != nil {

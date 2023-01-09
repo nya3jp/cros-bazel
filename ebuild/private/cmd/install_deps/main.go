@@ -101,6 +101,10 @@ var app = &cli.App{
 				return err
 			}
 
+			if err := makechroot.CleanLayer(board, outputDirPath); err != nil {
+				return err
+			}
+
 			if err := symindex.Generate(outputDirPath, outputSymindexPath); err != nil {
 				return err
 			}
