@@ -137,7 +137,7 @@ alias(
 
 alias(
     name = "regex",
-    actual = "@update_crates__regex-1.7.0//:regex",
+    actual = "@update_crates__regex-1.7.1//:regex",
     tags = ["manual"],
 )
 

@@ -10,11 +10,11 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
 };
+use version::Version;
 
 use crate::{
     bash::{parse_set_output, BashVars},
     data::Vars,
-    version::Version,
 };
 
 fn run_ebuild(

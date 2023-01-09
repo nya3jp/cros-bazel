@@ -12,6 +12,7 @@ use std::{
     path::{Path, PathBuf, MAIN_SEPARATOR},
     sync::{Arc, Mutex},
 };
+use version::Version;
 
 use crate::{
     bash::{BashValue, BashVars},
@@ -19,7 +20,6 @@ use crate::{
     data::{IUseMap, PackageSlotKey, Slot, UseMap},
     dependency::package::PackageRef,
     repository::RepositorySet,
-    version::Version,
 };
 
 use self::driver::EBuildDriver;

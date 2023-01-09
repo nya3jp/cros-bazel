@@ -2,12 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{
-    collections::{HashMap, HashSet},
-    iter,
-};
+use std::{collections::HashMap, collections::HashSet, iter};
 
 use itertools::Itertools;
+use version::Version;
 
 use crate::{
     data::{IUseMap, UseMap, Vars},
@@ -15,7 +13,6 @@ use crate::{
         package::{PackageRef, ThinPackageRef},
         Predicate,
     },
-    version::Version,
 };
 
 use super::{

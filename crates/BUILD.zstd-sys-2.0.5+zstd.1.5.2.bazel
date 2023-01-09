@@ -85,12 +85,12 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "2.0.4+zstd.1.5.2",
+    version = "2.0.5+zstd.1.5.2",
     deps = [
     ] + select({
         "//conditions:default": [
             "@update_crates__libc-0.2.139//:libc",
-            "@update_crates__zstd-sys-2.0.4-zstd.1.5.2//:build_script_build",
+            "@update_crates__zstd-sys-2.0.5-zstd.1.5.2//:build_script_build",
         ],
     }),
 )
@@ -165,12 +165,13 @@ cargo_build_script(
         "//conditions:default": [
         ],
     }),
-    version = "2.0.4+zstd.1.5.2",
+    version = "2.0.5+zstd.1.5.2",
     visibility = ["//visibility:private"],
     deps = [
     ] + select({
         "//conditions:default": [
             "@update_crates__cc-1.0.78//:cc",
+            "@update_crates__pkg-config-0.3.26//:pkg_config",
         ],
     }),
 )

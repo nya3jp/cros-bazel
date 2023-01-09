@@ -13,4 +13,3 @@ pub mod repository;
 pub mod resolver;
 #[cfg(test)]
 pub(crate) mod testutils;
-pub mod version;

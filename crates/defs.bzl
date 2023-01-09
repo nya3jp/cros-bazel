@@ -306,7 +306,7 @@ _NORMAL_DEPENDENCIES = {
             "nom_locate": "@update_crates__nom_locate-4.0.0//:nom_locate",
             "once_cell": "@update_crates__once_cell-1.17.0//:once_cell",
             "rayon": "@update_crates__rayon-1.6.1//:rayon",
-            "regex": "@update_crates__regex-1.7.0//:regex",
+            "regex": "@update_crates__regex-1.7.1//:regex",
             "rpds": "@update_crates__rpds-0.12.0//:rpds",
             "serde": "@update_crates__serde-1.0.152//:serde",
             "serde_json": "@update_crates__serde_json-1.0.91//:serde_json",
@@ -354,6 +354,13 @@ _NORMAL_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
+            "nom": "@update_crates__nom-7.1.2//:nom",
+            "once_cell": "@update_crates__once_cell-1.17.0//:once_cell",
+            "regex": "@update_crates__regex-1.7.1//:regex",
+            "strum": "@update_crates__strum-0.24.1//:strum",
+        },
     },
     "bazel/ebuild/private/common/symindex": {
     },
@@ -402,6 +409,8 @@ _NORMAL_ALIASES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/common/symindex": {
     },
@@ -517,6 +526,9 @@ _PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+        _COMMON_CONDITION: {
+            "strum_macros": "@update_crates__strum_macros-0.24.3//:strum_macros",
+        },
     },
     "bazel/ebuild/private/common/symindex": {
     },
@@ -1491,6 +1503,16 @@ def crate_repositories():
 
     maybe(
         http_archive,
+        name = "update_crates__pkg-config-0.3.26",
+        sha256 = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/pkg-config/0.3.26/download"],
+        strip_prefix = "pkg-config-0.3.26",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.pkg-config-0.3.26.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "update_crates__ppv-lite86-0.2.17",
         sha256 = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de",
         type = "tar.gz",
@@ -1641,12 +1663,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "update_crates__regex-1.7.0",
-        sha256 = "e076559ef8e241f2ae3479e36f97bd5741c0330689e217ad51ce2c76808b868a",
+        name = "update_crates__regex-1.7.1",
+        sha256 = "48aaa5748ba571fb95cd2c85c09f629215d3a6ece942baa100950af03a34f733",
         type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/regex/1.7.0/download"],
-        strip_prefix = "regex-1.7.0",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.regex-1.7.0.bazel"),
+        urls = ["https://crates.io/api/v1/crates/regex/1.7.1/download"],
+        strip_prefix = "regex-1.7.1",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.regex-1.7.1.bazel"),
     )
 
     maybe(
@@ -2151,10 +2173,10 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "update_crates__zstd-sys-2.0.4-zstd.1.5.2",
-        sha256 = "4fa202f2ef00074143e219d15b62ffc317d17cc33909feac471c044087cad7b0",
+        name = "update_crates__zstd-sys-2.0.5-zstd.1.5.2",
+        sha256 = "edc50ffce891ad571e9f9afe5039c4837bede781ac4bb13052ed7ae695518596",
         type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/zstd-sys/2.0.4+zstd.1.5.2/download"],
-        strip_prefix = "zstd-sys-2.0.4+zstd.1.5.2",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.zstd-sys-2.0.4+zstd.1.5.2.bazel"),
+        urls = ["https://crates.io/api/v1/crates/zstd-sys/2.0.5+zstd.1.5.2/download"],
+        strip_prefix = "zstd-sys-2.0.5+zstd.1.5.2",
+        build_file = Label("@chromiumos//bazel/crates:BUILD.zstd-sys-2.0.5+zstd.1.5.2.bazel"),
     )

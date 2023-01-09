@@ -6,6 +6,7 @@ load("//bazel/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 
 rust_binary_crate(
     name = "alchemist",
+    deps = ["//bazel/ebuild/private/common/standard/version:version_rust"],
 )
 
 rust_crate_test(

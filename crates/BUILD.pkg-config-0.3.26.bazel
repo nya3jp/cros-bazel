@@ -20,7 +20,7 @@ package(default_visibility = ["//visibility:public"])
 # ])
 
 rust_library(
-    name = "regex",
+    name = "pkg_config",
     srcs = glob(
         include = [
             "**/*.rs",
@@ -46,30 +46,13 @@ rust_library(
         ],
     }),
     crate_features = [
-        "aho-corasick",
-        "default",
-        "memchr",
-        "perf",
-        "perf-cache",
-        "perf-dfa",
-        "perf-inline",
-        "perf-literal",
-        "std",
-        "unicode",
-        "unicode-age",
-        "unicode-bool",
-        "unicode-case",
-        "unicode-gencat",
-        "unicode-perl",
-        "unicode-script",
-        "unicode-segment",
     ],
     crate_root = "src/lib.rs",
     data = select_with_or({
         "//conditions:default": [
         ],
     }),
-    edition = "2018",
+    edition = "2015",
     proc_macro_deps = [
     ] + select({
         "//conditions:default": [
@@ -94,13 +77,10 @@ rust_library(
         "noclippy",
         "norustfmt",
     ],
-    version = "1.7.0",
+    version = "0.3.26",
     deps = [
     ] + select({
         "//conditions:default": [
-            "@update_crates__aho-corasick-0.7.20//:aho_corasick",
-            "@update_crates__memchr-2.5.0//:memchr",
-            "@update_crates__regex-syntax-0.6.28//:regex_syntax",
         ],
     }),
 )

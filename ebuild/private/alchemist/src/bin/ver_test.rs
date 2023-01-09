@@ -4,9 +4,9 @@
 
 use std::{cmp::Ordering, process::exit};
 
-use alchemist::version::Version;
 use anyhow::{anyhow, bail, Result};
 use itertools::Itertools;
+use version::Version;
 
 fn main() -> Result<()> {
     let mut args = std::env::args().into_iter().skip(1).collect_vec();

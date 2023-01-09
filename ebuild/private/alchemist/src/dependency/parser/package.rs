@@ -15,16 +15,14 @@ use nom::{
 use nom_regex::str::re_find;
 use once_cell::sync::Lazy;
 use regex::Regex;
+use version::Version;
 
-use crate::{
-    dependency::{
-        package::{
-            PackageAtomDependency, PackageBlock, PackageDependency, PackageSlotDependency,
-            PackageUseDependency, PackageVersionDependency, PackageVersionOp,
-        },
-        CompositeDependency, Dependency,
+use crate::dependency::{
+    package::{
+        PackageAtomDependency, PackageBlock, PackageDependency, PackageSlotDependency,
+        PackageUseDependency, PackageVersionDependency, PackageVersionOp,
     },
-    version::Version,
+    CompositeDependency, Dependency,
 };
 
 use super::{DependencyParser, DependencyParserCommon};
@@ -43,7 +41,7 @@ static PACKAGE_NAME_WITH_VERSION_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!(
         "^{}-{}",
         PACKAGE_NAME_RE_RAW,
-        crate::version::VERSION_RE_RAW
+        version::VERSION_RE_RAW
     ))
     .unwrap()
 });

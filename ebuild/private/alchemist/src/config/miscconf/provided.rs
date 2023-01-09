@@ -4,11 +4,9 @@
 
 use anyhow::Result;
 use std::{fs::read_to_string, path::Path};
+use version::Version;
 
-use crate::{
-    config::{ConfigNode, ConfigNodeValue, ProvidedPackage},
-    version::Version,
-};
+use crate::config::{ConfigNode, ConfigNodeValue, ProvidedPackage};
 
 pub fn load_provided_packages_config(dir: &Path) -> Result<Vec<ConfigNode>> {
     let source = dir.join("package.provided");

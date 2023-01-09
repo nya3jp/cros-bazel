@@ -5,11 +5,9 @@
 use anyhow::{Error, Result};
 use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
+use version::Version;
 
-use crate::{
-    data::{Slot, UseMap},
-    version::Version,
-};
+use crate::data::{Slot, UseMap};
 
 use super::{
     parser::{package::PackageDependencyParser, DependencyParserType},

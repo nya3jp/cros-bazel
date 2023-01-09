@@ -10,10 +10,11 @@ pub mod site;
 
 use std::path::{Path, PathBuf};
 
+use version::Version;
+
 use crate::{
     data::Vars,
     dependency::package::{PackageAtomDependency, ThinPackageRef},
-    version::Version,
 };
 
 /// Represents a kind of a USE flag update entry.
