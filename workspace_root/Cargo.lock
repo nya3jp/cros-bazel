@@ -355,6 +355,10 @@ dependencies = [
 [[package]]
 name = "fileutil"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "walkdir",
+]
 
 [[package]]
 name = "fnv"

@@ -328,6 +328,10 @@ _NORMAL_DEPENDENCIES = {
         },
     },
     "bazel/ebuild/private/common/fileutil": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
+            "walkdir": "@update_crates__walkdir-2.3.2//:walkdir",
+        },
     },
     "bazel/ebuild/private/common/makechroot": {
         _COMMON_CONDITION: {
@@ -382,6 +386,8 @@ _NORMAL_ALIASES = {
         },
     },
     "bazel/ebuild/private/common/fileutil": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/common/makechroot": {
         _COMMON_CONDITION: {
