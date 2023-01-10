@@ -27154,9 +27154,7 @@
     "mainSlot": "0",
     "ebuildPath": "third_party/chromiumos-overlay/sys-kernel/linux-headers/linux-headers-4.14-r56.ebuild",
     "version": "4.14-r56",
-    "buildDeps": [
-      "//third_party/portage-stable/app-arch/xz-utils:0"
-    ],
+    "buildDeps": [],
     "localSrc": [],
     "runtimeDeps": [],
     "srcUris": {
@@ -27196,9 +27194,9 @@
     "ebuildPath": "third_party/chromiumos-overlay/sys-libs/libcxx/libcxx-15.0_pre458507-r6.ebuild",
     "version": "15.0_pre458507-r6",
     "buildDeps": [
+      "//third_party/chromiumos-overlay/sys-kernel/linux-headers:0",
       "//third_party/chromiumos-overlay/sys-libs/gcc-libs:0",
-      "//third_party/chromiumos-overlay/sys-libs/llvm-libunwind:0",
-      "//third_party/portage-stable/app-arch/xz-utils:0"
+      "//third_party/chromiumos-overlay/sys-libs/llvm-libunwind:0"
     ],
     "localSrc": [
       "//third_party/llvm-project:src"
@@ -27244,9 +27242,7 @@
     "mainSlot": "0",
     "ebuildPath": "third_party/chromiumos-overlay/sys-libs/llvm-libunwind/llvm-libunwind-15.0_pre458507-r4.ebuild",
     "version": "15.0_pre458507-r4",
-    "buildDeps": [
-      "//third_party/portage-stable/sys-devel/make:0"
-    ],
+    "buildDeps": [],
     "localSrc": [
       "//third_party/llvm-project:src"
     ],
