@@ -14,7 +14,7 @@ use alchemist::{
         ConfigSource, PackageMaskKind, PackageMaskUpdate, ProvidedPackage, SimpleConfigSource,
     },
     dependency::package::PackageAtomDependency,
-    ebuild::{CachedEBuildEvaluator, EBuildEvaluator},
+    ebuild::{CachedPackageLoader, PackageLoader},
     fakechroot::enter_fake_chroot,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -135,10 +135,10 @@ fn main() -> Result<()> {
         Box::new(override_source) as Box<dyn ConfigSource>,
     ]);
 
-    // Set up the ebuild evaluator.
+    // Set up the package loader.
     let tools_dir = std::env::current_exe()?.parent().unwrap().to_owned();
     // TODO: Avoid cloning ConfigBundle.
-    let evaluator = CachedEBuildEvaluator::new(EBuildEvaluator::new(
+    let loader = CachedPackageLoader::new(PackageLoader::new(
         repos.clone(),
         config.clone(),
         &tools_dir,
@@ -147,7 +147,7 @@ fn main() -> Result<()> {
     let resolver = PackageResolver::new(
         &repos,
         &config,
-        &evaluator,
+        &loader,
         alchemist::ebuild::Stability::Unstable,
     );
 
@@ -170,7 +170,7 @@ fn main() -> Result<()> {
             generate_repo_main(
                 &args.board,
                 &repos,
-                &evaluator,
+                &loader,
                 &resolver,
                 &translator,
                 &output_dir,

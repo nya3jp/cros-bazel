@@ -69,11 +69,11 @@ fn run_ebuild(
 }
 
 #[derive(Debug)]
-pub(super) struct EBuildDriver {
+pub(super) struct EBuildEvaluator {
     tools_dir: PathBuf,
 }
 
-impl EBuildDriver {
+impl EBuildEvaluator {
     pub(super) fn new(tools_dir: &Path) -> Self {
         Self {
             tools_dir: tools_dir.to_owned(),

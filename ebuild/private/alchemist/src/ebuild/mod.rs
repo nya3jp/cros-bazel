@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-mod driver;
+mod metadata;
 
 use anyhow::{anyhow, bail, Result};
 use itertools::Itertools;
@@ -22,7 +22,7 @@ use crate::{
     repository::RepositorySet,
 };
 
-use self::driver::EBuildDriver;
+use self::metadata::EBuildEvaluator;
 
 /// Parses IUSE defined by ebuild/eclasses and returns as an [IUseMap].
 fn parse_iuse_map(vars: &BashVars) -> IUseMap {
@@ -130,30 +130,30 @@ impl PackageDetails {
 }
 
 #[derive(Debug)]
-pub struct EBuildEvaluator {
+pub struct PackageLoader {
     repos: RepositorySet,
     config: ConfigBundle,
-    driver: EBuildDriver,
+    evaluator: EBuildEvaluator,
 }
 
-impl EBuildEvaluator {
+impl PackageLoader {
     pub fn new(repos: RepositorySet, config: ConfigBundle, tools_dir: &Path) -> Self {
-        let driver = EBuildDriver::new(tools_dir);
+        let evaluator = EBuildEvaluator::new(tools_dir);
         Self {
             repos,
             config,
-            driver,
+            evaluator,
         }
     }
 
-    pub fn evaluate(&self, ebuild_path: &Path) -> Result<PackageDetails> {
+    pub fn load_package(&self, ebuild_path: &Path) -> Result<PackageDetails> {
         // Locate the repository this ebuild belongs to, which identifies
         // eclass directories to be available to the ebuild.
         let (repo, _) = self.repos.get_repo_by_path(ebuild_path)?;
 
         // Drive the ebuild to read its metadata.
         let metadata = self
-            .driver
+            .evaluator
             .evaluate_metadata(ebuild_path, repo.eclass_dirs().collect_vec())?;
 
         // Compute additional information needed to fill in PackageDetails.
@@ -218,22 +218,22 @@ impl EBuildEvaluator {
     }
 }
 
-/// Wraps EBuildEvaluator to cache evaluation results.
+/// Wraps PackageLoader to cache results.
 #[derive(Debug)]
-pub struct CachedEBuildEvaluator {
-    evaluator: EBuildEvaluator,
+pub struct CachedPackageLoader {
+    loader: PackageLoader,
     cache: Mutex<HashMap<PathBuf, Arc<OnceCell<Arc<PackageDetails>>>>>,
 }
 
-impl CachedEBuildEvaluator {
-    pub fn new(evaluator: EBuildEvaluator) -> Self {
+impl CachedPackageLoader {
+    pub fn new(loader: PackageLoader) -> Self {
         Self {
-            evaluator,
+            loader,
             cache: Default::default(),
         }
     }
 
-    pub fn evaluate(&self, ebuild_path: &Path) -> Result<Arc<PackageDetails>> {
+    pub fn load_package(&self, ebuild_path: &Path) -> Result<Arc<PackageDetails>> {
         let once_cell = {
             let mut cache_guard = self.cache.lock().unwrap();
             cache_guard
@@ -242,7 +242,7 @@ impl CachedEBuildEvaluator {
                 .clone()
         };
         let details =
-            once_cell.get_or_try_init(|| self.evaluator.evaluate(ebuild_path).map(Arc::new))?;
+            once_cell.get_or_try_init(|| self.loader.load_package(ebuild_path).map(Arc::new))?;
         Ok(details.clone())
     }
 }

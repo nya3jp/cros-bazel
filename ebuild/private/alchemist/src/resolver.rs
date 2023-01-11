@@ -10,7 +10,7 @@ use std::sync::Arc;
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtomDependency, Predicate},
-    ebuild::{CachedEBuildEvaluator, PackageDetails, Stability},
+    ebuild::{CachedPackageLoader, PackageDetails, Stability},
     repository::RepositorySet,
 };
 
@@ -31,7 +31,7 @@ pub enum FindBestPackageError {
 pub struct PackageResolver<'a> {
     repos: &'a RepositorySet,
     config: &'a ConfigBundle,
-    evaluator: &'a CachedEBuildEvaluator,
+    loader: &'a CachedPackageLoader,
     accept_stability: Stability,
 }
 
@@ -43,13 +43,13 @@ impl<'a> PackageResolver<'a> {
     pub fn new(
         repos: &'a RepositorySet,
         config: &'a ConfigBundle,
-        evaluator: &'a CachedEBuildEvaluator,
+        loader: &'a CachedPackageLoader,
         accept_stability: Stability,
     ) -> Self {
         Self {
             repos,
             config,
-            evaluator,
+            loader,
             accept_stability,
         }
     }
@@ -60,7 +60,7 @@ impl<'a> PackageResolver<'a> {
 
         let mut packages = ebuild_paths
             .into_par_iter()
-            .map(|ebuild_path| self.evaluator.evaluate(&ebuild_path))
+            .map(|ebuild_path| self.loader.load_package(&ebuild_path))
             .filter(|details| match details {
                 Ok(details) => atom.matches(&details.as_package_ref()),
                 Err(_) => true,

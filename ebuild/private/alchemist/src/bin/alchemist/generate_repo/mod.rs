@@ -22,7 +22,7 @@ use alchemist::{
         source::{analyze_sources, fixup_sources, PackageRemoteSource, PackageSources},
     },
     dependency::package::PackageAtomDependency,
-    ebuild::{CachedEBuildEvaluator, PackageDetails},
+    ebuild::{CachedPackageLoader, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -353,7 +353,7 @@ fn generate_repositories_file(packages: &Vec<Package>, out: &Path) -> Result<()>
 
 fn evaluate_all_packages(
     repos: &RepositorySet,
-    evaluator: &CachedEBuildEvaluator,
+    loader: &CachedPackageLoader,
 ) -> Result<Vec<Arc<PackageDetails>>> {
     let ebuild_paths = repos.find_all_ebuilds()?;
     let ebuild_count = ebuild_paths.len();
@@ -364,7 +364,7 @@ fn evaluate_all_packages(
     let packages = ebuild_paths
         .into_par_iter()
         .map(|ebuild_path| {
-            let result = evaluator.evaluate(&ebuild_path);
+            let result = loader.load_package(&ebuild_path);
             let count = 1 + counter.fetch_add(1, Ordering::SeqCst);
             eprint!("Loading ebuilds... {}/{}\r", count, ebuild_count);
             result
@@ -444,7 +444,7 @@ fn join_by_package_dir<'a>(
 pub fn generate_repo_main(
     board: &str,
     repos: &RepositorySet,
-    evaluator: &CachedEBuildEvaluator,
+    loader: &CachedPackageLoader,
     resolver: &PackageResolver,
     translator: &PathTranslator,
     output_dir: &Path,
@@ -458,7 +458,7 @@ pub fn generate_repo_main(
     };
     create_dir_all(output_dir)?;
 
-    let all_details = evaluate_all_packages(repos, evaluator)?;
+    let all_details = evaluate_all_packages(repos, loader)?;
 
     let all_packages = analyze_packages(all_details, resolver);
 
