@@ -9,7 +9,7 @@ use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
-    path::{Path, PathBuf, MAIN_SEPARATOR},
+    path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 use version::Version;
@@ -23,8 +23,6 @@ use crate::{
 };
 
 use self::driver::EBuildDriver;
-
-const EBUILD_EXT: &str = ".ebuild";
 
 /// Parses IUSE defined by ebuild/eclasses and returns as an [IUseMap].
 fn parse_iuse_map(vars: &BashVars) -> IUseMap {
@@ -151,34 +149,26 @@ impl EBuildEvaluator {
     pub fn evaluate(&self, ebuild_path: &Path) -> Result<PackageDetails> {
         // Locate the repository this ebuild belongs to, which identifies
         // eclass directories to be available to the ebuild.
-        let (repo, rel_path) = self.repos.get_repo_by_path(ebuild_path)?;
-
-        // Extract the package name and version from the file path.
-        let rel_path = rel_path.to_string_lossy();
-        let (category_name, short_package_name, ebuild_name) = rel_path
-            .split(MAIN_SEPARATOR)
-            .collect_tuple()
-            .ok_or_else(|| anyhow!("invalid ebuild path"))?;
-        let ebuild_stem = ebuild_name
-            .strip_suffix(EBUILD_EXT)
-            .ok_or_else(|| anyhow!("file extension is not {}", EBUILD_EXT))?;
-        let (short_package_name2, version) = Version::from_str_suffix(ebuild_stem)?;
-        if short_package_name != short_package_name2 {
-            bail!("invalid ebuild name: {}", ebuild_path.to_string_lossy());
-        }
-        let package_name = [category_name, short_package_name].join("/");
+        let (repo, _) = self.repos.get_repo_by_path(ebuild_path)?;
 
         // Drive the ebuild to read its metadata.
-        let vars = self
+        let metadata = self
             .driver
             .evaluate_metadata(ebuild_path, repo.eclass_dirs().collect_vec())?;
 
         // Compute additional information needed to fill in PackageDetails.
-        let stability = Stability::compute(&vars, &self.config);
+        let package_name = [
+            metadata.path_info.category_name,
+            metadata.path_info.package_short_name,
+        ]
+        .join("/");
+        let stability = Stability::compute(&metadata.vars, &self.config);
         let stable = stability == Stability::Stable;
 
         let slot = Slot::<String>::new(
-            vars.get("SLOT")
+            metadata
+                .vars
+                .get("SLOT")
                 .and_then(|value| match value {
                     BashValue::Scalar(s) => Some(s.as_str()),
                     _ => None,
@@ -186,14 +176,17 @@ impl EBuildEvaluator {
                 .ok_or_else(|| anyhow!("SLOT not defined"))?,
         );
 
-        let iuse_map = parse_iuse_map(&vars);
-        let use_map = self
-            .config
-            .compute_use_map(&package_name, &version, stable, &iuse_map);
+        let iuse_map = parse_iuse_map(&metadata.vars);
+        let use_map = self.config.compute_use_map(
+            &package_name,
+            &metadata.path_info.version,
+            stable,
+            &iuse_map,
+        );
 
         let masked = self.config.is_package_masked(&PackageRef {
             package_name: package_name.as_str(),
-            version: &version,
+            version: &metadata.path_info.version,
             slot: Slot {
                 main: &slot.main,
                 sub: &slot.sub,
@@ -201,7 +194,7 @@ impl EBuildEvaluator {
             use_map: &use_map,
         });
 
-        let raw_inherited = match vars.get("INHERITED") {
+        let raw_inherited = match metadata.vars.get("INHERITED") {
             None => "",
             Some(BashValue::Scalar(s)) => s.as_str(),
             other => bail!("Invalid INHERITED value: {:?}", other),
@@ -213,8 +206,8 @@ impl EBuildEvaluator {
 
         Ok(PackageDetails {
             package_name,
-            version,
-            vars,
+            version: metadata.path_info.version,
+            vars: metadata.vars,
             slot,
             use_map,
             stability,

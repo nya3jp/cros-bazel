@@ -84,24 +84,30 @@ impl EBuildDriver {
         &self,
         ebuild_path: &Path,
         eclass_dirs: Vec<&Path>,
-    ) -> Result<BashVars> {
+    ) -> Result<EBuildMetadata> {
         // We don't need to provide profile variables to the ebuild environment
         // because PMS requires ebuild metadata to be defined independently of
         // profiles.
         // https://projects.gentoo.org/pms/8/pms.html#x1-600007.1
-        let path_info = PackagePathInfo::try_from(ebuild_path)?;
+        let path_info = EBuildPathInfo::try_from(ebuild_path)?;
         let env = path_info.to_vars();
-        run_ebuild(ebuild_path, &env, eclass_dirs, &self.tools_dir)
+        let vars = run_ebuild(ebuild_path, &env, eclass_dirs, &self.tools_dir)?;
+        Ok(EBuildMetadata { path_info, vars })
     }
 }
 
-struct PackagePathInfo {
+pub(super) struct EBuildMetadata {
+    pub path_info: EBuildPathInfo,
+    pub vars: BashVars,
+}
+
+pub(super) struct EBuildPathInfo {
     pub package_short_name: String,
     pub category_name: String,
     pub version: Version,
 }
 
-impl PackagePathInfo {
+impl EBuildPathInfo {
     fn to_vars(&self) -> Vars {
         Vars::from_iter(
             [
@@ -129,7 +135,7 @@ impl PackagePathInfo {
     }
 }
 
-impl TryFrom<&Path> for PackagePathInfo {
+impl TryFrom<&Path> for EBuildPathInfo {
     type Error = anyhow::Error;
 
     fn try_from(path: &Path) -> Result<Self> {
