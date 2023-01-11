@@ -67,6 +67,8 @@ impl ConfigSource for SiteSettings {
 mod tests {
     use std::str::FromStr;
 
+    use version::Version;
+
     use crate::{
         config::{
             ConfigNodeValue, PackageMaskKind, PackageMaskUpdate, ProvidedPackage, UseUpdate,
@@ -74,7 +76,6 @@ mod tests {
         },
         dependency::package::PackageAtomDependency,
         testutils::write_files,
-        version::Version,
     };
 
     use super::*;
