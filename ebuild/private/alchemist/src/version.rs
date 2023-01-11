@@ -53,7 +53,7 @@ impl Version {
     pub fn from_str_suffix(input: &str) -> Result<(&str, Self)> {
         let caps = VERSION_SUFFIX_RE
             .captures(input)
-            .ok_or_else(|| anyhow!("invalid version number"))?;
+            .ok_or_else(|| anyhow!("invalid version number {input:?}"))?;
         let ver = Self::try_new(&caps[0][1..])?;
         Ok((&input[..caps.get(0).unwrap().start()], ver))
     }

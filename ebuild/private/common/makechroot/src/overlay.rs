@@ -17,6 +17,7 @@ fn from_str(spec: &str) -> Result<(PathBuf, PathBuf)> {
     ))
 }
 
+#[derive(Debug, Clone)]
 pub struct OverlayInfo {
     pub mount_dir: PathBuf,
     pub image_path: PathBuf,
@@ -33,6 +34,7 @@ impl FromStr for OverlayInfo {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct BindMount {
     pub mount_path: PathBuf,
     pub source: PathBuf,
@@ -42,10 +44,7 @@ impl FromStr for BindMount {
     type Err = anyhow::Error;
     fn from_str(spec: &str) -> Result<Self> {
         let (mount_path, source) = from_str(spec)?;
-        Ok(Self {
-            mount_path,
-            source: PathBuf::from(source.absolutize()?),
-        })
+        Ok(Self { mount_path, source })
     }
 }
 
