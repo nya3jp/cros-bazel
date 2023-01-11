@@ -1,4 +1,256 @@
-fn main() {
-    println!("Hello, world!");
+// Copyright 2022 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+use anyhow::{anyhow, bail, Context, Result};
+use binarypackage::{BinaryPackage, OutputFileSpec, XpakSpec};
+use clap::Parser;
+use makechroot::{BindMount, OverlayInfo};
+use mountsdk::{LoginMode, MountedSDK};
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
+use version::Version;
+
+const EBUILD_EXT: &str = ".ebuild";
+const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_package.sh";
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about=None)]
+struct Cli {
+    #[arg(long, required = true)]
+    sdk: Vec<PathBuf>,
+
+    #[arg(
+        long,
+        help = "<inside path>=<squashfs file | directory | tar.*>: Mounts the file or directory at \
+            the specified path. Inside path can be absolute or relative to /mnt/host/source/.",
+        required = true
+    )]
+    overlay: Vec<OverlayInfo>,
+
+    #[arg(
+        long = "login",
+        help = "logs in to the SDK before installing deps, before building, after \
+        building, or after failing to build respectively.",
+        default_value_t = LoginMode::Never,
+    )]
+    login_mode: LoginMode,
+
+    #[arg(long, required = true)]
+    board: String,
+
+    #[arg(long, required = true)]
+    ebuild: EbuildMetadata,
+
+    #[arg(long)]
+    file: Vec<BindMount>,
+
+    #[arg(long)]
+    distfile: Vec<BindMount>,
+
+    #[arg(long, required = true)]
+    output: PathBuf,
+
+    #[arg(
+        long,
+        help = "<inside path>=<outside path>: Extracts a file from the binpkg and writes it to the outside path"
+    )]
+    output_file: Vec<OutputFileSpec>,
+
+    #[arg(
+        long,
+        help = "<XPAK key>=[?]<output file>: Write the XPAK key from the binpkg to the \
+    specified file. If =? is used then an empty file is created if XPAK key doesn't exist."
+    )]
+    xpak: Vec<XpakSpec>,
+
+    #[arg(
+        long,
+        help = "<inside path>=<outside path>: Copies the outside file into the sysroot"
+    )]
+    sysroot_file: Vec<SysrootFileSpec>,
 }
 
+#[derive(Debug, Clone)]
+struct SysrootFileSpec {
+    sysroot_path: PathBuf,
+    src_path: PathBuf,
+}
+
+impl FromStr for SysrootFileSpec {
+    type Err = anyhow::Error;
+    fn from_str(spec: &str) -> Result<Self> {
+        let (sysroot_path, src_path) = cliutil::split_key_value(spec)?;
+        let sysroot_path = PathBuf::from(sysroot_path);
+        if !sysroot_path.is_absolute() {
+            bail!(
+                "Invalid sysroot spec: {:?}, {:?} must be absolute",
+                spec,
+                sysroot_path
+            )
+        }
+        return Ok(Self {
+            sysroot_path,
+            src_path: PathBuf::from(src_path),
+        });
+    }
+}
+
+impl SysrootFileSpec {
+    pub fn install(&self, sysroot: &Path) -> Result<()> {
+        // TODO: Maybe we can hard link or bindmount the files to save the copy cost?
+        let dest = sysroot.join(&self.sysroot_path);
+        let dest_dir = dest
+            .parent()
+            .with_context(|| format!("{dest:?} must have a parent"))?;
+        std::fs::create_dir_all(dest_dir)?;
+        std::fs::copy(&self.src_path, dest)?;
+        Ok(())
+    }
+}
+
+fn extract_binary_package_files<P: AsRef<Path>>(
+    bin_pkg: P,
+    xpak_specs: &[XpakSpec],
+    output_file_specs: &[OutputFileSpec],
+) -> Result<()> {
+    if xpak_specs.is_empty() && output_file_specs.is_empty() {
+        return Ok(());
+    }
+    let mut pkg = BinaryPackage::new(bin_pkg)?;
+    pkg.extract_xpak_files(xpak_specs)?;
+    pkg.extract_out_files(output_file_specs)?;
+    Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct EbuildMetadata {
+    source: PathBuf,
+    overlay: String,
+    category: String,
+    package_name: String,
+    file_name: String,
+}
+
+impl FromStr for EbuildMetadata {
+    type Err = anyhow::Error;
+
+    fn from_str(spec: &str) -> Result<Self> {
+        let (path, source) = cliutil::split_key_value(spec)?;
+        // We expect path to be in the following form:
+        // <overlay>/<category>/<packageName>/<packageName>-<version>.ebuild
+        // i.e., third_party/chromiumos-overlay/app-accessibility/brltty/brltty-6.3-r6.ebuild
+        // TODO: this currently fails with absolute paths.
+        let stripped = path
+            .strip_suffix(EBUILD_EXT)
+            .ok_or(anyhow!("ebuild must have .ebuild suffix (got {:?}", path))?;
+        let (rest, _) = Version::from_str_suffix(&stripped)?;
+        let parts: Vec<_> = rest.split("/").collect();
+        if parts.len() < 4 {
+            bail!("unable to parse ebuild path: {:?}", path)
+        }
+
+        return Ok(Self {
+            source: source.into(),
+            package_name: parts[parts.len() - 2].into(),
+            category: parts[parts.len() - 3].into(),
+            overlay: parts[0..parts.len() - 3].join("/"),
+            file_name: Path::new(source)
+                .file_name()
+                .with_context(|| "Ebuild must have a file name")?
+                .to_string_lossy()
+                .into(),
+        });
+    }
+}
+
+fn main() -> Result<()> {
+    let args = Cli::parse();
+    let mut cfg = mountsdk::get_mount_config(args.sdk, args.overlay, args.login_mode)?;
+
+    let r = runfiles::Runfiles::create()?;
+
+    cfg.bind_mounts.push(BindMount {
+        source: r.rlocation("chromiumos/bazel/ebuild/private/cmd/build_package/build_package.sh"),
+        mount_path: PathBuf::from(MAIN_SCRIPT),
+    });
+
+    let ebuild_mount_dir: PathBuf = [
+        mountsdk::SOURCE_DIR,
+        "src",
+        &args.ebuild.overlay,
+        &args.ebuild.category,
+        &args.ebuild.package_name,
+    ]
+    .iter()
+    .collect();
+    let ebuild_path = ebuild_mount_dir.join(&args.ebuild.file_name);
+    cfg.bind_mounts.push(BindMount {
+        source: args.ebuild.source,
+        mount_path: ebuild_path.clone(),
+    });
+
+    cfg.remounts.push(ebuild_mount_dir.clone());
+
+    for mount in args.file {
+        cfg.bind_mounts.push(BindMount {
+            source: mount.source,
+            mount_path: ebuild_mount_dir.join(mount.mount_path),
+        })
+    }
+
+    for mount in args.distfile {
+        cfg.bind_mounts.push(BindMount {
+            source: mount.source,
+            mount_path: PathBuf::from("/var/cache/distfiles").join(mount.mount_path),
+        })
+    }
+
+    let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();
+
+    let sdk = MountedSDK::new(cfg)?;
+    let ebuild_path = sdk.root_dir().join(ebuild_path.strip_prefix("/")?);
+    let out_dir = sdk
+        .root_dir()
+        .outside
+        .join(&target_packages_dir.strip_prefix("/")?);
+    std::fs::create_dir_all(out_dir)?;
+    std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
+
+    let sysroot = sdk.root_dir().join("build").join(&args.board).outside;
+    for spec in args.sysroot_file {
+        spec.install(&sysroot)?;
+    }
+    let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
+    processes::run_and_check(
+        sdk.base_command()
+            .args([
+                MAIN_SCRIPT,
+                "ebuild",
+                "--skip-manifest",
+                &ebuild_path.inside.to_string_lossy(),
+                "clean",
+                "package",
+            ])
+            .env("BOARD", args.board)
+            .env("RUNFILES_DIR", runfiles_dir),
+    )?;
+
+    let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(
+        "{}.tbz2",
+        args.ebuild
+            .file_name
+            .strip_suffix(EBUILD_EXT)
+            .with_context(|| anyhow!("Ebuild file must end with .ebuild"))?
+    ));
+    std::fs::copy(
+        sdk.diff_dir().join(binary_out_path.strip_prefix("/")?),
+        &args.output,
+    )
+    .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
+    extract_binary_package_files(args.output, &args.xpak, &args.output_file)?;
+
+    Ok(())
+}

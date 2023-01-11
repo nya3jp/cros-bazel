@@ -319,6 +319,12 @@ _NORMAL_DEPENDENCIES = {
         },
     },
     "bazel/ebuild/private/cmd/build_package": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_crates__clap-4.0.32//:clap",
+            "nix": "@update_crates__nix-0.26.1//:nix",
+            "runfiles": "@update_crates__runfiles-0.1.0//:runfiles",
+        },
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
@@ -400,6 +406,8 @@ _NORMAL_ALIASES = {
         },
     },
     "bazel/ebuild/private/cmd/build_package": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/common/bazelutil": {
     },

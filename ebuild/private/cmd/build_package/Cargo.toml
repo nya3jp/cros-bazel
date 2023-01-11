@@ -6,3 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+binarypackage.workspace = true
+cliutil.workspace = true
+makechroot.workspace = true
+mountsdk.workspace = true
+processes.workspace = true
+version.workspace = true
+
+anyhow.workspace = true
+clap.workspace = true
+nix.workspace = true
+runfiles.workspace = true

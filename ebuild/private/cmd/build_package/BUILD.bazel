@@ -3,7 +3,29 @@
 # found in the LICENSE file.
 
 load("//bazel/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+bool_flag(
+    name = "use_rust_build_package",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "is_build_package_rust",
+    flag_values = {
+        ":use_rust_build_package": "true",
+    },
+)
+
+alias(
+    name = "build_package",
+    actual = select({
+        ":is_build_package_rust": ":build_package_rust",
+        "//conditions:default": ":build_package_go",
+    }),
+    visibility = ["//visibility:public"],
+)
 
 go_library(
     name = "build_package_lib",
@@ -27,7 +49,7 @@ go_library(
 )
 
 go_binary(
-    name = "build_package",
+    name = "build_package_go",
     embed = [":build_package_lib"],
     visibility = ["//visibility:public"],
 )
@@ -43,7 +65,20 @@ go_test(
     ],
 )
 
-rust_binary_crate(name = "build_package_rust")
+rust_binary_crate(
+    name = "build_package_rust",
+    crate_name = "build_package",
+    data = [":build_package.sh"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/cliutil:cliutil_rust",
+        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+        "//bazel/ebuild/private/common/mountsdk:mountsdk_rust",
+        "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+        "//bazel/ebuild/private/common/processes:processes_rust",
+        "//bazel/ebuild/private/common/standard/version:version_rust",
+    ],
+)
 
 rust_crate_test(
     name = "build_package_rust_test",

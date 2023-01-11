@@ -156,6 +156,18 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 [[package]]
 name = "build_package"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "binarypackage",
+ "clap",
+ "cliutil",
+ "makechroot",
+ "mountsdk",
+ "nix",
+ "processes",
+ "runfiles",
+ "version",
+]
 
 [[package]]
 name = "bytecount"
