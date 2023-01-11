@@ -6,7 +6,7 @@ use crate::helpers::OutputFileSpec;
 use crate::helpers::XpakSpec;
 use anyhow::{anyhow, bail, Context, Result};
 use bytes::ByteOrder;
-use nix::unistd::dup;
+use nix::fcntl::{fcntl, FcntlArg};
 use std::{
     collections::HashMap,
     fs::{File, OpenOptions},
@@ -33,25 +33,23 @@ impl BinaryPackage {
         Self::_new(path.as_ref())
     }
 
-    pub fn _new(path: &Path) -> Result<BinaryPackage> {
-        let f = File::open(&path)?;
+    fn _new(path: &Path) -> Result<BinaryPackage> {
+        let mut f = File::open(path)?;
         let md = std::fs::metadata(&path)?;
         let size = md.size();
 
-        let mut bp = Self {
-            xpak_start: 0,
-            size,
-            f,
-        };
         if size < 24 {
             bail!("corrupted .tbz2 file: size is too small")
         }
-        bp.expect_magic(size - 4, "STOP")
-            .with_context(|| CORRUPTED)?;
-        let bp_offset: u64 = u64::from(bp.read_u32(bp.size - 8).with_context(|| CORRUPTED)?);
-        bp.xpak_start = (bp.size - 8 - bp_offset)
-            .try_into()
-            .with_context(|| "corrupted .tbz2 file: invalid bp offset")?;
+        expect_magic(&mut f, size - 4, "STOP").with_context(|| CORRUPTED)?;
+        let bp_offset: u64 = u64::from(read_u32(&mut f, size - 8).with_context(|| CORRUPTED)?);
+        let mut bp = Self {
+            xpak_start: (size - 8 - bp_offset)
+                .try_into()
+                .with_context(|| "corrupted .tbz2 file: invalid bp offset")?,
+            size,
+            f,
+        };
         bp.expect_magic(bp.size - 16, "XPAKSTOP")
             .with_context(|| CORRUPTED)?;
         bp.expect_magic(bp.xpak_start, "XPAKPACK")
@@ -60,14 +58,17 @@ impl BinaryPackage {
         Ok(bp)
     }
 
-    pub fn new_tarball_reader(self: &Self) -> Result<std::io::Take<File>> {
-        let new_fd = dup(self.f.as_raw_fd())?;
+    pub fn new_tarball_reader(&self) -> Result<std::io::Take<File>> {
+        let new_fd = fcntl(
+            self.f.as_raw_fd(),
+            FcntlArg::F_DUPFD_CLOEXEC(self.f.as_raw_fd()),
+        )?;
         let mut f = unsafe { File::from_raw_fd(new_fd) };
         f.rewind()?;
         Ok(f.take(self.xpak_start))
     }
 
-    pub fn merge<P: AsRef<Path>>(self: &Self, dir: P) -> Result<()> {
+    pub fn merge<P: AsRef<Path>>(&self, dir: P) -> Result<()> {
         // Note that at the moment, ownership is not retained.
         // --same-owner should fix that, but:
         // 1) it can only be run with sudo.
@@ -94,12 +95,12 @@ impl BinaryPackage {
         };
 
         if !child.wait_with_output()?.status.success() {
-            bail ! ("failed to extract tarball - maybe multiple packages attempt to define the same file")
+            bail!("failed to extract tarball - maybe multiple packages attempt to define the same file")
         }
         Ok(())
     }
 
-    pub fn xpak(self: &mut Self) -> Result<HashMap<String, Vec<u8>>> {
+    pub fn xpak(&mut self) -> Result<HashMap<String, Vec<u8>>> {
         let index_len = u64::from(self.read_u32(self.xpak_start + 8)?);
         let data_len = u64::from(self.read_u32(self.xpak_start + 12)?);
         let index_start = self.xpak_start + 16;
@@ -140,7 +141,7 @@ impl BinaryPackage {
         Ok(xpak)
     }
 
-    pub fn extract_xpak_files(self: &mut Self, specs: &[XpakSpec]) -> Result<()> {
+    pub fn extract_xpak_files(&mut self, specs: &[XpakSpec]) -> Result<()> {
         if specs.len() == 0 {
             return Ok(());
         }
@@ -157,7 +158,7 @@ impl BinaryPackage {
         Ok(())
     }
 
-    pub fn extract_out_files(self: &mut Self, specs: &[OutputFileSpec]) -> Result<()> {
+    pub fn extract_out_files(&mut self, specs: &[OutputFileSpec]) -> Result<()> {
         if specs.len() == 0 {
             return Ok(());
         }
@@ -221,24 +222,30 @@ impl BinaryPackage {
         Ok(())
     }
 
-    fn read_u32(self: &mut Self, offset: u64) -> Result<u32> {
-        self.f.seek(Start(offset))?;
-        let mut buffer = [0_u8; std::mem::size_of::<u32>()];
-        (&mut self.f).read_exact(&mut buffer)?;
-        Ok(bytes::BigEndian::read_u32(&mut buffer))
+    fn read_u32(&mut self, offset: u64) -> Result<u32> {
+        read_u32(&mut self.f, offset)
     }
 
-    fn expect_magic(self: &mut Self, offset: u64, want: &str) -> Result<()> {
-        self.f.seek(Start(offset))?;
-        let mut got: String = "".to_string();
-        (&mut self.f)
-            .take(want.len() as u64)
-            .read_to_string(&mut got)?;
-        if got != want {
-            bail!("Bad magic: got {got}, want {want}");
-        }
-        Ok(())
+    fn expect_magic(&mut self, offset: u64, want: &str) -> Result<()> {
+        expect_magic(&mut self.f, offset, want)
     }
+}
+
+fn read_u32(f: &mut File, offset: u64) -> Result<u32> {
+    f.seek(Start(offset))?;
+    let mut buffer = [0_u8; std::mem::size_of::<u32>()];
+    f.read_exact(&mut buffer)?;
+    Ok(bytes::BigEndian::read_u32(&mut buffer))
+}
+
+fn expect_magic(f: &mut File, offset: u64, want: &str) -> Result<()> {
+    f.seek(Start(offset))?;
+    let mut got: String = "".to_string();
+    f.take(want.len() as u64).read_to_string(&mut got)?;
+    if got != want {
+        bail!("Bad magic: got {got}, want {want}");
+    }
+    Ok(())
 }
 
 #[cfg(test)]
