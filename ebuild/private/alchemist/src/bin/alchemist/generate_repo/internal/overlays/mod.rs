@@ -45,7 +45,7 @@ pub struct EBuildEntry {
 }
 
 impl EBuildEntry {
-    pub fn try_new(board: &str, package: &Package, resolver: &PackageResolver) -> Result<Self> {
+    pub fn try_new(package: &Package, resolver: &PackageResolver) -> Result<Self> {
         let ebuild_name = package
             .details
             .ebuild_path
@@ -104,12 +104,11 @@ impl EBuildEntry {
             .iter()
             .any(|v| v == &package.details.package_name)
         {
-            // The primordial packages need to use the -base SDK because they are used
-            // as inputs to the final board SDK.
-            format!("{}-base", board)
+            "//internal/sdk:base"
         } else {
-            board.to_owned()
-        };
+            "//internal/sdk"
+        }
+        .to_owned();
 
         Ok(Self {
             ebuild_name,
@@ -135,7 +134,6 @@ struct PackagesInDir<'a> {
 }
 
 fn generate_internal_package_build_file(
-    board: &str,
     packages_in_dir: &PackagesInDir,
     out: &Path,
     resolver: &PackageResolver,
@@ -144,7 +142,7 @@ fn generate_internal_package_build_file(
         ebuilds: packages_in_dir
             .packages
             .iter()
-            .map(|package| EBuildEntry::try_new(board, *package, resolver))
+            .map(|package| EBuildEntry::try_new(*package, resolver))
             .collect::<Result<_>>()?,
     };
 
@@ -159,7 +157,6 @@ fn generate_internal_package_build_file(
 }
 
 fn generate_internal_package(
-    board: &str,
     packages_in_dir: PackagesInDir,
     package_output_dir: &Path,
     translator: &PathTranslator,
@@ -198,7 +195,6 @@ fn generate_internal_package(
 
     // Generate `BUILD.bazel`.
     generate_internal_package_build_file(
-        board,
         &packages_in_dir,
         &package_output_dir.join("BUILD.bazel"),
         resolver,
@@ -232,7 +228,6 @@ fn join_by_package_dir<'a>(
 
 pub fn generate_internal_packages(
     all_packages: &Vec<Package>,
-    board: &str,
     resolver: &PackageResolver,
     translator: &PathTranslator,
     output_dir: &Path,
@@ -246,12 +241,6 @@ pub fn generate_internal_packages(
             let package_output_dir = output_dir
                 .join("internal/overlays")
                 .join(relative_package_dir);
-            generate_internal_package(
-                board,
-                packages_in_dir,
-                &package_output_dir,
-                translator,
-                resolver,
-            )
+            generate_internal_package(packages_in_dir, &package_output_dir, translator, resolver)
         })
 }

@@ -18,6 +18,7 @@ use alchemist::{
     fakechroot::enter_fake_chroot,
     repository::RepositorySet,
     resolver::PackageResolver,
+    toolchain::load_toolchains,
 };
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
@@ -167,12 +168,15 @@ fn main() -> Result<()> {
             dump_package_main(&resolver, atoms)?;
         }
         Commands::GenerateRepo { output_dir } => {
+            let toolchains = load_toolchains(&repos)?;
+
             generate_repo_main(
                 &args.board,
                 &repos,
                 &loader,
                 &resolver,
                 &translator,
+                &toolchains,
                 &output_dir,
             )?;
         }

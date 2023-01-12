@@ -16,6 +16,7 @@ use itertools::Itertools;
 use serde::Serialize;
 
 pub static CHROOT_SRC_DIR: &str = "/mnt/host/source/src";
+pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
 
 pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n";
 

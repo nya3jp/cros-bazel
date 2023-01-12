@@ -212,10 +212,12 @@ impl Repository {
     }
 }
 
-/// Holds a set of [`Repository`].
+/// Holds a set of at least one [`Repository`].
 #[derive(Clone, Debug)]
 pub struct RepositorySet {
     repos: HashMap<String, Repository>,
+    // Keeps the insertion order of `repos`.
+    order: Vec<String>,
 }
 
 impl RepositorySet {
@@ -248,22 +250,29 @@ impl RepositorySet {
         // Read layout.conf in repositories to build a map from repository names
         // to repository layout info.
         let mut layout_map = HashMap::<String, RepositoryLayout>::new();
+        let mut order: Vec<String> = Vec::new();
         for repo_dir in iter::once(primary_repo_dir.borrow())
             .chain(secondary_repo_dirs.split_ascii_whitespace())
         {
             let repo_dir = PathBuf::from(repo_dir);
             let layout = RepositoryLayout::load(&repo_dir)?;
-            if let Some(old_layout) = layout_map.insert(layout.name.to_owned(), layout) {
+            let name = layout.name.to_owned();
+            if let Some(old_layout) = layout_map.insert(name.to_owned(), layout) {
                 bail!(
                     "multiple repositories have the same name: {}",
                     old_layout.name
                 );
             }
+            order.push(name);
+        }
+
+        if order.is_empty() {
+            bail!("Repository contains no overlays");
         }
 
         // Finally, build a map from repository names to Repository objects,
         // resolving references.
-        let repos = layout_map
+        let repos: HashMap<String, Repository> = layout_map
             .keys()
             .map(|name| Repository::new(name, &layout_map))
             .collect::<Result<Vec<_>>>()?
@@ -271,7 +280,28 @@ impl RepositorySet {
             .map(|repo| (repo.name().to_owned(), repo))
             .collect();
 
-        Ok(Self { repos })
+        Ok(Self { repos, order })
+    }
+
+    /// Returns the repositories from most generic to most specific.
+    pub fn get_repos(&self) -> Vec<&Repository> {
+        let mut repo_list: Vec<&Repository> = Vec::new();
+        for name in &self.order {
+            repo_list.push(self.get_repo_by_name(name).unwrap());
+        }
+
+        repo_list
+    }
+
+    /// Returns the primary/leaf repository.
+    ///
+    /// i.e., overlay-arm64-generic
+    pub fn primary(&self) -> &Repository {
+        let name = self
+            .order
+            .last()
+            .expect("repository set should not be empty");
+        self.get_repo_by_name(name).unwrap()
     }
 
     /// Looks up a repository by its name.

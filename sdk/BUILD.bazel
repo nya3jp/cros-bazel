@@ -17,6 +17,7 @@ pkg_tar(
         "//bazel/sdk/usr/src",
     ],
     extension = "tar.gz",
+    visibility = ["//visibility:public"],
 )
 
 sdk_from_archive(

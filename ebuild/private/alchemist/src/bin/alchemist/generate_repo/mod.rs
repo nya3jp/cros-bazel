@@ -26,12 +26,13 @@ use alchemist::{
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
+    toolchain::ToolchainConfig,
 };
 use anyhow::Result;
 use rayon::prelude::*;
 
 use self::{
-    common::Package, internal::overlays::generate_internal_packages,
+    common::Package, internal::overlays::generate_internal_packages, internal::sdk::generate_sdk,
     public::generate_public_packages, repositories::generate_repositories_file,
 };
 
@@ -103,6 +104,7 @@ pub fn generate_repo_main(
     loader: &CachedPackageLoader,
     resolver: &PackageResolver,
     translator: &PathTranslator,
+    toolchain_config: &ToolchainConfig,
     output_dir: &Path,
 ) -> Result<()> {
     match remove_dir_all(output_dir) {
@@ -118,9 +120,10 @@ pub fn generate_repo_main(
 
     let all_packages = analyze_packages(all_details, resolver);
 
-    generate_internal_packages(&all_packages, board, resolver, translator, output_dir)?;
+    generate_internal_packages(&all_packages, resolver, translator, output_dir)?;
     generate_public_packages(&all_packages, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
+    generate_sdk(board, repos, toolchain_config, output_dir)?;
 
     File::create(output_dir.join("BUILD.bazel"))?.write_all(&[])?;
     File::create(output_dir.join("WORKSPACE.bazel"))?.write_all(&[])?;
