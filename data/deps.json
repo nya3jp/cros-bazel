@@ -700,8 +700,8 @@
     "localSrc": [
       "//aosp/frameworks/ml:src",
       "//aosp/hardware/interfaces/neuralnetworks:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -731,8 +731,8 @@
     "localSrc": [
       "//aosp/frameworks/ml:src",
       "//aosp/hardware/interfaces/neuralnetworks:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -758,10 +758,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/attestation:src",
       "//platform2/common-mk:src",
       "//platform2/libhwsec-foundation:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -792,16 +792,16 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/attestation:src",
       "//platform2/chaps:src",
       "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
-      "//platform2/metrics/memd:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -871,8 +871,8 @@
     ],
     "localSrc": [
       "//config:src",
-      "//third_party/autotest/files/server/cros/faft/fw-testing-configs:src",
-      "//third_party/autotest/files:src"
+      "//third_party/autotest/files:src",
+      "//third_party/autotest/files/server/cros/faft/fw-testing-configs:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/virtual/autotest-assistant-libs:0",
@@ -887,9 +887,9 @@
     "version": "9999",
     "buildDeps": [],
     "localSrc": [
+      "//platform2:src",
       "//platform2/avtest_label_detect:src",
-      "//platform2/common-mk:src",
-      "//platform2:src"
+      "//platform2/common-mk:src"
     ],
     "runtimeDeps": [],
     "srcUris": {}
@@ -906,9 +906,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/biod:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -942,10 +942,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/bootid-logger:src",
       "//platform2/common-mk:src",
       "//platform2/croslog:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -967,10 +967,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/cryptohome/dbus_bindings:src",
-      "//platform2/cryptohome:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/cryptohome:src",
+      "//platform2/cryptohome/dbus_bindings:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -991,9 +991,9 @@
       "//third_party/chromiumos-overlay/sys-apps/rootdev:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/bootstat:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1015,8 +1015,8 @@
     ],
     "localSrc": [
       "//platform/cbor:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1036,9 +1036,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chaps:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1071,15 +1071,15 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chaps:src",
       "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
-      "//platform2/metrics/memd:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1278,9 +1278,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-common-script:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1301,11 +1301,11 @@
     ],
     "localSrc": [
       "//platform/dev:src",
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
-      "//platform2/power_manager/dbus_bindings:src",
       "//platform2/power_manager:src",
-      "//platform2:src",
+      "//platform2/power_manager/dbus_bindings:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1441,9 +1441,9 @@
       "//third_party/chromiumos-overlay/sys-apps/rootdev:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/image-burner:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1472,12 +1472,12 @@
       "//third_party/portage-stable/dev-libs/re2:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/init/upstart/test-init:src",
-      "//platform2/init:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/init:src",
+      "//platform2/init/upstart/test-init:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1523,11 +1523,11 @@
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
       "//platform2/installer:src",
       "//platform2/verity:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1606,15 +1606,15 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
       "//platform2/libcontainer:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2/login_manager/dbus_bindings:src",
       "//platform2/login_manager:src",
-      "//platform2/metrics/memd:src",
+      "//platform2/login_manager/dbus_bindings:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1681,9 +1681,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/storage_info:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1747,9 +1747,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/trim:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1816,12 +1816,12 @@
       "//third_party/portage-stable/sys-libs/zlib:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/crash-reporter:src",
       "//platform2/libcrossystem:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1882,10 +1882,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/android:src",
       "//platform2/camera/build:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1919,10 +1919,11 @@
       "//third_party/portage-stable/x11-base/xorg-proto:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/common:src",
-      "//platform2/camera/features/document_scanning:src",
       "//platform2/camera/features:src",
+      "//platform2/camera/features/document_scanning:src",
       "//platform2/camera/gpu:src",
       "//platform2/camera/include:src",
       "//platform2/camera/mojo:src",
@@ -1930,9 +1931,8 @@
       "//platform2/common-mk:src",
       "//platform2/iioservice/libiioservice_ipc:src",
       "//platform2/iioservice/mojo:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1961,11 +1961,11 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/include:src",
       "//platform2/camera/tools:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -1997,18 +1997,18 @@
       "//third_party/chromiumos-overlay/x11-libs/libdrm:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/common:src",
-      "//platform2/camera/features/document_scanning:src",
       "//platform2/camera/features:src",
+      "//platform2/camera/features/document_scanning:src",
       "//platform2/camera/gpu:src",
-      "//platform2/camera/hal/usb:src",
       "//platform2/camera/hal:src",
+      "//platform2/camera/hal/usb:src",
       "//platform2/camera/hal_adapter:src",
       "//platform2/camera/include:src",
       "//platform2/camera/mojo:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2065,11 +2065,11 @@
       "//third_party/chromiumos-overlay/sys-apps/util-linux:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/cros-disks:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2298,11 +2298,11 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/croslog:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2377,10 +2377,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/cryptohome/dbus_bindings:src",
-      "//platform2/cryptohome:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/cryptohome:src",
+      "//platform2/cryptohome/dbus_bindings:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2419,13 +2419,13 @@
       "//third_party/portage-stable/sys-fs/ecryptfs-utils:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/cryptohome/dbus_bindings:src",
-      "//platform2/cryptohome:src",
-      "//platform2/libhwsec-foundation:src",
-      "//platform2/libhwsec:src",
-      "//platform2/secure_erase_file:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/cryptohome:src",
+      "//platform2/cryptohome/dbus_bindings:src",
+      "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
+      "//platform2/secure_erase_file:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2494,13 +2494,13 @@
       "//third_party/portage-stable/sys-libs/libselinux:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/cryptohome/dbus_bindings:src",
-      "//platform2/cryptohome:src",
-      "//platform2/libhwsec-foundation:src",
-      "//platform2/libhwsec:src",
-      "//platform2/secure_erase_file:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/cryptohome:src",
+      "//platform2/cryptohome/dbus_bindings:src",
+      "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
+      "//platform2/secure_erase_file:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2544,10 +2544,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/debugd/dbus_bindings:src",
-      "//platform2/debugd:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/debugd:src",
+      "//platform2/debugd/dbus_bindings:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2583,12 +2583,12 @@
       "//third_party/portage-stable/sys-libs/libcap:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/debugd/dbus_bindings:src",
-      "//platform2/debugd:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/debugd:src",
+      "//platform2/debugd/dbus_bindings:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2627,9 +2627,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/dev-install:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2672,11 +2672,11 @@
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
-      "//platform2/diagnostics/grpc:src",
       "//platform2/diagnostics:src",
-      "//platform2:src",
+      "//platform2/diagnostics/grpc:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2711,10 +2711,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/dlcservice/dbus_adaptors:src",
-      "//platform2/dlcservice:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/dlcservice:src",
+      "//platform2/dlcservice/dbus_adaptors:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2745,12 +2745,12 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/dlcservice/dbus_adaptors:src",
-      "//platform2/dlcservice:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/dlcservice:src",
+      "//platform2/dlcservice/dbus_adaptors:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2783,9 +2783,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/dlp:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -2821,13 +2821,13 @@
       "//third_party/portage-stable/net-misc/curl:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/dns-proxy:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "//platform2/shill/dbus/client:src",
       "//platform2/shill/net:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3054,11 +3054,11 @@
       "//third_party/chromiumos-overlay/media-libs/minigbm:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
       "//platform2/libec:src",
       "//platform2/runtime_probe:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3083,9 +3083,9 @@
       "//third_party/chromiumos-overlay/sys-apps/dbus:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/featured:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3106,9 +3106,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/foomatic_shell:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3133,9 +3133,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/fusebox:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3236,8 +3236,8 @@
       "//third_party/portage-stable/net-misc/curl:0"
     ],
     "localSrc": [
-      "//third_party/breakpad/src/third_party/lss:src",
-      "//third_party/breakpad:src"
+      "//third_party/breakpad:src",
+      "//third_party/breakpad/src/third_party/lss:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/dev-rust/rustc-demangle-capi:0",
@@ -3331,12 +3331,12 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
       "//platform2/hardware_verifier:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3362,11 +3362,11 @@
       "//third_party/chromiumos-overlay/dev-go/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/hardware_verifier:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3500,11 +3500,11 @@
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/hps:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3532,11 +3532,11 @@
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/hps:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3567,14 +3567,14 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/attestation:src",
       "//platform2/common-mk:src",
       "//platform2/hwsec-test-utils:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3604,14 +3604,14 @@
     ],
     "localSrc": [
       "//aosp/frameworks/native:src",
+      "//platform2:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice:src",
       "//platform2/iioservice/libiioservice_ipc:src",
       "//platform2/iioservice/mojo:src",
-      "//platform2/iioservice:src",
       "//platform2/libmems:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3640,12 +3640,12 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice:src",
       "//platform2/iioservice/libiioservice_ipc:src",
       "//platform2/iioservice/mojo:src",
-      "//platform2/iioservice:src",
       "//platform2/libmems:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3667,9 +3667,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/imageloader:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3697,9 +3697,9 @@
       "//third_party/portage-stable/sys-fs/lvm2:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/imageloader:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3776,12 +3776,12 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/kerberos:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3809,8 +3809,8 @@
       "//third_party/chromiumos-overlay/net-print/cups:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/lexmark-fax-pnh:src",
       "@chromite//:src"
     ],
@@ -3844,9 +3844,9 @@
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libbrillo:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3887,8 +3887,8 @@
     ],
     "localSrc": [
       "//platform/libchrome:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3917,9 +3917,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libchromeos-ui:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3955,9 +3955,9 @@
       "//third_party/portage-stable/sys-fs/lvm2:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libcontainer:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -3981,9 +3981,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libcrossystem:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4005,10 +4005,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/biod:src",
       "//platform2/common-mk:src",
       "//platform2/libec:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4045,12 +4045,12 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
-      "//platform2/libhwsec:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4078,13 +4078,13 @@
       "//third_party/portage-stable/dev-libs/flatbuffers:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/tpm2-simulator:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4111,11 +4111,11 @@
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice:src",
       "//platform2/iioservice/libiioservice_ipc:src",
       "//platform2/iioservice/mojo:src",
-      "//platform2/iioservice:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4135,9 +4135,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libipp:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4159,9 +4159,9 @@
       "//third_party/chromiumos-overlay/net-libs/libiio:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libmems:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4183,9 +4183,9 @@
       "//third_party/portage-stable/sys-apps/keyutils:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4222,8 +4222,8 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
-      "//platform2/sirenia/libsirenia/sirenia-rpc-macros:src",
-      "//platform2/sirenia/libsirenia:src"
+      "//platform2/sirenia/libsirenia:src",
+      "//platform2/sirenia/libsirenia/sirenia-rpc-macros:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/crosvm-base:0",
@@ -4261,12 +4261,12 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/libtpmcrypto:src",
       "//platform2/trunks:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4291,9 +4291,9 @@
       "//third_party/chromiumos-overlay/media-libs/minigbm:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/arc/vm/libvda:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4339,12 +4339,12 @@
       "//third_party/portage-stable/virtual/libusb:1"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/lorgnette/hwtests:src",
-      "//platform2/lorgnette:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/lorgnette:src",
+      "//platform2/lorgnette/hwtests:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4372,10 +4372,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/lorgnette/hwtests:src",
-      "//platform2/lorgnette:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/lorgnette:src",
+      "//platform2/lorgnette/hwtests:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4465,14 +4465,14 @@
       "//third_party/portage-stable/dev-libs/re2:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice:src",
       "//platform2/iioservice/libiioservice_ipc:src",
       "//platform2/iioservice/mojo:src",
-      "//platform2/iioservice:src",
       "//platform2/libmems:src",
       "//platform2/mems_setup:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4502,10 +4502,10 @@
       "//third_party/portage-stable/dev-libs/re2:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4552,9 +4552,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/missive:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4586,11 +4586,11 @@
       "//third_party/portage-stable/virtual/udev:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
-      "//platform2/mist:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
+      "//platform2/mist:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4615,9 +4615,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/ml:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4641,10 +4641,10 @@
       "//third_party/chromiumos-overlay/sci-libs/tensorflow:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/ml:src",
       "//platform2/ml_benchmark:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4693,10 +4693,10 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/ml:src",
       "//platform2/ml_benchmark:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4814,9 +4814,9 @@
       "//third_party/chromiumos-overlay/sys-apps/dbus:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/modem-utilities:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4841,9 +4841,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/modemfwd:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4867,9 +4867,9 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/mojo_service_manager:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4895,9 +4895,9 @@
       "//third_party/portage-stable/virtual/udev:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/mtpd:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4928,9 +4928,9 @@
       "//aosp/system/libfmq:src",
       "//aosp/system/libhidl:src",
       "//aosp/system/logging:src",
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/nnapi:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -4967,11 +4967,11 @@
       "//third_party/chromiumos-overlay/sys-apps/dbus:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
-      "//platform2/oobe_config:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
+      "//platform2/oobe_config:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5014,11 +5014,11 @@
       "//third_party/portage-stable/net-firewall/iptables:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
-      "//platform2/p2p:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
+      "//platform2/p2p:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5046,9 +5046,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/patchpanel:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5077,12 +5077,12 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "//platform2/patchpanel:src",
       "//platform2/shill/net:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5129,9 +5129,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/perfetto_simple_producer:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5151,9 +5151,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/permission_broker:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5180,9 +5180,9 @@
       "//third_party/portage-stable/virtual/udev:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/permission_broker:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5211,9 +5211,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/policy_proto:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5254,9 +5254,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/policy_utils:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5276,10 +5276,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/power_manager/dbus_bindings:src",
-      "//platform2/power_manager:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/power_manager:src",
+      "//platform2/power_manager/dbus_bindings:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5314,18 +5314,18 @@
       "//third_party/portage-stable/virtual/udev:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
+      "//platform2/iioservice:src",
       "//platform2/iioservice/libiioservice_ipc:src",
       "//platform2/iioservice/mojo:src",
-      "//platform2/iioservice:src",
       "//platform2/libec:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
-      "//platform2/power_manager/dbus_bindings:src",
+      "//platform2/metrics/memd:src",
       "//platform2/power_manager:src",
+      "//platform2/power_manager/dbus_bindings:src",
       "//platform2/shill/dbus/client:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5362,9 +5362,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/print_tools:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5430,8 +5430,8 @@
       "//third_party/portage-stable/dev-libs/re2:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5524,10 +5524,10 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libec:src",
       "//platform2/rgbkbd:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5553,10 +5553,10 @@
       "//third_party/portage-stable/sys-libs/libcap:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libcontainer:src",
       "//platform2/run_oci:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5580,9 +5580,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/runtime_probe:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5612,11 +5612,11 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
       "//platform2/libec:src",
       "//platform2/runtime_probe:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5669,9 +5669,9 @@
       "//third_party/portage-stable/net-libs/libvncserver:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/screen-capture-utils:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5700,11 +5700,11 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
-      "//platform2/secanomalyd:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
+      "//platform2/secanomalyd:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5728,9 +5728,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/secure_erase_file:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5750,9 +5750,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/secure-wipe:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5790,10 +5790,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/login_manager/dbus_bindings:src",
-      "//platform2/login_manager:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/login_manager:src",
+      "//platform2/login_manager/dbus_bindings:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5813,13 +5813,13 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
+      "//platform2/shill:src",
       "//platform2/shill/dbus/client:src",
       "//platform2/shill/dbus_bindings:src",
       "//platform2/shill/net:src",
       "//platform2/shill/test-scripts:src",
-      "//platform2/shill:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5842,13 +5842,13 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
+      "//platform2/shill:src",
       "//platform2/shill/dbus/client:src",
       "//platform2/shill/dbus_bindings:src",
       "//platform2/shill/net:src",
       "//platform2/shill/test-scripts:src",
-      "//platform2/shill:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5872,13 +5872,13 @@
       "//third_party/portage-stable/dev-libs/re2:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
+      "//platform2/shill:src",
       "//platform2/shill/dbus/client:src",
       "//platform2/shill/dbus_bindings:src",
       "//platform2/shill/net:src",
       "//platform2/shill/test-scripts:src",
-      "//platform2/shill:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -5941,18 +5941,18 @@
       "//third_party/portage-stable/net-libs/libtirpc:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/chaps:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
+      "//platform2/shill:src",
       "//platform2/shill/dbus/client:src",
       "//platform2/shill/dbus_bindings:src",
       "//platform2/shill/net:src",
       "//platform2/shill/test-scripts:src",
-      "//platform2/shill:src",
       "//platform2/vpn-manager:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6044,12 +6044,12 @@
       "//third_party/chromiumos-overlay/virtual/rust:0"
     ],
     "localSrc": [
+      "//platform2/sirenia:src",
       "//platform2/sirenia/dbus_bindings:src",
-      "//platform2/sirenia/libsirenia/sirenia-rpc-macros:src",
       "//platform2/sirenia/libsirenia:src",
+      "//platform2/sirenia/libsirenia/sirenia-rpc-macros:src",
       "//platform2/sirenia/manatee-client:src",
-      "//platform2/sirenia/manatee-runtime:src",
-      "//platform2/sirenia:src"
+      "//platform2/sirenia/manatee-runtime:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/cronista:0",
@@ -6097,10 +6097,10 @@
       "//third_party/chromiumos-overlay/sys-fs/fuse:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
       "//platform2/smbfs:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6130,10 +6130,10 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
       "//platform2/smbprovider:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6159,10 +6159,10 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/spaced:src",
       "//platform2/system_api:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6196,9 +6196,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/syslog-cat:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6237,10 +6237,10 @@
       "//third_party/portage-stable/net-misc/curl:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libpasswordprovider:src",
       "//platform2/system-proxy:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6270,9 +6270,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/system_api:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6401,8 +6401,8 @@
     ],
     "localSrc": [
       "//platform/tast-tests:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6442,8 +6442,8 @@
       "//third_party/chromiumos-overlay/dev-go/crypto:0"
     ],
     "localSrc": [
-      "//platform/tast-tests:src",
-      "//platform/tast:src"
+      "//platform/tast:src",
+      "//platform/tast-tests:src"
     ],
     "runtimeDeps": [
       "//third_party/chromiumos-overlay/chromeos-base/drm-tests:0",
@@ -6534,8 +6534,8 @@
     "version": "9999",
     "buildDeps": [],
     "localSrc": [
-      "//third_party/autotest/files/server/cros/faft/fw-testing-configs:src",
-      "//third_party/autotest/files:src"
+      "//third_party/autotest/files:src",
+      "//third_party/autotest/files/server/cros/faft/fw-testing-configs:src"
     ],
     "runtimeDeps": [],
     "srcUris": {}
@@ -6567,10 +6567,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/libhwsec-foundation:src",
       "//platform2/tpm_manager:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6600,15 +6600,15 @@
       "//third_party/chromiumos-overlay/sys-apps/baselayout:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/libtpmcrypto:src",
-      "//platform2/metrics/memd:src",
       "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6639,12 +6639,12 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/tpm_softclear_utils:src",
       "//platform2/trunks:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6683,10 +6683,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/trunks:src",
       "//platform2/u2fd:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6722,15 +6722,15 @@
       "//third_party/portage-stable/dev-libs/hidapi:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
-      "//platform2/libhwsec-foundation:src",
       "//platform2/libhwsec:src",
-      "//platform2/metrics/memd:src",
+      "//platform2/libhwsec-foundation:src",
       "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
       "//platform2/tpm_manager:src",
       "//platform2/trunks:src",
       "//platform2/u2fd:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6786,8 +6786,8 @@
     ],
     "localSrc": [
       "//aosp/system/update_engine:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6830,10 +6830,10 @@
     ],
     "localSrc": [
       "//aosp/system/update_engine:src",
-      "//platform2/common-mk:src",
-      "//platform2/diagnostics/grpc:src",
-      "//platform2/diagnostics:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/diagnostics:src",
+      "//platform2/diagnostics/grpc:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6876,11 +6876,11 @@
       "//third_party/chromiumos-overlay/sys-apps/usbguard:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
-      "//platform2/metrics/memd:src",
-      "//platform2/metrics:src",
-      "//platform2/usb_bouncer:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
+      "//platform2/metrics:src",
+      "//platform2/metrics/memd:src",
+      "//platform2/usb_bouncer:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -6997,9 +6997,9 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/verity:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -7024,8 +7024,8 @@
       "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/virtual-usb-printer:src",
       "@chromite//:src"
     ],
@@ -7056,9 +7056,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/vm_tools/proto:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -7101,9 +7101,9 @@
       "//third_party/chromiumos-overlay/net-vpn/strongswan:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/vpn-manager:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -7129,9 +7129,9 @@
       "//third_party/portage-stable/dev-libs/protobuf:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/common-mk:src",
       "//platform2/diagnostics/grpc:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -9279,8 +9279,8 @@
     ],
     "localSrc": [
       "//aosp/external/perfetto:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -10388,8 +10388,8 @@
       "//third_party/portage-stable/sys-libs/zlib:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/libtextclassifier:src",
       "@chromite//:src"
     ],
@@ -10500,8 +10500,8 @@
     ],
     "localSrc": [
       "//aosp/external/libutf:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -10548,8 +10548,8 @@
     ],
     "localSrc": [
       "//aosp/external/marisa-trie:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -10567,8 +10567,8 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/modp_b64:src",
       "@chromite//:src"
     ],
@@ -22690,8 +22690,8 @@
     ],
     "localSrc": [
       "//aosp/external/bsdiff:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -22820,8 +22820,8 @@
     ],
     "localSrc": [
       "//aosp/external/puffin:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -23372,10 +23372,10 @@
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/features/document_scanning:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -23403,13 +23403,13 @@
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/common:src",
       "//platform2/camera/hal/usb:src",
       "//platform2/camera/include:src",
       "//platform2/camera/mojo:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -23456,11 +23456,11 @@
       "//third_party/portage-stable/virtual/jpeg:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/common:src",
       "//platform2/camera/include:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -23484,10 +23484,10 @@
       "//third_party/chromiumos-overlay/dev-cpp/gtest:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/libfs:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -23529,11 +23529,11 @@
       "//third_party/chromiumos-overlay/media-libs/libyuv:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/common:src",
       "//platform2/camera/include:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -23565,13 +23565,13 @@
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/camera3_test:src",
       "//platform2/camera/common:src",
       "//platform2/camera/include:src",
       "//platform2/chromeos-config:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -23603,12 +23603,12 @@
       "//third_party/portage-stable/virtual/pkgconfig:0"
     ],
     "localSrc": [
+      "//platform2:src",
       "//platform2/camera/build:src",
       "//platform2/camera/common:src",
       "//platform2/camera/hal/usb:src",
       "//platform2/camera/include:src",
       "//platform2/common-mk:src",
-      "//platform2:src",
       "@chromite//:src"
     ],
     "runtimeDeps": [
@@ -25281,8 +25281,8 @@
       "//aosp/frameworks/proto_logging:src",
       "//aosp/packages/modules/Bluetooth/local:src",
       "//aosp/packages/modules/Bluetooth/upstream:src",
-      "//platform2/common-mk:src",
       "//platform2:src",
+      "//platform2/common-mk:src",
       "//third_party/rust_crates:src",
       "@chromite//:src"
     ],

@@ -10,7 +10,7 @@ use std::{
 use alchemist::{
     analyze::{
         dependency::analyze_dependencies,
-        source::{analyze_sources, fixup_sources, PackageSources},
+        source::{analyze_sources, fixup_sources, PackageLocalSourceOrigin, PackageSources},
     },
     data::PackageSlotKey,
     dependency::package::PackageAtomDependency,
@@ -410,7 +410,19 @@ pub fn dump_deps_main(
                     .map(|key| label_map.get(key).unwrap().clone())
                     .sorted()
                     .collect(),
-                local_src: package.sources.local_sources.clone(),
+                local_src: package
+                    .sources
+                    .local_sources
+                    .iter()
+                    .map(|source| {
+                        let repo_name = match source.origin {
+                            PackageLocalSourceOrigin::Src => "",
+                            PackageLocalSourceOrigin::Chrome => "@chrome",
+                            PackageLocalSourceOrigin::Chromite => "@chromite",
+                        };
+                        format!("{}//{}:src", repo_name, source.path)
+                    })
+                    .collect(),
                 src_uris: package
                     .sources
                     .remote_sources

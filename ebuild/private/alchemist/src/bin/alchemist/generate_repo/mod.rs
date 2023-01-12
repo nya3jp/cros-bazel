@@ -19,7 +19,10 @@ use anyhow::Result;
 use alchemist::{
     analyze::{
         dependency::{analyze_dependencies, PackageDependencies},
-        source::{analyze_sources, fixup_sources, PackageRemoteSource, PackageSources},
+        source::{
+            analyze_sources, fixup_sources, PackageLocalSourceOrigin, PackageRemoteSource,
+            PackageSources,
+        },
     },
     dependency::package::PackageAtomDependency,
     ebuild::{CachedPackageLoader, PackageDetails},
@@ -168,12 +171,13 @@ impl EBuildEntry {
             .sources
             .local_sources
             .iter()
-            .map(|label| {
-                if label.starts_with("@") {
-                    label.clone()
-                } else {
-                    format!("@{}", label)
-                }
+            .map(|source| {
+                let repo_name = match source.origin {
+                    PackageLocalSourceOrigin::Src => "@",
+                    PackageLocalSourceOrigin::Chrome => "@chrome",
+                    PackageLocalSourceOrigin::Chromite => "@chromite",
+                };
+                format!("{}//{}:src", repo_name, source.path)
             })
             .collect();
 

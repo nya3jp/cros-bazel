@@ -23,8 +23,36 @@ use crate::{
     ebuild::PackageDetails,
 };
 
-/// Represents local source code as a Bazel target label.
-pub type PackageLocalSource = String;
+/// Represents an origin of local source code.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum PackageLocalSourceOrigin {
+    /// ChromeOS source code at `/mnt/host/source/src`.
+    Src,
+    /// Chromite source code at `/mnt/host/source/chromite`.
+    Chromite,
+    /// Chrome source code.
+    Chrome,
+}
+
+/// Represents local source code.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct PackageLocalSource {
+    /// Origin of this source code.
+    pub origin: PackageLocalSourceOrigin,
+    /// The directory containg source code, relative to the root of the origin.
+    /// Empty string means all source code in the origin. The path must not end
+    /// with a slash.
+    pub path: String,
+}
+
+impl PackageLocalSource {
+    pub fn starts_with(&self, prefix: &Self) -> bool {
+        if self.origin != prefix.origin {
+            return false;
+        }
+        self.path == prefix.path || self.path.starts_with(&format!("{}/", &prefix.path))
+    }
+}
 
 /// Represents a source code archive to be fetched remotely to build a package.
 #[derive(Clone, Debug)]
@@ -54,7 +82,7 @@ impl PackageRemoteSource {
 /// Analyzed source information of a package. It is returned by
 /// [`analyze_sources`].
 pub struct PackageSources {
-    pub local_sources: Vec<String>,
+    pub local_sources: Vec<PackageLocalSource>,
     pub remote_sources: Vec<PackageRemoteSource>,
 }
 
@@ -84,7 +112,7 @@ fn get_cros_workon_array_variable(
     Ok(extended_values)
 }
 
-fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<String>> {
+fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<PackageLocalSource>> {
     let projects = match details.vars.hash_map().get("CROS_WORKON_PROJECT") {
         None => {
             // This is not a cros-workon package.
@@ -151,9 +179,12 @@ fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<String>> 
         }
     }
 
-    let mut source_labels = source_paths
+    let mut sources = source_paths
         .into_iter()
-        .map(|path| format!("//{}:src", path))
+        .map(|path| PackageLocalSource {
+            origin: PackageLocalSourceOrigin::Src,
+            path,
+        })
         .collect_vec();
 
     // Kernel packages need extra eclasses.
@@ -162,20 +193,26 @@ fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<String>> 
         .iter()
         .any(|p| p == "chromiumos/third_party/kernel")
     {
-        source_labels.push("//third_party/chromiumos-overlay/eclass/cros-kernel:src".to_owned());
+        sources.push(PackageLocalSource {
+            origin: PackageLocalSourceOrigin::Src,
+            path: "third_party/chromiumos-overlay/eclass/cros-kernel".to_owned(),
+        });
     }
 
-    Ok(source_labels)
+    Ok(sources)
 }
 
-fn extract_local_sources(details: &PackageDetails) -> Result<Vec<String>> {
-    let mut source_labels = extract_cros_workon_sources(details)?;
+fn extract_local_sources(details: &PackageDetails) -> Result<Vec<PackageLocalSource>> {
+    let mut sources = extract_cros_workon_sources(details)?;
 
     // Chromium packages need its source code.
     // TODO: Remove this hack.
     if details.inherited.contains("chromium-source") {
         // TODO: We need USE flags to add src-internal.
-        source_labels.push("@chrome//:src".to_owned());
+        sources.push(PackageLocalSource {
+            origin: PackageLocalSourceOrigin::Chrome,
+            path: String::new(),
+        });
     }
 
     // The platform eclass calls `platform2.py` which requires chromite.
@@ -187,13 +224,16 @@ fn extract_local_sources(details: &PackageDetails) -> Result<Vec<String>> {
         || details.inherited.contains("dlc")
         || details.package_name == "dev-libs/gobject-introspection"
     {
-        source_labels.push("@chromite//:src".to_owned());
+        sources.push(PackageLocalSource {
+            origin: PackageLocalSourceOrigin::Chromite,
+            path: String::new(),
+        })
     }
 
-    source_labels.sort();
-    source_labels.dedup();
+    sources.sort();
+    sources.dedup();
 
-    Ok(source_labels)
+    Ok(sources)
 }
 
 fn parse_uri_dependencies(deps: UriDependency, use_map: &UseMap) -> Result<Vec<UriAtomDependency>> {
@@ -322,60 +362,59 @@ pub fn fixup_sources<'a, I: IntoIterator<Item = &'a mut PackageSources>>(sources
     // When trying to build iioservice the mojo directory will be missing.
     // So this code will add //platform2/iioservice/mojo:src to iioservice.
 
-    let sources = sources_iter.into_iter().collect_vec();
+    let all_sources = sources_iter.into_iter().collect_vec();
 
-    let all_packages: Vec<String> = sources
+    let all_local_sources: Vec<PackageLocalSource> = all_sources
         .iter()
-        .flat_map(|data| &data.local_sources)
-        .filter_map(|label| label.strip_suffix(":src"))
+        .flat_map(|source| &source.local_sources)
         .sorted()
         .dedup()
-        .map(|package| package.to_owned())
+        .map(|source| source.clone())
         .collect();
 
-    let child_packages_map: HashMap<&str, Vec<&str>> = {
-        let mut child_packages_map: HashMap<&str, Vec<&str>> = all_packages
-            .iter()
-            .map(|package| (package.as_str(), Vec::new()))
-            .collect();
-        let mut parent_packages_stack = Vec::<&str>::new();
+    let child_sources_map: HashMap<&PackageLocalSource, Vec<&PackageLocalSource>> = {
+        let mut child_sources_map: HashMap<&PackageLocalSource, Vec<&PackageLocalSource>> =
+            all_local_sources
+                .iter()
+                .map(|source| (source, Vec::new()))
+                .collect();
+        let mut parent_sources_stack = Vec::<&PackageLocalSource>::new();
 
-        for current_package in all_packages.iter() {
-            while let Some(last_parent_package) = parent_packages_stack.pop() {
-                if current_package.starts_with(&format!("{}/", last_parent_package)) {
-                    parent_packages_stack.push(last_parent_package);
+        for current_source in all_local_sources.iter() {
+            while let Some(last_parent_source) = parent_sources_stack.pop() {
+                if current_source.starts_with(&last_parent_source) {
+                    parent_sources_stack.push(last_parent_source);
                     break;
                 }
             }
 
-            for parent_package in parent_packages_stack.iter() {
-                child_packages_map
-                    .get_mut(*parent_package)
+            for parent_source in parent_sources_stack.iter() {
+                child_sources_map
+                    .get_mut(*parent_source)
                     .unwrap()
-                    .push(current_package);
+                    .push(current_source);
             }
 
-            if current_package != "//platform2" {
-                parent_packages_stack.push(current_package);
+            if !(current_source.origin == PackageLocalSourceOrigin::Src
+                && current_source.path == "platform2")
+            {
+                parent_sources_stack.push(current_source);
             }
         }
 
-        child_packages_map
+        child_sources_map
     };
 
-    for source in sources {
+    for source in all_sources {
         let local_sources = std::mem::take(&mut source.local_sources);
         let local_sources = local_sources
             .into_iter()
-            .flat_map(|old_label| {
-                let mut new_labels = vec![old_label.clone()];
-                if let Some(old_package) = old_label.strip_suffix(":src") {
-                    if let Some(packages) = child_packages_map.get(old_package) {
-                        new_labels
-                            .extend(packages.iter().map(|package| format!("{}:src", *package)));
-                    }
+            .flat_map(|old_source| {
+                let mut new_sources = vec![old_source.clone()];
+                if let Some(child_sources) = child_sources_map.get(&old_source) {
+                    new_sources.extend(child_sources.iter().map(|source| (*source).clone()));
                 }
-                new_labels
+                new_sources
             })
             .sorted()
             .dedup()
