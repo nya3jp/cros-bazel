@@ -8,8 +8,8 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub struct XpakSpec {
-    pub(crate) xpak_header: String,
-    pub(crate) optional: bool,
+    pub xpak_header: String,
+    pub optional: bool,
     pub target_path: PathBuf,
 }
 
@@ -34,7 +34,7 @@ impl FromStr for XpakSpec {
 
 #[derive(Debug, Clone)]
 pub struct OutputFileSpec {
-    pub(crate) inside_path: String,
+    pub inside_path: String,
     pub target_path: PathBuf,
 }
 

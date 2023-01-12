@@ -125,7 +125,7 @@ impl BinaryPackage {
             let data_len = u64::from(self.read_u32(index_pos)?);
             index_pos += 4;
 
-            (&self.f).seek(Start(data_start + data_offset))?;
+            self.f.seek(Start(data_start + data_offset))?;
             let mut data = Vec::new();
             (&self.f).take(data_len).read_to_end(&mut data)?;
             if data.len() != data_len.try_into()? {
