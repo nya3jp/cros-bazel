@@ -4,7 +4,7 @@
 
 mod metadata;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::Result;
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use std::{
@@ -15,7 +15,7 @@ use std::{
 use version::Version;
 
 use crate::{
-    bash::{BashValue, BashVars},
+    bash::BashVars,
     config::bundle::ConfigBundle,
     data::{IUseMap, PackageSlotKey, Slot, UseMap},
     dependency::package::PackageRef,
@@ -25,13 +25,9 @@ use crate::{
 use self::metadata::EBuildEvaluator;
 
 /// Parses IUSE defined by ebuild/eclasses and returns as an [IUseMap].
-fn parse_iuse_map(vars: &BashVars) -> IUseMap {
-    vars.get("IUSE")
-        .and_then(|value| match value {
-            BashValue::Scalar(s) => Some(s.as_str()),
-            _ => None,
-        })
-        .unwrap_or_default()
+fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
+    Ok(vars
+        .get_scalar_or_default("IUSE")?
         .split_ascii_whitespace()
         .map(|token| {
             if let Some(name) = token.strip_prefix("+") {
@@ -43,7 +39,7 @@ fn parse_iuse_map(vars: &BashVars) -> IUseMap {
             (token, false)
         })
         .map(|(name, value)| (name.to_owned(), value))
-        .collect()
+        .collect())
 }
 
 #[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -57,18 +53,13 @@ pub enum Stability {
 impl Stability {
     /// Computes the stability of a package according to variables defined by
     /// profiles and ebuild/eclasses.
-    fn compute(vars: &BashVars, config: &ConfigBundle) -> Self {
+    fn compute(vars: &BashVars, config: &ConfigBundle) -> Result<Self> {
         let arch = config.env().get("ARCH").map(|s| &**s).unwrap_or_default();
 
         let mut default_stability = Stability::Unknown;
 
         for keyword in vars
-            .get("KEYWORDS")
-            .and_then(|value| match value {
-                BashValue::Scalar(s) => Some(s.as_str()),
-                _ => None,
-            })
-            .unwrap_or_default()
+            .get_scalar_or_default("KEYWORDS")?
             .split_ascii_whitespace()
         {
             let (stability, trimed_keyword) = {
@@ -81,13 +72,13 @@ impl Stability {
                 }
             };
             if trimed_keyword == arch {
-                return stability;
+                return Ok(stability);
             }
             if trimed_keyword == "*" {
                 default_stability = stability;
             }
         }
-        default_stability
+        Ok(default_stability)
     }
 }
 
@@ -162,21 +153,12 @@ impl PackageLoader {
             metadata.path_info.package_short_name,
         ]
         .join("/");
-        let stability = Stability::compute(&metadata.vars, &self.config);
+        let stability = Stability::compute(&metadata.vars, &self.config)?;
         let stable = stability == Stability::Stable;
 
-        let slot = Slot::<String>::new(
-            metadata
-                .vars
-                .get("SLOT")
-                .and_then(|value| match value {
-                    BashValue::Scalar(s) => Some(s.as_str()),
-                    _ => None,
-                })
-                .ok_or_else(|| anyhow!("SLOT not defined"))?,
-        );
+        let slot = Slot::<String>::new(metadata.vars.get_scalar("SLOT")?);
 
-        let iuse_map = parse_iuse_map(&metadata.vars);
+        let iuse_map = parse_iuse_map(&metadata.vars)?;
         let use_map = self.config.compute_use_map(
             &package_name,
             &metadata.path_info.version,
@@ -194,11 +176,7 @@ impl PackageLoader {
             use_map: &use_map,
         });
 
-        let raw_inherited = match metadata.vars.get("INHERITED") {
-            None => "",
-            Some(BashValue::Scalar(s)) => s.as_str(),
-            other => bail!("Invalid INHERITED value: {:?}", other),
-        };
+        let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;
         let inherited: HashSet<String> = raw_inherited
             .split_ascii_whitespace()
             .map(|s| s.to_owned())

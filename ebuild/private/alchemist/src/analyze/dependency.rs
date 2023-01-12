@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use itertools::Itertools;
 
 use crate::{
@@ -133,11 +133,7 @@ fn extract_dependencies(
         DependencyKind::Post => "PDEPEND",
     };
 
-    let raw_deps = match details.vars.get(var_name) {
-        None => "",
-        Some(BashValue::Scalar(s)) => s.as_str(),
-        Some(other) => bail!("Incorrect value for {}: {:?}", var_name, other),
-    };
+    let raw_deps = details.vars.get_scalar_or_default(var_name)?;
 
     let raw_extra_deps = get_extra_dependencies(details, kind);
 
@@ -151,7 +147,7 @@ fn extract_dependencies(
 fn is_rust_source_package(details: &PackageDetails) -> bool {
     let is_rust_package = details.inherited.contains("cros-rust");
     let is_cros_workon_package = details.inherited.contains("cros-workon");
-    let has_src_compile = match details.vars.get("HAS_SRC_COMPILE") {
+    let has_src_compile = match details.vars.hash_map().get("HAS_SRC_COMPILE") {
         Some(BashValue::Scalar(s)) if s == "1" => true,
         _ => false,
     };

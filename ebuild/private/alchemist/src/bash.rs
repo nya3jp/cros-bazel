@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::collections::HashMap;
-
-pub type BashVars = HashMap<String, BashValue>;
 
 /// Represents a shell variable value in bash.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -13,6 +11,83 @@ pub enum BashValue {
     Scalar(String),
     IndexedArray(Vec<String>),
     AssociativeArray(HashMap<String, String>),
+}
+
+/// Represents a set of [`BashValue`]. It wraps [`HashMap`] but provides methods
+/// for easier access.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BashVars {
+    values: HashMap<String, BashValue>,
+}
+
+impl BashVars {
+    /// Constructs a new [`BashVars`] from [`HashMap`].
+    pub fn new(values: HashMap<String, BashValue>) -> Self {
+        Self { values }
+    }
+
+    /// Returns the underlying [`HashMap`].
+    pub fn hash_map(&self) -> &HashMap<String, BashValue> {
+        &self.values
+    }
+
+    /// Gets a value with the specified name. If the value is missing, or it is
+    /// not a scalar value, it returns an error.
+    pub fn get_scalar(&self, name: &str) -> Result<&str> {
+        match self.values.get(name) {
+            Some(BashValue::Scalar(value)) => Ok(value),
+            Some(BashValue::IndexedArray(_)) => Err(anyhow!(
+                "{} is expected to be a scalar value, but an indexed array",
+                name
+            )),
+            Some(BashValue::AssociativeArray(_)) => Err(anyhow!(
+                "{} is expected to be a scalar value, but an associative array",
+                name
+            )),
+            None => Err(anyhow!("{} is not defined", name)),
+        }
+    }
+
+    /// Gets a value with the specified name. If the value is missing, it
+    /// returns an empty string. If the value is not a scalar value, it returns
+    /// an error.
+    pub fn get_scalar_or_default(&self, name: &str) -> Result<&str> {
+        match self.values.get(name) {
+            Some(BashValue::Scalar(value)) => Ok(value),
+            Some(BashValue::IndexedArray(_)) => Err(anyhow!(
+                "{} is expected to be a scalar value, but an indexed array",
+                name
+            )),
+            Some(BashValue::AssociativeArray(_)) => Err(anyhow!(
+                "{} is expected to be a scalar value, but an associative array",
+                name
+            )),
+            None => Ok(""),
+        }
+    }
+
+    /// Gets a value with the specified name. If the value is missing, or it is
+    /// not an indexed array, it returns an error.
+    pub fn get_indexed_array(&self, name: &str) -> Result<&[String]> {
+        match self.values.get(name) {
+            Some(BashValue::Scalar(_)) => Err(anyhow!(
+                "{} is expected to be an indexed array, but a scalar value",
+                name
+            )),
+            Some(BashValue::IndexedArray(array)) => Ok(array),
+            Some(BashValue::AssociativeArray(_)) => Err(anyhow!(
+                "{} is expected to be an indexed array, but an associative array",
+                name
+            )),
+            None => Err(anyhow!("{} is not defined", name)),
+        }
+    }
+}
+
+impl FromIterator<(String, BashValue)> for BashVars {
+    fn from_iter<T: IntoIterator<Item = (String, BashValue)>>(iter: T) -> Self {
+        Self::new(iter.into_iter().collect())
+    }
 }
 
 /// Parses an output of `set -o posix; set` from bash to create a list of
@@ -205,6 +280,81 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_bash_vars_get_scalar() {
+        let vars = BashVars::from_iter([
+            ("scalar".to_owned(), BashValue::Scalar("hi".to_owned())),
+            ("indexed".to_owned(), BashValue::IndexedArray(Vec::new())),
+            (
+                "associative".to_owned(),
+                BashValue::AssociativeArray(HashMap::new()),
+            ),
+        ]);
+
+        match vars.get_scalar("scalar") {
+            Ok(s) if s == "hi" => {}
+            other => panic!("get_scalar() returned unexpected result: {:?}", other),
+        }
+        assert!(vars.get_scalar("indexed").is_err());
+        assert!(vars.get_scalar("associative").is_err());
+        assert!(vars.get_scalar("missing").is_err());
+    }
+
+    #[test]
+    fn test_bash_vars_get_scalar_or_default() {
+        let vars = BashVars::from_iter([
+            ("scalar".to_owned(), BashValue::Scalar("hi".to_owned())),
+            ("indexed".to_owned(), BashValue::IndexedArray(Vec::new())),
+            (
+                "associative".to_owned(),
+                BashValue::AssociativeArray(HashMap::new()),
+            ),
+        ]);
+
+        match vars.get_scalar_or_default("scalar") {
+            Ok(s) if s == "hi" => {}
+            other => panic!(
+                "get_scalar_or_default() returned unexpected result: {:?}",
+                other
+            ),
+        }
+        assert!(vars.get_scalar_or_default("indexed").is_err());
+        assert!(vars.get_scalar_or_default("associative").is_err());
+        match vars.get_scalar_or_default("missing") {
+            Ok(s) if s == "" => {}
+            other => panic!(
+                "get_scalar_or_default() returned unexpected result: {:?}",
+                other
+            ),
+        }
+    }
+
+    #[test]
+    fn test_bash_vars_get_indexed_array() {
+        let vars = BashVars::from_iter([
+            ("scalar".to_owned(), BashValue::Scalar(String::new())),
+            (
+                "indexed".to_owned(),
+                BashValue::IndexedArray(vec!["a".to_owned(), "b".to_owned()]),
+            ),
+            (
+                "associative".to_owned(),
+                BashValue::AssociativeArray(HashMap::new()),
+            ),
+        ]);
+
+        assert!(vars.get_indexed_array("scalar").is_err());
+        match vars.get_indexed_array("indexed") {
+            Ok(v) if v == &["a".to_owned(), "b".to_owned()] => {}
+            other => panic!(
+                "get_indexed_array() returned unexpected result: {:?}",
+                other
+            ),
+        }
+        assert!(vars.get_indexed_array("associative").is_err());
+        assert!(vars.get_indexed_array("missing").is_err());
+    }
+
+    #[test]
     fn test_parse_set_output_unquoted() -> Result<()> {
         let vars = parse_set_output("LANG=en_US.UTF-8\n")?;
         assert_eq!(
@@ -390,12 +540,12 @@ mod tests {
         let vars = parse_set_output("ARRAY1=([999]=\"foo\")\nARRAY2=([1000]=\"foo\")\n")?;
         // ARRAY1 should be IndexedArray, whereas ARRAY2 should be AssociativeArray
         // since its key is too large.
-        match &vars["ARRAY1"] {
-            BashValue::IndexedArray(values) if values.len() == 1000 => {}
+        match vars.hash_map().get("ARRAY1") {
+            Some(BashValue::IndexedArray(values)) if values.len() == 1000 => {}
             other => bail!("ARRAY1 has unexpected value: {:?}", other),
         }
-        match &vars["ARRAY2"] {
-            BashValue::AssociativeArray(_) => {}
+        match vars.hash_map().get("ARRAY2") {
+            Some(BashValue::AssociativeArray(_)) => {}
             other => bail!("ARRAY2 has unexpected value: {:?}", other),
         }
         Ok(())

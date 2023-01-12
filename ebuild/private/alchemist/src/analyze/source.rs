@@ -63,7 +63,7 @@ fn get_cros_workon_array_variable(
     name: &str,
     projects: usize,
 ) -> Result<Vec<String>> {
-    let raw_values = match details.vars.get(name) {
+    let raw_values = match details.vars.hash_map().get(name) {
         None => {
             bail!("{} not defined", name);
         }
@@ -85,7 +85,7 @@ fn get_cros_workon_array_variable(
 }
 
 fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<String>> {
-    let projects = match details.vars.get("CROS_WORKON_PROJECT") {
+    let projects = match details.vars.hash_map().get("CROS_WORKON_PROJECT") {
         None => {
             // This is not a cros-workon package.
             return Ok(Vec::new());
@@ -243,11 +243,7 @@ fn load_package_manifest(dir: &Path) -> Result<PackageManifest> {
 
 fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageRemoteSource>> {
     // Collect URIs from SRC_URI.
-    let src_uri = match details.vars.get("SRC_URI") {
-        None => "",
-        Some(BashValue::Scalar(s)) => s.as_str(),
-        Some(other) => bail!("Incorrect value for SRC_URI: {:?}", other),
-    };
+    let src_uri = details.vars.get_scalar_or_default("SRC_URI")?;
     let source_deps = src_uri.parse::<UriDependency>()?;
     let source_atoms = parse_uri_dependencies(source_deps, &details.use_map)?;
 
