@@ -51,7 +51,7 @@ impl MountedSDK {
     pub fn new(cfg: Config) -> Result<Self> {
         let r = runfiles::Runfiles::create()?;
         let run_in_container_path = r.rlocation(
-            "chromiumos/bazel/ebuild/private/cmd/run_in_container/run_in_container_/run_in_container",
+            "cros/bazel/ebuild/private/cmd/run_in_container/run_in_container_/run_in_container",
         );
 
         let tmp_dir = tempdir()?;
@@ -119,7 +119,7 @@ impl MountedSDK {
 
         let setup_script_path = bazel_build_dir.join("setup.sh");
         std::fs::copy(
-            r.rlocation("chromiumos/bazel/ebuild/private/common/mountsdk/setup.sh"),
+            r.rlocation("cros/bazel/ebuild/private/common/mountsdk/setup.sh"),
             setup_script_path.outside,
         )?;
         args.push(setup_script_path.inside.to_string_lossy().to_string());
@@ -200,48 +200,48 @@ mod tests {
         let cfg = Config {
             overlays: vec![
                 OverlayInfo {
-                    image_path: r.rlocation("chromiumos/bazel/sdk/sdk"),
+                    image_path: r.rlocation("cros/bazel/sdk/sdk"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
-                    image_path: r.rlocation("chromiumos/bazel/sdk/sdk.symindex"),
+                    image_path: r.rlocation("cros/bazel/sdk/sdk.symindex"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
-                    image_path: r.rlocation("chromiumos/bazel/sdk/base_sdk"),
+                    image_path: r.rlocation("cros/bazel/sdk/base_sdk"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
-                    image_path: r.rlocation("chromiumos/bazel/sdk/base_sdk.symindex"),
+                    image_path: r.rlocation("cros/bazel/sdk/base_sdk.symindex"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
                     image_path: r.rlocation(
-                        "chromiumos/overlays/overlay-arm64-generic/overlay-arm64-generic.squashfs",
+                        "cros/overlays/overlay-arm64-generic/overlay-arm64-generic.squashfs",
                     ),
                     mount_dir: src_dir.join("src/overlays/overlay-arm64-generic"),
                 },
                 OverlayInfo {
                     image_path: r
-                        .rlocation("chromiumos/third_party/eclass-overlay/eclass-overlay.squashfs"),
+                        .rlocation("cros/third_party/eclass-overlay/eclass-overlay.squashfs"),
                     mount_dir: src_dir.join("src/third_party/eclass-overlay"),
                 },
                 OverlayInfo {
                     image_path: r.rlocation(
-                        "chromiumos/third_party/chromiumos-overlay/chromiumos-overlay.squashfs",
+                        "cros/third_party/chromiumos-overlay/chromiumos-overlay.squashfs",
                     ),
                     mount_dir: src_dir.join("src/third_party/chromiumos-overlay"),
                 },
                 OverlayInfo {
                     image_path: r
-                        .rlocation("chromiumos/third_party/portage-stable/portage-stable.squashfs"),
+                        .rlocation("cros/third_party/portage-stable/portage-stable.squashfs"),
                     mount_dir: portage_stable.to_path_buf(),
                 },
             ],
             bind_mounts: vec![
                 BindMount {
                     source: r.rlocation(
-                        "chromiumos/bazel/ebuild/private/common/mountsdk/testdata/mypkg.ebuild",
+                        "cros/bazel/ebuild/private/common/mountsdk/testdata/mypkg.ebuild",
                     ),
                     mount_path: ebuild_file.to_path_buf(),
                 },

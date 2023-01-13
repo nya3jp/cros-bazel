@@ -67,19 +67,19 @@ var app = &cli.App{
 		resourceMounts := []resourceMount{
 			{
 				mountPath: filepath.Join("/build", board, "var/cache/edb/chromeos"),
-				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos",
+				resource:  "cros/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos",
 			},
 			{
 				mountPath: filepath.Join("/build", board, "etc/portage/profile/package.provided"),
-				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
+				resource:  "cros/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
 			},
 			{
 				mountPath: "/mnt/host/bazel-build/install_deps.sh",
-				resource:  "chromiumos/bazel/ebuild/private/cmd/install_deps/install_deps.sh",
+				resource:  "cros/bazel/ebuild/private/cmd/install_deps/install_deps.sh",
 			},
 			{
 				mountPath: mainScript,
-				resource:  "chromiumos/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh",
+				resource:  "cros/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh",
 			},
 		}
 
@@ -136,7 +136,7 @@ var app = &cli.App{
 		if err := mountsdk.RunInSDK(cfg, func(s *mountsdk.MountedSDK) error {
 			// setup_board.sh creates emerge-{board} and portageq-{board}, both of
 			// which are used by build_image.sh
-			boardTemplatePath, err := runfiles.Rlocation("chromiumos/bazel/ebuild/private/cmd/build_image/container_files/board_script.sh")
+			boardTemplatePath, err := runfiles.Rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/board_script.sh")
 			if err != nil {
 				return err
 			}

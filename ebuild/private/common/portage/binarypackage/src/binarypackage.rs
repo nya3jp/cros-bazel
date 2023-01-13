@@ -256,13 +256,13 @@ mod tests {
     const NANO_SIZE: u64 = 225112;
 
     const BINARY_PKG_RUNFILE: &str =
-        "chromiumos/bazel/ebuild/private/common/portage/binarypackage/testdata/nano.tbz2";
+        "cros/bazel/ebuild/private/common/portage/binarypackage/testdata/nano.tbz2";
 
     // This is the contents of the tarball from the binary package, extracted with
     // qtbz2. We are unable to use the qtbz2 binary in bazel, as this would require
     // first being able to extract the qtbz2 binary from a package.
     const TARBALL_RUNFILE: &str =
-        "chromiumos/bazel/ebuild/private/common/portage/binarypackage/testdata/nano.tar.bz2";
+        "cros/bazel/ebuild/private/common/portage/binarypackage/testdata/nano.tar.bz2";
 
     fn binary_package() -> Result<BinaryPackage> {
         let r = runfiles::Runfiles::create()?;

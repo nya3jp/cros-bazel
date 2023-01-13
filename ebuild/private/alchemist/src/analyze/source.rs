@@ -191,7 +191,7 @@ fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<PackageLo
     // TODO: Remove this hack.
     if projects
         .iter()
-        .any(|p| p == "chromiumos/third_party/kernel")
+        .any(|p| p == "cros/third_party/kernel")
     {
         sources.push(PackageLocalSource {
             origin: PackageLocalSourceOrigin::Src,

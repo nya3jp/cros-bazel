@@ -9,7 +9,7 @@
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 # buildifier: disable=bzl-visibility
-load("@chromiumos//bazel/crates:defs.bzl", _crate_repositories = "crate_repositories")
+load("@cros//bazel/crates:defs.bzl", _crate_repositories = "crate_repositories")
 
 # buildifier: disable=bzl-visibility
 load("@rules_rust//crate_universe/private:crates_vendor.bzl", "crates_vendor_remote_repository")
@@ -18,8 +18,8 @@ def crate_repositories():
     maybe(
         crates_vendor_remote_repository,
         name = "update_crates",
-        build_file = Label("@chromiumos//bazel/crates:BUILD.bazel"),
-        defs_module = Label("@chromiumos//bazel/crates:defs.bzl"),
+        build_file = Label("@cros//bazel/crates:BUILD.bazel"),
+        defs_module = Label("@cros//bazel/crates:defs.bzl"),
     )
 
     _crate_repositories()

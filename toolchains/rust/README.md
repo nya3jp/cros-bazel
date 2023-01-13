@@ -9,7 +9,7 @@ This means that no setup is required for bazel, but if you'd like to build with 
 
 ```
 cros-bazel/src$ bazel build //bazel/toolchains/rust:update_crates
-cros-bazel/src$ ln -s bazel-bin/bazel/toolchains/rust/update_crates.sh.runfiles/chromiumos/Cargo.toml Cargo.toml `
+cros-bazel/src$ ln -s bazel-bin/bazel/toolchains/rust/update_crates.sh.runfiles/cros/Cargo.toml Cargo.toml `
 ```
 
 

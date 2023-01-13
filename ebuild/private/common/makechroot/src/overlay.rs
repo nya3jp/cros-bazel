@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn detect_overlay_type_works() -> Result<()> {
         let r = Runfiles::create()?;
-        let testdata = PathBuf::from("chromiumos/bazel/ebuild/private/common/makechroot/testdata/");
+        let testdata = PathBuf::from("cros/bazel/ebuild/private/common/makechroot/testdata/");
         assert_eq!(
             OverlayType::detect(r.rlocation(testdata.join("example.symindex")))?,
             OverlayType::Symindex

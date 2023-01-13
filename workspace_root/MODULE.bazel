@@ -1,6 +1,6 @@
 # We don't need to name our module, but the default is __main__, which isn't
 # very meaningful.
-module(name = "chromiumos", version = "0.1")
+module(name = "cros", version = "0.1")
 
 bazel_dep(name = "platforms", version = "0.0.5")
 bazel_dep(name = "protobuf", version = "3.19.6")

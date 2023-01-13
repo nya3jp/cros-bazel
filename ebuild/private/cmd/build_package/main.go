@@ -224,7 +224,7 @@ var app = &cli.App{
 			return err
 		}
 
-		runScript, err := runfiles.Rlocation("chromiumos/bazel/ebuild/private/cmd/build_package/build_package.sh")
+		runScript, err := runfiles.Rlocation("cros/bazel/ebuild/private/cmd/build_package/build_package.sh")
 		if err != nil {
 			return err
 		}

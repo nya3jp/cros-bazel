@@ -59,7 +59,7 @@ rust_library(
         ],
     }),
     rustc_env = {
-        "RULES_RUST_RUNFILES_WORKSPACE_NAME": "chromiumos",
+        "RULES_RUST_RUNFILES_WORKSPACE_NAME": "cros",
     },
     rustc_env_files = select_with_or({
         "//conditions:default": [

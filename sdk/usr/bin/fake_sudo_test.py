@@ -1,7 +1,7 @@
 from typing import Mapping, Optional, Sequence
 import unittest
 
-from chromiumos.bazel.sdk.usr.bin import fake_sudo
+from cros.bazel.sdk.usr.bin import fake_sudo
 
 # Stop unittest from truncating the error messages.
 unittest.util._MAX_LENGTH = 999999999

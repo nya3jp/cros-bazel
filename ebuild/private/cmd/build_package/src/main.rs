@@ -173,7 +173,7 @@ fn main() -> Result<()> {
     let r = runfiles::Runfiles::create()?;
 
     cfg.bind_mounts.push(BindMount {
-        source: r.rlocation("chromiumos/bazel/ebuild/private/cmd/build_package/build_package.sh"),
+        source: r.rlocation("cros/bazel/ebuild/private/cmd/build_package/build_package.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
     });
 

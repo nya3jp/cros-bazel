@@ -2,4 +2,4 @@
 # bazel package "runfiles".
 
 [env]
-RULES_RUST_RUNFILES_WORKSPACE_NAME = "chromiumos"
+RULES_RUST_RUNFILES_WORKSPACE_NAME = "cros"

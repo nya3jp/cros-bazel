@@ -56,7 +56,7 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 			subtree = subTrees[i]
 		}
 
-		if project == "chromiumos/platform/chromiumos-assets" && localName == "chromiumos-assets" {
+		if project == "cros/platform/chromiumos-assets" && localName == "chromiumos-assets" {
 			// ebuild is incorrect
 			localName = "platform/chromiumos-assets"
 		}
@@ -65,8 +65,8 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 
 		// If there is no local name, then we need to compute it
 		if localName == "" {
-			if strings.HasPrefix(project, "chromiumos/") {
-				paths = []string{strings.TrimPrefix(project, "chromiumos/")}
+			if strings.HasPrefix(project, "cros/") {
+				paths = []string{strings.TrimPrefix(project, "cros/")}
 			}
 		} else {
 			if pkg.Category() == "chromeos-base" {
@@ -114,7 +114,7 @@ func ExtractLocalPackages(pkg *packages.Package) ([]string, error) {
 			paths = newPaths
 		}
 
-		if project == "chromiumos/third_party/kernel" {
+		if project == "cros/third_party/kernel" {
 			paths = append(paths, "third_party/chromiumos-overlay/eclass/cros-kernel")
 		}
 
