@@ -1219,6 +1219,7 @@ dependencies = [
  "anyhow",
  "nom",
  "once_cell",
+ "proptest",
  "regex",
  "strum",
  "strum_macros",

@@ -480,6 +480,9 @@ _NORMAL_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+        _COMMON_CONDITION: {
+            "proptest": "@update_crates__proptest-1.0.0//:proptest",
+        },
     },
     "bazel/ebuild/private/common/symindex": {
     },
