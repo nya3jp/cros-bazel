@@ -8,7 +8,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 bool_flag(
     name = "use_rust_build_package",
-    build_setting_default = False,
+    build_setting_default = True,
 )
 
 config_setting(
