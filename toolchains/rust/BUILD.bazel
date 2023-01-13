@@ -1,6 +1,4 @@
-load("//bazel/toolchains/rust:update_crates.bzl", "generate_cargo_toml", "update_crates")
-load("//bazel/toolchains/rust:local_crates.bzl", "LOCAL_CRATES")
-load("@rules_rust//crate_universe:defs.bzl", "crate")
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
 
 py_binary(
     name = "cargo_init",
@@ -18,19 +16,34 @@ sh_binary(
     ],
 )
 
-update_crates(
+crates_vendor(
     name = "update_crates",
     annotations = dict(runfiles = [crate.annotation(
         rustc_env = dict(RULES_RUST_RUNFILES_WORKSPACE_NAME = "cros"),
     )]),
     bazel = ":update_crates_custom_bazel",
     cargo_lockfile = "//:Cargo.lock",
-    crates = LOCAL_CRATES,
-    root_manifest = "//:generated_manifest",
+    manifests = [
+        # Keep this list in sync with the members listed in //:Cargo.toml.
+        # I suspect this is needed so the Cargo.toml files are injected into
+        # the runtime environment.
+        "//:Cargo.toml",
+        "//bazel/ebuild/private/alchemist:Cargo.toml",
+        "//bazel/ebuild/private/cmd/build_package:Cargo.toml",
+        "//bazel/ebuild/private/common/bazelutil:Cargo.toml",
+        "//bazel/ebuild/private/common/cliutil:Cargo.toml",
+        "//bazel/ebuild/private/common/fileutil:Cargo.toml",
+        "//bazel/ebuild/private/common/makechroot:Cargo.toml",
+        "//bazel/ebuild/private/common/mountsdk:Cargo.toml",
+        "//bazel/ebuild/private/common/portage/binarypackage:Cargo.toml",
+        "//bazel/ebuild/private/common/processes:Cargo.toml",
+        "//bazel/ebuild/private/common/standard/version:Cargo.toml",
+        "//bazel/ebuild/private/common/symindex:Cargo.toml",
+        "//bazel/toolchains/rust/examples/hello_world:Cargo.toml",
+        "//bazel/toolchains/rust/examples/local_crate:Cargo.toml",
+        "//bazel/toolchains/rust/examples/use_local_crate:Cargo.toml",
+        "//bazel/toolchains/rust/examples/use_third_party_crate:Cargo.toml",
+    ],
     vendor_path = "//bazel/crates",
-)
-
-exports_files(
-    ["Cargo_template.toml"],
-    visibility = ["//:__pkg__"],
+    tags = ["manual"],
 )

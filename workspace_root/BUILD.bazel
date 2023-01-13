@@ -3,10 +3,9 @@
 # found in the LICENSE file.
 
 load("//bazel/ebuild:defs.bzl", "ebuild_src")
-load("//bazel/toolchains/rust:local_crates.bzl", "LOCAL_CRATES")
-load("//bazel/toolchains/rust:update_crates.bzl", "generate_cargo_toml")
 
 exports_files([
+    "Cargo.toml",
     "Cargo.lock",
 ])
 
@@ -25,14 +24,6 @@ ebuild_src(
     # scripts, the squashfs contains a root directory called scripts.
     mount_path = "",
     visibility = ["//bazel/ebuild/private/cmd/build_image:__pkg__"],
-)
-
-generate_cargo_toml(
-    name = "generated_manifest",
-    out = "Cargo.toml",
-    crates = LOCAL_CRATES,
-    tmpl = "//bazel/toolchains/rust:Cargo_template.toml",
-    visibility = ["//bazel/toolchains/rust:__pkg__"],
 )
 
 exports_files(["tools/bazel"])

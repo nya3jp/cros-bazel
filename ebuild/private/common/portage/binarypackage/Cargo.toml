@@ -6,9 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+cliutil = { path = "../../cliutil" }
+
 anyhow.workspace = true
 bytes.workspace = true
-cliutil.workspace = true
 nix.workspace = true
 tar.workspace = true
 zstd.workspace = true

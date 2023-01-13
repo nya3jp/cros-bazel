@@ -7,7 +7,7 @@ default-run = "alchemist"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-version.workspace = true
+version = { path = "../common/standard/version" }
 
 anyhow.workspace = true
 base64.workspace = true
