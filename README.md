@@ -20,15 +20,16 @@ $ cd src
 ```sh
 sudo apt install squashfs-tools
 
-go install github.com/bazelbuild/bazelisk@latest
+GOBIN=$HOME/go/bin go install github.com/bazelbuild/bazelisk@latest
 ```
 
 You'll also need to get Bazelisk onto your PATH, to be executed before any Bazel
 that's already on your PATH, and we'd like to invoke Bazelisk whenever we run
 `bazel`. Create a symlink to bazelisk in a directory that'll be on your PATH
 before any other bazels, and name the link `bazel`. Example:
+
 ```sh
-ln -s ${GOPATH:-$HOME/go}/bin/bazelisk ~/bin/bazel
+ln -s ~/go/bin/bazelisk ~/bin/bazel
 ```
 
 ## Building
