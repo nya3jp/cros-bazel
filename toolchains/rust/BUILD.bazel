@@ -16,8 +16,23 @@ sh_binary(
     ],
 )
 
-crates_vendor(
+# Updates a minimal set of crates required to meet your requirements.
+# Equivelant of "cargo update --workspace".
+sh_binary(
     name = "update_crates",
+    srcs = ["update_crates.sh"],
+    data = [":update_all_crates"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
+# Updates all crates, even if they're untouched by the current CL. Generally not
+# recommended.
+# Update the crate "runfiles":
+# 'bazel run //bazel/toolchains/rust:update_all_crates -- --runfiles"
+# Update the crate "runfiles" to a specific version (generally not recommended):
+# 'bazel run //bazel/toolchains/rust:update_all_crates -- --runfiles@1.0.0"
+crates_vendor(
+    name = "update_all_crates",
     annotations = dict(runfiles = [crate.annotation(
         rustc_env = dict(RULES_RUST_RUNFILES_WORKSPACE_NAME = "cros"),
     )]),
@@ -44,6 +59,6 @@ crates_vendor(
         "//bazel/toolchains/rust/examples/use_local_crate:Cargo.toml",
         "//bazel/toolchains/rust/examples/use_third_party_crate:Cargo.toml",
     ],
-    vendor_path = "//bazel/crates",
     tags = ["manual"],
+    vendor_path = "//bazel/crates",
 )

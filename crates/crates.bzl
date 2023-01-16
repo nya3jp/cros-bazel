@@ -17,7 +17,7 @@ load("@rules_rust//crate_universe/private:crates_vendor.bzl", "crates_vendor_rem
 def crate_repositories():
     maybe(
         crates_vendor_remote_repository,
-        name = "update_crates",
+        name = "update_all_crates",
         build_file = Label("@cros//bazel/crates:BUILD.bazel"),
         defs_module = Label("@cros//bazel/crates:defs.bzl"),
     )
