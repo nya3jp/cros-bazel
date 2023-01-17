@@ -4,6 +4,7 @@
 
 pub(self) mod common;
 pub(self) mod internal;
+pub(self) mod public;
 pub(self) mod repositories;
 
 use std::{
@@ -31,7 +32,7 @@ use rayon::prelude::*;
 
 use self::{
     common::Package, internal::overlays::generate_internal_packages,
-    repositories::generate_repositories_file,
+    public::generate_public_packages, repositories::generate_repositories_file,
 };
 
 fn evaluate_all_packages(
@@ -118,7 +119,7 @@ pub fn generate_repo_main(
     let all_packages = analyze_packages(all_details, resolver);
 
     generate_internal_packages(&all_packages, board, resolver, translator, output_dir)?;
-
+    generate_public_packages(&all_packages, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
 
     File::create(output_dir.join("BUILD.bazel"))?.write_all(&[])?;
