@@ -45,7 +45,11 @@ def _ebuild_impl(ctx):
     src_basename = _ebuild_basename(ctx)
     binpkg_output_file = ctx.actions.declare_file(src_basename + ".tbz2")
 
-    ebuild_inside_path = ctx.file.ebuild.path.removeprefix(ctx.file.ebuild.owner.workspace_root + "/")
+    ebuild_inside_path = ctx.file.ebuild.path.removeprefix(
+        ctx.file.ebuild.owner.workspace_root + "/",
+    ).removeprefix(
+        "internal/overlays/",
+    )
     args = ctx.actions.args()
     args.add_all([
         "--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path),
