@@ -317,5 +317,14 @@ _mountsdk_debug = rule(
 #   use this to sub in prebuilts for packages.
 def debuggable_mountsdk(name, orig_rule, **kwargs):
     orig_rule(name = name, **kwargs)
-    _mountsdk_debug(name = name + "_debug", target = name)
-    _mountsdk_debug(name = name + "_debug_no_deps", target = name, no_deps = True)
+    _mountsdk_debug(
+        name = name + "_debug",
+        target = name,
+        visibility = kwargs.get("visibility", None),
+    )
+    _mountsdk_debug(
+        name = name + "_debug_no_deps",
+        target = name,
+        no_deps = True,
+        visibility = kwargs.get("visibility", None),
+    )

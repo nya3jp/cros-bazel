@@ -55,6 +55,14 @@ fn generate_public_package(packages: Vec<&Package>, package_output_dir: &Path) -
                         ),
                     },
                     AliasEntry {
+                        name: format!("{}_debug", details.version.to_string()),
+                        actual: format!(
+                            "{}:{}_debug",
+                            &internal_package_location,
+                            details.version.to_string()
+                        ),
+                    },
+                    AliasEntry {
                         name: format!("{}_package_set", details.version.to_string()),
                         actual: format!(
                             "{}:{}_package_set",
