@@ -10,12 +10,13 @@ ebuild(
         {{- endfor }}
     },
     {{- if ebuild.sources }}
-    # TODO: Generate srcs. Currently this is broken.
-    # srcs = [
-    #     {{- for source in ebuild.sources }}
-    #     "{ source }",
-    #     {{- endfor }}
-    # ],
+    # TODO: Generate srcs. Currently this is only works for packages that have
+    # been added to the _bazel.xml.
+    srcs = [
+        {{- for source in ebuild.sources }}
+        "{ source }",
+        {{- endfor }}
+    ],
     {{- endif }}
     {{- if ebuild.build_deps }}
     build_deps = [
