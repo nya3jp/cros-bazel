@@ -36,10 +36,13 @@ def _ebuild_calculate_inputs(ctx, args):
 
     for shared_lib_dep in ctx.attr.shared_lib_deps:
         lib_info = shared_lib_dep[EbuildLibraryInfo]
-        deps = depset(transitive=[lib_info.headers ,lib_info.pkg_configs ,lib_info.shared_libs])
+        deps = depset(transitive = [lib_info.headers, lib_info.pkg_configs, lib_info.shared_libs])
 
-        args.add_all(deps, allow_closure = True,
-            map_each = lambda file: _format_input_file_arg(lib_info.strip_prefix, file))
+        args.add_all(
+            deps,
+            allow_closure = True,
+            map_each = lambda file: _format_input_file_arg(lib_info.strip_prefix, file),
+        )
 
 def _ebuild_impl(ctx):
     src_basename = _ebuild_basename(ctx)
