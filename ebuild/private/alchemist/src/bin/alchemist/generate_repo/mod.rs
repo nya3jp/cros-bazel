@@ -64,8 +64,7 @@ struct Package {
 }
 
 struct PackagesInDir<'a> {
-    input_dir: PathBuf,
-    output_dir: PathBuf,
+    original_dir: PathBuf,
     packages: Vec<&'a Package>,
 }
 
@@ -195,11 +194,11 @@ impl EBuildEntry {
                     let package = resolver.find_best_package(atom)?;
                     let rel_path = package
                         .ebuild_path
-                        .strip_prefix("/mnt/host/source/src/")?
+                        .strip_prefix(CHROOT_SRC_DIR)?
                         .parent()
                         .unwrap();
                     Ok(format!(
-                        "//{}:{}",
+                        "//internal/overlays/{}:{}",
                         rel_path.to_string_lossy(),
                         package.version
                     ))
@@ -275,14 +274,14 @@ fn generate_package_build_file(
     Ok(())
 }
 
-fn generate_package(
+fn generate_internal_package(
     board: &str,
-    packages_in_dir: PackagesInDir<'_>,
+    packages_in_dir: PackagesInDir,
     package_output_dir: &Path,
     translator: &PathTranslator,
     resolver: &PackageResolver,
 ) -> Result<()> {
-    create_dir_all(&packages_in_dir.output_dir)?;
+    create_dir_all(&package_output_dir)?;
 
     // Create `*.ebuild` symlinks.
     for package in packages_in_dir.packages.iter() {
@@ -295,20 +294,20 @@ fn generate_package(
 
     // Create a `files` symlink if necessary.
     // TODO: Create symlinks even if there is no ebuild.
-    let input_files_dir = packages_in_dir.input_dir.join("files");
+    let input_files_dir = packages_in_dir.original_dir.join("files");
     if input_files_dir.try_exists()? {
-        let output_files_dir = packages_in_dir.output_dir.join("files");
+        let output_files_dir = package_output_dir.join("files");
         symlink(input_files_dir, output_files_dir)?;
     }
 
     // Create `*.bashrc` symlinks if necessary.
     // TODO: Create symlinks even if there is no ebuild.
-    for entry in packages_in_dir.input_dir.read_dir()? {
+    for entry in packages_in_dir.original_dir.read_dir()? {
         let filename = entry?.file_name();
         if filename.to_string_lossy().ends_with(".bashrc") {
             symlink(
-                packages_in_dir.input_dir.join(&filename),
-                packages_in_dir.output_dir.join(&filename),
+                packages_in_dir.original_dir.join(&filename),
+                package_output_dir.join(&filename),
             )?;
         }
     }
@@ -320,6 +319,57 @@ fn generate_package(
         &package_output_dir.join("BUILD.bazel"),
         resolver,
     )
+}
+
+fn join_by_package_dir<'a>(
+    all_packages: &'a Vec<Package>,
+    translator: &PathTranslator,
+) -> HashMap<PathBuf, PackagesInDir<'a>> {
+    let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
+
+    for package in all_packages.iter() {
+        let original_dir = translator.translate(package.details.ebuild_path.parent().unwrap());
+        let relative_package_dir = match package.details.ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
+            Ok(relative_ebuild_path) => relative_ebuild_path.parent().unwrap().to_owned(),
+            Err(_) => continue,
+        };
+        packages_by_dir
+            .entry(relative_package_dir)
+            .or_insert_with(|| PackagesInDir {
+                original_dir,
+                packages: Vec::new(),
+            })
+            .packages
+            .push(package);
+    }
+
+    packages_by_dir
+}
+
+fn generate_internal_packages(
+    all_packages: &Vec<Package>,
+    board: &str,
+    resolver: &PackageResolver,
+    translator: &PathTranslator,
+    output_dir: &Path,
+) -> Result<()> {
+    let packages_by_dir = join_by_package_dir(&all_packages, translator);
+
+    // Generate packages in parallel.
+    packages_by_dir
+        .into_par_iter()
+        .try_for_each(|(relative_package_dir, packages_in_dir)| {
+            let package_output_dir = output_dir
+                .join("internal/overlays")
+                .join(relative_package_dir);
+            generate_internal_package(
+                board,
+                packages_in_dir,
+                &package_output_dir,
+                translator,
+                resolver,
+            )
+        })
 }
 
 fn generate_repositories_file(packages: &Vec<Package>, out: &Path) -> Result<()> {
@@ -416,34 +466,6 @@ fn analyze_packages(
     all_packages
 }
 
-fn join_by_package_dir<'a>(
-    all_packages: &'a Vec<Package>,
-    translator: &PathTranslator,
-    output_dir: &Path,
-) -> HashMap<PathBuf, PackagesInDir<'a>> {
-    let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
-
-    for package in all_packages.iter() {
-        let package_input_dir = translator.translate(package.details.ebuild_path.parent().unwrap());
-        let relative_package_dir = match package.details.ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
-            Ok(relative_ebuild_path) => relative_ebuild_path.parent().unwrap(),
-            Err(_) => continue,
-        };
-        let package_output_dir = output_dir.join(relative_package_dir);
-        packages_by_dir
-            .entry(package_output_dir)
-            .or_insert_with_key(|package_output_dir| PackagesInDir {
-                input_dir: package_input_dir,
-                output_dir: package_output_dir.clone(),
-                packages: Vec::new(),
-            })
-            .packages
-            .push(package);
-    }
-
-    packages_by_dir
-}
-
 /// The entry point of "generate-repo" subcommand.
 pub fn generate_repo_main(
     board: &str,
@@ -466,15 +488,7 @@ pub fn generate_repo_main(
 
     let all_packages = analyze_packages(all_details, resolver);
 
-    let packages_by_dir = join_by_package_dir(&all_packages, translator, output_dir);
-
-    // Generate packages in parallel.
-    packages_by_dir
-        .into_par_iter()
-        .try_for_each(|(relative_output_dir, packages_in_dir)| {
-            let package_dir = output_dir.join(relative_output_dir);
-            generate_package(board, packages_in_dir, &package_dir, translator, resolver)
-        })?;
+    generate_internal_packages(&all_packages, board, resolver, translator, output_dir)?;
 
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
 
