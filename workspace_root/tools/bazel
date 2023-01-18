@@ -20,6 +20,14 @@ if [ -e "$HOME/.chromiumos.bazelrc" ]; then
 fi
 
 if BAZELISK="$(command -v bazelisk)"; then
+
+    # Used to force the alchemist_digest repo rule to re-run every invocation.
+    if [[ "$#" -gt 1 ]]; then
+        ARGS+=("$1")
+        shift
+        ARGS+=("--repo_env=_CACHE_BUST_DATE="$(date --iso-8601=ns)"")
+    fi
+
     exec "${BAZELISK}" "${ARGS[@]}" "$@"
 fi
 
