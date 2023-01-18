@@ -200,11 +200,11 @@ mod tests {
         let cfg = Config {
             overlays: vec![
                 OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/sdk"),
+                    image_path: r.rlocation("cros/bazel/sdk/arm64-generic"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/sdk.symindex"),
+                    image_path: r.rlocation("cros/bazel/sdk/arm64-generic.symindex"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {

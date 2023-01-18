@@ -1,3 +1,7 @@
+// Copyright 2022 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 package mountsdk_test
 
 import (
@@ -36,11 +40,11 @@ func TestRunInSdk(t *testing.T) {
 	cfg := mountsdk.Config{
 		Overlays: []makechroot.OverlayInfo{
 			{
-				ImagePath: getRunfile("bazel/sdk/sdk"),
+				ImagePath: getRunfile("bazel/sdk/arm64-generic"),
 				MountDir:  "/",
 			},
 			{
-				ImagePath: getRunfile("bazel/sdk/sdk.symindex"),
+				ImagePath: getRunfile("bazel/sdk/arm64-generic.symindex"),
 				MountDir:  "/",
 			},
 			{
