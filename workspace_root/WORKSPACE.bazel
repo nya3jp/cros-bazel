@@ -31,6 +31,10 @@ load("//bazel/toolchains:register_toolchains.bzl", "load_toolchains")
 
 load_toolchains()
 
+load("//bazel/ebuild:alchemist.bzl", "alchemist_repositories")
+
+alchemist_repositories()
+
 load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
 
 prebuilts_dependencies()
