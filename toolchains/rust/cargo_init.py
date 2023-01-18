@@ -6,14 +6,24 @@ build files as required to make it a bazel package.
 """
 
 import argparse
+import importlib
 import os
 import pathlib
 import subprocess
 
+# importing python runfiles is currently incompatible with bzlmod because repo
+# mapping adds a "~" to the path.
+# https://github.com/bazelbuild/bazel/issues/16124
+spec = importlib.util.spec_from_file_location('runfiles',
+                                              '../rules_python~0.4.0/python/runfiles/runfiles.py')
+runfiles = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(runfiles)
+
 _BUILDOZER_COMMAND_FAILED = 2
 _BUILDOZER_NO_CHANGES = 3
 
-_UPDATE_CRATES_BUILD_FILE = pathlib.Path('bazel/toolchains/rust/local_crates.bzl')
+_ALL_CRATES_LIST = pathlib.Path('bazel/toolchains/rust/BUILD.bazel')
+_ROOT_CARGO_TOML = pathlib.Path('Cargo.toml')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('target')
@@ -57,6 +67,7 @@ def main():
     raise parser.error('Must provide exactly one of --bin and --lib')
 
   workspace = pathlib.Path(os.environ['BUILD_WORKSPACE_DIRECTORY'])
+  old_wd = os.getcwd()
   os.chdir(workspace)
 
   if not target.startswith('//'):
@@ -71,10 +82,12 @@ def main():
   directory = pathlib.Path(package[2:])
   if not args.existing:
     run(['cargo', 'init', '--bin' if args.bin else '--lib', str(directory)])
+  directory.joinpath('BUILD.bazel').touch()
 
-  # Buildozer can do this, but it can't add it in sorted order.
-  add_line_between_sorted(_UPDATE_CRATES_BUILD_FILE, 'LOCAL_CRATES = {', '}',
-                          f'    "{directory.name}": "{target}",')
+  add_line_between_sorted(_ROOT_CARGO_TOML, 'members = [', ']',
+                          f'    "{directory}",')
+  add_line_between_sorted(_ALL_CRATES_LIST, '        "//:Cargo.toml",', '    ],',
+                          f'        "//{directory}:Cargo.toml",')
 
   print("Adding a rule for the crate")
   rule = 'rust_binary_crate' if args.bin else 'rust_library_crate'
@@ -88,7 +101,10 @@ def main():
   buildozer(f'new rust_crate_test {label}_test', f'{package}:__pkg__', allow_failures=True)
   buildozer(f'set crate ":{label}"', f'{package}:{label}_test')
 
-  run(['bazel', 'run', '//bazel/toolchains/rust:update_crates'])
+  path = runfiles.Create().Rlocation(
+    "cros/bazel/toolchains/rust/update_crates.sh")
+  os.chdir(old_wd)
+  os.execl(path, path)
 
 if __name__ == '__main__':
   main()

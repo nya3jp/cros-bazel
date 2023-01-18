@@ -3,6 +3,8 @@ load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
 py_binary(
     name = "cargo_init",
     srcs = ["cargo_init.py"],
+    data = [":update_crates"],
+    deps = ["@rules_python//python/runfiles"],
 )
 
 sh_binary(
