@@ -42,7 +42,7 @@ func TestRunInSdk(t *testing.T) {
 				MountDir:  "/",
 			},
 			{
-				ImagePath: getRunfile("bazel/sdk/arm64-generic.symindex"),
+				ImagePath: getRunfile("bazel/sdk/arm64-generic-symlinks.tar"),
 				MountDir:  "/",
 			},
 			{
@@ -50,7 +50,7 @@ func TestRunInSdk(t *testing.T) {
 				MountDir:  "/",
 			},
 			{
-				ImagePath: getRunfile("bazel/sdk/base_sdk.symindex"),
+				ImagePath: getRunfile("bazel/sdk/base_sdk-symlinks.tar"),
 				MountDir:  "/",
 			},
 			{

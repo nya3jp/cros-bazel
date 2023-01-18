@@ -77,14 +77,14 @@ def create_layer(
         suffix = "-deps"):
     """Creates an action which builds an overlay in which the build dependencies are installed."""
     output_root = ctx.actions.declare_directory(ctx.attr.name + suffix)
-    output_symindex = ctx.actions.declare_file(ctx.attr.name + suffix + ".symindex")
+    output_symlink_tar = ctx.actions.declare_file(ctx.attr.name + suffix + "-symlinks.tar")
     sdk = sdk if sdk else ctx.attr.sdk[SDKInfo]
 
     args = ctx.actions.args()
     args.add_all([
         "--board=" + sdk.board,
         "--output-dir=" + output_root.path,
-        "--output-symindex=" + output_symindex.path,
+        "--output-symlink-tar=" + output_symlink_tar.path,
     ])
 
     direct_inputs = [
@@ -104,7 +104,7 @@ def create_layer(
 
     ctx.actions.run(
         inputs = depset(direct_inputs, transitive = transitive_inputs),
-        outputs = [output_root, output_symindex],
+        outputs = [output_root, output_symlink_tar],
         executable = ctx.executable._install_deps,
         arguments = [args],
         execution_requirements = {
@@ -117,7 +117,7 @@ def create_layer(
         mnemonic = "InstallDeps",
         progress_message = "Installing dependencies for " + progress_message_name,
     )
-    return output_root, output_symindex
+    return output_root, output_symlink_tar
 
 def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, install_deps = False, generate_run_action = True):
     sdk = ctx.attr.sdk[SDKInfo]
@@ -173,15 +173,15 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
     )
 
     if install_deps:
-        deps_directory, deps_symindex = create_layer(
+        deps_directory, deps_symlink_tar = create_layer(
             ctx,
             progress_message_name,
             transitive_build_time_deps_files,
             transitive_build_time_deps_targets,
         )
         args.add(deps_directory.path, format = "--sdk=%s")
-        args.add(deps_symindex.path, format = "--sdk=%s")
-        transitive_inputs.append(depset([deps_directory, deps_symindex]))
+        args.add(deps_symlink_tar.path, format = "--sdk=%s")
+        transitive_inputs.append(depset([deps_directory, deps_symlink_tar]))
     else:
         transitive_inputs.append(transitive_build_time_deps_files)
         install_groups = _calculate_install_groups(transitive_build_time_deps_targets)

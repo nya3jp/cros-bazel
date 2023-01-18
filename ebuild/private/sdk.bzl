@@ -7,17 +7,17 @@ load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "create_layer")
 
 def _sdk_from_archive_impl(ctx):
     output_root = ctx.actions.declare_directory(ctx.attr.name)
-    output_symindex = ctx.actions.declare_file(ctx.attr.name + ".symindex")
+    output_symlink_tar = ctx.actions.declare_file(ctx.attr.name + "-symlinks.tar")
 
     args = ctx.actions.args()
     args.add_all([
         "--input=" + ctx.file.src.path,
         "--output-dir=" + output_root.path,
-        "--output-symindex=" + output_symindex.path,
+        "--output-symlink-tar=" + output_symlink_tar.path,
     ])
 
     inputs = [ctx.executable._sdk_from_archive, ctx.file.src]
-    outputs = [output_root, output_symindex]
+    outputs = [output_root, output_symlink_tar]
 
     ctx.actions.run(
         inputs = inputs,
@@ -31,7 +31,7 @@ def _sdk_from_archive_impl(ctx):
     return [
         DefaultInfo(files = depset(outputs)),
         SDKBaseInfo(
-            layers = [output_root, output_symindex],
+            layers = [output_root, output_symlink_tar],
         ),
     ]
 
@@ -54,7 +54,7 @@ def _sdk_impl(ctx):
     base_sdk = ctx.attr.base[SDKBaseInfo]
 
     output_root = ctx.actions.declare_directory(ctx.attr.name)
-    output_symindex = ctx.actions.declare_file(ctx.attr.name + ".symindex")
+    output_symlink_tar = ctx.actions.declare_file(ctx.attr.name + "-symlinks.tar")
 
     host_installs = depset(
         transitive = [label[BinaryPackageInfo].transitive_runtime_deps_files for label in ctx.attr.host_deps],
@@ -67,7 +67,7 @@ def _sdk_impl(ctx):
     args.add_all([
         "--board=" + ctx.attr.board,
         "--output-dir=" + output_root.path,
-        "--output-symindex=" + output_symindex.path,
+        "--output-symlink-tar=" + output_symlink_tar.path,
     ])
     args.add_all(base_sdk.layers, format_each = "--input=%s", expand_directories = False)
     args.add_all(host_installs, format_each = "--install-host=%s")
@@ -84,7 +84,7 @@ def _sdk_impl(ctx):
         transitive = [host_installs, target_installs],
     )
 
-    outputs = [output_root, output_symindex]
+    outputs = [output_root, output_symlink_tar]
 
     ctx.actions.run(
         inputs = inputs,
@@ -106,7 +106,7 @@ def _sdk_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             board = ctx.attr.board,
-            layers = [output_root, output_symindex] + base_sdk.layers,
+            layers = [output_root, output_symlink_tar] + base_sdk.layers,
             overlays = ctx.attr.overlays[OverlaySetInfo],
         ),
     ]
@@ -156,7 +156,7 @@ def _sdk_update_impl(ctx):
         order = "postorder",
     )
 
-    output_root, output_symindex = create_layer(
+    output_root, output_symlink_tar = create_layer(
         ctx,
         "toolchain libraries",
         transitive_build_time_deps_files,
@@ -165,7 +165,7 @@ def _sdk_update_impl(ctx):
         suffix = "",
     )
 
-    outputs = [output_root, output_symindex]
+    outputs = [output_root, output_symlink_tar]
 
     return [
         DefaultInfo(files = depset(outputs)),

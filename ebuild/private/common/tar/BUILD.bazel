@@ -10,6 +10,7 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/common/tar",
     visibility = ["//visibility:public"],
     deps = [
+        "//bazel/ebuild/private/common/fileutil",
         "@com_github_klauspost_compress//zstd",
     ],
 )

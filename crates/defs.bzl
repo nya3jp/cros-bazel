@@ -398,8 +398,6 @@ _NORMAL_DEPENDENCIES = {
             "strum": "@update_all_crates__strum-0.24.1//:strum",
         },
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -462,8 +460,6 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -511,8 +507,6 @@ _NORMAL_DEV_DEPENDENCIES = {
             "proptest": "@update_all_crates__proptest-1.0.0//:proptest",
         },
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -553,8 +547,6 @@ _NORMAL_DEV_ALIASES = {
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
         },
-    },
-    "bazel/ebuild/private/common/symindex": {
     },
     "bazel/toolchains/rust/examples/hello_world": {
     },
@@ -600,8 +592,6 @@ _PROC_MACRO_DEPENDENCIES = {
             "strum_macros": "@update_all_crates__strum_macros-0.24.3//:strum_macros",
         },
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -637,8 +627,6 @@ _PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -673,8 +661,6 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
-    },
-    "bazel/ebuild/private/common/symindex": {
     },
     "bazel/toolchains/rust/examples/hello_world": {
     },
@@ -717,8 +703,6 @@ _PROC_MACRO_DEV_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -753,8 +737,6 @@ _BUILD_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
-    },
-    "bazel/ebuild/private/common/symindex": {
     },
     "bazel/toolchains/rust/examples/hello_world": {
     },
@@ -791,8 +773,6 @@ _BUILD_ALIASES = {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -828,8 +808,6 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
-    "bazel/ebuild/private/common/symindex": {
-    },
     "bazel/toolchains/rust/examples/hello_world": {
     },
     "bazel/toolchains/rust/examples/local_crate": {
@@ -864,8 +842,6 @@ _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
-    },
-    "bazel/ebuild/private/common/symindex": {
     },
     "bazel/toolchains/rust/examples/hello_world": {
     },

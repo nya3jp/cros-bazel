@@ -17,12 +17,10 @@ BinaryPackageInfo = provider(
             The depset *always* contains the binary package file of this package
             itself.
         """,
-
         "transitive_runtime_deps_targets": """
             Depset[Target]: Transitive runtime targets to be installed when this
             package is required at run time.
         """,
-
         "direct_runtime_deps_targets": """
             list[Target]: Direct runtime targets
         """,
@@ -57,8 +55,8 @@ SDKBaseInfo = provider(
     fields = {
         "layers": """
             File[]: A list of files each of which represents a file system layer
-            of the SDK. A layer file can be a directory, a symbolic link index
-            file (.symindex), or a squashfs image file (.squashfs).
+            of the SDK. A layer file can be a directory, a tar file (.tar or
+            .tar.zst) or a squashfs image file (.squashfs).
             The order matters; the first image must be overlayed on top of the
             second image, and so on.
         """,
@@ -73,8 +71,8 @@ SDKInfo = provider(
         """,
         "layers": """
             File[]: A list of files each of which represents a file system layer
-            of the SDK. A layer file can be a directory, a symbolic link index
-            file (.symindex), or a squashfs image file (.squashfs).
+            of the SDK.  A layer file can be a directory, a tar file (.tar or
+            .tar.zst) or a squashfs image file (.squashfs).
             The order matters; the first image must be overlayed on top of the
             second image, and so on.
         """,
@@ -82,7 +80,7 @@ SDKInfo = provider(
             OverlaySetInfo: The set of overlays that makeup the board. This will
             generally contain the overlay-<board> or overlay-<board>-private
             overlay and all the parents of that overlay.
-        """
+        """,
     },
 )
 
@@ -132,4 +130,3 @@ def relative_path_in_package(file):
     if owner == None:
         fail("File does not have an associated owner label")
     return relative_path_in_label(file, owner)
-

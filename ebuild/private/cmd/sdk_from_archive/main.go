@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"cros.local/bazel/ebuild/private/common/cliutil"
-	"cros.local/bazel/ebuild/private/common/symindex"
+	"cros.local/bazel/ebuild/private/common/tar"
 )
 
 var flagInput = &cli.StringFlag{
@@ -27,9 +27,9 @@ var flagOutputDir = &cli.StringFlag{
 	Required: true,
 }
 
-var flagOutputSymindex = &cli.StringFlag{
-	Name:     "output-symindex",
-	Usage:    "A path to write a symindex file to",
+var flagOutputSymlinkTar = &cli.StringFlag{
+	Name:     "output-symlink-tar",
+	Usage:    "A path to write a symlink tar to",
 	Required: true,
 }
 
@@ -37,12 +37,12 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagInput,
 		flagOutputDir,
-		flagOutputSymindex,
+		flagOutputSymlinkTar,
 	},
 	Action: func(c *cli.Context) error {
 		inputArchivePath := c.String(flagInput.Name)
 		outputDirPath := c.String(flagOutputDir.Name)
-		outputSymindexPath := c.String(flagOutputSymindex.Name)
+		outputSymlinkTarPath := c.String(flagOutputSymlinkTar.Name)
 
 		if err := os.MkdirAll(outputDirPath, 0o755); err != nil {
 			return err
@@ -56,7 +56,7 @@ var app = &cli.App{
 			return fmt.Errorf("tar failed: %w", err)
 		}
 
-		if err := symindex.Generate(outputDirPath, outputSymindexPath); err != nil {
+		if err := tar.CreateSymlinkTar(outputDirPath, outputSymlinkTarPath); err != nil {
 			return err
 		}
 		return nil

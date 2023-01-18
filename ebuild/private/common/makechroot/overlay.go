@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"cros.local/bazel/ebuild/private/common/symindex"
 	"cros.local/bazel/ebuild/private/common/tar"
 )
 
@@ -18,7 +17,6 @@ type OverlayType int
 
 const (
 	OverlayDir OverlayType = iota
-	OverlaySymindex
 	OverlaySquashfs
 	OverlayTar
 )
@@ -85,8 +83,6 @@ func DetectOverlayType(imagePath string) (OverlayType, error) {
 
 	if fileInfo.IsDir() {
 		return OverlayDir, nil
-	} else if strings.HasSuffix(imagePath, symindex.Ext) {
-		return OverlaySymindex, nil
 	} else if strings.HasSuffix(imagePath, ".squashfs") {
 		return OverlaySquashfs, nil
 	} else if tar.IsTar(imagePath) {

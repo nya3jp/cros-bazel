@@ -205,7 +205,7 @@ mod tests {
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/arm64-generic.symindex"),
+                    image_path: r.rlocation("cros/bazel/sdk/arm64-generic-symlinks.tar"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
@@ -213,7 +213,7 @@ mod tests {
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/base_sdk.symindex"),
+                    image_path: r.rlocation("cros/bazel/sdk/base_sdk-symlinks.tar"),
                     mount_dir: "/".into(),
                 },
                 OverlayInfo {

@@ -19,7 +19,6 @@ go_library(
     deps = [
         "//bazel/ebuild/private/common/fileutil",
         "//bazel/ebuild/private/common/portage/binarypackage",
-        "//bazel/ebuild/private/common/symindex",
         "//bazel/ebuild/private/common/tar",
     ],
 )

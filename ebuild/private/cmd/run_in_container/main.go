@@ -24,7 +24,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
 	"cros.local/bazel/ebuild/private/common/processes"
-	"cros.local/bazel/ebuild/private/common/symindex"
 	"cros.local/bazel/ebuild/private/common/tar"
 )
 
@@ -339,10 +338,6 @@ func continueNamespace(c *cli.Context) error {
 		case makechroot.OverlayDir:
 			if err := unix.Mount(sourcePath, lowerDir, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
 				return fmt.Errorf("failed bind-mounting %s: %w", sourcePath, err)
-			}
-		case makechroot.OverlaySymindex:
-			if err := symindex.Expand(sourcePath, lowerDir); err != nil {
-				return fmt.Errorf("failed expanding %s: %w", sourcePath, err)
 			}
 		case makechroot.OverlaySquashfs:
 			if err := runCommand(

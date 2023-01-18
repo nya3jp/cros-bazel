@@ -22,7 +22,7 @@ import (
 	"cros.local/bazel/ebuild/private/common/cliutil"
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/makechroot"
-	"cros.local/bazel/ebuild/private/common/symindex"
+	"cros.local/bazel/ebuild/private/common/tar"
 )
 
 //go:embed setup.sh
@@ -40,9 +40,9 @@ var flagOutputDir = &cli.StringFlag{
 	Required: true,
 }
 
-var flagOutputSymindex = &cli.StringFlag{
-	Name:     "output-symindex",
-	Usage:    "A path to write a symindex file to",
+var flagOutputSymlinkTar = &cli.StringFlag{
+	Name:     "output-symlink-tar",
+	Usage:    "A path to write a symlink tar to",
 	Required: true,
 }
 
@@ -72,7 +72,7 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagInput,
 		flagOutputDir,
-		flagOutputSymindex,
+		flagOutputSymlinkTar,
 		flagBoard,
 		flagOverlay,
 		flagInstallHost,
@@ -87,7 +87,7 @@ var app = &cli.App{
 
 		inputPaths := c.StringSlice(flagInput.Name)
 		outputDirPath := c.String(flagOutputDir.Name)
-		outputSymindexPath := c.String(flagOutputSymindex.Name)
+		outputSymlinkTarPath := c.String(flagOutputSymlinkTar.Name)
 		board := c.String(flagBoard.Name)
 		overlays, err := makechroot.ParseOverlaySpecs(c.StringSlice(flagOverlay.Name))
 		if err != nil {
@@ -196,7 +196,7 @@ var app = &cli.App{
 			return err
 		}
 
-		if err := symindex.Generate(outputDirPath, outputSymindexPath); err != nil {
+		if err := tar.CreateSymlinkTar(outputDirPath, outputSymlinkTarPath); err != nil {
 			return err
 		}
 

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"cros.local/bazel/ebuild/private/common/makechroot"
+	"cros.local/bazel/ebuild/private/common/tar"
 	"github.com/bazelbuild/rules_go/go/runfiles"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
@@ -21,7 +22,6 @@ import (
 	"cros.local/bazel/ebuild/private/common/fileutil"
 	"cros.local/bazel/ebuild/private/common/mountsdk"
 	"cros.local/bazel/ebuild/private/common/processes"
-	"cros.local/bazel/ebuild/private/common/symindex"
 )
 
 const mainScript = "/mnt/host/bazel-build/install_deps.sh"
@@ -37,9 +37,9 @@ var flagOutputDir = &cli.StringFlag{
 	Required: true,
 }
 
-var flagOutputSymindex = &cli.StringFlag{
-	Name:     "output-symindex",
-	Usage:    "A path to write a symindex file to",
+var flagOutputSymlinkTar = &cli.StringFlag{
+	Name:     "output-symlink-tar",
+	Usage:    "A path to write a symlink tar to",
 	Required: true,
 }
 
@@ -48,11 +48,11 @@ var app = &cli.App{
 		flagBoard,
 		mountsdk.FlagInstallTarget,
 		flagOutputDir,
-		flagOutputSymindex,
+		flagOutputSymlinkTar,
 	),
 	Action: func(c *cli.Context) error {
 		outputDirPath := c.String(flagOutputDir.Name)
-		outputSymindexPath := c.String(flagOutputSymindex.Name)
+		outputSymlinkTarPath := c.String(flagOutputSymlinkTar.Name)
 		board := c.String(flagBoard.Name)
 		installTargetsUnparsed := c.StringSlice(mountsdk.FlagInstallTarget.Name)
 
@@ -105,7 +105,7 @@ var app = &cli.App{
 				return err
 			}
 
-			if err := symindex.Generate(outputDirPath, outputSymindexPath); err != nil {
+			if err := tar.CreateSymlinkTar(outputDirPath, outputSymlinkTarPath); err != nil {
 				return err
 			}
 			return nil

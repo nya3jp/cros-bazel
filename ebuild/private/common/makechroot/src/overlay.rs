@@ -51,7 +51,6 @@ impl FromStr for BindMount {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OverlayType {
     Dir,
-    Symindex,
     Squashfs,
     Tar,
 }
@@ -70,11 +69,9 @@ impl OverlayType {
             .unwrap_or_default();
         if std::fs::metadata(&image_path)?.is_dir() {
             Ok(OverlayType::Dir)
-        } else if extension == "symindex" {
-            Ok(OverlayType::Symindex)
         } else if extension == "squashfs" {
             Ok(OverlayType::Squashfs)
-        } else if file_name.ends_with(".tar.zst") {
+        } else if file_name.ends_with(".tar.zst") || file_name.ends_with(".tar") {
             Ok(OverlayType::Tar)
         } else {
             bail!("unsupported file type: {:?}", image_path)
@@ -92,15 +89,15 @@ mod tests {
         let r = Runfiles::create()?;
         let testdata = PathBuf::from("cros/bazel/ebuild/private/common/makechroot/testdata/");
         assert_eq!(
-            OverlayType::detect(r.rlocation(testdata.join("example.symindex")))?,
-            OverlayType::Symindex
-        );
-        assert_eq!(
             OverlayType::detect(r.rlocation(testdata.join("example.squashfs")))?,
             OverlayType::Squashfs
         );
         assert_eq!(
             OverlayType::detect(r.rlocation(testdata.join("example.tar.zst")))?,
+            OverlayType::Tar
+        );
+        assert_eq!(
+            OverlayType::detect(r.rlocation(testdata.join("example.tar")))?,
             OverlayType::Tar
         );
         assert_eq!(OverlayType::detect(Path::new("/dev"))?, OverlayType::Dir);

@@ -18,7 +18,6 @@ members = [
     "bazel/ebuild/private/common/portage/binarypackage",
     "bazel/ebuild/private/common/processes",
     "bazel/ebuild/private/common/standard/version",
-    "bazel/ebuild/private/common/symindex",
     "bazel/toolchains/rust/examples/hello_world",
     "bazel/toolchains/rust/examples/local_crate",
     "bazel/toolchains/rust/examples/use_local_crate",

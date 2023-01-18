@@ -14,6 +14,7 @@ import (
 
 	"archive/tar"
 
+	"cros.local/bazel/ebuild/private/common/fileutil"
 	"github.com/klauspost/compress/zstd"
 )
 
@@ -70,16 +71,10 @@ func extractTar(r io.Reader, dest string) error {
 	return nil
 }
 
-func extractTarZstd(src string, dest string) error {
-	file, err := os.Open(src)
+func extractTarZstd(r io.Reader, dest string) error {
+	decoder, err := zstd.NewReader(r, zstd.WithDecoderConcurrency(0))
 	if err != nil {
 		return err
-	}
-	defer file.Close()
-
-	decoder, err := zstd.NewReader(file, zstd.WithDecoderConcurrency(0))
-	if err != nil {
-		return fmt.Errorf("Failed to create zstd decoder for file: %s", src)
 	}
 	defer decoder.Close()
 
@@ -90,9 +85,13 @@ func extractTarZstd(src string, dest string) error {
 	return nil
 }
 
-func findTarExtractor(path string) func(string, string) error {
+func findTarExtractor(path string) func(io.Reader, string) error {
 	if strings.HasSuffix(path, ".tar.zst") {
 		return extractTarZstd
+	}
+
+	if strings.HasSuffix(path, ".tar") {
+		return extractTar
 	}
 
 	return nil
@@ -107,12 +106,18 @@ func IsTar(path string) bool {
 }
 
 func Extract(src string, dest string) error {
+	file, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
 	fn := findTarExtractor(src)
 	if fn == nil {
 		return fmt.Errorf("%s has an unknown file type", src)
 	}
 
-	return fn(src, dest)
+	return fn(file, dest)
 }
 
 // files defines the src files inside the tarball and where to extract them to.
@@ -220,4 +225,77 @@ func ListFiles(r io.Reader) ([]FileListItem, error) {
 	}
 
 	return items, nil
+}
+
+// CreateSymlinkTar creates a tar file at dest which contains all symlinks under src.
+// It also removes all symlinks under src.
+func CreateSymlinkTar(src, dest string) error {
+	file, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := tar.NewWriter(file)
+	defer writer.Close()
+
+	writtenDirs := map[string]bool{}
+
+	// Note: WalkDir visits files in lexical order, so the output is deterministic.
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.Type()&fs.ModeSymlink == 0 {
+			return nil
+		}
+
+		linkSource, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		linkTarget, err := os.Readlink(path)
+		if err != nil {
+			return err
+		}
+
+		// Write all parent directories if not written yet
+		var parents []string
+		for parent := filepath.Dir(linkSource); parent != "."; parent = filepath.Dir(parent) {
+			if writtenDirs[parent] {
+				break
+			}
+			parents = append(parents, parent)
+		}
+		for i := len(parents) - 1; i >= 0; i-- {
+			fi, err := os.Lstat(filepath.Join(src, parents[i]))
+			if err != nil {
+				return err
+			}
+			if err := writer.WriteHeader(&tar.Header{
+				Typeflag: tar.TypeDir,
+				Name:     parents[i],
+				Mode:     int64(fi.Mode() & fs.ModePerm),
+			}); err != nil {
+				return err
+			}
+			writtenDirs[parents[i]] = true
+		}
+
+		// Write the symlink
+		fi, err := os.Lstat(path)
+		if err != nil {
+			return err
+		}
+		if err := writer.WriteHeader(&tar.Header{
+			Typeflag: tar.TypeSymlink,
+			Name:     linkSource,
+			Linkname: linkTarget,
+			Mode:     int64(fi.Mode() & fs.ModePerm),
+		}); err != nil {
+			return err
+		}
+
+		return fileutil.RemoveWithChmod(path)
+	})
 }
