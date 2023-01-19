@@ -13,8 +13,17 @@ common --experimental_enable_bzlmod
 try-import %workspace%/bazel/.bazelrc-BUILD-ignore
 
 # Prevent writing to the remote cache if source files change during the build.
-build --experimental_guard_against_concurrent_changes
-query --experimental_guard_against_concurrent_changes
+# **DISABLED** Only useful when uploading artifacts from local builds, which we
+# won't do once we have Bazel running in CI builds, and it prevents uploading
+# artifacts to the remote cache due to actions Bazel takes (see
+# https://github.com/bazelbuild/bazel/issues/17162). So we don't need it, and
+# it gets in the way, so we've decided not to use it after all. In 6.x, we could
+# just comment it out, but it's going to become the default in a later version
+# so we use the inverse version to protect us against that future change.
+#build --experimental_guard_against_concurrent_changes
+#query --experimental_guard_against_concurrent_changes
+build --noexperimental_guard_against_concurrent_changes
+query --noexperimental_guard_against_concurrent_changes
 
 # Aspect-Recommended bazel flags for all projects
 # Docs for these flags: https://bazel.build/reference/command-line-reference
