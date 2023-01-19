@@ -25,11 +25,7 @@ sdk_from_archive(
     src = "@cros-sdk-2022.08.22.085953//file",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
-    # Required for testing various things requiring running in a container.
-    visibility = [
-        "//bazel/ebuild/private/common/hostcontainercomms/host:__pkg__",
-        "//bazel/ebuild/private/common/mountsdk:__pkg__",
-    ],
+    visibility = ["//visibility:public"],
 )
 
 # arm64-generic
