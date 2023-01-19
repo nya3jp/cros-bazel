@@ -7,6 +7,7 @@
 # //bazel/toolchains/rust:update_crates.
 members = [
     "bazel/ebuild/private/alchemist",
+    "bazel/ebuild/private/cmd/build_image",
     "bazel/ebuild/private/cmd/build_package",
     "bazel/ebuild/private/common/bazelutil",
     "bazel/ebuild/private/common/cliutil",
@@ -59,5 +60,6 @@ tempfile = "3.3.0"
 thiserror = "1.0.37"
 tinytemplate = "1.2.1"
 url = "2.3.1"
+users = "0.11.0"
 walkdir = "2.3.2"
 zstd = "0.12.1"

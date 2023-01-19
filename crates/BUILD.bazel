@@ -226,6 +226,12 @@ alias(
 )
 
 alias(
+    name = "users",
+    actual = "@update_all_crates__users-0.11.0//:users",
+    tags = ["manual"],
+)
+
+alias(
     name = "walkdir",
     actual = "@update_all_crates__walkdir-2.3.2//:walkdir",
     tags = ["manual"],

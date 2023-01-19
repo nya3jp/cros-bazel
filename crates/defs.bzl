@@ -318,6 +318,14 @@ _NORMAL_DEPENDENCIES = {
             "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
         },
     },
+    "bazel/ebuild/private/cmd/build_image": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_all_crates__clap-4.0.32//:clap",
+            "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
+            "users": "@update_all_crates__users-0.11.0//:users",
+        },
+    },
     "bazel/ebuild/private/cmd/build_package": {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
@@ -405,6 +413,10 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/build_image": {
+        _COMMON_CONDITION: {
+        },
+    },
     "bazel/ebuild/private/cmd/build_package": {
         _COMMON_CONDITION: {
         },
@@ -459,6 +471,8 @@ _NORMAL_DEV_DEPENDENCIES = {
             "proptest": "@update_all_crates__proptest-1.0.0//:proptest",
         },
     },
+    "bazel/ebuild/private/cmd/build_image": {
+    },
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/common/bazelutil": {
@@ -501,6 +515,8 @@ _NORMAL_DEV_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/build_image": {
+    },
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/common/bazelutil": {
@@ -541,6 +557,8 @@ _PROC_MACRO_DEPENDENCIES = {
             "strum_macros": "@update_all_crates__strum_macros-0.24.3//:strum_macros",
         },
     },
+    "bazel/ebuild/private/cmd/build_image": {
+    },
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/common/bazelutil": {
@@ -580,6 +598,8 @@ _PROC_MACRO_DEPENDENCIES = {
 _PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/build_image": {
+    },
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/common/bazelutil": {
@@ -612,6 +632,8 @@ _PROC_MACRO_ALIASES = {
 
 _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
@@ -647,6 +669,8 @@ _PROC_MACRO_DEV_ALIASES = {
     "bazel/ebuild/private/alchemist": {
         _COMMON_CONDITION: {
         },
+    },
+    "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
@@ -685,6 +709,8 @@ _PROC_MACRO_DEV_ALIASES = {
 _BUILD_DEPENDENCIES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/build_image": {
+    },
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/common/bazelutil": {
@@ -717,6 +743,8 @@ _BUILD_DEPENDENCIES = {
 
 _BUILD_ALIASES = {
     "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
@@ -751,6 +779,8 @@ _BUILD_ALIASES = {
 _BUILD_PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/build_image": {
+    },
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/common/bazelutil": {
@@ -783,6 +813,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
 
 _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/alchemist": {
+    },
+    "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
@@ -2036,6 +2068,16 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/url/2.3.1/download"],
         strip_prefix = "url-2.3.1",
         build_file = Label("@cros//bazel/crates:BUILD.url-2.3.1.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__users-0.11.0",
+        sha256 = "24cc0f6d6f267b73e5a2cadf007ba8f9bc39c6a6f9666f8cf25ea809a153b032",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/users/0.11.0/download"],
+        strip_prefix = "users-0.11.0",
+        build_file = Label("@cros//bazel/crates:BUILD.users-0.11.0.bazel"),
     )
 
     maybe(

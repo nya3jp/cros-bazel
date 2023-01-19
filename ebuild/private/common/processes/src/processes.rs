@@ -41,7 +41,7 @@ pub fn run_and_check(cmd: &mut Command) -> Result<Output> {
     let out = run(cmd)?;
     if !out.status.success() {
         bail!(
-            "Command failed to run. Got stderr {}",
+            "Command {cmd:?} failed to run. Got stderr {}",
             std::str::from_utf8(&out.stderr)?
         );
     }

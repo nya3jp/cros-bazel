@@ -2,26 +2,51 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("//bazel/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 load("//bazel/ebuild:defs.bzl", "overlay_set")
 load("//bazel/ebuild/private:build_image.bzl", "build_image")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+bool_flag(
+    name = "use_rust_build_image",
+    build_setting_default = True,
+)
+
+config_setting(
+    name = "is_build_image_rust",
+    flag_values = {
+        ":use_rust_build_image": "true",
+    },
+)
+
+alias(
+    name = "build_image",
+    actual = select({
+        ":is_build_image_rust": ":build_image_rust",
+        "//conditions:default": ":build_image_go",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+DATA = [
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gdb",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:glibc",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:go",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libcxx",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
+    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
+    "//bazel/ebuild/private/cmd/install_deps:install_deps.sh",
+] + glob(["container_files/*"])
 
 go_library(
     name = "build_image_lib",
     srcs = ["main.go"],
-    data = [
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gdb",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:glibc",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:go",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libcxx",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
-        "//bazel/ebuild/private/cmd/install_deps:install_deps.sh",
-    ] + glob(["container_files/*"]),
+    data = DATA,
     importpath = "cros.local/bazel/ebuild/private/cmd/build_image",
     visibility = ["//visibility:private"],
     deps = [
@@ -37,7 +62,7 @@ go_library(
 )
 
 go_binary(
-    name = "build_image",
+    name = "build_image_go",
     embed = [":build_image_lib"],
     visibility = ["//visibility:public"],
 )
@@ -71,5 +96,21 @@ build_image(
         "//third_party/portage-stable/sys-devel/llvm-common:0",
     ],
     overlays = ":overlays_build_image",
-    sdk = "//bazel/sdk:arm64-generic"
+    sdk = "//bazel/sdk:arm64-generic",
+)
+
+rust_binary_crate(
+    name = "build_image_rust",
+    crate_name = "build_image",
+    data = DATA,
+    deps = [
+        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+        "//bazel/ebuild/private/common/mountsdk:mountsdk_rust",
+        "//bazel/ebuild/private/common/processes:processes_rust",
+    ],
+)
+
+rust_crate_test(
+    name = "build_image_rust_test",
+    crate = ":build_image_rust",
 )
