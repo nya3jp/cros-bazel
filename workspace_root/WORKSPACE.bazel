@@ -39,14 +39,20 @@ load("//bazel/ebuild:portage.bzl", "portage_repositories")
 
 portage_repositories()
 
+load("@portage//:repositories.bzl", "portage_dependencies")
+
+portage_dependencies()
+
 load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
 
 prebuilts_dependencies()
 
+# TODO: Delete once update_build is removed
 load("//third_party/portage-stable:repositories.bzl", portage_stable_dependencies = "dependencies")
 
 portage_stable_dependencies()
 
+# TODO: Delete once update_build is removed
 load("//third_party/chromiumos-overlay:repositories.bzl", chromiumos_overlay_dependencies = "dependencies")
 
 chromiumos_overlay_dependencies()
