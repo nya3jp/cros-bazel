@@ -49,7 +49,7 @@ pub struct ThinPackageRef<'a> {
 ///
 /// See the PMS for the specification:
 /// https://projects.gentoo.org/pms/8/pms.html#x1-820008.3.3
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PackageSlotDependency {
     slot: Option<(String, Option<String>)>,
     rebuild_on_slot_change: bool,
@@ -176,7 +176,7 @@ pub enum PackageVersionOp {
 /// Represents a package version dependency.
 ///
 /// This is a subcomponent of [`PackageAtomDependency`].
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PackageVersionDependency {
     op: PackageVersionOp,
     version: Version,
@@ -238,7 +238,7 @@ pub enum PackageBlock {
 ///
 /// See the PMS for the specification:
 /// https://projects.gentoo.org/pms/8/pms.html#x1-790008.3
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct PackageAtomDependency {
     package_name: String,
     version: Option<PackageVersionDependency>,

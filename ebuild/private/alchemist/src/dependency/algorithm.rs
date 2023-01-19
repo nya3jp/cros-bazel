@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{fmt::Display, hash::Hash};
+use std::fmt::Display;
 
 use anyhow::{bail, Result};
 use itertools::Itertools;
@@ -115,7 +115,7 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
 
 /// Converts a dependency expression to a list of leaf dependencies if it is
 /// a leaf dependency or an "all-of" of leaf dependencies.
-pub fn parse_simplified_dependency<L: Clone + Display + Eq + Hash>(
+pub fn parse_simplified_dependency<L: Clone + Display + Eq + Ord>(
     deps: Dependency<L>,
 ) -> Result<Vec<L>> {
     match deps {
@@ -132,7 +132,7 @@ pub fn parse_simplified_dependency<L: Clone + Display + Eq + Hash>(
                         ),
                     })
                     .collect::<Result<Vec<_>>>()?;
-                Ok(atoms.into_iter().unique().collect())
+                Ok(atoms.into_iter().sorted().dedup().collect())
             }
             CompositeDependency::Constant {
                 value: false,

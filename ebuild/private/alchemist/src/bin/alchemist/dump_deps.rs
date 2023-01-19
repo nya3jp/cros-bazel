@@ -20,7 +20,7 @@ use alchemist::{
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use rayon::prelude::*;
-use rpds::{HashTrieSetSync, VectorSync};
+use rpds::{RedBlackTreeSetSync, VectorSync};
 use serde::{Deserialize, Serialize};
 
 /// Package selected by [`select_packages`].
@@ -58,7 +58,7 @@ type UnresolvedPackageMap = HashMap<PackageSlotKey, UnresolvedPackage>;
 #[derive(Clone, Debug)]
 struct SearchPath {
     path: VectorSync<PackageAtomDependency>,
-    set: HashTrieSetSync<PackageAtomDependency>,
+    set: RedBlackTreeSetSync<PackageAtomDependency>,
 }
 
 impl SearchPath {
@@ -66,7 +66,7 @@ impl SearchPath {
     fn new() -> Self {
         Self {
             path: VectorSync::new_sync(),
-            set: HashTrieSetSync::new_sync(),
+            set: RedBlackTreeSetSync::new_sync(),
         }
     }
 

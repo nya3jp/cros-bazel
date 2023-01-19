@@ -20,7 +20,7 @@ static VERSION_SUFFIX_RE: Lazy<Regex> =
 ///
 /// See PMS for the specification.
 /// https://projects.gentoo.org/pms/8/pms.html#x1-250003.2
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 pub struct Version {
     main: Vec<String>,
     letter: String,
@@ -290,7 +290,7 @@ impl Ord for Version {
 }
 
 /// Represents a version suffix, such as "_alpha42".
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 pub struct VersionSuffix {
     label: VersionSuffixLabel,
     number: String,
