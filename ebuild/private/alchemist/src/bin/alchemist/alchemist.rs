@@ -6,6 +6,7 @@ use std::os::unix::fs;
 
 use std::{env::current_dir, path::PathBuf};
 
+use crate::digest_repo::digest_repo_main;
 use crate::dump_deps::dump_deps_main;
 use crate::dump_package::dump_package_main;
 use crate::generate_repo::generate_repo_main;
@@ -60,6 +61,13 @@ pub enum Commands {
         /// Output directory path.
         #[arg(short = 'o', long, value_name = "PATH")]
         output_dir: PathBuf,
+    },
+    /// Generates a digest of the repository that can be used to indicate if
+    /// any of the overlays, ebuilds, eclasses, etc have changed.
+    DigestRepo {
+        /// Directory used to store a (file_name, mtime) => digest cache.
+        #[command(flatten)]
+        args: crate::digest_repo::Args,
     },
 }
 
@@ -187,6 +195,9 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 &toolchains,
                 &output_dir,
             )?;
+        }
+        Commands::DigestRepo { args: local_args } => {
+            digest_repo_main(&args.board, local_args)?;
         }
     }
 
