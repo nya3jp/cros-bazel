@@ -4,7 +4,7 @@
 
 use anyhow::{anyhow, bail, Context, Result};
 use clap::{command, Parser};
-use makechroot::{BindMount};
+use makechroot::BindMount;
 use mountsdk::{ConfigArgs, MountedSDK};
 use std::{
     path::{Path, PathBuf},
@@ -26,6 +26,9 @@ struct Cli {
 
     #[arg(long, required = true)]
     ebuild: EbuildMetadata,
+
+    #[arg(long, required = true)]
+    ebuild_log: String,
 
     #[arg(long)]
     file: Vec<BindMount>,
@@ -180,7 +183,7 @@ fn main() -> Result<()> {
         spec.install(&sysroot)?;
     }
     let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
-    processes::run_and_check(
+    processes::run_suppress_stderr(
         sdk.base_command()
             .args([
                 MAIN_SCRIPT,
@@ -192,6 +195,7 @@ fn main() -> Result<()> {
             ])
             .env("BOARD", args.board)
             .env("RUNFILES_DIR", runfiles_dir),
+        &args.ebuild_log,
     )?;
 
     let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(

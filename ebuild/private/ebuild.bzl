@@ -46,6 +46,7 @@ def _ebuild_calculate_inputs(ctx, args):
 def _ebuild_impl(ctx):
     src_basename = _ebuild_basename(ctx)
     binpkg_output_file = ctx.actions.declare_file(src_basename + ".tbz2")
+    log_output_file = ctx.actions.declare_file(src_basename + ".log")
 
     ebuild_inside_path = ctx.file.ebuild.path.removeprefix(
         ctx.file.ebuild.owner.workspace_root + "/",
@@ -54,6 +55,7 @@ def _ebuild_impl(ctx):
     )
     args = ctx.actions.args()
     args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
+    args.add("--ebuild-log=%s" % (log_output_file.path))
 
     _ebuild_calculate_inputs(ctx, args)
 
@@ -125,7 +127,7 @@ def _ebuild_impl(ctx):
     providers = [
         output_group_info,
         library_info,
-        DefaultInfo(files = depset(outputs + [binpkg_output_file])),
+        DefaultInfo(files = depset(outputs + [binpkg_output_file, log_output_file])),
     ]
 
     prebuilt = ctx.attr.prebuilt[BuildSettingInfo].value
@@ -134,7 +136,7 @@ def _ebuild_impl(ctx):
         progress_message_name = ctx.file.ebuild.basename,
         inputs = [ctx.file.ebuild],
         binpkg_output_file = binpkg_output_file,
-        outputs = [binpkg_output_file],
+        outputs = [binpkg_output_file, log_output_file],
         args = args,
         install_deps = True,
         generate_run_action = not prebuilt,
