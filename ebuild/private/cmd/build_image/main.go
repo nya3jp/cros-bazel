@@ -91,16 +91,16 @@ var app = &cli.App{
 		// later if we find out they're never needed throughout the whole
 		// build_image process.
 		for _, resource := range []string{
-			"amd64_host_binutils_2_36_1_r8/file/binutils-2.36.1-r8.tbz2",
-			"amd64_host_compiler_rt_15_0_pre458507_r6/file/compiler-rt-15.0_pre458507-r6.tbz2",
-			"amd64_host_gcc_10_2_0_r28/file/gcc-10.2.0-r28.tbz2",
-			"amd64_host_gdb_9_2_20200923_r9/file/gdb-9.2.20200923-r9.tbz2",
-			"amd64_host_glibc_2_33_r17/file/glibc-2.33-r17.tbz2",
-			"amd64_host_go_1_18_r2/file/go-1.18-r2.tbz2",
-			"amd64_host_libcxx_15_0_pre458507_r6/file/libcxx-15.0_pre458507-r6.tbz2",
-			"amd64_host_libxcrypt_4_4_28_r1/file/libxcrypt-4.4.28-r1.tbz2",
-			"amd64_host_linux_headers_4_14_r56/file/linux-headers-4.14-r56.tbz2",
-			"amd64_host_llvm_libunwind_15_0_pre458507_r4/file/llvm-libunwind-15.0_pre458507-r4.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_binutils_2_36_1_r8/file/binutils-2.36.1-r8.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_compiler_rt_15_0_pre458507_r6/file/compiler-rt-15.0_pre458507-r6.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_gcc_10_2_0_r28/file/gcc-10.2.0-r28.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_gdb_9_2_20200923_r9/file/gdb-9.2.20200923-r9.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_glibc_2_33_r17/file/glibc-2.33-r17.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_go_1_18_r2/file/go-1.18-r2.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_libcxx_15_0_pre458507_r6/file/libcxx-15.0_pre458507-r6.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_libxcrypt_4_4_28_r1/file/libxcrypt-4.4.28-r1.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_linux_headers_4_14_r56/file/linux-headers-4.14-r56.tbz2",
+			"amd64_host_cross_aarch64_cros_linux_gnu_llvm_libunwind_15_0_pre458507_r4/file/llvm-libunwind-15.0_pre458507-r4.tbz2",
 		} {
 			// TODO: install_libc hardcodes arm64 to also install the arm32 packages.
 			// This is required only if nacl is used.
