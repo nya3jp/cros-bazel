@@ -11,8 +11,9 @@ def rust_repositories():
         github_repo = "rules_rust",
         tag = RULES_VERSION,
         patches = [
+            # https://github.com/bazelbuild/rules_rust/pull/1791
+            "//bazel/toolchains/rust:patches/path-env.patch",
             "//bazel/toolchains/rust:patches/fix-update-crates.patch",
-            "//bazel/toolchains/rust:patches/override-bazel.patch",
             "//bazel/toolchains/rust:patches/home-directory-env.patch",
         ],
     )

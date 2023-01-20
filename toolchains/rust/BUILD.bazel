@@ -7,17 +7,6 @@ py_binary(
     deps = ["@rules_python//python/runfiles"],
 )
 
-sh_binary(
-    name = "update_crates_custom_bazel",
-    srcs = ["//bazel/toolchains/rust:update_crates_custom_bazel.sh"],
-    data = [
-        "//:tools/bazel",
-    ],
-    deps = [
-        "@bazel_tools//tools/bash/runfiles",
-    ],
-)
-
 # Updates a minimal set of crates required to meet your requirements.
 # Equivelant of "cargo update --workspace".
 sh_binary(
@@ -38,7 +27,7 @@ crates_vendor(
     annotations = dict(runfiles = [crate.annotation(
         rustc_env = dict(RULES_RUST_RUNFILES_WORKSPACE_NAME = "cros"),
     )]),
-    bazel = ":update_crates_custom_bazel",
+    bazel = "//:tools/bazel",
     cargo_lockfile = "//:Cargo.lock",
     manifests = [
         # Keep this list in sync with the members listed in //:Cargo.toml.
