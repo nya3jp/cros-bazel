@@ -178,6 +178,12 @@ alias(
 )
 
 alias(
+    name = "sha2",
+    actual = "@update_all_crates__sha2-0.10.6//:sha2",
+    tags = ["manual"],
+)
+
+alias(
     name = "signal-hook",
     actual = "@update_all_crates__signal-hook-0.3.14//:signal_hook",
     tags = ["manual"],
@@ -263,6 +269,12 @@ alias(
 )
 
 alias(
+    name = "wait-timeout__reader",
+    actual = "@update_all_crates__wait-timeout-0.2.0//:reader__bin",
+    tags = ["manual"],
+)
+
+alias(
     name = "wait-timeout__sleep",
     actual = "@update_all_crates__wait-timeout-0.2.0//:sleep__bin",
     tags = ["manual"],
@@ -271,11 +283,5 @@ alias(
 alias(
     name = "wait-timeout__exit",
     actual = "@update_all_crates__wait-timeout-0.2.0//:exit__bin",
-    tags = ["manual"],
-)
-
-alias(
-    name = "wait-timeout__reader",
-    actual = "@update_all_crates__wait-timeout-0.2.0//:reader__bin",
     tags = ["manual"],
 )

@@ -133,6 +133,17 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         Some(s) => PathBuf::from(s),
         None => default_source_dir()?,
     };
+
+    // Commands that don't need the chroot
+    match args.command {
+        Commands::DigestRepo { args: local_args } => {
+            return digest_repo_main(&args.board, &source_dir, local_args);
+        }
+        _ => {
+            // Handle the rest below
+        }
+    }
+
     let translator = enter_fake_chroot(&source_dir)?;
 
     let root_dir = PathBuf::from("/build").join(&args.board);
@@ -196,8 +207,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 &output_dir,
             )?;
         }
-        Commands::DigestRepo { args: local_args } => {
-            digest_repo_main(&args.board, local_args)?;
+        Commands::DigestRepo { args: _ } => {
+            panic!("BUG: Should be handled above");
         }
     }
 
