@@ -33,6 +33,7 @@ thiserror.workspace = true
 tinytemplate.workspace = true
 url.workspace = true
 walkdir.workspace = true
+topological-sort.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

@@ -314,6 +314,7 @@ _NORMAL_DEPENDENCIES = {
             "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
             "thiserror": "@update_all_crates__thiserror-1.0.38//:thiserror",
             "tinytemplate": "@update_all_crates__tinytemplate-1.2.1//:tinytemplate",
+            "topological-sort": "@update_all_crates__topological-sort-0.2.2//:topological_sort",
             "url": "@update_all_crates__url-2.3.1//:url",
             "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
         },
@@ -2035,6 +2036,16 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/tinyvec_macros/0.1.0/download"],
         strip_prefix = "tinyvec_macros-0.1.0",
         build_file = Label("@cros//bazel/crates:BUILD.tinyvec_macros-0.1.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__topological-sort-0.2.2",
+        sha256 = "ea68304e134ecd095ac6c3574494fc62b909f416c4fca77e440530221e549d3d",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/topological-sort/0.2.2/download"],
+        strip_prefix = "topological-sort-0.2.2",
+        build_file = Label("@cros//bazel/crates:BUILD.topological-sort-0.2.2.bazel"),
     )
 
     maybe(
