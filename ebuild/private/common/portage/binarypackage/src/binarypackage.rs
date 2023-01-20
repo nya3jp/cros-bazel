@@ -58,6 +58,20 @@ impl BinaryPackage {
         Ok(bp)
     }
 
+    pub fn extract_files<P: AsRef<Path>>(
+        bin_pkg: P,
+        xpak_specs: &[XpakSpec],
+        output_file_specs: &[OutputFileSpec],
+    ) -> Result<()> {
+        if xpak_specs.is_empty() && output_file_specs.is_empty() {
+            return Ok(());
+        }
+        let mut pkg = Self::new(bin_pkg)?;
+        pkg.extract_xpak_files(xpak_specs)?;
+        pkg.extract_out_files(output_file_specs)?;
+        Ok(())
+    }
+
     pub fn new_tarball_reader(&self) -> Result<std::io::Take<File>> {
         let new_fd = fcntl(
             self.f.as_raw_fd(),

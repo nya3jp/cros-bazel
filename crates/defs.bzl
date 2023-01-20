@@ -334,6 +334,12 @@ _NORMAL_DEPENDENCIES = {
             "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
         },
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_all_crates__clap-4.0.32//:clap",
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -421,6 +427,10 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+        _COMMON_CONDITION: {
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -475,6 +485,8 @@ _NORMAL_DEV_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -519,6 +531,8 @@ _NORMAL_DEV_ALIASES = {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -561,6 +575,8 @@ _PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -602,6 +618,8 @@ _PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -636,6 +654,8 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
+    },
+    "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
@@ -673,6 +693,8 @@ _PROC_MACRO_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
+    },
+    "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
@@ -713,6 +735,8 @@ _BUILD_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -747,6 +771,8 @@ _BUILD_ALIASES = {
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
+    },
+    "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
@@ -783,6 +809,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/build_package": {
     },
+    "bazel/ebuild/private/cmd/extract_interface": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -817,6 +845,8 @@ _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
+    },
+    "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },

@@ -111,20 +111,6 @@ impl SysrootFileSpec {
     }
 }
 
-fn extract_binary_package_files<P: AsRef<Path>>(
-    bin_pkg: P,
-    xpak_specs: &[XpakSpec],
-    output_file_specs: &[OutputFileSpec],
-) -> Result<()> {
-    if xpak_specs.is_empty() && output_file_specs.is_empty() {
-        return Ok(());
-    }
-    let mut pkg = BinaryPackage::new(bin_pkg)?;
-    pkg.extract_xpak_files(xpak_specs)?;
-    pkg.extract_out_files(output_file_specs)?;
-    Ok(())
-}
-
 #[derive(Debug, Clone)]
 struct EbuildMetadata {
     source: PathBuf,
@@ -250,7 +236,7 @@ fn main() -> Result<()> {
         &args.output,
     )
     .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
-    extract_binary_package_files(args.output, &args.xpak, &args.output_file)?;
+    BinaryPackage::extract_files(args.output, &args.xpak, &args.output_file)?;
 
     Ok(())
 }

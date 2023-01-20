@@ -1,0 +1,12 @@
+load("//bazel/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+
+rust_binary_crate(
+    name = "extract_interface",
+    visibility = ["//visibility:public"],
+    deps = ["//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust"],
+)
+
+rust_crate_test(
+    name = "extract_interface_test",
+    crate = ":extract_interface",
+)
