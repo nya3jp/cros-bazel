@@ -5,6 +5,7 @@
 load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "COMMON_ATTRS", "debuggable_mountsdk", "mountsdk_generic")
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo", "string_flag")
 
 def _format_input_file_arg(strip_prefix, file):
     return "--sysroot-file=%s=%s" % (file.path.removeprefix(strip_prefix), file.path)
@@ -126,6 +127,8 @@ def _ebuild_impl(ctx):
         library_info,
         DefaultInfo(files = depset(outputs + [binpkg_output_file])),
     ]
+
+    prebuilt = ctx.attr.prebuilt[BuildSettingInfo].value
     providers.extend(mountsdk_generic(
         ctx,
         progress_message_name = ctx.file.ebuild.basename,
@@ -134,7 +137,23 @@ def _ebuild_impl(ctx):
         outputs = [binpkg_output_file],
         args = args,
         install_deps = True,
+        generate_run_action = not prebuilt,
     ))
+
+    if prebuilt:
+        gsutil_path = ctx.attr._gsutil_path[BuildSettingInfo].value
+        ctx.actions.run(
+            inputs = [],
+            outputs = [binpkg_output_file],
+            executable = ctx.executable._download_prebuilt,
+            arguments = [gsutil_path, prebuilt, binpkg_output_file.path],
+            execution_requirements = {
+                "requires-network": "",
+                "no-sandbox": "",
+                "no-remote": "",
+            },
+            progress_message = "Downloading %s" % prebuilt,
+        )
     return providers
 
 _ebuild = rule(
@@ -178,6 +197,7 @@ _ebuild = rule(
             """,
             providers = [EbuildLibraryInfo],
         ),
+        prebuilt = attr.label(providers = [BuildSettingInfo]),
         _builder = attr.label(
             executable = True,
             cfg = "exec",
@@ -188,9 +208,28 @@ _ebuild = rule(
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/extract_interface"),
         ),
+        _download_prebuilt = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private:download_prebuilt"),
+        ),
+        _gsutil_path = attr.label(
+            providers = [BuildSettingInfo],
+            default = Label("//bazel/ebuild/private:gsutil_path"),
+        ),
         **COMMON_ATTRS
     ),
 )
 
 def ebuild(name, **kwargs):
-    debuggable_mountsdk(name = name, orig_rule = _ebuild, **kwargs)
+    string_flag(
+        name = name + "_prebuilt",
+        build_setting_default = "",
+    )
+
+    debuggable_mountsdk(
+        name = name,
+        orig_rule = _ebuild,
+        prebuilt = ":%s_prebuilt" % name,
+        **kwargs
+    )

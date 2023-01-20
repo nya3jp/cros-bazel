@@ -119,7 +119,7 @@ def create_layer(
     )
     return output_root, output_symindex
 
-def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, install_deps = False):
+def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, install_deps = False, generate_run_action = True):
     sdk = ctx.attr.sdk[SDKInfo]
     args.add_all([
         "--output=" + binpkg_output_file.path,
@@ -199,21 +199,23 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         order = "postorder",
     )
 
-    ctx.actions.run(
-        inputs = depset(direct_inputs, transitive = transitive_inputs),
-        outputs = outputs,
-        executable = ctx.executable._builder,
-        arguments = [args],
-        execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
-            # Disable sandbox to avoid creating a symlink forest.
-            # This does not affect hermeticity since ebuild runs in a container.
-            "no-sandbox": "",
-        },
-        mnemonic = "Ebuild",
-        progress_message = "Building " + progress_message_name,
-    )
+    if generate_run_action:
+        ctx.actions.run(
+            inputs = depset(direct_inputs, transitive = transitive_inputs),
+            outputs = outputs,
+            executable = ctx.executable._builder,
+            arguments = [args],
+            execution_requirements = {
+                # Send SIGTERM instead of SIGKILL on user interruption.
+                "supports-graceful-termination": "",
+                # Disable sandbox to avoid creating a symlink forest.
+                # This does not affect hermeticity since ebuild runs in a container.
+                "no-sandbox": "",
+                "no-remote": "",
+            },
+            mnemonic = "Ebuild",
+            progress_message = "Building " + progress_message_name,
+        )
 
     return [
         BinaryPackageInfo(
