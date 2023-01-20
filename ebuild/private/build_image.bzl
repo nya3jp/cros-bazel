@@ -11,14 +11,16 @@ def _build_image_impl(ctx):
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
 
-    return mountsdk_generic(
+    providers = [DefaultInfo(files = [output])]
+    providers.extend(mountsdk_generic(
         ctx,
         progress_message_name = ctx.label.name,
         inputs = direct_inputs,
         binpkg_output_file = output,
         outputs = [output],
         args = args,
-    )
+    ))
+    return providers
 
 _build_image = rule(
     implementation = _build_image_impl,

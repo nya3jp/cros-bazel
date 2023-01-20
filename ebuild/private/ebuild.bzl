@@ -12,11 +12,9 @@ def _format_input_file_arg(strip_prefix, file):
 def _ebuild_basename(ctx):
     return ctx.file.ebuild.basename.rsplit(".", 1)[0]
 
-def _ebuild_declare_outputs(ctx, args, file_type, allowed_extensions = None):
-    basename = _ebuild_basename(ctx)
-
+def _ebuild_declare_outputs(ctx, basename, args, paths, allowed_extensions = None):
     outputs = []
-    for inside_path in getattr(ctx.attr, file_type):
+    for inside_path in paths:
         if not paths.is_absolute(inside_path):
             fail("%s is not absolute" % inside_path)
         file_name = paths.basename(inside_path)
@@ -54,35 +52,38 @@ def _ebuild_impl(ctx):
         "internal/overlays/",
     )
     args = ctx.actions.args()
-    args.add_all([
-        "--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path),
-    ])
+    args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
 
     _ebuild_calculate_inputs(ctx, args)
 
+    extraction_args = ctx.actions.args()
+    extraction_args.add("--binpkg=%s" % binpkg_output_file.path)
     xpak_outputs = []
     for xpak_file in ["NEEDED", "REQUIRES", "PROVIDES"]:
         file = ctx.actions.declare_file(paths.join(src_basename, "xpak", xpak_file))
         xpak_outputs.append(file)
-        args.add("--xpak=%s=?%s" % (xpak_file, file.path))
+        extraction_args.add("--xpak=%s=?%s" % (xpak_file, file.path))
 
     header_outputs = _ebuild_declare_outputs(
         ctx,
-        args,
-        "headers",
+        src_basename,
+        extraction_args,
+        ctx.attr.headers,
         allowed_extensions = [".h", ".hpp"],
     )
     pkg_config_outputs = _ebuild_declare_outputs(
         ctx,
-        args,
-        "pkg_config",
+        src_basename,
+        extraction_args,
+        ctx.attr.pkg_config,
         allowed_extensions = [".pc"],
     )
-    shared_lib_outputs = _ebuild_declare_outputs(ctx, args, "shared_libs")
+    shared_lib_outputs = _ebuild_declare_outputs(ctx, src_basename, extraction_args, ctx.attr.shared_libs)
     static_lib_outputs = _ebuild_declare_outputs(
         ctx,
-        args,
-        "static_libs",
+        src_basename,
+        extraction_args,
+        ctx.attr.static_libs,
         allowed_extensions = [".a"],
     )
 
@@ -95,6 +96,21 @@ def _ebuild_impl(ctx):
         static_libs = depset(static_lib_outputs),
     )
 
+    outputs = []
+    outputs.extend(xpak_outputs)
+    outputs.extend(header_outputs)
+    outputs.extend(pkg_config_outputs)
+    outputs.extend(shared_lib_outputs)
+    outputs.extend(static_lib_outputs)
+
+    ctx.actions.run(
+        inputs = [binpkg_output_file],
+        outputs = outputs,
+        executable = ctx.executable._extract_interface,
+        arguments = [extraction_args],
+        progress_message = "Generating metadata for %s" % ctx.label.name,
+    )
+
     # TODO: Only generate this if we have files specified
     library_info = EbuildLibraryInfo(
         strip_prefix = paths.join(binpkg_output_file.path.rsplit(".", 1)[0], "files"),
@@ -104,25 +120,22 @@ def _ebuild_impl(ctx):
         static_libs = output_group_info.static_libs,
     )
 
-    outputs = ([binpkg_output_file] +
-               xpak_outputs +
-               header_outputs +
-               pkg_config_outputs +
-               shared_lib_outputs +
-               static_lib_outputs)
-
-    # TODO: Create CCInfo so we can start using rules_cc
-
-    return mountsdk_generic(
+    # TODO: Create a CCInfo provider so we can start using rules_cc
+    providers = [
+        output_group_info,
+        library_info,
+        DefaultInfo(files = depset(outputs + [binpkg_output_file])),
+    ]
+    providers.extend(mountsdk_generic(
         ctx,
         progress_message_name = ctx.file.ebuild.basename,
         inputs = [ctx.file.ebuild],
         binpkg_output_file = binpkg_output_file,
-        outputs = outputs,
+        outputs = [binpkg_output_file],
         args = args,
-        extra_providers = [output_group_info, library_info],
         install_deps = True,
-    )
+    ))
+    return providers
 
 _ebuild = rule(
     implementation = _ebuild_impl,
@@ -169,6 +182,11 @@ _ebuild = rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/build_package"),
+        ),
+        _extract_interface = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/extract_interface"),
         ),
         **COMMON_ATTRS
     ),

@@ -119,16 +119,15 @@ def create_layer(
     )
     return output_root, output_symindex
 
-def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, extra_providers = [], install_deps = False):
+def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, install_deps = False):
     sdk = ctx.attr.sdk[SDKInfo]
     args.add_all([
         "--output=" + binpkg_output_file.path,
         "--board=" + sdk.board,
     ])
 
-    direct_inputs = [
-        ctx.executable._builder,
-    ] + inputs
+    direct_inputs = [ctx.executable._builder]
+    direct_inputs.extend(inputs)
     transitive_inputs = []
 
     args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
@@ -217,7 +216,6 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
     )
 
     return [
-        DefaultInfo(files = depset(outputs)),
         BinaryPackageInfo(
             file = binpkg_output_file,
             transitive_runtime_deps_files = transitive_runtime_deps_files,
@@ -231,7 +229,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
             direct_inputs = direct_inputs,
             transitive_inputs = transitive_inputs,
         ),
-    ] + extra_providers
+    ]
 
 COMMON_ATTRS = dict(
     distfiles = attr.label_keyed_string_dict(
