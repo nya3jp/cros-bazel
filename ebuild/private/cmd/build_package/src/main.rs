@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 use anyhow::{anyhow, bail, Context, Result};
-use binarypackage::{BinaryPackage, OutputFileSpec, XpakSpec};
 use clap::{command, Parser};
 use makechroot::{BindMount};
 use mountsdk::{ConfigArgs, MountedSDK};
@@ -36,19 +35,6 @@ struct Cli {
 
     #[arg(long, required = true)]
     output: PathBuf,
-
-    #[arg(
-        long,
-        help = "<inside path>=<outside path>: Extracts a file from the binpkg and writes it to the outside path"
-    )]
-    output_file: Vec<OutputFileSpec>,
-
-    #[arg(
-        long,
-        help = "<XPAK key>=[?]<output file>: Write the XPAK key from the binpkg to the \
-    specified file. If =? is used then an empty file is created if XPAK key doesn't exist."
-    )]
-    xpak: Vec<XpakSpec>,
 
     #[arg(
         long,
@@ -220,7 +206,6 @@ fn main() -> Result<()> {
         &args.output,
     )
     .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
-    BinaryPackage::extract_files(args.output, &args.xpak, &args.output_file)?;
 
     Ok(())
 }
