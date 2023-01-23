@@ -11,6 +11,7 @@ makechroot = { path = "../makechroot" }
 binarypackage = { path = "../portage/binarypackage" }
 
 anyhow.workspace = true
+clap.workspace = true
 libc.workspace = true
 nix.workspace = true
 runfiles.workspace = true

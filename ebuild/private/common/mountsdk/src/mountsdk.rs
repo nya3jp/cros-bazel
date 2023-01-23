@@ -14,7 +14,7 @@ use tempfile::{tempdir, TempDir};
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumString, strum_macros::Display)]
 #[strum(serialize_all = "kebab-case")]
-pub enum LoginMode {
+pub(crate) enum LoginMode {
     #[strum(serialize = "")]
     Never,
     Before,
@@ -31,7 +31,7 @@ pub struct Config {
     pub remounts: Vec<PathBuf>,
 
     pub run_in_container_extra_args: Vec<String>,
-    pub login_mode: LoginMode,
+    pub(crate) login_mode: LoginMode,
 }
 
 pub struct MountedSDK {

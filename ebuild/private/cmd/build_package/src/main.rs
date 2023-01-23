@@ -4,9 +4,9 @@
 
 use anyhow::{anyhow, bail, Context, Result};
 use binarypackage::{BinaryPackage, OutputFileSpec, XpakSpec};
-use clap::Parser;
-use makechroot::{BindMount, OverlayInfo};
-use mountsdk::{LoginMode, MountedSDK};
+use clap::{command, Parser};
+use makechroot::{BindMount};
+use mountsdk::{ConfigArgs, MountedSDK};
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
@@ -19,24 +19,8 @@ const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_package.sh";
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
 struct Cli {
-    #[arg(long, required = true)]
-    sdk: Vec<PathBuf>,
-
-    #[arg(
-        long,
-        help = "<inside path>=<squashfs file | directory | tar.*>: Mounts the file or directory at \
-            the specified path. Inside path can be absolute or relative to /mnt/host/source/.",
-        required = true
-    )]
-    overlay: Vec<OverlayInfo>,
-
-    #[arg(
-        long = "login",
-        help = "logs in to the SDK before installing deps, before building, after \
-        building, or after failing to build respectively.",
-        default_value_t = LoginMode::Never,
-    )]
-    login_mode: LoginMode,
+    #[command(flatten)]
+    mountsdk_config: ConfigArgs,
 
     #[arg(long, required = true)]
     board: String,
@@ -154,7 +138,7 @@ impl FromStr for EbuildMetadata {
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let mut cfg = mountsdk::get_mount_config(args.sdk, args.overlay, args.login_mode)?;
+    let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
 
     let r = runfiles::Runfiles::create()?;
 

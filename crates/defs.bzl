@@ -363,6 +363,7 @@ _NORMAL_DEPENDENCIES = {
     "bazel/ebuild/private/common/mountsdk": {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_all_crates__clap-4.0.32//:clap",
             "libc": "@update_all_crates__libc-0.2.139//:libc",
             "nix": "@update_all_crates__nix-0.26.1//:nix",
             "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",

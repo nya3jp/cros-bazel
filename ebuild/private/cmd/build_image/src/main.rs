@@ -4,8 +4,8 @@
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use makechroot::{BindMount, OverlayInfo};
-use mountsdk::{InstallGroup, LoginMode, MountedSDK};
+use makechroot::BindMount;
+use mountsdk::{InstallGroup, MountedSDK};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::from_utf8;
@@ -15,24 +15,8 @@ const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_image.sh";
 #[derive(Parser, Debug)]
 #[clap()]
 pub struct Cli {
-    #[arg(long, required = true)]
-    sdk: Vec<PathBuf>,
-
-    #[arg(
-        long,
-        help = "<inside path>=<squashfs file | directory | tar.*>: Mounts the file or directory at \
-            the specified path. Inside path can be absolute or relative to /mnt/host/source/.",
-        required = true
-    )]
-    overlay: Vec<OverlayInfo>,
-
-    #[arg(
-    long = "login",
-    help = "logs in to the SDK before installing deps, before building, after \
-        building, or after failing to build respectively.",
-    default_value_t = LoginMode::Never,
-    )]
-    login_mode: LoginMode,
+    #[command(flatten)]
+    mountsdk_config: mountsdk::ConfigArgs,
 
     #[arg(long)]
     board: String,
@@ -48,7 +32,7 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let r = runfiles::Runfiles::create()?;
 
-    let mut cfg = mountsdk::get_mount_config(args.sdk, args.overlay, args.login_mode)?;
+    let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
 
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation(
