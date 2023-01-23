@@ -7,9 +7,7 @@ package mountsdk_test
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"cros.local/bazel/ebuild/private/common/makechroot"
@@ -86,47 +84,82 @@ func TestRunInSdk(t *testing.T) {
 	}
 
 	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
+		if err := processes.Run(ctx, s.Command("true")); err != nil {
+			t.Errorf("Failed to run true: %v", err)
+		}
+		return nil
+	}); err != nil {
+		t.Error(err)
+	}
+
+	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
 		if err := processes.Run(ctx, s.Command("false")); err == nil {
 			t.Error("The command 'false' unexpectedly succeeded")
 		}
+		return nil
+	}); err != nil {
+		t.Error(err)
+	}
 
+	// Should be a read-only mount.
+	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
 		if err := processes.Run(ctx, s.Command("/bin/bash", "-c", "echo world > /hello")); err == nil {
 			t.Error("Writing to the mount '/hello' succeeded, but it should be read-only")
 		}
+		return nil
+	}); err != nil {
+		t.Error(err)
+	}
+	contents, err := os.ReadFile(helloFile)
+	if err != nil {
+		t.Error(err)
+	}
+	if string(contents) != "hello" {
+		t.Error("Chroot unexpectedly wrote to a mount that should be read-only")
+	}
 
+	// Check we're in the SDK by using a binary unlikely to be on the host machine.
+	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
+		if err := processes.Run(ctx, s.Command("test", "-f", "/usr/bin/ebuild")); err != nil {
+			t.Errorf("Failed to find /usr/bin/ebuild: %v", err)
+		}
+		return nil
+	}); err != nil {
+		t.Error(err)
+	}
+
+	// Confirm that overlays were loaded in to the SDK.
+	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
+		if err := processes.Run(ctx, s.Command("test", "-d", filepath.Join(portageStable, "eclass"))); err != nil {
+			t.Errorf("Failed to find the eclass directory: %v", err)
+		}
+		return nil
+	}); err != nil {
+		t.Error(err)
+	}
+
+	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
+		if err := processes.Run(ctx, s.Command("grep", "EBUILD_CONTENTS", ebuildFile)); err != nil {
+			t.Errorf("Failed to grep the ebuild file: %v", err)
+		}
+		return nil
+	}); err != nil {
+		t.Error(err)
+	}
+
+	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
 		outPkg := s.RootDir.Add("build/arm64-generic/packages/mypkg")
 		if err := os.MkdirAll(outPkg.Outside(), 0755); err != nil {
 			t.Error(err)
 		}
 		outFile := outPkg.Add("mpkg.tbz2")
 
-		for _, cmd := range []*exec.Cmd{
-			s.Command("true"),
-			// Check we're in the SDK by using a binary unlikely
-			// to be on the host machine.
-			s.Command("test", "-f", "/usr/bin/ebuild"),
-			// Confirm that overlays were loaded in to the SDK.
-			s.Command("test", "-d", filepath.Join(portageStable, "eclass")),
-			s.Command("test", "-d", outPkg.Inside()),
-			s.Command("test", "-f", ebuildFile),
-			s.Command("grep", "EBUILD_CONTENTS", ebuildFile),
-			s.Command("touch", outFile.Inside()),
-		} {
-			if err := processes.Run(ctx, cmd); err != nil {
-				t.Errorf("Failed to run %s: %v", strings.Join(cmd.Args, " "), err)
-			}
+		if err := processes.Run(ctx, s.Command("touch", outFile.Inside())); err != nil {
+			t.Errorf("Failed to touch %s: %v", outFile.Inside(), err)
 		}
 		hostOutFile := filepath.Join(s.DiffDir, outFile.Inside())
 		if _, err := os.Stat(hostOutFile); err != nil {
 			t.Errorf("Expected %s to exist: %v", hostOutFile, err)
-		}
-
-		contents, err := os.ReadFile(helloFile)
-		if err != nil {
-			return err
-		}
-		if string(contents) != "hello" {
-			t.Error("Chroot unexpectedly wrote to a mount that should be read-only")
 		}
 		return nil
 	}); err != nil {

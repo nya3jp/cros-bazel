@@ -22,6 +22,7 @@ pub(crate) enum LoginMode {
     AfterFail,
 }
 
+#[derive(Clone)]
 pub struct Config {
     pub overlays: Vec<OverlayInfo>,
     pub bind_mounts: Vec<BindMount>,
@@ -255,47 +256,47 @@ mod tests {
             login_mode: Never,
         };
 
-        let tmp_dir: PathBuf = {
-            let sdk = MountedSDK::new(cfg)?;
-            run_and_check(sdk.base_command().arg("true"))?;
-            assert!(run_and_check(sdk.base_command().arg("false")).is_err());
+        run_and_check(MountedSDK::new(cfg.clone())?.base_command().arg("true"))?;
 
-            // Should be a read-only mount.
-            assert!(run_and_check(sdk.base_command().args([
+        assert!(run_and_check(MountedSDK::new(cfg.clone())?.base_command().arg("false")).is_err());
+
+        // Should be a read-only mount.
+        assert!(
+            run_and_check(MountedSDK::new(cfg.clone())?.base_command().args([
                 "/bin/bash",
                 "-c",
                 "echo world > /hello"
             ]))
-            .is_err());
-            // Verify that the chroot hasn't modified this file.
-            assert_eq!(std::fs::read_to_string(hello)?, "hello");
+            .is_err()
+        );
+        // Verify that the chroot hasn't modified this file.
+        assert_eq!(std::fs::read_to_string(hello)?, "hello");
 
-            // Check we're in the SDK by using a binary unlikely to be on the host machine.
-            run_and_check(sdk.base_command().args(["test", "-f", "/usr/bin/ebuild"]))?;
-            // Confirm that overlays were loaded in to the SDK.
-            run_and_check(sdk.base_command().args([
-                "test",
-                "-d",
-                &portage_stable.join("eclass").to_string_lossy(),
-            ]))?;
+        // Check we're in the SDK by using a binary unlikely to be on the host machine.
+        run_and_check(MountedSDK::new(cfg.clone())?.base_command().args([
+            "test",
+            "-f",
+            "/usr/bin/ebuild",
+        ]))?;
+
+        // Confirm that overlays were loaded in to the SDK.
+        run_and_check(MountedSDK::new(cfg.clone())?.base_command().args([
+            "test",
+            "-d",
+            &portage_stable.join("eclass").to_string_lossy(),
+        ]))?;
+
+        run_and_check(MountedSDK::new(cfg.clone())?.base_command().args([
+            "grep",
+            "EBUILD_CONTENTS",
+            &ebuild_file.to_string_lossy(),
+        ]))?;
+
+        let tmp_dir: PathBuf = {
+            let sdk = MountedSDK::new(cfg)?;
 
             let out_pkg = sdk.root_dir.join("build/arm64-generic/packages/mypkg");
             std::fs::create_dir_all(&out_pkg.outside)?;
-            run_and_check(sdk.base_command().args([
-                "test",
-                "-d",
-                &out_pkg.inside.to_string_lossy(),
-            ]))?;
-
-            run_and_check(
-                sdk.base_command()
-                    .args(["test", "-f", &ebuild_file.to_string_lossy()]),
-            )?;
-            run_and_check(sdk.base_command().args([
-                "grep",
-                "EBUILD_CONTENTS",
-                &ebuild_file.to_string_lossy(),
-            ]))?;
 
             let out_file = out_pkg.inside.join("mypkg.tbz2");
             run_and_check(
