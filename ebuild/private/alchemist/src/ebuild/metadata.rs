@@ -24,7 +24,7 @@ fn run_ebuild(
     tools_dir: &Path,
 ) -> Result<BashVars> {
     let mut script_file = tempfile::tempfile()?;
-    script_file.write(include_bytes!("ebuild_prelude.sh"))?;
+    script_file.write_all(include_bytes!("ebuild_prelude.sh"))?;
     script_file.seek(SeekFrom::Start(0))?;
 
     let mut set_output_file = tempfile::NamedTempFile::new()?;

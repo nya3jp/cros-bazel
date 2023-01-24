@@ -58,7 +58,7 @@ fn evaluate_all_packages(
             result
         })
         .collect::<Result<Vec<_>>>()?;
-    eprintln!("");
+    eprintln!();
 
     Ok(packages)
 }
@@ -73,8 +73,8 @@ fn analyze_packages(
         .into_par_iter()
         .flat_map(|details| {
             let result = (|| -> Result<Package> {
-                let dependencies = analyze_dependencies(&*details, resolver)?;
-                let sources = analyze_sources(&*details, src_dir)?;
+                let dependencies = analyze_dependencies(&details, resolver)?;
+                let sources = analyze_sources(&details, src_dir)?;
                 Ok(Package {
                     details: details.clone(),
                     dependencies,

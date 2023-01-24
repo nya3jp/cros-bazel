@@ -98,7 +98,7 @@ fn build_override_config_source() -> SimpleConfigSource {
         // HACK: Provide packages that are not interesting to install.
         // TODO: Remove this hack.
         ConfigNode {
-            source: source.clone(),
+            source,
             value: ConfigNodeValue::ProvidedPackages(vec![
                 // This package was used to force rust binary packages to rebuild.
                 // We no longer need this workaround with bazel.
@@ -170,7 +170,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     let loader = CachedPackageLoader::new(PackageLoader::new(
         repos.clone(),
         config.clone(),
-        &tools_dir.path(),
+        tools_dir.path(),
     ));
 
     let resolver = PackageResolver::new(

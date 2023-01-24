@@ -51,23 +51,23 @@ fn generate_public_package(packages: Vec<&Package>, package_output_dir: &Path) -
                         actual: format!(
                             "{}:{}",
                             &internal_package_location,
-                            details.version.to_string()
+                            details.version
                         ),
                     },
                     AliasEntry {
-                        name: format!("{}_debug", details.version.to_string()),
+                        name: format!("{}_debug", details.version),
                         actual: format!(
                             "{}:{}_debug",
                             &internal_package_location,
-                            details.version.to_string()
+                            details.version
                         ),
                     },
                     AliasEntry {
-                        name: format!("{}_package_set", details.version.to_string()),
+                        name: format!("{}_package_set", details.version),
                         actual: format!(
                             "{}:{}_package_set",
                             &internal_package_location,
-                            details.version.to_string()
+                            details.version
                         ),
                     },
                 ]
@@ -91,7 +91,7 @@ fn join_by_package_name(all_packages: &Vec<Package>) -> HashMap<String, Vec<&Pac
     for package in all_packages.iter() {
         packages_by_name
             .entry(package.details.package_name.clone())
-            .or_insert_with(|| Vec::new())
+            .or_insert_with(Vec::new)
             .push(package);
     }
 
@@ -103,7 +103,7 @@ fn join_by_package_name(all_packages: &Vec<Package>) -> HashMap<String, Vec<&Pac
 }
 
 pub fn generate_public_packages(all_packages: &Vec<Package>, output_dir: &Path) -> Result<()> {
-    let packages_by_name = join_by_package_name(&all_packages);
+    let packages_by_name = join_by_package_name(all_packages);
 
     // Generate packages in parallel.
     packages_by_name

@@ -87,7 +87,7 @@ impl SearchPath {
     /// new [SearchPath] without modifying the original path. It fails if the
     /// same package dependency atom already exists in the path.
     fn try_push(&self, atom: &PackageAtomDependency) -> Result<SearchPath> {
-        if self.contains(&atom) {
+        if self.contains(atom) {
             bail!(
                 "A loop found on searching dependencies:\n\t{}\n\t{}",
                 self.iter().map(|atom| atom.to_string()).join(" ->\n\t"),
@@ -109,11 +109,11 @@ fn select_package(
 ) -> Result<Option<PackageSlotKey>> {
     let path = path.try_push(atom)?;
 
-    if let Some(_) = resolver.find_provided_packages(&atom).next() {
+    if let Some(_) = resolver.find_provided_packages(atom).next() {
         return Ok(None);
     }
 
-    let details = resolver.find_best_package(&atom)?;
+    let details = resolver.find_best_package(atom)?;
     let key = details.slot_key();
 
     // Have we already selected a package for the slot? If so, ensure that there
@@ -134,7 +134,7 @@ fn select_package(
     }
 
     // Analyze dependencies.
-    let unresolved_deps = analyze_dependencies(&*details, resolver)?;
+    let unresolved_deps = analyze_dependencies(&details, resolver)?;
 
     let build_deps =
         select_packages_parallel(selection, &path, unresolved_deps.build_deps, resolver)?;

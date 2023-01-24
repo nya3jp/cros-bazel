@@ -142,7 +142,7 @@ fn generate_internal_package_build_file(
         ebuilds: packages_in_dir
             .packages
             .iter()
-            .map(|package| EBuildEntry::try_new(*package, resolver))
+            .map(|package| EBuildEntry::try_new(package, resolver))
             .collect::<Result<_>>()?,
     };
 
@@ -162,7 +162,7 @@ fn generate_internal_package(
     translator: &PathTranslator,
     resolver: &PackageResolver,
 ) -> Result<()> {
-    create_dir_all(&package_output_dir)?;
+    create_dir_all(package_output_dir)?;
 
     // Create `*.ebuild` symlinks.
     for package in packages_in_dir.packages.iter() {
@@ -232,7 +232,7 @@ pub fn generate_internal_packages(
     translator: &PathTranslator,
     output_dir: &Path,
 ) -> Result<()> {
-    let packages_by_dir = join_by_package_dir(&all_packages, translator);
+    let packages_by_dir = join_by_package_dir(all_packages, translator);
 
     // Generate packages in parallel.
     packages_by_dir
