@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 

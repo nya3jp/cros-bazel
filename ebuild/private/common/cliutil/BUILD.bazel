@@ -1,4 +1,4 @@
-load("//bazel/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
+load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
@@ -10,7 +10,10 @@ go_library(
     visibility = ["//visibility:public"],
 )
 
-rust_library_crate(name = "cliutil_rust", crate_name = "cliutil")
+rust_library_crate(
+    name = "cliutil_rust",
+    crate_name = "cliutil",
+)
 
 rust_crate_test(
     name = "cliutil_rust_test",

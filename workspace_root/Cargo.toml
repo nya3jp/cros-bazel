@@ -4,7 +4,7 @@
 # List all local crates here.
 #
 # If you are adding to this list, make sure you also update the list on
-# //bazel/toolchains/rust:update_crates.
+# //rules_cros/toolchains/rust:update_crates.
 members = [
     "bazel/ebuild/private/alchemist",
     "bazel/ebuild/private/cmd/build_image",
@@ -18,10 +18,10 @@ members = [
     "bazel/ebuild/private/common/portage/binarypackage",
     "bazel/ebuild/private/common/processes",
     "bazel/ebuild/private/common/standard/version",
-    "bazel/toolchains/rust/examples/hello_world",
-    "bazel/toolchains/rust/examples/local_crate",
-    "bazel/toolchains/rust/examples/use_local_crate",
-    "bazel/toolchains/rust/examples/use_third_party_crate",
+    "rules_cros/toolchains/rust/examples/hello_world",
+    "rules_cros/toolchains/rust/examples/local_crate",
+    "rules_cros/toolchains/rust/examples/use_local_crate",
+    "rules_cros/toolchains/rust/examples/use_third_party_crate",
 ]
 
 [workspace.dependencies]

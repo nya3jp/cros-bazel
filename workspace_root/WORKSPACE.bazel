@@ -19,7 +19,7 @@ load("//bazel/ebuild:deps.bzl", "rules_ebuild_dependencies")
 # gazelle:repository_macro bazel/ebuild/deps.bzl%rules_ebuild_go_dependencies
 rules_ebuild_dependencies()
 
-load("//bazel/toolchains:toolchain_repositories.bzl", "toolchain_repositories")
+load("//rules_cros/toolchains:toolchain_repositories.bzl", "toolchain_repositories")
 
 toolchain_repositories()
 
@@ -27,7 +27,7 @@ load("//rules_cros/third_party:third_party_repositories.bzl", "third_party_repos
 
 third_party_repositories()
 
-load("//bazel/toolchains:register_toolchains.bzl", "load_toolchains")
+load("//rules_cros/toolchains:register_toolchains.bzl", "load_toolchains")
 
 load_toolchains()
 

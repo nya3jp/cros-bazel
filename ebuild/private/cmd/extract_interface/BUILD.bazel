@@ -1,4 +1,4 @@
-load("//bazel/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 
 rust_binary_crate(
     name = "extract_interface",
