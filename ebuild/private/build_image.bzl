@@ -11,7 +11,7 @@ def _build_image_impl(ctx):
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
 
-    providers = [DefaultInfo(files = [output])]
+    providers = [DefaultInfo(files = depset([output]))]
     providers.extend(mountsdk_generic(
         ctx,
         progress_message_name = ctx.label.name,
