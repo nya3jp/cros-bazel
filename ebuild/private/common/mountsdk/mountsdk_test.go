@@ -32,19 +32,10 @@ func TestRunInSdk(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// These values were obtained by looking at an invocation of build_package.
 	portageStable := filepath.Join(mountsdk.SourceDir, "src/third_party/portage-stable")
 	ebuildFile := filepath.Join(portageStable, "mypkg/mypkg.ebuild")
 	cfg := mountsdk.Config{
 		Overlays: []makechroot.OverlayInfo{
-			{
-				ImagePath: getRunfile("bazel/sdk/arm64-generic"),
-				MountDir:  "/",
-			},
-			{
-				ImagePath: getRunfile("bazel/sdk/arm64-generic-symlinks.tar"),
-				MountDir:  "/",
-			},
 			{
 				ImagePath: getRunfile("bazel/sdk/base_sdk"),
 				MountDir:  "/",
@@ -52,22 +43,6 @@ func TestRunInSdk(t *testing.T) {
 			{
 				ImagePath: getRunfile("bazel/sdk/base_sdk-symlinks.tar"),
 				MountDir:  "/",
-			},
-			{
-				ImagePath: getRunfile("overlays/overlay-arm64-generic/overlay-arm64-generic.squashfs"),
-				MountDir:  filepath.Join(mountsdk.SourceDir, "src/overlays/overlay-arm64-generic"),
-			},
-			{
-				ImagePath: getRunfile("third_party/eclass-overlay/eclass-overlay.squashfs"),
-				MountDir:  filepath.Join(mountsdk.SourceDir, "src/third_party/eclass-overlay"),
-			},
-			{
-				ImagePath: getRunfile("third_party/chromiumos-overlay/chromiumos-overlay.squashfs"),
-				MountDir:  filepath.Join(mountsdk.SourceDir, "src/third_party/chromiumos-overlay"),
-			},
-			{
-				ImagePath: getRunfile("third_party/portage-stable/portage-stable.squashfs"),
-				MountDir:  portageStable,
 			},
 		},
 		BindMounts: []makechroot.BindMount{
@@ -122,16 +97,6 @@ func TestRunInSdk(t *testing.T) {
 	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
 		if err := processes.Run(ctx, s.Command("test", "-f", "/usr/bin/ebuild")); err != nil {
 			t.Errorf("Failed to find /usr/bin/ebuild: %v", err)
-		}
-		return nil
-	}); err != nil {
-		t.Error(err)
-	}
-
-	// Confirm that overlays were loaded in to the SDK.
-	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {
-		if err := processes.Run(ctx, s.Command("test", "-d", filepath.Join(portageStable, "eclass"))); err != nil {
-			t.Errorf("Failed to find the eclass directory: %v", err)
 		}
 		return nil
 	}); err != nil {

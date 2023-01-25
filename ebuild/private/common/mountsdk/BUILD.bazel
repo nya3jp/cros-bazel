@@ -41,12 +41,7 @@ go_test(
     srcs = ["mountsdk_test.go"],
     data = [
         "testdata/mypkg.ebuild",
-        "//bazel/sdk:arm64-generic",
         "//bazel/sdk:base_sdk",
-        "//overlays/overlay-arm64-generic",
-        "//third_party/chromiumos-overlay",
-        "//third_party/eclass-overlay",
-        "//third_party/portage-stable",
     ],
     deps = [
         ":mountsdk",
@@ -85,12 +80,7 @@ rust_crate_test(
     crate = ":mountsdk_rust",
     data = [
         "testdata/mypkg.ebuild",
-        "//bazel/sdk:arm64-generic",
         "//bazel/sdk:base_sdk",
-        "//overlays/overlay-arm64-generic",
-        "//third_party/chromiumos-overlay",
-        "//third_party/eclass-overlay",
-        "//third_party/portage-stable",
     ],
     deps = ["//bazel/ebuild/private/common/processes:processes_rust"],
 )

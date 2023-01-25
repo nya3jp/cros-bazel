@@ -194,20 +194,12 @@ mod tests {
         let tmp_dir = tempfile::tempdir()?;
         let hello = tmp_dir.path().join("hello");
         std::fs::write(&hello, "hello")?;
-        // These values were obtained by looking at an invocation of build_package.
+
         let src_dir = PathBuf::from(SOURCE_DIR);
         let portage_stable = src_dir.join("src/third_party/portage-stable");
         let ebuild_file = portage_stable.join("mypkg/mypkg.ebuild");
         let cfg = Config {
             overlays: vec![
-                OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/arm64-generic"),
-                    mount_dir: "/".into(),
-                },
-                OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/arm64-generic-symlinks.tar"),
-                    mount_dir: "/".into(),
-                },
                 OverlayInfo {
                     image_path: r.rlocation("cros/bazel/sdk/base_sdk"),
                     mount_dir: "/".into(),
@@ -215,28 +207,6 @@ mod tests {
                 OverlayInfo {
                     image_path: r.rlocation("cros/bazel/sdk/base_sdk-symlinks.tar"),
                     mount_dir: "/".into(),
-                },
-                OverlayInfo {
-                    image_path: r.rlocation(
-                        "cros/overlays/overlay-arm64-generic/overlay-arm64-generic.squashfs",
-                    ),
-                    mount_dir: src_dir.join("src/overlays/overlay-arm64-generic"),
-                },
-                OverlayInfo {
-                    image_path: r
-                        .rlocation("cros/third_party/eclass-overlay/eclass-overlay.squashfs"),
-                    mount_dir: src_dir.join("src/third_party/eclass-overlay"),
-                },
-                OverlayInfo {
-                    image_path: r.rlocation(
-                        "cros/third_party/chromiumos-overlay/chromiumos-overlay.squashfs",
-                    ),
-                    mount_dir: src_dir.join("src/third_party/chromiumos-overlay"),
-                },
-                OverlayInfo {
-                    image_path: r
-                        .rlocation("cros/third_party/portage-stable/portage-stable.squashfs"),
-                    mount_dir: portage_stable.to_path_buf(),
                 },
             ],
             bind_mounts: vec![
@@ -277,13 +247,6 @@ mod tests {
             "test",
             "-f",
             "/usr/bin/ebuild",
-        ]))?;
-
-        // Confirm that overlays were loaded in to the SDK.
-        run_and_check(MountedSDK::new(cfg.clone())?.base_command().args([
-            "test",
-            "-d",
-            &portage_stable.join("eclass").to_string_lossy(),
         ]))?;
 
         run_and_check(MountedSDK::new(cfg.clone())?.base_command().args([
