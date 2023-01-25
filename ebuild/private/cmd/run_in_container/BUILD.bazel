@@ -24,7 +24,7 @@ go_library(
 go_binary(
     name = "run_in_container",
     data = [
-        "//bazel/third_party/squashfuse",
+        "//rules_cros/third_party/squashfuse",
         "@dumb_init//file",
     ],
     embed = [":run_in_container_lib"],

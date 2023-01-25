@@ -1,6 +1,6 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("//bazel/third_party:github_archive.bzl", "github_archive")
+load("//rules_cros/third_party:github_archive.bzl", "github_archive")
 
 PY3_URL = "https://github.com/indygreg/python-build-standalone/releases/download/20221002/cpython-3.10.7+20221002-x86_64_v3-unknown-linux-gnu-pgo+lto-full.tar.zst"
 PY3_CHECKSUM = "c54217b3df5f398e52e26e16683f642b245e36232d190ee9fec45a04923de9ca"

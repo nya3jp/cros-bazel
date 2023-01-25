@@ -23,7 +23,7 @@ load("//bazel/toolchains:toolchain_repositories.bzl", "toolchain_repositories")
 
 toolchain_repositories()
 
-load("//bazel/third_party:third_party_repositories.bzl", "third_party_repositories")
+load("//rules_cros/third_party:third_party_repositories.bzl", "third_party_repositories")
 
 third_party_repositories()
 

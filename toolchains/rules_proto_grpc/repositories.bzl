@@ -1,4 +1,4 @@
-load("//bazel/third_party:github_archive.bzl", "github_archive")
+load("//rules_cros/third_party:github_archive.bzl", "github_archive")
 
 VERSION = "4.2.0"
 CHECKSUM = "bbe4db93499f5c9414926e46f9e35016999a4e9f6e3522482d3760dc61011070"
