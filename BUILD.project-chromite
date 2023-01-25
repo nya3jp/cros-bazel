@@ -38,7 +38,8 @@ ebuild_src(
         "utils/**",
     ], exclude=[
         # Contains utf-8 characters
-        "third_party/swarming.client/example/**"
+        "third_party/swarming.client/example/**",
+        "**/__pycache__/**"
     ]),
     mount_path = "chromite",
     visibility = ["//visibility:public"],
