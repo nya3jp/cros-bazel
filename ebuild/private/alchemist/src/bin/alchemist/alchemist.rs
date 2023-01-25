@@ -133,6 +133,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         Some(s) => PathBuf::from(s),
         None => default_source_dir()?,
     };
+    let src_dir = source_dir.join("src");
 
     // Commands that don't need the chroot
     match args.command {
@@ -185,7 +186,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 .iter()
                 .map(|raw| raw.parse::<PackageAtomDependency>())
                 .collect::<Result<Vec<_>>>()?;
-            dump_deps_main(&resolver, starts)?;
+            dump_deps_main(&resolver, starts, &src_dir)?;
         }
         Commands::DumpPackage { packages } => {
             let atoms = packages
@@ -204,6 +205,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 &resolver,
                 &translator,
                 &toolchains,
+                &src_dir,
                 &output_dir,
             )?;
         }

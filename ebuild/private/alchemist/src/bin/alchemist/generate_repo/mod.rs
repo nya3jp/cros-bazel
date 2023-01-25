@@ -62,6 +62,7 @@ fn evaluate_all_packages(
 
 fn analyze_packages(
     all_details: Vec<Arc<PackageDetails>>,
+    src_dir: &Path,
     resolver: &PackageResolver,
 ) -> Vec<Package> {
     // Analyze packages in parallel.
@@ -70,7 +71,7 @@ fn analyze_packages(
         .flat_map(|details| {
             let result = (|| -> Result<Package> {
                 let dependencies = analyze_dependencies(&*details, resolver)?;
-                let sources = analyze_sources(&*details)?;
+                let sources = analyze_sources(&*details, src_dir)?;
                 Ok(Package {
                     details: details.clone(),
                     dependencies,
@@ -105,6 +106,7 @@ pub fn generate_repo_main(
     resolver: &PackageResolver,
     translator: &PathTranslator,
     toolchain_config: &ToolchainConfig,
+    src_dir: &Path,
     output_dir: &Path,
 ) -> Result<()> {
     match remove_dir_all(output_dir) {
@@ -118,7 +120,7 @@ pub fn generate_repo_main(
 
     let all_details = evaluate_all_packages(repos, loader)?;
 
-    let all_packages = analyze_packages(all_details, resolver);
+    let all_packages = analyze_packages(all_details, src_dir, resolver);
 
     generate_internal_packages(&all_packages, resolver, translator, output_dir)?;
     generate_public_packages(&all_packages, output_dir)?;

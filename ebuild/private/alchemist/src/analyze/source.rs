@@ -4,9 +4,9 @@
 
 use std::{
     collections::HashMap,
-    fs::read_to_string,
+    fs::{metadata, read_to_string},
     iter::{repeat, zip},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{anyhow, bail, Result};
@@ -112,7 +112,10 @@ fn get_cros_workon_array_variable(
     Ok(extended_values)
 }
 
-fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<PackageLocalSource>> {
+fn extract_cros_workon_sources(
+    details: &PackageDetails,
+    src_dir: &Path,
+) -> Result<Vec<PackageLocalSource>> {
     let projects = match details.vars.hash_map().get("CROS_WORKON_PROJECT") {
         None => {
             // This is not a cros-workon package.
@@ -179,7 +182,26 @@ fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<PackageLo
         }
     }
 
-    let mut sources = source_paths
+    // Handle regular files.
+    let source_dirs: Vec<String> = source_paths
+        .into_iter()
+        .map(|path| {
+            let meta = metadata(src_dir.join(&path))?;
+            if meta.is_dir() {
+                Ok(path)
+            } else {
+                // If the file is a regular file, use its parent directory.
+                // TODO: Improve this to include the file only.
+                Ok(PathBuf::from(path)
+                    .parent()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned())
+            }
+        })
+        .collect::<Result<_>>()?;
+
+    let mut sources = source_dirs
         .into_iter()
         .map(|path| PackageLocalSource {
             origin: PackageLocalSourceOrigin::Src,
@@ -202,8 +224,11 @@ fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<PackageLo
     Ok(sources)
 }
 
-fn extract_local_sources(details: &PackageDetails) -> Result<Vec<PackageLocalSource>> {
-    let mut sources = extract_cros_workon_sources(details)?;
+fn extract_local_sources(
+    details: &PackageDetails,
+    src_dir: &Path,
+) -> Result<Vec<PackageLocalSource>> {
+    let mut sources = extract_cros_workon_sources(details, src_dir)?;
 
     // Chromium packages need its source code.
     // TODO: Remove this hack.
@@ -341,9 +366,9 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageRemoteS
 
 /// Analyzes ebuild variables and returns [`PackageSources`] sumarizing its
 /// source information.
-pub fn analyze_sources(details: &PackageDetails) -> Result<PackageSources> {
+pub fn analyze_sources(details: &PackageDetails, src_dir: &Path) -> Result<PackageSources> {
     Ok(PackageSources {
-        local_sources: extract_local_sources(details)?,
+        local_sources: extract_local_sources(details, src_dir)?,
         remote_sources: extract_remote_sources(details)?,
     })
 }

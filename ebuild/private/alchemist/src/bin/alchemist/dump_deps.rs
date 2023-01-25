@@ -4,6 +4,7 @@
 
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
+    path::Path,
     sync::{Arc, Mutex},
 };
 
@@ -356,6 +357,7 @@ fn compute_label_map(graph: &PackageMap) -> HashMap<PackageSlotKey, String> {
 pub fn dump_deps_main(
     resolver: &PackageResolver,
     starts: Vec<PackageAtomDependency>,
+    src_dir: &Path,
 ) -> Result<()> {
     let selected_packages = select_packages(starts, resolver)?;
 
@@ -364,7 +366,7 @@ pub fn dump_deps_main(
         let mut packages = selected_packages
             .into_par_iter()
             .map(|(key, selected)| {
-                let sources = analyze_sources(&selected.details)?;
+                let sources = analyze_sources(&selected.details, &src_dir)?;
                 Ok((key, Package { selected, sources }))
             })
             .collect::<Result<PackageMap>>()?;
