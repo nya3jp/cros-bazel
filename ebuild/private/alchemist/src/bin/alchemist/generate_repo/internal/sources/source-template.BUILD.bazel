@@ -1,0 +1,53 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+pkg_files(
+    name = "__files_regular__",
+    srcs = glob(["**"], exclude=[
+        "**/.git",
+        "**/.git/**",
+        {{- for path in excludes }}
+        "{ path }",
+        {{- endfor }}
+    ]),
+    renames = \{
+        {{- for rename in renames }}
+        "{ rename.output_path }": "{ rename.source_path }",
+        {{- endfor }}
+    },
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+{{- for symlink in symlinks }}
+
+pkg_mklink(
+    name = "{ symlink.name }",
+    link_name = "{ symlink.location }",
+    target = "{ symlink.target }",
+    visibility = ["//visibility:private"],
+)
+{{- endfor }}
+
+pkg_filegroup(
+    name = "__files__",
+    srcs = [
+        ":__files_regular__",
+        {{- for symlink in symlinks }}
+        ":{ symlink.name }",
+        {{- endfor }}
+    ],
+    prefix = "/mnt/host/source/src/{ prefix }",
+    visibility = ["//:__subpackages__"],
+)
+
+pkg_tar(
+    name = "__tarball__",
+    srcs = [
+        ":__files__",
+        {{- for child in children }}
+        "//internal/sources/{ child }:__files__",
+        {{- endfor }}
+    ],
+    extension = "tar.gz",
+    visibility = ["//:__subpackages__"],
+)

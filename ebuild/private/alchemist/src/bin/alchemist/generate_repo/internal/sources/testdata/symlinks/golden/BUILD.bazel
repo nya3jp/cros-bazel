@@ -1,0 +1,52 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+pkg_files(
+    name = "__files_regular__",
+    srcs = glob(["**"], exclude=[
+        "**/.git",
+        "**/.git/**",
+        "another symlink",
+        "symlink",
+    ]),
+    renames = {
+    },
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_mklink(
+    name = "__symlink__another%20symlink",
+    link_name = "another symlink",
+    target = "/path/to/another file",
+    visibility = ["//visibility:private"],
+)
+
+pkg_mklink(
+    name = "__symlink__symlink",
+    link_name = "symlink",
+    target = "/path/to/target",
+    visibility = ["//visibility:private"],
+)
+
+pkg_filegroup(
+    name = "__files__",
+    srcs = [
+        ":__files_regular__",
+        ":__symlink__another%20symlink",
+        ":__symlink__symlink",
+    ],
+    prefix = "/mnt/host/source/src/",
+    visibility = ["//:__subpackages__"],
+)
+
+pkg_tar(
+    name = "__tarball__",
+    srcs = [
+        ":__files__",
+    ],
+    extension = "tar.gz",
+    visibility = ["//:__subpackages__"],
+)

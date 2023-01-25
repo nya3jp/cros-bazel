@@ -1,0 +1,14 @@
+[
+  {
+    "origin": "Src",
+    "path": "foo"
+  },
+  {
+    "origin": "Src",
+    "path": "foo/bar"
+  },
+  {
+    "origin": "Src",
+    "path": "foo/bar/baz"
+  }
+]

@@ -32,8 +32,11 @@ use anyhow::Result;
 use rayon::prelude::*;
 
 use self::{
-    common::Package, internal::overlays::generate_internal_packages, internal::sdk::generate_sdk,
-    public::generate_public_packages, repositories::generate_repositories_file,
+    common::Package,
+    internal::overlays::generate_internal_packages,
+    internal::{sdk::generate_sdk, sources::generate_internal_sources},
+    public::generate_public_packages,
+    repositories::generate_repositories_file,
 };
 
 fn evaluate_all_packages(
@@ -122,7 +125,13 @@ pub fn generate_repo_main(
 
     let all_packages = analyze_packages(all_details, src_dir, resolver);
 
+    let all_local_sources = all_packages
+        .iter()
+        .flat_map(|package| package.sources.local_sources.clone())
+        .collect();
+
     generate_internal_packages(&all_packages, resolver, translator, output_dir)?;
+    generate_internal_sources(&all_local_sources, &src_dir, output_dir)?;
     generate_public_packages(&all_packages, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
     generate_sdk(board, repos, toolchain_config, output_dir)?;

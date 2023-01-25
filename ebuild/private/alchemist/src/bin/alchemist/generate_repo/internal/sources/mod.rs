@@ -1,0 +1,645 @@
+// Copyright 2023 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+use std::{
+    collections::{BTreeMap, HashSet},
+    fs::{create_dir_all, read_link, File},
+    io::{ErrorKind, Write},
+    os::unix::fs::symlink,
+    path::{Path, PathBuf},
+};
+
+use crate::generate_repo::common::{escape_starlark_string, AUTOGENERATE_NOTICE};
+use alchemist::analyze::source::{PackageLocalSource, PackageLocalSourceOrigin};
+use anyhow::{Context, Result};
+use itertools::Itertools;
+use serde::Serialize;
+use tinytemplate::TinyTemplate;
+use walkdir::WalkDir;
+
+static SOURCE_BUILD_TEMPLATE: &str = include_str!("source-template.BUILD.bazel");
+
+const VALID_TARGET_NAME_PUNCTUATIONS: &str = r##"!%-@^_"#$&'()*-+,;<=>?[]{|}~/."##;
+
+/// Checks if a character is allowed in Bazel target names.
+fn is_valid_target_name_char(c: char) -> bool {
+    // See https://bazel.build/concepts/labels?hl=en#target-names for the
+    // lexical specification of valid target names.
+    c.is_ascii_alphanumeric() || VALID_TARGET_NAME_PUNCTUATIONS.contains(c)
+}
+
+/// Checks if a string is a valid Bazel target name.
+fn is_valid_target_name(s: &str) -> bool {
+    s.chars().all(is_valid_target_name_char)
+}
+
+/// Escapes a file name string so that it can be used as a Bazel target name.
+///
+/// It doesn't take care of invalid file names, such as:
+/// - empty string
+/// - strings starting with ./ or ../
+fn escape_file_name_for_bazel_target_name(s: &str) -> String {
+    s.bytes()
+        .map(|b| {
+            let c = b as char;
+            if is_valid_target_name_char(c) && c != '%' {
+                String::from(c)
+            } else {
+                format!("%{:02X}", b)
+            }
+        })
+        .join("")
+}
+
+const BAZEL_SPECIAL_FILE_NAMES: &[&str] = &["BUILD.bazel", "BUILD", "WORKSPACE.bazel", "WORKSPACE"];
+
+/// Checks if a file name needs renaming.
+fn file_path_needs_renaming(path: &Path) -> bool {
+    if !is_valid_target_name(&*path.to_string_lossy()) {
+        return true;
+    }
+
+    let file_name = &*path.file_name().unwrap_or_default().to_string_lossy();
+    BAZEL_SPECIAL_FILE_NAMES.contains(&file_name)
+}
+
+/// Describes the layout of a local source package.
+///
+/// A local source package corresponds to a directory in ChromeOS source code
+/// checkout that appears in `CROS_WORKON_*` variables of any valid .ebuild
+/// file. This struct describes its location and children.
+///
+/// This struct contains information computed sorely from ebuild metadata.
+/// It is eventually turned into [`SourcePackage`] after collecting more
+/// information from other sources, such as the file system.
+#[derive(Clone, Debug)]
+struct SourcePackageLayout {
+    /// Relative directory path from the "src" directory of ChromeOS checkout.
+    /// e.g. "platform2/debugd".
+    prefix: PathBuf,
+
+    /// Relative directory paths of child local source packages.
+    /// e.g. "platform2/debugd/dbus_bindings".
+    child_prefixes: Vec<PathBuf>,
+}
+
+impl SourcePackageLayout {
+    /// Computes a list of [`SourcePackageLayout`] from a list of [`PackageLocalSource`].
+    fn compute(all_local_sources: &Vec<PackageLocalSource>) -> Result<Vec<Self>> {
+        // Deduplicate all local source prefixes.
+        let sorted_prefixes: Vec<PathBuf> = all_local_sources
+            .iter()
+            .filter_map(|source| match source.origin {
+                PackageLocalSourceOrigin::Src => Some(PathBuf::from(&source.path)),
+                _ => None,
+            })
+            .sorted()
+            .dedup()
+            .collect();
+
+        // Create initial empty SourcePackageLayout's.
+        let mut layout_map: BTreeMap<PathBuf, SourcePackageLayout> =
+            BTreeMap::from_iter(sorted_prefixes.iter().map(|prefix| {
+                (
+                    prefix.clone(),
+                    SourcePackageLayout {
+                        prefix: prefix.clone(),
+                        child_prefixes: Vec::new(),
+                    },
+                )
+            }));
+
+        // Compute children of each local source package.
+        let mut stack: Vec<&Path> = Vec::new();
+        for prefix in sorted_prefixes.iter() {
+            while let Some(parent_prefix) = stack.pop() {
+                if prefix.starts_with(parent_prefix) {
+                    // `prefix` is a child of `parent_prefix`.
+                    layout_map
+                        .get_mut(parent_prefix)
+                        .unwrap()
+                        .child_prefixes
+                        .push(prefix.to_owned());
+                    stack.push(parent_prefix);
+                    break;
+                }
+            }
+            stack.push(prefix);
+        }
+
+        Ok(layout_map.into_values().collect())
+    }
+}
+
+/// Describes a file to rename on generating a source package.
+///
+/// We need to rename a file when its path contains special characters not
+/// allowed in Bazel target names, or it is treated specially by Bazel (e.g.
+/// `BUILD.bazel`). This struct describes how to handle such a file.
+#[derive(Clone, Debug)]
+struct Rename {
+    /// The original file path, relative from the source package directory.
+    source_path: PathBuf,
+    /// The new file path, relative from the output directory.
+    output_path: PathBuf,
+}
+
+/// Represents a local source package.
+///
+/// This struct is similar to [`SourcePackageLayout`], but it contains
+/// information gathered by scanning the actual source code directory.
+#[derive(Clone, Debug)]
+struct SourcePackage {
+    /// [`SourcePackageLayout`] describing the layout of this local source
+    /// package.
+    layout: SourcePackageLayout,
+
+    /// Absolute path to the source directory.
+    source_dir: PathBuf,
+
+    /// Absolute path to the output directory.
+    output_dir: PathBuf,
+
+    /// File paths, relative from the source package directory, of symbolic
+    /// links under the source package.
+    symlinks: Vec<PathBuf>,
+
+    /// File paths to rename on generating a source package. This is necessary
+    /// to handle file paths containing special characters not allowed in Bazel
+    /// target names.
+    renames: Vec<Rename>,
+
+    /// File paths, relative from the source package directory, of files to
+    /// exclude from globbing in the source package.
+    /// For example, `BUILD.bazel` files existing in the source directories
+    /// should be excluded to avoid confusing Bazel, thus they appear here.
+    /// `excludes` includes `symlinks` and `renames`.
+    excludes: Vec<PathBuf>,
+}
+
+impl SourcePackage {
+    /// Computes [`SourcePackage`] from [`SourcePackageLayout`] and the result of
+    /// scanning the directory.
+    fn try_new(
+        layout: SourcePackageLayout,
+        src_dir: &Path,
+        repository_output_dir: &Path,
+    ) -> Result<Self> {
+        let source_dir = src_dir.join(&layout.prefix);
+
+        let output_dir = repository_output_dir
+            .join("internal/sources")
+            .join(&layout.prefix);
+
+        // Pre-compute child package paths for fast lookup.
+        let child_paths: HashSet<PathBuf> = layout
+            .child_prefixes
+            .iter()
+            .map(|child_prefix| src_dir.join(child_prefix))
+            .collect();
+
+        // Find files to handle specially.
+        let mut symlinks = Vec::new();
+        let mut renames = Vec::new();
+        let mut excludes = Vec::new();
+        let mut walk = WalkDir::new(&source_dir)
+            .sort_by_file_name()
+            .into_iter()
+            .filter_entry(|entry| !child_paths.contains(entry.path()));
+        // We cannot use "for ... in" here because WalkDir::skip_current_dir
+        // needs a mutable borrow.
+        loop {
+            let entry = match walk.next() {
+                None => break,
+                Some(entry) => entry?,
+            };
+
+            let rel_path = entry.path().strip_prefix(&source_dir)?.to_owned();
+            let file_name_str = &*rel_path.file_name().unwrap_or_default().to_string_lossy();
+
+            // Skip .git directory. Note that this is also hard-coded in
+            // the template BUILD.bazel.
+            if file_name_str == ".git" {
+                // Note that .git can be a symlink, in which case we must not
+                // call WalkDir::skip_current_dir.
+                if entry.file_type().is_dir() {
+                    walk.skip_current_dir();
+                }
+                continue;
+            }
+
+            // Record symlinks.
+            if entry.file_type().is_symlink() {
+                symlinks.push(rel_path.clone());
+                excludes.push(rel_path);
+                continue;
+            }
+
+            // Record files that need renaming.
+            if file_path_needs_renaming(&rel_path) {
+                if !entry.file_type().is_dir() {
+                    renames.push(Rename {
+                        source_path: rel_path.clone(),
+                        output_path: PathBuf::from(format!("__rename__{}", renames.len())),
+                    });
+                }
+                excludes.push(rel_path);
+                continue;
+            }
+        }
+
+        Ok(Self {
+            layout,
+            source_dir,
+            output_dir,
+            symlinks,
+            renames,
+            excludes,
+        })
+    }
+}
+
+#[derive(Serialize)]
+struct SymlinkEntry {
+    name: String,
+    location: String,
+    target: String,
+}
+
+#[derive(Serialize)]
+struct RenameEntry {
+    source_path: String,
+    output_path: String,
+}
+
+#[derive(Serialize)]
+struct BuildTemplateContext {
+    prefix: String,
+    children: Vec<String>,
+    symlinks: Vec<SymlinkEntry>,
+    renames: Vec<RenameEntry>,
+    excludes: Vec<String>,
+}
+
+/// Generates `BUILD.bazel` file for a source package.
+fn generate_build_file(package: &SourcePackage) -> Result<()> {
+    let context = BuildTemplateContext {
+        prefix: package.layout.prefix.to_string_lossy().into_owned(),
+        children: package
+            .layout
+            .child_prefixes
+            .iter()
+            .map(|prefix| prefix.to_string_lossy().into_owned())
+            .collect(),
+        symlinks: package
+            .symlinks
+            .iter()
+            .map(|path| {
+                let location = path.to_string_lossy().into_owned();
+                let name = format!(
+                    "__symlink__{}",
+                    escape_file_name_for_bazel_target_name(&location)
+                );
+                let target = read_link(package.source_dir.join(path))?
+                    .to_string_lossy()
+                    .into_owned();
+                Ok(SymlinkEntry {
+                    name,
+                    location,
+                    target,
+                })
+            })
+            .collect::<Result<_>>()?,
+        renames: package
+            .renames
+            .iter()
+            .map(|rename| RenameEntry {
+                source_path: rename.source_path.to_string_lossy().into_owned(),
+                output_path: rename.output_path.to_string_lossy().into_owned(),
+            })
+            .collect(),
+        excludes: package
+            .excludes
+            .iter()
+            .map(|path| path.to_string_lossy().into_owned())
+            .collect(),
+    };
+
+    let mut templates = TinyTemplate::new();
+    templates.set_default_formatter(&escape_starlark_string);
+    templates.add_template("main", SOURCE_BUILD_TEMPLATE)?;
+    let rendered = templates.render("main", &context)?;
+
+    let mut file = File::create(package.output_dir.join("BUILD.bazel"))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    file.write_all(rendered.as_bytes())?;
+    Ok(())
+}
+
+/// Generates renaming symlinks for a source package.
+///
+/// Renaming symlinks are used to deal with files with special names, e.g.
+/// containing characters not allowed in Bazel target names or Bazel's special
+/// file names such as `BUILD`. We create symlinks to those files with "safe"
+/// file names, and use the "rename" attribute in rules_pkg to rename on
+/// creating archives.
+fn generate_renaming_symlinks(package: &SourcePackage) -> Result<()> {
+    for rename in package.renames.iter() {
+        let source_path = package.source_dir.join(&rename.source_path);
+        let output_path = package.output_dir.join(&rename.output_path);
+        symlink(source_path, output_path)?;
+    }
+
+    Ok(())
+}
+
+/// Generates general symlinks for a source package.
+///
+/// We replicate the original source directory structure by generating symlinks
+/// with the same name as original files. We call them *general* symlinks to
+/// distinguish them from *renaming* symlinks.
+///
+/// This function tries to minimize the number of directories and general
+/// symlinks in the output. If we can use a source directory as-is (e.g. no need
+/// to generate `BUILD.bazel`), we create a symlink to the whole directory,
+/// rather than creating a directory and a bunch of symlinks underneath it.
+fn generate_general_symlinks(package: &SourcePackage) -> Result<()> {
+    // Create child source package directories in case they have not been
+    // created yet.
+    for child_prefix in package.layout.child_prefixes.iter() {
+        let child_path = package
+            .output_dir
+            .join(child_prefix.strip_prefix(&package.layout.prefix).unwrap());
+        create_dir_all(&child_path)?;
+    }
+
+    // Create parent directories of excluded files so that we don't create
+    // symlinks for their whole parent directories.
+    for rel_path in package.excludes.iter() {
+        let dir_path = package
+            .output_dir
+            .join(rel_path)
+            .parent()
+            .unwrap()
+            .to_owned();
+        create_dir_all(&dir_path)?;
+    }
+
+    // Create parent directories of files/directories whose name containing
+    // special characters not allowed in Bazel target names.
+    for rename in package.renames.iter() {
+        // rename.source_path points to a regular file, so skip the first entry.
+        for rel_path in rename.source_path.ancestors().skip(1usize) {
+            if is_valid_target_name(&*rel_path.to_string_lossy()) {
+                create_dir_all(package.output_dir.join(rel_path))?;
+                break;
+            }
+        }
+    }
+
+    // Precompute hashsets for fast lookup.
+    let children_set: HashSet<PathBuf> = package
+        .layout
+        .child_prefixes
+        .iter()
+        .map(|child_prefix| {
+            // Children paths relative to the current package.
+            // Example:
+            // package.layout.prefix = "platform2/debugd"
+            // package.layout.children[0] = "platform2/debugd/dbus_bindings"
+            // => "dbus_bindings"
+            child_prefix
+                .strip_prefix(&package.layout.prefix)
+                .unwrap()
+                .to_owned()
+        })
+        .collect();
+    let exclude_set: HashSet<&PathBuf> = package.excludes.iter().collect();
+
+    // Walk the *output* tree to create symlinks.
+    let walk = WalkDir::new(&package.output_dir)
+        .sort_by_file_name()
+        .into_iter()
+        .filter_entry(|entry| entry.file_type().is_dir());
+    for output_dir_entry in walk {
+        let output_dir_entry = output_dir_entry?;
+        let dir_rel_path = output_dir_entry
+            .path()
+            .strip_prefix(&package.output_dir)
+            .unwrap();
+
+        // Do not step into children's directories.
+        if children_set.contains(dir_rel_path) {
+            continue;
+        }
+
+        let source_dir = package.source_dir.join(dir_rel_path);
+        let read_dir = source_dir
+            .read_dir()
+            .with_context(|| format!("Failed to read directory {:?}", &source_dir))?;
+        for source_file_entry in read_dir {
+            let source_file_entry = source_file_entry?;
+            let file_rel_path = dir_rel_path.join(source_file_entry.file_name());
+
+            // Skip file paths invalid as Bazel target names. They are processed
+            // in generate_renaming_symlinks.
+            if !is_valid_target_name(&*file_rel_path.to_string_lossy()) {
+                continue;
+            }
+
+            // Skip creating symlinks for excluded files.
+            if exclude_set.contains(&file_rel_path) {
+                continue;
+            }
+
+            // TODO: Use relative symlinks so renaming the top directory doesn't
+            // invalidate symlinks.
+            let source_file_path = source_file_entry.path();
+            let output_file_path = output_dir_entry.path().join(source_file_entry.file_name());
+            match symlink(&source_file_path, &output_file_path) {
+                // EEXIST is OK.
+                Err(err) if err.kind() == ErrorKind::AlreadyExists => {}
+                other => other.with_context(|| {
+                    format!(
+                        "Failed to create symlink {:?} -> {:?}",
+                        &source_file_path, &output_file_path
+                    )
+                })?,
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Generates a source package.
+fn generate_package(package: &SourcePackage) -> Result<()> {
+    create_dir_all(&package.output_dir)?;
+    generate_build_file(package)?;
+    generate_renaming_symlinks(package)?;
+    generate_general_symlinks(package)?;
+    Ok(())
+}
+
+/// Generates source packages under `@portage//internal/sources/`.
+pub fn generate_internal_sources(
+    all_local_sources: &Vec<PackageLocalSource>,
+    src_dir: &Path,
+    repository_output_dir: &Path,
+) -> Result<()> {
+    let source_layouts: Vec<SourcePackageLayout> = SourcePackageLayout::compute(all_local_sources)?;
+
+    let source_packages: Vec<SourcePackage> = source_layouts
+        .into_iter()
+        .flat_map(|layout| {
+            let prefix_string = layout.prefix.to_string_lossy().into_owned();
+            match SourcePackage::try_new(layout, &src_dir, repository_output_dir) {
+                Ok(source_package) => Some(source_package),
+                Err(err) => {
+                    eprintln!(
+                        "WARNING: Failed to generate source package for {}: {:?}",
+                        prefix_string, err
+                    );
+                    None
+                }
+            }
+        })
+        .collect();
+
+    // Generate source packages.
+    source_packages.iter().try_for_each(generate_package)?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::process::Command;
+
+    use anyhow::bail;
+    use tempfile::tempdir;
+
+    use super::*;
+
+    #[test]
+    fn test_escape_file_name_for_bazel_target_name() {
+        assert_eq!("foo", escape_file_name_for_bazel_target_name("foo"));
+        assert_eq!("foo/bar", escape_file_name_for_bazel_target_name("foo/bar"));
+        assert_eq!(
+            "foo%20bar",
+            escape_file_name_for_bazel_target_name("foo bar")
+        );
+        assert_eq!(
+            "foo%25bar",
+            escape_file_name_for_bazel_target_name("foo%bar")
+        );
+        assert_eq!(
+            r##"!%25-@^_"#$&'()*-+,;<=>?[]{|}~/."##,
+            escape_file_name_for_bazel_target_name(r##"!%-@^_"#$&'()*-+,;<=>?[]{|}~/."##)
+        );
+        assert_eq!("%F0%9F%90%88", escape_file_name_for_bazel_target_name("🐈"));
+    }
+
+    #[test]
+    fn test_file_path_needs_renaming() {
+        assert_eq!(
+            false,
+            file_path_needs_renaming(&PathBuf::from("foo/bar/baz"))
+        );
+        assert_eq!(
+            false,
+            file_path_needs_renaming(&PathBuf::from("foo/bar/BUILD.gn"))
+        );
+        assert_eq!(
+            true,
+            file_path_needs_renaming(&PathBuf::from("foo/bar/BUILD.bazel"))
+        );
+        assert_eq!(
+            true,
+            file_path_needs_renaming(&PathBuf::from("foo/bar/BUILD"))
+        );
+        assert_eq!(
+            true,
+            file_path_needs_renaming(&PathBuf::from("foo/bar/b a z"))
+        );
+        assert_eq!(
+            true,
+            file_path_needs_renaming(&PathBuf::from("foo/bar/b a z/hoge"))
+        );
+    }
+
+    /// Runs a command and returns an error if it doesn't exit with code 0.
+    fn run_ok(command: &mut Command) -> Result<()> {
+        let status = command.status()?;
+        if status.code() != Some(0) {
+            bail!("{}", status.to_string());
+        }
+        Ok(())
+    }
+
+    const TESTDATA_DIR: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/src/bin/alchemist/generate_repo/internal/sources/testdata"
+    );
+
+    /// Tests [`generate_internal_sources`] with scenarios found in `testdata`
+    /// directory.
+    ///
+    /// A directory under `testdata` corresponds to a test case, and it must
+    /// contain the following files:
+    ///
+    /// - `sources.json`: JSON-serialized `Vec<PackageLocalSource>`.
+    /// - `source`: Input source directory.
+    /// - `golden`: Expected output directory.
+    ///
+    /// You can regenerate golden directories by running the following command:
+    ///
+    /// `ALCHEMIST_REGENERATE_GOLDEN=1 cargo test`
+    #[test]
+    fn test_generate_internal_sources_with_golden_data() -> Result<()> {
+        let regenerate = std::env::var("ALCHEMIST_REGENERATE_GOLDEN").unwrap_or_default() == "1";
+        let testdata_dir = Path::new(TESTDATA_DIR);
+
+        for entry in testdata_dir.read_dir()? {
+            let entry = entry?;
+            if !entry.file_type()?.is_dir() {
+                continue;
+            }
+
+            eprintln!("Testing {:?}...", entry.file_name());
+            let case_dir = entry.path();
+            let case_input_path = case_dir.join("sources.json");
+            let case_source_dir = case_dir.join("source");
+            let case_golden_dir = case_dir.join("golden");
+
+            let local_sources: Vec<PackageLocalSource> = {
+                let file = File::open(&case_input_path)?;
+                serde_json::from_reader(&file)?
+            };
+
+            let temp_dir = tempdir()?;
+            let output_dir = temp_dir.path();
+
+            generate_internal_sources(&local_sources, &case_source_dir, &output_dir)?;
+
+            let inner_output_dir = output_dir.join("internal/sources");
+            if regenerate {
+                run_ok(
+                    Command::new("rsync")
+                        .args(["--recursive", "--copy-links", "--delete", "--"])
+                        .arg(inner_output_dir.join("")) // need a trailing slash
+                        .arg(&case_golden_dir),
+                )?;
+            } else {
+                run_ok(
+                    Command::new("diff")
+                        .args(["-Naru", "--"])
+                        .arg(&inner_output_dir)
+                        .arg(&case_golden_dir),
+                )?;
+            }
+        }
+        Ok(())
+    }
+}

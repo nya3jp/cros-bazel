@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::sync::Arc;
+use std::{fmt::Write, sync::Arc};
 
 use alchemist::{
     analyze::{
@@ -14,6 +14,7 @@ use alchemist::{
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
+use serde_json::Value;
 
 pub static CHROOT_SRC_DIR: &str = "/mnt/host/source/src";
 pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
@@ -108,5 +109,59 @@ impl DistFileEntry {
             integrity: source.compute_integrity()?,
             urls,
         })
+    }
+}
+
+/// Converts [`serde_json::Value`] into a string that is safe to be embedded in
+/// a Starlark literal string quoted with double-quotes (`"`).
+///
+/// Use this function with [`tinytemplate::TinyTemplate`] to generate Starlark
+/// files.
+pub fn escape_starlark_string(value: &Value, out: &mut String) -> tinytemplate::error::Result<()> {
+    match value {
+        Value::Null => Ok(()),
+        Value::Bool(b) => {
+            write!(out, "{}", b)?;
+            Ok(())
+        }
+        Value::Number(n) => {
+            write!(out, "{}", n)?;
+            Ok(())
+        }
+        Value::String(s) => {
+            out.push_str(&s.replace("\\", "\\\\").replace("\"", "\\\""));
+            Ok(())
+        }
+        _ => Err(tinytemplate::error::Error::GenericError {
+            msg: "Cannot format to a Starlark string".to_owned(),
+        }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn escape_starlark_string_value(value: Value) -> Result<String> {
+        let mut out = String::new();
+        escape_starlark_string(&value, &mut out)?;
+        Ok(out)
+    }
+
+    #[test]
+    fn test_escape_starlark_string() -> Result<()> {
+        assert_eq!("", escape_starlark_string_value(json!(null))?);
+        assert_eq!("123", escape_starlark_string_value(json!(123))?);
+        assert_eq!("abc", escape_starlark_string_value(json!("abc"))?);
+        assert_eq!(
+            r#"\"foo\""#,
+            escape_starlark_string_value(json!(r#""foo""#))?
+        );
+        assert_eq!(
+            r#"foo\\bar"#,
+            escape_starlark_string_value(json!(r#"foo\bar"#))?
+        );
+        Ok(())
     }
 }

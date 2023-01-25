@@ -11,6 +11,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Result};
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
@@ -24,7 +25,7 @@ use crate::{
 };
 
 /// Represents an origin of local source code.
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum PackageLocalSourceOrigin {
     /// ChromeOS source code at `/mnt/host/source/src`.
     Src,
@@ -35,7 +36,7 @@ pub enum PackageLocalSourceOrigin {
 }
 
 /// Represents local source code.
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct PackageLocalSource {
     /// Origin of this source code.
     pub origin: PackageLocalSourceOrigin,
