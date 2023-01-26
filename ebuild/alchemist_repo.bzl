@@ -60,5 +60,7 @@ alchemist_repo = repository_rule(
             allow_single_file = True,
         ),
     },
-    local = True,
+    # Do not set this to true. It will force the evaluation to happen every
+    # bazel invocation for unknown reasons...
+    local = False,
 )
