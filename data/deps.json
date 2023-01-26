@@ -23717,8 +23717,8 @@
     "srcUris": {
       "freetype-2.9.tar.bz2": {
         "uris": [
-          "mirror://sourceforge/freetype/freetype-2.9.tar.bz2",
-          "mirror://nongnu/freetype/freetype-2.9.tar.bz2"
+          "mirror://nongnu/freetype/freetype-2.9.tar.bz2",
+          "mirror://sourceforge/freetype/freetype-2.9.tar.bz2"
         ],
         "size": 1915013,
         "integrity": "sha512-KEZfNFO6+aGHUpQyEYOJ3o8bhSc8n7eH0sjw/u6Ktks4fd2Ta05n7Fjc9x4ziE5+JfARabc3gkIhqxQ4OakWGg==",
@@ -25778,8 +25778,8 @@
     "srcUris": {
       "baselayout-2.2.tar.bz2": {
         "uris": [
-          "mirror://gentoo/baselayout-2.2.tar.bz2",
-          "http://dev.gentoo.org/~vapier/dist/baselayout-2.2.tar.bz2"
+          "http://dev.gentoo.org/~vapier/dist/baselayout-2.2.tar.bz2",
+          "mirror://gentoo/baselayout-2.2.tar.bz2"
         ],
         "size": 40744,
         "integrity": "sha512-pRmcQug12fJoPMlPPExH7Nw5IxbCTgkyhFc24ukEebDFyK1y6tjgU38JdAW311SNALh7f/jJ42UUhuPFwJcLNg==",
@@ -28331,8 +28331,8 @@
     "srcUris": {
       "sudo-1.9.8p2.tar.gz": {
         "uris": [
-          "https://www.sudo.ws/sudo/dist/sudo-1.9.8p2.tar.gz",
-          "ftp://ftp.sudo.ws/pub/sudo/sudo-1.9.8p2.tar.gz"
+          "ftp://ftp.sudo.ws/pub/sudo/sudo-1.9.8p2.tar.gz",
+          "https://www.sudo.ws/sudo/dist/sudo-1.9.8p2.tar.gz"
         ],
         "size": 4302256,
         "integrity": "sha512-iZslLowhkib2WN/z3TTJewfUIASZi0UXW0wMTeQqa/n5CVmOmbQFb6EXHmM3jiA4VLD4YIsPXBsA6dNneBj20w==",
@@ -28442,8 +28442,8 @@
     "srcUris": {
       "gzip-1.12.tar.xz": {
         "uris": [
-          "mirror://gnu/gzip/gzip-1.12.tar.xz",
-          "https://alpha.gnu.org/gnu/gzip/gzip-1.12.tar.xz"
+          "https://alpha.gnu.org/gnu/gzip/gzip-1.12.tar.xz",
+          "mirror://gnu/gzip/gzip-1.12.tar.xz"
         ],
         "size": 825548,
         "integrity": "sha512-EWMm/pkYKCJ94VAzagwBb0/pMt+7cooWtKhJZSVtmSlXSk9c+vPPa7QVSXLvDREPJqtHLJPmLsml/XpdZavqJA==",
@@ -28596,8 +28596,8 @@
     "srcUris": {
       "tar-1.34.tar.xz": {
         "uris": [
-          "mirror://gnu/tar/tar-1.34.tar.xz",
-          "https://alpha.gnu.org/gnu/tar/tar-1.34.tar.xz"
+          "https://alpha.gnu.org/gnu/tar/tar-1.34.tar.xz",
+          "mirror://gnu/tar/tar-1.34.tar.xz"
         ],
         "size": 2226068,
         "integrity": "sha512-XnfEp7SZg619FSOMK84ovnqKpDe0sYFfwAq9Ewltowi2u6GWzG4+152F5igj1SCuDY/Notk4c4Qs+E3DNp/JAg==",
@@ -29126,9 +29126,9 @@
     "srcUris": {
       "pax-utils-1.3.3.tar.xz": {
         "uris": [
-          "mirror://gentoo/pax-utils-1.3.3.tar.xz",
           "https://dev.gentoo.org/~sam/distfiles/pax-utils-1.3.3.tar.xz",
-          "https://dev.gentoo.org/~vapier/dist/pax-utils-1.3.3.tar.xz"
+          "https://dev.gentoo.org/~vapier/dist/pax-utils-1.3.3.tar.xz",
+          "mirror://gentoo/pax-utils-1.3.3.tar.xz"
         ],
         "size": 725900,
         "integrity": "sha512-uw0DNxz48MwmqDy+6Iim2R5wQW3tx0BHbNVUndrvZwSMaALjDkaasaztD9f2P4TpZEdEYCstSD73rzcZFQX3Lg==",
@@ -29237,8 +29237,8 @@
     "srcUris": {
       "portage-utils-0.63.tar.xz": {
         "uris": [
-          "mirror://gentoo/portage-utils-0.63.tar.xz",
-          "https://dev.gentoo.org/~vapier/dist/portage-utils-0.63.tar.xz"
+          "https://dev.gentoo.org/~vapier/dist/portage-utils-0.63.tar.xz",
+          "mirror://gentoo/portage-utils-0.63.tar.xz"
         ],
         "size": 529012,
         "integrity": "sha512-KwvO7mO4lOf1F/PJOKGHOqkMQbZoq79qORJaG7nOEFlzHjQhbMNXeHtcv4OgzwdIUwFHJiZz6gvCZATWJ0cU6w==",
@@ -29282,8 +29282,8 @@
       },
       "bash51-001": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-001",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-001"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-001",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-001"
         ],
         "size": 2894,
         "integrity": "sha512-HNhoBaJjlhQ3KuwppxC8RW4zCry7qghnggyU9xSh+l+1wbGKosECY64Lzp2tdXnHry9zIoIxXBw0v9apB3e/0g==",
@@ -29292,8 +29292,8 @@
       },
       "bash51-001.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-001.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-001.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-001.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-001.sig"
         ],
         "size": 95,
         "integrity": "sha512-pyryREwycYD+kdV4C4mqtp0r1n50N1A+FWXsZhj+y0lU3KpJmBhvjRDkoCujah61BzPT/tq6YIZf7nXTjSDwZQ==",
@@ -29302,8 +29302,8 @@
       },
       "bash51-002": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-002",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-002"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-002",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-002"
         ],
         "size": 1575,
         "integrity": "sha512-kj54IqlilkU0fTrqAFj7Xi1SIjUHFZpiNpMJ8mRhLfRKhJMcGeDMs4UumM5nLfvUVEdwkLQEG1oN5HfJTrYQiA==",
@@ -29312,8 +29312,8 @@
       },
       "bash51-002.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-002.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-002.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-002.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-002.sig"
         ],
         "size": 95,
         "integrity": "sha512-yYHp5C8zVIo64mBb5pCwEuk0y/rlVRm1VVk8MPD03Q/PB4rztVDlyYjohyufT1tyWI2i8fWlUmRqREwqISYoNg==",
@@ -29322,8 +29322,8 @@
       },
       "bash51-003": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-003",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-003"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-003",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-003"
         ],
         "size": 1800,
         "integrity": "sha512-AelS3P2uWGJHI9ZJEuo0RO7S/c0ma6GpKblew6vXD5FL9ABgfD97t6lKwpJfeU+R83wZKdW7mH3iun9goZy4vQ==",
@@ -29332,8 +29332,8 @@
       },
       "bash51-003.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-003.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-003.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-003.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-003.sig"
         ],
         "size": 95,
         "integrity": "sha512-4J4pWc92NQnOxLf/f8vzJwSRPqN1BsbJP6JlzN8JCBLbaDUdRN8HMBTTKdi7cDDifuCJ7IRWMRA6Q9dE2Edw+g==",
@@ -29342,8 +29342,8 @@
       },
       "bash51-004": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-004",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-004"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-004",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-004"
         ],
         "size": 3745,
         "integrity": "sha512-EP8kzZGizYiBi/pyGAUIQ69rQJ5D/MqJ9exw2CZgIMbCpVEyQmJx8WXNDxVPSesPjsJ2G4D8BmySG4MSC7VDzg==",
@@ -29352,8 +29352,8 @@
       },
       "bash51-004.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-004.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-004.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-004.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-004.sig"
         ],
         "size": 95,
         "integrity": "sha512-RFwzz1miH1xfLL9E8/HxdW2xhQKBtPrXxQZmXp4m+EDJ+1ZHxEp0/ei+LsgyZR/RDfYksWSeo68oWM4+DjGXog==",
@@ -29362,8 +29362,8 @@
       },
       "bash51-005": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-005",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-005"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-005",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-005"
         ],
         "size": 2577,
         "integrity": "sha512-+oPYlP6HSgW5p9R7i8qOW39AZyIdguixr2FtF3JVksNzfGIfKorTyReymEYBLDfIWs003LtD62sFBlzM6JsmDA==",
@@ -29372,8 +29372,8 @@
       },
       "bash51-005.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-005.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-005.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-005.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-005.sig"
         ],
         "size": 95,
         "integrity": "sha512-j64sY4CNBzAwTaWb1qUISYN/mNoyqBTjv6FKmls0uswOz5+u6jVbcp2IwOvxGDbjZRbhyTwaGec+szH9n22BKQ==",
@@ -29382,8 +29382,8 @@
       },
       "bash51-006": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-006",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-006"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-006",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-006"
         ],
         "size": 1412,
         "integrity": "sha512-ubbj1x97dxji6FmOyOM33MZ1Vx+yM8KeUjDr8U6rIkkgRTHy/oxNFFnF/tEKy2eQSFiNHkV+mNvAD/xNLNIn4w==",
@@ -29392,8 +29392,8 @@
       },
       "bash51-006.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-006.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-006.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-006.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-006.sig"
         ],
         "size": 95,
         "integrity": "sha512-aAEiTfcxlKWB2DoNE3tLnH4ZYJUoYC5vE7TcWYELILBmYxfCKd9HB4Tggs8gXxyU/+ufardGXQWVmgO/S4FZwg==",
@@ -29402,8 +29402,8 @@
       },
       "bash51-007": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-007",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-007"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-007",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-007"
         ],
         "size": 2621,
         "integrity": "sha512-5OvcR+eA3cJYjs38/gDLYYA5xwROJQqyuDawc1xGHrrNFb6vIUXid8cLf1HN7VW9jd53V9+BDzP42uMG7lulcQ==",
@@ -29412,8 +29412,8 @@
       },
       "bash51-007.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-007.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-007.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-007.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-007.sig"
         ],
         "size": 95,
         "integrity": "sha512-s4xEUL7TdANo3csk0Uoor6qYMncagcj6DD//3k5uG/50JXmchU6M7qMZBqhrok84FcIOgLB+kGKSCJdufJOcbw==",
@@ -29422,8 +29422,8 @@
       },
       "bash51-008": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-008",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-008"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-008",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-008"
         ],
         "size": 1821,
         "integrity": "sha512-l/lVigimbMnaYsKFv5EYs5Mo4l7TuSd3KOBTmxrAre8XagkOOc2W3APW/ZANgVW9WAQMszkKCfY3urHeivP69g==",
@@ -29432,8 +29432,8 @@
       },
       "bash51-008.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-008.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-008.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-008.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-008.sig"
         ],
         "size": 95,
         "integrity": "sha512-OOLoPsTZuapW1n1YFu0hUfsgeJ+wuVCtNy6+Wj/qYsGTcCsrW+KXkGPJI/ZkvRQ3BYggo/rGjUbHWYqtSP/I9A==",
@@ -29442,8 +29442,8 @@
       },
       "bash51-009": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-009",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-009"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-009",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-009"
         ],
         "size": 1627,
         "integrity": "sha512-LTxlFi7E5cPf60OYkZUO8sQ5c6hBIvzfa1bDiEZsfmcdvJsjbSJT8BQRtmjDZYVSY5ldusuOb56dvLfmwsxRjA==",
@@ -29452,8 +29452,8 @@
       },
       "bash51-009.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-009.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-009.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-009.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-009.sig"
         ],
         "size": 95,
         "integrity": "sha512-2O72rsxthiYsd51cclv26qROpjWreuTkbDLX/wraHuC6lj7XiPK38Fm37vHOyEUEmjFSIacQGXjYj5LCOnrzaQ==",
@@ -29462,8 +29462,8 @@
       },
       "bash51-010": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-010",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-010"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-010",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-010"
         ],
         "size": 1700,
         "integrity": "sha512-qsSgtytVlWYzTxApxSdU9MmBha+Z4JQ25AHYOrgbq3iC0NgFBnSzDxcXM/NigVd3eiZFZukn6T2y6loY0mYw8Q==",
@@ -29472,8 +29472,8 @@
       },
       "bash51-010.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-010.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-010.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-010.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-010.sig"
         ],
         "size": 95,
         "integrity": "sha512-jQ3SRs6xAWfsRRfKcw+M7WVW3DQR69ETCztJFPgbcIg1U4eykhTVzSPe75sHKGKYHiOA9kZ1QkBj3fr25jcQDw==",
@@ -29482,8 +29482,8 @@
       },
       "bash51-011": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-011",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-011"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-011",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-011"
         ],
         "size": 2229,
         "integrity": "sha512-u55HpXC7l1jDZYMfllC5N5tghiuM71cu3DzYM9+W67i5YS3kdL3CoD/078InX4cdVZYilTheOPNliHRIjpdLgQ==",
@@ -29492,8 +29492,8 @@
       },
       "bash51-011.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-011.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-011.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-011.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-011.sig"
         ],
         "size": 95,
         "integrity": "sha512-oxfNdEnOOkUSlQUwifxKEA9xAq4zIsQ/fWVXAxHOtg0lp/ErLA/GeXQ0k96aN2KqrX++prW2mQDa4gJbDT5yNQ==",
@@ -29502,8 +29502,8 @@
       },
       "bash51-012": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-012",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-012"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-012",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-012"
         ],
         "size": 6372,
         "integrity": "sha512-WYGZFLaCHZ9K8Kree5t+qSNowrjrhAfOoR3+7nIIkF3Qa973oEnXscT6xBxE2aEwuVoGGVepZJBQs3RxswRM8Q==",
@@ -29512,8 +29512,8 @@
       },
       "bash51-012.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-012.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-012.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-012.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-012.sig"
         ],
         "size": 95,
         "integrity": "sha512-dgLS9wVjiWTuYRl+2qHC6tKbx5MuL7NsUelx/cTZFD7DcF2lldrvIoUcydlnOuv/f5o6RIp/H8jM+HwKzTL6XA==",
@@ -29522,8 +29522,8 @@
       },
       "bash51-013": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-013",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-013"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-013",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-013"
         ],
         "size": 1277,
         "integrity": "sha512-Z1NRVfSaf1TxUeYqupJ0+C0B8zoaGn5e/Rqg1jui0Hh2XwteIssk23Ey7/LYxYUqNogpi6pSF7i24Vmq4GXXSA==",
@@ -29532,8 +29532,8 @@
       },
       "bash51-013.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-013.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-013.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-013.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-013.sig"
         ],
         "size": 95,
         "integrity": "sha512-nMabuT6M4yVN9RMgptYKIl1S135WGEdepkTeXo4eOd/lVqJYSy2e/48xe8LC1XBj58CMmDC5gtZFacH5p3W+Tw==",
@@ -29542,8 +29542,8 @@
       },
       "bash51-014": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-014",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-014"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-014",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-014"
         ],
         "size": 1456,
         "integrity": "sha512-9lirfvAbodJvc14ksjvzVofhWw1dIPkNojPQAHRaVb26FCwR6fulLjuERw7GJfq2DMdM1r5TPZkElqN5XGWOiA==",
@@ -29552,8 +29552,8 @@
       },
       "bash51-014.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-014.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-014.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-014.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-014.sig"
         ],
         "size": 95,
         "integrity": "sha512-TJst7+e+qQUzqc8sSy9YEzglX9A248oxmS/up3mer1ROKRTnMec1rzXHiDpoekn0XII411L/xyVvWw0KNkK2Ow==",
@@ -29562,8 +29562,8 @@
       },
       "bash51-015": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-015",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-015"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-015",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-015"
         ],
         "size": 1409,
         "integrity": "sha512-/UvIX5QqOhbFRffpUaJPYg/y2IRkDepuBfMFqviO1Bhiv7Be6iJYiBYI3mlvnceg/jvrtRoBH1C3IOp6ZmmRhA==",
@@ -29572,8 +29572,8 @@
       },
       "bash51-015.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-015.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-015.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-015.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-015.sig"
         ],
         "size": 95,
         "integrity": "sha512-bdgzAsLf+nAcy17LbWVXFEeWCfIpe9U8XQKp2Baf5SzqCRSdEitnlAXaDsuutCUriDTdU5fomqrRuHUo0Y6n+w==",
@@ -29582,8 +29582,8 @@
       },
       "bash51-016": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-016",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-016"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-016",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-016"
         ],
         "size": 2122,
         "integrity": "sha512-Ags/Pbd8pgOiejQjMjU421yYRL4X7kKM982oC+vcxxXTDqtslXc1QcuNFPOtnmFCvwrc2g50XuY4JCUIzAqwXw==",
@@ -29592,8 +29592,8 @@
       },
       "bash51-016.sig": {
         "uris": [
-          "mirror://gnu/bash/bash-5.1-patches/bash51-016.sig",
-          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-016.sig"
+          "ftp://ftp.cwru.edu/pub/bash/bash-5.1-patches/bash51-016.sig",
+          "mirror://gnu/bash/bash-5.1-patches/bash51-016.sig"
         ],
         "size": 95,
         "integrity": "sha512-0AjZHba2vM6pQx+WJmX8SXbL7th7JOoTMETpoVsKuhTx1jYeUk8ACWN3qhGpsdruorvrZegjlssSvFfLVglA8A==",
@@ -30368,8 +30368,8 @@
     "srcUris": {
       "libev-4.33.tar.gz": {
         "uris": [
-          "http://dist.schmorp.de/libev/libev-4.33.tar.gz",
-          "http://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz"
+          "http://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz",
+          "http://dist.schmorp.de/libev/libev-4.33.tar.gz"
         ],
         "size": 569527,
         "integrity": "sha512-xmKmU2ARXgslmOPogkz3szNgxDqWrJIz9rbqKHOhAQJVF3PK0Oiec4VB51r5/U8+PBHNLyUcVwOqJPGTEouJaw==",
@@ -30647,8 +30647,8 @@
     "srcUris": {
       "libpcre2-10.34-patchset-01.tar.xz": {
         "uris": [
-          "https://dev.gentoo.org/~whissi/dist/libpcre2/libpcre2-10.34-patchset-01.tar.xz",
-          "https://dev.gentoo.org/~polynomial-c/dist/libpcre2-10.34-patchset-01.tar.xz"
+          "https://dev.gentoo.org/~polynomial-c/dist/libpcre2-10.34-patchset-01.tar.xz",
+          "https://dev.gentoo.org/~whissi/dist/libpcre2/libpcre2-10.34-patchset-01.tar.xz"
         ],
         "size": 1208,
         "integrity": "sha512-2IFmVwG8Mw8jfRnuSEkagdyLlSsLjlKeuDw//fFHEPaOuTT4cu1272sL7hhkJhRT5+ceYOFCF8AE5OEsa6pJnw==",
@@ -30657,8 +30657,8 @@
       },
       "pcre2-10.34.tar.bz2": {
         "uris": [
-          "mirror://sourceforge/pcre/pcre2-10.34.tar.bz2",
-          "https://ftp.pcre.org/pub/pcre/pcre2-10.34.tar.bz2"
+          "https://ftp.pcre.org/pub/pcre/pcre2-10.34.tar.bz2",
+          "mirror://sourceforge/pcre/pcre2-10.34.tar.bz2"
         ],
         "size": 1714731,
         "integrity": "sha512-d611+LC4u/wvV5MllhUbyiWwa9Yh4PBH5HbzjNEn9D4gUkYLlcKBp+h0qtK3/YbI80E/SjI6u3S5RApC0O6VJA==",
@@ -30678,8 +30678,8 @@
     "srcUris": {
       "pcre-8.44.tar.bz2": {
         "uris": [
-          "mirror://sourceforge/pcre/pcre-8.44.tar.bz2",
-          "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.44.tar.bz2"
+          "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.44.tar.bz2",
+          "mirror://sourceforge/pcre/pcre-8.44.tar.bz2"
         ],
         "size": 1577611,
         "integrity": "sha512-8m2FCqtSKHmeWKyMIwb7MTiJMyw54psRjvHeV2d8XJD5cNaNP0dcq8ZPi5gqd/BOypkP8QV/PM9eGb0TeZfErA==",
@@ -32467,8 +32467,8 @@
     "srcUris": {
       "pyxattr-0.6.0.tar.gz": {
         "uris": [
-          "mirror://pypi/p/pyxattr/pyxattr-0.6.0.tar.gz",
-          "https://pyxattr.k1024.org/downloads/pyxattr-0.6.0.tar.gz"
+          "https://pyxattr.k1024.org/downloads/pyxattr-0.6.0.tar.gz",
+          "mirror://pypi/p/pyxattr/pyxattr-0.6.0.tar.gz"
         ],
         "size": 31057,
         "integrity": "sha512-xWv1dym1+Mjj4Z4p/ZA7c2XGZEq+Pc6/V//C+XoektDiLNwKlnxavuOnS6YaKjeeMaFzT0VEkJW9t4lbg1epuw==",
@@ -33197,8 +33197,8 @@
     "srcUris": {
       "rt-tests-2.2.tar.xz": {
         "uris": [
-          "https://kernel.org/pub/linux/utils/rt-tests/rt-tests-2.2.tar.xz",
-          "https://kernel.org/pub/linux/utils/rt-tests/older/rt-tests-2.2.tar.xz"
+          "https://kernel.org/pub/linux/utils/rt-tests/older/rt-tests-2.2.tar.xz",
+          "https://kernel.org/pub/linux/utils/rt-tests/rt-tests-2.2.tar.xz"
         ],
         "size": 115120,
         "integrity": "sha512-gm3IiU3YZw5wVWa1Ik9Uve6J5bSPIcoA5sQGHyjE++LasUweGxMC/scBHb8o8+uIwbitwTf+19F5WOqXLjwIsQ==",
@@ -34553,8 +34553,8 @@
     "srcUris": {
       "dhcp-4.4.1.tar.gz": {
         "uris": [
-          "ftp://ftp.isc.org/isc/dhcp/dhcp-4.4.1.tar.gz",
-          "ftp://ftp.isc.org/isc/dhcp/4.4.1/dhcp-4.4.1.tar.gz"
+          "ftp://ftp.isc.org/isc/dhcp/4.4.1/dhcp-4.4.1.tar.gz",
+          "ftp://ftp.isc.org/isc/dhcp/dhcp-4.4.1.tar.gz"
         ],
         "size": 11164378,
         "integrity": "sha512-aErjSfIkkYyfjOx71sVc0Lg60rWCc3Wyh2ygiOsFt/8TZOUPbcJPJIXGENm+lNS6MCD2Cg+g72OWI0nRkbiH5w==",
@@ -34822,10 +34822,10 @@
     "srcUris": {
       "openldap-2.4.57.tgz": {
         "uris": [
-          "https://openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.57.tgz",
           "http://gpl.savoirfairelinux.net/pub/mirrors/openldap/openldap-release/openldap-2.4.57.tgz",
+          "http://mirror.eu.oneandone.net/software/openldap/openldap-release/openldap-2.4.57.tgz",
           "http://repository.linagora.org/OpenLDAP/openldap-release/openldap-2.4.57.tgz",
-          "http://mirror.eu.oneandone.net/software/openldap/openldap-release/openldap-2.4.57.tgz"
+          "https://openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.57.tgz"
         ],
         "size": 5883912,
         "integrity": "sha512-uSm87Q9bqakOAVokuAN8iVj7tygtsnK9DKz0O191QKtCFZo8REEUgHQ0Aii7Xwf5NlHA27Kv/elhvhVgWPmc5Q==",
@@ -34998,8 +34998,8 @@
     "srcUris": {
       "coreutils-8.30-patches-01.tar.xz": {
         "uris": [
-          "mirror://gentoo/coreutils-8.30-patches-01.tar.xz",
-          "https://dev.gentoo.org/~polynomial-c/dist/coreutils-8.30-patches-01.tar.xz"
+          "https://dev.gentoo.org/~polynomial-c/dist/coreutils-8.30-patches-01.tar.xz",
+          "mirror://gentoo/coreutils-8.30-patches-01.tar.xz"
         ],
         "size": 5788,
         "integrity": "sha512-seGTNjfeRYHV+Mbt5OgKASQ10T8M9VUKdqtbvpRB48Fc4Z7z94p+o7g2jV6aO7F8EgfEcdJhcbWXhvOK3roEVA==",
@@ -35051,8 +35051,8 @@
     "srcUris": {
       "diffutils-3.8.tar.xz": {
         "uris": [
-          "mirror://gnu/diffutils/diffutils-3.8.tar.xz",
-          "https://alpha.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz"
+          "https://alpha.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz",
+          "mirror://gnu/diffutils/diffutils-3.8.tar.xz"
         ],
         "size": 1585120,
         "integrity": "sha512-J5RBJwmH5w1ez6+EtihaSGaSnEPsh35Q8VSniIWNVIqKMW8vwmrWL3NIyNKJyymgnQbfrc4YBuPYtOqIyLGqfA==",
@@ -35230,8 +35230,8 @@
     "srcUris": {
       "groff-1.22.4.tar.gz": {
         "uris": [
-          "mirror://gnu/groff/groff-1.22.4.tar.gz",
-          "mirror://gnu-alpha/groff/groff-1.22.4.tar.gz"
+          "mirror://gnu-alpha/groff/groff-1.22.4.tar.gz",
+          "mirror://gnu/groff/groff-1.22.4.tar.gz"
         ],
         "size": 4137480,
         "integrity": "sha512-HELTzXHvrwZ7WFCUXZCX+h8PrdXitrp0Rr2dT0Of4a0Fjk3bDU4PUDaCE338fIIpRM4ePlz5gWc/i6GX6ncSbQ==",
@@ -35863,8 +35863,8 @@
     "srcUris": {
       "autoconf-2.69.tar.xz": {
         "uris": [
-          "mirror://gnu/autoconf/autoconf-2.69.tar.xz",
-          "ftp://alpha.gnu.org/pub/gnu/autoconf/autoconf-2.69.tar.xz"
+          "ftp://alpha.gnu.org/pub/gnu/autoconf/autoconf-2.69.tar.xz",
+          "mirror://gnu/autoconf/autoconf-2.69.tar.xz"
         ],
         "size": 1214744,
         "integrity": "sha512-mV0+Wo6x6zfit/rlPG7HqbTfmXKGt9ZDNEgY+UY2dWsb9f9eqRVedVy5RhFJqFPfvyiG/GvXEy5a+pwWjjBumw==",
@@ -35900,8 +35900,8 @@
     "srcUris": {
       "automake-1.15.1.tar.xz": {
         "uris": [
-          "mirror://gnu/automake/automake-1.15.1.tar.xz",
-          "https://alpha.gnu.org/pub/gnu/automake/automake-1.15.1.tar.xz"
+          "https://alpha.gnu.org/pub/gnu/automake/automake-1.15.1.tar.xz",
+          "mirror://gnu/automake/automake-1.15.1.tar.xz"
         ],
         "size": 1509496,
         "integrity": "sha512-AvZhsmdvHUQzTOHHGI+ZE6aHS/RrpIdwitgJCtV5BfFK6tgP7+2BXiHv+s+7kl4juUTqfdMlY9yjnBpBdO2miA==",
@@ -36301,8 +36301,8 @@
       },
       "binutils-2.37_p1.tar.xz": {
         "uris": [
-          "mirror://gnu/binutils/binutils-2.37_p1.tar.xz",
-          "https://dev.gentoo.org/~dilfridge/distfiles/binutils-2.37_p1.tar.xz"
+          "https://dev.gentoo.org/~dilfridge/distfiles/binutils-2.37_p1.tar.xz",
+          "mirror://gnu/binutils/binutils-2.37_p1.tar.xz"
         ],
         "size": 22992196,
         "integrity": "sha512-RsKX7Cp6W4HRxuPxZIam3ChgoHUg/i3Yhx0etRYAZbvizGsEFdU1K/EihBM+WBek5CnmB3GC1hXpab0aj1LtKA==",
@@ -36701,9 +36701,9 @@
     "srcUris": {
       "zlib-1.2.11.tar.gz": {
         "uris": [
-          "https://zlib.net/zlib-1.2.11.tar.gz",
           "http://www.gzip.org/zlib/zlib-1.2.11.tar.gz",
-          "http://www.zlib.net/current/beta/zlib-1.2.11.tar.gz"
+          "http://www.zlib.net/current/beta/zlib-1.2.11.tar.gz",
+          "https://zlib.net/zlib-1.2.11.tar.gz"
         ],
         "size": 607698,
         "integrity": "sha512-c/0//0rezNSJQITBXdrImJDNEO8QXdXhg14em7tqSf8ilxO9GX0gPt+hfCcncA/OZaKiNfB1aCEtgg3KiLUorg==",

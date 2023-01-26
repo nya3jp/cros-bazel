@@ -189,7 +189,10 @@ fn extract_cros_workon_sources(details: &PackageDetails) -> Result<Vec<PackageLo
 
     // Kernel packages need extra eclasses.
     // TODO: Remove this hack.
-    if projects.iter().any(|p| p == "cros/third_party/kernel") {
+    if projects
+        .iter()
+        .any(|p| p == "chromiumos/third_party/kernel")
+    {
         sources.push(PackageLocalSource {
             origin: PackageLocalSourceOrigin::Src,
             path: "third_party/chromiumos-overlay/eclass/cros-kernel".to_owned(),
