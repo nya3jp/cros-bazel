@@ -2,7 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "ebuild_src")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 exports_files([
     "Cargo.toml",
@@ -14,15 +15,25 @@ alias(
     actual = "//third_party/chromiumos-overlay/virtual/target-os:0_package_set",
 )
 
-ebuild_src(
-    name = "scripts_src",
+pkg_files(
+    name = "scripts_src_files",
     srcs = glob(
         ["scripts/**"],
         exclude = ["scripts/.git/**"],
     ),
-    # Our mount path should be scripts, but because the glob starts with
-    # scripts, the squashfs contains a root directory called scripts.
-    mount_path = "",
+    prefix = "/mnt/host/source/src",
+    strip_prefix = strip_prefix.from_root(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "scripts_src",
+    srcs = [
+        ":scripts_src_files",
+    ],
+    extension = "tar.zst",
+    compressor = "//bazel/ebuild/private:zstd",
+    compressor_args = "--threads=0",
     visibility = ["//bazel/ebuild/private/cmd/build_image:__pkg__"],
 )
 

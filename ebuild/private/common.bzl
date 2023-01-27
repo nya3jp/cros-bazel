@@ -84,20 +84,6 @@ SDKInfo = provider(
     },
 )
 
-EbuildSrcInfo = provider(
-    "Source files used by an ebuild",
-    fields = {
-        "file": """
-            File: A .squashfs or tar.* that contains src files for this
-            ebuild.
-        """,
-        "mount_path": """
-            str: The patch where the src files will be mounted. It is relative
-            to /mnt/host/source.
-        """,
-    },
-)
-
 EbuildLibraryInfo = provider(
     "Ebuild library info",
     fields = {

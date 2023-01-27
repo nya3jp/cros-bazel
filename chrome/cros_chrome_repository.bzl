@@ -102,6 +102,7 @@ def _cros_chrome_repository_impl(ctx):
         "--exclude-vcs",
         "--auto-compress",
         "--create",
+        "--transform=s,^,/home/root/chrome_root/,"
     ]
 
     # We use zstd since it's way faster than gzip and should be installed by

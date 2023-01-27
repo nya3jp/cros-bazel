@@ -2,8 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildSrcInfo", "SDKInfo", "relative_path_in_package")
-load("@bazel_skylib//lib:paths.bzl", "paths")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "SDKInfo", "relative_path_in_package")
 
 MountSDKDebugInfo = provider(
     "Information required to create a debug target for a mountsdk target",
@@ -149,10 +148,9 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
         direct_inputs.append(overlay.squashfs_file)
 
-    for target in ctx.attr.srcs:
-        info = target[EbuildSrcInfo]
-        args.add("--overlay=%s=%s" % (info.mount_path, info.file.path))
-        direct_inputs.append(info.file)
+    for file in ctx.files.srcs:
+        args.add("--overlay=/=%s" % file.path)
+        direct_inputs.append(file)
 
     # TODO: Consider target/host transitions.
     transitive_build_time_deps_files = depset(
@@ -239,7 +237,7 @@ COMMON_ATTRS = dict(
     ),
     srcs = attr.label_list(
         doc = "src files used by the ebuild",
-        providers = [EbuildSrcInfo],
+        allow_files = True,
     ),
     build_deps = attr.label_list(
         providers = [BinaryPackageInfo],

@@ -2,18 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@//bazel/ebuild:defs.bzl", "ebuild_tar_src")
-
-ebuild_tar_src(
+alias(
     name = "src",
-    src = "src.tar.zst",
-    mount_path = "/home/root/chrome_root",
+    actual = "src.tar.zst",
     visibility = ["//visibility:public"],
 )
 
-ebuild_tar_src(
+alias(
     name = "src-internal",
-    src = "src-internal.tar.zst",
-    mount_path = "/home/root/chrome_root",
+    actual = "src-internal.tar.zst",
     visibility = ["//visibility:public"],
 )

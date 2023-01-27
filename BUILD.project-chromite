@@ -2,12 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@//bazel/ebuild:defs.bzl", "ebuild_src")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 # Chromite has some recursive symlinks which we need to exclude
 
-ebuild_src(
-    name="src",
+pkg_files(
+    name = "__files__",
     srcs = glob([
         "api/**",
         "bin/**",
@@ -41,6 +42,18 @@ ebuild_src(
         "third_party/swarming.client/example/**",
         "**/__pycache__/**"
     ]),
-    mount_path = "chromite",
+    prefix = "/mnt/host/source/chromite",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "src",
+    srcs = [
+        ":__files__",
+    ],
+    extension = "tar.zst",
+    compressor = "@//bazel/ebuild/private:zstd",
+    compressor_args = "--threads=0",
     visibility = ["//visibility:public"],
 )

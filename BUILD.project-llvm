@@ -2,10 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "ebuild_src")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
-ebuild_src(
-    name = "src",
+pkg_files(
+    name = "__files__",
     # We intentionally include the .git repo because it's required
     # to calculate which patches to apply. We really need to figure out another
     # way of doing this.
@@ -16,5 +17,18 @@ ebuild_src(
     	# Not supported in squashfs
     	"libcxx/lib/abi/x86_64-apple-darwin.*"
     ]),
+    prefix = "/mnt/host/source/src",
+    strip_prefix = strip_prefix.from_root(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "src",
+    srcs = [
+        ":__files__",
+    ],
+    extension = "tar.zst",
+    compressor = "//bazel/ebuild/private:zstd",
+    compressor_args = "--threads=0",
     visibility = ["//visibility:public"],
 )
