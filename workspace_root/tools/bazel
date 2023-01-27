@@ -21,6 +21,15 @@ fi
 
 if BAZELISK="$(command -v bazelisk)"; then
 
+    while [[ "$#" -gt 1 ]]; do
+        if [[ "$1" == --* ]]; then
+            ARGS+=("$1")
+            shift
+        else
+            break
+        fi
+    done
+
     # Used to force the alchemist_digest repo rule to re-run every invocation.
     if [[ "$#" -gt 1 ]]; then
         ARGS+=("$1")
