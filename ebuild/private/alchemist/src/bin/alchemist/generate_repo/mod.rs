@@ -64,8 +64,10 @@ fn analyze_packages(
     all_details: Vec<Arc<PackageDetails>>,
     src_dir: &Path,
     resolver: &PackageResolver,
+    verbose: bool,
 ) -> Vec<Package> {
     // Analyze packages in parallel.
+    let fail_count = AtomicUsize::new(0);
     let all_packages: Vec<Package> = all_details
         .into_par_iter()
         .flat_map(|details| {
@@ -81,16 +83,28 @@ fn analyze_packages(
             match result {
                 Ok(package) => Some(package),
                 Err(err) => {
-                    println!(
-                        "WARNING: {}: Analysis failed: {:#}",
-                        details.ebuild_path.to_string_lossy(),
-                        err
-                    );
+                    fail_count.fetch_add(1, Ordering::SeqCst);
+                    if verbose {
+                        eprintln!(
+                            "WARNING: {}: Analysis failed: {:#}",
+                            details.ebuild_path.to_string_lossy(),
+                            err
+                        );
+                    }
                     None
                 }
             }
         })
         .collect();
+
+    if !verbose {
+        let fail_count = fail_count.load(Ordering::SeqCst);
+        if fail_count > 0 {
+            eprintln!(
+                "WARNING: Analysis failed for {fail_count} packages; use --verbose to see details"
+            );
+        }
+    }
 
     all_packages
 }
@@ -105,6 +119,7 @@ pub fn generate_repo_main(
     toolchain_config: &ToolchainConfig,
     src_dir: &Path,
     output_dir: &Path,
+    verbose: bool,
 ) -> Result<()> {
     match remove_dir_all(output_dir) {
         Ok(_) => {}
@@ -117,7 +132,7 @@ pub fn generate_repo_main(
 
     let all_details = evaluate_all_packages(repos, loader)?;
 
-    let all_packages = analyze_packages(all_details, src_dir, resolver);
+    let all_packages = analyze_packages(all_details, src_dir, resolver, verbose);
 
     let all_local_sources = all_packages
         .iter()
