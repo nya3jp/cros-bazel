@@ -499,11 +499,12 @@ impl RepositoryLookup {
         for base in &self.repository_roots {
             // This applies to the board overlays.
             let prefixed = format!("overlay-{repository_name}");
+            let project = format!("project-{repository_name}");
 
             // chromiumos is the only repository following this convention.
             let suffixed = format!("{repository_name}-overlay");
 
-            for dir in &[repository_name, &prefixed, &suffixed] {
+            for dir in &[repository_name, &prefixed, &suffixed, &project] {
                 let repository_base = self.root_dir.join(base).join(dir);
                 let layout = repository_base.join("metadata/layout.conf");
 
@@ -643,6 +644,17 @@ thin-manifests = true
 use-manifests = true
 "#;
 
+    const CHEETS_LAYOUT_CONF: &str = r#"
+cache-format = md5-dict
+masters = portage-stable chromiumos eclass-overlay
+profile-formats = portage-2 profile-default-eapi
+profile_eapi_when_unspecified = 5-progress
+repo-name = cheets-private
+thin-manifests = true
+use-manifests = strict
+
+"#;
+
     #[test]
     fn lookp_repository_path() -> Result<()> {
         let dir = tempfile::tempdir()?;
@@ -662,6 +674,10 @@ use-manifests = true
                 (
                     "third_party/chromiumos-overlay/metadata/layout.conf",
                     CHROMIUMOS_LAYOUT_CONF,
+                ),
+                (
+                    "private-overlays/project-cheets-private/metadata/layout.conf",
+                    CHEETS_LAYOUT_CONF,
                 ),
             ],
         )?;
@@ -685,6 +701,11 @@ use-manifests = true
         assert_eq!(
             dir.join("third_party/chromiumos-overlay"),
             lookup.path("chromiumos")?
+        );
+
+        assert_eq!(
+            dir.join("private-overlays/project-cheets-private"),
+            lookup.path("cheets-private")?
         );
 
         Ok(())
