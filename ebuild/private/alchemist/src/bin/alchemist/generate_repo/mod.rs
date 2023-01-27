@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 pub(self) mod common;
-pub(self) mod internal;
+pub mod internal;
 pub(self) mod public;
 pub(self) mod repositories;
 
@@ -147,7 +147,7 @@ pub fn generate_repo_main(
     generate_internal_sources(&all_local_sources, &src_dir, output_dir)?;
     generate_public_packages(&all_packages, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
-    generate_sdk(board, repos, toolchain_config, output_dir)?;
+    generate_sdk(board, repos, toolchain_config, translator, output_dir)?;
 
     File::create(output_dir.join("BUILD.bazel"))?.write_all(&[])?;
     File::create(output_dir.join("WORKSPACE.bazel"))?.write_all(&[])?;

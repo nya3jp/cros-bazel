@@ -10,7 +10,9 @@ use std::{
 
 use anyhow::{Context, Result};
 
-use alchemist::{repository::RepositorySet, toolchain::ToolchainConfig};
+use alchemist::{
+    fakechroot::PathTranslator, repository::RepositorySet, toolchain::ToolchainConfig,
+};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::Serialize;
@@ -202,13 +204,18 @@ struct MakeConfContext {
     vars: Vec<MakeVar>,
 }
 
-fn generate_make_conf_board(repos: &RepositorySet, out: &Path) -> Result<()> {
+pub fn generate_make_conf_board(
+    repos: &RepositorySet,
+    translator: &PathTranslator,
+    out: &Path,
+) -> Result<()> {
     let mut sources: Vec<String> = Vec::new();
     for repo in repos.get_repos() {
         let make_conf = repo.base_dir().join("make.conf");
         if make_conf.try_exists()? {
             sources.push(
-                make_conf
+                translator
+                    .to_inner(&make_conf)?
                     .to_str()
                     .context("Invalid make.conf path")?
                     .to_owned(),
@@ -231,12 +238,19 @@ fn generate_make_conf_board(repos: &RepositorySet, out: &Path) -> Result<()> {
     Ok(())
 }
 
-fn generate_make_conf_board_setup(
+pub fn generate_make_conf_board_setup(
     board: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
+    translator: &PathTranslator,
     out: &Path,
 ) -> Result<()> {
+    let overlays = repos
+        .get_repos()
+        .iter()
+        .map(|r| translator.to_inner(r.base_dir()))
+        .collect::<Result<Vec<_>>>()?;
+
     let vars: Vec<MakeVar> = vec![
         MakeVar::from((
             "ARCH",
@@ -248,11 +262,10 @@ fn generate_make_conf_board_setup(
         // BOARD_OVERLAY contains everything that isn't a third_party repo
         MakeVar::from((
             "BOARD_OVERLAY",
-            repos
-                .get_repos()
+            overlays
                 .iter()
-                .filter(|r| !r.base_dir().starts_with(CHROOT_THIRD_PARTY_DIR))
-                .map(|r| r.base_dir().display())
+                .filter(|p| !p.starts_with(CHROOT_THIRD_PARTY_DIR))
+                .map(|p| p.display())
                 .join("\n"),
         )),
         MakeVar::from(("BOARD_USE", board)),
@@ -279,11 +292,7 @@ fn generate_make_conf_board_setup(
             // TODO: The make.conf actually overrides this variable. Evaluate
             // if we can get rid of it.
             "PORTDIR_OVERLAY",
-            repos
-                .get_repos()
-                .iter()
-                .map(|r| r.base_dir().display())
-                .join("\n"),
+            overlays.iter().map(|p| p.display()).join("\n"),
         )),
         MakeVar::from((
             "ROOT",
@@ -308,6 +317,7 @@ pub fn generate_sdk(
     board: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
+    translator: &PathTranslator,
     out: &Path,
 ) -> Result<()> {
     let out = out.join("internal/sdk");
@@ -318,8 +328,8 @@ pub fn generate_sdk(
     if let Some(toolchain) = toolchain_config.primary() {
         generate_wrappers(board, &toolchain.name, &out)?;
     }
-    generate_make_conf_board(repos, &out)?;
-    generate_make_conf_board_setup(board, repos, toolchain_config, &out)?;
+    generate_make_conf_board(repos, translator, &out)?;
+    generate_make_conf_board_setup(board, repos, toolchain_config, translator, &out)?;
 
     Ok(())
 }

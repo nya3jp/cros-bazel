@@ -4,11 +4,13 @@
 
 pub mod analyze;
 pub mod bash;
+pub mod common;
 pub mod config;
 pub mod data;
 pub mod dependency;
 pub mod ebuild;
 pub mod fakechroot;
+pub mod fileops;
 pub mod repository;
 pub mod resolver;
 #[cfg(test)]

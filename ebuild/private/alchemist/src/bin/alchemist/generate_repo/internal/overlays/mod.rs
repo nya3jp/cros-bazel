@@ -190,7 +190,7 @@ fn generate_internal_package(
     for package in packages_in_dir.packages.iter() {
         let details = &package.details;
         symlink(
-            translator.translate(&details.ebuild_path),
+            translator.to_outer(&details.ebuild_path)?,
             package_output_dir.join(details.ebuild_path.file_name().unwrap()),
         )?;
     }
@@ -230,7 +230,9 @@ fn join_by_package_dir<'a>(
     let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
 
     for package in all_packages.iter() {
-        let original_dir = translator.translate(package.details.ebuild_path.parent().unwrap());
+        let original_dir = translator
+            .to_outer(package.details.ebuild_path.parent().unwrap())
+            .unwrap();
         let relative_package_dir = match package.details.ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
             Ok(relative_ebuild_path) => relative_ebuild_path.parent().unwrap().to_owned(),
             Err(_) => continue,
