@@ -155,7 +155,12 @@ impl ToolchainConfig {
                 // TODO: AFAIK there is no real-world usage of toolchain
                 // overrides. If we do have a need, we can implement settings
                 // overrides.
-                bail!("Duplicate toolchain declaration found: {}", toolchain.name);
+                bail!(
+                    "Duplicate toolchain ({}) declaration found in {}: {:#?}",
+                    toolchain.name,
+                    path.display(),
+                    self.toolchains
+                );
             }
 
             if self.default_index.is_none() && toolchain.can_be_default() {
