@@ -342,6 +342,13 @@ _NORMAL_DEPENDENCIES = {
             "clap": "@update_all_crates__clap-4.0.32//:clap",
         },
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_all_crates__clap-4.0.32//:clap",
+            "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -352,14 +359,17 @@ _NORMAL_DEPENDENCIES = {
     "bazel/ebuild/private/common/fileutil": {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "libc": "@update_all_crates__libc-0.2.139//:libc",
             "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
         },
     },
     "bazel/ebuild/private/common/makechroot": {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "itertools": "@update_all_crates__itertools-0.10.5//:itertools",
             "path-absolutize": "@update_all_crates__path-absolutize-3.0.14//:path_absolutize",
             "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
+            "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
         },
     },
     "bazel/ebuild/private/common/mountsdk": {
@@ -400,6 +410,13 @@ _NORMAL_DEPENDENCIES = {
             "strum": "@update_all_crates__strum-0.24.1//:strum",
         },
     },
+    "bazel/ebuild/private/common/tar": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "tar": "@update_all_crates__tar-0.4.38//:tar",
+            "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
+        },
+    },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
     "rules_cros/toolchains/rust/examples/local_crate": {
@@ -432,6 +449,10 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+        _COMMON_CONDITION: {
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -459,6 +480,10 @@ _NORMAL_ALIASES = {
         },
     },
     "bazel/ebuild/private/common/standard/version": {
+        _COMMON_CONDITION: {
+        },
+    },
+    "bazel/ebuild/private/common/tar": {
         _COMMON_CONDITION: {
         },
     },
@@ -486,6 +511,8 @@ _NORMAL_DEV_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -509,6 +536,8 @@ _NORMAL_DEV_DEPENDENCIES = {
             "proptest": "@update_all_crates__proptest-1.0.0//:proptest",
         },
     },
+    "bazel/ebuild/private/common/tar": {
+    },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
     "rules_cros/toolchains/rust/examples/local_crate": {
@@ -530,6 +559,8 @@ _NORMAL_DEV_ALIASES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -549,6 +580,8 @@ _NORMAL_DEV_ALIASES = {
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
         },
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -572,6 +605,8 @@ _PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -593,6 +628,8 @@ _PROC_MACRO_DEPENDENCIES = {
         _COMMON_CONDITION: {
             "strum_macros": "@update_all_crates__strum_macros-0.24.3//:strum_macros",
         },
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -613,6 +650,8 @@ _PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -628,6 +667,8 @@ _PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -648,6 +689,8 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -663,6 +706,8 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -685,6 +730,8 @@ _PROC_MACRO_DEV_ALIASES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -704,6 +751,8 @@ _PROC_MACRO_DEV_ALIASES = {
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
         },
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -724,6 +773,8 @@ _BUILD_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -739,6 +790,8 @@ _BUILD_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -759,6 +812,8 @@ _BUILD_ALIASES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -774,6 +829,8 @@ _BUILD_ALIASES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -794,6 +851,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -809,6 +868,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
@@ -829,6 +890,8 @@ _BUILD_PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
     },
+    "bazel/ebuild/private/cmd/install_deps": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -844,6 +907,8 @@ _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/standard/version": {
+    },
+    "bazel/ebuild/private/common/tar": {
     },
     "rules_cros/toolchains/rust/examples/hello_world": {
     },
