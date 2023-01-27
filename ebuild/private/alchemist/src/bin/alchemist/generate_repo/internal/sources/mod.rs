@@ -294,6 +294,7 @@ struct BuildTemplateContext {
     symlinks: Vec<SymlinkEntry>,
     renames: Vec<RenameEntry>,
     excludes: Vec<String>,
+    include_git: bool,
 }
 
 /// Generates `BUILD.bazel` file for a source package.
@@ -338,6 +339,11 @@ fn generate_build_file(package: &SourcePackage) -> Result<()> {
             .iter()
             .map(|path| path.to_string_lossy().into_owned())
             .collect(),
+        // HACK: We intentionally include the .git repo for llvm because it's
+        // required to calculate which patches to apply. We really need to
+        // figure out another way of doing this.
+        // TODO: Remove this hack.
+        include_git: package.layout.prefix.to_string_lossy() == "third_party/llvm-project",
     };
 
     let mut file = File::create(package.output_dir.join("BUILD.bazel"))?;

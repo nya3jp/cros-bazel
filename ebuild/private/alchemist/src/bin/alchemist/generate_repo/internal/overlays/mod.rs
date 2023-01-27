@@ -70,13 +70,12 @@ impl EBuildEntry {
             .sources
             .local_sources
             .iter()
-            .map(|source| {
-                let repo_name = match source.origin {
-                    PackageLocalSourceOrigin::Src => "@",
-                    PackageLocalSourceOrigin::Chrome => "@chrome",
-                    PackageLocalSourceOrigin::Chromite => "@chromite",
-                };
-                format!("{}//{}:src", repo_name, source.path)
+            .map(|source| match source.origin {
+                PackageLocalSourceOrigin::Src => {
+                    format!("//internal/sources/{}:__tarball__", source.path)
+                }
+                PackageLocalSourceOrigin::Chrome => format!("@chrome//{}:src", source.path),
+                PackageLocalSourceOrigin::Chromite => format!("@chromite//{}:src", source.path),
             })
             .collect();
 

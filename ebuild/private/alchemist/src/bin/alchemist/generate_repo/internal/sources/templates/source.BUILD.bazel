@@ -4,8 +4,10 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 pkg_files(
     name = "__files_regular__",
     srcs = glob(["**"], exclude=[
+        {%- if not include_git %}
         "**/.git",
         "**/.git/**",
+        {%- endif %}
         {%- for path in excludes %}
         "{{ path }}",
         {%- endfor %}
