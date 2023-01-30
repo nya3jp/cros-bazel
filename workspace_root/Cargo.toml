@@ -58,6 +58,7 @@ strum = "0.24.1"
 strum_macros = "0.24.3"
 tar = "0.4.38"
 tempfile = "3.3.0"
+tera = { version = "1.17.1", default-features = false }
 thiserror = "1.0.37"
 tinytemplate = "1.2.1"
 topological-sort = "0.2.2"

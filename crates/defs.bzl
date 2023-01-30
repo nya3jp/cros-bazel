@@ -313,6 +313,7 @@ _NORMAL_DEPENDENCIES = {
             "sha2": "@update_all_crates__sha2-0.10.6//:sha2",
             "strum": "@update_all_crates__strum-0.24.1//:strum",
             "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
+            "tera": "@update_all_crates__tera-1.17.1//:tera",
             "thiserror": "@update_all_crates__thiserror-1.0.38//:thiserror",
             "tinytemplate": "@update_all_crates__tinytemplate-1.2.1//:tinytemplate",
             "topological-sort": "@update_all_crates__topological-sort-0.2.2//:topological_sort",
@@ -1025,6 +1026,16 @@ def crate_repositories():
 
     maybe(
         http_archive,
+        name = "update_all_crates__bstr-1.1.0",
+        sha256 = "b45ea9b00a7b3f2988e9a65ad3917e62123c38dba709b666506207be96d1790b",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/bstr/1.1.0/download"],
+        strip_prefix = "bstr-1.1.0",
+        build_file = Label("@cros//bazel/crates:BUILD.bstr-1.1.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "update_all_crates__bytecount-0.6.3",
         sha256 = "2c676a478f63e9fa2dd5368a42f28bba0d6c560b775f38583c8bbaa7fcd67c9c",
         type = "tar.gz",
@@ -1295,6 +1306,26 @@ def crate_repositories():
 
     maybe(
         http_archive,
+        name = "update_all_crates__globset-0.4.10",
+        sha256 = "029d74589adefde59de1a0c4f4732695c32805624aec7b68d91503d4dba79afc",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/globset/0.4.10/download"],
+        strip_prefix = "globset-0.4.10",
+        build_file = Label("@cros//bazel/crates:BUILD.globset-0.4.10.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__globwalk-0.8.1",
+        sha256 = "93e3af942408868f6934a7b85134a3230832b9977cf66125df2f9edcfce4ddcc",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/globwalk/0.8.1/download"],
+        strip_prefix = "globwalk-0.8.1",
+        build_file = Label("@cros//bazel/crates:BUILD.globwalk-0.8.1.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "update_all_crates__heck-0.4.0",
         sha256 = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9",
         type = "tar.gz",
@@ -1351,6 +1382,16 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/idna/0.3.0/download"],
         strip_prefix = "idna-0.3.0",
         build_file = Label("@cros//bazel/crates:BUILD.idna-0.3.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__ignore-0.4.20",
+        sha256 = "dbe7873dab538a9a44ad79ede1faf5f30d49f9a5c883ddbab48bce81b64b7492",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/ignore/0.4.20/download"],
+        strip_prefix = "ignore-0.4.20",
+        build_file = Label("@cros//bazel/crates:BUILD.ignore-0.4.20.bazel"),
     )
 
     maybe(
@@ -1621,6 +1662,46 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/percent-encoding/2.2.0/download"],
         strip_prefix = "percent-encoding-2.2.0",
         build_file = Label("@cros//bazel/crates:BUILD.percent-encoding-2.2.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__pest-2.5.4",
+        sha256 = "4ab62d2fa33726dbe6321cc97ef96d8cde531e3eeaf858a058de53a8a6d40d8f",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/pest/2.5.4/download"],
+        strip_prefix = "pest-2.5.4",
+        build_file = Label("@cros//bazel/crates:BUILD.pest-2.5.4.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__pest_derive-2.5.4",
+        sha256 = "8bf026e2d0581559db66d837fe5242320f525d85c76283c61f4d51a1238d65ea",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/pest_derive/2.5.4/download"],
+        strip_prefix = "pest_derive-2.5.4",
+        build_file = Label("@cros//bazel/crates:BUILD.pest_derive-2.5.4.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__pest_generator-2.5.4",
+        sha256 = "2b27bd18aa01d91c8ed2b61ea23406a676b42d82609c6e2581fba42f0c15f17f",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/pest_generator/2.5.4/download"],
+        strip_prefix = "pest_generator-2.5.4",
+        build_file = Label("@cros//bazel/crates:BUILD.pest_generator-2.5.4.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__pest_meta-2.5.4",
+        sha256 = "9f02b677c1859756359fc9983c2e56a0237f18624a3789528804406b7e915e5d",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/pest_meta/2.5.4/download"],
+        strip_prefix = "pest_meta-2.5.4",
+        build_file = Label("@cros//bazel/crates:BUILD.pest_meta-2.5.4.bazel"),
     )
 
     maybe(
@@ -2045,6 +2126,16 @@ def crate_repositories():
 
     maybe(
         http_archive,
+        name = "update_all_crates__tera-1.17.1",
+        sha256 = "3df578c295f9ec044ff1c829daf31bb7581d5b3c2a7a3d87419afe1f2531438c",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/tera/1.17.1/download"],
+        strip_prefix = "tera-1.17.1",
+        build_file = Label("@cros//bazel/crates:BUILD.tera-1.17.1.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "update_all_crates__termcolor-1.1.3",
         sha256 = "bab24d30b911b2376f3a13cc2cd443142f0c81dda04c118693e35b3835757755",
         type = "tar.gz",
@@ -2071,6 +2162,16 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/thiserror-impl/1.0.38/download"],
         strip_prefix = "thiserror-impl-1.0.38",
         build_file = Label("@cros//bazel/crates:BUILD.thiserror-impl-1.0.38.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__thread_local-1.1.4",
+        sha256 = "5516c27b78311c50bf42c071425c560ac799b11c30b31f87e3081965fe5e0180",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/thread_local/1.1.4/download"],
+        strip_prefix = "thread_local-1.1.4",
+        build_file = Label("@cros//bazel/crates:BUILD.thread_local-1.1.4.bazel"),
     )
 
     maybe(
@@ -2121,6 +2222,76 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/typenum/1.16.0/download"],
         strip_prefix = "typenum-1.16.0",
         build_file = Label("@cros//bazel/crates:BUILD.typenum-1.16.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__ucd-trie-0.1.5",
+        sha256 = "9e79c4d996edb816c91e4308506774452e55e95c3c9de07b6729e17e15a5ef81",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/ucd-trie/0.1.5/download"],
+        strip_prefix = "ucd-trie-0.1.5",
+        build_file = Label("@cros//bazel/crates:BUILD.ucd-trie-0.1.5.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__unic-char-property-0.9.0",
+        sha256 = "a8c57a407d9b6fa02b4795eb81c5b6652060a15a7903ea981f3d723e6c0be221",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/unic-char-property/0.9.0/download"],
+        strip_prefix = "unic-char-property-0.9.0",
+        build_file = Label("@cros//bazel/crates:BUILD.unic-char-property-0.9.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__unic-char-range-0.9.0",
+        sha256 = "0398022d5f700414f6b899e10b8348231abf9173fa93144cbc1a43b9793c1fbc",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/unic-char-range/0.9.0/download"],
+        strip_prefix = "unic-char-range-0.9.0",
+        build_file = Label("@cros//bazel/crates:BUILD.unic-char-range-0.9.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__unic-common-0.9.0",
+        sha256 = "80d7ff825a6a654ee85a63e80f92f054f904f21e7d12da4e22f9834a4aaa35bc",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/unic-common/0.9.0/download"],
+        strip_prefix = "unic-common-0.9.0",
+        build_file = Label("@cros//bazel/crates:BUILD.unic-common-0.9.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__unic-segment-0.9.0",
+        sha256 = "e4ed5d26be57f84f176157270c112ef57b86debac9cd21daaabbe56db0f88f23",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/unic-segment/0.9.0/download"],
+        strip_prefix = "unic-segment-0.9.0",
+        build_file = Label("@cros//bazel/crates:BUILD.unic-segment-0.9.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__unic-ucd-segment-0.9.0",
+        sha256 = "2079c122a62205b421f499da10f3ee0f7697f012f55b675e002483c73ea34700",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/unic-ucd-segment/0.9.0/download"],
+        strip_prefix = "unic-ucd-segment-0.9.0",
+        build_file = Label("@cros//bazel/crates:BUILD.unic-ucd-segment-0.9.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__unic-ucd-version-0.9.0",
+        sha256 = "96bd2f2237fe450fcd0a1d2f5f4e91711124f7857ba2e964247776ebeeb7b0c4",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/unic-ucd-version/0.9.0/download"],
+        strip_prefix = "unic-ucd-version-0.9.0",
+        build_file = Label("@cros//bazel/crates:BUILD.unic-ucd-version-0.9.0.bazel"),
     )
 
     maybe(
