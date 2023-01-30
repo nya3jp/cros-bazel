@@ -226,12 +226,6 @@ alias(
 )
 
 alias(
-    name = "tinytemplate",
-    actual = "@update_all_crates__tinytemplate-1.2.1//:tinytemplate",
-    tags = ["manual"],
-)
-
-alias(
     name = "topological-sort",
     actual = "@update_all_crates__topological-sort-0.2.2//:topological_sort",
     tags = ["manual"],

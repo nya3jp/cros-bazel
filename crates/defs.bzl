@@ -315,7 +315,6 @@ _NORMAL_DEPENDENCIES = {
             "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
             "tera": "@update_all_crates__tera-1.17.1//:tera",
             "thiserror": "@update_all_crates__thiserror-1.0.38//:thiserror",
-            "tinytemplate": "@update_all_crates__tinytemplate-1.2.1//:tinytemplate",
             "topological-sort": "@update_all_crates__topological-sort-0.2.2//:topological_sort",
             "url": "@update_all_crates__url-2.3.1//:url",
             "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
@@ -2172,16 +2171,6 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/thread_local/1.1.4/download"],
         strip_prefix = "thread_local-1.1.4",
         build_file = Label("@cros//bazel/crates:BUILD.thread_local-1.1.4.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "update_all_crates__tinytemplate-1.2.1",
-        sha256 = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc",
-        type = "tar.gz",
-        urls = ["https://crates.io/api/v1/crates/tinytemplate/1.2.1/download"],
-        strip_prefix = "tinytemplate-1.2.1",
-        build_file = Label("@cros//bazel/crates:BUILD.tinytemplate-1.2.1.bazel"),
     )
 
     maybe(
