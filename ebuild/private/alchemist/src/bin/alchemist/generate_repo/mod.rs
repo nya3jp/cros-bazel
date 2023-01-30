@@ -18,10 +18,7 @@ use std::{
 };
 
 use alchemist::{
-    analyze::{
-        dependency::analyze_dependencies,
-        source::{analyze_sources, fixup_sources},
-    },
+    analyze::{dependency::analyze_dependencies, source::analyze_sources},
     ebuild::{CachedPackageLoader, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
@@ -69,7 +66,7 @@ fn analyze_packages(
     resolver: &PackageResolver,
 ) -> Vec<Package> {
     // Analyze packages in parallel.
-    let mut all_packages: Vec<Package> = all_details
+    let all_packages: Vec<Package> = all_details
         .into_par_iter()
         .flat_map(|details| {
             let result = (|| -> Result<Package> {
@@ -94,9 +91,6 @@ fn analyze_packages(
             }
         })
         .collect();
-
-    // Fix-up can be done after analyzing all packages.
-    fixup_sources(all_packages.iter_mut().map(|package| &mut package.sources));
 
     all_packages
 }
