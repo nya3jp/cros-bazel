@@ -250,13 +250,14 @@ impl SourcePackage {
             }
 
             // Record files that need renaming.
-            if file_path_needs_renaming(&rel_path) {
-                if !entry.file_type().is_dir() {
-                    renames.push(Rename {
-                        source_path: rel_path.clone(),
-                        output_path: PathBuf::from(format!("__rename__{}", renames.len())),
-                    });
-                }
+            // We can ignore directories since they're not matched by glob().
+            // This means that empty directories are not reproduced, but Git
+            // doesn't support them anyway.
+            if file_path_needs_renaming(&rel_path) && !entry.file_type().is_dir() {
+                renames.push(Rename {
+                    source_path: rel_path.clone(),
+                    output_path: PathBuf::from(format!("__rename__{}", renames.len())),
+                });
                 excludes.push(rel_path);
                 continue;
             }

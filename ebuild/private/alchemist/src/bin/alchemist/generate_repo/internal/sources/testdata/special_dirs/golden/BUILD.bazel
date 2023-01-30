@@ -8,7 +8,6 @@ pkg_files(
     srcs = glob(["**"], exclude=[
         "**/.git",
         "**/.git/**",
-        "hello world",
         "hello world/file.txt",
     ]),
     renames = {
