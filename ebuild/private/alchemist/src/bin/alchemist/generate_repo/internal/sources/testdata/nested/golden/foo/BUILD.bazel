@@ -30,6 +30,8 @@ pkg_tar(
         ":__files__",
         "//internal/sources/foo/bar:__files__",
     ],
-    extension = "tar.gz",
+    extension = "tar.zst",
+    compressor = "@//bazel/ebuild/private:zstd",
+    compressor_args = "--threads=0",
     visibility = ["//:__subpackages__"],
 )
