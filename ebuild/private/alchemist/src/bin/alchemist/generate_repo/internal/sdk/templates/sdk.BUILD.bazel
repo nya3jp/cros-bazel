@@ -1,6 +1,6 @@
 load("@//bazel/ebuild:defs.bzl", "sdk", "sdk_update", "overlay_set")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_mkdirs", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 
 pkg_files(
     name = "make_conf_board",
@@ -47,12 +47,26 @@ pkg_mkdirs(
     dirs = ["build/{{ board }}/usr/share/aclocal"],
 )
 
+pkg_files(
+    name = "build_bin",
+    srcs = [
+        {%- for path in wrappers %}
+        "{{ path }}",
+        {%- endfor %}
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "build/{{ board }}/build/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
 pkg_tar(
     name = "board_extra_tarball",
     srcs = [
-        # TODO: Do we need to add /build/$BOARD/build/bin helpers?
         ":etc",
         ":aclocal",
+        ":build_bin",
     ],
     extension = "tar.gz",
 )

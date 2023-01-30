@@ -1,0 +1,14 @@
+#!/bin/bash
+
+PKG_CONFIG_LIBDIR=$(printf '%s:' "/build/{{ board }}"/usr/*/pkgconfig)
+export PKG_CONFIG_LIBDIR
+
+export PKG_CONFIG_SYSROOT_DIR="/build/{{ board }}"
+
+# Portage will get confused and try to "help" us by exporting this.
+# Undo that logic.
+unset PKG_CONFIG_PATH
+
+# Use full path to bypass automated wrapper checks that block `pkg-config`.
+# https://crbug.com/985180
+exec /usr/bin/pkg-config "$@"
