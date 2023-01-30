@@ -223,6 +223,9 @@ impl Repository {
             }
         }
 
+        // Make the order deterministic.
+        ebuild_paths.sort();
+
         Ok(ebuild_paths)
     }
 }
@@ -366,6 +369,10 @@ impl RepositorySet {
     }
 
     /// Scans the repositories and returns all ebuild file paths.
+    ///
+    /// When there are two or more repositories, returned ebuild paths are
+    /// sorted so that one from a lower-priority repository comes before one
+    /// from a higher-priority repository.
     pub fn find_all_ebuilds(&self) -> Result<Vec<PathBuf>> {
         let mut paths = Vec::<PathBuf>::new();
         for repo in self.repos.values() {
