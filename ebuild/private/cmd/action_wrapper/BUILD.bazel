@@ -1,0 +1,14 @@
+load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+
+rust_binary_crate(
+    name = "action_wrapper",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/processes:processes_rust"
+    ],
+)
+
+rust_crate_test(
+    name = "action_wrapper_test",
+    crate = ":action_wrapper",
+)

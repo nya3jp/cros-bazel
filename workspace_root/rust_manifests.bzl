@@ -4,6 +4,7 @@ MANIFESTS = [
     # the runtime environment.
     "//:Cargo.toml",
     "//bazel/ebuild/private/alchemist:Cargo.toml",
+    "//bazel/ebuild/private/cmd/action_wrapper:Cargo.toml",
     "//bazel/ebuild/private/cmd/build_image:Cargo.toml",
     "//bazel/ebuild/private/cmd/build_package:Cargo.toml",
     "//bazel/ebuild/private/cmd/extract_interface:Cargo.toml",
