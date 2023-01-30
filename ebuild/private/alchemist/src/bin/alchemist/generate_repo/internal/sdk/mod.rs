@@ -12,10 +12,22 @@ use anyhow::{Context, Result};
 
 use alchemist::{repository::RepositorySet, toolchain::ToolchainConfig};
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use serde::Serialize;
-use tinytemplate::TinyTemplate;
+use tera::Tera;
 
 use super::super::common::{AUTOGENERATE_NOTICE, CHROOT_SRC_DIR, CHROOT_THIRD_PARTY_DIR};
+
+lazy_static! {
+    static ref TEMPLATES: Tera = {
+        let mut tera: Tera = Default::default();
+        tera.add_raw_template("make.conf", include_str!("templates/make.conf"))
+            .unwrap();
+        tera.add_raw_template("sdk.BUILD.bazel", include_str!("templates/sdk.BUILD.bazel"))
+            .unwrap();
+        tera
+    };
+}
 
 #[derive(Serialize, Debug)]
 struct SdkTemplateContext<'a> {
@@ -24,7 +36,6 @@ struct SdkTemplateContext<'a> {
     triples: Vec<&'a str>,
     profile_path: PathBuf,
 }
-static SDK_BUILD_TEMPLATE: &str = include_str!("sdk-template.BUILD.bazel");
 
 fn generate_sdk_build(
     board: &str,
@@ -41,29 +52,28 @@ fn generate_sdk_build(
         overlays_targets.push(format!("@//{}", relative.display()));
     }
 
-    let mut templates = TinyTemplate::new();
-    templates.add_template("main", SDK_BUILD_TEMPLATE)?;
+    let context = SdkTemplateContext {
+        board,
+        triples: toolchain_config
+            .toolchains
+            .iter()
+            // TODO: We only have the prebuilds for the following two
+            // toolchains defined. Add the rest of the prebuilds and then
+            // remove this.
+            .filter(|t| t.name == "x86_64-cros-linux-gnu" || t.name == "aarch64-cros-linux-gnu")
+            .map(|t| t.name.as_ref())
+            .collect(),
+        overlays: overlays_targets,
+        profile_path,
+    };
 
-    let rendered = templates.render(
-        "main",
-        &SdkTemplateContext {
-            board,
-            triples: toolchain_config
-                .toolchains
-                .iter()
-                // TODO: We only have the prebuilds for the following two
-                // toolchains defined. Add the rest of the prebuilds and then
-                // remove this.
-                .filter(|t| t.name == "x86_64-cros-linux-gnu" || t.name == "aarch64-cros-linux-gnu")
-                .map(|t| t.name.as_ref())
-                .collect(),
-            overlays: overlays_targets,
-            profile_path,
-        },
-    )?;
     let mut file = File::create(out.join("BUILD.bazel"))?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    file.write_all(rendered.as_bytes())?;
+    TEMPLATES.render_to(
+        "sdk.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
 
     Ok(())
 }
@@ -99,7 +109,6 @@ struct MakeConfContext {
     sources: Vec<String>,
     vars: Vec<MakeVar>,
 }
-static MAKE_CONF_TEMPLATE: &str = include_str!("make.conf.template");
 
 fn generate_make_conf_board(repos: &RepositorySet, out: &Path) -> Result<()> {
     let mut sources: Vec<String> = Vec::new();
@@ -121,13 +130,11 @@ fn generate_make_conf_board(repos: &RepositorySet, out: &Path) -> Result<()> {
         "$USE -ondevice_speech",
     ))];
 
-    let mut templates = TinyTemplate::new();
-    templates.add_template("main", MAKE_CONF_TEMPLATE)?;
+    let context = MakeConfContext { sources, vars };
 
-    let rendered = templates.render("main", &MakeConfContext { sources, vars })?;
     let mut file = File::create(out.join("make.conf.board"))?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    file.write_all(rendered.as_bytes())?;
+    TEMPLATES.render_to("make.conf", &tera::Context::from_serialize(context)?, file)?;
 
     Ok(())
 }
@@ -193,19 +200,14 @@ fn generate_make_conf_board_setup(
         )),
     ];
 
-    let mut templates = TinyTemplate::new();
-    templates.add_template("main", MAKE_CONF_TEMPLATE)?;
+    let context = MakeConfContext {
+        sources: vec![],
+        vars,
+    };
 
-    let rendered = templates.render(
-        "main",
-        &MakeConfContext {
-            sources: vec![],
-            vars,
-        },
-    )?;
     let mut file = File::create(out.join("make.conf.board_setup"))?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    file.write_all(rendered.as_bytes())?;
+    TEMPLATES.render_to("make.conf", &tera::Context::from_serialize(context)?, file)?;
 
     Ok(())
 }

@@ -6,12 +6,23 @@ use std::{fs::File, io::Write, path::Path};
 
 use anyhow::Result;
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use serde::Serialize;
-use tinytemplate::TinyTemplate;
+use tera::{Context, Tera};
 
 use super::common::{DistFileEntry, Package, AUTOGENERATE_NOTICE};
 
-static REPOSITORIES_TEMPLATE: &str = include_str!("repositories-template.bzl");
+lazy_static! {
+    static ref TEMPLATES: Tera = {
+        let mut tera: Tera = Default::default();
+        tera.add_raw_template(
+            "repositories.bzl",
+            include_str!("templates/repositories.bzl"),
+        )
+        .unwrap();
+        tera
+    };
+}
 
 #[derive(Serialize)]
 struct RepositoriesTemplateContext {
@@ -40,12 +51,9 @@ pub fn generate_repositories_file(packages: &Vec<Package>, out: &Path) -> Result
         dists: unique_dists,
     };
 
-    let mut templates = TinyTemplate::new();
-    templates.add_template("main", REPOSITORIES_TEMPLATE)?;
-    let rendered = templates.render("main", &context)?;
-
     let mut file = File::create(out)?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    file.write_all(rendered.as_bytes())?;
+    TEMPLATES.render_to("repositories.bzl", &Context::from_serialize(context)?, file)?;
+
     Ok(())
 }

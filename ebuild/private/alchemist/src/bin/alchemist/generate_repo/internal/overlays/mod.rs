@@ -16,13 +16,24 @@ use alchemist::{
 };
 use anyhow::Result;
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use rayon::prelude::*;
 use serde::Serialize;
-use tinytemplate::TinyTemplate;
+use tera::Tera;
 
 use crate::generate_repo::common::{DistFileEntry, Package, AUTOGENERATE_NOTICE, CHROOT_SRC_DIR};
 
-static PACKAGE_BUILD_TEMPLATE: &str = include_str!("package-template.BUILD.bazel");
+lazy_static! {
+    static ref TEMPLATES: Tera = {
+        let mut tera: Tera = Default::default();
+        tera.add_raw_template(
+            "package.BUILD.bazel",
+            include_str!("templates/package.BUILD.bazel"),
+        )
+        .unwrap();
+        tera
+    };
+}
 
 // Packages that are used to bootstrap the board's SDK
 static PRIMORDIAL_PACKAGES: &[&str] = &[
@@ -146,13 +157,13 @@ fn generate_internal_package_build_file(
             .collect::<Result<_>>()?,
     };
 
-    let mut templates = TinyTemplate::new();
-    templates.add_template("main", PACKAGE_BUILD_TEMPLATE)?;
-    let rendered = templates.render("main", &context)?;
-
     let mut file = File::create(out)?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    file.write_all(rendered.as_bytes())?;
+    TEMPLATES.render_to(
+        "package.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
     Ok(())
 }
 

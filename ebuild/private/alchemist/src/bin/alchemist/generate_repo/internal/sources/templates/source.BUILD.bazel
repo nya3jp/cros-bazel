@@ -6,37 +6,37 @@ pkg_files(
     srcs = glob(["**"], exclude=[
         "**/.git",
         "**/.git/**",
-        {{- for path in excludes }}
-        "{ path }",
-        {{- endfor }}
+        {%- for path in excludes %}
+        "{{ path }}",
+        {%- endfor %}
     ]),
-    renames = \{
-        {{- for rename in renames }}
-        "{ rename.output_path }": "{ rename.source_path }",
-        {{- endfor }}
+    renames = {
+        {%- for rename in renames %}
+        "{{ rename.output_path }}": "{{ rename.source_path }}",
+        {%- endfor %}
     },
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
-{{- for symlink in symlinks }}
+{%- for symlink in symlinks %}
 
 pkg_mklink(
-    name = "{ symlink.name }",
-    link_name = "{ symlink.location }",
-    target = "{ symlink.target }",
+    name = "{{ symlink.name }}",
+    link_name = "{{ symlink.location }}",
+    target = "{{ symlink.target }}",
     visibility = ["//visibility:private"],
 )
-{{- endfor }}
+{%- endfor %}
 
 pkg_filegroup(
     name = "__files__",
     srcs = [
         ":__files_regular__",
-        {{- for symlink in symlinks }}
-        ":{ symlink.name }",
-        {{- endfor }}
+        {%- for symlink in symlinks %}
+        ":{{ symlink.name }}",
+        {%- endfor %}
     ],
-    prefix = "/mnt/host/source/src/{ prefix }",
+    prefix = "/mnt/host/source/src/{{ prefix }}",
     visibility = ["//:__subpackages__"],
 )
 
@@ -44,9 +44,9 @@ pkg_tar(
     name = "__tarball__",
     srcs = [
         ":__files__",
-        {{- for child in children }}
-        "//internal/sources/{ child }:__files__",
-        {{- endfor }}
+        {%- for child in children %}
+        "//internal/sources/{{ child }}:__files__",
+        {%- endfor %}
     ],
     extension = "tar.zst",
     compressor = "@//bazel/ebuild/private:zstd",

@@ -1,8 +1,0 @@
-{{- for alias in aliases }}
-alias(
-    name = "{ alias.name }",
-    actual = "{ alias.actual }",
-    visibility = ["//visibility:public"],
-)
-
-{{- endfor }}

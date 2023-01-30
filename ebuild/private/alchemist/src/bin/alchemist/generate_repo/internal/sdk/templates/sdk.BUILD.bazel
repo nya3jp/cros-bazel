@@ -26,12 +26,12 @@ pkg_mklink(
 pkg_mklink(
     name = "portage_make_profile",
     link_name = "portage/make.profile",
-    target = "{profile_path}",
+    target = "{{ profile_path }}",
 )
 
 pkg_filegroup(
     name = "etc",
-    prefix = "build/{board}/etc",
+    prefix = "build/{{ board }}/etc",
     srcs = [
         ":make_conf",
         ":make_conf_board",
@@ -44,7 +44,7 @@ pkg_filegroup(
 # TODO: Figure out why this is needed.
 pkg_mkdirs(
     name = "aclocal",
-    dirs = ["build/{board}/usr/share/aclocal"],
+    dirs = ["build/{{ board }}/usr/share/aclocal"],
 )
 
 pkg_tar(
@@ -60,9 +60,9 @@ pkg_tar(
 overlay_set(
     name = "overlays",
     overlays = [
-        {{ - for overlay in overlays }}
-        "{overlay}",
-        {{ - endfor }}
+        {%- for overlay in overlays %}
+        "{{ overlay }}",
+        {%- endfor %}
     ],
 )
 
@@ -71,7 +71,7 @@ sdk(
     base = "@//bazel/sdk:base_sdk",
     # TODO: Maybe split installing the host deps from installing the board
     # specific items.
-    board = "{board}",
+    board = "{{ board }}",
     extra_tarballs = [
         "@//bazel/sdk:extra_tarball",
         ":board_extra_tarball",
@@ -83,17 +83,17 @@ sdk(
         "@//bazel/prebuilts/amd64-host:xcb-proto",
         "@//bazel/prebuilts/amd64-host:hps-sdk",
         "@//bazel/prebuilts/amd64-host:rust",
-        {{ for triple in triples - }}
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:binutils",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:gcc",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:gdb",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:glibc",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:go",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:libcxx",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:libxcrypt",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:linux-headers",
-        "@//bazel/prebuilts/amd64-host/cross-{triple}:llvm-libunwind",
-        {{ - endfor }}
+        {% for triple in triples -%}
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:binutils",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:gcc",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:gdb",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:glibc",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:go",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:libcxx",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:libxcrypt",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:linux-headers",
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:llvm-libunwind",
+        {%- endfor %}
     ],
     overlays = ":overlays",
     visibility = ["//visibility:public"],

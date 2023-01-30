@@ -14,11 +14,24 @@ use crate::generate_repo::common::{escape_starlark_string, AUTOGENERATE_NOTICE};
 use alchemist::analyze::source::{PackageLocalSource, PackageLocalSourceOrigin};
 use anyhow::{Context, Result};
 use itertools::Itertools;
+use lazy_static::lazy_static;
 use serde::Serialize;
-use tinytemplate::TinyTemplate;
+use tera::Tera;
 use walkdir::WalkDir;
 
-static SOURCE_BUILD_TEMPLATE: &str = include_str!("source-template.BUILD.bazel");
+lazy_static! {
+    static ref TEMPLATES: Tera = {
+        let mut tera: Tera = Default::default();
+        tera.add_raw_template(
+            "source.BUILD.bazel",
+            include_str!("templates/source.BUILD.bazel"),
+        )
+        .unwrap();
+        tera.autoescape_on(vec![".bazel"]);
+        tera.set_escape_fn(escape_starlark_string);
+        tera
+    };
+}
 
 const VALID_TARGET_NAME_PUNCTUATIONS: &str = r##"!%-@^_"#$&'()*-+,;<=>?[]{|}~/."##;
 
@@ -326,14 +339,14 @@ fn generate_build_file(package: &SourcePackage) -> Result<()> {
             .collect(),
     };
 
-    let mut templates = TinyTemplate::new();
-    templates.set_default_formatter(&escape_starlark_string);
-    templates.add_template("main", SOURCE_BUILD_TEMPLATE)?;
-    let rendered = templates.render("main", &context)?;
-
     let mut file = File::create(package.output_dir.join("BUILD.bazel"))?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    file.write_all(rendered.as_bytes())?;
+    TEMPLATES.render_to(
+        "source.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
+
     Ok(())
 }
 

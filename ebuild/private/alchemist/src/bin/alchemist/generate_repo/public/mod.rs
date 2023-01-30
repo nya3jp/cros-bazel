@@ -10,13 +10,24 @@ use std::{
 };
 
 use anyhow::Result;
+use lazy_static::lazy_static;
 use rayon::prelude::*;
 use serde::Serialize;
-use tinytemplate::TinyTemplate;
+use tera::Tera;
 
 use super::common::{Package, AUTOGENERATE_NOTICE, CHROOT_SRC_DIR};
 
-static PACKAGE_BUILD_TEMPLATE: &str = include_str!("package-template.BUILD.bazel");
+lazy_static! {
+    static ref TEMPLATES: Tera = {
+        let mut tera: Tera = Default::default();
+        tera.add_raw_template(
+            "package.BUILD.bazel",
+            include_str!("templates/package.BUILD.bazel"),
+        )
+        .unwrap();
+        tera
+    };
+}
 
 #[derive(Serialize)]
 pub struct AliasEntry {
@@ -48,26 +59,17 @@ fn generate_public_package(packages: Vec<&Package>, package_output_dir: &Path) -
                 vec![
                     AliasEntry {
                         name: details.version.to_string(),
-                        actual: format!(
-                            "{}:{}",
-                            &internal_package_location,
-                            details.version
-                        ),
+                        actual: format!("{}:{}", &internal_package_location, details.version),
                     },
                     AliasEntry {
                         name: format!("{}_debug", details.version),
-                        actual: format!(
-                            "{}:{}_debug",
-                            &internal_package_location,
-                            details.version
-                        ),
+                        actual: format!("{}:{}_debug", &internal_package_location, details.version),
                     },
                     AliasEntry {
                         name: format!("{}_package_set", details.version),
                         actual: format!(
                             "{}:{}_package_set",
-                            &internal_package_location,
-                            details.version
+                            &internal_package_location, details.version
                         ),
                     },
                 ]
@@ -75,13 +77,14 @@ fn generate_public_package(packages: Vec<&Package>, package_output_dir: &Path) -
             .collect(),
     };
 
-    let mut templates = TinyTemplate::new();
-    templates.add_template("main", PACKAGE_BUILD_TEMPLATE)?;
-    let rendered = templates.render("main", &context)?;
-
     let mut file = File::create(package_output_dir.join("BUILD.bazel"))?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    file.write_all(rendered.as_bytes())?;
+    TEMPLATES.render_to(
+        "package.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
+
     Ok(())
 }
 
