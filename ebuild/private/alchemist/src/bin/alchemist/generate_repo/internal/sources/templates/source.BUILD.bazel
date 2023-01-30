@@ -1,4 +1,4 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_files(
@@ -17,6 +17,15 @@ pkg_files(
         "{{ rename.output_path }}": "{{ rename.source_path }}",
         {%- endfor %}
     },
+    attributes = pkg_attributes(
+        {#- Make all files executable since some packages execute scripts in  #}
+        {#- the source checkout directly.                                     #}
+        {#- We considered adding executable bits per file, but we could't     #}
+        {#- come up with a way that works well with repository regeneration   #}
+        {#- logic. When the user runs "chmod +x" to some file, we would have  #}
+        {#- to regenerate the repository, but how can it be efficient?        #}
+        mode = "0755",
+    ),
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )

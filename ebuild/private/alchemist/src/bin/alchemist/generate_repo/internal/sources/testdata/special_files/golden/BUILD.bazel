@@ -1,6 +1,6 @@
 # AUTO-GENERATED FILE. DO NOT EDIT.
 
-load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_files(
@@ -17,6 +17,9 @@ pkg_files(
         "__rename__1": "WORKSPACE.bazel",
         "__rename__2": "hello world.txt",
     },
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
