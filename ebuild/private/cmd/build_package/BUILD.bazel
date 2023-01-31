@@ -74,7 +74,6 @@ rust_binary_crate(
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
         "//bazel/ebuild/private/common/mountsdk:mountsdk_rust",
-        "//bazel/ebuild/private/common/processes:processes_rust",
         "//bazel/ebuild/private/common/standard/version:version_rust",
     ],
 )

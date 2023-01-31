@@ -9,6 +9,7 @@ use signal_hook::{
     iterator::Signals,
 };
 use std::fs::File;
+use std::path::Path;
 use std::process::{Command, Output, Stdio};
 
 // run runs a child process, with some special signal handling:
@@ -53,7 +54,7 @@ pub fn run_and_check(cmd: &mut Command) -> Result<Output> {
     Ok(out)
 }
 
-pub fn run_suppress_stderr(cmd: &mut Command, logfile: &str) -> Result<Output> {
+pub fn run_suppress_stderr(cmd: &mut Command, logfile: &Path) -> Result<Output> {
     let write_file = File::create(&logfile)?;
     let out = run(cmd.stderr(Stdio::from(write_file)))?;
 

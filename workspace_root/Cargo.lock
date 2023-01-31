@@ -182,7 +182,6 @@ dependencies = [
  "clap",
  "makechroot",
  "mountsdk",
- "processes",
  "runfiles",
  "users",
 ]
@@ -197,7 +196,6 @@ dependencies = [
  "makechroot",
  "mountsdk",
  "nix",
- "processes",
  "runfiles",
  "version",
 ]
@@ -744,6 +742,7 @@ dependencies = [
  "makechroot",
  "nix",
  "processes",
+ "run_in_container_lib",
  "runfiles",
  "scopeguard",
  "strum",

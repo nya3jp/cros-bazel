@@ -106,7 +106,6 @@ rust_binary_crate(
     deps = [
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
         "//bazel/ebuild/private/common/mountsdk:mountsdk_rust",
-        "//bazel/ebuild/private/common/processes:processes_rust",
     ],
 )
 

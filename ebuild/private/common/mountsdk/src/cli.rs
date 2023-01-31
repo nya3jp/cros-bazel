@@ -22,6 +22,9 @@ pub struct ConfigArgs {
     required = true
     )]
     overlay: Vec<OverlayInfo>,
+    
+    #[arg(long)]
+    ebuild_log: Option<PathBuf>,
 
     #[arg(
     long = "login",
@@ -54,8 +57,9 @@ impl Config {
             overlays: new_overlays,
             login_mode: args.login_mode,
             remounts: Vec::new(),
+            cmd_prefix: vec![],
             bind_mounts: Vec::new(),
-            run_in_container_extra_args: Vec::new(),
+            log_file: args.ebuild_log,
         });
     }
 }

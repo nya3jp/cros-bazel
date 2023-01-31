@@ -9,7 +9,6 @@ edition = "2021"
 cliutil = { path = "../../common/cliutil" }
 makechroot = { path = "../../common/makechroot" }
 mountsdk = { path = "../../common/mountsdk" }
-processes = { path = "../../common/processes" }
 version = { path = "../../common/standard/version" }
 
 anyhow.workspace = true

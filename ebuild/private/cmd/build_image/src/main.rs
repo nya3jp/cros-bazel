@@ -7,7 +7,6 @@ use clap::Parser;
 use makechroot::BindMount;
 use mountsdk::{InstallGroup, MountedSDK};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::str::from_utf8;
 
 const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_image.sh";
@@ -114,7 +113,18 @@ fn main() -> Result<()> {
         .replace("${BOARD}", &args.board)
         .replace("${CHOST}", "aarch64-cros-linux-gnu");
 
-    let sdk = MountedSDK::new(cfg)?;
+    // I have no idea why, but I happened to be trying to run this in a nested
+    // namespace initially, and when I tried to remove it, discovered that
+    // run_in_container only works inside a mount namespace if you're running
+    // as sudo.
+    cfg.cmd_prefix = vec![
+        "/usr/bin/sudo".to_string(),
+        "--preserve-env".to_string(),
+        "--unshare".to_string(),
+        "--mount".to_string(),
+        "--".to_string(),
+    ];
+    let mut sdk = MountedSDK::new(cfg)?;
     sdk.write(
         format!("/usr/bin/emerge-{}", &args.board),
         board_script.replace("${COMMAND}", "emerge --root-deps"),
@@ -126,17 +136,7 @@ fn main() -> Result<()> {
 
     let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
 
-    let base_cmd = sdk.base_command();
-    // I have no idea why, but I happened to be trying to run this in a nested
-    // namespace initially, and when I tried to remove it, discovered that
-    // run_in_container only works inside a mount namespace if you're running
-    // as sudo.
-    processes::run_and_check(
-        Command::new("/usr/bin/sudo")
-            .args(["--preserve-env", "unshare", "--mount", "--"])
-            .arg(base_cmd.get_program())
-            .args(base_cmd.get_args())
-            .envs(base_cmd.get_envs().map(|(k, v)| (k, v.unwrap())))
+    sdk.run_cmd(|cmd| cmd
             .args([
                 MAIN_SCRIPT,
                 &format!("--board={}", &args.board),

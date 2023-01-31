@@ -46,7 +46,7 @@ fn main() -> Result<()> {
         InstallGroup::get_mounts_and_env(&args.install_target, &target_packages_dir)?;
     cfg.bind_mounts.append(&mut mounts);
 
-    let sdk = MountedSDK::new(cfg)?;
+    let mut sdk = MountedSDK::new(cfg)?;
     // TODO: Simplify this after tg/1717983 is submitted.
     let out_dir = sdk
         .root_dir()
@@ -56,13 +56,11 @@ fn main() -> Result<()> {
     std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
 
     let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
-    processes::run_and_check(
-        sdk.base_command()
-            .args([MAIN_SCRIPT])
-            .envs(env)
-            .env("BOARD", &args.board)
-            .env("RUNFILES_DIR", runfiles_dir),
-    )?;
+    sdk.run_cmd(|cmd| cmd
+        .args([MAIN_SCRIPT])
+        .envs(env)
+        .env("BOARD", &args.board)
+        .env("RUNFILES_DIR", runfiles_dir))?;
 
     fileutil::move_dir_contents(sdk.diff_dir().as_path(), args.output_dir.as_path())?;
     makechroot::clean_layer(Some(&args.board), args.output_dir.as_path())?;

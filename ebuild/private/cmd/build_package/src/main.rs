@@ -27,9 +27,6 @@ struct Cli {
     #[arg(long, required = true)]
     ebuild: EbuildMetadata,
 
-    #[arg(long, required = true)]
-    ebuild_log: String,
-
     #[arg(long)]
     file: Vec<BindMount>,
 
@@ -169,12 +166,11 @@ fn main() -> Result<()> {
 
     let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();
 
-    let sdk = MountedSDK::new(cfg)?;
-    let ebuild_path = sdk.root_dir().join(ebuild_path.strip_prefix("/")?);
+    let mut sdk = MountedSDK::new(cfg)?;
     let out_dir = sdk
         .root_dir()
         .outside
-        .join(&target_packages_dir.strip_prefix("/")?);
+        .join(target_packages_dir.strip_prefix("/")?);
     std::fs::create_dir_all(out_dir)?;
     std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
 
@@ -183,24 +179,16 @@ fn main() -> Result<()> {
         spec.install(&sysroot)?;
     }
     let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
-    let mut cmd = sdk.base_command();
-    cmd.args([
+    sdk.run_cmd(|cmd| cmd.args([
         MAIN_SCRIPT,
         "ebuild",
         "--skip-manifest",
-        &ebuild_path.inside.to_string_lossy(),
+        &ebuild_path.to_string_lossy(),
         "clean",
         "package",
     ])
-    .env("BOARD", args.board)
-    .env("RUNFILES_DIR", runfiles_dir);
-
-    // Do not redirect stderr if the interactive shell is used (b/267392458).
-    if nix::unistd::isatty(0)? {
-        processes::run_and_check(&mut cmd)?;
-    } else {
-        processes::run_suppress_stderr(&mut cmd, &args.ebuild_log)?;
-    }
+        .env("BOARD", args.board)
+        .env("RUNFILES_DIR", runfiles_dir))?;
 
     let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",
