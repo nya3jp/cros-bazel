@@ -26,7 +26,7 @@ pkg_filegroup(
         ":__files_regular__",
     ],
     prefix = "/mnt/host/source/src/",
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:private"],
 )
 
 pkg_tar(
@@ -37,5 +37,13 @@ pkg_tar(
     extension = "tar.zst",
     compressor = "@//bazel/ebuild/private:zstd",
     compressor_args = "--threads=0",
+    visibility = ["//internal/sources:__subpackages__"],
+)
+
+filegroup(
+    name = "__tarballs__",
+    srcs = [
+        ":__tarball__",
+    ],
     visibility = ["//:__subpackages__"],
 )

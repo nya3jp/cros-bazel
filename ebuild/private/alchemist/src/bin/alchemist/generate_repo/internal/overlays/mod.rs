@@ -72,7 +72,7 @@ impl EBuildEntry {
             .iter()
             .map(|source| match source.origin {
                 PackageLocalSourceOrigin::Src => {
-                    format!("//internal/sources/{}:__tarball__", source.path)
+                    format!("//internal/sources/{}:__tarballs__", source.path)
                 }
                 PackageLocalSourceOrigin::Chrome => format!("@chrome//{}:src", source.path),
                 PackageLocalSourceOrigin::Chromite => format!("@chromite//{}:src", source.path),

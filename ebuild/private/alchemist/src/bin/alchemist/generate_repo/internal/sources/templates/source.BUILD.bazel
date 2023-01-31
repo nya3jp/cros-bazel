@@ -48,19 +48,27 @@ pkg_filegroup(
         {%- endfor %}
     ],
     prefix = "/mnt/host/source/src/{{ prefix }}",
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:private"],
 )
 
 pkg_tar(
     name = "__tarball__",
     srcs = [
         ":__files__",
-        {%- for child in children %}
-        "//internal/sources/{{ child }}:__files__",
-        {%- endfor %}
     ],
     extension = "tar.zst",
     compressor = "@//bazel/ebuild/private:zstd",
     compressor_args = "--threads=0",
+    visibility = ["//internal/sources:__subpackages__"],
+)
+
+filegroup(
+    name = "__tarballs__",
+    srcs = [
+        ":__tarball__",
+        {%- for child in children %}
+        "//internal/sources/{{ child }}:__tarball__",
+        {%- endfor %}
+    ],
     visibility = ["//:__subpackages__"],
 )

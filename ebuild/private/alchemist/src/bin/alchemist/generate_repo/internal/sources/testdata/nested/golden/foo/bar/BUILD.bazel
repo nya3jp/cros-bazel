@@ -24,17 +24,25 @@ pkg_filegroup(
         ":__files_regular__",
     ],
     prefix = "/mnt/host/source/src/foo/bar",
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:private"],
 )
 
 pkg_tar(
     name = "__tarball__",
     srcs = [
         ":__files__",
-        "//internal/sources/foo/bar/baz:__files__",
     ],
     extension = "tar.zst",
     compressor = "@//bazel/ebuild/private:zstd",
     compressor_args = "--threads=0",
+    visibility = ["//internal/sources:__subpackages__"],
+)
+
+filegroup(
+    name = "__tarballs__",
+    srcs = [
+        ":__tarball__",
+        "//internal/sources/foo/bar/baz:__tarball__",
+    ],
     visibility = ["//:__subpackages__"],
 )
