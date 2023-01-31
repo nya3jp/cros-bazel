@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-// RemoveWithChmod calls os.Remove() after ensuring we have o+rwx to the parent directory and restores the original file permissions.
+// RemoveWithChmod calls os.Remove() after ensuring we have u+rwx to the parent directory and restores the original file permissions.
 func RemoveWithChmod(path string) error {
 	parent := filepath.Dir(path)
 	stat, err := os.Stat(parent)
@@ -30,7 +30,7 @@ func RemoveWithChmod(path string) error {
 	return nil
 }
 
-// RemoveAllWithChmod calls os.RemoveAll after ensuring we have o+rwx to each
+// RemoveAllWithChmod calls os.RemoveAll after ensuring we have u+rwx to each
 // directory so that we can remove all files.
 func RemoveAllWithChmod(path string) error {
 	// Make sure the directory exists before trying to walk it.
@@ -68,7 +68,7 @@ func RemoveAllWithChmod(path string) error {
 		return err
 	}
 
-	// Ensure we have o+rwx on the parent directory so we can unlink any files
+	// Ensure we have u+rwx on the parent directory so we can unlink any files
 	parent := filepath.Dir(path)
 	stat, err := os.Stat(parent)
 	if err != nil {

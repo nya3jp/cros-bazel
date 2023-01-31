@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// MoveDirContents moves the contents of |from| to |to| after ensuring we have o+w to each directory
+// MoveDirContents moves the contents of |from| to |to| after ensuring we have u+w to each directory
 // entry and restores the original file permissions.
 func MoveDirContents(from string, to string) error {
 	es, err := os.ReadDir(from)
@@ -26,7 +26,7 @@ func MoveDirContents(from string, to string) error {
 
 		var fileMode fs.FileMode
 		if e.IsDir() {
-			// For directories, we need o+w (S_IWUSR) permission to rename.
+			// For directories, we need u+w (S_IWUSR) permission to rename.
 			fi, err := e.Info()
 			if err != nil {
 				return err
