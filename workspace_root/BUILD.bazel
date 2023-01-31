@@ -12,7 +12,7 @@ exports_files([
 
 alias(
     name = "all_target_packages",
-    actual = "//third_party/chromiumos-overlay/virtual/target-os:0_package_set",
+    actual = "@portage//virtual/target-os:package_set",
 )
 
 pkg_files(
