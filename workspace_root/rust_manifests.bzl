@@ -15,6 +15,7 @@ MANIFESTS = [
     "//bazel/ebuild/private/common/portage/binarypackage:Cargo.toml",
     "//bazel/ebuild/private/common/processes:Cargo.toml",
     "//bazel/ebuild/private/common/standard/version:Cargo.toml",
+    "//bazel/ebuild/private/common/tar:Cargo.toml",
     "//rules_cros/toolchains/rust/examples/hello_world:Cargo.toml",
     "//rules_cros/toolchains/rust/examples/local_crate:Cargo.toml",
     "//rules_cros/toolchains/rust/examples/use_local_crate:Cargo.toml",
