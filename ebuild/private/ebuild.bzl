@@ -156,6 +156,7 @@ def _ebuild_impl(ctx):
             },
             progress_message = "Downloading %s" % prebuilt,
         )
+        ctx.actions.write(log_output_file, "Downloaded from %s\n" % prebuilt)
     return providers
 
 _ebuild = rule(
