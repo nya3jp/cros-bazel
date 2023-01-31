@@ -679,8 +679,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cliutil",
+ "fileutil",
+ "itertools",
  "path-absolutize",
  "runfiles",
+ "walkdir",
 ]
 
 [[package]]
