@@ -99,6 +99,9 @@ sdk(
         "@//bazel/prebuilts/amd64-host:rust",
         {% for triple in triples -%}
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:binutils",
+        {% if triple == "aarch64-cros-linux-gnu" -%}
+        "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:compiler-rt",
+        {% endif -%}
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:gcc",
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:gdb",
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:glibc",
