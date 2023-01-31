@@ -11,6 +11,7 @@ members = [
     "bazel/ebuild/private/cmd/build_package",
     "bazel/ebuild/private/cmd/extract_interface",
     "bazel/ebuild/private/cmd/install_deps",
+    "bazel/ebuild/private/cmd/run_in_container",
     "bazel/ebuild/private/common/bazelutil",
     "bazel/ebuild/private/common/cliutil",
     "bazel/ebuild/private/common/fileutil",
@@ -18,6 +19,7 @@ members = [
     "bazel/ebuild/private/common/mountsdk",
     "bazel/ebuild/private/common/portage/binarypackage",
     "bazel/ebuild/private/common/processes",
+    "bazel/ebuild/private/common/run_in_container_lib",
     "bazel/ebuild/private/common/standard/version",
     "bazel/ebuild/private/common/tar",
     "rules_cros/toolchains/rust/examples/hello_world",
@@ -46,6 +48,7 @@ nom_locate = "4.0.0"
 nom-regex = "0.2.0"
 once_cell = "1.16.0"
 path-absolutize = "3.0.14"
+pathdiff = "0.2.1"
 proptest = "1.0.0"
 rayon = "1.6.0"
 regex = "1.7.0"

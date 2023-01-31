@@ -1,0 +1,14 @@
+load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
+
+rust_library_crate(
+    name = "run_in_container_lib",
+    visibility = ["//bazel/ebuild/private:__subpackages__"],
+    deps = [
+        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+    ],
+)
+
+rust_crate_test(
+    name = "run_in_container_lib_test",
+    crate = ":run_in_container_lib",
+)

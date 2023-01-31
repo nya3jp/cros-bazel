@@ -698,6 +698,7 @@ dependencies = [
  "itertools",
  "path-absolutize",
  "runfiles",
+ "serde",
  "walkdir",
 ]
 
@@ -852,6 +853,12 @@ checksum = "9a81540d94551664b72b72829b12bd167c73c9d25fbac0e04fafa8023f7e4901"
 dependencies = [
  "once_cell",
 ]
+
+[[package]]
+name = "pathdiff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
 
 [[package]]
 name = "percent-encoding"
@@ -1108,6 +1115,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66262ea963eff99163e6b741fbc3417a52cc13074728c1047e9911789df9b000"
 dependencies = [
  "archery",
+]
+
+[[package]]
+name = "run_in_container"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "fileutil",
+ "itertools",
+ "makechroot",
+ "nix",
+ "path-absolutize",
+ "pathdiff",
+ "run_in_container_lib",
+ "runfiles",
+ "serde",
+ "serde_json",
+ "tar 0.4.38",
+ "tempfile",
+ "walkdir",
+ "zstd",
+]
+
+[[package]]
+name = "run_in_container_lib"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "makechroot",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

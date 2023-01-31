@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 use anyhow::{bail, Result};
 use path_absolutize::Absolutize;
+use serde::{Serialize, Deserialize};
 use std::{path::Path, path::PathBuf, str::FromStr};
 
 fn from_str(spec: &str) -> Result<(PathBuf, PathBuf)> {
@@ -17,7 +18,7 @@ fn from_str(spec: &str) -> Result<(PathBuf, PathBuf)> {
     ))
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OverlayInfo {
     pub mount_dir: PathBuf,
     pub image_path: PathBuf,
@@ -34,7 +35,7 @@ impl FromStr for OverlayInfo {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BindMount {
     pub mount_path: PathBuf,
     pub source: PathBuf,

@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_library(
@@ -29,4 +30,26 @@ go_binary(
     ],
     embed = [":run_in_container_lib"],
     visibility = ["//visibility:public"],
+)
+
+# Note that the go and rust run_in_container are *not* CLI-compatible.
+# rust serializes and deserializes its arguments to a file, while go takes all
+# arguments on the command-line.
+rust_binary_crate(
+    name = "run_in_container_rust",
+    data = [
+        "//rules_cros/third_party/squashfuse",
+        "@dumb_init//file",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/fileutil:fileutil_rust",
+        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+        "//bazel/ebuild/private/common/run_in_container_lib",
+    ],
+)
+
+rust_crate_test(
+    name = "run_in_container_rust_test",
+    crate = ":run_in_container_rust",
 )

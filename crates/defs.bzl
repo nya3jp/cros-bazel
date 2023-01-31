@@ -349,6 +349,23 @@ _NORMAL_DEPENDENCIES = {
             "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
         },
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_all_crates__clap-4.0.32//:clap",
+            "itertools": "@update_all_crates__itertools-0.10.5//:itertools",
+            "nix": "@update_all_crates__nix-0.26.1//:nix",
+            "path-absolutize": "@update_all_crates__path-absolutize-3.0.14//:path_absolutize",
+            "pathdiff": "@update_all_crates__pathdiff-0.2.1//:pathdiff",
+            "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
+            "serde": "@update_all_crates__serde-1.0.152//:serde",
+            "serde_json": "@update_all_crates__serde_json-1.0.91//:serde_json",
+            "tar": "@update_all_crates__tar-0.4.38//:tar",
+            "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
+            "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
+            "zstd": "@update_all_crates__zstd-0.12.2-zstd.1.5.2//:zstd",
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -369,6 +386,7 @@ _NORMAL_DEPENDENCIES = {
             "itertools": "@update_all_crates__itertools-0.10.5//:itertools",
             "path-absolutize": "@update_all_crates__path-absolutize-3.0.14//:path_absolutize",
             "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
+            "serde": "@update_all_crates__serde-1.0.152//:serde",
             "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
         },
     },
@@ -399,6 +417,13 @@ _NORMAL_DEPENDENCIES = {
             "libc": "@update_all_crates__libc-0.2.139//:libc",
             "nix": "@update_all_crates__nix-0.26.1//:nix",
             "signal-hook": "@update_all_crates__signal-hook-0.3.14//:signal_hook",
+        },
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "serde": "@update_all_crates__serde-1.0.152//:serde",
+            "serde_json": "@update_all_crates__serde_json-1.0.91//:serde_json",
         },
     },
     "bazel/ebuild/private/common/standard/version": {
@@ -453,6 +478,10 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+        _COMMON_CONDITION: {
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -476,6 +505,10 @@ _NORMAL_ALIASES = {
         },
     },
     "bazel/ebuild/private/common/processes": {
+        _COMMON_CONDITION: {
+        },
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
         _COMMON_CONDITION: {
         },
     },
@@ -513,6 +546,8 @@ _NORMAL_DEV_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -530,6 +565,8 @@ _NORMAL_DEV_DEPENDENCIES = {
         },
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
@@ -561,6 +598,8 @@ _NORMAL_DEV_ALIASES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -576,6 +615,8 @@ _NORMAL_DEV_ALIASES = {
         },
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
@@ -607,6 +648,8 @@ _PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -623,6 +666,8 @@ _PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
@@ -652,6 +697,8 @@ _PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -665,6 +712,8 @@ _PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
@@ -691,6 +740,8 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -704,6 +755,8 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
@@ -732,6 +785,8 @@ _PROC_MACRO_DEV_ALIASES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -747,6 +802,8 @@ _PROC_MACRO_DEV_ALIASES = {
         },
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
         _COMMON_CONDITION: {
@@ -775,6 +832,8 @@ _BUILD_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -788,6 +847,8 @@ _BUILD_DEPENDENCIES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
@@ -814,6 +875,8 @@ _BUILD_ALIASES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -827,6 +890,8 @@ _BUILD_ALIASES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
@@ -853,6 +918,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -866,6 +933,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
@@ -892,6 +961,8 @@ _BUILD_PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
+    "bazel/ebuild/private/cmd/run_in_container": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -905,6 +976,8 @@ _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
     "bazel/ebuild/private/common/processes": {
+    },
+    "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
     },
@@ -1716,6 +1789,16 @@ def crate_repositories():
         urls = ["https://crates.io/api/v1/crates/path-dedot/3.0.18/download"],
         strip_prefix = "path-dedot-3.0.18",
         build_file = Label("@cros//bazel/crates:BUILD.path-dedot-3.0.18.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "update_all_crates__pathdiff-0.2.1",
+        sha256 = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd",
+        type = "tar.gz",
+        urls = ["https://crates.io/api/v1/crates/pathdiff/0.2.1/download"],
+        strip_prefix = "pathdiff-0.2.1",
+        build_file = Label("@cros//bazel/crates:BUILD.pathdiff-0.2.1.bazel"),
     )
 
     maybe(

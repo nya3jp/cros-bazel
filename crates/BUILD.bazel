@@ -130,6 +130,12 @@ alias(
 )
 
 alias(
+    name = "pathdiff",
+    actual = "@update_all_crates__pathdiff-0.2.1//:pathdiff",
+    tags = ["manual"],
+)
+
+alias(
     name = "proptest",
     actual = "@update_all_crates__proptest-1.0.0//:proptest",
     tags = ["manual"],
