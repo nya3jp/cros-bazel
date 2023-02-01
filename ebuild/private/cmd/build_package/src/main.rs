@@ -183,20 +183,24 @@ fn main() -> Result<()> {
         spec.install(&sysroot)?;
     }
     let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
-    processes::run_suppress_stderr(
-        sdk.base_command()
-            .args([
-                MAIN_SCRIPT,
-                "ebuild",
-                "--skip-manifest",
-                &ebuild_path.inside.to_string_lossy(),
-                "clean",
-                "package",
-            ])
-            .env("BOARD", args.board)
-            .env("RUNFILES_DIR", runfiles_dir),
-        &args.ebuild_log,
-    )?;
+    let mut cmd = sdk.base_command();
+    cmd.args([
+        MAIN_SCRIPT,
+        "ebuild",
+        "--skip-manifest",
+        &ebuild_path.inside.to_string_lossy(),
+        "clean",
+        "package",
+    ])
+    .env("BOARD", args.board)
+    .env("RUNFILES_DIR", runfiles_dir);
+
+    // Do not redirect stderr if the interactive shell is used (b/267392458).
+    if nix::unistd::isatty(0)? {
+        processes::run_and_check(&mut cmd)?;
+    } else {
+        processes::run_suppress_stderr(&mut cmd, &args.ebuild_log)?;
+    }
 
     let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",
