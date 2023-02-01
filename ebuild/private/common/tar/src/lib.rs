@@ -46,6 +46,7 @@ pub fn move_symlinks_into_tar(src: &Path, dest: &Path) -> Result<()> {
         let mode = std::fs::symlink_metadata(entry.path())?.mode();
         header.set_mode(mode);
         header.set_entry_type(tar::EntryType::Symlink);
+        header.set_size(0);
         tar.append_link(&mut header, link_source, link_target)?;
 
         fileutil::remove_file_with_chmod(entry.path())?;

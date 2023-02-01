@@ -9,6 +9,7 @@ MANIFESTS = [
     "//bazel/ebuild/private/cmd/extract_interface:Cargo.toml",
     "//bazel/ebuild/private/cmd/install_deps:Cargo.toml",
     "//bazel/ebuild/private/cmd/run_in_container:Cargo.toml",
+    "//bazel/ebuild/private/cmd/sdk_from_archive:Cargo.toml",
     "//bazel/ebuild/private/common/bazelutil:Cargo.toml",
     "//bazel/ebuild/private/common/cliutil:Cargo.toml",
     "//bazel/ebuild/private/common/fileutil:Cargo.toml",

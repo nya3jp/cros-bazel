@@ -366,6 +366,12 @@ _NORMAL_DEPENDENCIES = {
             "zstd": "@update_all_crates__zstd-0.12.2-zstd.1.5.2//:zstd",
         },
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_all_crates__clap-4.0.32//:clap",
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -482,6 +488,10 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+        _COMMON_CONDITION: {
+        },
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -548,6 +558,8 @@ _NORMAL_DEV_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -600,6 +612,8 @@ _NORMAL_DEV_ALIASES = {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -650,6 +664,8 @@ _PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -699,6 +715,8 @@ _PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -741,6 +759,8 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/install_deps": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
+    },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
@@ -786,6 +806,8 @@ _PROC_MACRO_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/install_deps": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
+    },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
@@ -834,6 +856,8 @@ _BUILD_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -876,6 +900,8 @@ _BUILD_ALIASES = {
     "bazel/ebuild/private/cmd/install_deps": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
+    },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
@@ -920,6 +946,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
+    },
     "bazel/ebuild/private/common/bazelutil": {
     },
     "bazel/ebuild/private/common/cliutil": {
@@ -962,6 +990,8 @@ _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/cmd/install_deps": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
+    },
+    "bazel/ebuild/private/cmd/sdk_from_archive": {
     },
     "bazel/ebuild/private/common/bazelutil": {
     },
