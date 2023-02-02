@@ -38,20 +38,13 @@ pub struct ConfigArgs {
 impl Config {
     pub fn try_from(args: ConfigArgs) -> Result<Config> {
         let mut new_overlays: Vec<OverlayInfo> = Vec::new();
-        for sdk in args.sdk.iter() {
+        for sdk in args.sdk {
             new_overlays.push(OverlayInfo {
                 mount_dir: PathBuf::from("/"),
-                image_path: sdk.to_path_buf(),
+                image_path: sdk,
             });
         }
-        new_overlays.extend(args.overlay.iter().map(|overlay| OverlayInfo {
-            image_path: overlay.image_path.to_path_buf(),
-            mount_dir: if overlay.mount_dir.is_absolute() {
-                overlay.mount_dir.to_path_buf()
-            } else {
-                PathBuf::from(SOURCE_DIR).join(overlay.mount_dir.to_path_buf())
-            },
-        }));
+        new_overlays.extend(args.overlay);
         return Ok(Config {
             overlays: new_overlays,
             login_mode: args.login_mode,

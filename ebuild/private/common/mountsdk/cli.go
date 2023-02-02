@@ -6,7 +6,6 @@ package mountsdk
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"cros.local/bazel/ebuild/private/common/makechroot"
 	"github.com/urfave/cli/v2"
@@ -64,9 +63,6 @@ func GetMountConfigFromCLI(c *cli.Context) (*Config, error) {
 		overlay := makechroot.OverlayInfo{
 			ImagePath: spec.ImagePath,
 			MountDir:  spec.MountDir,
-		}
-		if !filepath.IsAbs(overlay.MountDir) {
-			overlay.MountDir = filepath.Join(SourceDir, overlay.MountDir)
 		}
 		cfg.Overlays = append(cfg.Overlays, overlay)
 	}

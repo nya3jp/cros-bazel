@@ -114,7 +114,6 @@ var app = &cli.App{
 
 		rootDir := fileutil.NewDualPath(filepath.Join(tmpDir, "root"), "/")
 		sysrootDir := rootDir.Add("build", board)
-		sourceDir := rootDir.Add("mnt/host/source")
 		stageDir := rootDir.Add("stage")
 		tarballsDir := stageDir.Add("tarballs")
 		hostPackagesDir := rootDir.Add("var/lib/portage/pkgs")
@@ -160,8 +159,7 @@ var app = &cli.App{
 		}
 
 		for _, overlay := range overlays {
-			overlayDir := sourceDir.Add(overlay.MountDir)
-			args = append(args, "--overlay="+overlayDir.Inside()+"="+overlay.ImagePath)
+			args = append(args, "--overlay="+overlay.MountDir+"="+overlay.ImagePath)
 		}
 
 		args = append(args, scriptPath.Inside())

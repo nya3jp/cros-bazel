@@ -262,9 +262,12 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
 
     // Ensure mountpoints to exist in base.
     for (mount_dir, lower_dirs) in lower_dirs_by_mount_dir.iter_mut() {
-        let mount = base_dir.join(mount_dir.strip_prefix("/")?);
-        dir_builder.create(&mount)?;
-        lower_dirs.push(mount);
+        let actual_mount_dir = match mount_dir.strip_prefix("/") {
+            Ok(mount_dir_no_slash) => base_dir.join(mount_dir_no_slash),
+            Err(_) => base_dir.join("mnt/host/source").join(mount_dir),
+        };
+        dir_builder.create(&actual_mount_dir)?;
+        lower_dirs.push(actual_mount_dir);
     }
 
     let orig_wd = std::env::current_dir()?;

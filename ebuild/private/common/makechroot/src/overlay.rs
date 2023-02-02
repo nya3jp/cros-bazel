@@ -8,14 +8,7 @@ use std::{path::Path, path::PathBuf, str::FromStr};
 
 fn from_str(spec: &str) -> Result<(PathBuf, PathBuf)> {
     let (first, second) = cliutil::split_key_value(spec)?;
-    Ok((
-        PathBuf::from(if first == "/" {
-            "/"
-        } else {
-            first.trim_end_matches('/')
-        }),
-        PathBuf::from(second),
-    ))
+    Ok((PathBuf::from(first), PathBuf::from(second)))
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -33,12 +33,8 @@ func ParseOverlaySpecs(specs []string) ([]OverlayInfo, error) {
 		if len(v) != 2 {
 			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
 		}
-		mountDir := v[0]
-		if mountDir != "/" {
-			mountDir = strings.TrimSuffix(mountDir, "/")
-		}
 		overlays = append(overlays, OverlayInfo{
-			MountDir:  mountDir,
+			MountDir:  v[0],
 			ImagePath: v[1],
 		})
 	}

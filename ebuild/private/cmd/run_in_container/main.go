@@ -48,12 +48,19 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 
 	var mounts []overlayInfo
 	for _, overlay := range overlays {
+		// If the mount path is relative, use /mnt/host/source as the base.
+		mountDir := overlay.MountDir
+		if !filepath.IsAbs(mountDir) {
+			mountDir = filepath.Join("/mnt/host/source", mountDir)
+		}
+
 		overlayType, err := makechroot.DetectOverlayType(overlay.ImagePath)
 		if err != nil {
 			return nil, err
 		}
+
 		mounts = append(mounts, overlayInfo{
-			Target: overlay.MountDir,
+			Target: mountDir,
 			Source: overlay.ImagePath,
 			Type:   overlayType,
 		})
