@@ -691,6 +691,7 @@ name = "makechroot"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "binarypackage",
  "cliutil",
  "fileutil",
  "itertools",
@@ -1221,6 +1222,21 @@ dependencies = [
  "clap",
  "processes",
  "tar 0.1.0",
+]
+
+[[package]]
+name = "sdk_update"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "fileutil",
+ "makechroot",
+ "processes",
+ "run_in_container_lib",
+ "runfiles",
+ "tar 0.1.0",
+ "tempfile",
 ]
 
 [[package]]

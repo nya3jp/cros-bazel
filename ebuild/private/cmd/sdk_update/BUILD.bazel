@@ -2,7 +2,30 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+bool_flag(
+    name = "use_rust_sdk_update",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "is_sdk_update_rust",
+    flag_values = {
+        ":use_rust_sdk_update": "true",
+    },
+)
+
+alias(
+    name = "sdk_update",
+    actual = select({
+        ":is_sdk_update_rust": ":sdk_update_rust",
+        "//conditions:default": ":sdk_update_go",
+    }),
+    visibility = ["//visibility:public"],
+)
 
 go_library(
     name = "sdk_update_lib",
@@ -23,10 +46,27 @@ go_library(
 )
 
 go_binary(
-    name = "sdk_update",
+    name = "sdk_update_go",
     data = [
         "//bazel/ebuild/private/cmd/run_in_container",
     ],
     embed = [":sdk_update_lib"],
     visibility = ["//visibility:public"],
+)
+
+rust_binary_crate(
+    name = "sdk_update_rust",
+    crate_name = "sdk_update",
+    data = [
+        ":setup.sh",
+        "//bazel/ebuild/private/cmd/run_in_container:run_in_container_rust",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/fileutil:fileutil_rust",
+        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+        "//bazel/ebuild/private/common/processes:processes_rust",
+        "//bazel/ebuild/private/common/run_in_container_lib",
+        "//bazel/ebuild/private/common/tar:tar_rust",
+    ],
 )
