@@ -23,3 +23,35 @@ ChromeOS has three main sources of configuration data:
 1) [boxster](go/cros-boxster-site) - Boxster was a reenvisioning of `chromeos-config`. It uses `proto` and `starlark` as the configuration language and provides a lot more structure to how configuration is defined. The boxster configuration gets transformed into the same output format as `chromeos-config`. This insulates the ebuilds and devices from having to learn about a new configuration system.
 
 With the migration to Bazel, we have an option for another configuration model (insert `xkcd` link here), [bazel platforms](https://bazel.build/extending/platforms). Bazel platforms can be used to tell bazel how to the target should be compiled, which features to enable, what libraries to link in, etc.
+
+### USE Flags
+
+Due to the massive amounts of portage configuration used by ChromeOS and the constant churn of that configuration, it doesn't make sense to take on a massive configuration conversion effort as part of the bazel migration. Instead we will embrace `USE` flags and the portage configuration model. Due to the [expressiveness](https://dev.gentoo.org/~ulm/pms/head/pms.html#section-8.2) of the `USE` flag expressions, and the complexity of how `USE` flags get computed it's practically impossible to convert the `USE` flag model into `bazel` [constraint_settings](https://bazel.build/reference/be/platform#constraint_setting) and [select](https://bazel.build/reference/be/functions#select) clauses. Instead we will preprocesses all of the portage configuration settings and bake their final values into the generated `BUILD.bazel` files.
+
+```
+ebuild(
+    name = "8.1_p1-r1",
+    ebuild = "readline-8.1_p1-r1.ebuild",
+    distfiles = {
+        "@portage-dist_readline-8.1.tar.gz//file": "readline-8.1.tar.gz",
+        "@portage-dist_readline81-001//file": "readline81-001",
+    },
+    build_deps = [
+        "//internal/overlays/third_party/portage-stable/sys-libs/ncurses:5.9-r99",
+    ],
+    runtime_deps = [
+        "//internal/overlays/third_party/portage-stable/sys-libs/ncurses:5.9-r99",
+    ],
+    files = glob(["files/**", "*.bashrc"]),
+    use = ["-cros_host", "-static-libs", "unicode", "utils"],
+    eclasses = [
+        "//internal/overlays/third_party/portage-stable/eclass:flag-o-matic",
+        "//internal/overlays/third_party/chromiumos-overlay/eclass:toolchain-funcs",
+        "//internal/overlays/third_party/portage-stable/eclass:usr-ldscript",
+    ],
+    sdk = "//internal/sdk",
+    visibility = ["//visibility:public"],
+)
+```
+
+This removes bazel from having to understand anything about `USE` flags, portages dependency resolution logic, and keeps the generated `BUILD` files readable.
