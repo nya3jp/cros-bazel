@@ -32,6 +32,13 @@ before any other bazels, and name the link `bazel`. Example:
 ln -s ~/go/bin/bazelisk ~/bin/bazel
 ```
 
+## Enabling commit hooks (optional)
+If you'd like to run the tests every time you commit, add the following (you can skip it with `git commit --no-verify`).
+```sh
+cd cros-bazel/src/bazel
+ln -s tools/run_tests.sh .git/hooks/pre-commit
+```
+
 ## Building
 
 *** note
