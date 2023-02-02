@@ -60,7 +60,7 @@ fn main() -> Result<()> {
         cmd.args([MAIN_SCRIPT])
             .envs(env)
             .env("BOARD", &args.board)
-            .env("RUNFILES_DIR", runfiles_dir)
+            .env("RUNFILES_DIR", runfiles_dir);
     })?;
 
     fileutil::move_dir_contents(sdk.diff_dir().as_path(), args.output_dir.as_path())?;

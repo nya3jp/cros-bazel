@@ -146,7 +146,7 @@ fn main() -> Result<()> {
         .env("BOARD", &args.board)
         .env("RUNFILES_DIR", runfiles_dir)
         .env("HOST_UID", users::get_current_uid().to_string())
-        .env("HOST_GID", users::get_current_gid().to_string())
+        .env("HOST_GID", users::get_current_gid().to_string());
     })?;
 
     let path = Path::new("mnt/host/source/src/build/images")
