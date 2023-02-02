@@ -54,7 +54,11 @@ var app = &cli.App{
 			specs = append(specs, strings.Split(strings.TrimRight(string(b), "\n"), "\n")...)
 		}
 
-		cmd := exec.Command("/usr/bin/mksquashfs", "-", outputPath, "-tar", "-noappend", "-all-time", "0", "-comp", "lz4")
+		// We need -all-root even though we emit a tarball with UID/GID=0.
+		// It seems like mksquashfs automatically records directories with
+		// the current process UID/GID, without -all-root, when it sees a
+		// file entry before its ancestor directories.
+		cmd := exec.Command("/usr/bin/mksquashfs", "-", outputPath, "-tar", "-noappend", "-all-root", "-all-time", "0", "-comp", "lz4")
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			return err
@@ -125,7 +129,7 @@ func processFile(w *tar.Writer, spec, prefix string) error {
 			Name:     dst,
 			Typeflag: tar.TypeReg,
 			Size:     stat.Size(),
-			Mode:     int64(stat.Mode().Perm()),
+			Mode:     0o755,
 		})
 		f, err := os.Open(src)
 		if err != nil {
@@ -149,7 +153,7 @@ func processFile(w *tar.Writer, spec, prefix string) error {
 		w.WriteHeader(&tar.Header{
 			Name:     dst,
 			Typeflag: tar.TypeDir,
-			Mode:     int64(stat.Mode().Perm()),
+			Mode:     0o755,
 		})
 		return nil
 
