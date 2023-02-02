@@ -34,10 +34,6 @@ OverlayInfo = provider(
             File: A squashfs image (.squashfs) that contains files of this
             overlay.
         """,
-        "mount_path": """
-            str: A path where the overlay is mounted. It is a relative path
-            from /mnt/host/source.
-        """,
     },
 )
 

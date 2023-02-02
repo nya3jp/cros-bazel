@@ -8,7 +8,7 @@ def _build_image_impl(ctx):
     direct_inputs = []
 
     for overlay in ctx.attr.overlays[OverlaySetInfo].overlays:
-        args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
+        args.add("--overlay=/=%s" % overlay.squashfs_file.path)
         direct_inputs.append(overlay.squashfs_file)
 
     providers = [DefaultInfo(files = depset([output]))]

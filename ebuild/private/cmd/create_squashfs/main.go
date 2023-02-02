@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/urfave/cli/v2"
@@ -24,6 +25,11 @@ var flagOutput = &cli.StringFlag{
 	Required: true,
 }
 
+var flagPrefix = &cli.StringFlag{
+	Name:     "prefix",
+	Required: true,
+}
+
 var flagSpecsFrom = &cli.StringFlag{
 	Name: "specs-from",
 }
@@ -31,10 +37,12 @@ var flagSpecsFrom = &cli.StringFlag{
 var app = &cli.App{
 	Flags: []cli.Flag{
 		flagOutput,
+		flagPrefix,
 		flagSpecsFrom,
 	},
 	Action: func(c *cli.Context) error {
 		outputPath := c.String(flagOutput.Name)
+		prefix := c.String(flagPrefix.Name)
 		specsFile := c.String(flagSpecsFrom.Name)
 		specs := c.Args().Slice()
 
@@ -64,7 +72,7 @@ var app = &cli.App{
 
 		w := tar.NewWriter(stdin)
 		for _, spec := range specs {
-			if err := processFile(w, spec); err != nil {
+			if err := processFile(w, spec, prefix); err != nil {
 				return err
 			}
 		}
@@ -97,12 +105,12 @@ func writeZeros(w io.Writer, n int64) error {
 	return nil
 }
 
-func processFile(w *tar.Writer, spec string) error {
+func processFile(w *tar.Writer, spec, prefix string) error {
 	v := strings.Split(spec, ":")
 	if len(v) != 2 {
 		return fmt.Errorf("invalid file spec: %s; maybe file names containing colons?", spec)
 	}
-	dst := v[0]
+	dst := filepath.Join(prefix, v[0])
 	src := v[1]
 
 	// Always follow symlinks.

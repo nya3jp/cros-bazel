@@ -76,7 +76,7 @@ def _sdk_impl(ctx):
 
     overlay_inputs = []
     for overlay in ctx.attr.overlays[OverlaySetInfo].overlays:
-        args.add("--overlay=%s=%s" % (overlay.mount_path, overlay.squashfs_file.path))
+        args.add("--overlay=/=%s" % overlay.squashfs_file.path)
         overlay_inputs.append(overlay.squashfs_file)
 
     inputs = depset(
