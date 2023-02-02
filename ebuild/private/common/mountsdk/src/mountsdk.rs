@@ -52,9 +52,8 @@ impl MountedSDK {
     // Prepares the SDK according to the specifications requested.
     pub fn new(cfg: Config) -> Result<Self> {
         let r = runfiles::Runfiles::create()?;
-        let run_in_container_path = r.rlocation(
-            "cros/bazel/ebuild/private/cmd/run_in_container/run_in_container_rust",
-        );
+        let run_in_container_path =
+            r.rlocation("cros/bazel/ebuild/private/cmd/run_in_container/run_in_container_rust");
 
         let tmp_dir = tempdir()?;
 
@@ -69,7 +68,7 @@ impl MountedSDK {
 
         std::fs::create_dir_all(&bazel_build_dir.outside)?;
 
-        let mut overlays: Vec<OverlayInfo> = vec![OverlayInfo{
+        let mut overlays: Vec<OverlayInfo> = vec![OverlayInfo {
             mount_dir: "/".into(),
             image_path: root_dir.outside.clone(),
         }];
@@ -81,7 +80,9 @@ impl MountedSDK {
             cmd.args(&cfg.cmd_prefix[1..]).arg(run_in_container_path);
             cmd
         };
-        cmd.stdin(Stdio::inherit()).stdout(Stdio::inherit()).stderr(Stdio::inherit());
+        cmd.stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
         let serialized_path = tmp_dir.path().join("run_in_container_args.json");
         cmd.arg("--cfg").arg(&serialized_path);
 
@@ -90,12 +91,13 @@ impl MountedSDK {
             let mount_dir = root_dir.inside.join(remount_relative);
             let image_path = root_dir.outside.join(remount_relative);
             std::fs::create_dir_all(&image_path)?;
-            overlays.push(OverlayInfo{mount_dir, image_path});
+            overlays.push(OverlayInfo {
+                mount_dir,
+                image_path,
+            });
         }
 
         overlays.extend(cfg.overlays);
-
-
 
         let setup_script_path = bazel_build_dir.join("setup.sh");
         std::fs::copy(
@@ -119,13 +121,14 @@ impl MountedSDK {
         };
 
         cmd.arg("--cmd").arg(setup_script_path.inside);
-        RunInContainerConfig{
+        RunInContainerConfig {
             staging_dir: scratch_dir,
             chdir: PathBuf::from("/"),
             overlays,
             bind_mounts,
             keep_host_mount: false,
-        }.serialize_to(&serialized_path)?;
+        }
+        .serialize_to(&serialized_path)?;
         return Ok(Self {
             cmd: Some(cmd),
             root_dir,
@@ -137,9 +140,7 @@ impl MountedSDK {
     }
 
     pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(&self, path: P, contents: C) -> Result<()> {
-        let path = &self
-            .root_dir
-            .outside.join(path.as_ref().strip_prefix("/")?);
+        let path = &self.root_dir.outside.join(path.as_ref().strip_prefix("/")?);
         std::fs::create_dir_all(path.parent().ok_or(anyhow!("Path can't be empty"))?)?;
         std::fs::write(path, contents)?;
         Ok(())
@@ -154,12 +155,15 @@ impl MountedSDK {
     }
 
     pub fn run_cmd(&mut self, cmd_modifier: impl FnOnce(&mut Command)) -> Result<Output> {
-        let mut cmd = self.cmd.take().with_context(|| "Can only execute a command once per SDK.")?;
+        let mut cmd = self
+            .cmd
+            .take()
+            .with_context(|| "Can only execute a command once per SDK.")?;
         cmd_modifier(&mut cmd);
         if let Some(log_file) = &self.log_file {
             // Only redirect stderr if we aren't in an interactive shell (b/267392458).
             if !nix::unistd::isatty(0)? {
-                return processes::run_suppress_stderr(&mut cmd, &log_file)
+                return processes::run_suppress_stderr(&mut cmd, &log_file);
             }
         }
         processes::run_and_check(&mut cmd)
@@ -215,43 +219,35 @@ mod tests {
             remounts: vec![portage_stable.join("mypkg")],
             cmd_prefix: vec![],
             login_mode: Never,
-            log_file: None
+            log_file: None,
         };
 
         MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
             cmd.arg("true");
         })?;
 
-        assert!(MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
-            cmd.arg("false");
-        }).is_err());
+        assert!(MountedSDK::new(cfg.clone())?
+            .run_cmd(|cmd| {
+                cmd.arg("false");
+            })
+            .is_err());
 
         // Should be a read-only mount.
-        assert!(MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
-            cmd.args([
-                "/bin/bash",
-                "-c",
-                "echo world > /hello"
-            ]);
-        }).is_err());
+        assert!(MountedSDK::new(cfg.clone())?
+            .run_cmd(|cmd| {
+                cmd.args(["/bin/bash", "-c", "echo world > /hello"]);
+            })
+            .is_err());
         // Verify that the chroot hasn't modified this file.
         assert_eq!(std::fs::read_to_string(hello)?, "hello");
 
         // Check we're in the SDK by using a binary unlikely to be on the host machine.
         MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
-            cmd.args([
-                "test",
-                "-f",
-                "/usr/bin/ebuild",
-            ]);
+            cmd.args(["test", "-f", "/usr/bin/ebuild"]);
         })?;
 
         MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
-            cmd.args([
-                "grep",
-                "EBUILD_CONTENTS",
-                &ebuild_file.to_string_lossy(),
-            ]);
+            cmd.args(["grep", "EBUILD_CONTENTS", &ebuild_file.to_string_lossy()]);
         })?;
 
         let tmp_dir: PathBuf = {

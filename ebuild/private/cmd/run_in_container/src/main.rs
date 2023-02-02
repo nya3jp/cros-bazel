@@ -4,38 +4,38 @@
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use itertools::Itertools;
+use makechroot::OverlayType;
 use nix::{
-    mount::{mount, MsFlags, umount2},
-    sched::{unshare, CloneFlags},
-    unistd::{execv, getgid, getuid, pivot_root, Uid},
     mount::MntFlags,
-    unistd::execvp
+    mount::{mount, umount2, MsFlags},
+    sched::{unshare, CloneFlags},
+    unistd::execvp,
+    unistd::{execv, getgid, getuid, pivot_root, Uid},
 };
 use path_absolutize::Absolutize;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
-    ffi::OsStr,
-    os::unix::fs::OpenOptionsExt,
-    os::unix::fs::DirBuilderExt,
-    fs::File,
-    ffi::CString,
     collections::HashMap,
+    ffi::CString,
+    ffi::OsStr,
+    fs::File,
+    io::Read,
+    os::unix::fs::DirBuilderExt,
+    os::unix::fs::OpenOptionsExt,
     path::{Path, PathBuf},
     process::Command,
-    io::Read
 };
 use tar::Archive;
 use walkdir::WalkDir;
-use makechroot::OverlayType;
 
 const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
 const NONE_STR: Option<&str> = None::<&str>;
 
 #[derive(Parser, Debug)]
-#[clap(trailing_var_arg=true)]
+#[clap(trailing_var_arg = true)]
 struct Cli {
     /// A path to a serialized RunInContainerConfig.
-    #[arg(long, required=true)]
+    #[arg(long, required = true)]
     cfg: PathBuf,
 
     /// Whether we are already in the namespace. Never set this, as it's as internal flag.
@@ -77,9 +77,9 @@ fn resolve_overlay_source_path(input_path: &Path) -> Result<PathBuf> {
     // Resolve the symlink so we always return an absolute path.
     let info = std::fs::symlink_metadata(input_path)?;
     if info.is_symlink() {
-        return Ok(std::fs::read_link(input_path)?)
+        return Ok(std::fs::read_link(input_path)?);
     } else if !info.is_dir() {
-        return Ok(PathBuf::from(input_path))
+        return Ok(PathBuf::from(input_path));
     }
 
     for res_entry in WalkDir::new(input_path).follow_links(false) {
@@ -91,18 +91,19 @@ fn resolve_overlay_source_path(input_path: &Path) -> Result<PathBuf> {
             let relative_symlink = entry.path().strip_prefix(input_path)?; // blah
             let mut resolved: &Path = &target;
             for _ in 0..relative_symlink.iter().count() {
-                resolved = resolved.parent().with_context(|| "Symlink target should have parent")?;
+                resolved = resolved
+                    .parent()
+                    .with_context(|| "Symlink target should have parent")?;
             }
             return Ok(PathBuf::from(resolved));
         } else if info.is_file() {
-            return Ok(PathBuf::from(input_path))
+            return Ok(PathBuf::from(input_path));
         }
     }
     // In the case that the directory is empty, we still want the returned path to
     // be valid.
     Ok(PathBuf::from(input_path))
 }
-
 
 fn enter_namespace() -> Result<()> {
     let r = runfiles::Runfiles::create()?;
@@ -117,7 +118,10 @@ fn enter_namespace() -> Result<()> {
     // longer be able to execute commands requiring root, and won't be able to
     // access files owned by other users.
     let enter_user_namespace = uid != Uid::from_raw(0);
-    let mut clone_flags = CloneFlags::CLONE_NEWNS | CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWNET | CloneFlags::CLONE_NEWIPC;
+    let mut clone_flags = CloneFlags::CLONE_NEWNS
+        | CloneFlags::CLONE_NEWPID
+        | CloneFlags::CLONE_NEWNET
+        | CloneFlags::CLONE_NEWIPC;
     if enter_user_namespace {
         clone_flags |= CloneFlags::CLONE_NEWUSER;
     }
@@ -132,7 +136,9 @@ fn enter_namespace() -> Result<()> {
     }
 
     let dumb_init = CString::new(dumb_init_path.to_string_lossy().to_string())?;
-    let argv = std::env::args().map(CString::new).collect::<Result<Vec<CString>, _>>()?;
+    let argv = std::env::args()
+        .map(CString::new)
+        .collect::<Result<Vec<CString>, _>>()?;
 
     // --single-child tells dumb-init to not create a new SID. A new SID doesn't
     // have a controlling terminal, so running `bash` won't work correctly.
@@ -168,7 +174,8 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
     if !Command::new("/usr/sbin/ifconfig")
         .args(["lo", "up"])
         .status()?
-        .success() {
+        .success()
+    {
         bail!("Failed to run ifconfig in container");
     }
 
@@ -182,13 +189,26 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
 
     let mut binding = std::fs::DirBuilder::new();
     let dir_builder = binding.recursive(true).mode(0o755);
-    for dir in [&root_dir, &base_dir, &lowers_dir, &diff_dir, &work_dir, &tar_dir] {
+    for dir in [
+        &root_dir,
+        &base_dir,
+        &lowers_dir,
+        &diff_dir,
+        &work_dir,
+        &tar_dir,
+    ] {
         dir_builder.create(dir)?;
     }
 
     for dir in [&root_dir, &base_dir, &lowers_dir] {
         // Mount a tmpfs so that files are purged automatically on exit.
-        mount(Some("tmpfs"), dir, Some("tmpfs"), MsFlags::empty(), NONE_STR)?;
+        mount(
+            Some("tmpfs"),
+            dir,
+            Some("tmpfs"),
+            MsFlags::empty(),
+            NONE_STR,
+        )?;
     }
 
     // Set up the base directory.
@@ -204,24 +224,18 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
         dir_builder.create(&lower_dir)?;
 
         match OverlayType::detect(&overlay.image_path)? {
-            OverlayType::Dir => {
-                mount(
-                    Some(&source_path),
-                    &lower_dir,
-                    NONE_STR,
-                    BIND_REC,
-                    NONE_STR)
-                    .with_context(|| format!("Failed bind-mounting {source_path:?}"))?
-            },
+            OverlayType::Dir => mount(Some(&source_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
+                .with_context(|| format!("Failed bind-mounting {source_path:?}"))?,
 
             OverlayType::Squashfs => {
                 if !Command::new(&squashfuse_path)
                     .args([&source_path, &lower_dir])
                     .status()?
-                    .success() {
+                    .success()
+                {
                     bail!("Failed mounting {source_path:?} to {lower_dir:?} via squashfuse");
                 }
-            },
+            }
 
             OverlayType::Tar => {
                 // We use a dedicated directory for the extracted artifacts instead of
@@ -230,16 +244,20 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
                 lower_dir = tar_dir.join(i.to_string());
                 dir_builder.create(&lower_dir)?;
                 let f = File::open(&overlay.image_path)?;
-                let decompressed: Box<dyn Read> = if overlay.image_path.extension() == Some(OsStr::new("zst")) {
-                    Box::new(zstd::stream::read::Decoder::new(f)?)
-                } else {
-                    Box::new(f)
-                };
+                let decompressed: Box<dyn Read> =
+                    if overlay.image_path.extension() == Some(OsStr::new("zst")) {
+                        Box::new(zstd::stream::read::Decoder::new(f)?)
+                    } else {
+                        Box::new(f)
+                    };
                 Archive::new(decompressed).unpack(&lower_dir)?;
             }
         }
 
-        lower_dirs_by_mount_dir.entry(overlay.mount_dir.clone()).or_default().push(lower_dir);
+        lower_dirs_by_mount_dir
+            .entry(overlay.mount_dir.clone())
+            .or_default()
+            .push(lower_dir);
     }
 
     // Ensure mountpoints to exist in base.
@@ -253,11 +271,14 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
     // Change the current directory to minimize the option string passed to
     // mount(2) as its length is constrained.
     std::env::set_current_dir(&lowers_dir)?;
-    let relative_dir = |p| pathdiff::diff_paths(&p, &lowers_dir)
-        .with_context(|| format!("Unable to make {p:?} relative to {lowers_dir:?}"));
+    let relative_dir = |p| {
+        pathdiff::diff_paths(&p, &lowers_dir)
+            .with_context(|| format!("Unable to make {p:?} relative to {lowers_dir:?}"))
+    };
 
     // Must be topologically sorted.
-    let mount_dirs: Vec<(&PathBuf, &Vec<PathBuf>)> = lower_dirs_by_mount_dir.iter().sorted().collect();
+    let mount_dirs: Vec<(&PathBuf, &Vec<PathBuf>)> =
+        lower_dirs_by_mount_dir.iter().sorted().collect();
 
     // Overlay multiple directories.
     // This is done by mounting overlayfs per mount offset.
@@ -271,39 +292,75 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
         dir_builder.create(&work_dir)?;
 
         // Compute shorter representations of lower directories.
-        let short_lowers = lower_dirs.iter().map(|lower_dir| {
-            let rel_lower_dir: PathBuf = relative_dir(lower_dir.to_path_buf())?;
-            Ok(if rel_lower_dir.to_string_lossy().len() < lower_dir.to_string_lossy().len() {
-                rel_lower_dir
-            } else {
-                lower_dir.to_path_buf()
-            }.to_string_lossy().to_string())
-        }).collect::<Result<Vec<_>>>()?.join(":");
+        let short_lowers = lower_dirs
+            .iter()
+            .map(|lower_dir| {
+                let rel_lower_dir: PathBuf = relative_dir(lower_dir.to_path_buf())?;
+                Ok(
+                    if rel_lower_dir.to_string_lossy().len() < lower_dir.to_string_lossy().len() {
+                        rel_lower_dir
+                    } else {
+                        lower_dir.to_path_buf()
+                    }
+                    .to_string_lossy()
+                    .to_string(),
+                )
+            })
+            .collect::<Result<Vec<_>>>()?
+            .join(":");
 
         // Mount overlayfs.
-        let overlay_options = format!("upperdir={},workdir={},lowerdir={}", upper_dir.display(), work_dir.display(), short_lowers);
+        let overlay_options = format!(
+            "upperdir={},workdir={},lowerdir={}",
+            upper_dir.display(),
+            work_dir.display(),
+            short_lowers
+        );
         mount(
             Some("none"),
             &root_dir.join(mount_dir.strip_prefix("/")?),
             Some("overlay"),
             MsFlags::empty(),
-            Some::<&str>(&overlay_options))
-            .with_context(|| "mounting overlayfs")?;
+            Some::<&str>(&overlay_options),
+        )
+        .with_context(|| "mounting overlayfs")?;
     }
 
-    mount(Some("/dev"), &root_dir.join("dev"), NONE_STR, BIND_REC, NONE_STR)
-        .with_context(|| "Bind-mounting /dev")?;
-    mount(Some("/proc"), &root_dir.join("proc"), Some("proc"), MsFlags::empty(), NONE_STR)
-        .with_context(|| "Bind-mounting /proc")?;
-    mount(Some("/sys"), &root_dir.join("sys"), NONE_STR, BIND_REC, NONE_STR)
-        .with_context(|| "Bind-mounting /sys")?;
+    mount(
+        Some("/dev"),
+        &root_dir.join("dev"),
+        NONE_STR,
+        BIND_REC,
+        NONE_STR,
+    )
+    .with_context(|| "Bind-mounting /dev")?;
+    mount(
+        Some("/proc"),
+        &root_dir.join("proc"),
+        Some("proc"),
+        MsFlags::empty(),
+        NONE_STR,
+    )
+    .with_context(|| "Bind-mounting /proc")?;
+    mount(
+        Some("/sys"),
+        &root_dir.join("sys"),
+        NONE_STR,
+        BIND_REC,
+        NONE_STR,
+    )
+    .with_context(|| "Bind-mounting /sys")?;
 
     for spec in cfg.bind_mounts {
         let target = root_dir.join(spec.mount_path.strip_prefix("/")?);
         // Paths are sometimes provided as relative paths, but we changed directory earlier.
         // Thus, we need to join to the old working directory.
         let source = orig_wd.join(spec.source);
-        dir_builder.create(target.parent().with_context(|| "Can't bind-mount the root directory")?)?;
+        dir_builder.create(
+            target
+                .parent()
+                .with_context(|| "Can't bind-mount the root directory")?,
+        )?;
 
         // When bind-mounting, the destination must exist.
         if !target.try_exists()? {
@@ -311,7 +368,11 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
             if info.is_dir() {
                 dir_builder.create(&target)?;
             } else {
-                std::fs::OpenOptions::new().create(true).write(true).mode(0o755).open(&target)?;
+                std::fs::OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .mode(0o755)
+                    .open(&target)?;
             }
         }
 
@@ -323,9 +384,12 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
             NONE_STR,
             &target,
             NONE_STR,
-            MsFlags::MS_REMOUNT.union(MsFlags::MS_BIND).union(MsFlags::MS_RDONLY),
-            NONE_STR)
-            .with_context(|| format!("Failed remounting {target:?} as read-only"))?;
+            MsFlags::MS_REMOUNT
+                .union(MsFlags::MS_BIND)
+                .union(MsFlags::MS_RDONLY),
+            NONE_STR,
+        )
+        .with_context(|| format!("Failed remounting {target:?} as read-only"))?;
     }
 
     pivot_root(&root_dir, &root_dir.join("host")).with_context(|| "Failed to pivot root")?;
@@ -342,7 +406,10 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
 
     std::env::set_current_dir(&cfg.chdir).with_context(|| format!("chdir to {:?}", cfg.chdir))?;
 
-    let cmd = cmd.into_iter().map(CString::new).collect::<Result<Vec<CString>, _>>()?;
+    let cmd = cmd
+        .into_iter()
+        .map(CString::new)
+        .collect::<Result<Vec<CString>, _>>()?;
     execvp(&cmd[0], &cmd)?;
     unreachable!();
 }

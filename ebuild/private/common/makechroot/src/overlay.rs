@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 use anyhow::{bail, Result};
 use path_absolutize::Absolutize;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{path::Path, path::PathBuf, str::FromStr};
 
 fn from_str(spec: &str) -> Result<(PathBuf, PathBuf)> {

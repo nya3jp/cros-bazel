@@ -16,13 +16,13 @@ pub struct ConfigArgs {
     sdk: Vec<PathBuf>,
 
     #[arg(
-    long,
-    help = "<inside path>=<squashfs file | directory | tar.*>: Mounts the file or directory at \
+        long,
+        help = "<inside path>=<squashfs file | directory | tar.*>: Mounts the file or directory at \
             the specified path. Inside path can be absolute or relative to /mnt/host/source/.",
-    required = true
+        required = true
     )]
     overlay: Vec<OverlayInfo>,
-    
+
     #[arg(long)]
     ebuild_log: Option<PathBuf>,
 
@@ -34,7 +34,6 @@ pub struct ConfigArgs {
     )]
     login_mode: LoginMode,
 }
-
 
 impl Config {
     pub fn try_from(args: ConfigArgs) -> Result<Config> {

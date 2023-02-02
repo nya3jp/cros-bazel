@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 use anyhow::Result;
 use makechroot::{BindMount, OverlayInfo};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};

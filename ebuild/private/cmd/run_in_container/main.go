@@ -141,7 +141,7 @@ var flagStagingDir = &cli.StringFlag{
 	Name:     "scratch-dir",
 	Required: true,
 	Usage: "Directory that will be used by the overlayfs mount. " +
-			"Output artifacts can be found in the 'diff' directory.",
+		"Output artifacts can be found in the 'diff' directory.",
 }
 
 var flagChdir = &cli.StringFlag{
@@ -152,18 +152,18 @@ var flagChdir = &cli.StringFlag{
 var flagOverlay = &cli.StringSliceFlag{
 	Name: "overlay",
 	Usage: "<inside>=<outside>. " +
-			"Mounts a file system layer found at an outside path to a directory " +
-			"inside the container at the specified inside path. " +
-			"This option can be specified multiple times. The earlier " +
-			"overlays are mounted as the higher layer, and the later " +
-			"overlays are mounted as the lower layer.",
+		"Mounts a file system layer found at an outside path to a directory " +
+		"inside the container at the specified inside path. " +
+		"This option can be specified multiple times. The earlier " +
+		"overlays are mounted as the higher layer, and the later " +
+		"overlays are mounted as the lower layer.",
 	Required: true,
 }
 
 var flagBindMount = &cli.StringSliceFlag{
 	Name: "bind-mount",
 	Usage: "<mountpoint>=<source>. " +
-			"Mounts a file contained at source to the mountpoint specified",
+		"Mounts a file contained at source to the mountpoint specified",
 }
 
 var flagKeepHostMount = &cli.BoolFlag{

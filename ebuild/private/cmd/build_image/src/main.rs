@@ -34,9 +34,8 @@ fn main() -> Result<()> {
     let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
 
     cfg.bind_mounts.push(BindMount {
-        source: r.rlocation(
-            "cros/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos",
-        ),
+        source: r
+            .rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos"),
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("var/cache/edb/chromeos"),
@@ -54,9 +53,8 @@ fn main() -> Result<()> {
         mount_path: PathBuf::from("/mnt/host/bazel-build/install_deps.sh"),
     });
     cfg.bind_mounts.push(BindMount {
-        source: r.rlocation(
-            "cros/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh",
-        ),
+        source: r
+            .rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
     });
 
@@ -105,9 +103,9 @@ fn main() -> Result<()> {
     cfg.bind_mounts.append(&mut mounts);
     // setup_board.sh creates emerge-{board} and portageq-{board}, both of
     // which are used by build_image.sh
-    let board_script_template = &std::fs::read(r.rlocation(
-        "cros/bazel/ebuild/private/cmd/build_image/container_files/board_script.sh",
-    ))?;
+    let board_script_template = &std::fs::read(
+        r.rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/board_script.sh"),
+    )?;
     // TODO: stop hardcoding aarch64-cros-linux-gnu.
     let board_script = from_utf8(board_script_template)?
         .replace("${BOARD}", &args.board)
@@ -136,20 +134,20 @@ fn main() -> Result<()> {
 
     let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
 
-    sdk.run_cmd(|cmd| cmd
-            .args([
-                MAIN_SCRIPT,
-                &format!("--board={}", &args.board),
-                // TODO: at some point, we should support a variety of image types
-                "base",
-            ])
-            // TODO: add unparsed command-line args.
-            .envs(env)
-            .env("BOARD", &args.board)
-            .env("RUNFILES_DIR", runfiles_dir)
-            .env("HOST_UID", users::get_current_uid().to_string())
-            .env("HOST_GID", users::get_current_gid().to_string()),
-    )?;
+    sdk.run_cmd(|cmd| {
+        cmd.args([
+            MAIN_SCRIPT,
+            &format!("--board={}", &args.board),
+            // TODO: at some point, we should support a variety of image types
+            "base",
+        ])
+        // TODO: add unparsed command-line args.
+        .envs(env)
+        .env("BOARD", &args.board)
+        .env("RUNFILES_DIR", runfiles_dir)
+        .env("HOST_UID", users::get_current_uid().to_string())
+        .env("HOST_GID", users::get_current_gid().to_string())
+    })?;
 
     let path = Path::new("mnt/host/source/src/build/images")
         .join(args.board)
