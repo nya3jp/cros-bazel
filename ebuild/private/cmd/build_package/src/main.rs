@@ -179,16 +179,18 @@ fn main() -> Result<()> {
         spec.install(&sysroot)?;
     }
     let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
-    sdk.run_cmd(|cmd| cmd.args([
-        MAIN_SCRIPT,
-        "ebuild",
-        "--skip-manifest",
-        &ebuild_path.to_string_lossy(),
-        "clean",
-        "package",
-    ])
+    sdk.run_cmd(|cmd| {
+        cmd.args([
+            MAIN_SCRIPT,
+            "ebuild",
+            "--skip-manifest",
+            &ebuild_path.to_string_lossy(),
+            "clean",
+            "package",
+        ])
         .env("BOARD", args.board)
-        .env("RUNFILES_DIR", runfiles_dir))?;
+        .env("RUNFILES_DIR", runfiles_dir);
+    })?;
 
     let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",
