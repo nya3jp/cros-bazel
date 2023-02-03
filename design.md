@@ -55,3 +55,34 @@ ebuild(
 ```
 
 This removes bazel from having to understand anything about `USE` flags, portages dependency resolution logic, and keeps the generated `BUILD` files readable.
+
+#### Flag Overrides
+
+Portage supports setting the `USE` environment variable when invoking `emerge`:
+
+    USE="debug" emerge-$BOARD sys-kernel/chromeos-kernel-upstream
+
+This invocation overrides the `USE` flags defined in the `overlays`, but it only override the `USE`
+flag for packages installed by the `emerge` invocation. It doesn't apply globally to all packages
+that are already installed unless you specify `--deep` and `--newuse`. We want to support something
+similar.
+
+When invoking `bazel` with the `USE` environment variable it will be taken into account when
+`alchemist` does the `USE` flag calculations. It will be applied globally though, so it will affect
+ALL packages that declare that `USE` flag.
+
+    BOARD=arm64-generic USE=debug bazel build @portage//sys-kernel/chromeos-kernel-upstream
+
+This might be undesirable since it could have a drastic effect on the dependency graph. Instead of
+using the global `USE` option, we will provide the user a [package.use](https://wiki.gentoo.org/wiki//etc/portage/package.use) file that they can use to override the individual `USE` flags for the packages they care about.
+
+src/package.use.user:
+```
+sys-kernel/chromeos-kernel-upstream debug
+```
+
+`alchemist` will consume the file when calculating the `USE` flags and apply it as an override source.
+The benefits of this approach are that it's well documented, and well understood. It also removes
+the burden of having to remember which debug `USE` flags you normally set on a package.
+
+TODO: Should we support a `host` `package.use` and a `target` `package.use`?
