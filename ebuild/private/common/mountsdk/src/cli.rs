@@ -18,7 +18,7 @@ pub struct ConfigArgs {
     #[arg(
         long,
         help = "<inside path>=<squashfs file | directory | tar.*>: Mounts the file or directory at \
-            the specified path. Inside path can be absolute or relative to /mnt/host/source/.",
+            the specified path. Inside path must be absolute.",
         required = true
     )]
     overlay: Vec<OverlayInfo>,

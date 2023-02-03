@@ -262,10 +262,11 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
 
     // Ensure mountpoints to exist in base.
     for (mount_dir, lower_dirs) in lower_dirs_by_mount_dir.iter_mut() {
-        let actual_mount_dir = match mount_dir.strip_prefix("/") {
-            Ok(mount_dir_no_slash) => base_dir.join(mount_dir_no_slash),
-            Err(_) => base_dir.join("mnt/host/source").join(mount_dir),
-        };
+        let actual_mount_dir = base_dir.join(
+            mount_dir
+                .strip_prefix("/")
+                .with_context(|| "overlay mount path must be absolute")?,
+        );
         dir_builder.create(&actual_mount_dir)?;
         lower_dirs.push(actual_mount_dir);
     }

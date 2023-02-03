@@ -21,7 +21,7 @@ var flagOverlay = &cli.StringSliceFlag{
 	Required: true,
 	Usage: "<inside path>=<squashfs file | directory | tar.*>: " +
 		"Mounts the file or directory at the specified path. " +
-		"Inside path can be absolute or relative to /mnt/host/source/.",
+		"Inside path must be absolute.",
 }
 
 var flagLogin = &cli.StringFlag{
