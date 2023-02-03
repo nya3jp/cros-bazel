@@ -34,15 +34,23 @@ ln -s ~/go/bin/bazelisk ~/bin/bazel
 
 ## Building
 
-Until [b/265214747](http://b/265214747) is fixed, you need to first set up
-a board inside the conventional CrOS SDK. For example, if you're building
+*** note
+**NOTE**: Until [b/265214747](http://b/265214747) is fixed, you need to first
+set up a board inside the conventional CrOS SDK. For example, if you're building
 for arm64-generic:
 
 ```
 cros_sdk setup_board --board=arm64-generic
 ```
+***
 
-Then you can start building packages. To build sys-apps/attr for example:
+*** note
+**NOTE**: If you see 403 errors on downloading Lacros files, use
+`bazel/tools/download_lacros.sh` to download them with corp credentials.
+See [go/gcloud-cli](http://go/gcloud-cli) for how to install and set up gcloud.
+***
+
+To build sys-apps/attr:
 
 ```sh
 $ BOARD=arm64-generic bazel build @portage//sys-apps/attr
