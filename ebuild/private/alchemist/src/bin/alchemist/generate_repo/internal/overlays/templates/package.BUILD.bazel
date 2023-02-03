@@ -1,6 +1,20 @@
-load("@//bazel/ebuild:defs.bzl", "ebuild", "package_set")
+load("@//bazel/ebuild:defs.bzl", "binary_package", "ebuild", "package_set")
 
-{% for ebuild in ebuilds -%}
+{%- for ebuild in ebuilds %}
+{%- if ebuild.binary_package_src %}
+binary_package(
+    name = "{{ ebuild.version }}",
+    src = "{{ ebuild.binary_package_src }}",
+    {%- if ebuild.runtime_deps %}
+    runtime_deps = [
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    visibility = ["//visibility:public"],
+)
+{%- else %}
 ebuild(
     name = "{{ ebuild.version }}",
     ebuild = "{{ ebuild.ebuild_name }}",
@@ -34,6 +48,7 @@ ebuild(
     sdk = "{{ ebuild.sdk }}",
     visibility = ["//visibility:public"],
 )
+{%- endif %}
 
 package_set(
     name = "{{ ebuild.version }}_package_set",
