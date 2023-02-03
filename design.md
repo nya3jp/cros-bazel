@@ -86,3 +86,59 @@ The benefits of this approach are that it's well documented, and well understood
 the burden of having to remember which debug `USE` flags you normally set on a package.
 
 TODO: Should we support a `host` `package.use` and a `target` `package.use`?
+
+### Host Tools
+
+Currently we don't support `BDEPEND`, but we would like to. We will generate a new `ebuild` target with the `host`'s portage configuration baked in.
+
+```
+ebuild(
+    name = "4.2.1-r4_host",
+    ebuild = "make-4.2.1-r4.ebuild",
+    distfiles = {
+        "@portage-dist_make-4.2.1.tar.bz2//file": "make-4.2.1.tar.bz2",
+    },
+    files = glob(["files/**", "*.bashrc"]),
+    use = ["guile", "nls", "-static"],
+    eclasses = [
+        "//internal/overlays/third_party/portage-stable/eclass:flag-o-matic",
+    ],
+    sdk = "@//bazel/sdk",
+    visibility = ["//visibility:public"],
+)
+```
+
+The `target` version of the ebuild will then include the `_host` targets as `tool_deps`.
+```
+ebuild(
+    name = "8.1_p1-r1",
+    ebuild = "readline-8.1_p1-r1.ebuild",
+    ...
+    tool_deps = [
+        "//internal/overlays/third_party/portage-stable/sys-devel/make:4.2.1-r4_host",
+    ],
+)
+```
+
+TODO: Instead of the `_host` suffix, evaluate putting `target` and `host` packages in their own sub-directories instead. i.e., `@portage//host/...` and `@portage//target/...`.
+
+TODO: Add `target_compatible_with` to `host` and `target` ebuilds once we have the attributes defined.
+
+To make it easy for users to build `host` packages, they will use the same generated aliases in the `@portage` repo as they use for the `target` packages. The difference will be they will pass in `--platforms=@portage//:host`. The generated aliases will use this in a `select` statement to choose the correct package to build.
+
+@portage//sys-devel/make/BUILD.bazel
+```
+alias(
+    name = "4.2.1-r4",
+    actual = select({
+        "//:host": ["//internal/overlays/third_party/portage-stable/sys-devel/make:4.2.1-r4_host"],
+        "//conditions:default": ["//internal/overlays/third_party/portage-stable/sys-devel/make:4.2.1-r4]
+    }),
+    visibility = ["//visibility:public"],
+)
+```
+
+An example invocation looks like so:
+```
+bazel build --platforms=@portage//:host @portage//sys-devel/make
+```
