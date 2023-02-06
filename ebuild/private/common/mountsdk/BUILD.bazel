@@ -7,50 +7,6 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
 
-go_library(
-    name = "mountsdk",
-    srcs = [
-        "cli.go",
-        "control.go",
-        "install_target.go",
-        "mountsdk.go",
-    ],
-    data = [
-        "//bazel/ebuild/private/cmd/run_in_container",
-    ],
-    embedsrcs = ["setup.sh"],
-    importpath = "cros.local/bazel/ebuild/private/common/mountsdk",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//bazel/ebuild/private/common/fileutil",
-        "//bazel/ebuild/private/common/makechroot",
-        "//bazel/ebuild/private/common/portage/binarypackage",
-        "@com_github_urfave_cli_v2//:cli",
-        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
-        "@org_golang_x_sys//unix",
-    ],
-)
-
-# If adding test data, do not depend on anything built by build_package.
-# eg. //third_party/portage-stable/category/pkg:0
-# If you do so, if there's a problem with the mountsdk library, the test will
-# be unable to build (and therefore you can't even run the test).
-go_test(
-    name = "mountsdk_test",
-    size = "small",
-    srcs = ["mountsdk_test.go"],
-    data = [
-        "testdata/mypkg.ebuild",
-        "//bazel/sdk:base_sdk",
-    ],
-    deps = [
-        ":mountsdk",
-        "//bazel/ebuild/private/common/makechroot",
-        "//bazel/ebuild/private/common/processes",
-        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
-    ],
-)
-
 sh_binary(
     name = "create_debug_file",
     srcs = ["create_debug_file.sh"],
@@ -58,8 +14,7 @@ sh_binary(
 )
 
 rust_library_crate(
-    name = "mountsdk_rust",
-    crate_name = "mountsdk",
+    name = "mountsdk",
     data = [
         "setup.sh",
         "//bazel/ebuild/private/cmd/run_in_container:run_in_container_rust",
@@ -78,8 +33,8 @@ rust_library_crate(
 # If you do so, if there's a problem with the mountsdk library, the test will
 # be unable to build (and therefore you can't even run the test).
 rust_crate_test(
-    name = "mountsdk_rust_test",
-    crate = ":mountsdk_rust",
+    name = "mountsdk_test",
+    crate = ":mountsdk",
     data = [
         "testdata/mypkg.ebuild",
         "//bazel/sdk:base_sdk",

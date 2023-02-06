@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 rust_binary_crate(
     name = "install_deps",
@@ -13,7 +12,7 @@ rust_binary_crate(
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
-        "//bazel/ebuild/private/common/mountsdk:mountsdk_rust",
+        "//bazel/ebuild/private/common/mountsdk",
         "//bazel/ebuild/private/common/processes:processes_rust",
         "//bazel/ebuild/private/common/tar:tar_rust",
     ],

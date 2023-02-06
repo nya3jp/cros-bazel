@@ -33,7 +33,7 @@ rust_binary_crate(
     ] + glob(["container_files/*"]),
     deps = [
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
-        "//bazel/ebuild/private/common/mountsdk:mountsdk_rust",
+        "//bazel/ebuild/private/common/mountsdk",
     ],
 )
 
