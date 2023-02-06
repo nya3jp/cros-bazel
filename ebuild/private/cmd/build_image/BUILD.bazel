@@ -5,67 +5,6 @@
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 load("//bazel/ebuild:defs.bzl", "overlay_set")
 load("//bazel/ebuild/private:build_image.bzl", "build_image")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
-
-bool_flag(
-    name = "use_rust_build_image",
-    build_setting_default = True,
-)
-
-config_setting(
-    name = "is_build_image_rust",
-    flag_values = {
-        ":use_rust_build_image": "true",
-    },
-)
-
-alias(
-    name = "build_image",
-    actual = select({
-        ":is_build_image_rust": ":build_image_rust",
-        "//conditions:default": ":build_image_go",
-    }),
-    visibility = ["//visibility:public"],
-)
-
-DATA = [
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gdb",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:glibc",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:go",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libcxx",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
-    "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
-    "//bazel/ebuild/private/cmd/install_deps:install_deps.sh",
-] + glob(["container_files/*"])
-
-go_library(
-    name = "build_image_lib",
-    srcs = ["main.go"],
-    data = DATA,
-    importpath = "cros.local/bazel/ebuild/private/cmd/build_image",
-    visibility = ["//visibility:private"],
-    deps = [
-        "//bazel/ebuild/private/common/bazelutil",
-        "//bazel/ebuild/private/common/fileutil",
-        "//bazel/ebuild/private/common/makechroot",
-        "//bazel/ebuild/private/common/mountsdk",
-        "//bazel/ebuild/private/common/processes",
-        "@com_github_urfave_cli_v2//:cli",
-        "@io_bazel_rules_go//go/runfiles:go_default_library",
-        "@org_golang_x_sys//unix",
-    ],
-)
-
-go_binary(
-    name = "build_image_go",
-    embed = [":build_image_lib"],
-    visibility = ["//visibility:public"],
-)
 
 # build_image is relying on emerge to install the binpkgs this means we need
 # a fully functional portage environment.
@@ -100,9 +39,21 @@ build_image(
 )
 
 rust_binary_crate(
-    name = "build_image_rust",
+    name = "build_image",
     crate_name = "build_image",
-    data = DATA,
+    data = [
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gdb",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:glibc",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:go",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libcxx",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
+        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
+        "//bazel/ebuild/private/cmd/install_deps:install_deps.sh",
+    ] + glob(["container_files/*"]),
     deps = [
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
         "//bazel/ebuild/private/common/mountsdk:mountsdk_rust",
@@ -110,6 +61,6 @@ rust_binary_crate(
 )
 
 rust_crate_test(
-    name = "build_image_rust_test",
-    crate = ":build_image_rust",
+    name = "build_image_test",
+    crate = ":build_image",
 )
