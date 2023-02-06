@@ -1,15 +1,3 @@
 # Copyright 2022 The ChromiumOS Authors.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
-
-rust_binary_crate(
-    name = "alchemist",
-    deps = ["//bazel/ebuild/private/common/standard/version:version_rust"],
-)
-
-rust_crate_test(
-    name = "alchemist_test",
-    crate = ":alchemist",
-)
