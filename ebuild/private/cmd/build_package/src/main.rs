@@ -148,8 +148,6 @@ fn main() -> Result<()> {
         mount_path: ebuild_path.clone(),
     });
 
-    cfg.remounts.push(ebuild_mount_dir.clone());
-
     for mount in args.file {
         cfg.bind_mounts.push(BindMount {
             source: mount.source,

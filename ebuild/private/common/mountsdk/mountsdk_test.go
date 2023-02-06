@@ -55,7 +55,6 @@ func TestRunInSdk(t *testing.T) {
 				MountPath: "/hello",
 			},
 		},
-		Remounts: []string{filepath.Join(portageStable, "mypkg")},
 	}
 
 	if err := mountsdk.RunInSDK(&cfg, func(s *mountsdk.MountedSDK) error {

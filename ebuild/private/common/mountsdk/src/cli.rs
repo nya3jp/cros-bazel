@@ -48,7 +48,6 @@ impl Config {
         return Ok(Config {
             overlays: new_overlays,
             login_mode: args.login_mode,
-            remounts: Vec::new(),
             cmd_prefix: vec![],
             bind_mounts: Vec::new(),
             log_file: args.ebuild_log,

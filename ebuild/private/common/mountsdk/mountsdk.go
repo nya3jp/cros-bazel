@@ -35,10 +35,6 @@ const (
 type Config struct {
 	Overlays   []makechroot.OverlayInfo
 	BindMounts []makechroot.BindMount
-	// A list of paths which need to be remounted on top of the overlays.
-	// For example, if you specify an overlay for /dir, but you want /dir/subdir
-	// to come from the host, add /dir/subdir to Remounts.
-	Remounts []string
 
 	RunInContainerExtraArgs []string
 	loginMode               loginMode
@@ -84,17 +80,6 @@ func RunInSDK(cfg *Config, action Action) error {
 		"--overlay=/=" + sdk.RootDir.Outside(),
 	},
 		cfg.RunInContainerExtraArgs...)
-
-	for _, remount := range cfg.Remounts {
-		if !filepath.IsAbs(remount) {
-			return fmt.Errorf("expected remounts to be an absolute path: got %s", remount)
-		}
-		dualPath := sdk.RootDir.Add(remount[1:])
-		if err := os.MkdirAll(dualPath.Outside(), 0755); err != nil {
-			return err
-		}
-		args = append(args, "--overlay="+dualPath.Inside()+"="+dualPath.Outside())
-	}
 
 	for _, overlay := range cfg.Overlays {
 		args = append(args, fmt.Sprintf("--overlay=%s=%s", overlay.MountDir, overlay.ImagePath))

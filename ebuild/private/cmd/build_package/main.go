@@ -247,7 +247,6 @@ var app = &cli.App{
 			Source:    v[1],
 			MountPath: filepath.Join(mountsdk.SourceDir, "src", ebuildMetadata.Overlay, ebuildMetadata.Category, ebuildMetadata.PackageName, filepath.Base(ebuildSource)),
 		}
-		cfg.Remounts = append(cfg.Remounts, filepath.Dir(ebuildFile.MountPath))
 
 		cfg.BindMounts = append(cfg.BindMounts, ebuildFile)
 		for _, fileSpec := range fileSpecs {

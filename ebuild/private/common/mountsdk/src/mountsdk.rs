@@ -26,10 +26,6 @@ pub(crate) enum LoginMode {
 pub struct Config {
     pub overlays: Vec<OverlayInfo>,
     pub bind_mounts: Vec<BindMount>,
-    // A list of paths which need to be remounted on top of the overlays.
-    // For example, if you specify an overlay for /dir, but you want /dir/subdir
-    // to come from the host, add /dir/subdir to Remounts.
-    pub remounts: Vec<PathBuf>,
 
     pub cmd_prefix: Vec<String>,
     pub(crate) login_mode: LoginMode,
@@ -85,17 +81,6 @@ impl MountedSDK {
             .stderr(Stdio::inherit());
         let serialized_path = tmp_dir.path().join("run_in_container_args.json");
         cmd.arg("--cfg").arg(&serialized_path);
-
-        for remount in cfg.remounts.iter() {
-            let remount_relative = remount.strip_prefix("/")?;
-            let mount_dir = root_dir.inside.join(remount_relative);
-            let image_path = root_dir.outside.join(remount_relative);
-            std::fs::create_dir_all(&image_path)?;
-            overlays.push(OverlayInfo {
-                mount_dir,
-                image_path,
-            });
-        }
 
         overlays.extend(cfg.overlays);
 
@@ -216,7 +201,6 @@ mod tests {
                     mount_path: "/hello".into(),
                 },
             ],
-            remounts: vec![portage_stable.join("mypkg")],
             cmd_prefix: vec![],
             login_mode: Never,
             log_file: None,
