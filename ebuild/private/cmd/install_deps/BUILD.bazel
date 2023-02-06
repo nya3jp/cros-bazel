@@ -4,58 +4,9 @@
 
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
-
-bool_flag(
-    name = "use_rust_install_deps",
-    build_setting_default = True,
-)
-
-config_setting(
-    name = "is_install_deps_rust",
-    flag_values = {
-        ":use_rust_install_deps": "true",
-    },
-)
-
-alias(
-    name = "install_deps",
-    actual = select({
-        ":is_install_deps_rust": ":install_deps_rust",
-        "//conditions:default": ":install_deps_go",
-    }),
-    visibility = ["//visibility:public"],
-)
-
-go_library(
-    name = "install_deps_lib",
-    srcs = ["main.go"],
-    data = [":install_deps.sh"],
-    importpath = "cros.local/bazel/ebuild/private/cmd/install_deps",
-    visibility = ["//visibility:private"],
-    deps = [
-        "//bazel/ebuild/private/common/bazelutil",
-        "//bazel/ebuild/private/common/cliutil",
-        "//bazel/ebuild/private/common/fileutil",
-        "//bazel/ebuild/private/common/makechroot",
-        "//bazel/ebuild/private/common/mountsdk",
-        "//bazel/ebuild/private/common/processes",
-        "//bazel/ebuild/private/common/tar",
-        "@com_github_urfave_cli_v2//:cli",
-        "@io_bazel_rules_go//go/runfiles:go_default_library",
-        "@org_golang_x_sys//unix",
-    ],
-)
-
-go_binary(
-    name = "install_deps_go",
-    embed = [":install_deps_lib"],
-    visibility = ["//visibility:public"],
-)
 
 rust_binary_crate(
-    name = "install_deps_rust",
-    crate_name = "install_deps",
+    name = "install_deps",
     data = [":install_deps.sh"],
     visibility = ["//visibility:public"],
     deps = [
