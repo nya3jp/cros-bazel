@@ -84,19 +84,19 @@ build_image(
         "@chromite//:src",
     ],
     build_deps = [
-        # Copied from target-os:0_package_set's deps
-        "//third_party/chromiumos-overlay/chromeos-base/patchpanel:0",
-        "//third_party/chromiumos-overlay/sys-apps/hwids:0",
-        "//third_party/chromiumos-overlay/virtual/target-os:0",
-        "//third_party/chromiumos-overlay/virtual/ttf-fonts:0",
-        "//third_party/portage-stable/app-misc/ca-certificates:0",
-        "//third_party/portage-stable/net-dialup/ppp-scripts:0",
-        "//third_party/portage-stable/sys-apps/coreutils:0",
-        "//third_party/portage-stable/sys-auth/pambase:0",
-        "//third_party/portage-stable/sys-devel/llvm-common:0",
+        # Copied from @portage//virtual/target-os:package_set's deps
+        "@portage//chromeos-base/patchpanel",
+        "@portage//sys-apps/hwids",
+        "@portage//virtual/target-os",
+        "@portage//virtual/ttf-fonts",
+        "@portage//app-misc/ca-certificates",
+        "@portage//net-dialup/ppp-scripts",
+        "@portage//sys-apps/coreutils",
+        "@portage//sys-auth/pambase",
+        "@portage//sys-devel/llvm-common",
     ],
     overlays = ":overlays_build_image",
-    sdk = "//bazel/sdk:arm64-generic",
+    sdk = "@portage//internal/sdk",
 )
 
 rust_binary_crate(
