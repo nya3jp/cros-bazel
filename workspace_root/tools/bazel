@@ -34,7 +34,8 @@ if BAZELISK="$(command -v bazelisk)"; then
     if [[ "$#" -gt 1 ]]; then
         ARGS+=("$1")
         shift
-        ARGS+=("--repo_env=_CACHE_BUST_DATE="$(date --iso-8601=ns)"")
+        CACHE_BUST_DATE="${CACHE_BUST_DATE:-$(date --iso-8601=ns)}"
+        ARGS+=("--repo_env=_CACHE_BUST_DATE=${CACHE_BUST_DATE}")
     fi
 
     exec "${BAZELISK}" "${ARGS[@]}" "$@"
