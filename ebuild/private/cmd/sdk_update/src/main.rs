@@ -4,7 +4,7 @@
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use makechroot::OverlayInfo;
+use makechroot::{BindMount, OverlayInfo};
 use std::path::PathBuf;
 use std::process::Command;
 use tempfile::tempdir;
@@ -90,34 +90,37 @@ fn main() -> Result<()> {
     )
     .with_context(|| "Failed to copy the script.")?;
 
-    let mut overlays = vec![
-        OverlayInfo {
-            mount_dir: stage_dir.inside,
-            image_path: stage_dir.outside,
-        },
-        OverlayInfo {
-            mount_dir: host_packages_dir.inside,
-            image_path: host_packages_dir.outside,
-        },
-        OverlayInfo {
-            mount_dir: target_packages_dir.inside,
-            image_path: target_packages_dir.outside,
-        },
-    ];
-    for input_path in args.input {
-        overlays.push(OverlayInfo {
+    let overlays = args
+        .input
+        .into_iter()
+        .map(|input_path| OverlayInfo {
             mount_dir: PathBuf::from("/"),
             image_path: input_path,
-        });
-    }
-    overlays.extend_from_slice(&args.overlay);
+        })
+        .chain(args.overlay.into_iter())
+        .collect();
+
+    let bind_mounts = vec![
+        BindMount {
+            mount_path: stage_dir.inside,
+            source: stage_dir.outside,
+        },
+        BindMount {
+            mount_path: host_packages_dir.inside,
+            source: host_packages_dir.outside,
+        },
+        BindMount {
+            mount_path: target_packages_dir.inside,
+            source: target_packages_dir.outside,
+        },
+    ];
 
     let config_path = tmp_dir.path().join("run_in_container_args.json");
     run_in_container_lib::RunInContainerConfig {
         staging_dir: scratch_dir,
         chdir: PathBuf::from("/"),
         overlays,
-        bind_mounts: vec![],
+        bind_mounts,
         keep_host_mount: false,
     }
     .serialize_to(&config_path)?;

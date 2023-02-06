@@ -149,9 +149,9 @@ var app = &cli.App{
 		args := []string{
 			runInContainerPath,
 			"--scratch-dir=" + scratchDir,
-			"--overlay=" + stageDir.Inside() + "=" + stageDir.Outside(),
-			"--overlay=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
-			"--overlay=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
+			"--bind-mount=" + stageDir.Inside() + "=" + stageDir.Outside(),
+			"--bind-mount=" + hostPackagesDir.Inside() + "=" + hostPackagesDir.Outside(),
+			"--bind-mount=" + targetPackagesDir.Inside() + "=" + targetPackagesDir.Outside(),
 		}
 
 		for _, inputPath := range inputPaths {
