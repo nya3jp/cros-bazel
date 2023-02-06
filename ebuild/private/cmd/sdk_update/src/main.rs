@@ -27,9 +27,6 @@ struct Cli {
     #[arg(long, required = true)]
     board: String,
 
-    #[arg(long, required = true)]
-    overlay: Vec<OverlayInfo>,
-
     #[arg(long)]
     install_host: Vec<PathBuf>,
 
@@ -97,7 +94,6 @@ fn main() -> Result<()> {
             mount_dir: PathBuf::from("/"),
             image_path: input_path,
         })
-        .chain(args.overlay.into_iter())
         .collect();
 
     let bind_mounts = vec![

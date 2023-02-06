@@ -51,11 +51,6 @@ var flagBoard = &cli.StringFlag{
 	Required: true,
 }
 
-var flagOverlay = &cli.StringSliceFlag{
-	Name:     "overlay",
-	Required: true,
-}
-
 var flagInstallHost = &cli.StringSliceFlag{
 	Name: "install-host",
 }
@@ -74,7 +69,6 @@ var app = &cli.App{
 		flagOutputDir,
 		flagOutputSymlinkTar,
 		flagBoard,
-		flagOverlay,
 		flagInstallHost,
 		flagInstallTarget,
 		flagInstallTarball,
@@ -89,10 +83,6 @@ var app = &cli.App{
 		outputDirPath := c.String(flagOutputDir.Name)
 		outputSymlinkTarPath := c.String(flagOutputSymlinkTar.Name)
 		board := c.String(flagBoard.Name)
-		overlays, err := makechroot.ParseOverlaySpecs(c.StringSlice(flagOverlay.Name))
-		if err != nil {
-			return err
-		}
 		hostInstallPaths := c.StringSlice(flagInstallHost.Name)
 		targetInstallPaths := c.StringSlice(flagInstallTarget.Name)
 		tarballPaths := c.StringSlice(flagInstallTarball.Name)
@@ -156,10 +146,6 @@ var app = &cli.App{
 
 		for _, inputPath := range inputPaths {
 			args = append(args, "--overlay=/="+inputPath)
-		}
-
-		for _, overlay := range overlays {
-			args = append(args, "--overlay="+overlay.MountDir+"="+overlay.ImagePath)
 		}
 
 		args = append(args, scriptPath.Inside())
