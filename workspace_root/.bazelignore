@@ -1,0 +1,2 @@
+bazel/workspace_root
+bazel/ebuild/private/alchemist/src/bin/alchemist/generate_repo/internal/sources/testdata
