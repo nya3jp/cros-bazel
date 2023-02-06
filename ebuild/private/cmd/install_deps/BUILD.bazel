@@ -8,7 +8,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 bool_flag(
     name = "use_rust_install_deps",
-    build_setting_default = False,
+    build_setting_default = True,
 )
 
 config_setting(
@@ -26,7 +26,6 @@ alias(
     }),
     visibility = ["//visibility:public"],
 )
-
 
 go_library(
     name = "install_deps_lib",
