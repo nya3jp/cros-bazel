@@ -121,8 +121,6 @@ fn main() -> Result<()> {
     }
     .serialize_to(&config_path)?;
 
-    let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
-
     processes::run_and_check(
         Command::new(run_in_container_path)
             .arg("--cfg")
@@ -132,7 +130,6 @@ fn main() -> Result<()> {
             .envs(std::env::vars())
             .env("PATH", "/usr/sbin:/usr/bin:/sbin:/bin")
             .env("BOARD", &args.board)
-            .env("RUNFILES_DIR", runfiles_dir)
             .env("INSTALL_ATOMS_HOST", host_install_atoms.join(" "))
             .env("INSTALL_ATOMS_TARGET", target_install_atoms.join(" ")),
     )

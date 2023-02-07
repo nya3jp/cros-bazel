@@ -51,6 +51,7 @@ pub fn main() -> Result<()> {
     let args = Cli::parse();
 
     if !args.already_in_namespace {
+        fix_runfiles_env()?;
         enter_namespace()?
     } else {
         continue_namespace(RunInContainerConfig::deserialize_from(&args.cfg)?, args.cmd)?
@@ -103,6 +104,15 @@ fn resolve_overlay_source_path(input_path: &Path) -> Result<PathBuf> {
     // In the case that the directory is empty, we still want the returned path to
     // be valid.
     Ok(PathBuf::from(input_path))
+}
+
+/// Fixes the RUNFILES_DIR environment variable to make it an absolute path so that runfiles can be
+/// found even after changing the current directory.
+fn fix_runfiles_env() -> Result<()> {
+    let r = runfiles::Runfiles::create()?;
+    let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
+    std::env::set_var("RUNFILES_DIR", runfiles_dir);
+    Ok(())
 }
 
 fn enter_namespace() -> Result<()> {

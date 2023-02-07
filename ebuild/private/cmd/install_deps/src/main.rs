@@ -55,12 +55,8 @@ fn main() -> Result<()> {
     std::fs::create_dir_all(out_dir)?;
     std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
 
-    let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
     sdk.run_cmd(|cmd| {
-        cmd.args([MAIN_SCRIPT])
-            .envs(env)
-            .env("BOARD", &args.board)
-            .env("RUNFILES_DIR", runfiles_dir);
+        cmd.args([MAIN_SCRIPT]).envs(env).env("BOARD", &args.board);
     })?;
 
     fileutil::move_dir_contents(sdk.diff_dir().as_path(), args.output_dir.as_path())?;

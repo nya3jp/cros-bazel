@@ -132,8 +132,6 @@ fn main() -> Result<()> {
         board_script.replace("${COMMAND}", "portageq"),
     )?;
 
-    let runfiles_dir = std::env::current_dir()?.join(r.rlocation(""));
-
     sdk.run_cmd(|cmd| {
         cmd.args([
             MAIN_SCRIPT,
@@ -144,7 +142,6 @@ fn main() -> Result<()> {
         // TODO: add unparsed command-line args.
         .envs(env)
         .env("BOARD", &args.board)
-        .env("RUNFILES_DIR", runfiles_dir)
         .env("HOST_UID", users::get_current_uid().to_string())
         .env("HOST_GID", users::get_current_gid().to_string());
     })?;
