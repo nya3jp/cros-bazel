@@ -18,9 +18,6 @@ pub struct Cli {
     mountsdk_config: mountsdk::ConfigArgs,
 
     #[arg(long)]
-    board: String,
-
-    #[arg(long)]
     output: PathBuf,
 
     #[arg(long, required = true)]
@@ -37,7 +34,7 @@ fn main() -> Result<()> {
         source: r
             .rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos"),
         mount_path: Path::new("/build")
-            .join(&args.board)
+            .join(&cfg.board)
             .join("var/cache/edb/chromeos"),
     });
     cfg.bind_mounts.push(BindMount {
@@ -45,7 +42,7 @@ fn main() -> Result<()> {
             "cros/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
         ),
         mount_path: Path::new("/build")
-            .join(&args.board)
+            .join(&cfg.board)
             .join("etc/portage/profile/package.provided"),
     });
     cfg.bind_mounts.push(BindMount {
@@ -94,7 +91,7 @@ fn main() -> Result<()> {
         });
     }
 
-    let target_packages_dir = Path::new("/build").join(&args.board).join("packages");
+    let target_packages_dir = Path::new("/build").join(&cfg.board).join("packages");
     // get_mounts_and_env returns a set of environment variables for the packages you want to
     // install. We want to drop this to avoid calling emerge on every package which we know is
     // already installed.
@@ -108,7 +105,7 @@ fn main() -> Result<()> {
     )?;
     // TODO: stop hardcoding aarch64-cros-linux-gnu.
     let board_script = from_utf8(board_script_template)?
-        .replace("${BOARD}", &args.board)
+        .replace("${BOARD}", &cfg.board)
         .replace("${CHOST}", "aarch64-cros-linux-gnu");
 
     // I have no idea why, but I happened to be trying to run this in a nested
@@ -122,32 +119,32 @@ fn main() -> Result<()> {
         "--mount".to_string(),
         "--".to_string(),
     ];
+    cfg.envs = env;
+    cfg.envs
+        .insert("HOST_UID".to_owned(), users::get_current_uid().to_string());
+    cfg.envs
+        .insert("HOST_GID".to_owned(), users::get_current_gid().to_string());
+
     let mut sdk = MountedSDK::new(cfg)?;
     sdk.write(
-        format!("/usr/bin/emerge-{}", &args.board),
+        format!("/usr/bin/emerge-{}", &sdk.board),
         board_script.replace("${COMMAND}", "emerge --root-deps"),
     )?;
     sdk.write(
-        format!("/usr/bin/portageq-{}", &args.board),
+        format!("/usr/bin/portageq-{}", &sdk.board),
         board_script.replace("${COMMAND}", "portageq"),
     )?;
 
-    sdk.run_cmd(|cmd| {
-        cmd.args([
-            MAIN_SCRIPT,
-            &format!("--board={}", &args.board),
-            // TODO: at some point, we should support a variety of image types
-            "base",
-        ])
+    sdk.run_cmd(&[
+        MAIN_SCRIPT,
+        &format!("--board={}", &sdk.board),
+        // TODO: at some point, we should support a variety of image types
+        "base",
         // TODO: add unparsed command-line args.
-        .envs(env)
-        .env("BOARD", &args.board)
-        .env("HOST_UID", users::get_current_uid().to_string())
-        .env("HOST_GID", users::get_current_gid().to_string());
-    })?;
+    ])?;
 
     let path = Path::new("mnt/host/source/src/build/images")
-        .join(args.board)
+        .join(&sdk.board)
         .join("latest_chromiumos_base_image.bin");
     std::fs::copy(sdk.diff_dir().join(path), args.output)?;
 

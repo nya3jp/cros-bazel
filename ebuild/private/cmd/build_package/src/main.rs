@@ -22,9 +22,6 @@ struct Cli {
     mountsdk_config: ConfigArgs,
 
     #[arg(long, required = true)]
-    board: String,
-
-    #[arg(long, required = true)]
     ebuild: EbuildMetadata,
 
     #[arg(long)]
@@ -162,7 +159,7 @@ fn main() -> Result<()> {
         })
     }
 
-    let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();
+    let target_packages_dir: PathBuf = ["/build", &cfg.board, "packages"].iter().collect();
 
     let mut sdk = MountedSDK::new(cfg)?;
     let out_dir = sdk
@@ -172,21 +169,18 @@ fn main() -> Result<()> {
     std::fs::create_dir_all(out_dir)?;
     std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
 
-    let sysroot = sdk.root_dir().join("build").join(&args.board).outside;
+    let sysroot = sdk.root_dir().join("build").join(&sdk.board).outside;
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
     }
-    sdk.run_cmd(|cmd| {
-        cmd.args([
-            MAIN_SCRIPT,
-            "ebuild",
-            "--skip-manifest",
-            &ebuild_path.to_string_lossy(),
-            "clean",
-            "package",
-        ])
-        .env("BOARD", args.board);
-    })?;
+    sdk.run_cmd(&[
+        MAIN_SCRIPT,
+        "ebuild",
+        "--skip-manifest",
+        &ebuild_path.to_string_lossy(),
+        "clean",
+        "package",
+    ])?;
 
     let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",

@@ -6,12 +6,16 @@ use crate::mountsdk::{Config, LoginMode};
 use anyhow::Result;
 use clap::{arg, Args};
 use makechroot::OverlayInfo;
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub const SOURCE_DIR: &str = "/mnt/host/source";
 
 #[derive(Args, Debug)]
 pub struct ConfigArgs {
+    #[arg(long, required = true)]
+    board: String,
+
     #[arg(long, required = true)]
     sdk: Vec<PathBuf>,
 
@@ -46,10 +50,12 @@ impl Config {
         }
         new_overlays.extend(args.overlay);
         return Ok(Config {
+            board: args.board,
             overlays: new_overlays,
             login_mode: args.login_mode,
             cmd_prefix: vec![],
             bind_mounts: Vec::new(),
+            envs: HashMap::new(),
             log_file: args.ebuild_log,
         });
     }

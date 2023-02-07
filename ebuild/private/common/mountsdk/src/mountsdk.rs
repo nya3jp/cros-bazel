@@ -6,6 +6,7 @@ use crate::control::ControlChannel;
 use anyhow::{anyhow, Context, Result};
 use makechroot::{BindMount, OverlayInfo};
 use run_in_container_lib::RunInContainerConfig;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
@@ -24,8 +25,10 @@ pub(crate) enum LoginMode {
 
 #[derive(Clone)]
 pub struct Config {
+    pub board: String,
     pub overlays: Vec<OverlayInfo>,
     pub bind_mounts: Vec<BindMount>,
+    pub envs: HashMap<String, String>,
 
     pub cmd_prefix: Vec<String>,
     pub(crate) login_mode: LoginMode,
@@ -33,6 +36,7 @@ pub struct Config {
 }
 
 pub struct MountedSDK {
+    pub board: String,
     root_dir: fileutil::DualPath,
     diff_dir: PathBuf,
     log_file: Option<PathBuf>,
@@ -90,7 +94,9 @@ impl MountedSDK {
             setup_script_path.outside,
         )?;
         cmd.envs(std::env::vars());
+        cmd.envs(cfg.envs);
         cmd.env("PATH", "/usr/sbin:/usr/bin:/sbin:/bin");
+        cmd.env("BOARD", &cfg.board);
         let control_channel = if cfg.login_mode != LoginMode::Never {
             // Named pipes created using `mkfifo` use the inode number as the address.
             // We need to bind mount the control fifo on top of the overlayfs mounts to
@@ -115,6 +121,7 @@ impl MountedSDK {
         }
         .serialize_to(&serialized_path)?;
         return Ok(Self {
+            board: cfg.board,
             cmd: Some(cmd),
             root_dir,
             diff_dir,
@@ -139,12 +146,12 @@ impl MountedSDK {
         &self.diff_dir
     }
 
-    pub fn run_cmd(&mut self, cmd_modifier: impl FnOnce(&mut Command)) -> Result<Output> {
+    pub fn run_cmd(&mut self, args: &[&str]) -> Result<Output> {
         let mut cmd = self
             .cmd
             .take()
             .with_context(|| "Can only execute a command once per SDK.")?;
-        cmd_modifier(&mut cmd);
+        cmd.args(args);
         if let Some(log_file) = &self.log_file {
             // Only redirect stderr if we aren't in an interactive shell (b/267392458).
             if !nix::unistd::isatty(0)? {
@@ -179,6 +186,7 @@ mod tests {
         let portage_stable = src_dir.join("src/third_party/portage-stable");
         let ebuild_file = portage_stable.join("mypkg/mypkg.ebuild");
         let cfg = Config {
+            board: "amd64-generic".to_owned(),
             overlays: vec![
                 OverlayInfo {
                     image_path: r.rlocation("cros/bazel/sdk/base_sdk"),
@@ -201,38 +209,31 @@ mod tests {
                     mount_path: "/hello".into(),
                 },
             ],
+            envs: HashMap::new(),
             cmd_prefix: vec![],
             login_mode: Never,
             log_file: None,
         };
 
-        MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
-            cmd.arg("true");
-        })?;
+        MountedSDK::new(cfg.clone())?.run_cmd(&["true"])?;
 
-        assert!(MountedSDK::new(cfg.clone())?
-            .run_cmd(|cmd| {
-                cmd.arg("false");
-            })
-            .is_err());
+        assert!(MountedSDK::new(cfg.clone())?.run_cmd(&["false"]).is_err());
 
         // Should be a read-only mount.
         assert!(MountedSDK::new(cfg.clone())?
-            .run_cmd(|cmd| {
-                cmd.args(["/bin/bash", "-c", "echo world > /hello"]);
-            })
+            .run_cmd(&["/bin/bash", "-c", "echo world > /hello"])
             .is_err());
         // Verify that the chroot hasn't modified this file.
         assert_eq!(std::fs::read_to_string(hello)?, "hello");
 
         // Check we're in the SDK by using a binary unlikely to be on the host machine.
-        MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
-            cmd.args(["test", "-f", "/usr/bin/ebuild"]);
-        })?;
+        MountedSDK::new(cfg.clone())?.run_cmd(&["test", "-f", "/usr/bin/ebuild"])?;
 
-        MountedSDK::new(cfg.clone())?.run_cmd(|cmd| {
-            cmd.args(["grep", "EBUILD_CONTENTS", &ebuild_file.to_string_lossy()]);
-        })?;
+        MountedSDK::new(cfg.clone())?.run_cmd(&[
+            "grep",
+            "EBUILD_CONTENTS",
+            &ebuild_file.to_string_lossy(),
+        ])?;
 
         let tmp_dir: PathBuf = {
             let mut sdk = MountedSDK::new(cfg)?;
@@ -241,9 +242,7 @@ mod tests {
             std::fs::create_dir_all(&out_pkg.outside)?;
 
             let out_file = out_pkg.inside.join("mypkg.tbz2");
-            sdk.run_cmd(|cmd| {
-                cmd.args(["touch", &out_file.to_string_lossy()]);
-            })?;
+            sdk.run_cmd(&["touch", &out_file.to_string_lossy()])?;
             assert!(sdk
                 .diff_dir
                 .join(out_file.strip_prefix("/")?)

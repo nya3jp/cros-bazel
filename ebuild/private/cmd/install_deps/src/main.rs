@@ -16,9 +16,6 @@ struct Cli {
     #[command(flatten)]
     mountsdk_config: mountsdk::ConfigArgs,
 
-    #[arg(long, required = true)]
-    board: String,
-
     #[arg(long)]
     install_target: Vec<InstallGroup>,
 
@@ -40,11 +37,12 @@ fn main() -> Result<()> {
         mount_path: PathBuf::from(MAIN_SCRIPT),
     });
 
-    let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();
+    let target_packages_dir: PathBuf = ["/build", &cfg.board, "packages"].iter().collect();
 
     let (mut mounts, env) =
         InstallGroup::get_mounts_and_env(&args.install_target, &target_packages_dir)?;
     cfg.bind_mounts.append(&mut mounts);
+    cfg.envs = env;
 
     let mut sdk = MountedSDK::new(cfg)?;
     // TODO: Simplify this after tg/1717983 is submitted.
@@ -55,12 +53,10 @@ fn main() -> Result<()> {
     std::fs::create_dir_all(out_dir)?;
     std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
 
-    sdk.run_cmd(|cmd| {
-        cmd.args([MAIN_SCRIPT]).envs(env).env("BOARD", &args.board);
-    })?;
+    sdk.run_cmd(&[MAIN_SCRIPT])?;
 
     fileutil::move_dir_contents(sdk.diff_dir().as_path(), args.output_dir.as_path())?;
-    makechroot::clean_layer(Some(&args.board), args.output_dir.as_path())?;
+    makechroot::clean_layer(Some(&sdk.board), args.output_dir.as_path())?;
     tar::move_symlinks_into_tar(args.output_dir.as_path(), args.output_symlink_tar.as_path())?;
 
     Ok(())
