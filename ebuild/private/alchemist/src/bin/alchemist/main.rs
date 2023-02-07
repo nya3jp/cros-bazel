@@ -9,8 +9,9 @@ mod dump_package;
 mod generate_repo;
 mod ver_test;
 
+use std::process::ExitCode;
+
 use crate::alchemist::alchemist_main;
-use anyhow::Result;
 use clap::{Parser, Subcommand};
 use ver_test::ver_test_main;
 
@@ -29,9 +30,19 @@ enum Executables {
     VerTest(ver_test::Args),
 }
 
-fn main() -> Result<()> {
-    match Cli::parse().executables {
+fn main() -> ExitCode {
+    let result = match Cli::parse().executables {
         Executables::Alchemist(args) => alchemist_main(args),
         Executables::VerTest(args) => ver_test_main(args),
+    };
+    match result {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("ERROR: {:?}", err);
+            if let Err(_) = std::env::var("RUST_BACKTRACE") {
+                eprintln!("Hint: Set RUST_BACKTRACE=1 to print stack traces");
+            }
+            ExitCode::FAILURE
+        }
     }
 }
