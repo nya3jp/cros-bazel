@@ -272,10 +272,7 @@ def _mountsdk_debug_impl(ctx):
         outputs = [wrapper],
     )
 
-    if ctx.attr.no_deps:
-        runfiles = ctx.runfiles(transitive_files = depset(debug_info.direct_inputs))
-    else:
-        runfiles = ctx.runfiles(transitive_files = depset(debug_info.direct_inputs, transitive = debug_info.transitive_inputs))
+    runfiles = ctx.runfiles(transitive_files = depset(debug_info.direct_inputs, transitive = debug_info.transitive_inputs))
     runfiles = runfiles.merge_all([
         debug_info.executable_runfiles,
         ctx.attr._bash_runfiles[DefaultInfo].default_runfiles,
@@ -294,7 +291,6 @@ _mountsdk_debug = rule(
             providers = [MountSDKDebugInfo],
             mandatory = True,
         ),
-        no_deps = attr.bool(default = False),
         _bash_runfiles = attr.label(default = "@bazel_tools//tools/bash/runfiles"),
         _create_debug_script = attr.label(
             default = "//bazel/ebuild/private/common/mountsdk:create_debug_file",
@@ -305,24 +301,14 @@ _mountsdk_debug = rule(
     executable = True,
 )
 
-# Creates three targets.
+# Creates two targets.
 # * name: orig_rule(**kwargs).
 # * {name}_debug: Something equivalent to the above target, but for use with
 #   bazel run instead of bazel build, so you can debug it.
-# * {name}_debug_no_deps: The same as above, but doesn't declare the packages it
-#   depends on as inputs. This ensures that you don't rebuild packages if
-#   modifying a common library (eg. run_in_container / mountsdk). You can also
-#   use this to sub in prebuilts for packages.
 def debuggable_mountsdk(name, orig_rule, **kwargs):
     orig_rule(name = name, **kwargs)
     _mountsdk_debug(
         name = name + "_debug",
         target = name,
-        visibility = kwargs.get("visibility", None),
-    )
-    _mountsdk_debug(
-        name = name + "_debug_no_deps",
-        target = name,
-        no_deps = True,
         visibility = kwargs.get("visibility", None),
     )
