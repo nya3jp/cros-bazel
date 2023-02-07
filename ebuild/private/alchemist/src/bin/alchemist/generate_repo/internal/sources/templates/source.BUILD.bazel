@@ -70,5 +70,5 @@ filegroup(
         "//internal/sources/{{ child }}:__tarball__",
         {%- endfor %}
     ],
-    visibility = ["//:__subpackages__"],
+    visibility = ["//internal/overlays:__subpackages__"],
 )

@@ -113,18 +113,22 @@ sdk(
         {%- endfor %}
     ],
     overlays = ":overlays",
-    visibility = ["//visibility:public"],
+    visibility = ["//:__subpackages__"],
 )
 
 sdk_update(
     name = "sdk",
     base = ":base",
     target_deps = [
-        # TODO: Remove hard coded version numbers
-        "//sys-kernel/linux-headers:4.14-r56",
-        "//sys-libs/gcc-libs:10.2.0-r4",
-        "//sys-libs/libcxx:15.0_pre458507-r6",
-        "//sys-libs/llvm-libunwind:15.0_pre458507-r4",
+        "//sys-kernel/linux-headers",
+        "//sys-libs/gcc-libs",
+        "//sys-libs/libcxx",
+        "//sys-libs/llvm-libunwind",
     ],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//:__subpackages__",
+        # For @//:build_image_demo.
+        # TODO: Remove this.
+        "@//:__pkg__",
+    ],
 )
