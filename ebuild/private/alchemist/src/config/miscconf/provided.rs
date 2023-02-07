@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::{fs::read_to_string, path::Path};
 use version::Version;
 
@@ -19,12 +19,19 @@ pub fn load_provided_packages_config(dir: &Path) -> Result<Vec<ConfigNode>> {
 
     let mut packages = Vec::<ProvidedPackage>::new();
 
-    for line in contents
+    for (lineno, line) in contents
         .split("\n")
         .map(|line| line.trim())
-        .filter(|line| !line.is_empty() && !line.starts_with("#"))
+        .enumerate()
+        .filter(|(_, line)| !line.is_empty() && !line.starts_with("#"))
     {
-        let (package_name, version) = Version::from_str_suffix(line)?;
+        let (package_name, version) = Version::from_str_suffix(line).with_context(|| {
+            format!(
+                "Failed to load {}: syntax error at line {}",
+                source.display(),
+                lineno + 1
+            )
+        })?;
         packages.push(ProvidedPackage {
             package_name: package_name.to_owned(),
             version,

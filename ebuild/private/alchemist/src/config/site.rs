@@ -4,7 +4,7 @@
 
 use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 
 use crate::data::Vars;
 
@@ -28,9 +28,19 @@ impl SiteSettings {
 
         for rel_path in ["etc/make.conf", "etc/portage/make.conf"] {
             let path = root_dir.join(rel_path);
-            confs.push(
-                MakeConf::load(&path, path.parent().unwrap(), true, true)
-                    .with_context(|| format!("Loading {}", path.to_string_lossy()))?,
+            if path.exists() {
+                confs.push(
+                    MakeConf::load(&path, path.parent().unwrap(), true, true)
+                        .with_context(|| format!("Failed to load {}", path.display()))?,
+                );
+            }
+        }
+
+        // Either of the two make.conf files must exist.
+        if confs.is_empty() {
+            bail!(
+                "make.conf not found under {} (have you run setup_board?)",
+                root_dir.display()
             );
         }
 

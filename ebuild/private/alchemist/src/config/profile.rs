@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use itertools::Itertools;
 use std::{fs::read_to_string, io::ErrorKind, path::Path};
 
@@ -33,6 +33,7 @@ impl Profile {
     /// `repos` is a set of known repositories. It is used to resolve profile
     /// parents.
     pub fn load(dir: &Path, repos: &RepositorySet) -> Result<Self> {
+        let context = || format!("Failed to load profile {}", dir.display());
         let parent_keys = load_parents(&dir.join("parent"))?;
         let parents = parent_keys
             .into_iter()
@@ -46,13 +47,15 @@ impl Profile {
                 let profile = Self::load(&parent_dir, repos)?;
                 Ok(Box::new(profile))
             })
-            .collect::<Result<Vec<_>>>()?;
-        let makeconf = MakeConf::load(&dir.join("make.defaults"), dir, false, true)?;
+            .collect::<Result<Vec<_>>>()
+            .with_context(context)?;
+        let makeconf =
+            MakeConf::load(&dir.join("make.defaults"), dir, false, true).with_context(context)?;
 
         let precomputed_nodes = [
-            load_package_configs(dir)?,
-            load_use_configs(dir)?,
-            load_provided_packages_config(dir)?,
+            load_package_configs(dir).with_context(context)?,
+            load_use_configs(dir).with_context(context)?,
+            load_provided_packages_config(dir).with_context(context)?,
         ]
         .concat();
 
@@ -68,7 +71,10 @@ impl Profile {
     /// It is a short-hand for loading `${root_dir}/etc/portage/make.profile`,
     /// after resolving the symlink.
     pub fn load_default(root_dir: &Path, repos: &RepositorySet) -> Result<Self> {
-        let dir = root_dir.join("etc/portage/make.profile").read_link()?;
+        let symlink_path = root_dir.join("etc/portage/make.profile");
+        let dir = symlink_path
+            .read_link()
+            .with_context(|| format!("Reading symlink at {}", symlink_path.display()))?;
         Profile::load(&dir, repos)
     }
 }

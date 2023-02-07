@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 use anyhow::{Context, Result};
-use itertools::Itertools;
 use std::{fs::read_to_string, path::Path};
 
 use crate::{
@@ -28,7 +27,7 @@ fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<Confi
             let new_source = source.join(name);
             nodes.extend(
                 load_package_config(&new_source, kind)
-                    .with_context(|| format!("Loading {}", new_source.to_string_lossy()))?,
+                    .with_context(|| format!("Failed to load {}", source.display()))?,
             );
         }
         return Ok(nodes);
@@ -38,12 +37,22 @@ fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<Confi
 
     let mut updates = Vec::<PackageMaskUpdate>::new();
 
-    for line in contents
+    for (lineno, line) in contents
         .split("\n")
         .map(|line| line.trim())
-        .filter(|line| !line.is_empty() && !line.starts_with("#"))
+        .enumerate()
+        .filter(|(_, line)| !line.is_empty() && !line.starts_with("#"))
     {
-        let atom = line.trim().parse::<PackageAtomDependency>()?;
+        let atom = line
+            .trim()
+            .parse::<PackageAtomDependency>()
+            .with_context(|| {
+                format!(
+                    "Failed to load {}: syntax error at line {}",
+                    source.display(),
+                    lineno + 1
+                )
+            })?;
         updates.push(PackageMaskUpdate { kind, atom })
     }
 
@@ -54,12 +63,9 @@ fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<Confi
 }
 
 pub fn load_package_configs(dir: &Path) -> Result<Vec<ConfigNode>> {
-    Ok([
-        load_package_config(&dir.join("package.mask"), PackageMaskKind::Mask)?,
-        load_package_config(&dir.join("package.unmask"), PackageMaskKind::Unmask)?,
-    ]
-    .into_iter()
-    .concat())
+    let mask_nodes = load_package_config(&dir.join("package.mask"), PackageMaskKind::Mask)?;
+    let unmask_nodes = load_package_config(&dir.join("package.unmask"), PackageMaskKind::Unmask)?;
+    Ok([mask_nodes, unmask_nodes].concat())
 }
 
 #[cfg(test)]

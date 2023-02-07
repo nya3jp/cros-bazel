@@ -128,6 +128,7 @@ impl MakeConf {
         allow_missing: bool,
     ) -> Result<()> {
         let source = base_dir.join(path);
+        let context = || format!("Failed to load {}", source.display());
 
         if allow_missing && !source.exists() {
             return Ok(());
@@ -142,15 +143,14 @@ impl MakeConf {
             for name in names {
                 let new_path = path.join(name);
                 self.load_file(&new_path, base_dir, allow_source, allow_missing)
-                    .with_context(|| format!("Loading {}", new_path.to_string_lossy()))?;
+                    .with_context(context)?;
             }
             return Ok(());
         }
 
-        let content = read_to_string(&source)
-            .with_context(|| format!("Failed to read {}", source.to_string_lossy()))?;
+        let content = read_to_string(&source).with_context(context)?;
         let span = parser::Span::new_extra(&content, &source);
-        let statements = parser::full_parse(span, allow_source)?;
+        let statements = parser::full_parse(span, allow_source).with_context(context)?;
 
         // Resolves [parser::RVal] into [RVal].
         let evaluate_parser_rval = |values: &HashMap<String, RVal>, rval: parser::RVal| {
@@ -189,9 +189,12 @@ impl MakeConf {
                 }
                 parser::Statement::Source(rval) => {
                     let rval = evaluate_parser_rval(&self.values, rval);
-                    let source_path = base_dir.join(rval.try_to_string_no_unresolved_expansion()?);
+                    let source_path = base_dir.join(
+                        rval.try_to_string_no_unresolved_expansion()
+                            .with_context(context)?,
+                    );
                     self.load_file(&source_path, base_dir, allow_source, allow_missing)
-                        .with_context(|| format!("Sourcing {}", source_path.to_string_lossy()))?;
+                        .with_context(context)?;
                 }
             }
         }

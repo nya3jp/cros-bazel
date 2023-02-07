@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 use anyhow::{Context, Result};
-use itertools::Itertools;
 use std::{fs::read_to_string, path::Path};
 
 use crate::{
@@ -32,7 +31,7 @@ fn load_wildcard_use_config(
             let new_source = source.join(name);
             nodes.extend(
                 load_wildcard_use_config(&new_source, kind, stable_only)
-                    .with_context(|| format!("Loading {}", new_source.to_string_lossy()))?,
+                    .with_context(|| format!("Failed to load {}", new_source.to_string_lossy()))?,
             );
         }
         return Ok(nodes);
@@ -84,7 +83,7 @@ fn load_package_use_config(
             let new_source = source.join(name);
             nodes.extend(
                 load_package_use_config(&new_source, kind, stable_only)
-                    .with_context(|| format!("Loading {}", new_source.to_string_lossy()))?,
+                    .with_context(|| format!("Failed to load {}", source.display()))?,
             );
         }
         return Ok(nodes);
@@ -94,16 +93,19 @@ fn load_package_use_config(
 
     let mut updates = Vec::<UseUpdate>::new();
 
-    for line in contents
+    for (lineno, line) in contents
         .split("\n")
         .map(|line| line.trim())
-        .filter(|line| !line.is_empty() && !line.starts_with("#"))
+        .enumerate()
+        .filter(|(_, line)| !line.is_empty() && !line.starts_with("#"))
     {
         let (raw_atom, tokens) = line
             .trim()
             .split_once(|c: char| c.is_ascii_whitespace())
             .unwrap_or((line, ""));
-        let atom = raw_atom.parse::<PackageAtomDependency>()?;
+        let atom = raw_atom
+            .parse::<PackageAtomDependency>()
+            .with_context(|| format!("Failed to load {}: line {}", source.display(), lineno + 1))?;
         updates.push(UseUpdate {
             kind,
             filter: UseUpdateFilter {
@@ -143,7 +145,6 @@ pub fn load_use_configs(dir: &Path) -> Result<Vec<ConfigNode>> {
             true,
         )?,
     ]
-    .into_iter()
     .concat())
 }
 

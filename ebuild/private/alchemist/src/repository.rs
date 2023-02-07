@@ -53,7 +53,9 @@ impl RepositoryLayout {
     /// Loads `metadata/layout.conf` from a directory.
     fn load(base_dir: &Path) -> Result<Self> {
         let path = base_dir.join("metadata/layout.conf");
-        let content = read_to_string(&path).with_context(|| format!("reading {path:?}"))?;
+        let context = || format!("Failed to load {}", path.display());
+
+        let content = read_to_string(&path).with_context(context)?;
 
         let mut name: Option<String> = None;
         let mut parents = Vec::<String>::new();
@@ -64,9 +66,10 @@ impl RepositoryLayout {
                 continue;
             }
 
-            let caps = LAYOUT_CONF_LINE_RE.captures(line).ok_or_else(|| {
-                anyhow!("{}:{}: syntax error", path.to_string_lossy(), lineno + 1)
-            })?;
+            let caps = LAYOUT_CONF_LINE_RE
+                .captures(line)
+                .ok_or_else(|| anyhow!("Line {}: syntax error", lineno + 1))
+                .with_context(context)?;
             let key = caps.get(1).unwrap().as_str();
             let value = caps.get(2).unwrap().as_str();
             match key {
@@ -85,8 +88,9 @@ impl RepositoryLayout {
             }
         }
 
-        let name =
-            name.ok_or_else(|| anyhow!("{}: repo-name not defined", path.to_string_lossy()))?;
+        let name = name
+            .ok_or_else(|| anyhow!("repo-name not defined"))
+            .with_context(context)?;
         Ok(Self {
             name,
             base_dir: base_dir.to_owned(),
