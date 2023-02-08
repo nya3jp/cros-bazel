@@ -4,7 +4,7 @@
 
 use crate::control::ControlChannel;
 use anyhow::{anyhow, Context, Result};
-use makechroot::{BindMount, OverlayInfo};
+use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -26,7 +26,7 @@ pub(crate) enum LoginMode {
 #[derive(Clone)]
 pub struct Config {
     pub board: String,
-    pub overlays: Vec<OverlayInfo>,
+    pub layer_paths: Vec<PathBuf>,
     pub bind_mounts: Vec<BindMount>,
     pub envs: HashMap<String, String>,
 
@@ -68,10 +68,10 @@ impl MountedSDK {
 
         std::fs::create_dir_all(&bazel_build_dir.outside)?;
 
-        let mut overlays: Vec<OverlayInfo> = vec![OverlayInfo {
-            mount_dir: "/".into(),
-            image_path: root_dir.outside.clone(),
-        }];
+        let layer_paths: Vec<PathBuf> = [root_dir.outside.clone()]
+            .into_iter()
+            .chain(cfg.layer_paths)
+            .collect();
         let mut bind_mounts: Vec<BindMount> = cfg.bind_mounts;
         let mut cmd = if cfg.cmd_prefix.is_empty() {
             Command::new(run_in_container_path)
@@ -85,8 +85,6 @@ impl MountedSDK {
             .stderr(Stdio::inherit());
         let serialized_path = tmp_dir.path().join("run_in_container_args.json");
         cmd.arg("--cfg").arg(&serialized_path);
-
-        overlays.extend(cfg.overlays);
 
         let setup_script_path = bazel_build_dir.join("setup.sh");
         std::fs::copy(
@@ -115,7 +113,7 @@ impl MountedSDK {
         RunInContainerConfig {
             staging_dir: scratch_dir,
             chdir: PathBuf::from("/"),
-            overlays,
+            layer_paths,
             bind_mounts,
             keep_host_mount: false,
         }
@@ -187,15 +185,9 @@ mod tests {
         let ebuild_file = portage_stable.join("mypkg/mypkg.ebuild");
         let cfg = Config {
             board: "amd64-generic".to_owned(),
-            overlays: vec![
-                OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/base_sdk"),
-                    mount_dir: "/".into(),
-                },
-                OverlayInfo {
-                    image_path: r.rlocation("cros/bazel/sdk/base_sdk-symlinks.tar"),
-                    mount_dir: "/".into(),
-                },
+            layer_paths: vec![
+                r.rlocation("cros/bazel/sdk/base_sdk"),
+                r.rlocation("cros/bazel/sdk/base_sdk-symlinks.tar"),
             ],
             bind_mounts: vec![
                 BindMount {

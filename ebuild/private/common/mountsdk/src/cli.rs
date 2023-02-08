@@ -5,7 +5,6 @@
 use crate::mountsdk::{Config, LoginMode};
 use anyhow::Result;
 use clap::{arg, Args};
-use makechroot::OverlayInfo;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -16,42 +15,30 @@ pub struct ConfigArgs {
     #[arg(long, required = true)]
     board: String,
 
-    #[arg(long, required = true)]
-    sdk: Vec<PathBuf>,
-
     #[arg(
         long,
-        help = "<inside path>=<squashfs file | directory | tar.*>: Mounts the file or directory at \
-            the specified path. Inside path must be absolute.",
+        help = "mounts a file or directory as a file system layer in the container.",
         required = true
     )]
-    overlay: Vec<OverlayInfo>,
+    layer: Vec<PathBuf>,
 
     #[arg(long)]
     ebuild_log: Option<PathBuf>,
 
     #[arg(
-    long = "login",
-    help = "logs in to the SDK before installing deps, before building, after \
-        building, or after failing to build respectively.",
-    default_value_t = LoginMode::Never,
+        long = "login",
+        help = "logs in to the SDK before installing deps, before building, after \
+            building, or after failing to build respectively.",
+        default_value_t = LoginMode::Never,
     )]
     login_mode: LoginMode,
 }
 
 impl Config {
     pub fn try_from(args: ConfigArgs) -> Result<Config> {
-        let mut new_overlays: Vec<OverlayInfo> = Vec::new();
-        for sdk in args.sdk {
-            new_overlays.push(OverlayInfo {
-                mount_dir: PathBuf::from("/"),
-                image_path: sdk,
-            });
-        }
-        new_overlays.extend(args.overlay);
         return Ok(Config {
             board: args.board,
-            overlays: new_overlays,
+            layer_paths: args.layer,
             login_mode: args.login_mode,
             cmd_prefix: vec![],
             bind_mounts: Vec::new(),

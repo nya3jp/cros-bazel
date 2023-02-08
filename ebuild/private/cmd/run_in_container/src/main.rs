@@ -3,8 +3,7 @@
 // found in the LICENSE file.
 use anyhow::{bail, Context, Result};
 use clap::Parser;
-use itertools::Itertools;
-use makechroot::OverlayType;
+use makechroot::LayerType;
 use nix::{
     mount::MntFlags,
     mount::{mount, umount2, MsFlags},
@@ -15,7 +14,6 @@ use nix::{
 use path_absolutize::Absolutize;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
-    collections::HashMap,
     ffi::CString,
     ffi::OsStr,
     fs::File,
@@ -59,9 +57,9 @@ pub fn main() -> Result<()> {
     Ok(())
 }
 
-/// translates an overlay source path by possibly following symlinks.
+/// Translates a file system layer source path by possibly following symlinks.
 ///
-/// The --overlay inputs can be three types:
+/// The --layer inputs can be three types:
 ///  1. A path to a real file/directory.
 ///  2. A symlink to a file/directory.
 ///  3. A directory tree with symlinks pointing to real files.
@@ -74,7 +72,7 @@ pub fn main() -> Result<()> {
 /// This method will find the first symlink in the symlink forest which will be
 /// pointing to the real execroot. It then calculates the folder that should have
 /// been passed in by bazel.
-fn resolve_overlay_source_path(input_path: &Path) -> Result<PathBuf> {
+fn resolve_layer_source_path(input_path: &Path) -> Result<PathBuf> {
     // Resolve the symlink so we always return an absolute path.
     let info = std::fs::symlink_metadata(input_path)?;
     if info.is_symlink() {
@@ -227,35 +225,35 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
     }
 
     // Set up lower directories.
-    let mut lower_dirs_by_mount_dir: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
-    for (i, overlay) in cfg.overlays.iter().enumerate() {
-        let source_path = resolve_overlay_source_path(&overlay.image_path)?;
+    let mut lower_dirs: Vec<PathBuf> = Vec::new();
+    for (i, layer_path) in cfg.layer_paths.iter().enumerate() {
+        let layer_path = resolve_layer_source_path(layer_path)?;
         let mut lower_dir = lowers_dir.join(i.to_string());
         dir_builder.create(&lower_dir)?;
 
-        match OverlayType::detect(&overlay.image_path)? {
-            OverlayType::Dir => mount(Some(&source_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
-                .with_context(|| format!("Failed bind-mounting {source_path:?}"))?,
+        match LayerType::detect(&layer_path)? {
+            LayerType::Dir => mount(Some(&layer_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
+                .with_context(|| format!("Failed bind-mounting {layer_path:?}"))?,
 
-            OverlayType::Squashfs => {
+            LayerType::Squashfs => {
                 if !Command::new(&squashfuse_path)
-                    .args([&source_path, &lower_dir])
+                    .args([&layer_path, &lower_dir])
                     .status()?
                     .success()
                 {
-                    bail!("Failed mounting {source_path:?} to {lower_dir:?} via squashfuse");
+                    bail!("Failed mounting {layer_path:?} to {lower_dir:?} via squashfuse");
                 }
             }
 
-            OverlayType::Tar => {
+            LayerType::Tar => {
                 // We use a dedicated directory for the extracted artifacts instead of
                 // putting them in the lower directory because the lower directory is a
                 // tmpfs mount and we don't want to use up all the RAM.
                 lower_dir = tar_dir.join(i.to_string());
                 dir_builder.create(&lower_dir)?;
-                let f = File::open(&overlay.image_path)?;
+                let f = File::open(&layer_path)?;
                 let decompressed: Box<dyn Read> =
-                    if overlay.image_path.extension() == Some(OsStr::new("zst")) {
+                    if layer_path.extension() == Some(OsStr::new("zst")) {
                         Box::new(zstd::stream::read::Decoder::new(f)?)
                     } else {
                         Box::new(f)
@@ -264,82 +262,60 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
             }
         }
 
-        lower_dirs_by_mount_dir
-            .entry(overlay.mount_dir.clone())
-            .or_default()
-            .push(lower_dir);
+        lower_dirs.push(lower_dir);
     }
 
-    // Ensure mountpoints to exist in base.
-    for (mount_dir, lower_dirs) in lower_dirs_by_mount_dir.iter_mut() {
-        let actual_mount_dir = base_dir.join(
-            mount_dir
-                .strip_prefix("/")
-                .with_context(|| "overlay mount path must be absolute")?,
-        );
-        dir_builder.create(&actual_mount_dir)?;
-        lower_dirs.push(actual_mount_dir);
-    }
+    // Insert the base directory as the lowest layer.
+    lower_dirs.push(base_dir);
 
-    let orig_wd = std::env::current_dir()?;
+    // Set up the store directories.
+    dir_builder.create(&diff_dir)?;
+    dir_builder.create(&work_dir)?;
+
     // Change the current directory to minimize the option string passed to
     // mount(2) as its length is constrained.
+    let orig_wd = std::env::current_dir()?;
     std::env::set_current_dir(&lowers_dir)?;
     let relative_dir = |p| {
         pathdiff::diff_paths(&p, &lowers_dir)
             .with_context(|| format!("Unable to make {p:?} relative to {lowers_dir:?}"))
     };
 
-    // Must be topologically sorted.
-    let mount_dirs: Vec<(&PathBuf, &Vec<PathBuf>)> =
-        lower_dirs_by_mount_dir.iter().sorted().collect();
+    let short_diff_dir = relative_dir(&diff_dir)?;
+    let short_work_dir = relative_dir(&work_dir)?;
+    let short_lower_dirs = lower_dirs
+        .iter()
+        .map(|abs_lower_dir| {
+            let rel_lower_dir: PathBuf = relative_dir(abs_lower_dir)?;
+            let abs_lower_dir = abs_lower_dir.to_string_lossy();
+            let rel_lower_dir = rel_lower_dir.to_string_lossy();
+            let short_lower_dir = if rel_lower_dir.len() < abs_lower_dir.len() {
+                rel_lower_dir
+            } else {
+                abs_lower_dir
+            };
+            Ok(short_lower_dir.to_string())
+        })
+        .collect::<Result<Vec<_>>>()?
+        .join(":");
 
-    // Overlay multiple directories.
-    // This is done by mounting overlayfs per mount offset.
-    for (i, (mount_dir, lower_dirs)) in mount_dirs.iter().enumerate() {
-        // Set up the store directory.
-        // TODO: Avoid overlapped upper directories. They cause overlayfs to emit warnings in kernel
-        // logs.
-        let upper_dir = relative_dir(diff_dir.join(mount_dir.strip_prefix("/")?))?;
-        dir_builder.create(&upper_dir)?;
-        let work_dir = relative_dir(work_dir.join(i.to_string()))?;
-        dir_builder.create(&work_dir)?;
+    // Mount overlayfs.
+    let overlay_options = format!(
+        "upperdir={},workdir={},lowerdir={}",
+        short_diff_dir.display(),
+        short_work_dir.display(),
+        short_lower_dirs
+    );
+    mount(
+        Some("none"),
+        &root_dir,
+        Some("overlay"),
+        MsFlags::empty(),
+        Some::<&str>(&overlay_options),
+    )
+    .with_context(|| "mounting overlayfs")?;
 
-        // Compute shorter representations of lower directories.
-        let short_lowers = lower_dirs
-            .iter()
-            .map(|lower_dir| {
-                let rel_lower_dir: PathBuf = relative_dir(lower_dir.to_path_buf())?;
-                Ok(
-                    if rel_lower_dir.to_string_lossy().len() < lower_dir.to_string_lossy().len() {
-                        rel_lower_dir
-                    } else {
-                        lower_dir.to_path_buf()
-                    }
-                    .to_string_lossy()
-                    .to_string(),
-                )
-            })
-            .collect::<Result<Vec<_>>>()?
-            .join(":");
-
-        // Mount overlayfs.
-        let overlay_options = format!(
-            "upperdir={},workdir={},lowerdir={}",
-            upper_dir.display(),
-            work_dir.display(),
-            short_lowers
-        );
-        mount(
-            Some("none"),
-            &root_dir.join(mount_dir.strip_prefix("/")?),
-            Some("overlay"),
-            MsFlags::empty(),
-            Some::<&str>(&overlay_options),
-        )
-        .with_context(|| "mounting overlayfs")?;
-    }
-
+    // Mount misc file systems.
     mount(
         Some("/dev"),
         &root_dir.join("dev"),

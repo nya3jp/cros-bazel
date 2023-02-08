@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -34,42 +33,10 @@ func runCommand(name string, args ...string) error {
 	return cmd.Run()
 }
 
-type overlayInfo struct {
-	Target string
-	Source string
-	Type   makechroot.OverlayType
-}
-
-func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
-	overlays, err := makechroot.ParseOverlaySpecs(specs)
-	if err != nil {
-		return nil, err
-	}
-
-	var mounts []overlayInfo
-	for _, overlay := range overlays {
-		if !filepath.IsAbs(overlay.MountDir) {
-			return nil, errors.New("overlay mount path must be absolute")
-		}
-
-		overlayType, err := makechroot.DetectOverlayType(overlay.ImagePath)
-		if err != nil {
-			return nil, err
-		}
-
-		mounts = append(mounts, overlayInfo{
-			Target: overlay.MountDir,
-			Source: overlay.ImagePath,
-			Type:   overlayType,
-		})
-	}
-	return mounts, nil
-}
-
-// resolveOverlaySourcePath translates an overlay source path by possibly
+// resolveLayerSourcePath translates a file system layer source path by possibly
 // following symlinks.
 //
-// The --overlay inputs can be three types:
+// The --layer inputs can be three types:
 //  1. A path to a real file/directory.
 //  2. A symlink to a file/directory.
 //  3. A directory tree with symlinks pointing to real files.
@@ -82,7 +49,7 @@ func parseOverlaySpecs(specs []string) ([]overlayInfo, error) {
 // This method will find the first symlink in the symlink forest which will be
 // pointing to the real execroot. It then calculates the folder that should have
 // been passed in by bazel.
-func resolveOverlaySourcePath(inputPath string) (string, error) {
+func resolveLayerSourcePath(inputPath string) (string, error) {
 	info, err := os.Lstat(inputPath)
 	if err != nil {
 		return "", err
@@ -154,15 +121,12 @@ var flagChdir = &cli.StringFlag{
 	Value: "/",
 }
 
-var flagOverlay = &cli.StringSliceFlag{
-	Name: "overlay",
-	Usage: "<inside>=<outside>. " +
-		"Mounts a file system layer found at an outside path to a directory " +
-		"inside the container at the specified inside path. " +
+var flagLayer = &cli.StringSliceFlag{
+	Name: "layer",
+	Usage: "Mounts a file system layer. " +
 		"This option can be specified multiple times. The earlier " +
-		"overlays are mounted as the higher layer, and the later " +
-		"overlays are mounted as the lower layer.",
-	Required: true,
+		"layers are mounted as the higher layer, and the later " +
+		"layers are mounted as the lower layer.",
 }
 
 var flagBindMount = &cli.StringSliceFlag{
@@ -184,7 +148,7 @@ var app = &cli.App{
 	Flags: []cli.Flag{
 		flagStagingDir,
 		flagChdir,
-		flagOverlay,
+		flagLayer,
 		flagBindMount,
 		flagKeepHostMount,
 		flagInternalContinue,
@@ -192,9 +156,6 @@ var app = &cli.App{
 	Before: func(c *cli.Context) error {
 		if c.Args().Len() == 0 {
 			return errors.New("positional arguments missing")
-		}
-		if _, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name)); err != nil {
-			return err
 		}
 		if _, err := makechroot.ParseBindMountSpec(c.StringSlice(flagBindMount.Name)); err != nil {
 			return err
@@ -276,10 +237,7 @@ func continueNamespace(c *cli.Context) error {
 	}
 
 	chdir := c.String(flagChdir.Name)
-	overlays, err := parseOverlaySpecs(c.StringSlice(flagOverlay.Name))
-	if err != nil {
-		return err
-	}
+	layerPaths := c.StringSlice(flagLayer.Name)
 	bindMounts, err := makechroot.ParseBindMountSpec(c.StringSlice(flagBindMount.Name))
 	if err != nil {
 		return err
@@ -327,9 +285,14 @@ func continueNamespace(c *cli.Context) error {
 	}
 
 	// Set up lower directories.
-	lowerDirsByMountDir := make(map[string][]string)
-	for i, overlay := range overlays {
-		sourcePath, err := resolveOverlaySourcePath(overlay.Source)
+	var lowerDirs []string
+	for i, layerPath := range layerPaths {
+		layerType, err := makechroot.DetectLayerType(layerPath)
+		if err != nil {
+			return err
+		}
+
+		layerPath, err := resolveLayerSourcePath(layerPath)
 		if err != nil {
 			return err
 		}
@@ -339,19 +302,19 @@ func continueNamespace(c *cli.Context) error {
 			return err
 		}
 
-		switch overlay.Type {
-		case makechroot.OverlayDir:
-			if err := unix.Mount(sourcePath, lowerDir, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
-				return fmt.Errorf("failed bind-mounting %s: %w", sourcePath, err)
+		switch layerType {
+		case makechroot.LayerDir:
+			if err := unix.Mount(layerPath, lowerDir, "", unix.MS_BIND|unix.MS_REC, ""); err != nil {
+				return fmt.Errorf("failed bind-mounting %s: %w", layerPath, err)
 			}
-		case makechroot.OverlaySquashfs:
+		case makechroot.LayerSquashfs:
 			if err := runCommand(
 				squashfusePath,
-				sourcePath,
+				layerPath,
 				lowerDir); err != nil {
-				return fmt.Errorf("failed mounting %s: %w", sourcePath, err)
+				return fmt.Errorf("failed mounting %s: %w", layerPath, err)
 			}
-		case makechroot.OverlayTar:
+		case makechroot.LayerTar:
 			// We use a dedicated directory for the extracted artifacts instead of
 			// putting them in the lower directory because the lower directory is a
 			// tmpfs mount and we don't want to use up all the RAM.
@@ -359,23 +322,18 @@ func continueNamespace(c *cli.Context) error {
 			if err := os.MkdirAll(lowerDir, 0o755); err != nil {
 				return err
 			}
-			if err := tar.Extract(overlay.Source, lowerDir); err != nil {
-				return fmt.Errorf("failed to extract %s: %w", overlay.Source, err)
+			if err := tar.Extract(layerPath, lowerDir); err != nil {
+				return fmt.Errorf("failed to extract %s: %w", layerPath, err)
 			}
 		default:
-			return fmt.Errorf("BUG: unknown overlay type %d", overlay.Type)
+			return fmt.Errorf("BUG: unknown layer type %d", layerType)
 		}
 
-		lowerDirsByMountDir[overlay.Target] = append(lowerDirsByMountDir[overlay.Target], lowerDir)
+		lowerDirs = append(lowerDirs, lowerDir)
 	}
 
-	// Ensure mountpoints to exist in base.
-	for mountDir, lowerDirs := range lowerDirsByMountDir {
-		if err := os.MkdirAll(filepath.Join(baseDir, mountDir), 0o755); err != nil {
-			return err
-		}
-		lowerDirsByMountDir[mountDir] = append(lowerDirs, filepath.Join(baseDir, mountDir))
-	}
+	// Insert the base directory as the lowest layer.
+	lowerDirs = append(lowerDirs, baseDir)
 
 	// Change the current directory to minimize the option string passed to
 	// mount(2) as its length is constrained.
@@ -383,54 +341,39 @@ func continueNamespace(c *cli.Context) error {
 		return err
 	}
 
-	// Overlay multiple directories.
-	// This is done by mounting overlayfs per mount offset.
-	mountDirs := make([]string, 0, len(lowerDirsByMountDir))
-	for mountDir := range lowerDirsByMountDir {
-		mountDirs = append(mountDirs, mountDir)
+	// Set up the store directories.
+	for _, dir := range []string{diffDir, workDir} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
 	}
-	sort.Strings(mountDirs) // must be topologically sorted
 
-	for i, mountDir := range mountDirs {
-		// Set up the store directory.
-		// TODO: Avoid overlapped upper directories. They cause overlayfs to emit
-		// warnings in kernel logs.
-		upperDir, err := filepath.Rel(lowersDir, filepath.Join(diffDir, mountDir))
+	// Compute shorter representations of lower directories.
+	shortDiffDir, err := filepath.Rel(lowersDir, diffDir)
+	if err != nil {
+		return err
+	}
+	shortWorkDir, err := filepath.Rel(lowersDir, workDir)
+	if err != nil {
+		return err
+	}
+	shortLowerDirs := make([]string, 0, len(lowerDirs))
+	for _, lowerDir := range lowerDirs {
+		relLowerDir, err := filepath.Rel(lowersDir, lowerDir)
 		if err != nil {
 			return err
 		}
-
-		workDir, err := filepath.Rel(lowersDir, filepath.Join(workDir, strconv.Itoa(i)))
-		if err != nil {
-			return err
+		shortLowerDir := relLowerDir
+		if len(relLowerDir) > len(lowerDir) {
+			shortLowerDir = lowerDir
 		}
+		shortLowerDirs = append(shortLowerDirs, shortLowerDir)
+	}
 
-		for _, dir := range []string{upperDir, workDir} {
-			if err := os.MkdirAll(dir, 0o755); err != nil {
-				return err
-			}
-		}
-
-		// Compute shorter representations of lower directories.
-		lowerDirs := lowerDirsByMountDir[mountDir]
-		shortLowerDirs := make([]string, 0, len(lowerDirs))
-		for _, lowerDir := range lowerDirs {
-			relLowerDir, err := filepath.Rel(lowersDir, lowerDir)
-			if err != nil {
-				return err
-			}
-			shortLowerDir := relLowerDir
-			if len(relLowerDir) > len(lowerDir) {
-				shortLowerDir = lowerDir
-			}
-			shortLowerDirs = append(shortLowerDirs, shortLowerDir)
-		}
-
-		// Mount overlayfs.
-		overlayOptions := fmt.Sprintf("upperdir=%s,workdir=%s,lowerdir=%s", upperDir, workDir, strings.Join(shortLowerDirs, ":"))
-		if err := unix.Mount("none", filepath.Join(rootDir, mountDir), "overlay", 0, overlayOptions); err != nil {
-			return fmt.Errorf("mounting overlayfs: %w", err)
-		}
+	// Mount overlayfs.
+	overlayOptions := fmt.Sprintf("upperdir=%s,workdir=%s,lowerdir=%s", shortDiffDir, shortWorkDir, strings.Join(shortLowerDirs, ":"))
+	if err := unix.Mount("none", rootDir, "overlay", 0, overlayOptions); err != nil {
+		return fmt.Errorf("mounting overlayfs: %w", err)
 	}
 
 	// Mount essential filesystems.

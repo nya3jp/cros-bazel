@@ -145,7 +145,7 @@ var app = &cli.App{
 		}
 
 		for _, inputPath := range inputPaths {
-			args = append(args, "--overlay=/="+inputPath)
+			args = append(args, "--layer="+inputPath)
 		}
 
 		args = append(args, scriptPath.Inside())

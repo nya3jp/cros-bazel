@@ -13,77 +13,52 @@ import (
 	"cros.local/bazel/ebuild/private/common/tar"
 )
 
-type OverlayType int
-
-const (
-	OverlayDir OverlayType = iota
-	OverlaySquashfs
-	OverlayTar
-)
-
-type OverlayInfo struct {
-	MountDir  string
-	ImagePath string
-}
-
-func ParseOverlaySpecs(specs []string) ([]OverlayInfo, error) {
-	var overlays []OverlayInfo
-	for _, spec := range specs {
-		v := strings.Split(spec, "=")
-		if len(v) != 2 {
-			return nil, fmt.Errorf("invalid overlay spec: %s", spec)
-		}
-		overlays = append(overlays, OverlayInfo{
-			MountDir:  v[0],
-			ImagePath: v[1],
-		})
-	}
-	return overlays, nil
-}
-
 type BindMount struct {
 	MountPath string
 	Source    string
 }
 
 func ParseBindMountSpec(specs []string) ([]BindMount, error) {
-	// Bind-mounts work the same as overlay, so we can just use their parsing
-	// mechanism.
-	overlays, err := ParseOverlaySpecs(specs)
-	if err != nil {
-		return nil, fmt.Errorf("invalid bind-mount: %v", err)
-	}
-
 	var mounts []BindMount
-	for _, overlay := range overlays {
-		path, err := filepath.Abs(overlay.ImagePath)
-		if err != nil {
-			return nil, err
+	for _, spec := range specs {
+		v := strings.Split(spec, "=")
+		if len(v) != 2 {
+			return nil, fmt.Errorf("invalid bind-mount spec: %s", spec)
 		}
-
-		mounts = append(mounts, BindMount{MountPath: overlay.MountDir, Source: path})
+		mounts = append(mounts, BindMount{
+			MountPath: v[0],
+			Source:    v[1],
+		})
 	}
 	return mounts, nil
 }
 
-func DetectOverlayType(imagePath string) (OverlayType, error) {
-	imagePath, err := filepath.EvalSymlinks(imagePath)
+type LayerType int
+
+const (
+	LayerDir LayerType = iota
+	LayerSquashfs
+	LayerTar
+)
+
+func DetectLayerType(layerPath string) (LayerType, error) {
+	layerPath, err := filepath.EvalSymlinks(layerPath)
 	if err != nil {
 		return -1, err
 	}
 
-	fileInfo, err := os.Stat(imagePath)
+	fileInfo, err := os.Stat(layerPath)
 	if err != nil {
 		return -1, err
 	}
 
 	if fileInfo.IsDir() {
-		return OverlayDir, nil
-	} else if strings.HasSuffix(imagePath, ".squashfs") {
-		return OverlaySquashfs, nil
-	} else if tar.IsTar(imagePath) {
-		return OverlayTar, nil
+		return LayerDir, nil
+	} else if strings.HasSuffix(layerPath, ".squashfs") {
+		return LayerSquashfs, nil
+	} else if tar.IsTar(layerPath) {
+		return LayerTar, nil
 	} else {
-		return -1, fmt.Errorf("unsupported file type: %s", imagePath)
+		return -1, fmt.Errorf("unsupported file type: %s", layerPath)
 	}
 }

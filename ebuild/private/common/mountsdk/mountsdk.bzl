@@ -92,11 +92,11 @@ def create_layer(
     direct_inputs = []
     transitive_inputs = [transitive_build_time_deps_files]
 
-    args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
+    args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(sdk.layers)
 
     for overlay in sdk.overlays.overlays:
-        args.add("--overlay=/=%s" % overlay.squashfs_file.path)
+        args.add("--layer=%s" % overlay.squashfs_file.path)
         direct_inputs.append(overlay.squashfs_file)
 
     install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
@@ -131,7 +131,7 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
     direct_inputs.extend(inputs)
     transitive_inputs = []
 
-    args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
+    args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(sdk.layers)
 
     for file in ctx.attr.files:
@@ -147,11 +147,11 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
         direct_inputs.append(file)
 
     for overlay in sdk.overlays.overlays:
-        args.add("--overlay=/=%s" % overlay.squashfs_file.path)
+        args.add("--layer=%s" % overlay.squashfs_file.path)
         direct_inputs.append(overlay.squashfs_file)
 
     for file in ctx.files.srcs:
-        args.add("--overlay=/=%s" % file.path)
+        args.add("--layer=%s" % file.path)
         direct_inputs.append(file)
 
     # TODO: Consider target/host transitions.
@@ -179,8 +179,8 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
             transitive_build_time_deps_files,
             transitive_build_time_deps_targets,
         )
-        args.add(deps_directory.path, format = "--sdk=%s")
-        args.add(deps_symlink_tar.path, format = "--sdk=%s")
+        args.add(deps_directory.path, format = "--layer=%s")
+        args.add(deps_symlink_tar.path, format = "--layer=%s")
         transitive_inputs.append(depset([deps_directory, deps_symlink_tar]))
     else:
         transitive_inputs.append(transitive_build_time_deps_files)

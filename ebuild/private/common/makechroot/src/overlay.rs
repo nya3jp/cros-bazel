@@ -12,23 +12,6 @@ fn from_str(spec: &str) -> Result<(PathBuf, PathBuf)> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct OverlayInfo {
-    pub mount_dir: PathBuf,
-    pub image_path: PathBuf,
-}
-
-impl FromStr for OverlayInfo {
-    type Err = anyhow::Error;
-    fn from_str(spec: &str) -> Result<Self> {
-        let (mount_dir, image_path) = from_str(spec)?;
-        Ok(Self {
-            mount_dir,
-            image_path,
-        })
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BindMount {
     pub mount_path: PathBuf,
     pub source: PathBuf,
@@ -43,32 +26,32 @@ impl FromStr for BindMount {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum OverlayType {
+pub enum LayerType {
     Dir,
     Squashfs,
     Tar,
 }
 
-impl OverlayType {
-    pub fn detect<P: AsRef<Path>>(image_path: P) -> Result<Self> {
-        let image_path = image_path.as_ref().absolutize()?;
+impl LayerType {
+    pub fn detect<P: AsRef<Path>>(layer_path: P) -> Result<Self> {
+        let layer_path = layer_path.as_ref().absolutize()?;
 
-        let file_name = image_path
+        let file_name = layer_path
             .file_name()
             .and_then(|x| x.to_str())
             .unwrap_or_default();
-        let extension = image_path
+        let extension = layer_path
             .extension()
             .and_then(|x| x.to_str())
             .unwrap_or_default();
-        if std::fs::metadata(&image_path)?.is_dir() {
-            Ok(OverlayType::Dir)
+        if std::fs::metadata(&layer_path)?.is_dir() {
+            Ok(LayerType::Dir)
         } else if extension == "squashfs" {
-            Ok(OverlayType::Squashfs)
+            Ok(LayerType::Squashfs)
         } else if file_name.ends_with(".tar.zst") || file_name.ends_with(".tar") {
-            Ok(OverlayType::Tar)
+            Ok(LayerType::Tar)
         } else {
-            bail!("unsupported file type: {:?}", image_path)
+            bail!("unsupported file type: {:?}", layer_path)
         }
     }
 }
@@ -79,23 +62,23 @@ mod tests {
     use runfiles::Runfiles;
 
     #[test]
-    fn detect_overlay_type_works() -> Result<()> {
+    fn detect_layer_type_works() -> Result<()> {
         let r = Runfiles::create()?;
         let testdata = PathBuf::from("cros/bazel/ebuild/private/common/makechroot/testdata/");
         assert_eq!(
-            OverlayType::detect(r.rlocation(testdata.join("example.squashfs")))?,
-            OverlayType::Squashfs
+            LayerType::detect(r.rlocation(testdata.join("example.squashfs")))?,
+            LayerType::Squashfs
         );
         assert_eq!(
-            OverlayType::detect(r.rlocation(testdata.join("example.tar.zst")))?,
-            OverlayType::Tar
+            LayerType::detect(r.rlocation(testdata.join("example.tar.zst")))?,
+            LayerType::Tar
         );
         assert_eq!(
-            OverlayType::detect(r.rlocation(testdata.join("example.tar")))?,
-            OverlayType::Tar
+            LayerType::detect(r.rlocation(testdata.join("example.tar")))?,
+            LayerType::Tar
         );
-        assert_eq!(OverlayType::detect(Path::new("/dev"))?, OverlayType::Dir);
-        assert!(OverlayType::detect(Path::new("/dev/null")).is_err());
+        assert_eq!(LayerType::detect(Path::new("/dev"))?, LayerType::Dir);
+        assert!(LayerType::detect(Path::new("/dev/null")).is_err());
 
         Ok(())
     }
