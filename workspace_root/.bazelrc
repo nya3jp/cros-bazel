@@ -10,7 +10,7 @@
 common --experimental_enable_bzlmod
 
 # Used to ignore BUILD files
-try-import %workspace%/bazel/.bazelrc-BUILD-ignore
+import %workspace%/bazel/.bazelrc-BUILD-ignore
 
 # Prevent writing to the remote cache if source files change during the build.
 # **DISABLED** Only useful when uploading artifacts from local builds, which we
