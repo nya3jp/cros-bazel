@@ -25,14 +25,11 @@ impl fmt::Display for TerminationKind {
 
 fn base_test(termination_kind: TerminationKind, expected_code: i32) -> Result<()> {
     let out_file = NamedTempFile::new()?;
-    let err_file = NamedTempFile::new()?;
 
     let mut command = Command::new(env!("CARGO_BIN_EXE_action_wrapper"));
     command
-        .arg("--stdout")
+        .arg("--output")
         .arg(out_file.path())
-        .arg("--stderr")
-        .arg(err_file.path())
         .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/test_script.sh"))
         .arg(format!("{termination_kind}"))
         .arg("ONE")
@@ -52,15 +49,12 @@ fn base_test(termination_kind: TerminationKind, expected_code: i32) -> Result<()
         assert_eq!(actual_printed_stdout, "");
         assert_eq!(actual_printed_stderr, "");
     } else {
-        assert_eq!(actual_printed_stdout, "stdout ONE\n");
-        assert_eq!(actual_printed_stderr, "stderr TWO\n");
+        assert_eq!(actual_printed_stdout, "");
+        assert_eq!(actual_printed_stderr, "stdout ONE\nstderr TWO\n");
     }
 
-    let actual_saved_stdout = std::fs::read_to_string(out_file.path())?;
-    let actual_saved_stderr = std::fs::read_to_string(err_file.path())?;
-
-    assert_eq!(actual_saved_stdout, "stdout ONE\n");
-    assert_eq!(actual_saved_stderr, "stderr TWO\n");
+    let actual_saved_output = std::fs::read_to_string(out_file.path())?;
+    assert_eq!(actual_saved_output, "stdout ONE\nstderr TWO\n");
 
     Ok(())
 }
