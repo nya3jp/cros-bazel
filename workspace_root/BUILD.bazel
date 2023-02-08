@@ -4,6 +4,8 @@
 
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/ebuild:defs.bzl", "overlay_set")
+load("//bazel/ebuild/private:build_image.bzl", "build_image")
 
 exports_files([
     "Cargo.toml",
@@ -31,10 +33,34 @@ pkg_tar(
     srcs = [
         ":scripts_src_files",
     ],
-    extension = "tar.zst",
     compressor = "//bazel/ebuild/private:zstd",
     compressor_args = "--threads=0",
+    extension = "tar.zst",
     visibility = ["//bazel/ebuild/private/cmd/build_image:__pkg__"],
+)
+
+# Define this in the workspace root to prevent //bazel/... from attempting to
+# build whole images.
+build_image(
+    name = "build_image_demo",
+    srcs = [
+        "//:scripts_src",
+        "@chromite//:src",
+    ],
+    build_deps = [
+        # Copied from @portage//virtual/target-os:package_set's deps
+        "@portage//chromeos-base/patchpanel",
+        "@portage//sys-apps/hwids",
+        "@portage//virtual/target-os",
+        "@portage//virtual/ttf-fonts",
+        "@portage//app-misc/ca-certificates",
+        "@portage//net-dialup/ppp-scripts",
+        "@portage//sys-apps/coreutils",
+        "@portage//sys-auth/pambase",
+        "@portage//sys-devel/llvm-common",
+    ],
+    overlays = ":overlays_build_image",
+    sdk = "@portage//internal/sdk",
 )
 
 exports_files(["tools/bazel"])

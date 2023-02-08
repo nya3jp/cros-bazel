@@ -14,11 +14,6 @@ TARGETS=(
   //bazel/ebuild/...
    # Check that build_package works.
   @portage//dev-libs/leveldb
-  # Exclude build_image as it requires compiling every ebuild.
-  -//bazel/ebuild/private/cmd/build_image:build_image_demo
-  -//bazel/ebuild/private/cmd/build_image:build_image_demo_debug
-  # Alchemist needs to be tested with cargo, not bazel.
-  -//bazel/ebuild/private/alchemist/...
 )
 
 # Optimization: don't bust the cache between the bazel test and bazel build.

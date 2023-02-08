@@ -4,7 +4,6 @@
 
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
 load("//bazel/ebuild:defs.bzl", "overlay_set")
-load("//bazel/ebuild/private:build_image.bzl", "build_image")
 
 # build_image is relying on emerge to install the binpkgs this means we need
 # a fully functional portage environment.
@@ -14,28 +13,6 @@ overlay_set(
         "//third_party/chromiumos-overlay:package-provided",
     ],
     visibility = ["//visibility:public"],
-)
-
-build_image(
-    name = "build_image_demo",
-    srcs = [
-        "//:scripts_src",
-        "@chromite//:src",
-    ],
-    build_deps = [
-        # Copied from @portage//virtual/target-os:package_set's deps
-        "@portage//chromeos-base/patchpanel",
-        "@portage//sys-apps/hwids",
-        "@portage//virtual/target-os",
-        "@portage//virtual/ttf-fonts",
-        "@portage//app-misc/ca-certificates",
-        "@portage//net-dialup/ppp-scripts",
-        "@portage//sys-apps/coreutils",
-        "@portage//sys-auth/pambase",
-        "@portage//sys-devel/llvm-common",
-    ],
-    overlays = ":overlays_build_image",
-    sdk = "@portage//internal/sdk",
 )
 
 rust_binary_crate(
