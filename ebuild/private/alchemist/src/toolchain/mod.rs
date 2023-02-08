@@ -110,6 +110,7 @@ pub struct ToolchainConfig {
 
 /// Contains the toolchain configuration for a repository set.
 impl ToolchainConfig {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         ToolchainConfig {
             toolchains: Vec::new(),
@@ -124,8 +125,8 @@ impl ToolchainConfig {
         }
     }
 
-    fn exists(&self, name: &str) -> bool {
-        self.toolchains.iter().any(|t| t.name == name)
+    fn get(&self, name: &str) -> Option<&Toolchain> {
+        self.toolchains.iter().find(|t| t.name == name)
     }
 
     /// Loads the toolchain.conf that specifies the toolchains that are needed
@@ -151,23 +152,34 @@ impl ToolchainConfig {
 
             let toolchain = Toolchain::from_str(line)?;
 
-            if self.exists(&toolchain.name) {
-                // TODO: AFAIK there is no real-world usage of toolchain
-                // overrides. If we do have a need, we can implement settings
-                // overrides.
-                bail!(
-                    "Duplicate toolchain ({}) declaration found in {}: {:#?}",
-                    toolchain.name,
-                    path.display(),
-                    self.toolchains
-                );
-            }
+            // For some reason the default toolchain is chosen by the most
+            // specific overlay. i.e., overlay-$BOARD. This means that the board
+            // overlays have to redeclare the "primary" toolchain that the
+            // chipset or baseboard already specified. When we parse the
+            // baseboard or chipset overlays we discard their duplicate
+            // toolchain declarations since the board overlay already declared
+            // it.
+            if let Some(existing) = self.get(&toolchain.name) {
+                if toolchain.options != existing.options {
+                    // TODO: AFAIK there is no real-world usage of toolchain
+                    // overrides. If we do have a need, we can implement settings
+                    // overrides.
+                    bail!(
+                        "Duplicate toolchain ({}) declaration found in {}: {:#?}",
+                        toolchain.name,
+                        path.display(),
+                        self.toolchains
+                    );
+                }
+            } else {
+                let can_be_default = toolchain.can_be_default();
 
-            if self.default_index.is_none() && toolchain.can_be_default() {
-                self.default_index = Some(self.toolchains.len());
-            }
+                self.toolchains.push(toolchain);
 
-            self.toolchains.push(toolchain);
+                if self.default_index.is_none() && can_be_default {
+                    self.default_index = Some(self.toolchains.len() - 1);
+                }
+            }
         }
 
         Ok(())
@@ -179,6 +191,7 @@ pub fn load_toolchains(repos: &RepositorySet) -> Result<ToolchainConfig> {
         repos
             .get_repos()
             .iter()
+            .rev() // The primary toolchain is defined by the leaf overlay
             .map(|repo| repo.base_dir().join("toolchain.conf"))
             .collect(),
     );
@@ -291,8 +304,43 @@ arm-none-eabi
         write_files(
             dir,
             [
-                ("a/toolchain.conf", "x86_64-cros-linux-gnu"),
+                ("a/toolchain.conf", "x86_64-cros-linux-gnu\narm-none-eabi"),
                 ("b/toolchain.conf", "x86_64-cros-linux-gnu"),
+            ],
+        )?;
+
+        let config = load_toolchains_from_paths(vec![
+            dir.join("a/toolchain.conf"),
+            dir.join("b/toolchain.conf"),
+        ])?;
+
+        assert_eq!(
+            config,
+            ToolchainConfig {
+                default_index: Some(0),
+                toolchains: vec![
+                    Toolchain::from_str("x86_64-cros-linux-gnu")?,
+                    Toolchain::from_str("arm-none-eabi")?,
+                ],
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_duplicate_toolchain_with_override() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                ("a/toolchain.conf", "x86_64-cros-linux-gnu"),
+                (
+                    "b/toolchain.conf",
+                    r#"x86_64-cros-linux-gnu {"default": false}"#,
+                ),
             ],
         )?;
 
