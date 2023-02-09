@@ -14,6 +14,7 @@ use crate::data::Vars;
 
 use super::{ConfigNode, ConfigNodeValue, ConfigSource};
 
+pub mod generate;
 mod parser;
 
 #[derive(Clone, Debug, Eq, PartialEq)]

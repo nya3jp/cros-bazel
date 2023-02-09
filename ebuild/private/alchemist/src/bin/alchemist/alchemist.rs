@@ -11,10 +11,8 @@ use crate::digest_repo::digest_repo_main;
 use crate::dump_deps::dump_deps_main;
 use crate::dump_package::dump_package_main;
 use crate::generate_repo::generate_repo_main;
-use crate::generate_repo::internal::sdk::{
-    generate_make_conf_board, generate_make_conf_board_setup,
-};
 
+use alchemist::config::makeconf::generate::generate_make_conf_for_board;
 use alchemist::fakechroot::PathTranslator;
 use alchemist::fileops::{execute_file_ops, FileOps};
 use alchemist::repository::RepositoryLookup;
@@ -174,8 +172,7 @@ dev-lang/go-1.18-r2
 
     let board_etc = board_root.join("etc");
 
-    generate_make_conf_board_setup(board, repos, toolchains, translator, &board_etc)?;
-    generate_make_conf_board(repos, translator, &board_etc)?;
+    generate_make_conf_for_board(board, repos, toolchains, translator, &board_etc)?;
 
     Ok(())
 }
