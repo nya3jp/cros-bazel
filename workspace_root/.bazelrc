@@ -9,9 +9,6 @@
 # Bzlmod is the new dependency management system in bazel.
 common --experimental_enable_bzlmod
 
-# Used to ignore BUILD files
-import %workspace%/bazel/.bazelrc-BUILD-ignore
-
 # Prevent writing to the remote cache if source files change during the build.
 # **DISABLED** Only useful when uploading artifacts from local builds, which we
 # won't do once we have Bazel running in CI builds, and it prevents uploading
