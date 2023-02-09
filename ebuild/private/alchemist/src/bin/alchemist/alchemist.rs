@@ -4,7 +4,6 @@
 
 use std::os::unix::fs;
 
-use std::path::Path;
 use std::{env::current_dir, path::PathBuf};
 
 use crate::digest_repo::digest_repo_main;
@@ -12,11 +11,6 @@ use crate::dump_deps::dump_deps_main;
 use crate::dump_package::dump_package_main;
 use crate::generate_repo::generate_repo_main;
 
-use alchemist::config::makeconf::generate::generate_make_conf_for_board;
-use alchemist::fakechroot::PathTranslator;
-use alchemist::fileops::{execute_file_ops, FileOps};
-use alchemist::repository::RepositoryLookup;
-use alchemist::toolchain::ToolchainConfig;
 use alchemist::{
     config::{
         bundle::ConfigBundle, profile::Profile, site::SiteSettings, ConfigNode, ConfigNodeValue,
@@ -139,80 +133,6 @@ fn setup_tools() -> Result<TempDir> {
     Ok(tools_dir)
 }
 
-/// Generates the portage configuration for the board
-fn generate_board_config(
-    board_root: &Path,
-    board: &str,
-    repos: &RepositorySet,
-    toolchains: &ToolchainConfig,
-    translator: &PathTranslator,
-) -> Result<()> {
-    let files = vec![
-        FileOps::symlink (
-            "/etc/make.conf",
-            "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.generic-target",
-        ),
-        FileOps::symlink (
-            "/etc/make.conf.user",
-            "/etc/make.conf.user",
-        ),
-        FileOps::symlink(
-            "/etc/portage/make.profile",
-            // TODO: Remove hard coded base profile
-            translator.to_inner(repos.primary().base_dir())?.join("profiles/base"),
-        ),
-        // TODO(b/266979761): Remove the need for this list
-        FileOps::plainfile("/etc/portage/profile/package.provided", r#"
-sys-devel/gcc-10.2.0-r28
-sys-libs/glibc-2.33-r17
-dev-lang/go-1.18-r2
-"#),
-    ];
-    execute_file_ops(&files, board_root)?;
-
-    let board_etc = board_root.join("etc");
-
-    generate_make_conf_for_board(board, repos, toolchains, translator, &board_etc)?;
-
-    Ok(())
-}
-
-/// Generates the portage config for the host SDK
-///
-/// Instead of depending on an extracted SDK tarball, we hard code the config
-/// here. The host config is relatively simple, so it shouldn't be changing
-/// that often.
-fn generate_host_config(root: &Path) -> Result<()> {
-    let ops = vec![
-        // Host specific files
-        FileOps::symlink(
-            "/etc/make.conf",
-            "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
-        ),
-        FileOps::plainfile(
-            "/etc/make.conf.board_setup",
-            r#"
-# Created by cros_sysroot_utils from --board=amd64-host.
-ARCH="amd64"
-BOARD_OVERLAY="/mnt/host/source/src/overlays/overlay-amd64-host"
-BOARD_USE="amd64-host"
-CHOST="x86_64-pc-linux-gnu"
-# TODO(b/266973461): Remove hard coded -j
-MAKEOPTS="-j32"
-PORTDIR_OVERLAY="/mnt/host/source/src/overlays/overlay-amd64-host"
-"#,
-        ),
-        FileOps::plainfile("/etc/make.conf.host_setup", ""),
-        FileOps::plainfile("/etc/make.conf.user", ""),
-        FileOps::symlink(
-            "/etc/portage/make.profile",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/base",
-        ),
-    ];
-
-    execute_file_ops(&ops, root)
-}
-
 pub fn alchemist_main(args: Args) -> Result<()> {
     let source_dir = match args.source_dir {
         Some(s) => PathBuf::from(s),
@@ -230,25 +150,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         }
     }
 
-    let translator = enter_fake_chroot(&source_dir, &|new_root_dir, translator| {
-        generate_host_config(new_root_dir)?;
-
-        // We throw away the repos and toolchain after we generate the files so we can
-        // create new instances that have the "internal" paths instead.
-        // TODO: Re-evaluate if this is really necessary.
-        let lookup = RepositoryLookup::new(
-            &source_dir,
-            vec!["src/private-overlays", "src/overlays", "src/third_party"],
-        )?;
-
-        let repos = lookup.create_repository_set(&args.board)?;
-
-        let toolchains = load_toolchains(&repos)?;
-
-        let board_root = new_root_dir.join("build").join(&args.board);
-        generate_board_config(&board_root, &args.board, &repos, &toolchains, translator)?;
-        Ok(())
-    })?;
+    let translator = enter_fake_chroot(&args.board, &source_dir)?;
 
     let root_dir = PathBuf::from("/build").join(&args.board);
 
