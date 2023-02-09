@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "hooks",
@@ -6,7 +6,7 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/hooks",
     visibility = ["//visibility:public"],
     deps = select({
-        "@io_bazel_rules_go//go/platform:amd64": [
+        "@rules_go//go/platform:amd64": [
             "//bazel/ebuild/private/cmd/fakefs/fsop",
             "//bazel/ebuild/private/cmd/fakefs/logging",
             "//bazel/ebuild/private/cmd/fakefs/ptracearch",

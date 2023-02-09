@@ -1,5 +1,5 @@
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@rules_go//go:def.bzl", "go_library")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
 

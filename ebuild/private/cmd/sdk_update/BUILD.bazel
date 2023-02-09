@@ -4,7 +4,7 @@
 
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
 
 bool_flag(
     name = "use_rust_sdk_update",
@@ -40,8 +40,8 @@ go_library(
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/tar",
         "@com_github_urfave_cli_v2//:cli",
-        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
         "@org_golang_x_sys//unix",
+        "@rules_go//go/tools/bazel:go_default_library",
     ],
 )
 

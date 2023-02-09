@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
-load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
 

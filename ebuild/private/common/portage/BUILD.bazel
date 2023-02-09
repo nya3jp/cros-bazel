@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 go_test(
     name = "portage_test",
@@ -35,6 +35,6 @@ go_library(
         "//bazel/ebuild/private/common/standard/makevars",
         "//bazel/ebuild/private/common/standard/packages",
         "//bazel/ebuild/private/common/standard/version",
-        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@rules_go//go/tools/bazel:go_default_library",
     ],
 )

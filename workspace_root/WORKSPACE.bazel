@@ -4,20 +4,31 @@
 workspace(name = "cros")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 # See https://github.com/bazelbuild/bazel/issues/16644
 # This allows intellij users to sync bazel targets and thus get proper debugger
 # support, code completion, and cross-references.
 http_archive(name = "intellij_aspect")
 
-load("//bazel/ebuild:repositories.bzl", "rules_ebuild_repositories")
+http_file(
+    name = "dumb_init",
+    executable = True,
+    sha256 = "e874b55f3279ca41415d290c512a7ba9d08f98041b28ae7c2acb19a545f1c4df",
+    urls = ["https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64"],
+)
 
-rules_ebuild_repositories()
-
-load("//bazel/ebuild:deps.bzl", "rules_ebuild_dependencies")
-
-# gazelle:repository_macro bazel/ebuild/deps.bzl%rules_ebuild_go_dependencies
-rules_ebuild_dependencies()
+# Unfortunately, although skylib is defined in MODULE.bazel, it's inaccessible
+# from WORKSPACE.bazel.
+maybe(
+    http_archive,
+    name = "bazel_skylib",
+    sha256 = "f24ab666394232f834f74d19e2ff142b0af17466ea0c69a3f4c276ee75f6efce",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.4.0/bazel-skylib-1.4.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.0/bazel-skylib-1.4.0.tar.gz",
+    ],
+)
 
 load("//rules_cros/toolchains:toolchain_repositories.bzl", "toolchain_repositories")
 
