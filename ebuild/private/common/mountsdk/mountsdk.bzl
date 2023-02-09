@@ -77,18 +77,19 @@ def create_layer(
     """Creates an action which builds an overlay in which the build dependencies are installed."""
     output_root = ctx.actions.declare_directory(ctx.attr.name + suffix)
     output_symlink_tar = ctx.actions.declare_file(ctx.attr.name + suffix + "-symlinks.tar")
+    output_log = ctx.actions.declare_file(ctx.attr.name + suffix + ".log")
     sdk = sdk if sdk else ctx.attr.sdk[SDKInfo]
 
     args = ctx.actions.args()
     args.add_all([
+        "--output=" + output_log.path,
+        ctx.executable._install_deps,
         "--board=" + sdk.board,
         "--output-dir=" + output_root.path,
         "--output-symlink-tar=" + output_symlink_tar.path,
     ])
 
-    direct_inputs = [
-        ctx.executable._install_deps,
-    ]
+    direct_inputs = []
     transitive_inputs = [transitive_build_time_deps_files]
 
     args.add_all(sdk.layers, format_each = "--sdk=%s", expand_directories = False)
@@ -103,8 +104,9 @@ def create_layer(
 
     ctx.actions.run(
         inputs = depset(direct_inputs, transitive = transitive_inputs),
-        outputs = [output_root, output_symlink_tar],
-        executable = ctx.executable._install_deps,
+        outputs = [output_root, output_symlink_tar, output_log],
+        executable = ctx.executable._action_wrapper,
+        tools = [ctx.executable._install_deps],
         arguments = [args],
         execution_requirements = {
             # Send SIGTERM instead of SIGKILL on user interruption.

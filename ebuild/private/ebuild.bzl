@@ -201,6 +201,11 @@ _ebuild = rule(
             providers = [EbuildLibraryInfo],
         ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
+        _action_wrapper = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
+        ),
         _builder = attr.label(
             executable = True,
             cfg = "exec",

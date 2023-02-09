@@ -186,6 +186,11 @@ sdk_update = rule(
         "target_deps": attr.label_list(
             providers = [BinaryPackageInfo],
         ),
+        "_action_wrapper": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
+        ),
         "_install_deps": attr.label(
             executable = True,
             cfg = "exec",
