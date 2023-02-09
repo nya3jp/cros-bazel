@@ -132,12 +132,16 @@ pub fn generate_repo_main(
 
     let all_details = evaluate_all_packages(repos, loader)?;
 
+    eprintln!("Analyzing packages...");
+
     let all_packages = analyze_packages(all_details, src_dir, resolver, verbose);
 
     let all_local_sources = all_packages
         .iter()
         .flat_map(|package| package.sources.local_sources.clone())
         .collect();
+
+    eprintln!("Generating @portage...");
 
     generate_internal_packages(&all_packages, resolver, translator, output_dir)?;
     generate_internal_sources(&all_local_sources, &src_dir, output_dir)?;
@@ -147,6 +151,8 @@ pub fn generate_repo_main(
 
     File::create(output_dir.join("BUILD.bazel"))?.write_all(&[])?;
     File::create(output_dir.join("WORKSPACE.bazel"))?.write_all(&[])?;
+
+    eprintln!("Generated @portage.");
 
     Ok(())
 }
