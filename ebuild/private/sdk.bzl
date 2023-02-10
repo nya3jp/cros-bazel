@@ -69,14 +69,14 @@ def _sdk_impl(ctx):
         "--output-dir=" + output_root.path,
         "--output-symlink-tar=" + output_symlink_tar.path,
     ])
-    args.add_all(base_sdk.layers, format_each = "--input=%s", expand_directories = False)
+    args.add_all(base_sdk.layers, format_each = "--sdk=%s", expand_directories = False)
     args.add_all(host_installs, format_each = "--install-host=%s")
     args.add_all(target_installs, format_each = "--install-target=%s")
     args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
 
     layer_inputs = base_sdk.layers[:]
     for overlay in ctx.attr.overlays[OverlaySetInfo].overlays:
-        args.add("--input=%s" % overlay.squashfs_file.path)
+        args.add("--overlay=/=%s" % overlay.squashfs_file.path)
         layer_inputs.append(overlay.squashfs_file)
 
     inputs = depset(

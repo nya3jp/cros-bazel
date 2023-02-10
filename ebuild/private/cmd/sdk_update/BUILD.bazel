@@ -65,8 +65,8 @@ rust_binary_crate(
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
-        "//bazel/ebuild/private/common/processes:processes_rust",
-        "//bazel/ebuild/private/common/run_in_container_lib",
+        "//bazel/ebuild/private/common/mountsdk",
+        "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "//bazel/ebuild/private/common/tar:tar_rust",
     ],
 )
