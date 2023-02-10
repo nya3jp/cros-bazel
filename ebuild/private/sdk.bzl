@@ -55,6 +55,7 @@ def _sdk_impl(ctx):
 
     output_root = ctx.actions.declare_directory(ctx.attr.name)
     output_symlink_tar = ctx.actions.declare_file(ctx.attr.name + "-symlinks.tar")
+    output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
 
     host_installs = depset(
         transitive = [label[BinaryPackageInfo].transitive_runtime_deps_files for label in ctx.attr.host_deps],
@@ -65,6 +66,8 @@ def _sdk_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
+        "--output=" + output_log.path,
+        ctx.executable._sdk_update,
         "--board=" + ctx.attr.board,
         "--output-dir=" + output_root.path,
         "--output-symlink-tar=" + output_symlink_tar.path,
@@ -84,12 +87,13 @@ def _sdk_impl(ctx):
         transitive = [host_installs, target_installs],
     )
 
-    outputs = [output_root, output_symlink_tar]
+    outputs = [output_root, output_symlink_tar, output_log]
 
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
-        executable = ctx.executable._sdk_update,
+        executable = ctx.executable._action_wrapper,
+        tools = [ctx.executable._sdk_update],
         arguments = [args],
         execution_requirements = {
             # Send SIGTERM instead of SIGKILL on user interruption.
@@ -133,6 +137,11 @@ sdk = rule(
         "overlays": attr.label(
             providers = [OverlaySetInfo],
             mandatory = True,
+        ),
+        "_action_wrapper": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
         ),
         "_sdk_update": attr.label(
             executable = True,
