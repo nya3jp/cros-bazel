@@ -33,6 +33,16 @@ lazy_static! {
             include_str!("templates/package.BUILD.bazel"),
         )
         .unwrap();
+        tera.add_raw_template(
+            "overlay.BUILD.bazel",
+            include_str!("templates/overlay.BUILD.bazel"),
+        )
+        .unwrap();
+        tera.add_raw_template(
+            "chromiumos-overlay.BUILD.bazel",
+            include_str!("templates/chromiumos-overlay.BUILD.bazel"),
+        )
+        .unwrap();
         tera
     };
 }
@@ -86,6 +96,42 @@ fn generate_overlay_symlinks(original_dir: &Path, output_dir: &Path) -> Result<(
     Ok(())
 }
 
+#[derive(Serialize)]
+struct OverlayBuildTemplateContext<'a> {
+    name: &'a str,
+    mount_path: &'a Path,
+}
+
+fn generate_overlay_build_file(relative_dir: &Path, output_file: &Path) -> Result<()> {
+    // We don't use `relative_dir` because chromiumos != chromiumos-overlay.
+    let name = relative_dir
+        .file_name()
+        .expect("repository name")
+        .to_str()
+        .expect("valid name");
+    let mount_path = Path::new("src").join(relative_dir);
+    let context = OverlayBuildTemplateContext {
+        name,
+        mount_path: &mount_path,
+    };
+
+    // The chromiumos-overlay repo contains a pretty complex BUILD.bazel file.
+    // Once the bashrc and patch files can be cleaned up hopefully we can
+    // use the standard template.
+    let template = if relative_dir.to_string_lossy() == "third_party/chromiumos-overlay" {
+        "chromiumos-overlay.BUILD.bazel"
+    } else {
+        "overlay.BUILD.bazel"
+    };
+
+    let mut file =
+        File::create(output_file).with_context(|| format!("file {}", output_file.display()))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    TEMPLATES.render_to(template, &tera::Context::from_serialize(context)?, file)?;
+
+    Ok(())
+}
+
 fn generate_overlays(
     repos: &RepositorySet,
     src_dir: &Path,
@@ -103,6 +149,8 @@ fn generate_overlays(
                 .with_context(|| format!("mkdir -p {}", output_dir.display()))?;
 
             generate_overlay_symlinks(&original_dir, &output_dir)?;
+
+            generate_overlay_build_file(&relative_dir, &output_dir.join("BUILD.bazel"))?;
 
             Ok(())
         })?;

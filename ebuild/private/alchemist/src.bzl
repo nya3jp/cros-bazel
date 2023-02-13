@@ -14,6 +14,8 @@ ALCHEMIST_SRCS = [
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/common.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/mod.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/overlays/mod.rs"),
+    Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/overlays/templates/chromiumos-overlay.BUILD.bazel"),
+    Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/overlays/templates/overlay.BUILD.bazel"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/overlays/templates/package.BUILD.bazel"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sdk/mod.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sdk/templates/emerge"),

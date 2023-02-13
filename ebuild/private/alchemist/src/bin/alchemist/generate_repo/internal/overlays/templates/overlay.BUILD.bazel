@@ -1,0 +1,13 @@
+load("@//bazel/ebuild:defs.bzl", "overlay")
+
+overlay(
+    name = "{{ name }}",
+    srcs = ["metadata/layout.conf"] + glob([
+        "eclass/*.eclass",
+        "profiles/**",
+        "make.conf",
+        "prebuilt.conf",
+    ]),
+    mount_path = "{{ mount_path }}",
+    visibility = ["//visibility:public"],
+)

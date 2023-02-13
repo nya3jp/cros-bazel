@@ -138,7 +138,7 @@ fn generate_sdk_build(
     let mut overlays_targets: Vec<String> = Vec::new();
     for repo in repos.get_repos() {
         let relative = repo.base_dir().strip_prefix(CHROOT_SRC_DIR)?;
-        overlays_targets.push(format!("@//{}", relative.display()));
+        overlays_targets.push(format!("//internal/overlays/{}", relative.display()));
     }
 
     let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();

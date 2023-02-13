@@ -1,0 +1,44 @@
+load("@//bazel/ebuild:defs.bzl", "overlay")
+
+overlay(
+    name = "{{ name }}",
+    srcs = ["metadata/layout.conf"] + glob([
+        "chromeos/**",
+        "eclass/*.eclass",
+        "profiles/**",
+        # HACK: Include CrOS-specific bashrc files that override profile vars
+        # and several other files referenced by them.
+        #
+        # See cros_stack_bashrc in this file for details:
+        # https://source.corp.google.com/chromeos_public/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc
+        #
+        # TODO: Consider isolating those bashrc files from the overlay and
+        # associating them to corresponding packages. Note that we also need
+        # to take care of chromiumos-overlay/chromeos/config/env.
+        "*/*/*.bashrc",
+        "app-shells/bash/files/*.patch",
+        "app-shells/dash/files/*.patch",
+        "dev-libs/dbus-glib/files/*.patch",
+        "dev-python/python-daemon/files/*.patch",
+        "sys-apps/kmod/files/*.patch",
+        "sys-apps/man-pages/files/*.py",
+        "sys-apps/mawk/files/*.patch",
+        "*/*/files/*_waf_config_answers",
+    ], exclude = [
+        # These are only required when computing the dep graph, we don't need
+        # them when building packages.
+        "**/package.keywords",
+        "**/package.mask",
+        "**/package.provided",
+        "**/package.unmask",
+    ]),
+    mount_path = "{{ mount_path }}",
+    visibility = ["//visibility:public"],
+)
+
+overlay(
+    name = "package-provided",
+    srcs = glob(["**/package.provided"]),
+    mount_path = "{{ mount_path }}",
+    visibility = ["//visibility:public"],
+)
