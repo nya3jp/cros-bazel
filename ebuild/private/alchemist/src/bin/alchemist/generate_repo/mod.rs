@@ -30,7 +30,7 @@ use rayon::prelude::*;
 
 use self::{
     common::Package,
-    internal::overlays::generate_internal_packages,
+    internal::overlays::generate_internal_overlays,
     internal::{sdk::generate_sdk, sources::generate_internal_sources},
     public::generate_public_packages,
     repositories::generate_repositories_file,
@@ -143,8 +143,8 @@ pub fn generate_repo_main(
 
     eprintln!("Generating @portage...");
 
-    generate_internal_packages(&all_packages, resolver, translator, output_dir)?;
-    generate_internal_sources(&all_local_sources, &src_dir, output_dir)?;
+    generate_internal_overlays(src_dir, repos, &all_packages, resolver, output_dir)?;
+    generate_internal_sources(&all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&all_packages, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
     generate_sdk(board, repos, toolchain_config, translator, output_dir)?;

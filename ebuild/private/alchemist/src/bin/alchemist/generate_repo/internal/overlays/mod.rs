@@ -4,7 +4,8 @@
 
 use std::{
     collections::HashMap,
-    fs::{create_dir_all, File},
+    ffi::OsStr,
+    fs::{create_dir, create_dir_all, File},
     io::Write,
     os::unix::fs::symlink,
     path::{Path, PathBuf},
@@ -12,14 +13,15 @@ use std::{
 
 use alchemist::{
     analyze::source::PackageLocalSourceOrigin, dependency::package::PackageAtomDependency,
-    fakechroot::PathTranslator, resolver::PackageResolver,
+    repository::RepositorySet, resolver::PackageResolver,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use serde::Serialize;
 use tera::Tera;
+use walkdir::WalkDir;
 
 use crate::generate_repo::common::{DistFileEntry, Package, AUTOGENERATE_NOTICE, CHROOT_SRC_DIR};
 
@@ -42,6 +44,70 @@ static PRIMORDIAL_PACKAGES: &[&str] = &[
     "sys-libs/libcxx",
     "sys-libs/llvm-libunwind",
 ];
+
+/// Mirrors files in the original overlay to the output tree with symlinks.
+///
+/// This function skips creating symlinks for these files:
+/// - `**/BUILD.bazel`: They should not exist in overlays and interferes with
+///   `BUILD.bazel` files we will generate later.
+/// - `metadata/md5-cache`: They're not consumed by alchemist, and we have too
+///   many files under the directory.
+fn generate_overlay_symlinks(original_dir: &Path, output_dir: &Path) -> Result<()> {
+    let walk = WalkDir::new(original_dir)
+        .min_depth(1)
+        .into_iter()
+        .filter_entry(|entry| {
+            if entry.file_name() == OsStr::new("BUILD.bazel") {
+                return false;
+            }
+            let relative_path = entry.path().strip_prefix(original_dir).unwrap();
+            if relative_path == Path::new("metadata/md5-cache") {
+                return false;
+            }
+            true
+        });
+    for entry in walk {
+        let entry = entry?;
+        let original_file = entry.path();
+        let relative_path = original_file.strip_prefix(original_dir).unwrap();
+        let output_file = output_dir.join(relative_path);
+        if entry.file_type().is_dir() {
+            create_dir(&output_file).with_context(|| format!("mkdir {}", output_file.display()))?;
+            continue;
+        }
+        symlink(&original_file, &output_file).with_context(|| {
+            format!(
+                "ln -s {} {}",
+                original_file.display(),
+                output_file.display()
+            )
+        })?;
+    }
+    Ok(())
+}
+
+fn generate_overlays(
+    repos: &RepositorySet,
+    src_dir: &Path,
+    output_overlays_dir: &Path,
+) -> Result<()> {
+    repos
+        .get_repos()
+        .into_iter()
+        .try_for_each(|repo| -> Result<()> {
+            let relative_dir = repo.base_dir().strip_prefix("/mnt/host/source/src")?;
+            let original_dir = src_dir.join(relative_dir);
+            let output_dir = output_overlays_dir.join(relative_dir);
+
+            create_dir_all(&output_dir)
+                .with_context(|| format!("mkdir -p {}", output_dir.display()))?;
+
+            generate_overlay_symlinks(&original_dir, &output_dir)?;
+
+            Ok(())
+        })?;
+    Ok(())
+}
 
 #[derive(Serialize)]
 pub struct EBuildEntry {
@@ -151,7 +217,6 @@ struct BuildTemplateContext {
 }
 
 struct PackagesInDir<'a> {
-    original_dir: PathBuf,
     packages: Vec<&'a Package>,
 }
 
@@ -178,61 +243,10 @@ fn generate_internal_package_build_file(
     Ok(())
 }
 
-fn generate_internal_package(
-    packages_in_dir: PackagesInDir,
-    package_output_dir: &Path,
-    translator: &PathTranslator,
-    resolver: &PackageResolver,
-) -> Result<()> {
-    create_dir_all(package_output_dir)?;
-
-    // Create `*.ebuild` symlinks.
-    for package in packages_in_dir.packages.iter() {
-        let details = &package.details;
-        symlink(
-            translator.to_outer(&details.ebuild_path)?,
-            package_output_dir.join(details.ebuild_path.file_name().unwrap()),
-        )?;
-    }
-
-    // Create a `files` symlink if necessary.
-    // TODO: Create symlinks even if there is no ebuild.
-    let input_files_dir = packages_in_dir.original_dir.join("files");
-    if input_files_dir.try_exists()? {
-        let output_files_dir = package_output_dir.join("files");
-        symlink(input_files_dir, output_files_dir)?;
-    }
-
-    // Create `*.bashrc` symlinks if necessary.
-    // TODO: Create symlinks even if there is no ebuild.
-    for entry in packages_in_dir.original_dir.read_dir()? {
-        let filename = entry?.file_name();
-        if filename.to_string_lossy().ends_with(".bashrc") {
-            symlink(
-                packages_in_dir.original_dir.join(&filename),
-                package_output_dir.join(&filename),
-            )?;
-        }
-    }
-
-    // Generate `BUILD.bazel`.
-    generate_internal_package_build_file(
-        &packages_in_dir,
-        &package_output_dir.join("BUILD.bazel"),
-        resolver,
-    )
-}
-
-fn join_by_package_dir<'a>(
-    all_packages: &'a Vec<Package>,
-    translator: &PathTranslator,
-) -> HashMap<PathBuf, PackagesInDir<'a>> {
+fn join_by_package_dir<'a>(all_packages: &'a Vec<Package>) -> HashMap<PathBuf, PackagesInDir<'a>> {
     let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
 
     for package in all_packages.iter() {
-        let original_dir = translator
-            .to_outer(package.details.ebuild_path.parent().unwrap())
-            .unwrap();
         let relative_package_dir = match package.details.ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
             Ok(relative_ebuild_path) => relative_ebuild_path.parent().unwrap().to_owned(),
             Err(_) => continue,
@@ -240,7 +254,6 @@ fn join_by_package_dir<'a>(
         packages_by_dir
             .entry(relative_package_dir)
             .or_insert_with(|| PackagesInDir {
-                original_dir,
                 packages: Vec::new(),
             })
             .packages
@@ -250,21 +263,24 @@ fn join_by_package_dir<'a>(
     packages_by_dir
 }
 
-pub fn generate_internal_packages(
+pub fn generate_internal_overlays(
+    src_dir: &Path,
+    repos: &RepositorySet,
     all_packages: &Vec<Package>,
     resolver: &PackageResolver,
-    translator: &PathTranslator,
     output_dir: &Path,
 ) -> Result<()> {
-    let packages_by_dir = join_by_package_dir(all_packages, translator);
+    let output_overlays_dir = output_dir.join("internal/overlays");
+    generate_overlays(repos, src_dir, &output_overlays_dir)?;
 
     // Generate packages in parallel.
+    let packages_by_dir = join_by_package_dir(all_packages);
     packages_by_dir
         .into_par_iter()
         .try_for_each(|(relative_package_dir, packages_in_dir)| {
-            let package_output_dir = output_dir
-                .join("internal/overlays")
-                .join(relative_package_dir);
-            generate_internal_package(packages_in_dir, &package_output_dir, translator, resolver)
+            let output_file = output_overlays_dir
+                .join(relative_package_dir)
+                .join("BUILD.bazel");
+            generate_internal_package_build_file(&packages_in_dir, &output_file, resolver)
         })
 }
