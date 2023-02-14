@@ -73,8 +73,9 @@ ALL packages that declare that `USE` flag.
 
     BOARD=arm64-generic USE=debug bazel build @portage//sys-kernel/chromeos-kernel-upstream
 
-This might be undesirable since it could have a drastic effect on the dependency graph. Instead of
-using the global `USE` option, we will provide the user a [package.use](https://wiki.gentoo.org/wiki//etc/portage/package.use) file that they can use to override the individual `USE` flags for the packages they care about.
+If the user wanted to limit a USE flag override to a specific package, they could use the user
+provided  [package.use](https://wiki.gentoo.org/wiki//etc/portage/package.use) file. This file
+can be used to override the individual `USE` flags for the packages they care about.
 
 src/package.use.user:
 ```
