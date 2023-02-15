@@ -320,6 +320,14 @@ _NORMAL_DEPENDENCIES = {
             "walkdir": "@update_all_crates__walkdir-2.3.2//:walkdir",
         },
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+        _COMMON_CONDITION: {
+            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
+            "clap": "@update_all_crates__clap-4.0.32//:clap",
+            "libc": "@update_all_crates__libc-0.2.139//:libc",
+            "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
+        },
+    },
     "bazel/ebuild/private/cmd/build_image": {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
@@ -347,13 +355,6 @@ _NORMAL_DEPENDENCIES = {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
             "clap": "@update_all_crates__clap-4.0.32//:clap",
             "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
-        },
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
-        _COMMON_CONDITION: {
-            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
-            "clap": "@update_all_crates__clap-4.0.32//:clap",
-            "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
         },
     },
     "bazel/ebuild/private/cmd/run_in_container": {
@@ -483,6 +484,10 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+        _COMMON_CONDITION: {
+        },
+    },
     "bazel/ebuild/private/cmd/build_image": {
         _COMMON_CONDITION: {
         },
@@ -496,10 +501,6 @@ _NORMAL_ALIASES = {
         },
     },
     "bazel/ebuild/private/cmd/install_deps": {
-        _COMMON_CONDITION: {
-        },
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
         _COMMON_CONDITION: {
         },
     },
@@ -571,6 +572,8 @@ _NORMAL_DEV_DEPENDENCIES = {
             "proptest": "@update_all_crates__proptest-1.0.0//:proptest",
         },
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -578,8 +581,6 @@ _NORMAL_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -629,6 +630,8 @@ _NORMAL_DEV_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -636,8 +639,6 @@ _NORMAL_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -685,6 +686,8 @@ _PROC_MACRO_DEPENDENCIES = {
             "strum_macros": "@update_all_crates__strum_macros-0.24.3//:strum_macros",
         },
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -692,8 +695,6 @@ _PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -740,6 +741,8 @@ _PROC_MACRO_DEPENDENCIES = {
 _PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -747,8 +750,6 @@ _PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -789,6 +790,8 @@ _PROC_MACRO_ALIASES = {
 _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -796,8 +799,6 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -840,6 +841,8 @@ _PROC_MACRO_DEV_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -847,8 +850,6 @@ _PROC_MACRO_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -893,6 +894,8 @@ _PROC_MACRO_DEV_ALIASES = {
 _BUILD_DEPENDENCIES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -900,8 +903,6 @@ _BUILD_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -942,6 +943,8 @@ _BUILD_DEPENDENCIES = {
 _BUILD_ALIASES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -949,8 +952,6 @@ _BUILD_ALIASES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -991,6 +992,8 @@ _BUILD_ALIASES = {
 _BUILD_PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -998,8 +1001,6 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },
@@ -1040,6 +1041,8 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
 _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/alchemist": {
     },
+    "bazel/ebuild/private/cmd/action_wrapper": {
+    },
     "bazel/ebuild/private/cmd/build_image": {
     },
     "bazel/ebuild/private/cmd/build_package": {
@@ -1047,8 +1050,6 @@ _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/cmd/extract_interface": {
     },
     "bazel/ebuild/private/cmd/install_deps": {
-    },
-    "bazel/ebuild/private/cmd/action_wrapper": {
     },
     "bazel/ebuild/private/cmd/run_in_container": {
     },

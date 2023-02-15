@@ -22,9 +22,6 @@ pub struct ConfigArgs {
     )]
     layer: Vec<PathBuf>,
 
-    #[arg(long)]
-    ebuild_log: Option<PathBuf>,
-
     #[arg(
         long = "login",
         help = "logs in to the SDK before installing deps, before building, after \
@@ -43,7 +40,6 @@ impl Config {
             cmd_prefix: vec![],
             bind_mounts: Vec::new(),
             envs: HashMap::new(),
-            log_file: args.ebuild_log,
         });
     }
 }

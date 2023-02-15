@@ -120,7 +120,15 @@ def create_layer(
     )
     return output_root, output_symlink_tar
 
-def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, outputs, args, install_deps = False, generate_run_action = True):
+def mountsdk_generic(
+        ctx,
+        progress_message_name,
+        inputs,
+        binpkg_output_file,
+        outputs, args,
+        install_deps = False,
+        generate_run_action = True,
+        log_output_file = None):
     sdk = ctx.attr.sdk[SDKInfo]
     args.add_all([
         "--output=" + binpkg_output_file.path,
@@ -200,11 +208,16 @@ def mountsdk_generic(ctx, progress_message_name, inputs, binpkg_output_file, out
     )
 
     if generate_run_action:
+        log_args = []
+        if log_output_file:
+            outputs.append(log_output_file)
+            log_args.extend(["--output", log_output_file.path])
         ctx.actions.run(
             inputs = depset(direct_inputs, transitive = transitive_inputs),
             outputs = outputs,
-            executable = ctx.executable._builder,
-            arguments = [args],
+            executable = ctx.executable._action_wrapper,
+            tools = [ctx.executable._builder],
+            arguments = log_args + [ctx.executable._builder.path] + [args],
             execution_requirements = {
                 # Send SIGTERM instead of SIGKILL on user interruption.
                 "supports-graceful-termination": "",

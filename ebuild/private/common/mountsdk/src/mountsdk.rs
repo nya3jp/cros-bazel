@@ -32,14 +32,12 @@ pub struct Config {
 
     pub cmd_prefix: Vec<String>,
     pub(crate) login_mode: LoginMode,
-    pub(crate) log_file: Option<PathBuf>,
 }
 
 pub struct MountedSDK {
     pub board: String,
     root_dir: fileutil::DualPath,
     diff_dir: PathBuf,
-    log_file: Option<PathBuf>,
 
     // Required for RAII.
     cmd: Option<Command>,
@@ -123,7 +121,6 @@ impl MountedSDK {
             cmd: Some(cmd),
             root_dir,
             diff_dir,
-            log_file: cfg.log_file,
             tmp_dir,
             _control_channel: control_channel,
         });
@@ -150,12 +147,6 @@ impl MountedSDK {
             .take()
             .with_context(|| "Can only execute a command once per SDK.")?;
         cmd.args(args);
-        if let Some(log_file) = &self.log_file {
-            // Only redirect stderr if we aren't in an interactive shell (b/267392458).
-            if !nix::unistd::isatty(0)? {
-                return processes::run_suppress_stderr(&mut cmd, &log_file);
-            }
-        }
         processes::run_and_check(&mut cmd)
     }
 }
@@ -204,7 +195,6 @@ mod tests {
             envs: HashMap::new(),
             cmd_prefix: vec![],
             login_mode: Never,
-            log_file: None,
         };
 
         MountedSDK::new(cfg.clone())?.run_cmd(&["true"])?;

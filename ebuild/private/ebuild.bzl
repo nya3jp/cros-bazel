@@ -55,7 +55,6 @@ def _ebuild_impl(ctx):
     )
     args = ctx.actions.args()
     args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
-    args.add("--ebuild-log=%s" % (log_output_file.path))
 
     _ebuild_calculate_inputs(ctx, args)
 
@@ -140,6 +139,7 @@ def _ebuild_impl(ctx):
         args = args,
         install_deps = True,
         generate_run_action = not prebuilt,
+        log_output_file = log_output_file
     ))
 
     if prebuilt:
