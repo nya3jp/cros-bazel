@@ -11,7 +11,7 @@ use std::{
 };
 
 use crate::generate_repo::common::{escape_starlark_string, AUTOGENERATE_NOTICE};
-use alchemist::analyze::source::{PackageLocalSource, PackageLocalSourceOrigin};
+use alchemist::analyze::source::PackageLocalSource;
 use anyhow::{Context, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -99,12 +99,14 @@ struct SourcePackageLayout {
 
 impl SourcePackageLayout {
     /// Computes a list of [`SourcePackageLayout`] from a list of [`PackageLocalSource`].
-    fn compute(all_local_sources: &[PackageLocalSource]) -> Result<Vec<Self>> {
+    fn compute<'a>(
+        all_local_sources: impl IntoIterator<Item = &'a PackageLocalSource>,
+    ) -> Result<Vec<Self>> {
         // Deduplicate all local source prefixes.
         let sorted_prefixes: Vec<PathBuf> = all_local_sources
-            .iter()
-            .filter_map(|source| match source.origin {
-                PackageLocalSourceOrigin::Src => Some(PathBuf::from(&source.path)),
+            .into_iter()
+            .filter_map(|origin| match origin {
+                PackageLocalSource::Src(src) => Some(PathBuf::from(src)),
                 _ => None,
             })
             .sorted()
@@ -503,8 +505,8 @@ fn generate_package(package: &SourcePackage) -> Result<()> {
 }
 
 /// Generates source packages under `@portage//internal/sources/`.
-pub fn generate_internal_sources(
-    all_local_sources: &[PackageLocalSource],
+pub fn generate_internal_sources<'a>(
+    all_local_sources: impl IntoIterator<Item = &'a PackageLocalSource>,
     src_dir: &Path,
     repository_output_dir: &Path,
 ) -> Result<()> {

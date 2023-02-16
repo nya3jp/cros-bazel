@@ -1,14 +1,11 @@
 [
   {
-    "origin": "Src",
-    "path": "foo"
+    "Src": "foo"
   },
   {
-    "origin": "Src",
-    "path": "foo/bar"
+    "Src": "foo/bar"
   },
   {
-    "origin": "Src",
-    "path": "foo/bar/baz"
+    "Src": "foo/bar/baz"
   }
 ]

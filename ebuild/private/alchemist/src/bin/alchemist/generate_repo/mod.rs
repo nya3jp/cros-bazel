@@ -21,7 +21,7 @@ use std::{
 use alchemist::{
     analyze::{
         dependency::{analyze_dependencies, PackageDependencies},
-        source::{analyze_sources, PackageLocalSource, PackageSources},
+        source::{analyze_sources, PackageSources},
     },
     ebuild::{CachedPackageLoader, PackageDetails, Stability},
     fakechroot::PathTranslator,
@@ -254,15 +254,14 @@ pub fn generate_repo_main(
 
     let all_packages = analyze_packages(all_details, src_dir, resolver, verbose);
 
-    let all_local_sources: Vec<PackageLocalSource> = all_packages
+    let all_local_sources = all_packages
         .iter()
-        .flat_map(|package| package.sources.local_sources.clone())
-        .collect();
+        .flat_map(|package| &package.sources.local_sources);
 
     eprintln!("Generating @portage...");
 
     generate_internal_overlays(src_dir, repos, &all_packages, output_dir)?;
-    generate_internal_sources(&all_local_sources, src_dir, output_dir)?;
+    generate_internal_sources(all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&all_packages, resolver, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
     generate_sdk(board, repos, toolchain_config, translator, output_dir)?;

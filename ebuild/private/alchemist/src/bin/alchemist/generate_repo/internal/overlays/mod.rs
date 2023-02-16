@@ -13,7 +13,7 @@ use std::{
 };
 
 use alchemist::{
-    analyze::source::PackageLocalSourceOrigin, ebuild::PackageDetails, repository::RepositorySet,
+    analyze::source::PackageLocalSource, ebuild::PackageDetails, repository::RepositorySet,
 };
 use anyhow::{Context, Result};
 use itertools::Itertools;
@@ -186,12 +186,12 @@ impl EBuildEntry {
             .sources
             .local_sources
             .iter()
-            .map(|source| match source.origin {
-                PackageLocalSourceOrigin::Src => {
-                    format!("//internal/sources/{}:__tarballs__", source.path)
+            .map(|source| match source {
+                PackageLocalSource::Src(src) => {
+                    format!("//internal/sources/{}:__tarballs__", src.to_string_lossy())
                 }
-                PackageLocalSourceOrigin::Chrome => format!("@chrome//{}:src", source.path),
-                PackageLocalSourceOrigin::Chromite => format!("@chromite//{}:src", source.path),
+                PackageLocalSource::Chrome => "@chrome//:src".to_string(),
+                PackageLocalSource::Chromite => "@chromite//:src".to_string(),
             })
             .collect();
 

@@ -29,34 +29,14 @@ use crate::{
 };
 
 /// Represents an origin of local source code.
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub enum PackageLocalSourceOrigin {
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub enum PackageLocalSource {
     /// ChromeOS source code at `/mnt/host/source/src`.
-    Src,
+    Src(PathBuf),
     /// Chromite source code at `/mnt/host/source/chromite`.
     Chromite,
     /// Chrome source code.
     Chrome,
-}
-
-/// Represents local source code.
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
-pub struct PackageLocalSource {
-    /// Origin of this source code.
-    pub origin: PackageLocalSourceOrigin,
-    /// The directory containing source code, relative to the root of the origin.
-    /// Empty string means all source code in the origin. The path must not end
-    /// with a slash.
-    pub path: String,
-}
-
-impl PackageLocalSource {
-    pub fn starts_with(&self, prefix: &Self) -> bool {
-        if self.origin != prefix.origin {
-            return false;
-        }
-        self.path == prefix.path || self.path.starts_with(&format!("{}/", &prefix.path))
-    }
 }
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -294,10 +274,7 @@ fn extract_cros_workon_sources(
 
     let mut sources = source_dirs
         .into_iter()
-        .map(|path| PackageLocalSource {
-            origin: PackageLocalSourceOrigin::Src,
-            path: path.to_string_lossy().to_string(),
-        })
+        .map(PackageLocalSource::Src)
         .collect_vec();
 
     // Kernel packages need extra eclasses.
@@ -306,10 +283,9 @@ fn extract_cros_workon_sources(
         .iter()
         .any(|p| p == "chromiumos/third_party/kernel")
     {
-        sources.push(PackageLocalSource {
-            origin: PackageLocalSourceOrigin::Src,
-            path: "third_party/chromiumos-overlay/eclass/cros-kernel".to_owned(),
-        });
+        sources.push(PackageLocalSource::Src(
+            "third_party/chromiumos-overlay/eclass/cros-kernel".into(),
+        ));
     }
 
     Ok((sources, repo_sources))
@@ -323,10 +299,7 @@ fn apply_local_sources_workarounds(
     // TODO: Remove this hack.
     if details.inherited.contains("chromium-source") {
         // TODO: We need USE flags to add src-internal.
-        local_sources.push(PackageLocalSource {
-            origin: PackageLocalSourceOrigin::Chrome,
-            path: String::new(),
-        });
+        local_sources.push(PackageLocalSource::Chrome);
     }
 
     // The platform eclass calls `platform2.py` which requires chromite.
@@ -338,10 +311,7 @@ fn apply_local_sources_workarounds(
         || details.inherited.contains("dlc")
         || details.package_name == "dev-libs/gobject-introspection"
     {
-        local_sources.push(PackageLocalSource {
-            origin: PackageLocalSourceOrigin::Chromite,
-            path: String::new(),
-        })
+        local_sources.push(PackageLocalSource::Chromite)
     }
 
     Ok(())
@@ -905,18 +875,9 @@ mod tests {
         assert_eq!(
             local_sources,
             [
-                PackageLocalSource {
-                    origin: PackageLocalSourceOrigin::Src,
-                    path: "platform/depthcharge".to_owned(),
-                },
-                PackageLocalSource {
-                    origin: PackageLocalSourceOrigin::Src,
-                    path: "platform/vboot_reference".to_owned(),
-                },
-                PackageLocalSource {
-                    origin: PackageLocalSourceOrigin::Src,
-                    path: "third_party/coreboot".to_owned(),
-                },
+                PackageLocalSource::Src("platform/depthcharge".into()),
+                PackageLocalSource::Src("platform/vboot_reference".into()),
+                PackageLocalSource::Src("third_party/coreboot".into()),
             ]
         );
 
