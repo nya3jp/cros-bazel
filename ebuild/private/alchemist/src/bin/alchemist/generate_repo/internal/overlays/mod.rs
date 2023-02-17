@@ -9,11 +9,11 @@ use std::{
     io::Write,
     os::unix::fs::symlink,
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use alchemist::{
-    analyze::source::PackageLocalSourceOrigin, dependency::package::PackageAtomDependency,
-    repository::RepositorySet, resolver::PackageResolver,
+    analyze::source::PackageLocalSourceOrigin, ebuild::PackageDetails, repository::RepositorySet,
 };
 use anyhow::{Context, Result};
 use itertools::Itertools;
@@ -171,7 +171,7 @@ pub struct EBuildEntry {
 }
 
 impl EBuildEntry {
-    pub fn try_new(package: &Package, resolver: &PackageResolver) -> Result<Self> {
+    pub fn try_new(package: &Package) -> Result<Self> {
         let ebuild_name = package
             .details
             .ebuild_path
@@ -201,12 +201,11 @@ impl EBuildEntry {
             .map(DistFileEntry::try_new)
             .collect::<Result<_>>()?;
 
-        let resolve_dependencies = |deps: &Vec<PackageAtomDependency>| -> Result<Vec<String>> {
+        let format_dependencies = |deps: &[Arc<PackageDetails>]| -> Result<Vec<String>> {
             let targets = deps
                 .iter()
-                .map(|atom| {
-                    let package = resolver.find_best_package(atom)?;
-                    let rel_path = package
+                .map(|details| {
+                    let rel_path = details
                         .ebuild_path
                         .strip_prefix(CHROOT_SRC_DIR)?
                         .parent()
@@ -214,16 +213,16 @@ impl EBuildEntry {
                     Ok(format!(
                         "//internal/overlays/{}:{}",
                         rel_path.to_string_lossy(),
-                        package.version
+                        details.version
                     ))
                 })
                 .collect::<Result<Vec<_>>>()?;
             Ok(targets.into_iter().sorted().dedup().collect())
         };
 
-        let build_deps = resolve_dependencies(&package.dependencies.build_deps)?;
-        let runtime_deps = resolve_dependencies(&package.dependencies.runtime_deps)?;
-        let post_deps = resolve_dependencies(&package.dependencies.post_deps)?;
+        let build_deps = format_dependencies(&package.dependencies.build_deps)?;
+        let runtime_deps = format_dependencies(&package.dependencies.runtime_deps)?;
+        let post_deps = format_dependencies(&package.dependencies.post_deps)?;
 
         let sdk = if PRIMORDIAL_PACKAGES
             .iter()
@@ -268,16 +267,12 @@ struct PackagesInDir<'a> {
     packages: Vec<&'a Package>,
 }
 
-fn generate_internal_package_build_file(
-    packages_in_dir: &PackagesInDir,
-    out: &Path,
-    resolver: &PackageResolver,
-) -> Result<()> {
+fn generate_internal_package_build_file(packages_in_dir: &PackagesInDir, out: &Path) -> Result<()> {
     let context = BuildTemplateContext {
         ebuilds: packages_in_dir
             .packages
             .iter()
-            .map(|package| EBuildEntry::try_new(package, resolver))
+            .map(|package| EBuildEntry::try_new(package))
             .collect::<Result<_>>()?,
     };
 
@@ -315,7 +310,6 @@ pub fn generate_internal_overlays(
     src_dir: &Path,
     repos: &RepositorySet,
     all_packages: &[Package],
-    resolver: &PackageResolver,
     output_dir: &Path,
 ) -> Result<()> {
     let output_overlays_dir = output_dir.join("internal/overlays");
@@ -329,6 +323,6 @@ pub fn generate_internal_overlays(
             let output_file = output_overlays_dir
                 .join(relative_package_dir)
                 .join("BUILD.bazel");
-            generate_internal_package_build_file(&packages_in_dir, &output_file, resolver)
+            generate_internal_package_build_file(&packages_in_dir, &output_file)
         })
 }

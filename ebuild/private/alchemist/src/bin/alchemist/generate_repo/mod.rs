@@ -146,7 +146,7 @@ pub fn generate_repo_main(
 
     eprintln!("Generating @portage...");
 
-    generate_internal_overlays(src_dir, repos, &all_packages, resolver, output_dir)?;
+    generate_internal_overlays(src_dir, repos, &all_packages, output_dir)?;
     generate_internal_sources(&all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&all_packages, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;

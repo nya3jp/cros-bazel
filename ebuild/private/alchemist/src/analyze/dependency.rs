@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use std::sync::Arc;
+
 use anyhow::{Context, Result};
 use itertools::Itertools;
 
@@ -10,7 +12,7 @@ use crate::{
     data::UseMap,
     dependency::{
         algorithm::{elide_use_conditions, parse_simplified_dependency, simplify},
-        package::{PackageAtomDependency, PackageBlock, PackageDependency},
+        package::{PackageBlock, PackageDependency},
         CompositeDependency, Dependency,
     },
     ebuild::PackageDetails,
@@ -20,14 +22,14 @@ use crate::{
 /// Analyzed package dependencies of a package. It is returned by
 /// [`analyze_dependencies`].
 ///
-/// This struct represents dependencies as lists of [`PackageAtomDependency`]
-/// instead of [`PackageDependency`] that can contain complex expressions such
-/// as any-of.
+/// This struct represents dependencies as lists of [`PackageDetails`] instead
+/// of [`PackageDependency`] that can contain complex expressions such as
+/// any-of.
 #[derive(Clone, Debug)]
 pub struct PackageDependencies {
-    pub build_deps: Vec<PackageAtomDependency>,
-    pub runtime_deps: Vec<PackageAtomDependency>,
-    pub post_deps: Vec<PackageAtomDependency>,
+    pub build_deps: Vec<Arc<PackageDetails>>,
+    pub runtime_deps: Vec<Arc<PackageDetails>>,
+    pub post_deps: Vec<Arc<PackageDetails>>,
 }
 
 /// Represents a package dependency type.
@@ -42,13 +44,12 @@ enum DependencyKind {
 }
 
 /// Parses a dependency represented as [`PackageDependency`] that can contain
-/// complex expressions such as any-of to a simple list of
-/// [`PackageAtomDependency`].
+/// complex expressions such as any-of to a simple list of [`PackageDetails`].
 fn parse_dependencies(
     deps: PackageDependency,
     use_map: &UseMap,
     resolver: &PackageResolver,
-) -> Result<Vec<PackageAtomDependency>> {
+) -> Result<Vec<Arc<PackageDetails>>> {
     let deps = elide_use_conditions(deps, use_map).unwrap_or_default();
 
     // Rewrite atoms.
@@ -105,7 +106,16 @@ fn parse_dependencies(
 
     let deps = simplify(deps);
 
-    parse_simplified_dependency(deps)
+    let atoms = parse_simplified_dependency(deps)?;
+
+    atoms
+        .into_iter()
+        .map(|atom| {
+            resolver
+                .find_best_package(&atom)
+                .map_err(anyhow::Error::from)
+        })
+        .collect::<Result<_>>()
 }
 
 // TODO: Remove this hack.
@@ -126,7 +136,7 @@ fn extract_dependencies(
     details: &PackageDetails,
     kind: DependencyKind,
     resolver: &PackageResolver,
-) -> Result<Vec<PackageAtomDependency>> {
+) -> Result<Vec<Arc<PackageDetails>>> {
     let var_name = match kind {
         DependencyKind::Build => "DEPEND",
         DependencyKind::Run => "RDEPEND",
@@ -155,7 +165,7 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
 }
 
 /// Analyzes ebuild variables and returns [`PackageDependencies`] containing
-/// its dependencies as a list of [`PackageAtomDependency`].
+/// its dependencies as a list of [`PackageDetails`].
 pub fn analyze_dependencies(
     details: &PackageDetails,
     resolver: &PackageResolver,
@@ -184,8 +194,12 @@ pub fn analyze_dependencies(
         runtime_deps
             .into_iter()
             .chain(build_deps.clone().into_iter())
-            .sorted()
-            .dedup()
+            .sorted_by(|a, b| {
+                a.package_name
+                    .cmp(&b.package_name)
+                    .then(a.version.cmp(&b.version))
+            })
+            .dedup_by(|a, b| a.package_name == b.package_name && a.version == b.version)
             .collect()
     } else {
         runtime_deps
