@@ -7,7 +7,6 @@ use std::os::unix::fs;
 use std::{env::current_dir, path::PathBuf};
 
 use crate::digest_repo::digest_repo_main;
-use crate::dump_deps::dump_deps_main;
 use crate::dump_package::dump_package_main;
 use crate::generate_repo::generate_repo_main;
 
@@ -47,11 +46,6 @@ pub struct Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Dumps dependency graph information in JSON.
-    DumpDeps {
-        /// Package names to start scanning the dependency graph.
-        packages: Vec<String>,
-    },
     /// Dumps information of packages.
     DumpPackage {
         /// Package names.
@@ -187,13 +181,6 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     );
 
     match args.command {
-        Commands::DumpDeps { packages } => {
-            let starts = packages
-                .iter()
-                .map(|raw| raw.parse::<PackageAtomDependency>())
-                .collect::<Result<Vec<_>>>()?;
-            dump_deps_main(&resolver, starts, &src_dir)?;
-        }
         Commands::DumpPackage { packages } => {
             let atoms = packages
                 .iter()
