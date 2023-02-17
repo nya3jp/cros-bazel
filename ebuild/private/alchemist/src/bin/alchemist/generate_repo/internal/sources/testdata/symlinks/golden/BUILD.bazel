@@ -61,5 +61,5 @@ filegroup(
     srcs = [
         ":__tarball__",
     ],
-    visibility = ["//:__subpackages__"],
+    visibility = ["//internal/overlays:__subpackages__"],
 )
