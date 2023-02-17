@@ -8,7 +8,6 @@ rust_binary_crate(
     name = "sdk_from_archive",
     visibility = ["//visibility:public"],
     deps = [
-        "//bazel/ebuild/private/common/processes:processes_rust",
         "//bazel/ebuild/private/common/tar:tar_rust",
     ],
 )

@@ -325,6 +325,8 @@ _NORMAL_DEPENDENCIES = {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
             "clap": "@update_all_crates__clap-4.0.32//:clap",
             "libc": "@update_all_crates__libc-0.2.139//:libc",
+            "nix": "@update_all_crates__nix-0.26.1//:nix",
+            "signal-hook": "@update_all_crates__signal-hook-0.3.14//:signal_hook",
             "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
         },
     },
@@ -433,14 +435,6 @@ _NORMAL_DEPENDENCIES = {
             "zstd": "@update_all_crates__zstd-0.12.2-zstd.1.5.2//:zstd",
         },
     },
-    "bazel/ebuild/private/common/processes": {
-        _COMMON_CONDITION: {
-            "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
-            "libc": "@update_all_crates__libc-0.2.139//:libc",
-            "nix": "@update_all_crates__nix-0.26.1//:nix",
-            "signal-hook": "@update_all_crates__signal-hook-0.3.14//:signal_hook",
-        },
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
@@ -538,10 +532,6 @@ _NORMAL_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
-    "bazel/ebuild/private/common/processes": {
-        _COMMON_CONDITION: {
-        },
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
         _COMMON_CONDITION: {
         },
@@ -604,8 +594,6 @@ _NORMAL_DEV_DEPENDENCIES = {
             "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
         },
     },
-    "bazel/ebuild/private/common/processes": {
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
@@ -659,8 +647,6 @@ _NORMAL_DEV_ALIASES = {
     "bazel/ebuild/private/common/portage/binarypackage": {
         _COMMON_CONDITION: {
         },
-    },
-    "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
@@ -717,8 +703,6 @@ _PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
-    "bazel/ebuild/private/common/processes": {
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
@@ -769,8 +753,6 @@ _PROC_MACRO_ALIASES = {
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
-    "bazel/ebuild/private/common/processes": {
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
@@ -817,8 +799,6 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/common/mountsdk": {
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
-    },
-    "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
@@ -871,8 +851,6 @@ _PROC_MACRO_DEV_ALIASES = {
         _COMMON_CONDITION: {
         },
     },
-    "bazel/ebuild/private/common/processes": {
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
@@ -922,8 +900,6 @@ _BUILD_DEPENDENCIES = {
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
-    "bazel/ebuild/private/common/processes": {
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
@@ -970,8 +946,6 @@ _BUILD_ALIASES = {
     "bazel/ebuild/private/common/mountsdk": {
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
-    },
-    "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
@@ -1020,8 +994,6 @@ _BUILD_PROC_MACRO_DEPENDENCIES = {
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
     },
-    "bazel/ebuild/private/common/processes": {
-    },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },
     "bazel/ebuild/private/common/standard/version": {
@@ -1068,8 +1040,6 @@ _BUILD_PROC_MACRO_ALIASES = {
     "bazel/ebuild/private/common/mountsdk": {
     },
     "bazel/ebuild/private/common/portage/binarypackage": {
-    },
-    "bazel/ebuild/private/common/processes": {
     },
     "bazel/ebuild/private/common/run_in_container_lib": {
     },

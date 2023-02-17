@@ -9,7 +9,6 @@ edition = "2021"
 binarypackage = { path = "../portage/binarypackage" }
 fileutil = { path = "../fileutil" }
 makechroot = { path = "../makechroot" }
-processes = { path = "../processes" }
 run_in_container_lib = { path = "../run_in_container_lib" }
 
 anyhow.workspace = true
@@ -21,6 +20,3 @@ scopeguard.workspace = true
 strum.workspace = true
 strum_macros.workspace = true
 tempfile.workspace = true
-
-[dev-dependencies]
-processes = { path = "../processes" }

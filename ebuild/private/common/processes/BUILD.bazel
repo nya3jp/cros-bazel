@@ -1,4 +1,3 @@
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
 load("@rules_go//go:def.bzl", "go_library")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
@@ -9,14 +8,4 @@ go_library(
     importpath = "cros.local/bazel/ebuild/private/common/processes",
     visibility = ["//visibility:public"],
     deps = ["@org_golang_x_sys//unix"],
-)
-
-rust_library_crate(
-    name = "processes_rust",
-    crate_name = "processes",
-)
-
-rust_crate_test(
-    name = "processes_rust_test",
-    crate = ":processes_rust",
 )

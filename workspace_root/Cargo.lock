@@ -9,7 +9,8 @@ dependencies = [
  "anyhow",
  "clap",
  "libc",
- "processes",
+ "nix",
+ "signal-hook",
  "tempfile",
 ]
 
@@ -597,7 +598,6 @@ dependencies = [
  "fileutil",
  "makechroot",
  "mountsdk",
- "processes",
  "runfiles",
  "tar 0.1.0",
 ]
@@ -752,7 +752,6 @@ dependencies = [
  "libc",
  "makechroot",
  "nix",
- "processes",
  "run_in_container_lib",
  "runfiles",
  "scopeguard",
@@ -969,16 +968,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57a8eca9f9c4ffde41714334dee777596264c7825420f521abc92b5b5deb63a5"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "processes"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "libc",
- "nix",
- "signal-hook",
 ]
 
 [[package]]
@@ -1230,8 +1219,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "processes",
  "tar 0.1.0",
+ "tempfile",
 ]
 
 [[package]]

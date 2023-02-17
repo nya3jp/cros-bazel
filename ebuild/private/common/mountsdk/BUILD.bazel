@@ -22,7 +22,6 @@ rust_library_crate(
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
-        "//bazel/ebuild/private/common/processes:processes_rust",
         "//bazel/ebuild/private/common/run_in_container_lib",
     ],
 )
@@ -38,5 +37,4 @@ rust_crate_test(
         "testdata/mypkg.ebuild",
         "//bazel/sdk:base_sdk",
     ],
-    deps = ["//bazel/ebuild/private/common/processes:processes_rust"],
 )

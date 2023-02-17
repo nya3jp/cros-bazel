@@ -18,7 +18,6 @@ MANIFESTS = [
     "//bazel/ebuild/private/common/makechroot:Cargo.toml",
     "//bazel/ebuild/private/common/mountsdk:Cargo.toml",
     "//bazel/ebuild/private/common/portage/binarypackage:Cargo.toml",
-    "//bazel/ebuild/private/common/processes:Cargo.toml",
     "//bazel/ebuild/private/common/run_in_container_lib:Cargo.toml",
     "//bazel/ebuild/private/common/standard/version:Cargo.toml",
     "//bazel/ebuild/private/common/tar:Cargo.toml",

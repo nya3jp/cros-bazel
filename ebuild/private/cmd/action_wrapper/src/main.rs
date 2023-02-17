@@ -4,10 +4,13 @@
 
 use anyhow::Result;
 use clap::Parser;
+use nix::sys::signal::Signal;
+use signal_hook::consts::signal::{SIGCHLD, SIGINT, SIGTERM};
+use signal_hook::iterator::Signals;
 use std::fs::File;
 use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
-use std::process::{Command, ExitCode, Stdio};
+use std::process::{Command, ExitCode, ExitStatus, Stdio};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -19,6 +22,37 @@ struct Cli {
 
     #[arg(help = "Command to run", required = true)]
     command_line: Vec<String>,
+}
+
+/// Runs a child process, with some special signal handling.
+///   - Forwards SIGTERM to the child processes
+///   - Ignores SIGINT while the processes is running. SIGINT is normally generated
+///     by the terminal when Ctrl+C is pressed. The signal is sent to all processes
+///     in the foreground processes group. This means that the child processes
+///     should receive the signal by default so we don't need to forward it. One
+///     exception is if the child puts itself into a different processes group, but
+///     we want to avoid that.
+fn run(cmd: &mut Command) -> Result<ExitStatus> {
+    // Register the signal handler before spawning the process to ensure we don't drop any signals.
+    let mut signals = Signals::new(&[SIGCHLD, SIGINT, SIGTERM])?;
+
+    let mut child = cmd.spawn()?;
+
+    for signal in signals.forever() {
+        match signal as libc::c_int {
+            SIGCHLD => match &child.try_wait()? {
+                Some(_) => return Ok(child.wait()?),
+                None => continue,
+            },
+            SIGINT => {}
+            SIGTERM => nix::sys::signal::kill(
+                nix::unistd::Pid::from_raw(child.id().try_into()?),
+                Signal::SIGTERM,
+            )?,
+            _ => unreachable!(),
+        }
+    }
+    unreachable!()
 }
 
 fn main() -> Result<ExitCode> {
@@ -36,10 +70,10 @@ fn main() -> Result<ExitCode> {
             .stderr(Stdio::from(log_err));
     }
 
-    let out = processes::run(&mut command)?;
+    let status = run(&mut command)?;
 
     // If the command failed , then print saved output on the stderr.
-    if !out.status.success() {
+    if !status.success() {
         if let Some(log_name) = &args.output {
             let mut read_file = File::open(&log_name)?;
             std::io::copy(&mut read_file, &mut std::io::stderr())?;
@@ -48,14 +82,28 @@ fn main() -> Result<ExitCode> {
 
     // Propagate the exit status of the command
     // (128 + signal if it terminated after receiving a signal).
-    match out.status.code() {
+    match status.code() {
         Some(code) => Ok(ExitCode::from(code as u8)),
         None => {
-            let signal = out
-                .status
-                .signal()
-                .expect("signal number should be present");
+            let signal = status.signal().expect("signal number should be present");
             Ok(ExitCode::from(128 + signal as u8))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn runs_process() -> Result<()> {
+        run(&mut Command::new("true"))?;
+        Ok(())
+    }
+
+    #[test]
+    fn runs_failed_process() -> Result<()> {
+        run(&mut Command::new("false"))?;
+        Ok(())
     }
 }

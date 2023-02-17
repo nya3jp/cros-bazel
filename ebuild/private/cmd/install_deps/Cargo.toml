@@ -10,7 +10,6 @@ cliutil = { path = "../../common/cliutil" }
 fileutil = { path = "../../common/fileutil" }
 makechroot = { path = "../../common/makechroot" }
 mountsdk = { path = "../../common/mountsdk" }
-processes = { path = "../../common/processes" }
 tar = { path = "../../common/tar" }
 
 anyhow.workspace = true

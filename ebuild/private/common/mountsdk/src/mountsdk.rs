@@ -3,13 +3,13 @@
 // found in the LICENSE file.
 
 use crate::control::ControlChannel;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output, Stdio};
+use std::process::{Command, Stdio};
 use strum_macros::EnumString;
 use tempfile::{tempdir, TempDir};
 
@@ -144,13 +144,16 @@ impl MountedSDK {
         &self.diff_dir
     }
 
-    pub fn run_cmd(&mut self, args: &[&str]) -> Result<Output> {
+    pub fn run_cmd(&mut self, args: &[&str]) -> Result<()> {
         let mut cmd = self
             .cmd
             .take()
             .with_context(|| "Can only execute a command once per SDK.")?;
-        cmd.args(args);
-        processes::run_and_check(&mut cmd)
+        let status = cmd.args(args).status()?;
+        if !status.success() {
+            bail!("command failed: {:?}", status);
+        }
+        Ok(())
     }
 }
 
