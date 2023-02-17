@@ -165,7 +165,7 @@ pub struct EBuildEntry {
     dists: Vec<DistFileEntry>,
     build_deps: Vec<String>,
     runtime_deps: Vec<String>,
-    post_deps: Vec<String>,
+    install_set: Vec<String>,
     sdk: String,
     binary_package_src: Option<String>,
 }
@@ -222,7 +222,8 @@ impl EBuildEntry {
 
         let build_deps = format_dependencies(&package.dependencies.build_deps)?;
         let runtime_deps = format_dependencies(&package.dependencies.runtime_deps)?;
-        let post_deps = format_dependencies(&package.dependencies.post_deps)?;
+
+        let install_set = format_dependencies(&package.install_set)?;
 
         let sdk = if PRIMORDIAL_PACKAGES
             .iter()
@@ -251,7 +252,7 @@ impl EBuildEntry {
             dists,
             build_deps,
             runtime_deps,
-            post_deps,
+            install_set,
             sdk,
             binary_package_src,
         })

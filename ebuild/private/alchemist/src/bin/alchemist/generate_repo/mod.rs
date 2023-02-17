@@ -8,9 +8,10 @@ pub(self) mod public;
 pub(self) mod repositories;
 
 use std::{
+    collections::HashMap,
     fs::{create_dir_all, remove_dir_all, File},
     io::{ErrorKind, Write},
-    path::Path,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -19,8 +20,8 @@ use std::{
 
 use alchemist::{
     analyze::{
-        dependency::analyze_dependencies,
-        source::{analyze_sources, PackageLocalSource},
+        dependency::{analyze_dependencies, PackageDependencies},
+        source::{analyze_sources, PackageLocalSource, PackageSources},
     },
     ebuild::{CachedPackageLoader, PackageDetails},
     fakechroot::PathTranslator,
@@ -29,6 +30,7 @@ use alchemist::{
     toolchain::ToolchainConfig,
 };
 use anyhow::Result;
+use itertools::Itertools;
 use rayon::prelude::*;
 
 use self::{
@@ -63,6 +65,49 @@ fn evaluate_all_packages(
     Ok(packages)
 }
 
+/// Similar to [`Package`], but an install set is not resolved yet.
+struct PackagePartial {
+    pub details: Arc<PackageDetails>,
+    pub dependencies: PackageDependencies,
+    pub sources: PackageSources,
+}
+
+/// Performs DFS on the dependency graph presented by `partial_by_path` and
+/// records the install set of `current` to `install_map`. Note that
+/// `install_map` is a [`HashMap`] because it is used for remembering visited
+/// nodes.
+fn find_install_map<'a>(
+    partial_by_path: &'a HashMap<&Path, &PackagePartial>,
+    current: &'a Arc<PackageDetails>,
+    install_map: &mut HashMap<&'a Path, Arc<PackageDetails>>,
+) {
+    use std::collections::hash_map::Entry::*;
+    match install_map.entry(current.ebuild_path.as_path()) {
+        Occupied(_) => {
+            return;
+        }
+        Vacant(entry) => {
+            entry.insert(current.clone());
+        }
+    }
+
+    // PackagePartial can be unavailable when analysis failed for the package
+    // (e.g. failed to flatten RDEPEND). We can just skip traversing the graph
+    // in this case.
+    let current_partial = match partial_by_path.get(current.ebuild_path.as_path()) {
+        Some(partial) => partial,
+        None => {
+            return;
+        }
+    };
+
+    let deps = &current_partial.dependencies;
+    let installs = deps.runtime_deps.iter().chain(deps.post_deps.iter());
+    for install in installs {
+        find_install_map(partial_by_path, install, install_map);
+    }
+}
+
 fn analyze_packages(
     all_details: Vec<Arc<PackageDetails>>,
     src_dir: &Path,
@@ -71,13 +116,13 @@ fn analyze_packages(
 ) -> Vec<Package> {
     // Analyze packages in parallel.
     let fail_count = AtomicUsize::new(0);
-    let all_packages: Vec<Package> = all_details
-        .into_par_iter()
+    let all_partials: Vec<PackagePartial> = all_details
+        .par_iter()
         .flat_map(|details| {
-            let result = (|| -> Result<Package> {
-                let dependencies = analyze_dependencies(&details, resolver)?;
-                let sources = analyze_sources(&details, src_dir)?;
-                Ok(Package {
+            let result = (|| -> Result<PackagePartial> {
+                let dependencies = analyze_dependencies(details, resolver)?;
+                let sources = analyze_sources(details, src_dir)?;
+                Ok(PackagePartial {
                     details: details.clone(),
                     dependencies,
                     sources,
@@ -109,7 +154,72 @@ fn analyze_packages(
         }
     }
 
-    all_packages
+    // Compute install sets.
+    //
+    // Portage provides two kinds of runtime dependencies: RDEPEND and PDEPEND.
+    // They're very similar, but PDEPEND doesn't require dependencies to be
+    // emerged in advance, and thus it's typically used to represent mutual
+    // runtime dependencies without introducing circular dependencies.
+    //
+    // For example, sys-libs/pam and sys-auth/pambase depends on each other:
+    // - sys-libs/pam:     PDEPEND="sys-auth/pambase"
+    // - sys-auth/pambase: RDEPEND="sys-libs/pam"
+    //
+    // To build a ChromeOS base image, we need to build all packages depended
+    // on for runtime by virtual/target-os, directly or indirectly. However,
+    // we cannot simply represent PDEPEND as Bazel target dependencies since
+    // they will introduce circular dependencies in Bazel dependency graph.
+    // Therefore, alchemist needs to resolve PDEPEND and embed the computed
+    // results in the generated BUILD.bazel files. Specifically, alchemist
+    // needs to compute a transitive closure of a runtime dependency graph,
+    // and to write the results as package_set Bazel targets.
+    //
+    // In the example above, sys-auth/pambase will appear in all package_set
+    // targets that depend on it directly or indirectly, including sys-libs/pam
+    // and virtual/target-os.
+    //
+    // There are some sophisticated algorithms to compute transitive closures,
+    // but for our purpose it is sufficient to just traverse the dependency
+    // graph starting from each node.
+
+    let partial_by_path: HashMap<&Path, &PackagePartial> = all_partials
+        .iter()
+        .map(|partial| (partial.details.ebuild_path.as_path(), partial))
+        .collect();
+
+    let mut install_set_by_path: HashMap<PathBuf, Vec<Arc<PackageDetails>>> = partial_by_path
+        .iter()
+        .map(|(path, partial)| {
+            let mut install_map: HashMap<&Path, Arc<PackageDetails>> = HashMap::new();
+            find_install_map(&partial_by_path, &partial.details, &mut install_map);
+
+            let install_set = install_map
+                .into_values()
+                .sorted_by(|a, b| {
+                    a.package_name
+                        .cmp(&b.package_name)
+                        .then_with(|| a.version.cmp(&b.version))
+                })
+                .collect();
+
+            ((*path).to_owned(), install_set)
+        })
+        .collect();
+
+    all_partials
+        .into_iter()
+        .map(|partial| {
+            let install_set = install_set_by_path
+                .remove(partial.details.ebuild_path.as_path())
+                .unwrap();
+            Package {
+                details: partial.details,
+                dependencies: partial.dependencies,
+                install_set,
+                sources: partial.sources,
+            }
+        })
+        .collect()
 }
 
 /// The entry point of "generate-repo" subcommand.

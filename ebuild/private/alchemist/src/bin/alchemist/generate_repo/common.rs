@@ -43,10 +43,22 @@ fn file_name_to_repository_name(file_name: &str) -> String {
     format!("portage-dist_{}", escaped_file_name)
 }
 
+/// Holds rich information about a package.
 pub struct Package {
+    /// Package information extracted by [`PackageResolver`].
     pub details: Arc<PackageDetails>,
+
+    /// Dependency information computed from the package metadata.
     pub dependencies: PackageDependencies,
+
+    /// Locates source code needed to build this package.
     pub sources: PackageSources,
+
+    /// A list of packages needed to install together with this package.
+    /// Specifically, it is a transitive closure of dependencies introduced by
+    /// RDEPEND and PDEPEND. Alchemist needs to compute it, instead of letting
+    /// Bazel compute it, because there can be circular dependencies.
+    pub install_set: Vec<Arc<PackageDetails>>,
 }
 
 #[derive(Serialize)]

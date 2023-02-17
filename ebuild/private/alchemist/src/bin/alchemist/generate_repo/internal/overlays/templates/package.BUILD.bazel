@@ -53,8 +53,7 @@ ebuild(
 package_set(
     name = "{{ ebuild.version }}_package_set",
     deps = [
-        ":{{ ebuild.version }}",
-        {%- for dep in ebuild.post_deps %}
+        {%- for dep in ebuild.install_set %}
         "{{ dep }}",
         {%- endfor %}
     ],
