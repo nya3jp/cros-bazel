@@ -10,7 +10,7 @@ load("//bazel/ebuild:defs.bzl", "overlay_set")
 overlay_set(
     name = "overlays_build_image",
     overlays = [
-        "//third_party/chromiumos-overlay:package-provided",
+        "@portage//internal/overlays/third_party/chromiumos-overlay:package-provided",
     ],
     visibility = ["//visibility:public"],
 )
@@ -35,6 +35,7 @@ rust_binary_crate(
         "//bazel/ebuild/private/common/makechroot:makechroot_rust",
         "//bazel/ebuild/private/common/mountsdk",
     ],
+    visibility = ["//visibility:public"],
 )
 
 rust_crate_test(

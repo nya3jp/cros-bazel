@@ -115,7 +115,7 @@ fn main() -> Result<()> {
     cfg.cmd_prefix = vec![
         "/usr/bin/sudo".to_string(),
         "--preserve-env".to_string(),
-        "--unshare".to_string(),
+        "unshare".to_string(),
         "--mount".to_string(),
         "--".to_string(),
     ];
