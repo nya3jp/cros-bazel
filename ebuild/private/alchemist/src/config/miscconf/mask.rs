@@ -38,10 +38,10 @@ fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<Confi
     let mut updates = Vec::<PackageMaskUpdate>::new();
 
     for (lineno, line) in contents
-        .split("\n")
+        .split('\n')
         .map(|line| line.trim())
         .enumerate()
-        .filter(|(_, line)| !line.is_empty() && !line.starts_with("#"))
+        .filter(|(_, line)| !line.is_empty() && !line.starts_with('#'))
     {
         let atom = line
             .trim()

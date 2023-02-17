@@ -40,7 +40,7 @@ pub enum PackageLocalSourceOrigin {
 pub struct PackageLocalSource {
     /// Origin of this source code.
     pub origin: PackageLocalSourceOrigin,
-    /// The directory containg source code, relative to the root of the origin.
+    /// The directory containing source code, relative to the root of the origin.
     /// Empty string means all source code in the origin. The path must not end
     /// with a slash.
     pub path: String,
@@ -263,7 +263,7 @@ fn extract_local_sources(
 }
 
 fn parse_uri_dependencies(deps: UriDependency, use_map: &UseMap) -> Result<Vec<UriAtomDependency>> {
-    let deps = elide_use_conditions(deps, &use_map).unwrap_or_default();
+    let deps = elide_use_conditions(deps, use_map).unwrap_or_default();
     let deps = simplify(deps);
     parse_simplified_dependency(deps)
 }
@@ -338,7 +338,7 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageRemoteS
         return Ok(Vec::new());
     }
 
-    let manifest = load_package_manifest(&details.ebuild_path.parent().unwrap())?;
+    let manifest = load_package_manifest(details.ebuild_path.parent().unwrap())?;
 
     let mut dist_map: HashMap<String, DistEntry> = manifest
         .dists

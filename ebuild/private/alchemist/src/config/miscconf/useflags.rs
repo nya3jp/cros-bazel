@@ -42,9 +42,9 @@ fn load_wildcard_use_config(
     let mut updates = Vec::<UseUpdate>::new();
 
     for tokens in contents
-        .split("\n")
+        .split('\n')
         .map(|line| line.trim())
-        .filter(|line| !line.is_empty() && !line.starts_with("#"))
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
     {
         updates.push(UseUpdate {
             kind,
@@ -94,10 +94,10 @@ fn load_package_use_config(
     let mut updates = Vec::<UseUpdate>::new();
 
     for (lineno, line) in contents
-        .split("\n")
+        .split('\n')
         .map(|line| line.trim())
         .enumerate()
-        .filter(|(_, line)| !line.is_empty() && !line.starts_with("#"))
+        .filter(|(_, line)| !line.is_empty() && !line.starts_with('#'))
     {
         let (raw_atom, tokens) = line
             .trim()

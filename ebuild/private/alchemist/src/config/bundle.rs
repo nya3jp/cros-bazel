@@ -72,7 +72,7 @@ fn merge_incremental_tokens<'s, I: IntoIterator<Item = &'s str>>(
 ) -> impl Iterator<Item = &'s str> {
     let mut values = HashSet::<&str>::new();
     for token in iter {
-        if let Some(token) = token.strip_prefix("-") {
+        if let Some(token) = token.strip_prefix('-') {
             if token == "*" {
                 values.clear();
             } else {
@@ -402,9 +402,7 @@ impl ConfigBundle {
     ///
     /// This function is supposed to be called from the constructor and its
     /// result should be cached, thus this function does not take self.
-    fn compute_general_incremental_variables<'a>(
-        nodes: &Vec<ConfigNode>,
-    ) -> HashMap<String, Vec<String>> {
+    fn compute_general_incremental_variables(nodes: &[ConfigNode]) -> HashMap<String, Vec<String>> {
         // Compute built-in incremental variables.
         let builtins: HashMap<String, Vec<String>> = BUILTIN_INCREMENTAL_VARIABLES_EXCEPT_USE
             .iter()
@@ -447,7 +445,7 @@ impl ConfigBundle {
     /// This function is supposed to be called from the constructor and its
     /// result should be cached, thus this function does not take self.
     fn compute_general_incremental_variable<'a>(
-        nodes: &'a Vec<ConfigNode>,
+        nodes: &'a [ConfigNode],
         name: &'a str,
         defaults: &'a str,
     ) -> impl Iterator<Item = &'a str> {

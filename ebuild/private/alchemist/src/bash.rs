@@ -128,12 +128,9 @@ mod parser {
             // If all keys can be parsed as integers less than INDEX_LIMIT,
             // convert the map to an indexed array.
             const INDEX_LIMIT: usize = 1000;
-            let is_indexed = entries
-                .iter()
-                .all(|entry| match entry.key.parse::<usize>() {
-                    Ok(index) if index < INDEX_LIMIT => true,
-                    _ => false,
-                });
+            let is_indexed = entries.iter().all(
+                |entry| matches!(entry.key.parse::<usize>(), Ok(index) if index < INDEX_LIMIT),
+            );
             if is_indexed {
                 return BashValue::IndexedArray(entries.into_iter().fold(
                     Vec::new(),
@@ -147,12 +144,12 @@ mod parser {
                     },
                 ));
             }
-            return BashValue::AssociativeArray(
+            BashValue::AssociativeArray(
                 entries
                     .into_iter()
                     .map(|entry| (entry.key, entry.value))
                     .collect(),
-            );
+            )
         }
     }
 
@@ -320,7 +317,7 @@ mod tests {
         assert!(vars.get_scalar_or_default("indexed").is_err());
         assert!(vars.get_scalar_or_default("associative").is_err());
         match vars.get_scalar_or_default("missing") {
-            Ok(s) if s == "" => {}
+            Ok(s) if s.is_empty() => {}
             other => panic!(
                 "get_scalar_or_default() returned unexpected result: {:?}",
                 other
@@ -344,7 +341,7 @@ mod tests {
 
         assert!(vars.get_indexed_array("scalar").is_err());
         match vars.get_indexed_array("indexed") {
-            Ok(v) if v == &["a".to_owned(), "b".to_owned()] => {}
+            Ok(v) if v == ["a".to_owned(), "b".to_owned()] => {}
             other => panic!(
                 "get_indexed_array() returned unexpected result: {:?}",
                 other

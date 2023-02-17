@@ -1,3 +1,7 @@
+// Copyright 2023 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 use anyhow::{bail, Context, Result};
 use nix::{
     sys::select::FdSet,
@@ -60,15 +64,14 @@ impl ControlChannel {
     pub fn new(path: PathBuf) -> Result<Self> {
         nix::unistd::mkfifo(&path, nix::sys::stat::Mode::from_bits(0o666).unwrap())?;
         let (tx, rx) = nix::unistd::pipe()?;
-        return Ok(Self {
+        Ok(Self {
             join_handle: Some(std::thread::spawn(move || {
-                match Self::read_fifo(path, rx) {
-                    Err(e) => eprintln!("Failed to read fifo: {e}"),
-                    _ => {}
+                if let Err(e) = Self::read_fifo(path, rx) {
+                    eprintln!("Failed to read fifo: {e}");
                 }
             })),
             tx,
-        });
+        })
     }
 }
 

@@ -20,10 +20,10 @@ pub fn load_provided_packages_config(dir: &Path) -> Result<Vec<ConfigNode>> {
     let mut packages = Vec::<ProvidedPackage>::new();
 
     for (lineno, line) in contents
-        .split("\n")
+        .split('\n')
         .map(|line| line.trim())
         .enumerate()
-        .filter(|(_, line)| !line.is_empty() && !line.starts_with("#"))
+        .filter(|(_, line)| !line.is_empty() && !line.starts_with('#'))
     {
         let (package_name, version) = Version::from_str_suffix(line).with_context(|| {
             format!(

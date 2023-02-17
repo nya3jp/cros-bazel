@@ -11,7 +11,7 @@ use std::{
     str::FromStr,
 };
 
-pub const VERSION_RE_RAW: &'static str =
+pub const VERSION_RE_RAW: &str =
     r"[0-9]+(?:\.[0-9]+)*[a-z]?(?:_(?:alpha|beta|pre|rc|p)[0-9]*)*(?:-r[0-9]+)?";
 static VERSION_SUFFIX_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(&format!("-{}$", VERSION_RE_RAW)).unwrap());
@@ -153,7 +153,7 @@ impl Version {
         let trimed_version = (|| {
             let mut copy = self.clone();
 
-            if prefix.revision != "" {
+            if !prefix.revision.is_empty() {
                 return copy;
             }
             copy.revision.clear();
@@ -165,7 +165,7 @@ impl Version {
                 return copy;
             }
 
-            if prefix.letter != "" {
+            if !prefix.letter.is_empty() {
                 return copy;
             }
             copy.letter.clear();

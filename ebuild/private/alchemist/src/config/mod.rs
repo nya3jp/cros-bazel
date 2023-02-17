@@ -179,11 +179,8 @@ impl SimpleConfigSource {
 impl ConfigSource for SimpleConfigSource {
     fn evaluate_configs(&self, env: &mut Vars) -> Vec<ConfigNode> {
         for node in self.nodes.iter() {
-            match &node.value {
-                ConfigNodeValue::Vars(vars) => {
-                    env.extend(vars.clone());
-                }
-                _ => {}
+            if let ConfigNodeValue::Vars(vars) = &node.value {
+                env.extend(vars.clone());
             }
         }
         self.nodes.clone()

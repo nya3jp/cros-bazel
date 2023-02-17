@@ -30,7 +30,7 @@ fn find_files(root: &Path, predicate: fn(&str) -> bool) -> Result<Vec<PathBuf>> 
 fn sort_contents(pkg_dir: &Path) -> Result<()> {
     for path in find_files(pkg_dir, |file_name| file_name == "CONTENTS")? {
         let contents = std::fs::read_to_string(&path)?
-            .split("\n")
+            .split('\n')
             .filter(|line| !line.is_empty())
             .sorted()
             .join("\n");

@@ -128,26 +128,26 @@ pub fn full_parse(mut input: Span<'_>, allow_source: bool) -> anyhow::Result<Fil
 }
 
 /// Parser to recognize a commented line in a `make.conf` file.
-fn comment_line(input: Span<'_>) -> IResult<Span<'_>, Span<'_>> {
+fn comment_line(input: Span) -> IResult<Span, Span> {
     recognize(preceded(complete::char('#'), complete::not_line_ending))(input)
 }
 
 /// Parser to recognize a full assignment expression, e.g. `FOO="$BAR $BAZ"`.
-fn assignment<'a>(input: Span<'a>) -> IResult<Span<'a>, Statement<'a>> {
+fn assignment(input: Span) -> IResult<Span, Statement> {
     map(separated_pair(variable, tag("="), rval), |(lval, rval)| {
         Statement::Assign(lval, rval)
     })(input)
 }
 
 /// Parser to recognize a source statement, e.g. `source path/to/make.conf`.
-fn source<'a>(input: Span<'a>) -> IResult<Span<'a>, Statement<'a>> {
+fn source(input: Span) -> IResult<Span, Statement> {
     map(preceded(pair(tag("source"), multispace1), rval), |rval| {
         Statement::Source(rval)
     })(input)
 }
 
 /// Parser to recognize a [RVal].
-fn rval<'a>(input: Span<'a>) -> IResult<Span<'a>, RVal<'a>> {
+fn rval(input: Span) -> IResult<Span, RVal> {
     alt((double_quoted_rval, single_quoted_rval, unquoted_rval))(input)
 }
 
@@ -157,7 +157,7 @@ fn rval<'a>(input: Span<'a>) -> IResult<Span<'a>, RVal<'a>> {
 /// https://dev.gentoo.org/~ulm/pms/head/pms.html#x1-470005.2.4
 ///
 /// Line continuations are not currently handled properly.
-fn double_quoted_rval<'a>(input: Span<'a>) -> IResult<Span<'a>, RVal<'a>> {
+fn double_quoted_rval(input: Span) -> IResult<Span, RVal> {
     map(
         delimited(
             tag("\""),
@@ -171,7 +171,7 @@ fn double_quoted_rval<'a>(input: Span<'a>) -> IResult<Span<'a>, RVal<'a>> {
 /// Parser to recognize a properly single-quoted [RVal].
 ///
 /// Line continuations are not currently handled properly.
-fn single_quoted_rval<'a>(input: Span<'a>) -> IResult<Span<'a>, RVal<'a>> {
+fn single_quoted_rval(input: Span) -> IResult<Span, RVal> {
     map(delimited(tag("'"), is_not("'"), tag("'")), |s| RVal {
         vals: vec![Value::Literal(s)],
     })(input)
@@ -181,7 +181,7 @@ fn single_quoted_rval<'a>(input: Span<'a>) -> IResult<Span<'a>, RVal<'a>> {
 ///
 /// These are violations of the PMS, but the ability to correctly parse these is needed to support
 /// the few organic usages within the Chrome OS tree.
-fn unquoted_rval<'a>(input: Span<'a>) -> IResult<Span<'a>, RVal<'a>> {
+fn unquoted_rval(input: Span) -> IResult<Span, RVal> {
     let not_ws = |c: char| !c.is_ascii_whitespace();
     // Our best guess for an unquoted rvalue is everything up until the next piece of whitespace.
     let unquoted_literal = map(take_while1(not_ws), Value::Literal);

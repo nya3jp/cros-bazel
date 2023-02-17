@@ -151,7 +151,7 @@ impl Repository {
             .collect::<Result<Vec<_>>>()?;
         Ok(Self {
             name: name.to_owned(),
-            location: location.clone(),
+            location,
             parents,
         })
     }
@@ -268,12 +268,12 @@ impl RepositorySet {
         let primary_repo_dir = bootstrap_config
             .env()
             .get("PORTDIR")
-            .map(|v| v.clone())
+            .cloned()
             .ok_or_else(|| anyhow!("PORTDIR is not defined in system configs"))?;
         let secondary_repo_dirs = bootstrap_config
             .env()
             .get("PORTDIR_OVERLAY")
-            .map(|v| v.clone())
+            .cloned()
             .unwrap_or_default();
 
         // Read layout.conf in repositories to build a map from repository names

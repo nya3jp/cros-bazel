@@ -284,7 +284,7 @@ fn generate_configs(board: &str, translator: &PathTranslator) -> Result<()> {
 
     let toolchains = load_toolchains(&repos)?;
 
-    generate_board_configs(&board, &repos, &toolchains, translator)?;
+    generate_board_configs(board, &repos, &toolchains, translator)?;
 
     Ok(())
 }

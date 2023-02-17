@@ -19,10 +19,10 @@ impl FromStr for XpakSpec {
     // If =? is used, an empty file is written if the key doesn't exist
     fn from_str(spec: &str) -> Result<Self> {
         let (xpak_header, target_path) = cliutil::split_key_value(spec)?;
-        let (target_path, optional) = if target_path.starts_with("?") {
-            (&target_path[1..], true)
+        let (target_path, optional) = if let Some(target_path) = target_path.strip_prefix('?') {
+            (target_path, true)
         } else {
-            (&target_path[..], false)
+            (target_path, false)
         };
         Ok(Self {
             xpak_header: xpak_header.to_string(),
@@ -47,7 +47,7 @@ impl FromStr for OutputFileSpec {
             inside_path: inside_path.to_string(),
             target_path: PathBuf::from_str(target_path)?,
         };
-        if !res.inside_path.starts_with("/") {
+        if !res.inside_path.starts_with('/') {
             bail!(
                 "Invalid overlay spec: {spec}, {0:?} must be absolute",
                 res.inside_path
@@ -66,7 +66,7 @@ mod tests {
         let spec = XpakSpec::from_str("a=b")?;
         assert_eq!(spec.xpak_header, "a");
         assert_eq!(spec.target_path, PathBuf::from("b"));
-        assert_eq!(spec.optional, false);
+        assert!(!spec.optional);
 
         Ok(())
     }
@@ -76,7 +76,7 @@ mod tests {
         let spec = XpakSpec::from_str("a=?b")?;
         assert_eq!(spec.xpak_header, "a");
         assert_eq!(spec.target_path, PathBuf::from("b"));
-        assert_eq!(spec.optional, true);
+        assert!(spec.optional);
 
         Ok(())
     }

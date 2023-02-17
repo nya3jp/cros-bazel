@@ -29,7 +29,7 @@ struct RepositoriesTemplateContext {
     dists: Vec<DistFileEntry>,
 }
 
-pub fn generate_repositories_file(packages: &Vec<Package>, out: &Path) -> Result<()> {
+pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()> {
     let joined_dists: Vec<DistFileEntry> = packages
         .iter()
         .flat_map(|package| {

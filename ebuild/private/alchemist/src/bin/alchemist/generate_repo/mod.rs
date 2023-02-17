@@ -18,7 +18,10 @@ use std::{
 };
 
 use alchemist::{
-    analyze::{dependency::analyze_dependencies, source::analyze_sources},
+    analyze::{
+        dependency::analyze_dependencies,
+        source::{analyze_sources, PackageLocalSource},
+    },
     ebuild::{CachedPackageLoader, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
@@ -136,7 +139,7 @@ pub fn generate_repo_main(
 
     let all_packages = analyze_packages(all_details, src_dir, resolver, verbose);
 
-    let all_local_sources = all_packages
+    let all_local_sources: Vec<PackageLocalSource> = all_packages
         .iter()
         .flat_map(|package| package.sources.local_sources.clone())
         .collect();

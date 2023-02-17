@@ -150,7 +150,7 @@ fn generate_overlays(
 
             generate_overlay_symlinks(&original_dir, &output_dir)?;
 
-            generate_overlay_build_file(&relative_dir, &output_dir.join("BUILD.bazel"))?;
+            generate_overlay_build_file(relative_dir, &output_dir.join("BUILD.bazel"))?;
 
             Ok(())
         })?;
@@ -291,7 +291,7 @@ fn generate_internal_package_build_file(
     Ok(())
 }
 
-fn join_by_package_dir<'a>(all_packages: &'a Vec<Package>) -> HashMap<PathBuf, PackagesInDir<'a>> {
+fn join_by_package_dir(all_packages: &[Package]) -> HashMap<PathBuf, PackagesInDir> {
     let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
 
     for package in all_packages.iter() {
@@ -314,7 +314,7 @@ fn join_by_package_dir<'a>(all_packages: &'a Vec<Package>) -> HashMap<PathBuf, P
 pub fn generate_internal_overlays(
     src_dir: &Path,
     repos: &RepositorySet,
-    all_packages: &Vec<Package>,
+    all_packages: &[Package],
     resolver: &PackageResolver,
     output_dir: &Path,
 ) -> Result<()> {

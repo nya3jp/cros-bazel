@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 use anyhow::Result;
-use libc;
 use std::fmt;
 use std::process::{Command, Stdio};
 use tempfile::NamedTempFile;
@@ -86,7 +85,7 @@ fn run_without_arguments() -> Result<()> {
         .stderr(Stdio::piped())
         .output()?;
 
-    assert_eq!(output.status.success(), false);
+    assert!(!output.status.success());
 
     let actual_printed_stderr = String::from_utf8(output.stderr)?;
 

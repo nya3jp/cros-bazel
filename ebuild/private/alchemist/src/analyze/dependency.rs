@@ -41,7 +41,7 @@ enum DependencyKind {
     Post,
 }
 
-/// Parses a depenendency represented as [`PackageDependency`] that can contain
+/// Parses a dependency represented as [`PackageDependency`] that can contain
 /// complex expressions such as any-of to a simple list of
 /// [`PackageAtomDependency`].
 fn parse_dependencies(
@@ -59,15 +59,15 @@ fn parse_dependencies(
                 if atom.block() != PackageBlock::None {
                     return Ok(Dependency::new_constant(
                         true,
-                        &format!("Package block {} is ignored", atom.to_string()),
+                        &format!("Package block {} is ignored", atom),
                     ));
                 }
 
                 // Remove provided packages.
-                if let Some(_) = resolver.find_provided_packages(&atom).next() {
+                if resolver.find_provided_packages(&atom).next().is_some() {
                     return Ok(Dependency::new_constant(
                         true,
-                        &format!("Package {} is in package.provided", atom.to_string()),
+                        &format!("Package {} is in package.provided", atom),
                     ));
                 }
 
@@ -76,7 +76,7 @@ fn parse_dependencies(
                     Err(FindBestPackageError::NotFound) => {
                         return Ok(Dependency::new_constant(
                             false,
-                            &format!("No package satisfies {}", atom.to_string()),
+                            &format!("No package satisfies {}", atom),
                         ));
                     }
                     res => {
@@ -105,7 +105,7 @@ fn parse_dependencies(
 
     let deps = simplify(deps);
 
-    parse_simplified_dependency(deps.clone())
+    parse_simplified_dependency(deps)
 }
 
 // TODO: Remove this hack.
@@ -147,10 +147,9 @@ fn extract_dependencies(
 fn is_rust_source_package(details: &PackageDetails) -> bool {
     let is_rust_package = details.inherited.contains("cros-rust");
     let is_cros_workon_package = details.inherited.contains("cros-workon");
-    let has_src_compile = match details.vars.hash_map().get("HAS_SRC_COMPILE") {
-        Some(BashValue::Scalar(s)) if s == "1" => true,
-        _ => false,
-    };
+    let has_src_compile = matches!(
+        details.vars.hash_map().get("HAS_SRC_COMPILE"),
+        Some(BashValue::Scalar(s)) if s == "1");
 
     is_rust_package && !is_cros_workon_package && !has_src_compile
 }
@@ -161,16 +160,16 @@ pub fn analyze_dependencies(
     details: &PackageDetails,
     resolver: &PackageResolver,
 ) -> Result<PackageDependencies> {
-    let build_deps = extract_dependencies(&*details, DependencyKind::Build, resolver)
-        .with_context(|| {
+    let build_deps =
+        extract_dependencies(details, DependencyKind::Build, resolver).with_context(|| {
             format!(
                 "Resolving build-time dependencies for {}-{}",
                 &details.package_name, &details.version
             )
         })?;
 
-    let runtime_deps = extract_dependencies(&*details, DependencyKind::Run, resolver)
-        .with_context(|| {
+    let runtime_deps =
+        extract_dependencies(details, DependencyKind::Run, resolver).with_context(|| {
             format!(
                 "Resolving runtime dependencies for {}-{}",
                 &details.package_name, &details.version
@@ -181,7 +180,7 @@ pub fn analyze_dependencies(
     // They also need to be listed as RDPEND so they get pulled in as transitive
     // deps.
     // TODO: Fix ebuilds and remove this hack.
-    let runtime_deps = if is_rust_source_package(&details) {
+    let runtime_deps = if is_rust_source_package(details) {
         runtime_deps
             .into_iter()
             .chain(build_deps.clone().into_iter())
@@ -193,7 +192,7 @@ pub fn analyze_dependencies(
     };
 
     let post_deps =
-        extract_dependencies(&*details, DependencyKind::Post, resolver).with_context(|| {
+        extract_dependencies(details, DependencyKind::Post, resolver).with_context(|| {
             format!(
                 "Resolving post-time dependencies for {}-{}",
                 &details.package_name, &details.version

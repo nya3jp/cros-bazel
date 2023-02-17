@@ -50,7 +50,7 @@ impl FromStr for Toolchain {
         };
 
         // See https://wiki.osdev.org/Target_Triplet
-        let mut parts = triple.split("-");
+        let mut parts = triple.split('-');
         let arch = match parts.next() {
             Some(arch) => arch,
             None => bail!("Tripplet is missing arch"),
@@ -102,7 +102,7 @@ impl Toolchain {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ToolchainConfig {
     pub toolchains: Vec<Toolchain>,
     pub default_index: Option<usize>,

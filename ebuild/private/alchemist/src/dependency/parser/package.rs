@@ -28,8 +28,7 @@ use crate::dependency::{
 use super::{DependencyParser, DependencyParserCommon};
 
 /// Raw regular expression string matching a valid package name.
-pub const PACKAGE_NAME_RE_RAW: &'static str =
-    r"[A-Za-z0-9_][A-Za-z0-9+_.-]*/[A-Za-z0-9_][A-Za-z0-9+_-]*";
+pub const PACKAGE_NAME_RE_RAW: &str = r"[A-Za-z0-9_][A-Za-z0-9+_.-]*/[A-Za-z0-9_][A-Za-z0-9+_-]*";
 
 /// Regular expression matching a string starting with a valid package name.
 static PACKAGE_NAME_PLAIN_RE: Lazy<Regex> =
@@ -57,7 +56,7 @@ impl<'i> DependencyParserCommon<'i, PackageAtomDependency> for PackageDependency
     fn expression(input: &str) -> IResult<&str, PackageDependency> {
         let (input, _) = multispace0(input)?;
         alt((
-            map(Self::atom, |atom| Dependency::Leaf(atom)),
+            map(Self::atom, Dependency::Leaf),
             Self::all_of,
             Self::any_of,
             Self::use_conditional,

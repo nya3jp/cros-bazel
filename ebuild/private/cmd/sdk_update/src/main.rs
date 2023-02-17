@@ -68,7 +68,7 @@ fn main() -> Result<()> {
     let host_packages_dir = Path::new("/var/lib/portage/pkgs");
     let target_packages_dir = PathBuf::from("/build").join(&cfg.board).join("packages");
 
-    let host_install_atoms = bind_binary_packages(&mut cfg, &host_packages_dir, args.install_host)
+    let host_install_atoms = bind_binary_packages(&mut cfg, host_packages_dir, args.install_host)
         .with_context(|| "Failed to bind host binary packages.")?;
     cfg.envs.insert(
         "INSTALL_ATOMS_HOST".to_owned(),
@@ -99,9 +99,9 @@ fn main() -> Result<()> {
 
     let mut sdk = mountsdk::MountedSDK::new(cfg)?;
     sdk.run_cmd(&[MAIN_SCRIPT])
-        .with_context(|| format!("Failed to run the command."))?;
+        .with_context(|| "Failed to run the command.")?;
 
-    fileutil::move_dir_contents(&sdk.diff_dir(), &args.output_dir)
+    fileutil::move_dir_contents(sdk.diff_dir(), &args.output_dir)
         .with_context(|| "Failed to move the diff dir.")?;
 
     makechroot::clean_layer(Some(&sdk.board), &args.output_dir)

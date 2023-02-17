@@ -1,3 +1,7 @@
+// Copyright 2023 The ChromiumOS Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 use anyhow::{Context, Error, Result};
 use binarypackage::BinaryPackage;
 use makechroot::BindMount;
@@ -15,7 +19,7 @@ impl FromStr for InstallGroup {
 
     fn from_str(s: &str) -> Result<Self> {
         Ok(Self {
-            packages: s.split(":").map(PathBuf::from).collect(),
+            packages: s.split(':').map(PathBuf::from).collect(),
         })
     }
 }

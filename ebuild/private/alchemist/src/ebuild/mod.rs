@@ -30,10 +30,10 @@ fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
         .get_scalar_or_default("IUSE")?
         .split_ascii_whitespace()
         .map(|token| {
-            if let Some(name) = token.strip_prefix("+") {
+            if let Some(name) = token.strip_prefix('+') {
                 return (name, true);
             }
-            if let Some(name) = token.strip_prefix("-") {
+            if let Some(name) = token.strip_prefix('-') {
                 return (name, false);
             }
             (token, false)
@@ -63,9 +63,9 @@ impl Stability {
             .split_ascii_whitespace()
         {
             let (stability, trimed_keyword) = {
-                if let Some(trimed_keyword) = keyword.strip_prefix("~") {
+                if let Some(trimed_keyword) = keyword.strip_prefix('~') {
                     (Stability::Unstable, trimed_keyword)
-                } else if let Some(trimed_keyword) = keyword.strip_prefix("-") {
+                } else if let Some(trimed_keyword) = keyword.strip_prefix('-') {
                     (Stability::Broken, trimed_keyword)
                 } else {
                     (Stability::Stable, keyword)

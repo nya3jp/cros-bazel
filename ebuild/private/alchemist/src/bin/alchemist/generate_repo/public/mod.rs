@@ -112,7 +112,7 @@ fn generate_public_package(packages: Vec<&Package>, package_output_dir: &Path) -
     Ok(())
 }
 
-fn join_by_package_name(all_packages: &Vec<Package>) -> HashMap<String, Vec<&Package>> {
+fn join_by_package_name(all_packages: &[Package]) -> HashMap<String, Vec<&Package>> {
     let mut packages_by_name = HashMap::<String, Vec<&Package>>::new();
 
     for package in all_packages.iter() {
@@ -129,7 +129,7 @@ fn join_by_package_name(all_packages: &Vec<Package>) -> HashMap<String, Vec<&Pac
     packages_by_name
 }
 
-pub fn generate_public_packages(all_packages: &Vec<Package>, output_dir: &Path) -> Result<()> {
+pub fn generate_public_packages(all_packages: &[Package], output_dir: &Path) -> Result<()> {
     let packages_by_name = join_by_package_name(all_packages);
 
     // Generate packages in parallel.

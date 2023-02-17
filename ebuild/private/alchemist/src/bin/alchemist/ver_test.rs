@@ -84,19 +84,13 @@ mod tests {
 
     #[test]
     fn test_gt() -> Result<()> {
-        assert_eq!(
-            true,
-            compare(Args {
-                args: vec!["0.5".to_owned(), "-gt".to_owned(), "0.2".to_owned()]
-            })?
-        );
+        assert!(compare(Args {
+            args: vec!["0.5".to_owned(), "-gt".to_owned(), "0.2".to_owned()]
+        })?);
 
-        assert_eq!(
-            false,
-            compare(Args {
-                args: vec!["0.2".to_owned(), "-gt".to_owned(), "0.5".to_owned()]
-            })?
-        );
+        assert!(!compare(Args {
+            args: vec!["0.2".to_owned(), "-gt".to_owned(), "0.5".to_owned()]
+        })?);
 
         Ok(())
     }

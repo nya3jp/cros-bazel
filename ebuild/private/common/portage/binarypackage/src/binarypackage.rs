@@ -44,9 +44,7 @@ impl BinaryPackage {
         expect_magic(&mut f, size - 4, "STOP").with_context(|| CORRUPTED)?;
         let bp_offset: u64 = u64::from(read_u32(&mut f, size - 8).with_context(|| CORRUPTED)?);
         let mut bp = Self {
-            xpak_start: (size - 8 - bp_offset)
-                .try_into()
-                .with_context(|| "corrupted .tbz2 file: invalid bp offset")?,
+            xpak_start: size - 8 - bp_offset,
             size,
             f,
         };
@@ -156,7 +154,7 @@ impl BinaryPackage {
     }
 
     pub fn extract_xpak_files(&mut self, specs: &[XpakSpec]) -> Result<()> {
-        if specs.len() == 0 {
+        if specs.is_empty() {
             return Ok(());
         }
 
@@ -166,14 +164,14 @@ impl BinaryPackage {
             let contents = headers
                 .get(&spec.xpak_header)
                 .or(if spec.optional { Some(&v) } else { None })
-                .ok_or(anyhow!("XPAK key {} not found in header", spec.xpak_header))?;
+                .ok_or_else(|| anyhow!("XPAK key {} not found in header", spec.xpak_header))?;
             std::fs::write(&spec.target_path, contents)?;
         }
         Ok(())
     }
 
     pub fn extract_out_files(&mut self, specs: &[OutputFileSpec]) -> Result<()> {
-        if specs.len() == 0 {
+        if specs.is_empty() {
             return Ok(());
         }
 
@@ -188,7 +186,7 @@ impl BinaryPackage {
             self.new_tarball_reader()?,
         )?);
 
-        for entry_result in archive.entries()?.into_iter() {
+        for entry_result in archive.entries()? {
             let mut entry = entry_result?;
             let header = &entry.header();
             let path = entry.path()?;
@@ -210,7 +208,7 @@ impl BinaryPackage {
                         EntryType::Symlink => {
                             let dest = header
                                 .link_name()?
-                                .ok_or(anyhow!("Link name doesn't exist"))?;
+                                .ok_or_else(|| anyhow!("Link name doesn't exist"))?;
                             // bazel only supports relative symlinks that point to existing files.
                             // Let's limit this to symlinks that point to files in the same
                             // directory for now.
@@ -249,7 +247,7 @@ fn read_u32(f: &mut File, offset: u64) -> Result<u32> {
     f.seek(Start(offset))?;
     let mut buffer = [0_u8; std::mem::size_of::<u32>()];
     f.read_exact(&mut buffer)?;
-    Ok(bytes::BigEndian::read_u32(&mut buffer))
+    Ok(bytes::BigEndian::read_u32(&buffer))
 }
 
 fn expect_magic(f: &mut File, offset: u64, want: &str) -> Result<()> {

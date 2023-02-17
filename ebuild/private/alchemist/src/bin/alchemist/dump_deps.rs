@@ -109,7 +109,7 @@ fn select_package(
 ) -> Result<Option<PackageSlotKey>> {
     let path = path.try_push(atom)?;
 
-    if let Some(_) = resolver.find_provided_packages(atom).next() {
+    if resolver.find_provided_packages(atom).next().is_some() {
         return Ok(None);
     }
 
@@ -374,7 +374,7 @@ fn fixup_sources<'a, I: IntoIterator<Item = &'a mut PackageSources>>(sources_ite
         .flat_map(|source| &source.local_sources)
         .sorted()
         .dedup()
-        .map(|source| source.clone())
+        .cloned()
         .collect();
 
     let child_sources_map: HashMap<&PackageLocalSource, Vec<&PackageLocalSource>> = {
@@ -387,7 +387,7 @@ fn fixup_sources<'a, I: IntoIterator<Item = &'a mut PackageSources>>(sources_ite
 
         for current_source in all_local_sources.iter() {
             while let Some(last_parent_source) = parent_sources_stack.pop() {
-                if current_source.starts_with(&last_parent_source) {
+                if current_source.starts_with(last_parent_source) {
                     parent_sources_stack.push(last_parent_source);
                     break;
                 }
@@ -441,7 +441,7 @@ pub fn dump_deps_main(
         let mut packages = selected_packages
             .into_par_iter()
             .map(|(key, selected)| {
-                let sources = analyze_sources(&selected.details, &src_dir)?;
+                let sources = analyze_sources(&selected.details, src_dir)?;
                 Ok((key, Package { selected, sources }))
             })
             .collect::<Result<PackageMap>>()?;

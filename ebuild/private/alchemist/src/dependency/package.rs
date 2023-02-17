@@ -314,11 +314,8 @@ impl Display for PackageAtomDependency {
         write!(f, "{}", &self.package_name)?;
         if let Some(version) = &self.version {
             write!(f, "-{}", version.version)?;
-            match version.op {
-                PackageVersionOp::Equal { wildcard: true } => {
-                    write!(f, "*")?;
-                }
-                _ => {}
+            if let PackageVersionOp::Equal { wildcard: true } = version.op {
+                write!(f, "*")?;
             }
         }
         if let Some(slot) = &self.slot {

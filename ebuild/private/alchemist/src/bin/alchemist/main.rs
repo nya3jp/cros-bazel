@@ -39,7 +39,7 @@ fn main() -> ExitCode {
         Ok(_) => ExitCode::SUCCESS,
         Err(err) => {
             eprintln!("ERROR: {:?}", err);
-            if let Err(_) = std::env::var("RUST_BACKTRACE") {
+            if std::env::var("RUST_BACKTRACE").is_err() {
                 eprintln!("Hint: Set RUST_BACKTRACE=1 to print stack traces");
             }
             ExitCode::FAILURE

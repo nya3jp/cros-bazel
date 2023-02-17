@@ -116,19 +116,22 @@ impl MountedSDK {
             keep_host_mount: false,
         }
         .serialize_to(&serialized_path)?;
-        return Ok(Self {
+        Ok(Self {
             board: cfg.board,
             cmd: Some(cmd),
             root_dir,
             diff_dir,
             tmp_dir,
             _control_channel: control_channel,
-        });
+        })
     }
 
     pub fn write<P: AsRef<Path>, C: AsRef<[u8]>>(&self, path: P, contents: C) -> Result<()> {
         let path = &self.root_dir.outside.join(path.as_ref().strip_prefix("/")?);
-        std::fs::create_dir_all(path.parent().ok_or(anyhow!("Path can't be empty"))?)?;
+        std::fs::create_dir_all(
+            path.parent()
+                .ok_or_else(|| anyhow!("Path can't be empty"))?,
+        )?;
         std::fs::write(path, contents)?;
         Ok(())
     }
@@ -185,10 +188,10 @@ mod tests {
                     source: r.rlocation(
                         "cros/bazel/ebuild/private/common/mountsdk/testdata/mypkg.ebuild",
                     ),
-                    mount_path: ebuild_file.to_path_buf(),
+                    mount_path: ebuild_file.clone(),
                 },
                 BindMount {
-                    source: hello.to_path_buf(),
+                    source: hello.clone(),
                     mount_path: "/hello".into(),
                 },
             ],

@@ -33,13 +33,13 @@ pub struct ConfigArgs {
 
 impl Config {
     pub fn try_from(args: ConfigArgs) -> Result<Config> {
-        return Ok(Config {
+        Ok(Config {
             board: args.board,
             layer_paths: args.layer,
             login_mode: args.login_mode,
             cmd_prefix: vec![],
             bind_mounts: Vec::new(),
             envs: HashMap::new(),
-        });
+        })
     }
 }

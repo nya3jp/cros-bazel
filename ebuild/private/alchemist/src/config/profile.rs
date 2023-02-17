@@ -22,7 +22,7 @@ use crate::{
 /// Parsed Portage profile.
 #[derive(Debug)]
 pub struct Profile {
-    parents: Vec<Box<Profile>>,
+    parents: Vec<Profile>,
     makeconf: MakeConf,
     precomputed_nodes: Vec<ConfigNode>,
 }
@@ -45,7 +45,7 @@ impl Profile {
                     dir.join(&parent_key)
                 };
                 let profile = Self::load(&parent_dir, repos)?;
-                Ok(Box::new(profile))
+                Ok(profile)
             })
             .collect::<Result<Vec<_>>>()
             .with_context(context)?;
@@ -103,7 +103,7 @@ fn load_parents(path: &Path) -> Result<Vec<String>> {
     let mut parents = Vec::<String>::new();
     for line in contents.split('\n') {
         let line = line.trim();
-        if line.is_empty() || line.starts_with("#") {
+        if line.is_empty() || line.starts_with('#') {
             continue;
         }
         parents.push(line.to_owned());

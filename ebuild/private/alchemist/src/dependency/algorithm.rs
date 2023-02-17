@@ -53,10 +53,7 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
                         let children = children
                             .into_iter()
                             // Drop the constant true.
-                            .filter(|d| match d.check_constant() {
-                                Some((true, _)) => false,
-                                _ => true,
-                            })
+                            .filter(|d| !matches!(d.check_constant(), Some((true, _))))
                             // Merge nested all-of.
                             .flat_map(|d| match d {
                                 Dependency::Composite(composite) => match *composite {
@@ -85,10 +82,7 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
                         let children = children
                             .into_iter()
                             // Drop the constant false.
-                            .filter(|d| match d.check_constant() {
-                                Some((false, _)) => false,
-                                _ => true,
-                            })
+                            .filter(|d| !matches!(d.check_constant(), Some((false, _))))
                             .collect_vec();
                         let first_constant_true = children
                             .iter()

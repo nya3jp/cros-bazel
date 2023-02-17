@@ -58,10 +58,10 @@ impl FromStr for SysrootFileSpec {
                 sysroot_path
             )
         }
-        return Ok(Self {
+        Ok(Self {
             sysroot_path,
             src_path: PathBuf::from(src_path),
-        });
+        })
     }
 }
 
@@ -98,9 +98,9 @@ impl FromStr for EbuildMetadata {
         // TODO: this currently fails with absolute paths.
         let stripped = path
             .strip_suffix(EBUILD_EXT)
-            .ok_or(anyhow!("ebuild must have .ebuild suffix (got {:?}", path))?;
-        let (rest, _) = Version::from_str_suffix(&stripped)?;
-        let parts: Vec<_> = rest.split("/").collect();
+            .ok_or_else(|| anyhow!("ebuild must have .ebuild suffix (got {:?}", path))?;
+        let (rest, _) = Version::from_str_suffix(stripped)?;
+        let parts: Vec<_> = rest.split('/').collect();
         if parts.len() < 4 {
             bail!("unable to parse ebuild path: {:?}", path)
         }
