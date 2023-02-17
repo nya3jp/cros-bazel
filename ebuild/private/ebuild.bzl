@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "COMMON_ATTRS", "debuggable_mountsdk", "mountsdk_generic")
+load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "COMMON_ATTRS", "MountSDKInfo", "debuggable_mountsdk", "mountsdk_generic")
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo", "string_flag")
@@ -229,6 +229,47 @@ _ebuild = rule(
     ),
 )
 
+def _ebuild_test_impl(ctx):
+    info = ctx.attr.target[MountSDKInfo]
+
+    test_runner = ctx.actions.declare_file(ctx.label.name)
+
+    args = ctx.actions.args()
+    args.add_all([test_runner, info.executable])
+    ctx.actions.run(
+        executable = ctx.executable._generate_test_runner,
+        arguments = [args, info.args, "--test"],
+        outputs = [test_runner],
+    )
+
+    runfiles = ctx.runfiles(transitive_files = depset(info.direct_inputs, transitive = info.transitive_inputs))
+    runfiles.merge(info.executable_runfiles)
+
+    return [DefaultInfo(
+        files = depset([test_runner]),
+        runfiles = runfiles,
+        executable = test_runner,
+    )]
+
+# TODO(b/269558613) Rename this to _ebuild_test.
+# A rule name can end with "_test" only when test = True.
+_ebuild_test_run = rule(
+    implementation = _ebuild_test_impl,
+    attrs = dict(
+        target = attr.label(
+            providers = [MountSDKInfo],
+            mandatory = True,
+        ),
+        _generate_test_runner = attr.label(
+            default = ":generate_test_runner",
+            executable = True,
+            cfg = "exec",
+        ),
+    ),
+    # TODO(b/269558613) Change this to "test = True".
+    executable = True,
+)
+
 def ebuild(name, **kwargs):
     string_flag(
         name = name + "_prebuilt",
@@ -240,4 +281,10 @@ def ebuild(name, **kwargs):
         orig_rule = _ebuild,
         prebuilt = ":%s_prebuilt" % name,
         **kwargs
+    )
+
+    _ebuild_test_run(
+        name = name + "_test",
+        target = name,
+        visibility = kwargs.get("visibility", None),
     )

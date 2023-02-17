@@ -4,7 +4,7 @@
 
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "SDKInfo", "relative_path_in_package")
 
-MountSDKDebugInfo = provider(
+MountSDKInfo = provider(
     "Information required to create a debug target for a mountsdk target",
     fields = dict(
         executable = "The binary to be debugged",
@@ -237,7 +237,7 @@ def mountsdk_generic(
             transitive_runtime_deps_targets = transitive_runtime_deps_targets,
             direct_runtime_deps_targets = ctx.attr.runtime_deps,
         ),
-        MountSDKDebugInfo(
+        MountSDKInfo(
             executable = ctx.executable._builder,
             executable_runfiles = ctx.attr._builder[DefaultInfo].default_runfiles,
             args = args,
@@ -275,21 +275,21 @@ COMMON_ATTRS = dict(
 )
 
 def _mountsdk_debug_impl(ctx):
-    debug_info = ctx.attr.target[MountSDKDebugInfo]
+    info = ctx.attr.target[MountSDKInfo]
 
     wrapper = ctx.actions.declare_file(ctx.label.name)
 
     args = ctx.actions.args()
-    args.add_all([wrapper, debug_info.executable])
+    args.add_all([wrapper, info.executable])
     ctx.actions.run(
         executable = ctx.executable._create_debug_script,
-        arguments = [args, debug_info.args],
+        arguments = [args, info.args],
         outputs = [wrapper],
     )
 
-    runfiles = ctx.runfiles(transitive_files = depset(debug_info.direct_inputs, transitive = debug_info.transitive_inputs))
+    runfiles = ctx.runfiles(transitive_files = depset(info.direct_inputs, transitive = info.transitive_inputs))
     runfiles = runfiles.merge_all([
-        debug_info.executable_runfiles,
+        info.executable_runfiles,
         ctx.attr._bash_runfiles[DefaultInfo].default_runfiles,
     ])
 
@@ -303,7 +303,7 @@ _mountsdk_debug = rule(
     implementation = _mountsdk_debug_impl,
     attrs = dict(
         target = attr.label(
-            providers = [MountSDKDebugInfo],
+            providers = [MountSDKInfo],
             mandatory = True,
         ),
         _bash_runfiles = attr.label(default = "@bazel_tools//tools/bash/runfiles"),

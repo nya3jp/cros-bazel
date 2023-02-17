@@ -38,6 +38,9 @@ struct Cli {
         help = "<inside path>=<outside path>: Copies the outside file into the sysroot"
     )]
     sysroot_file: Vec<SysrootFileSpec>,
+
+    #[arg(long)]
+    test: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -173,14 +176,19 @@ fn main() -> Result<()> {
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
     }
-    sdk.run_cmd(&[
+    let ebuild_path_str = ebuild_path.to_string_lossy();
+    let mut cmd_args = vec![
         MAIN_SCRIPT,
         "ebuild",
         "--skip-manifest",
-        &ebuild_path.to_string_lossy(),
+        &ebuild_path_str,
         "clean",
         "package",
-    ])?;
+    ];
+    if args.test {
+        cmd_args.push("test");
+    }
+    sdk.run_cmd(&cmd_args)?;
 
     let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",
