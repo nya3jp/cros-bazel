@@ -8,9 +8,7 @@ use signal_hook::{
     consts::signal::{SIGCHLD, SIGINT, SIGTERM},
     iterator::Signals,
 };
-use std::fs::File;
-use std::path::Path;
-use std::process::{Command, Output, Stdio};
+use std::process::{Command, Output};
 
 // run runs a child process, with some special signal handling:
 //   - Forwards SIGTERM to the child processes
@@ -51,19 +49,6 @@ pub fn run_and_check(cmd: &mut Command) -> Result<Output> {
             std::str::from_utf8(&out.stderr)?
         );
     }
-    Ok(out)
-}
-
-pub fn run_suppress_stderr(cmd: &mut Command, logfile: &Path) -> Result<Output> {
-    let write_file = File::create(&logfile)?;
-    let out = run(cmd.stderr(Stdio::from(write_file)))?;
-
-    if !out.status.success() {
-        let mut read_file = File::open(&logfile)?;
-        std::io::copy(&mut read_file, &mut std::io::stderr())?;
-        bail!("Command {cmd:?} failed to run.");
-    }
-
     Ok(out)
 }
 
