@@ -9,7 +9,6 @@ ALCHEMIST_SRCS = [
     Label("//bazel/ebuild/private/alchemist:src/bash.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/alchemist.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/digest_repo.rs"),
-    Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/dump_deps.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/dump_package.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/common.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/mod.rs"),
