@@ -18,7 +18,7 @@ $ cd src
 ## Installing host dependencies
 
 ```sh
-sudo apt install squashfs-tools
+sudo apt install pkg-config squashfs-tools
 
 GOBIN=$HOME/go/bin go install github.com/bazelbuild/bazelisk@latest
 ```
