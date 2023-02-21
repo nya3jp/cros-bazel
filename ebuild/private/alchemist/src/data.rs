@@ -41,12 +41,3 @@ impl<S: Display> Display for Slot<S> {
         write!(f, "{}/{}", &self.main, &self.sub)
     }
 }
-
-/// A pair of a package name and a (main) SLOT, for which at most single package
-/// can be selected for installation. This is to be used as a key of package
-/// collections when selecting packages.
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct PackageSlotKey {
-    pub package_name: String,
-    pub main_slot: String,
-}

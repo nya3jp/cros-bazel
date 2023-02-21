@@ -17,7 +17,7 @@ use version::Version;
 use crate::{
     bash::BashVars,
     config::bundle::ConfigBundle,
-    data::{IUseMap, PackageSlotKey, Slot, UseMap},
+    data::{IUseMap, Slot, UseMap},
     dependency::package::PackageRef,
     repository::RepositorySet,
 };
@@ -107,15 +107,6 @@ impl PackageDetails {
                 sub: self.slot.sub.as_str(),
             },
             use_map: &self.use_map,
-        }
-    }
-
-    /// Returns a PackageSlotKey identifying a package name / main SLOT pair
-    /// that this package occupies.
-    pub fn slot_key(&self) -> PackageSlotKey {
-        PackageSlotKey {
-            package_name: self.package_name.clone(),
-            main_slot: self.slot.main.clone(),
         }
     }
 }
