@@ -23,7 +23,7 @@ use alchemist::{
         dependency::{analyze_dependencies, PackageDependencies},
         source::{analyze_sources, PackageLocalSource, PackageSources},
     },
-    ebuild::{CachedPackageLoader, PackageDetails},
+    ebuild::{CachedPackageLoader, PackageDetails, Stability},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -243,7 +243,12 @@ pub fn generate_repo_main(
     };
     create_dir_all(output_dir)?;
 
-    let all_details = evaluate_all_packages(repos, loader)?;
+    let mut all_details = evaluate_all_packages(repos, loader)?;
+
+    // We don't want to generate targets for packages that are marked broken
+    // for the arch. i.e., a x86 only package shouldn't be visible for an arm64
+    // build. We can revisit this once we support building host packages.
+    all_details.retain(|package| package.stability != Stability::Broken);
 
     eprintln!("Analyzing packages...");
 
