@@ -69,11 +69,19 @@ impl<'a> PackageResolver<'a> {
         &self,
         atom: &PackageAtomDependency,
     ) -> Result<Option<Arc<PackageDetails>>> {
-        let packages = self.find_packages(atom)?;
+        self.find_best_package_in(&self.find_packages(atom)?)
+    }
 
+    /// Finds the best package in the provided list.
+    /// You must ensure all the packages have the same name.
+    /// TODO(b/271000644): Define a PackageSelector.
+    pub fn find_best_package_in(
+        &self,
+        packages: &[Arc<PackageDetails>],
+    ) -> Result<Option<Arc<PackageDetails>>> {
         // Filter masked packages.
         let packages = packages
-            .into_iter()
+            .iter()
             .filter(|details| !details.masked)
             .collect_vec();
 
@@ -90,7 +98,8 @@ impl<'a> PackageResolver<'a> {
         // priority packages come first and higher priority packages come last.
         Ok(packages
             .into_iter()
-            .max_by(|a, b| a.version.cmp(&b.version)))
+            .max_by(|a, b| a.version.cmp(&b.version))
+            .cloned())
     }
 
     /// Finds *provided packages* matching the specified [`PackageAtomDependency`].
