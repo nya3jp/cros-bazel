@@ -27,21 +27,11 @@ BinaryPackageInfo = provider(
     },
 )
 
-OverlayInfo = provider(
-    "Portage overlay info",
-    fields = {
-        "squashfs_file": """
-            File: A squashfs image (.squashfs) that contains files of this
-            overlay.
-        """,
-    },
-)
-
 OverlaySetInfo = provider(
     "Portage overlay set info",
     fields = {
         "overlays": """
-            OverlayInfo[]: Overlays.
+            PackageArtifactInfo[]: Overlays in .tar.zst format.
         """,
     },
 )

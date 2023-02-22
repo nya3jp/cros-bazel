@@ -96,8 +96,8 @@ def create_layer(
     direct_inputs.extend(sdk.layers)
 
     for overlay in sdk.overlays.overlays:
-        args.add("--layer=%s" % overlay.squashfs_file.path)
-        direct_inputs.append(overlay.squashfs_file)
+        args.add("--layer=%s" % overlay.file.path)
+        direct_inputs.append(overlay.file)
 
     install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
     args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
@@ -155,8 +155,8 @@ def mountsdk_generic(
         direct_inputs.append(file)
 
     for overlay in sdk.overlays.overlays:
-        args.add("--layer=%s" % overlay.squashfs_file.path)
-        direct_inputs.append(overlay.squashfs_file)
+        args.add("--layer=%s" % overlay.file.path)
+        direct_inputs.append(overlay.file)
 
     for file in ctx.files.srcs:
         args.add("--layer=%s" % file.path)

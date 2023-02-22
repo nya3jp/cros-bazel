@@ -79,8 +79,8 @@ def _sdk_impl(ctx):
 
     layer_inputs = base_sdk.layers[:]
     for overlay in ctx.attr.overlays[OverlaySetInfo].overlays:
-        args.add("--layer=%s" % overlay.squashfs_file.path)
-        layer_inputs.append(overlay.squashfs_file)
+        args.add("--layer=%s" % overlay.file.path)
+        layer_inputs.append(overlay.file)
 
     inputs = depset(
         [ctx.executable._sdk_update] + layer_inputs + ctx.files.extra_tarballs,
