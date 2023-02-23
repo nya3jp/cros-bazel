@@ -6,6 +6,7 @@ use anyhow::Result;
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::sync::Arc;
+use version::Version;
 
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
@@ -21,6 +22,8 @@ pub struct PackageResolver<'a> {
     config: &'a ConfigBundle,
     loader: &'a CachedPackageLoader,
     accept_stability: Stability,
+    allow_9999_ebuilds: bool,
+    version_9999: Version,
 }
 
 impl<'a> PackageResolver<'a> {
@@ -28,17 +31,23 @@ impl<'a> PackageResolver<'a> {
     ///
     /// `accept_stability` specifies the minimum stability required for a
     /// package to be returned by `find_packages` and `find_best_package`.
+    ///
+    /// `allow_9999_ebuilds` will consider 9999 cros-workon packages that don't
+    /// specify CROS_WORKON_MANUAL_UPREV as stable.
     pub fn new(
         repos: &'a RepositorySet,
         config: &'a ConfigBundle,
         loader: &'a CachedPackageLoader,
         accept_stability: Stability,
+        allow_9999_ebuilds: bool,
     ) -> Self {
         Self {
             repos,
             config,
             loader,
             accept_stability,
+            allow_9999_ebuilds,
+            version_9999: Version::try_new("9999").unwrap(),
         }
     }
 
@@ -72,6 +81,16 @@ impl<'a> PackageResolver<'a> {
         self.find_best_package_in(&self.find_packages(atom)?)
     }
 
+    fn is_allowed_9999_ebuild(&self, package: &PackageDetails) -> bool {
+        self.allow_9999_ebuilds
+            && package.inherited.contains("cros-workon")
+            && package.version == self.version_9999
+            && match package.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
+                Ok(value) => value != "1",
+                Err(_) => false,
+            }
+    }
+
     /// Finds the best package in the provided list.
     /// You must ensure all the packages have the same name.
     /// TODO(b/271000644): Define a PackageSelector.
@@ -88,7 +107,9 @@ impl<'a> PackageResolver<'a> {
         // Select by stability.
         let packages = packages
             .into_iter()
-            .filter(|details| details.stability >= self.accept_stability)
+            .filter(|details| {
+                details.stability >= self.accept_stability || self.is_allowed_9999_ebuild(details)
+            })
             .collect_vec();
 
         // Find the latest version.

@@ -177,7 +177,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         &repos,
         &config,
         &loader,
-        alchemist::ebuild::Stability::Unstable,
+        alchemist::ebuild::Stability::Stable,
+        true,
     );
 
     match args.command {
