@@ -16,7 +16,7 @@ use crate::{
         CompositeDependency, Dependency,
     },
     ebuild::PackageDetails,
-    resolver::{FindBestPackageError, PackageResolver},
+    resolver::PackageResolver,
 };
 
 /// Analyzed package dependencies of a package. It is returned by
@@ -73,16 +73,11 @@ fn parse_dependencies(
                 }
 
                 // Remove non-existent packages.
-                match resolver.find_best_package(&atom) {
-                    Err(FindBestPackageError::NotFound) => {
-                        return Ok(Dependency::new_constant(
-                            false,
-                            &format!("No package satisfies {}", atom),
-                        ));
-                    }
-                    res => {
-                        res?;
-                    }
+                if resolver.find_best_package(&atom)?.is_none() {
+                    return Ok(Dependency::new_constant(
+                        false,
+                        &format!("No package satisfies {}", atom),
+                    ));
                 };
 
                 Ok(Dependency::Leaf(atom))
@@ -111,11 +106,13 @@ fn parse_dependencies(
     atoms
         .into_iter()
         .map(|atom| {
-            resolver
-                .find_best_package(&atom)
-                .map_err(anyhow::Error::from)
+            Ok(
+                resolver
+                    .find_best_package(&atom)?
+                    .expect("package to exist"), // missing packages were filtered above
+            )
         })
-        .collect::<Result<_>>()
+        .collect::<Result<Vec<_>>>()
 }
 
 // TODO: Remove this hack.

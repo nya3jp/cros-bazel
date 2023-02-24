@@ -14,18 +14,6 @@ use crate::{
     repository::RepositorySet,
 };
 
-/// An error returned by `Resolver::find_best_package`.
-///
-/// Particuarly it allows checking if the method failed because no package
-/// satisfies the given package dependency atom.
-#[derive(Debug, thiserror::Error)]
-pub enum FindBestPackageError {
-    #[error("package not found")]
-    NotFound,
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
-}
-
 /// Answers queries related to Portage packages.
 #[derive(Debug)]
 pub struct PackageResolver<'a> {
@@ -72,10 +60,14 @@ impl<'a> PackageResolver<'a> {
     }
 
     /// Finds a package best matching the specified [`PackageAtomDependency`].
+    ///
+    /// If Ok(None) is returned that means that no suitable packages were found.
+    /// If Err(_) is returned, that means there was an unexpected error looking
+    /// for the package.
     pub fn find_best_package(
         &self,
         atom: &PackageAtomDependency,
-    ) -> std::result::Result<Arc<PackageDetails>, FindBestPackageError> {
+    ) -> Result<Option<Arc<PackageDetails>>> {
         let packages = self.find_packages(atom)?;
 
         // Filter masked packages.
@@ -91,10 +83,9 @@ impl<'a> PackageResolver<'a> {
             .collect_vec();
 
         // Find the latest version.
-        packages
+        Ok(packages
             .into_iter()
-            .max_by(|a, b| a.version.cmp(&b.version))
-            .ok_or(FindBestPackageError::NotFound)
+            .max_by(|a, b| a.version.cmp(&b.version)))
     }
 
     /// Finds *provided packages* matching the specified [`PackageAtomDependency`].
