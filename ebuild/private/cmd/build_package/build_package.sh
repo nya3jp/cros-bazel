@@ -17,6 +17,9 @@ if [[ -d /home/root/chrome_root/src/third_party/depot_tools ]]; then
   export USE="-runhooks ${USE}"
   # Use the CIPD cache provided by the tarball to avoid network access.
   export CIPD_CACHE_DIR="/home/root/chrome_root/.cipd-cache"
+
+  # Tell the chrome ebuilds to use the local source.
+  export CHROME_ORIGIN="LOCAL_SOURCE"
 fi
 
 export FEATURES="${FEATURES} fakeroot"
