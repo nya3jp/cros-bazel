@@ -179,7 +179,7 @@ fn extract_cros_workon_sources(
 
     let is_chromeos_base = details.package_name.starts_with("chromeos-base/");
 
-    let mut source_paths = Vec::<String>::new();
+    let mut source_paths = Vec::<PathBuf>::new();
     let mut repo_sources = Vec::<PackageRepoSource>::new();
     let mut seen_trees = HashSet::<&String>::new();
 
@@ -210,13 +210,29 @@ fn extract_cros_workon_sources(
                 .eval(&details.use_map)?
         };
 
-        if !trees.is_empty() {
-            let local_subtrees = if subtree.is_empty() {
-                Vec::from([""])
-            } else {
-                subtree.split_ascii_whitespace().collect_vec()
-            };
+        let local_subtrees = if subtree.is_empty() {
+            Vec::from([""])
+        } else {
+            subtree.split_ascii_whitespace().collect_vec()
+        };
 
+        if trees.is_empty() {
+            // 9999 ebuilds
+            if !required {
+                // Skip the whole project
+                continue;
+            }
+            for subtree in local_subtrees {
+                let subtree =  subtree.trim_start_matches('/');
+
+                if subtree.is_empty() {
+                    source_paths.push(PathBuf::from(&local_path))
+                } else {
+                    source_paths.push(Path::new(&local_path).join(subtree))
+                }
+            }
+        } else {
+            // Pinned ebuilds
             for subtree in local_subtrees {
                 if tree_index >= trees.len() {
                     bail!("invalid number of entries in CROS_WORKON_TREE {:?}", &trees);
@@ -251,43 +267,10 @@ fn extract_cros_workon_sources(
                     },
                 });
             }
-
-            continue;
-        }
-        // TODO: Come back and remove all these hacks since we probably don't need them.
-
-        // Consider CROS_WORKON_SUBTREE for platform2 packages only.
-        if subtree.is_empty() || !local_path.starts_with("platform2") {
-            // HACK: We need a pinned version of crosvm for sys_util_core, so we
-            // can't use the default location.
-            // TODO: Inspect CROS_WORKON_MANUAL_UPREV to detect pinned packages
-            // automatically and remove this hack.
-            if details.package_name == "dev-rust/sys_util_core" && local_path == "platform/crosvm" {
-                source_paths.push("platform/crosvm-sys_util_core".to_owned());
-            } else {
-                source_paths.push(local_path);
-            }
-        } else {
-            let subtree_local_paths = subtree.split_ascii_whitespace().flat_map(|subtree_path| {
-                // TODO: Remove these special cases.
-                match subtree_path {
-                    // Use the platform2 src package instead.
-                    ".gn" => Some(local_path.clone()),
-                    // We really don't need .clang-format to build...
-                    ".clang-format" => None,
-                    // We don't have a sub-package for platform2/chromeos-config.
-                    "chromeos-config/cros_config_host" => {
-                        Some(format!("{}/chromeos-config", &local_path))
-                    }
-                    _ => Some(format!("{}/{}", &local_path, &subtree_path)),
-                }
-            });
-            source_paths.extend(subtree_local_paths);
         }
     }
-
     // Handle regular files.
-    let source_dirs: Vec<String> = source_paths
+    let source_dirs = source_paths
         .into_iter()
         .map(|path| {
             let meta = metadata(src_dir.join(&path))?;
@@ -296,20 +279,16 @@ fn extract_cros_workon_sources(
             } else {
                 // If the file is a regular file, use its parent directory.
                 // TODO: Improve this to include the file only.
-                Ok(PathBuf::from(path)
-                    .parent()
-                    .unwrap()
-                    .to_string_lossy()
-                    .into_owned())
+                Ok(path.parent().unwrap().to_owned())
             }
         })
-        .collect::<Result<_>>()?;
+        .collect::<Result<Vec<_>>>()?;
 
     let mut sources = source_dirs
         .into_iter()
         .map(|path| PackageLocalSource {
             origin: PackageLocalSourceOrigin::Src,
-            path,
+            path: path.to_string_lossy().to_string(),
         })
         .collect_vec();
 
