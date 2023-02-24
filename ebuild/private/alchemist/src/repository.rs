@@ -364,9 +364,13 @@ impl RepositorySet {
 
     /// Scans the repositories and returns ebuild file paths for the specified
     /// package.
+    ///
+    /// When there are two or more repositories, returned ebuild paths are
+    /// sorted so that one from a lower-priority repository comes before one
+    /// from a higher-priority repository.
     pub fn find_ebuilds(&self, package_name: &str) -> Result<Vec<PathBuf>> {
         let mut paths = Vec::<PathBuf>::new();
-        for repo in self.repos.values() {
+        for repo in self.get_repos() {
             paths.extend(repo.find_ebuilds(package_name)?);
         }
         Ok(paths)
@@ -379,7 +383,7 @@ impl RepositorySet {
     /// from a higher-priority repository.
     pub fn find_all_ebuilds(&self) -> Result<Vec<PathBuf>> {
         let mut paths = Vec::<PathBuf>::new();
-        for repo in self.repos.values() {
+        for repo in self.get_repos() {
             paths.extend(repo.find_all_ebuilds()?);
         }
         Ok(paths)

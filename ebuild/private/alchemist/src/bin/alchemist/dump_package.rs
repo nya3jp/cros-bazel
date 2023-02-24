@@ -12,11 +12,13 @@ pub fn dump_package_main(
     atoms: Vec<PackageAtomDependency>,
 ) -> Result<()> {
     for atom in atoms {
-        let details_list = resolver.find_packages(&atom)?;
+        let mut packages = resolver.find_packages(&atom)?;
+        packages.sort_by(|a, b| a.version.cmp(&b.version));
+        packages.reverse();
 
         println!("=======\t{}", atom);
 
-        for details in details_list {
+        for details in packages {
             println!("Path:\t\t{}", &details.ebuild_path.to_string_lossy());
             println!("Package:\t{}", &details.package_name);
             println!("Version:\t{}", &details.version);

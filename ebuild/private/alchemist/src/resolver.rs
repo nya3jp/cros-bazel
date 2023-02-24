@@ -43,10 +43,13 @@ impl<'a> PackageResolver<'a> {
     }
 
     /// Finds all packages matching the specified [`PackageAtomDependency`].
+    ///
+    /// Packages from a lower-priority repository come before packages from a
+    /// higher-priority repository.
     pub fn find_packages(&self, atom: &PackageAtomDependency) -> Result<Vec<Arc<PackageDetails>>> {
         let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
 
-        let mut packages = ebuild_paths
+        let packages = ebuild_paths
             .into_par_iter()
             .map(|ebuild_path| self.loader.load_package(&ebuild_path))
             .filter(|details| match details {
@@ -54,8 +57,6 @@ impl<'a> PackageResolver<'a> {
                 Err(_) => true,
             })
             .collect::<Result<Vec<_>>>()?;
-        packages.sort_unstable_by_key(|package| package.version.clone());
-        packages.reverse();
         Ok(packages)
     }
 
@@ -83,6 +84,10 @@ impl<'a> PackageResolver<'a> {
             .collect_vec();
 
         // Find the latest version.
+        // max_by will return the last element if multiple elements are equal.
+        // This translates to picking a package from an overlay with a higher
+        // priority since the `packages` variable is sorted so that lower
+        // priority packages come first and higher priority packages come last.
         Ok(packages
             .into_iter()
             .max_by(|a, b| a.version.cmp(&b.version)))
