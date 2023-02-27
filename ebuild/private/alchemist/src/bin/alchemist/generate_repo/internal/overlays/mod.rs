@@ -327,3 +327,17 @@ pub fn generate_internal_overlays(
             generate_internal_package_build_file(&packages_in_dir, &output_file)
         })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_overlay_build_file_succeeds() -> Result<()> {
+        // Templates in this module are loaded together,
+        // so syntax errors in any of them will fail the test.
+        let relative_dir = Path::new("third_party/chromiumos-overlay");
+        let output_file = tempfile::NamedTempFile::new()?;
+        generate_overlay_build_file(relative_dir, output_file.path())
+    }
+}

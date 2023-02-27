@@ -1,7 +1,10 @@
-load("@//bazel/ebuild:defs.bzl", "overlay")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
-overlay(
-    name = "{{ name }}",
+{% set files_target = name ~ "_tarfiles" %}
+
+pkg_files(
+    name = "{{ files_target }}",
     srcs = ["metadata/layout.conf"] + glob([
         "chromeos/**",
         "eclass/*.eclass",
@@ -32,13 +35,33 @@ overlay(
         "**/package.provided",
         "**/package.unmask",
     ]),
-    mount_path = "{{ mount_path }}",
-    visibility = ["//visibility:public"],
+    prefix = "{{ "mnt/host/source/" ~ mount_path }}",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
 )
 
-overlay(
-    name = "package-provided",
+pkg_tar(
+    name = "{{ name }}",
+    extension = "tar.zst",
+    compressor = "@//bazel/ebuild/private:zstd",
+    compressor_args = "--threads=0",
+    srcs = ["{{ files_target }}"],
+    visibility = ["//visibility:public"]
+)
+
+pkg_files(
+    name = "package-provided_tarfiles",
     srcs = glob(["**/package.provided"]),
-    mount_path = "{{ mount_path }}",
-    visibility = ["//visibility:public"],
+    prefix = "{{ "mnt/host/source/" ~ mount_path }}",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "package-provided",
+    extension = "tar.zst",
+    compressor = "@//bazel/ebuild/private:zstd",
+    compressor_args = "--threads=0",
+    srcs = [ ":package-provided_tarfiles"],
+    visibility = ["//visibility:public"]
 )
