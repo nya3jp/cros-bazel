@@ -3,33 +3,6 @@
 # found in the LICENSE file.
 
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
-load("@rules_go//go:def.bzl", "go_binary", "go_library")
-
-go_library(
-    name = "run_in_container_lib",
-    srcs = ["main.go"],
-    importpath = "cros.local/bazel/ebuild/private/cmd/run_in_container",
-    visibility = ["//visibility:private"],
-    deps = [
-        "//bazel/ebuild/private/common/bazelutil",
-        "//bazel/ebuild/private/common/cliutil",
-        "//bazel/ebuild/private/common/makechroot",
-        "//bazel/ebuild/private/common/tar",
-        "@com_github_urfave_cli_v2//:cli",
-        "@org_golang_x_sys//unix",
-        "@rules_go//go/tools/bazel:go_default_library",
-    ],
-)
-
-go_binary(
-    name = "run_in_container",
-    data = [
-        "//rules_cros/third_party/squashfuse",
-        "@dumb_init//file",
-    ],
-    embed = [":run_in_container_lib"],
-    visibility = ["//visibility:public"],
-)
 
 # Note that the go and rust run_in_container are *not* CLI-compatible.
 # rust serializes and deserializes its arguments to a file, while go takes all
