@@ -75,14 +75,14 @@ impl PackageRepoSource {
 
 /// Represents a source code archive to be fetched remotely to build a package.
 #[derive(Clone, Debug)]
-pub struct PackageRemoteSource {
+pub struct PackageDistSource {
     pub urls: Vec<Url>,
     pub filename: String,
     pub size: u64,
     pub hashes: HashMap<String, String>,
 }
 
-impl PackageRemoteSource {
+impl PackageDistSource {
     pub fn compute_integrity(&self) -> Result<String> {
         // We prefer SHA512 for integrity checking.
         for name in ["SHA512", "SHA256", "BLAKE2B"] {
@@ -103,7 +103,7 @@ impl PackageRemoteSource {
 pub struct PackageSources {
     pub local_sources: Vec<PackageLocalSource>,
     pub repo_sources: Vec<PackageRepoSource>,
-    pub remote_sources: Vec<PackageRemoteSource>,
+    pub dist_sources: Vec<PackageDistSource>,
 }
 
 fn get_cros_workon_array_variable(
@@ -374,7 +374,7 @@ fn load_package_manifest(dir: &Path) -> Result<PackageManifest> {
     Ok(PackageManifest { dists })
 }
 
-fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageRemoteSource>> {
+fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageDistSource>> {
     // Collect URIs from SRC_URI.
     let src_uri = details.vars.get_scalar_or_default("SRC_URI")?;
     let source_deps = src_uri.parse::<UriDependency>()?;
@@ -419,7 +419,7 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageRemoteS
             let dist = dist_map
                 .remove(&filename)
                 .ok_or_else(|| anyhow!("{} not found in Manifest", &filename))?;
-            Ok(PackageRemoteSource {
+            Ok(PackageDistSource {
                 urls,
                 filename,
                 size: dist.size,
@@ -445,7 +445,7 @@ pub fn analyze_sources(details: &PackageDetails, src_dir: &Path) -> Result<Packa
     Ok(PackageSources {
         local_sources,
         repo_sources,
-        remote_sources: extract_remote_sources(details)?,
+        dist_sources: extract_remote_sources(details)?,
     })
 }
 

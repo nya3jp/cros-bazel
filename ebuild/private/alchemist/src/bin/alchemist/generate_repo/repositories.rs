@@ -35,7 +35,7 @@ pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()
         .flat_map(|package| {
             package
                 .sources
-                .remote_sources
+                .dist_sources
                 .iter()
                 .map(DistFileEntry::try_new)
         })

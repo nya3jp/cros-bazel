@@ -7,7 +7,7 @@ use std::sync::Arc;
 use alchemist::{
     analyze::{
         dependency::PackageDependencies,
-        source::{PackageRemoteSource, PackageSources},
+        source::{PackageDistSource, PackageSources},
     },
     ebuild::PackageDetails,
 };
@@ -70,7 +70,7 @@ pub struct DistFileEntry {
 }
 
 impl DistFileEntry {
-    pub fn try_new(source: &PackageRemoteSource) -> Result<Self> {
+    pub fn try_new(source: &PackageDistSource) -> Result<Self> {
         let special_urls = source
             .urls
             .iter()

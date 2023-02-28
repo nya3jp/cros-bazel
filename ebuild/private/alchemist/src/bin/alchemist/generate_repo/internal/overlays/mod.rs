@@ -196,7 +196,7 @@ impl EBuildEntry {
 
         let dists = package
             .sources
-            .remote_sources
+            .dist_sources
             .iter()
             .map(DistFileEntry::try_new)
             .collect::<Result<_>>()?;
