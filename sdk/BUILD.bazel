@@ -22,7 +22,7 @@ pkg_tar(
 
 sdk_from_archive(
     name = "base_sdk",
-    src = "@cros-sdk-2022.08.22.085953//file",
+    src = "@cros-sdk-2022.08.25.153812//file",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
     visibility = ["//visibility:public"],
