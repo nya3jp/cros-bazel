@@ -35,14 +35,17 @@ pkg_tar(
     extension = "tar.zst",
     compressor = "@//bazel/ebuild/private:zstd",
     compressor_args = "--threads=0",
-    visibility = ["//internal/sources:__subpackages__"],
+    visibility = ["//visibility:private"],
 )
 
 filegroup(
     name = "__tarballs__",
     srcs = [
         ":__tarball__",
-        "//internal/sources/foo/bar/baz:__tarball__",
+        "//internal/sources/foo/bar/baz:__tarballs__",
     ],
-    visibility = ["//internal/overlays:__subpackages__"],
+    visibility = [
+        "//internal/overlays:__subpackages__",
+        "//internal/sources:__subpackages__",
+    ],
 )
