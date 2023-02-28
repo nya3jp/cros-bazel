@@ -18,8 +18,6 @@ $ cd src
 ## Installing host dependencies
 
 ```sh
-sudo apt install pkg-config squashfs-tools
-
 GOBIN=$HOME/go/bin go install github.com/bazelbuild/bazelisk@latest
 ```
 
@@ -80,7 +78,6 @@ See [manifest/_bazel.xml] for details on how this repository is organized.
             * `private/` ... contains programs used by Bazel rules
                 * `alchemist` ... generates a Bazel repository on `bazel build`
                 * `cmd/` commands internally used in the build
-                    * `create_squashfs/` ... creates squashfs from a file set; used by `overlay` rule
                     * `run_in_container/` ... runs a program within an unprivileged Linux container; used by other programs such as `build_sdk` and `build_package`
                     * `build_sdk/` ... builds SDK squashfs; used by `sdk` rule
                     * `build_package/` ... builds a Portage binary package; used by `ebuild` rule
