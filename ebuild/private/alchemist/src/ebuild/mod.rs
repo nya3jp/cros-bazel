@@ -15,7 +15,7 @@ use std::{
 use version::Version;
 
 use crate::{
-    bash::BashVars,
+    bash::vars::BashVars,
     config::bundle::ConfigBundle,
     data::{IUseMap, Slot, UseMap},
     dependency::package::PackageRef,

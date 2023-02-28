@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
-    bash::BashValue,
+    bash::vars::BashValue,
     data::UseMap,
     dependency::{
         algorithm::{elide_use_conditions, parse_simplified_dependency, simplify},
@@ -452,7 +452,7 @@ pub fn analyze_sources(details: &PackageDetails, src_dir: &Path) -> Result<Packa
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bash::BashVars;
+    use crate::bash::vars::BashVars;
     use crate::data::Slot;
     use crate::ebuild::Stability;
     use std::collections::HashSet;

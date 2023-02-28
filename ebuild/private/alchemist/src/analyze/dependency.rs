@@ -8,7 +8,7 @@ use anyhow::{Context, Result};
 use itertools::Itertools;
 
 use crate::{
-    bash::BashValue,
+    bash::vars::BashValue,
     data::UseMap,
     dependency::{
         algorithm::{elide_use_conditions, parse_simplified_dependency, simplify},

@@ -13,7 +13,7 @@ use std::{
 use version::Version;
 
 use crate::{
-    bash::{parse_set_output, BashVars},
+    bash::vars::{parse_set_output, BashVars},
     data::Vars,
 };
 
