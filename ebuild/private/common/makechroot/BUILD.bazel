@@ -3,25 +3,8 @@
 # found in the LICENSE file.
 
 load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
-load("@rules_go//go:def.bzl", "go_library")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
-
-go_library(
-    name = "makechroot",
-    srcs = [
-        "binpkgs.go",
-        "cleanup.go",
-        "overlay.go",
-    ],
-    importpath = "cros.local/bazel/ebuild/private/common/makechroot",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//bazel/ebuild/private/common/fileutil",
-        "//bazel/ebuild/private/common/portage/binarypackage",
-        "//bazel/ebuild/private/common/tar",
-    ],
-)
 
 rust_library_crate(
     name = "makechroot_rust",
