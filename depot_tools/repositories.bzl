@@ -8,8 +8,8 @@ def depot_tools_repository():
     new_git_repository(
         name="depot_tools",
         remote = "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-        commit = "d9db3f6fd8ec38121d5255b8fbded901e7ca16eb",
-        shallow_since = "1667836312 +0000",
+        commit = "512fd3bd855fe001443ee3328d139da8c4b95d00",
+        shallow_since = "1677704801 +0000",
         patch_cmds = [
             'touch .disable_auto_update',
             # We need gclient to fetch the chromium sources
