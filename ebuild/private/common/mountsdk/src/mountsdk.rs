@@ -51,7 +51,7 @@ impl MountedSDK {
     pub fn new(cfg: Config) -> Result<Self> {
         let r = runfiles::Runfiles::create()?;
         let run_in_container_path =
-            r.rlocation("cros/bazel/ebuild/private/cmd/run_in_container/run_in_container_rust");
+            r.rlocation("cros/bazel/ebuild/private/cmd/run_in_container/run_in_container");
 
         let tmp_dir = tempdir()?;
 

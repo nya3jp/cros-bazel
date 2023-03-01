@@ -8,19 +8,19 @@ load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_t
 # rust serializes and deserializes its arguments to a file, while go takes all
 # arguments on the command-line.
 rust_binary_crate(
-    name = "run_in_container_rust",
+    name = "run_in_container",
     data = [
         "@dumb_init//file",
     ],
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
-        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+        "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/run_in_container_lib",
     ],
 )
 
 rust_crate_test(
-    name = "run_in_container_rust_test",
-    crate = ":run_in_container_rust",
+    name = "run_in_container_test",
+    crate = ":run_in_container",
 )

@@ -7,7 +7,7 @@ load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_c
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
 
 rust_library_crate(
-    name = "makechroot_rust",
+    name = "makechroot",
     crate_name = "makechroot",
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
@@ -16,7 +16,7 @@ rust_library_crate(
 )
 
 rust_crate_test(
-    name = "makechroot_rust_test",
-    crate = ":makechroot_rust",
+    name = "makechroot_test",
+    crate = ":makechroot",
     data = glob(["testdata/*"]),
 )

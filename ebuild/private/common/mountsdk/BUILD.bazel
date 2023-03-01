@@ -16,11 +16,11 @@ rust_library_crate(
     name = "mountsdk",
     data = [
         "setup.sh",
-        "//bazel/ebuild/private/cmd/run_in_container:run_in_container_rust",
+        "//bazel/ebuild/private/cmd/run_in_container",
     ],
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
-        "//bazel/ebuild/private/common/makechroot:makechroot_rust",
+        "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "//bazel/ebuild/private/common/run_in_container_lib",
     ],
