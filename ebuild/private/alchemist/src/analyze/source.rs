@@ -130,6 +130,14 @@ fn get_cros_workon_array_variable(
     let extended_values = if raw_values.len() == 1 {
         repeat(raw_values[0].clone()).take(projects).collect()
     } else {
+        if raw_values.len() != projects {
+            bail!(
+                "Expected {} to have length of {}, got {}",
+                name,
+                projects,
+                raw_values.len()
+            );
+        }
         raw_values
     };
     Ok(extended_values)
