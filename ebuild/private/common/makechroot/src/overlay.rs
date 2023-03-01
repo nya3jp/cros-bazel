@@ -28,7 +28,6 @@ impl FromStr for BindMount {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LayerType {
     Dir,
-    Squashfs,
     Tar,
 }
 
@@ -40,14 +39,8 @@ impl LayerType {
             .file_name()
             .and_then(|x| x.to_str())
             .unwrap_or_default();
-        let extension = layer_path
-            .extension()
-            .and_then(|x| x.to_str())
-            .unwrap_or_default();
         if std::fs::metadata(&layer_path)?.is_dir() {
             Ok(LayerType::Dir)
-        } else if extension == "squashfs" {
-            Ok(LayerType::Squashfs)
         } else if file_name.ends_with(".tar.zst") || file_name.ends_with(".tar") {
             Ok(LayerType::Tar)
         } else {
@@ -65,10 +58,6 @@ mod tests {
     fn detect_layer_type_works() -> Result<()> {
         let r = Runfiles::create()?;
         let testdata = PathBuf::from("cros/bazel/ebuild/private/common/makechroot/testdata/");
-        assert_eq!(
-            LayerType::detect(r.rlocation(testdata.join("example.squashfs")))?,
-            LayerType::Squashfs
-        );
         assert_eq!(
             LayerType::detect(r.rlocation(testdata.join("example.tar.zst")))?,
             LayerType::Tar

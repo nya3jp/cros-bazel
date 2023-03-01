@@ -10,7 +10,6 @@ load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_t
 rust_binary_crate(
     name = "run_in_container_rust",
     data = [
-        "//rules_cros/third_party/squashfuse",
         "@dumb_init//file",
     ],
     visibility = ["//visibility:public"],

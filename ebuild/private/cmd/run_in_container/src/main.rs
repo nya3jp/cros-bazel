@@ -175,8 +175,6 @@ fn enter_namespace() -> Result<()> {
 
 fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()> {
     let stage_dir = cfg.staging_dir.absolutize()?;
-    let r = runfiles::Runfiles::create()?;
-    let squashfuse_path = r.rlocation("cros/rules_cros/third_party/squashfuse/squashfuse");
 
     // Enable the loopback networking.
     if !Command::new("/usr/sbin/ifconfig")
@@ -234,16 +232,6 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
         match LayerType::detect(&layer_path)? {
             LayerType::Dir => mount(Some(&layer_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
                 .with_context(|| format!("Failed bind-mounting {layer_path:?}"))?,
-
-            LayerType::Squashfs => {
-                if !Command::new(&squashfuse_path)
-                    .args([&layer_path, &lower_dir])
-                    .status()?
-                    .success()
-                {
-                    bail!("Failed mounting {layer_path:?} to {lower_dir:?} via squashfuse");
-                }
-            }
 
             LayerType::Tar => {
                 // We use a dedicated directory for the extracted artifacts instead of
