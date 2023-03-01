@@ -4,6 +4,7 @@
 
 use std::{fs::File, io::Write, path::Path};
 
+use alchemist::analyze::source::PackageLocalSource;
 use anyhow::Result;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -32,9 +33,10 @@ struct RepoRepositoryTemplateContext {
 }
 
 #[derive(Serialize)]
-struct RepositoriesTemplateContext {
+struct RepositoriesTemplateContext<'a> {
     dists: Vec<DistFileEntry>,
     repos: Vec<RepoRepositoryTemplateContext>,
+    chrome: Vec<&'a String>,
 }
 
 pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()> {
@@ -67,9 +69,21 @@ pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()
         .sorted_by(|a, b| a.name.cmp(&b.name))
         .collect();
 
+    let chrome = packages
+        .iter()
+        .flat_map(|package| &package.sources.local_sources)
+        .filter_map(|origin| match origin {
+            PackageLocalSource::Chrome(version) => Some(version),
+            _ => None,
+        })
+        .unique()
+        .sorted()
+        .collect();
+
     let context = RepositoriesTemplateContext {
         dists: unique_dists,
         repos,
+        chrome,
     };
 
     let mut file = File::create(out)?;

@@ -190,7 +190,7 @@ impl EBuildEntry {
                 PackageLocalSource::Src(src) => {
                     format!("//internal/sources/{}:__tarballs__", src.to_string_lossy())
                 }
-                PackageLocalSource::Chrome => "@chrome//:src".to_string(),
+                PackageLocalSource::Chrome(version) => format!("@chrome-{version}//:src"),
                 PackageLocalSource::Chromite => "@chromite//:src".to_string(),
             })
             .collect();

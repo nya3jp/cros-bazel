@@ -28,6 +28,10 @@ use crate::{
     ebuild::PackageDetails,
 };
 
+/// Represents a chrome version number
+/// i.e., 113.0.5623.0
+pub type ChromeVersion = String;
+
 /// Represents an origin of local source code.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum PackageLocalSource {
@@ -36,7 +40,7 @@ pub enum PackageLocalSource {
     /// Chromite source code at `/mnt/host/source/chromite`.
     Chromite,
     /// Chrome source code.
-    Chrome,
+    Chrome(ChromeVersion),
 }
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -295,11 +299,19 @@ fn apply_local_sources_workarounds(
     details: &PackageDetails,
     local_sources: &mut Vec<PackageLocalSource>,
 ) -> Result<()> {
-    // Chromium packages need its source code.
-    // TODO: Remove this hack.
-    if details.inherited.contains("chromium-source") {
+    // We can't support the 9999 ebuild flow for the chrome ebuilds because
+    // 1) We don't know where the chrome source is checked out, 2) We need to
+    // run all the repo hooks to generate a self contained tarball.
+    if details.inherited.contains("chromium-source")
+        && details
+            .version
+            .main()
+            .first()
+            .map_or(false, |main| main != "9999")
+    {
+        let version = details.version.main().join(".");
         // TODO: We need USE flags to add src-internal.
-        local_sources.push(PackageLocalSource::Chrome);
+        local_sources.push(PackageLocalSource::Chrome(version));
     }
 
     // The platform eclass calls `platform2.py` which requires chromite.

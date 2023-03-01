@@ -62,9 +62,9 @@ load("//bazel/sdk:repositories.bzl", "cros_sdk_repositories")
 
 cros_sdk_repositories()
 
-load("//bazel/chrome:repositories.bzl", "cros_chrome_repositories")
+load("//bazel/depot_tools:repositories.bzl", "depot_tools_repository")
 
-cros_chrome_repositories()
+depot_tools_repository()
 
 new_local_repository(
     name = "chromite",

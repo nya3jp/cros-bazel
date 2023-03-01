@@ -1,11 +1,10 @@
-# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Copyright 2023 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load(":cros_chrome_repository.bzl", "cros_chrome_repository")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
-def cros_chrome_repositories():
+def depot_tools_repository():
     new_git_repository(
         name="depot_tools",
         remote = "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
@@ -29,11 +28,5 @@ EOF
             # downloaded.
             './gclient.wrapper.sh help'
         ],
-        build_file = "@//bazel/chrome:BUILD.depot_tools-template",
-    )
-
-    cros_chrome_repository(
-        name = "chrome",
-        tag = "107.0.5257.0",
-        gclient = "@depot_tools//:gclient.wrapper.sh"
+        build_file = "@//bazel/depot_tools:BUILD.depot_tools-template",
     )
