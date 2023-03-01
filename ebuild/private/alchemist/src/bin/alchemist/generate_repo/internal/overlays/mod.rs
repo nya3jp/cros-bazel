@@ -162,6 +162,7 @@ pub struct EBuildEntry {
     ebuild_name: String,
     version: String,
     sources: Vec<String>,
+    git_trees: Vec<String>,
     dists: Vec<DistFileEntry>,
     build_deps: Vec<String>,
     runtime_deps: Vec<String>,
@@ -192,6 +193,13 @@ impl EBuildEntry {
                 PackageLocalSourceOrigin::Chrome => format!("@chrome//{}:src", source.path),
                 PackageLocalSourceOrigin::Chromite => format!("@chromite//{}:src", source.path),
             })
+            .collect();
+
+        let git_trees = package
+            .sources
+            .repo_sources
+            .iter()
+            .map(|source| format!("@{}//:src", source.name.to_owned()))
             .collect();
 
         let dists = package
@@ -249,6 +257,7 @@ impl EBuildEntry {
             ebuild_name,
             version,
             sources,
+            git_trees,
             dists,
             build_deps,
             runtime_deps,

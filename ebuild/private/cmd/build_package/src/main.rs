@@ -8,7 +8,7 @@ use makechroot::BindMount;
 use mountsdk::{ConfigArgs, MountedSDK};
 use std::{
     path::{Path, PathBuf},
-    str::FromStr,
+    str::FromStr, collections::HashSet,
 };
 use version::Version;
 
@@ -29,6 +29,9 @@ struct Cli {
 
     #[arg(long)]
     distfile: Vec<BindMount>,
+
+    #[arg(long, help = "Git trees used by CROS_WORKON_TREE")]
+    git_tree: Vec<PathBuf>,
 
     #[arg(long, required = true)]
     output: PathBuf,
@@ -159,6 +162,23 @@ fn main() -> Result<()> {
         cfg.bind_mounts.push(BindMount {
             source: mount.source,
             mount_path: PathBuf::from("/var/cache/distfiles").join(mount.mount_path),
+        })
+    }
+
+    let mut seen_git_trees = HashSet::with_capacity(args.git_tree.len());
+
+    for file in &args.git_tree {
+        // Either <SHA> or <SHA>.tar.xxx
+        let tree_file = file.file_name();
+
+        if !seen_git_trees.insert(tree_file) {
+            bail!("Duplicate git tree {:?} specified.", tree_file);
+        }
+
+        cfg.bind_mounts.push(BindMount {
+            source: file.to_path_buf(),
+            mount_path: PathBuf::from("/var/cache/trees")
+                .join(file.file_name().expect("path to contain file name")),
         })
     }
 

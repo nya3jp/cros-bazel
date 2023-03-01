@@ -58,6 +58,8 @@ def _ebuild_impl(ctx):
 
     _ebuild_calculate_inputs(ctx, args)
 
+    args.add_all(ctx.files.git_trees, format_each="--git-tree=%s")
+
     extraction_args = ctx.actions.args()
     extraction_args.add("--binpkg=%s" % binpkg_output_file.path)
     xpak_outputs = []
@@ -133,7 +135,7 @@ def _ebuild_impl(ctx):
     providers.extend(mountsdk_generic(
         ctx,
         progress_message_name = ctx.file.ebuild.basename,
-        inputs = [ctx.file.ebuild],
+        inputs = [ctx.file.ebuild] + ctx.files.git_trees,
         binpkg_output_file = binpkg_output_file,
         outputs = [binpkg_output_file, log_output_file],
         args = args,
@@ -199,6 +201,13 @@ _ebuild = rule(
             The shared libraries this target will link against.
             """,
             providers = [EbuildLibraryInfo],
+        ),
+        git_trees = attr.label_list(
+            doc = """
+            The git tree objects listed in the CROS_WORKON_TREE variable.
+            """,
+            allow_empty = True,
+            allow_files = True,
         ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
         _action_wrapper = attr.label(

@@ -25,8 +25,16 @@ lazy_static! {
 }
 
 #[derive(Serialize)]
+struct RepoRepositoryTemplateContext {
+    name: String,
+    project: String,
+    tree_hash: String,
+}
+
+#[derive(Serialize)]
 struct RepositoriesTemplateContext {
     dists: Vec<DistFileEntry>,
+    repos: Vec<RepoRepositoryTemplateContext>,
 }
 
 pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()> {
@@ -47,8 +55,21 @@ pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()
         .dedup_by(|a, b| a.filename == b.filename)
         .collect();
 
+    let repos: Vec<RepoRepositoryTemplateContext> = packages
+        .iter()
+        .flat_map(|package| &package.sources.repo_sources)
+        .unique_by(|source| &source.name)
+        .map(|repo| RepoRepositoryTemplateContext {
+            name: repo.name.clone(),
+            project: repo.project.clone(),
+            tree_hash: repo.tree_hash.clone(),
+        })
+        .sorted_by(|a, b| a.name.cmp(&b.name))
+        .collect();
+
     let context = RepositoriesTemplateContext {
         dists: unique_dists,
+        repos,
     };
 
     let mut file = File::create(out)?;

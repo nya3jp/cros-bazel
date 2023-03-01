@@ -30,6 +30,13 @@ ebuild(
         {%- endfor %}
     ],
     {%- endif %}
+    {%- if ebuild.git_trees %}
+    git_trees = [
+        {%- for git_tree in ebuild.git_trees %}
+        "{{ git_tree }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
     {%- if ebuild.build_deps %}
     build_deps = [
         {%- for dep in ebuild.build_deps %}
