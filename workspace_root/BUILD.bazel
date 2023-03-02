@@ -4,8 +4,6 @@
 
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/ebuild:defs.bzl", "overlay_set")
-load("//bazel/ebuild/private:build_image.bzl", "build_image")
 
 exports_files([
     "Cargo.toml",
@@ -44,20 +42,21 @@ pkg_tar(
 
 # Define this in the workspace root to prevent //bazel/... from attempting to
 # build whole images.
-build_image(
-    name = "build_image_demo",
-    srcs = [
-        "//:scripts_src",
-        "@chromite//:src",
-    ],
-    build_deps = [
-        # Copied from @portage//virtual/target-os:package_set's deps
-        # TODO: Directly refer to @portage//virtual/target-os:package_set
-        # TODO(b/269698929): FIX PDEPEND handling.
-        "@portage//virtual/target-os",
-    ],
-    overlays = "//bazel/ebuild/private/cmd/build_image:overlays_build_image",
-    sdk = "@portage//internal/sdk",
-)
+# TODO(b/271038794): Restore this target.
+# build_image(
+#     name = "build_image_demo",
+#     srcs = [
+#         "//:scripts_src",
+#         "@chromite//:src",
+#     ],
+#     build_deps = [
+#         # Copied from @portage//virtual/target-os:package_set's deps
+#         # TODO: Directly refer to @portage//virtual/target-os:package_set
+#         # TODO(b/269698929): FIX PDEPEND handling.
+#         "@portage//virtual/target-os",
+#     ],
+#     overlays = "//bazel/ebuild/private/cmd/build_image:overlays_build_image",
+#     sdk = "@portage//internal/sdk",
+# )
 
 exports_files(["tools/bazel"])
