@@ -24,9 +24,7 @@ set -x
 # We can run cargo in parallel with bazel.
 cargo test --package alchemist -- --nocapture &
 
-# Runs tests first to ensure that, for example, if mountsdk is broken, we don't
-# get a failure like "failed to build ebuild", but instead fail :mountsdk_test.
+# Despite the name, bazel test also builds non-test targets if they're listed.
 bazel test --test_size_filters=small -- "${TARGETS[@]}"
-bazel build -- "${TARGETS[@]}"
 
 wait
