@@ -142,21 +142,6 @@ an interactive console:
 - `--login=after`: after building the package
 - `--login=after-fail`: after failing to build the package
 
-### Comparing binary packages
-
-Use `cros_sdk` to enter the standard CrOS chroot, and run `setup_board` and
-`build_packages` to build packages for `arm64-generic`. Binary packages will be
-saved to `/build/arm64-generic/packages`.
-
-Also follow [the building section](#building) to build packages with Bazel.
-
-Then run the following command to compare binary packages from the two
-implementations.
-
-```sh
-$ bazel run //bazel/ebuild/cmd/compare_packages
-```
-
 ### Extracting binary packages
 
 In case you need to extract the contents of a binary package so you can easily
