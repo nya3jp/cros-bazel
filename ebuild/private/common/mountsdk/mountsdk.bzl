@@ -126,9 +126,8 @@ def mountsdk_generic(
         inputs,
         binpkg_output_file,
         outputs, args,
-        install_deps = False,
-        generate_run_action = True,
-        log_output_file = None):
+        log_output_file,
+        generate_run_action = True):
     sdk = ctx.attr.sdk[SDKInfo]
     args.add_all([
         "--output=" + binpkg_output_file.path,
@@ -180,20 +179,15 @@ def mountsdk_generic(
         order = "postorder",
     )
 
-    if install_deps:
-        deps_directory, deps_symlink_tar = create_layer(
-            ctx,
-            progress_message_name,
-            transitive_build_time_deps_files,
-            transitive_build_time_deps_targets,
-        )
-        args.add(deps_directory.path, format = "--layer=%s")
-        args.add(deps_symlink_tar.path, format = "--layer=%s")
-        transitive_inputs.append(depset([deps_directory, deps_symlink_tar]))
-    else:
-        transitive_inputs.append(transitive_build_time_deps_files)
-        install_groups = _calculate_install_groups(transitive_build_time_deps_targets)
-        args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
+    deps_directory, deps_symlink_tar = create_layer(
+        ctx,
+        progress_message_name,
+        transitive_build_time_deps_files,
+        transitive_build_time_deps_targets,
+    )
+    args.add(deps_directory.path, format = "--layer=%s")
+    args.add(deps_symlink_tar.path, format = "--layer=%s")
+    transitive_inputs.append(depset([deps_directory, deps_symlink_tar]))
 
     transitive_runtime_deps_files = depset(
         [binpkg_output_file],
@@ -208,16 +202,13 @@ def mountsdk_generic(
     )
 
     if generate_run_action:
-        log_args = []
-        if log_output_file:
-            outputs.append(log_output_file)
-            log_args.extend(["--output", log_output_file.path])
+        outputs.append(log_output_file)
         ctx.actions.run(
             inputs = depset(direct_inputs, transitive = transitive_inputs),
             outputs = outputs,
             executable = ctx.executable._action_wrapper,
             tools = [ctx.executable._builder],
-            arguments = log_args + [ctx.executable._builder.path] + [args],
+            arguments = ["--output", log_output_file.path, ctx.executable._builder.path, args],
             execution_requirements = {
                 # Send SIGTERM instead of SIGKILL on user interruption.
                 "supports-graceful-termination": "",

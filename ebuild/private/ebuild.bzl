@@ -139,9 +139,8 @@ def _ebuild_impl(ctx):
         binpkg_output_file = binpkg_output_file,
         outputs = [binpkg_output_file, log_output_file],
         args = args,
-        install_deps = True,
-        generate_run_action = not prebuilt,
-        log_output_file = log_output_file
+        log_output_file = log_output_file,
+        generate_run_action = not prebuilt
     ))
 
     if prebuilt:
