@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKBaseInfo", "SDKInfo")
-load("//bazel/ebuild/private/common/mountsdk:mountsdk.bzl", "create_layer")
+load("install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
     output_root = ctx.actions.declare_directory(ctx.attr.name)
@@ -154,27 +154,21 @@ sdk = rule(
 def _sdk_update_impl(ctx):
     sdk = ctx.attr.base[SDKInfo]
 
-    transitive_build_time_deps_files = depset(
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.target_deps],
-        order = "postorder",
-    )
-
-    transitive_build_time_deps_targets = depset(
+    install_targets = depset(
         ctx.attr.target_deps,
         transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.target_deps],
         order = "postorder",
     )
 
-    output_root, output_symlink_tar = create_layer(
-        ctx,
-        "toolchain libraries",
-        transitive_build_time_deps_files,
-        transitive_build_time_deps_targets,
+    outputs = install_deps(
+        ctx = ctx,
+        output_prefix = ctx.attr.name,
         sdk = sdk,
-        suffix = "",
+        install_targets = install_targets,
+        executable_action_wrapper = ctx.executable._action_wrapper,
+        executable_install_deps = ctx.executable._install_deps,
+        progress_message = "Updating SDK",
     )
-
-    outputs = [output_root, output_symlink_tar]
 
     return [
         DefaultInfo(files = depset(outputs)),
