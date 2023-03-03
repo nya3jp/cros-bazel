@@ -2,22 +2,85 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "MountSDKInfo", "SDKInfo", "relative_path_in_package")
-load("//bazel/ebuild/private:install_deps.bzl", "install_deps")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "SDKInfo", "relative_path_in_package")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
+load("//bazel/ebuild/private:sdk.bzl", "sdk_update")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo", "string_flag")
 
 def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
 
-def _ebuild_impl(ctx):
-    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
+# Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
+_EBUILD_COMMON_ATTRS = dict(
+    ebuild = attr.label(
+        mandatory = True,
+        allow_single_file = [".ebuild"],
+    ),
+    distfiles = attr.label_keyed_string_dict(
+        allow_files = True,
+    ),
+    srcs = attr.label_list(
+        doc = "src files used by the ebuild",
+        allow_files = True,
+    ),
+    git_trees = attr.label_list(
+        doc = """
+        The git tree objects listed in the CROS_WORKON_TREE variable.
+        """,
+        allow_empty = True,
+        allow_files = True,
+    ),
+    files = attr.label_list(
+        allow_files = True,
+    ),
+    runtime_deps = attr.label_list(
+        providers = [BinaryPackageInfo],
+    ),
+    shared_lib_deps = attr.label_list(
+        doc = """
+        The shared libraries this target will link against.
+        """,
+        providers = [EbuildLibraryInfo],
+    ),
+    sdk = attr.label(
+        providers = [SDKInfo],
+        mandatory = True,
+    ),
+    _action_wrapper = attr.label(
+        executable = True,
+        cfg = "exec",
+        default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
+    ),
+    _install_deps = attr.label(
+        executable = True,
+        cfg = "exec",
+        default = Label("//bazel/ebuild/private/cmd/install_deps"),
+    ),
+    _build_package = attr.label(
+        executable = True,
+        cfg = "exec",
+        default = Label("//bazel/ebuild/private/cmd/build_package"),
+    ),
+)
 
-    # Declare outputs.
-    output_binary_package_file = ctx.actions.declare_file(src_basename + ".tbz2")
-    output_log_file = ctx.actions.declare_file(src_basename + ".log")
+def _compute_build_package_args(ctx, output_path):
+    """
+    Computes the arguments to pass to build_package.
 
-    # Variables to record arguments and inputs of the action.
+    This function can be called only from `ebuild`, `ebuild_debug`, and
+    `ebuild_test`. Particularly, the current rule must include
+    _EBUILD_COMMON_ATTRS in its attribute definition.
+
+    Args:
+        ctx: ctx: A context objected passed to the rule implementation.
+        output_path: str: A file path where an output binary package file is
+            saved.
+
+    Returns:
+        (args, inputs) where:
+            args: Args: Arguments to pass to build_package.
+            inputs: Depset[File]: Inputs to build_package.
+    """
     args = ctx.actions.args()
     direct_inputs = []
     transitive_inputs = []
@@ -25,7 +88,7 @@ def _ebuild_impl(ctx):
     # Basic arguments
     sdk = ctx.attr.sdk[SDKInfo]
     args.add_all([
-        "--output=" + output_binary_package_file.path,
+        "--output=" + output_path,
         "--board=" + sdk.board,
     ])
 
@@ -67,38 +130,26 @@ def _ebuild_impl(ctx):
     args.add_all(ctx.files.git_trees, format_each = "--git-tree=%s")
     direct_inputs.extend(ctx.files.git_trees)
 
-    # --layer for dependencies
-    transitive_build_time_deps_targets = depset(
-        ctx.attr.build_deps,
-        # Pull in runtime dependencies of build-time dependencies.
-        # TODO: Revisit this logic to see if we can avoid pulling in transitive
-        # dependencies.
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.build_deps],
-        order = "postorder",
-    )
-    deps_layers = install_deps(
-        ctx = ctx,
-        output_prefix = src_basename + "-deps",
-        sdk = ctx.attr.sdk[SDKInfo],
-        install_targets = transitive_build_time_deps_targets,
-        executable_action_wrapper = ctx.executable._action_wrapper,
-        executable_install_deps = ctx.executable._install_deps,
-        progress_message = "Installing dependencies for %s" % ctx.file.ebuild.basename,
-    )
-    args.add_all(deps_layers, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(deps_layers)
-
     # Consume interface libraries.
     add_interface_library_args(
         input_targets = ctx.attr.shared_lib_deps,
         args = args,
     )
 
-    # Now we've fully decided arguments and inputs.
-    # Do not modify direct_inputs and transitive_inputs after this.
     inputs = depset(direct_inputs, transitive = transitive_inputs)
+    return args, inputs
 
-    # Define an action to build the package.
+def _ebuild_impl(ctx):
+    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
+
+    # Declare outputs.
+    output_binary_package_file = ctx.actions.declare_file(src_basename + ".tbz2")
+    output_log_file = ctx.actions.declare_file(src_basename + ".log")
+
+    # Compute arguments and inputs to build_package.
+    args, inputs = _compute_build_package_args(ctx, output_path = output_binary_package_file.path)
+
+    # Define the main action.
     prebuilt = ctx.attr.prebuilt[BuildSettingInfo].value
     if prebuilt:
         gsutil_path = ctx.attr._gsutil_path[BuildSettingInfo].value
@@ -120,8 +171,8 @@ def _ebuild_impl(ctx):
             inputs = inputs,
             outputs = [output_binary_package_file, output_log_file],
             executable = ctx.executable._action_wrapper,
-            tools = [ctx.executable._builder],
-            arguments = ["--output", output_log_file.path, ctx.executable._builder.path, args],
+            tools = [ctx.executable._build_package],
+            arguments = ["--output", output_log_file.path, ctx.executable._build_package.path, args],
             execution_requirements = {
                 # Send SIGTERM instead of SIGKILL on user interruption.
                 "supports-graceful-termination": "",
@@ -168,42 +219,11 @@ def _ebuild_impl(ctx):
             transitive_runtime_deps_targets = transitive_runtime_deps_targets,
             direct_runtime_deps_targets = ctx.attr.runtime_deps,
         ),
-        MountSDKInfo(
-            executable = ctx.executable._builder,
-            executable_runfiles = ctx.attr._builder[DefaultInfo].default_runfiles,
-            args = args,
-            direct_inputs = direct_inputs,
-            transitive_inputs = transitive_inputs,
-        ),
     ] + interface_library_providers
 
 _ebuild = rule(
     implementation = _ebuild_impl,
     attrs = dict(
-        ebuild = attr.label(
-            mandatory = True,
-            allow_single_file = [".ebuild"],
-        ),
-        distfiles = attr.label_keyed_string_dict(
-            allow_files = True,
-        ),
-        srcs = attr.label_list(
-            doc = "src files used by the ebuild",
-            allow_files = True,
-        ),
-        build_deps = attr.label_list(
-            providers = [BinaryPackageInfo],
-        ),
-        runtime_deps = attr.label_list(
-            providers = [BinaryPackageInfo],
-        ),
-        files = attr.label_list(
-            allow_files = True,
-        ),
-        sdk = attr.label(
-            providers = [SDKInfo],
-            mandatory = True,
-        ),
         headers = attr.string_list(
             allow_empty = True,
             doc = """
@@ -232,35 +252,7 @@ _ebuild = rule(
             The path inside the binpkg that contains static libraries.
             """,
         ),
-        shared_lib_deps = attr.label_list(
-            doc = """
-            The shared libraries this target will link against.
-            """,
-            providers = [EbuildLibraryInfo],
-        ),
-        git_trees = attr.label_list(
-            doc = """
-            The git tree objects listed in the CROS_WORKON_TREE variable.
-            """,
-            allow_empty = True,
-            allow_files = True,
-        ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
-        _action_wrapper = attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
-        ),
-        _builder = attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//bazel/ebuild/private/cmd/build_package"),
-        ),
-        _install_deps = attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//bazel/ebuild/private/cmd/install_deps"),
-        ),
         _extract_interface = attr.label(
             executable = True,
             cfg = "exec",
@@ -275,71 +267,77 @@ _ebuild = rule(
             providers = [BuildSettingInfo],
             default = Label("//bazel/ebuild/private:gsutil_path"),
         ),
+        **_EBUILD_COMMON_ATTRS
     ),
 )
 
 def _ebuild_debug_impl(ctx):
-    info = ctx.attr.target[MountSDKInfo]
+    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
 
-    wrapper = ctx.actions.declare_file(ctx.label.name)
+    # Declare outputs.
+    output_debug_script = ctx.actions.declare_file(src_basename + "_debug.sh")
 
-    args = ctx.actions.args()
-    args.add_all([wrapper, info.executable])
+    # Compute arguments and inputs to build_package.
+    args, inputs = _compute_build_package_args(ctx, output_path = "/dev/null")
+
+    # Define the main action.
     ctx.actions.run(
         executable = ctx.executable._create_debug_script,
-        arguments = [args, info.args],
-        outputs = [wrapper],
+        arguments = [output_debug_script.path, ctx.executable._build_package.path, args],
+        outputs = [output_debug_script],
     )
 
-    runfiles = ctx.runfiles(transitive_files = depset(info.direct_inputs, transitive = info.transitive_inputs))
+    # Compute provider data.
+    runfiles = ctx.runfiles(transitive_files = inputs)
     runfiles = runfiles.merge_all([
-        info.executable_runfiles,
+        ctx.attr._build_package[DefaultInfo].default_runfiles,
         ctx.attr._bash_runfiles[DefaultInfo].default_runfiles,
     ])
-
-    return [DefaultInfo(
-        files = depset([wrapper]),
-        runfiles = runfiles,
-        executable = wrapper,
-    )]
+    return [
+        DefaultInfo(
+            files = depset([output_debug_script]),
+            executable = output_debug_script,
+            runfiles = runfiles,
+        ),
+    ]
 
 _ebuild_debug = rule(
     implementation = _ebuild_debug_impl,
+    executable = True,
     attrs = dict(
-        target = attr.label(
-            providers = [MountSDKInfo],
-            mandatory = True,
-        ),
         _bash_runfiles = attr.label(default = "@bazel_tools//tools/bash/runfiles"),
         _create_debug_script = attr.label(
             default = "//bazel/ebuild/private/common/mountsdk:create_debug_file",
             executable = True,
             cfg = "exec",
         ),
+        **_EBUILD_COMMON_ATTRS
     ),
-    executable = True,
 )
 
 def _ebuild_test_impl(ctx):
-    info = ctx.attr.target[MountSDKInfo]
+    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
 
-    test_runner = ctx.actions.declare_file(ctx.label.name)
+    # Declare outputs.
+    output_runner_script = ctx.actions.declare_file(src_basename + "_test.sh")
 
-    args = ctx.actions.args()
-    args.add_all([test_runner, info.executable])
+    # Compute arguments and inputs to build_package.
+    args, inputs = _compute_build_package_args(ctx, output_path = "/dev/null")
+    args.add("--test")
+
+    # Generate the test runner.
     ctx.actions.run(
         executable = ctx.executable._generate_test_runner,
-        arguments = [args, info.args, "--test"],
-        outputs = [test_runner],
+        arguments = [output_runner_script.path, ctx.executable._build_package.path, args],
+        outputs = [output_runner_script],
     )
 
-    runfiles = ctx.runfiles(transitive_files = depset(info.direct_inputs, transitive = info.transitive_inputs))
-    runfiles.merge(info.executable_runfiles)
-
+    runfiles = ctx.runfiles(transitive_files = inputs)
+    runfiles.merge(ctx.attr._build_package[DefaultInfo].default_runfiles)
     return [DefaultInfo(
-        files = depset([test_runner]),
+        files = depset([output_runner_script]),
+        executable = output_runner_script,
         runfiles = runfiles,
-        executable = test_runner,
     )]
 
 # TODO(b/269558613) Rename this to _ebuild_test.
@@ -347,37 +345,49 @@ def _ebuild_test_impl(ctx):
 _ebuild_test_run = rule(
     implementation = _ebuild_test_impl,
     attrs = dict(
-        target = attr.label(
-            providers = [MountSDKInfo],
-            mandatory = True,
-        ),
         _generate_test_runner = attr.label(
             default = ":generate_test_runner",
             executable = True,
             cfg = "exec",
         ),
+        **_EBUILD_COMMON_ATTRS
     ),
     # TODO(b/269558613) Change this to "test = True".
     executable = True,
 )
 
-def ebuild(name, **kwargs):
+def ebuild(name, ebuild, sdk, build_deps = [], visibility = None, **kwargs):
     string_flag(
         name = name + "_prebuilt",
         build_setting_default = "",
+        visibility = visibility,
+    )
+    sdk_update(
+        name = name + "_deps",
+        base = sdk,
+        target_deps = build_deps,
+        progress_message = "Installing dependencies for " + ebuild,
+        visibility = ["//visibility:private"],
     )
     _ebuild(
         name = name,
+        ebuild = ebuild,
+        sdk = ":%s_deps" % name,
         prebuilt = ":%s_prebuilt" % name,
+        visibility = visibility,
         **kwargs
     )
     _ebuild_debug(
         name = name + "_debug",
-        target = name,
-        visibility = kwargs.get("visibility", None),
+        ebuild = ebuild,
+        sdk = ":%s_deps" % name,
+        visibility = visibility,
+        **kwargs
     )
     _ebuild_test_run(
         name = name + "_test",
-        target = name,
-        visibility = kwargs.get("visibility", None),
+        ebuild = ebuild,
+        sdk = ":%s_deps" % name,
+        visibility = visibility,
+        **kwargs
     )

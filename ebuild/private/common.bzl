@@ -89,27 +89,6 @@ EbuildLibraryInfo = provider(
     },
 )
 
-MountSDKInfo = provider(
-    "Information required to create a debug target for a mountsdk target",
-    fields = {
-        "executable": """
-            File: The binary to be debugged
-        """,
-        "executable_runfiles": """
-            runfiles: The runfiles for the executable binary
-        """,
-        "args": """
-            list: The arguments this package is being run with
-        """,
-        "direct_inputs": """
-            list[File]: The data required to build this package (eg. srcs)
-        """,
-        "transitive_inputs": """
-            list[Depset[File]]: All the packages we transitively depend on.
-        """,
-    },
-)
-
 def _workspace_root(label):
     return paths.join("..", label.workspace_name) if label.workspace_name else ""
 

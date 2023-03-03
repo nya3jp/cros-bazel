@@ -167,7 +167,7 @@ def _sdk_update_impl(ctx):
         install_targets = install_targets,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
-        progress_message = "Updating SDK",
+        progress_message = ctx.attr.progress_message,
     )
 
     return [
@@ -183,11 +183,23 @@ sdk_update = rule(
     implementation = _sdk_update_impl,
     attrs = {
         "base": attr.label(
+            doc = """
+            Base SDK to derive a new SDK from.
+            """,
             mandatory = True,
             providers = [SDKInfo],
         ),
         "target_deps": attr.label_list(
+            doc = """
+            Target packages to install in the SDK.
+            """,
             providers = [BinaryPackageInfo],
+        ),
+        "progress_message": attr.string(
+            doc = """
+            Progress message for this target.
+            """,
+            default = "Updating SDK",
         ),
         "_action_wrapper": attr.label(
             executable = True,
