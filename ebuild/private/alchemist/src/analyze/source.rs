@@ -215,7 +215,7 @@ fn extract_cros_workon_sources(
                 continue;
             }
             for subtree in local_subtrees {
-                let subtree =  subtree.trim_start_matches('/');
+                let subtree = subtree.trim_start_matches('/');
 
                 if subtree.is_empty() {
                     source_paths.push(PathBuf::from(&local_path))
@@ -265,7 +265,9 @@ fn extract_cros_workon_sources(
     let source_dirs = source_paths
         .into_iter()
         .map(|path| {
-            let meta = metadata(src_dir.join(&path))?;
+            let full_path = src_dir.join(&path);
+            let meta = metadata(&full_path)
+                .with_context(|| format!("failed to get metadata for {}", full_path.display()))?;
             if meta.is_dir() {
                 Ok(path)
             } else {
