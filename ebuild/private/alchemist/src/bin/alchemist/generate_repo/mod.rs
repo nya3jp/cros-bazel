@@ -23,6 +23,7 @@ use alchemist::{
         dependency::{analyze_dependencies, PackageDependencies},
         source::{analyze_sources, PackageSources},
     },
+    config::bundle::ConfigBundle,
     ebuild::{CachedPackageLoader, PackageDetails, Stability},
     fakechroot::PathTranslator,
     repository::RepositorySet,
@@ -109,6 +110,7 @@ fn find_install_map<'a>(
 }
 
 fn analyze_packages(
+    config: &ConfigBundle,
     all_details: Vec<Arc<PackageDetails>>,
     src_dir: &Path,
     resolver: &PackageResolver,
@@ -121,7 +123,7 @@ fn analyze_packages(
         .flat_map(|details| {
             let result = (|| -> Result<PackagePartial> {
                 let dependencies = analyze_dependencies(details, resolver)?;
-                let sources = analyze_sources(details, src_dir)?;
+                let sources = analyze_sources(config, details, src_dir)?;
                 Ok(PackagePartial {
                     details: details.clone(),
                     dependencies,
@@ -226,6 +228,7 @@ fn analyze_packages(
 pub fn generate_repo_main(
     board: &str,
     repos: &RepositorySet,
+    config: &ConfigBundle,
     loader: &CachedPackageLoader,
     resolver: &PackageResolver,
     translator: &PathTranslator,
@@ -252,7 +255,7 @@ pub fn generate_repo_main(
 
     eprintln!("Analyzing packages...");
 
-    let all_packages = analyze_packages(all_details, src_dir, resolver, verbose);
+    let all_packages = analyze_packages(config, all_details, src_dir, resolver, verbose);
 
     let all_local_sources = all_packages
         .iter()

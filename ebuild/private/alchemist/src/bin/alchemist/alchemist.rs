@@ -198,6 +198,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             generate_repo_main(
                 &args.board,
                 &repos,
+                &config,
                 &loader,
                 &resolver,
                 &translator,

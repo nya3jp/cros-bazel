@@ -2,8 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::bash::expr::BashExpr;
-use anyhow::Context;
+use crate::{
+    bash::expr::BashExpr,
+    config::bundle::ConfigBundle,
+    dependency::restrict::{RestrictAtom, RestrictDependency},
+};
+use anyhow::{ensure, Context};
 use std::{
     collections::{HashMap, HashSet},
     fs::{metadata, read_to_string},
@@ -61,7 +65,7 @@ impl PackageRepoSource {
 }
 
 /// Represents a source code archive to be fetched remotely to build a package.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PackageDistSource {
     pub urls: Vec<Url>,
     pub filename: String,
@@ -337,6 +341,15 @@ fn parse_uri_dependencies(deps: UriDependency, use_map: &UseMap) -> Result<Vec<U
     parse_simplified_dependency(deps)
 }
 
+fn parse_restrict_dependencies(
+    deps: RestrictDependency,
+    use_map: &UseMap,
+) -> Result<Vec<RestrictAtom>> {
+    let deps = elide_use_conditions(deps, use_map).unwrap_or_default();
+    let deps = simplify(deps);
+    parse_simplified_dependency(deps)
+}
+
 struct DistEntry {
     pub filename: String,
     pub size: u64,
@@ -348,7 +361,8 @@ struct PackageManifest {
 }
 
 fn load_package_manifest(dir: &Path) -> Result<PackageManifest> {
-    let content = read_to_string(&dir.join("Manifest"))?;
+    let full_path = &dir.join("Manifest");
+    let content = read_to_string(full_path).with_context(|| full_path.display().to_string())?;
     let dists = content
         .split('\n')
         .map(|line| {
@@ -376,7 +390,62 @@ fn load_package_manifest(dir: &Path) -> Result<PackageManifest> {
     Ok(PackageManifest { dists })
 }
 
-fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageDistSource>> {
+// These are the only public gs buckets an ebuild should be accessing.
+// See https://source.chromium.org/chromium/chromiumos/docs/+/main:archive_mirrors.md
+static PUBLIC_GS_BUCKETS: &[&str] = &[
+    "chromeos-mirror",
+    "chromeos-localmirror",
+    // These have not been listed in the doc above, but are considered valid.
+    // See b/271483241.
+    "chromium-nodejs",
+    "chromeos-prebuilt",
+];
+
+// For the public mirrors, lets prefer using HTTPS to download the files.
+// TODO(b/271846096): Delete this if we choose.
+fn convert_public_gs_buckets_to_https(url: Url) -> Result<Url> {
+    let host = url.host_str().expect("URL to have a host");
+
+    if url.scheme() != "gs" || !PUBLIC_GS_BUCKETS.contains(&host) {
+        return Ok(url);
+    }
+    Ok(Url::parse(
+        format!("https://storage.googleapis.com/{}{}", host, url.path()).as_ref(),
+    )?)
+}
+
+fn extract_remote_sources(
+    config: &ConfigBundle,
+    details: &PackageDetails,
+) -> Result<Vec<PackageDistSource>> {
+    let restrict = details.vars.get_scalar_or_default("RESTRICT")?;
+    let restrict_deps = restrict.parse::<RestrictDependency>()?;
+    let restrict_atoms = parse_restrict_dependencies(restrict_deps, &details.use_map)?;
+
+    // TODO: We should read the FEATURES field from the portage config and check
+    // for `mirror` and `force-mirror`. For our purposes we always want
+    // force-mirror so let's just hard code it for now.
+    let force_mirror = true;
+
+    let use_mirror = force_mirror && !restrict_atoms.contains(&RestrictAtom::Mirror);
+
+    let mirrors = if use_mirror {
+        let mirrors = config
+            .env()
+            .get("GENTOO_MIRRORS")
+            .map_or("", |s| s.as_str());
+        let mirrors = mirrors.split_ascii_whitespace().collect_vec();
+
+        ensure!(
+            !mirrors.is_empty(),
+            "Force mirror is enabled, but no mirrors were found"
+        );
+
+        Some(mirrors)
+    } else {
+        None
+    };
+
     // Collect URIs from SRC_URI.
     let src_uri = details.vars.get_scalar_or_default("SRC_URI")?;
     let source_deps = src_uri.parse::<UriDependency>()?;
@@ -386,7 +455,7 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageDistSou
     let mut source_map = HashMap::<String, Vec<Url>>::new();
     for source_atom in source_atoms {
         let (url, filename) = match source_atom {
-            UriAtomDependency::Uri(url, opt_filename) => {
+            UriAtomDependency::Uri(mut url, opt_filename) => {
                 let filename = if let Some(filename) = opt_filename {
                     filename
                 } else if let Some(segments) = url.path_segments() {
@@ -394,6 +463,11 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageDistSou
                 } else {
                     bail!("Invalid source URI: {}", &url);
                 };
+
+                // TODO: Fix ebuilds with bad URLS. For now let's fix the URL
+                // for them.
+                url.set_path(&url.path().replace("//", "/"));
+
                 (url, filename)
             }
             UriAtomDependency::Filename(filename) => {
@@ -421,6 +495,30 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageDistSou
             let dist = dist_map
                 .remove(&filename)
                 .ok_or_else(|| anyhow!("{} not found in Manifest", &filename))?;
+
+            let urls = match &mirrors {
+                Some(mirrors) => mirrors
+                    .iter()
+                    .map(|mirror| Url::parse(format!("{}/distfiles/{}", mirror, filename).as_ref()))
+                    .collect::<::core::result::Result<_, _>>()?,
+                None => urls
+                    .into_iter()
+                    .map(convert_public_gs_buckets_to_https)
+                    .collect::<Result<Vec<_>>>()?,
+            };
+
+            // TODO: This should probably go into generate_repo, but failing
+            // there is fatal. If we fail here then we at least get a nice error
+            // message when using --verbose.
+            for url in &urls {
+                ensure!(
+                    // Some ebuilds specify http://
+                    url.scheme() == "https" || url.scheme() == "http",
+                    "Only https urls are supported, got {}",
+                    url
+                );
+            }
+
             Ok(PackageDistSource {
                 urls,
                 filename,
@@ -436,7 +534,11 @@ fn extract_remote_sources(details: &PackageDetails) -> Result<Vec<PackageDistSou
 
 /// Analyzes ebuild variables and returns [`PackageSources`] summarizing its
 /// source information.
-pub fn analyze_sources(details: &PackageDetails, src_dir: &Path) -> Result<PackageSources> {
+pub fn analyze_sources(
+    config: &ConfigBundle,
+    details: &PackageDetails,
+    src_dir: &Path,
+) -> Result<PackageSources> {
     let (mut local_sources, repo_sources) = extract_cros_workon_sources(details, src_dir)?;
 
     apply_local_sources_workarounds(details, &mut local_sources)?;
@@ -447,7 +549,7 @@ pub fn analyze_sources(details: &PackageDetails, src_dir: &Path) -> Result<Packa
     Ok(PackageSources {
         local_sources,
         repo_sources,
-        dist_sources: extract_remote_sources(details)?,
+        dist_sources: extract_remote_sources(config, details)?,
     })
 }
 
@@ -455,30 +557,129 @@ pub fn analyze_sources(details: &PackageDetails, src_dir: &Path) -> Result<Packa
 mod tests {
     use super::*;
     use crate::bash::vars::BashVars;
-    use crate::data::Slot;
+    use crate::data::{Slot, Vars};
     use crate::ebuild::Stability;
+    use crate::testutils::write_files;
     use std::collections::HashSet;
 
+    use tempfile::TempDir;
     use version::Version;
+
+    const MIRRORS: &str = "https://mirror/a https://mirror/b";
+
+    fn new_non_cros_workon_package(use_map: UseMap) -> Result<(PackageDetails, TempDir)> {
+        let tmp = TempDir::new()?;
+
+        write_files(
+            tmp.path(),
+            [(
+                "Manifest",
+                r#"
+                DIST foo-0.1.0.tar.gz 12345 SHA256 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+                DIST foo-extra.tar.gz 56789 SHA256 a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447
+                "#,
+            )],
+        )?;
+
+        let package = PackageDetails {
+            package_name: "sys-libs/foo".to_owned(),
+            version: Version::try_new("0.1.0").unwrap(),
+            vars: BashVars::new(HashMap::from([
+                ("SRC_URI".to_owned(),
+                    BashValue::Scalar("https://example/f00-0.1.0.tar.gz -> foo-0.1.0.tar.gz extra? ( gs://chromeos-localmirror/foo-extra.tar.gz )".to_owned())),
+                ("RESTRICT".to_owned(),
+                    BashValue::Scalar("extra? ( mirror )".to_owned())),
+                ])),
+            slot: Slot::new("0"),
+            use_map,
+            stability: Stability::Stable,
+            masked: false,
+            ebuild_path: tmp.path().join("foo-0.1.0.ebuild"),
+            inherited: HashSet::new(),
+        };
+
+        Ok((package, tmp))
+    }
 
     #[test]
     fn non_cros_workon_package() -> Result<()> {
-        let package = PackageDetails {
-            package_name: "sys-libs/foo".to_owned(),
-            version: Version::try_new("0.1.0")?,
-            vars: BashVars::new(HashMap::new()),
-            slot: Slot::new("0"),
-            use_map: HashMap::new(),
-            stability: Stability::Stable,
-            masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
-            inherited: HashSet::new(),
-        };
+        let (package, _tmpdir) = new_non_cros_workon_package(UseMap::new())?;
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, Path::new("/src"))?;
 
         assert_eq!(local_sources, []);
         assert_eq!(repo_sources, []);
+
+        Ok(())
+    }
+
+    #[test]
+    fn src_uri_mirror_no_extra() -> Result<()> {
+        let config = ConfigBundle::new(
+            Vars::from([("GENTOO_MIRRORS".to_owned(), MIRRORS.to_owned())]),
+            vec![],
+        );
+
+        let (package, _tmpdir) = new_non_cros_workon_package(UseMap::new())?;
+        let dist_sources = extract_remote_sources(&config, &package)?;
+
+        assert_eq!(
+            dist_sources,
+            [PackageDistSource {
+                urls: vec![
+                    Url::parse("https://mirror/a/distfiles/foo-0.1.0.tar.gz")?,
+                    Url::parse("https://mirror/b/distfiles/foo-0.1.0.tar.gz")?,
+                ],
+                filename: "foo-0.1.0.tar.gz".to_string(),
+                size: 12345,
+                hashes: HashMap::from([(
+                    "SHA256".to_string(),
+                    "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b".to_string()
+                )]),
+            }]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn src_uri_mirror_with_extra() -> Result<()> {
+        let config = ConfigBundle::new(
+            Vars::from([("GENTOO_MIRRORS".to_owned(), MIRRORS.to_owned())]),
+            vec![],
+        );
+
+        let (package, _tmpdir) =
+            new_non_cros_workon_package(UseMap::from([("extra".to_string(), true)]))?;
+        let dist_sources = extract_remote_sources(&config, &package)?;
+
+        assert_eq!(
+            dist_sources,
+            [
+                PackageDistSource {
+                    urls: vec![Url::parse("https://example/f00-0.1.0.tar.gz")?,],
+                    filename: "foo-0.1.0.tar.gz".to_string(),
+                    size: 12345,
+                    hashes: HashMap::from([(
+                        "SHA256".to_string(),
+                        "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+                            .to_string()
+                    )]),
+                },
+                PackageDistSource {
+                    urls: vec![Url::parse(
+                        "https://storage.googleapis.com/chromeos-localmirror/foo-extra.tar.gz"
+                    )?,],
+                    filename: "foo-extra.tar.gz".to_string(),
+                    size: 56789,
+                    hashes: HashMap::from([(
+                        "SHA256".to_string(),
+                        "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447"
+                            .to_string()
+                    )]),
+                }
+            ]
+        );
 
         Ok(())
     }

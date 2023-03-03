@@ -39,12 +39,6 @@ ln -s tools/run_tests.sh .git/hooks/pre-commit
 
 ## Building
 
-*** note
-**NOTE**: If you see 403 errors on downloading Lacros files, use
-`bazel/tools/download_lacros.sh` to download them with corp credentials.
-See [go/gcloud-cli](http://go/gcloud-cli) for how to install and set up gcloud.
-***
-
 To build sys-apps/attr:
 
 ```sh
