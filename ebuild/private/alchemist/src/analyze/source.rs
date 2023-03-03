@@ -2,11 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::bash::expr::BashExpr;
+use anyhow::Context;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::{metadata, read_to_string},
     iter::repeat,
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 use anyhow::{anyhow, bail, Result};
@@ -170,15 +173,20 @@ fn extract_cros_workon_sources(
     let local_names =
         get_cros_workon_array_variable(details, "CROS_WORKON_LOCALNAME", projects.len())?;
     let subtrees = get_cros_workon_array_variable(details, "CROS_WORKON_SUBTREE", projects.len())?;
+    let optional_expressions =
+        get_cros_workon_array_variable(details, "CROS_WORKON_OPTIONAL_CHECKOUT", projects.len())?;
     let trees = get_cros_workon_tree(details)?;
 
     let is_chromeos_base = details.package_name.starts_with("chromeos-base/");
 
     let mut source_paths = Vec::<String>::new();
     let mut repo_sources = Vec::<PackageRepoSource>::new();
+    let mut seen_trees = HashSet::<&String>::new();
 
     let mut tree_index = 0;
-    for (project, local_name, subtree) in izip!(&projects, local_names, &subtrees) {
+    for (project, local_name, subtree, optional_expression) in
+        izip!(&projects, local_names, &subtrees, optional_expressions)
+    {
         // CROS_WORKON_LOCALNAME points to file paths relative to src/ if the
         // package is in the chromeos-base category; otherwise they're relative
         // to src/third_party/.
@@ -194,6 +202,14 @@ fn extract_cros_workon_sources(
             format!("third_party/{}", local_name)
         };
 
+        let required = if optional_expression.is_empty() {
+            true
+        } else {
+            BashExpr::from_str(&optional_expression)
+                .with_context(|| format!("Expression '{}'", optional_expression))?
+                .eval(&details.use_map)?
+        };
+
         if !trees.is_empty() {
             let local_subtrees = if subtree.is_empty() {
                 Vec::from([""])
@@ -207,6 +223,21 @@ fn extract_cros_workon_sources(
                 }
                 let tree_hash = &trees[tree_index];
                 tree_index += 1;
+
+                // Even if the project isn't required, we still need to increment
+                // the tree_index.
+                if !required {
+                    continue;
+                }
+                if !seen_trees.insert(tree_hash) {
+                    // There are two possible reasons a package could have duplicate hashes:
+                    // 1) The package incorrectly declares a duplicate entry in SUBTREE.
+                    // 2) Two subtrees end up being identical.
+                    //
+                    // Fortunately trees don't have an order requirement so we can just skip
+                    // adding the duplicate.
+                    continue;
+                }
 
                 repo_sources.push(PackageRepoSource {
                     name: format!("tree-{}-{}", project.replace('/', "-"), tree_hash),
@@ -526,6 +557,10 @@ mod tests {
                         "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".to_owned(),
                     ])),
                 ),
+                (
+                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                    BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
+                ),
             ])),
             slot: Slot::new("0"),
             use_map: HashMap::new(),
@@ -631,6 +666,14 @@ mod tests {
                     "CROS_WORKON_SUBTREE".to_owned(),
                     BashValue::Scalar("".to_owned()),
                 ),
+                (
+                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "".to_owned(),
+                        "".to_owned(),
+                        "".to_owned(),
+                    ])),
+                ),
             ])),
             slot: Slot::new("0"),
             use_map: HashMap::new(),
@@ -668,6 +711,156 @@ mod tests {
                     subtree: None,
                 },
 
+            ]
+        );
+
+        Ok(())
+    }
+
+    fn create_optional_subtree_package(use_map: UseMap) -> PackageDetails {
+        PackageDetails {
+            package_name: "sys-boot/libpayload".to_owned(),
+            version: Version::try_new("0.1.0").unwrap(),
+            vars: BashVars::new(HashMap::from([
+                (
+                    "CROS_WORKON_PROJECT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "chromiumos/third_party/coreboot".to_owned(),
+                        "chromiumos/platform/vboot_reference".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_LOCALNAME".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "coreboot".to_owned(),
+                        "../platform/vboot_reference".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_SUBTREE".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "payloads/libpayload src/commonlib util/kconfig util/xcompile".to_owned(),
+                        "Makefile firmware".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_COMMIT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
+                        "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_TREE".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
+                        "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
+                        "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
+                        "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
+                        "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
+                        "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                    BashValue::IndexedArray(Vec::from(["use coreboot".to_owned(), "".to_owned()])),
+                ),
+            ])),
+            slot: Slot::new("0"),
+            use_map,
+            stability: Stability::Stable,
+            masked: false,
+            ebuild_path: PathBuf::from("/dev/null"),
+            inherited: HashSet::new(),
+        }
+    }
+
+    #[test]
+    fn cros_workon_pinned_package_with_subtree_optional_checkout_true() -> Result<()> {
+        let package =
+            create_optional_subtree_package(UseMap::from([("coreboot".to_owned(), true)]));
+
+        let (local_sources, repo_sources) =
+            extract_cros_workon_sources(&package, Path::new("/src"))?;
+
+        assert_eq!(local_sources, []);
+        assert_eq!(
+            repo_sources,
+            [
+                PackageRepoSource {
+                    name: "tree-chromiumos-third_party-coreboot-6f11773570dfaaade362374b0d0392c28cf17206".into(),
+                    project: "chromiumos/third_party/coreboot".into(),
+                    tree_hash: "6f11773570dfaaade362374b0d0392c28cf17206".into(),
+                    project_path: "third_party/coreboot".into(),
+                    subtree: Some("payloads/libpayload".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-third_party-coreboot-5e822365b04b4690729ca6ec32935a177db97ed2".into(),
+                    project: "chromiumos/third_party/coreboot".into(),
+                    tree_hash: "5e822365b04b4690729ca6ec32935a177db97ed2".into(),
+                    project_path: "third_party/coreboot".into(),
+                    subtree: Some("src/commonlib".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-third_party-coreboot-514603540da793957fa87fa22df81b288fb39d0f".into(),
+                    project: "chromiumos/third_party/coreboot".into(),
+                    tree_hash: "514603540da793957fa87fa22df81b288fb39d0f".into(),
+                    project_path: "third_party/coreboot".into(),
+                    subtree: Some("util/kconfig".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-third_party-coreboot-b2307ed1e70bf1a5718afaa81217ec9504854005".into(),
+                    project: "chromiumos/third_party/coreboot".into(),
+                    tree_hash: "b2307ed1e70bf1a5718afaa81217ec9504854005".into(),
+                    project_path: "third_party/coreboot".into(),
+                    subtree: Some("util/xcompile".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-platform-vboot_reference-bc55f0377f73029f50c4c74d5936e4d7bde877c6".into(),
+                    project: "chromiumos/platform/vboot_reference".into(),
+                    tree_hash: "bc55f0377f73029f50c4c74d5936e4d7bde877c6".into(),
+                    project_path: "platform/vboot_reference".into(),
+                    subtree: Some("Makefile".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-platform-vboot_reference-e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".into(),
+                    project: "chromiumos/platform/vboot_reference".into(),
+                    tree_hash: "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".into(),
+                    project_path: "platform/vboot_reference".into(),
+                    subtree: Some("firmware".into()),
+                }
+            ]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn cros_workon_pinned_package_with_subtree_optional_checkout_false() -> Result<()> {
+        let package =
+            create_optional_subtree_package(UseMap::from([("coreboot".to_owned(), false)]));
+
+        let (local_sources, repo_sources) =
+            extract_cros_workon_sources(&package, Path::new("/src"))?;
+
+        assert_eq!(local_sources, []);
+        assert_eq!(
+            repo_sources,
+            [
+                PackageRepoSource {
+                    name: "tree-chromiumos-platform-vboot_reference-bc55f0377f73029f50c4c74d5936e4d7bde877c6".into(),
+                    project: "chromiumos/platform/vboot_reference".into(),
+                    tree_hash: "bc55f0377f73029f50c4c74d5936e4d7bde877c6".into(),
+                    project_path: "platform/vboot_reference".into(),
+                    subtree: Some("Makefile".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-platform-vboot_reference-e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".into(),
+                    project: "chromiumos/platform/vboot_reference".into(),
+                    tree_hash: "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".into(),
+                    project_path: "platform/vboot_reference".into(),
+                    subtree: Some("firmware".into()),
+                }
             ]
         );
 
