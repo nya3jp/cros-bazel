@@ -18,6 +18,7 @@ use regex::Regex;
 use super::{CompositeDependency, Dependency};
 
 pub mod package;
+pub mod restrict;
 pub mod uri;
 
 /// Regular expression matching a valid USE flag name.
