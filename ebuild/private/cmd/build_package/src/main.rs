@@ -7,8 +7,9 @@ use clap::{command, Parser};
 use makechroot::BindMount;
 use mountsdk::{ConfigArgs, MountedSDK};
 use std::{
+    collections::HashSet,
     path::{Path, PathBuf},
-    str::FromStr, collections::HashSet,
+    str::FromStr,
 };
 use version::Version;
 
@@ -33,8 +34,8 @@ struct Cli {
     #[arg(long, help = "Git trees used by CROS_WORKON_TREE")]
     git_tree: Vec<PathBuf>,
 
-    #[arg(long, required = true)]
-    output: PathBuf,
+    #[arg(long)]
+    output: Option<PathBuf>,
 
     #[arg(
         long,
@@ -217,11 +218,14 @@ fn main() -> Result<()> {
             .strip_suffix(EBUILD_EXT)
             .with_context(|| anyhow!("Ebuild file must end with .ebuild"))?
     ));
-    std::fs::copy(
-        sdk.diff_dir().join(binary_out_path.strip_prefix("/")?),
-        &args.output,
-    )
-    .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
+
+    if let Some(output) = args.output {
+        std::fs::copy(
+            sdk.diff_dir().join(binary_out_path.strip_prefix("/")?),
+            &output,
+        )
+        .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
+    }
 
     Ok(())
 }

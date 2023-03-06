@@ -73,8 +73,8 @@ def _compute_build_package_args(ctx, output_path):
 
     Args:
         ctx: ctx: A context objected passed to the rule implementation.
-        output_path: str: A file path where an output binary package file is
-            saved.
+        output_path: Optional[str]: A file path where an output binary package
+            file is saved. If None, a binary package file is not saved.
 
     Returns:
         (args, inputs) where:
@@ -87,10 +87,9 @@ def _compute_build_package_args(ctx, output_path):
 
     # Basic arguments
     sdk = ctx.attr.sdk[SDKInfo]
-    args.add_all([
-        "--output=" + output_path,
-        "--board=" + sdk.board,
-    ])
+    args.add("--board=" + sdk.board)
+    if output_path:
+        args.add("--output=" + output_path)
 
     # --ebuild
     ebuild_inside_path = ctx.file.ebuild.path.removeprefix(
@@ -285,7 +284,7 @@ def _ebuild_debug_impl(ctx):
     output_debug_script = ctx.actions.declare_file(src_basename + "_debug.sh")
 
     # Compute arguments and inputs to build_package.
-    args, inputs = _compute_build_package_args(ctx, output_path = "/dev/null")
+    args, inputs = _compute_build_package_args(ctx, output_path = None)
 
     # Define the main action.
     ctx.actions.run(
@@ -329,7 +328,7 @@ def _ebuild_test_impl(ctx):
     output_runner_script = ctx.actions.declare_file(src_basename + "_test.sh")
 
     # Compute arguments and inputs to build_package.
-    args, inputs = _compute_build_package_args(ctx, output_path = "/dev/null")
+    args, inputs = _compute_build_package_args(ctx, output_path = None)
     args.add("--test")
 
     # Generate the test runner.
