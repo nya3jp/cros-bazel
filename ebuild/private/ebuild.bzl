@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "SDKInfo", "relative_path_in_package")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 
@@ -197,10 +197,10 @@ def _ebuild_impl(ctx):
     )
 
     # Compute provider data.
-    direct_runtime_deps = [
+    direct_runtime_deps = tuple([
         target[BinaryPackageInfo]
         for target in ctx.attr.runtime_deps
-    ]
+    ])
     transitive_runtime_deps = depset(
         direct_runtime_deps,
         transitive = [
@@ -214,17 +214,20 @@ def _ebuild_impl(ctx):
         transitive = [pkg.all_files for pkg in direct_runtime_deps],
         order = "postorder",
     )
+    package_info = BinaryPackageInfo(
+        file = output_binary_package_file,
+        all_files = all_files,
+        direct_runtime_deps = direct_runtime_deps,
+        transitive_runtime_deps = transitive_runtime_deps,
+    )
+    package_set_info = single_binary_package_set_info(package_info)
     return [
         DefaultInfo(files = depset(
             [output_binary_package_file, output_log_file] +
             interface_library_outputs,
         )),
-        BinaryPackageInfo(
-            file = output_binary_package_file,
-            all_files = all_files,
-            direct_runtime_deps = direct_runtime_deps,
-            transitive_runtime_deps = transitive_runtime_deps,
-        ),
+        package_info,
+        package_set_info,
     ] + interface_library_providers
 
 ebuild = rule(

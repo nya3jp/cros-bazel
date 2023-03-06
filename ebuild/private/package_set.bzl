@@ -2,34 +2,27 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageInfo")
+load("common.bzl", "BinaryPackageSetInfo")
 
 def _package_set_impl(ctx):
-    direct_runtime_deps = [
-        target[BinaryPackageInfo]
-        for target in ctx.attr.deps
-    ]
-    transitive_runtime_deps = depset(
-        direct_runtime_deps,
+    packages = depset(
         transitive = [
-            pkg.transitive_runtime_deps
-            for pkg in direct_runtime_deps
+            target[BinaryPackageSetInfo].packages
+            for target in ctx.attr.deps
         ],
-        order = "postorder",
     )
-    all_files = depset(
-        transitive = [pkg.all_files for pkg in direct_runtime_deps],
+    files = depset(
+        transitive = [
+            target[BinaryPackageSetInfo].files
+            for target in ctx.attr.deps
+        ],
     )
 
     return [
-        DefaultInfo(files = all_files),
-        # TODO: Do not return BinaryPackageInfo from package_set. It is suitable
-        # for a single binary package, but not for a set of it.
-        BinaryPackageInfo(
-            file = None,
-            all_files = all_files,
-            direct_runtime_deps = direct_runtime_deps,
-            transitive_runtime_deps = transitive_runtime_deps,
+        DefaultInfo(files = files),
+        BinaryPackageSetInfo(
+            packages = packages,
+            files = files,
         ),
     ]
 
@@ -37,7 +30,7 @@ package_set = rule(
     implementation = _package_set_impl,
     attrs = {
         "deps": attr.label_list(
-            providers = [BinaryPackageInfo],
+            providers = [BinaryPackageSetInfo],
         ),
     },
 )
