@@ -2,62 +2,71 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo")
+def _map_install_group(group):
+    """
+    Computes an --install-target argument for an install group.
 
-def _map_install_group(targets):
-    files = []
-    for target in targets:
-        file = target[BinaryPackageInfo].file
-        files.append(file.path)
-    return ":".join(files)
+    Args:
+        group: list[BinaryPackageInfo]: An install group.
 
-def _calculate_install_groups(build_deps):
+    Returns:
+        str: A value for the --install-target flag.
+    """
+    return ":".join([pkg.file.path for pkg in group])
+
+def _calculate_install_groups(install_list):
+    """
+    Splits a package set to install groups.
+
+    Args:
+        install_list: list[BinaryPackageInfo]: A list of packages to install.
+            This list must be closed over transitive runtime dependencies.
+
+    Returns:
+        list[list[BinaryPackageInfo]]: An ordered list containing a list of
+            packages that can be installed in parallel.
+    """
+    groups = []
+    remaining_packages = install_list[:]
     seen = {}
 
-    # An ordered list containing a list of deps that can be installed in parallel
-    levels = []
-
-    remaining_targets = build_deps.to_list()
-
     for _ in range(100):
-        if len(remaining_targets) == 0:
+        if len(remaining_packages) == 0:
             break
 
         satisfied_list = []
         not_satisfied_list = []
-        for target in remaining_targets:
-            info = target[BinaryPackageInfo]
-
+        for package in remaining_packages:
             all_seen = True
-            for runtime_target in info.direct_runtime_deps_targets:
-                if not seen.get(runtime_target.label):
+            for dep in package.direct_runtime_deps:
+                if dep.file.path not in seen:
                     all_seen = False
                     break
 
             if all_seen:
-                satisfied_list.append(target)
+                satisfied_list.append(package)
             else:
-                not_satisfied_list.append(target)
+                not_satisfied_list.append(package)
 
         if len(satisfied_list) == 0:
             fail("Dependency list is unsatisfiable")
 
-        for target in satisfied_list:
-            seen[target.label] = True
+        for dep in satisfied_list:
+            seen[dep.file.path] = True
 
-        levels.append(satisfied_list)
-        remaining_targets = not_satisfied_list
+        groups.append(satisfied_list)
+        remaining_packages = not_satisfied_list
 
-    if len(remaining_targets) > 0:
+    if len(remaining_packages) > 0:
         fail("Too many dependencies")
 
-    return levels
+    return groups
 
 def install_deps(
         ctx,
         output_prefix,
         sdk,
-        install_targets,
+        install_set,
         executable_action_wrapper,
         executable_install_deps,
         progress_message):
@@ -69,10 +78,10 @@ def install_deps(
         output_prefix: str: A file name prefix to prepend to output files
             defined in this function.
         sdk: SDKInfo: The provider describing the base file system layers.
-        install_targets: Depset[Target]: Binary package targets to install.
-            This depset must be closed over transitive runtime dependencies;
-            that is, if the depset contains a package X, it must also contain
-            all transitive dependencies of the package X.
+        install_set: Depset[BinaryPackageInfo]: Binary package targets to
+            install. This depset must be closed over transitive runtime
+            dependencies; that is, if the depset contains a package X, it must
+            also contain all transitive dependencies of the package X.
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_install_deps: File: An executable file of install_deps.
         progress_message: str: Progress message for the installation action.
@@ -93,7 +102,9 @@ def install_deps(
         "--output-symlink-tar=" + output_tarball.path,
     ])
 
-    direct_inputs = [target[BinaryPackageInfo].file for target in install_targets.to_list()]
+    # TODO: Can we avoid the costly to_list() operation?
+    install_list = install_set.to_list()
+    direct_inputs = [pkg.file for pkg in install_list]
 
     args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(sdk.layers)
@@ -102,7 +113,7 @@ def install_deps(
         args.add("--layer=%s" % overlay.file.path)
         direct_inputs.append(overlay.file)
 
-    install_groups = _calculate_install_groups(install_targets)
+    install_groups = _calculate_install_groups(install_list)
     args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
 
     ctx.actions.run(

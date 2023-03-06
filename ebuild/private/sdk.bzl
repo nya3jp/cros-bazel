@@ -58,10 +58,16 @@ def _sdk_impl(ctx):
     output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
 
     host_installs = depset(
-        transitive = [label[BinaryPackageInfo].transitive_runtime_deps_files for label in ctx.attr.host_deps],
+        transitive = [
+            target[BinaryPackageInfo].all_files
+            for target in ctx.attr.host_deps
+        ],
     )
     target_installs = depset(
-        transitive = [label[BinaryPackageInfo].transitive_runtime_deps_files for label in ctx.attr.target_deps],
+        transitive = [
+            target[BinaryPackageInfo].all_files
+            for target in ctx.attr.target_deps
+        ],
     )
 
     args = ctx.actions.args()
@@ -154,9 +160,9 @@ sdk = rule(
 def _sdk_update_impl(ctx):
     sdk = ctx.attr.base[SDKInfo]
 
-    install_targets = depset(
-        ctx.attr.target_deps,
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.target_deps],
+    install_set = depset(
+        [dep[BinaryPackageInfo] for dep in ctx.attr.target_deps],
+        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps for dep in ctx.attr.target_deps],
         order = "postorder",
     )
 
@@ -164,7 +170,7 @@ def _sdk_update_impl(ctx):
         ctx = ctx,
         output_prefix = ctx.attr.name,
         sdk = sdk,
-        install_targets = install_targets,
+        install_set = install_set,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
         progress_message = ctx.attr.progress_message,

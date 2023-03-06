@@ -5,24 +5,25 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
 BinaryPackageInfo = provider(
-    "Portage binary package info",
+    """
+    Describes a Portage binary package.
+    """,
     fields = {
         "file": """
             File: A binary package file (.tbz2) of this package.
         """,
-        "transitive_runtime_deps_files": """
-            Depset[File]: Binary package files (.tbz2) to be installed when
-            this package is required in run time.
-
-            The depset *always* contains the binary package file of this package
-            itself.
+        "all_files": """
+            Depset[File]: All binary package files including this package's one
+                itself and all transitive runtime dependencies.
         """,
-        "transitive_runtime_deps_targets": """
-            Depset[Target]: Transitive runtime targets to be installed when this
-            package is required at run time.
+        "direct_runtime_deps": """
+            list[BinaryPackageInfo]: Direct runtime dependencies of the package.
         """,
-        "direct_runtime_deps_targets": """
-            list[Target]: Direct runtime targets
+        "transitive_runtime_deps": """
+            Depset[BinaryPackageInfo]: Transitive runtime dependencies of the
+                package. Note that this depset does *NOT* contain this package
+                itself, just because it is impossible to construct a
+                self-referencing provider.
         """,
     },
 )

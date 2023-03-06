@@ -198,14 +198,21 @@ def _ebuild_impl(ctx):
     )
 
     # Compute provider data.
-    transitive_runtime_deps_files = depset(
-        [output_binary_package_file],
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.runtime_deps],
+    direct_runtime_deps = [
+        target[BinaryPackageInfo]
+        for target in ctx.attr.runtime_deps
+    ]
+    transitive_runtime_deps = depset(
+        direct_runtime_deps,
+        transitive = [
+            pkg.transitive_runtime_deps
+            for pkg in direct_runtime_deps
+        ],
         order = "postorder",
     )
-    transitive_runtime_deps_targets = depset(
-        ctx.attr.runtime_deps,
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.runtime_deps],
+    all_files = depset(
+        [output_binary_package_file],
+        transitive = [pkg.all_files for pkg in direct_runtime_deps],
         order = "postorder",
     )
     return [
@@ -215,9 +222,9 @@ def _ebuild_impl(ctx):
         )),
         BinaryPackageInfo(
             file = output_binary_package_file,
-            transitive_runtime_deps_files = transitive_runtime_deps_files,
-            transitive_runtime_deps_targets = transitive_runtime_deps_targets,
-            direct_runtime_deps_targets = ctx.attr.runtime_deps,
+            all_files = all_files,
+            direct_runtime_deps = direct_runtime_deps,
+            transitive_runtime_deps = transitive_runtime_deps,
         ),
     ] + interface_library_providers
 

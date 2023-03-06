@@ -5,24 +5,31 @@
 load("common.bzl", "BinaryPackageInfo")
 
 def _package_set_impl(ctx):
-    transitive_runtime_deps_files = depset(
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_files for dep in ctx.attr.deps],
+    direct_runtime_deps = [
+        target[BinaryPackageInfo]
+        for target in ctx.attr.deps
+    ]
+    transitive_runtime_deps = depset(
+        direct_runtime_deps,
+        transitive = [
+            pkg.transitive_runtime_deps
+            for pkg in direct_runtime_deps
+        ],
         order = "postorder",
     )
-
-    transitive_runtime_deps_targets = depset(
-        ctx.attr.deps,
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps_targets for dep in ctx.attr.deps],
-        order = "postorder",
+    all_files = depset(
+        transitive = [pkg.all_files for pkg in direct_runtime_deps],
     )
 
     return [
-        DefaultInfo(files = transitive_runtime_deps_files),
+        DefaultInfo(files = all_files),
+        # TODO: Do not return BinaryPackageInfo from package_set. It is suitable
+        # for a single binary package, but not for a set of it.
         BinaryPackageInfo(
             file = None,
-            transitive_runtime_deps_files = transitive_runtime_deps_files,
-            transitive_runtime_deps_targets = transitive_runtime_deps_targets,
-            direct_runtime_deps_targets = ctx.attr.deps,
+            all_files = all_files,
+            direct_runtime_deps = direct_runtime_deps,
+            transitive_runtime_deps = transitive_runtime_deps,
         ),
     ]
 
