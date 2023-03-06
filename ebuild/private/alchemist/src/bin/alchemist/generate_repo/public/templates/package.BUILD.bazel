@@ -6,3 +6,11 @@ alias(
 )
 
 {%- endfor %}
+
+{%- for test_suite in test_suites %}
+test_suite(
+    name = "{{ test_suite.name }}",
+    tests = [ "{{ test_suite.test_name }}" ],
+    visibility = ["//visibility:public"],
+)
+{%- endfor %}

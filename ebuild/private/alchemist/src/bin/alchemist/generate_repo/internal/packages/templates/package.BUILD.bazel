@@ -1,4 +1,4 @@
-load("@//bazel/ebuild:defs.bzl", "ebuild", "ebuild_debug", "ebuild_test_run", "package_set", "sdk_update")
+load("@//bazel/ebuild:defs.bzl", "ebuild", "ebuild_debug", "ebuild_test", "package_set", "sdk_update")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 {%- for ebuild in ebuilds %}
@@ -91,7 +91,7 @@ ebuild_debug(
     visibility = ["//:__subpackages__"],
 )
 
-ebuild_test_run(
+ebuild_test(
     name = "{{ ebuild.version }}_test",
     ebuild = "{{ ebuild.ebuild_name }}",
     distfiles = {

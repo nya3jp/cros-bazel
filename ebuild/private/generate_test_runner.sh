@@ -17,12 +17,6 @@ cat <<'EOF' > "${OUT_FILE}"
 wd="$(pwd)"
 cd "${wd%%/bazel-out/*}"
 
-# The runfiles manifest file contains relative paths, which are evaluated
-# relative to the working directory. Since we provide our own working directory,
-# we need to use the RUNFILES_DIR instead.
-export RUNFILES_DIR="${RUNFILES_MANIFEST_FILE%_manifest}"
-unset RUNFILES_MANIFEST_FILE
-
 EOF
 
 # Unfortunately, this can't deal with characters such as ', ", and spaces in

@@ -344,16 +344,14 @@ def _ebuild_test_impl(ctx):
     )
 
     runfiles = ctx.runfiles(transitive_files = inputs)
-    runfiles.merge(ctx.attr._build_package[DefaultInfo].default_runfiles)
+    runfiles = runfiles.merge(ctx.attr._build_package[DefaultInfo].default_runfiles)
     return [DefaultInfo(
         files = depset([output_runner_script]),
         executable = output_runner_script,
         runfiles = runfiles,
     )]
 
-# TODO(b/269558613) Rename this to ebuild_test.
-# A rule name can end with "_test" only when test = True.
-ebuild_test_run = rule(
+ebuild_test = rule(
     implementation = _ebuild_test_impl,
     doc = "Runs ebuild tests.",
     attrs = dict(
@@ -364,6 +362,5 @@ ebuild_test_run = rule(
         ),
         **_EBUILD_COMMON_ATTRS
     ),
-    # TODO(b/269558613) Change this to "test = True".
-    executable = True,
+    test = True,
 )

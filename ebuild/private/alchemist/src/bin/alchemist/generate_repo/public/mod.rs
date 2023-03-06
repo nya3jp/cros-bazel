@@ -39,8 +39,15 @@ pub struct AliasEntry {
 }
 
 #[derive(Serialize)]
+pub struct TestSuiteEntry {
+    name: String,
+    test_name: String,
+}
+
+#[derive(Serialize)]
 struct BuildTemplateContext {
     aliases: Vec<AliasEntry>,
+    test_suites: Vec<TestSuiteEntry>,
 }
 
 fn generate_public_package(
@@ -61,29 +68,33 @@ fn generate_public_package(
         .map(|package| (package.details.version.clone(), package))
         .collect();
 
-    let mut aliases: Vec<AliasEntry> = version_to_package
-        .values()
-        .flat_map(|package| {
-            let details = &package.details;
-            let package_relative_dir = match details.ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
-                Ok(ebuild_relative_path) => ebuild_relative_path.parent().unwrap(),
-                _ => return Vec::new(),
-            };
-            let internal_package_location = format!(
-                "//internal/packages/{}",
-                package_relative_dir.to_string_lossy(),
-            );
-            ["", "_debug", "_package_set", "_test"]
-                .map(|suffix| AliasEntry {
-                    name: format!("{}{}", details.version, suffix),
-                    actual: format!(
-                        "{}:{}{}",
-                        &internal_package_location, details.version, suffix
-                    ),
-                })
-                .into()
-        })
-        .collect();
+    let mut aliases = Vec::new();
+    let mut test_suites = Vec::new();
+
+    for package in version_to_package.values() {
+        let details = &package.details;
+        let package_relative_dir = match details.ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
+            Ok(ebuild_relative_path) => ebuild_relative_path.parent().unwrap(),
+            _ => continue,
+        };
+        let internal_package_location = format!(
+            "//internal/packages/{}",
+            package_relative_dir.to_string_lossy(),
+        );
+        for suffix in ["", "_debug", "_package_set"] {
+            aliases.push(AliasEntry {
+                name: format!("{}{}", details.version, suffix),
+                actual: format!(
+                    "{}:{}{}",
+                    &internal_package_location, details.version, suffix
+                ),
+            });
+        }
+        test_suites.push(TestSuiteEntry {
+            name: format!("{}_test", details.version),
+            test_name: format!("{}:{}_test", &internal_package_location, details.version),
+        });
+    }
 
     if let Some(best_package) = resolver
         .find_best_package_in(&package_details)
@@ -95,13 +106,20 @@ fn generate_public_package(
             name: short_package_name.to_owned(),
             actual: format!(":{}", &best_version),
         });
-        aliases.extend(["debug", "package_set", "test"].map(|suffix| AliasEntry {
+        aliases.extend(["debug", "package_set"].map(|suffix| AliasEntry {
             name: suffix.to_owned(),
             actual: format!(":{}_{}", &best_version, suffix),
         }));
+        test_suites.push(TestSuiteEntry {
+            name: "test".to_owned(),
+            test_name: format!(":{}_test", &best_version),
+        });
     }
 
-    let context = BuildTemplateContext { aliases };
+    let context = BuildTemplateContext {
+        aliases,
+        test_suites,
+    };
 
     let mut file = File::create(package_output_dir.join("BUILD.bazel"))?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
