@@ -575,6 +575,9 @@ _NORMAL_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/run_in_container": {
     },
     "bazel/ebuild/private/cmd/sdk_from_archive": {
+        _COMMON_CONDITION: {
+            "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
+        },
     },
     "bazel/ebuild/private/cmd/sdk_update": {
     },
@@ -631,6 +634,8 @@ _NORMAL_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/run_in_container": {
     },
     "bazel/ebuild/private/cmd/sdk_from_archive": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/cmd/sdk_update": {
     },
@@ -834,6 +839,8 @@ _PROC_MACRO_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/run_in_container": {
     },
     "bazel/ebuild/private/cmd/sdk_from_archive": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/cmd/sdk_update": {
     },
