@@ -18,22 +18,11 @@ overlay_set(
 rust_binary_crate(
     name = "build_image",
     crate_name = "build_image",
-    data = [
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:binutils",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:compiler-rt",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gcc",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:gdb",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:glibc",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:go",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libcxx",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:libxcrypt",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:linux-headers",
-        "//bazel/prebuilts/amd64-host/cross-aarch64-cros-linux-gnu:llvm-libunwind",
-        "//bazel/ebuild/private/cmd/install_deps:install_deps.sh",
-    ] + glob(["container_files/*"]),
+    data = glob(["container_files/*"]),
     deps = [
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/mountsdk",
+        "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
     ],
     visibility = ["//visibility:public"],
 )

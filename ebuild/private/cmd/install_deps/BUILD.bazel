@@ -16,8 +16,3 @@ rust_binary_crate(
         "//bazel/ebuild/private/common/tar:tar_rust",
     ],
 )
-
-exports_files(
-    ["install_deps.sh"],
-    visibility = ["//visibility:public"],
-)
