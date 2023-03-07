@@ -37,7 +37,7 @@ impl Config {
             board: args.board,
             layer_paths: args.layer,
             login_mode: args.login_mode,
-            cmd_prefix: vec![],
+            privileged: false,
             bind_mounts: Vec::new(),
             envs: HashMap::new(),
         })

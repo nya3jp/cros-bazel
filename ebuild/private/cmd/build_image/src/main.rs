@@ -29,6 +29,7 @@ fn main() -> Result<()> {
     let r = runfiles::Runfiles::create()?;
 
     let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
+    cfg.privileged = true;
 
     cfg.bind_mounts.push(BindMount {
         source: r
@@ -108,17 +109,6 @@ fn main() -> Result<()> {
         .replace("${BOARD}", &cfg.board)
         .replace("${CHOST}", "aarch64-cros-linux-gnu");
 
-    // I have no idea why, but I happened to be trying to run this in a nested
-    // namespace initially, and when I tried to remove it, discovered that
-    // run_in_container only works inside a mount namespace if you're running
-    // as sudo.
-    cfg.cmd_prefix = vec![
-        "/usr/bin/sudo".to_string(),
-        "--preserve-env".to_string(),
-        "unshare".to_string(),
-        "--mount".to_string(),
-        "--".to_string(),
-    ];
     cfg.envs = env;
     cfg.envs
         .insert("HOST_UID".to_owned(), users::get_current_uid().to_string());

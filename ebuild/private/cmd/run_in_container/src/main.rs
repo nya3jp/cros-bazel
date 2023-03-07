@@ -9,7 +9,7 @@ use nix::{
     mount::{mount, umount2, MsFlags},
     sched::{unshare, CloneFlags},
     unistd::execvp,
-    unistd::{execv, getgid, getuid, pivot_root, Uid},
+    unistd::{execv, getgid, getuid, pivot_root},
 };
 use path_absolutize::Absolutize;
 use run_in_container_lib::RunInContainerConfig;
@@ -36,6 +36,11 @@ struct Cli {
     #[arg(long, required = true)]
     cfg: PathBuf,
 
+    /// Enters a privileged container. In order for this flag to work, the
+    /// calling process must have privileges (e.g. root).
+    #[arg(long)]
+    privileged: bool,
+
     /// Whether we are already in the namespace. Never set this, as it's as internal flag.
     #[arg(long)]
     already_in_namespace: bool,
@@ -50,7 +55,7 @@ pub fn main() -> Result<()> {
 
     if !args.already_in_namespace {
         fix_runfiles_env()?;
-        enter_namespace()?
+        enter_namespace(args.privileged)?
     } else {
         continue_namespace(RunInContainerConfig::deserialize_from(&args.cfg)?, args.cmd)?
     }
@@ -113,28 +118,22 @@ fn fix_runfiles_env() -> Result<()> {
     Ok(())
 }
 
-fn enter_namespace() -> Result<()> {
+fn enter_namespace(privileged: bool) -> Result<()> {
     let r = runfiles::Runfiles::create()?;
     let dumb_init_path = r.rlocation("dumb_init/file/downloaded");
 
     // Enter a new namespace.
-    let uid = getuid();
-    let gid = getgid();
-    // If this script is running as root, it's assumed that the user wants to do
-    // things requiring root privileges inside the container. However, mapping 0
-    // to 0 is not the same as no user namespace. If you map 0 to 0, you will no
-    // longer be able to execute commands requiring root, and won't be able to
-    // access files owned by other users.
-    let enter_user_namespace = uid != Uid::from_raw(0);
-    let mut clone_flags = CloneFlags::CLONE_NEWNS
-        | CloneFlags::CLONE_NEWPID
-        | CloneFlags::CLONE_NEWNET
-        | CloneFlags::CLONE_NEWIPC;
-    if enter_user_namespace {
-        clone_flags |= CloneFlags::CLONE_NEWUSER;
-    }
-    unshare(clone_flags).with_context(|| "Failed to create namespaces")?;
-    if enter_user_namespace {
+    const UNSHARE_FLAGS: CloneFlags = CloneFlags::CLONE_NEWNS
+        .union(CloneFlags::CLONE_NEWPID)
+        .union(CloneFlags::CLONE_NEWNET)
+        .union(CloneFlags::CLONE_NEWIPC);
+    if privileged {
+        unshare(UNSHARE_FLAGS).with_context(|| "Failed to create a privileged container")?;
+    } else {
+        let uid = getuid();
+        let gid = getgid();
+        unshare(CloneFlags::CLONE_NEWUSER | UNSHARE_FLAGS)
+            .with_context(|| "Failed to create an unprivileged container")?;
         std::fs::write("/proc/self/setgroups", "deny")
             .with_context(|| "Writing /proc/self/setgroups")?;
         std::fs::write("/proc/self/uid_map", format!("0 {} 1\n", uid))

@@ -30,7 +30,9 @@ pub struct Config {
     pub bind_mounts: Vec<BindMount>,
     pub envs: HashMap<String, String>,
 
-    pub cmd_prefix: Vec<String>,
+    /// If set to true, runs a privileged container.
+    pub privileged: bool,
+
     pub(crate) login_mode: LoginMode,
 }
 
@@ -71,12 +73,17 @@ impl MountedSDK {
             .chain(cfg.layer_paths)
             .collect();
         let mut bind_mounts: Vec<BindMount> = cfg.bind_mounts;
-        let mut cmd = if cfg.cmd_prefix.is_empty() {
-            Command::new(run_in_container_path)
-        } else {
-            let mut cmd = Command::new(&cfg.cmd_prefix[0]);
-            cmd.args(&cfg.cmd_prefix[1..]).arg(run_in_container_path);
+        let mut cmd = if cfg.privileged {
+            let mut cmd = Command::new("/usr/bin/sudo");
+            // We have no idea why, but run_in_container fails on pivot_root(2)
+            // for EINVAL if we don't enter a mount namespace in advance.
+            // TODO: Investigate the cause.
+            cmd.args(["--preserve-env", "unshare", "--mount", "--"]);
+            cmd.arg(run_in_container_path);
+            cmd.arg("--privileged");
             cmd
+        } else {
+            Command::new(run_in_container_path)
         };
         cmd.stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
@@ -199,7 +206,7 @@ mod tests {
                 },
             ],
             envs: HashMap::new(),
-            cmd_prefix: vec![],
+            privileged: false,
             login_mode: Never,
         };
 
