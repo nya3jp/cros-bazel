@@ -13,7 +13,6 @@ pkg_tar(
         "//bazel/sdk/run/lock",
         "//bazel/sdk/usr/bin",
         "//bazel/sdk/usr/lib64",
-        "//bazel/sdk/usr/local/bin",
         "//bazel/sdk/usr/src",
     ],
     extension = "tar.gz",

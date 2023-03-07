@@ -1,2 +1,0 @@
-#!/bin/sh
-exec cros workon --build-target="arm64-generic" "$@"

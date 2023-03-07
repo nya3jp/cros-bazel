@@ -48,10 +48,10 @@ pkg_mkdirs(
 )
 
 pkg_files(
-    name = "build_bin",
+    name = "wrappers_build_bin",
     srcs = [
-        {%- for path in wrappers %}
-        "{{ path }}",
+        {%- for name in wrappers %}
+        "{{ name }}",
         {%- endfor %}
     ],
     strip_prefix = strip_prefix.from_pkg(),
@@ -61,12 +61,32 @@ pkg_files(
     ),
 )
 
+pkg_files(
+    name = "wrappers_usr_local_bin",
+    srcs = [
+        {%- for name in wrappers %}
+        "{{ name }}",
+        {%- endfor %}
+    ],
+    renames = {
+        {%- for name in wrappers %}
+        "{{ name }}": "{{ name }}-{{ board }}",
+        {%- endfor %}
+    },
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "usr/local/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
 pkg_tar(
     name = "board_extra_tarball",
     srcs = [
-        ":etc",
         ":aclocal",
-        ":build_bin",
+        ":etc",
+        ":wrappers_build_bin",
+        ":wrappers_usr_local_bin",
     ],
     extension = "tar.gz",
 )

@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "cros_workon-arm64-generic is deprecated, use cros-workon-arm64-generic instead."
-exec cros_workon --board="arm64-generic" "$@"

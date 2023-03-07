@@ -99,15 +99,6 @@ fn main() -> Result<()> {
     let (mut mounts, env) =
         InstallGroup::get_mounts_and_env(&args.install_target, target_packages_dir)?;
     cfg.bind_mounts.append(&mut mounts);
-    // setup_board.sh creates emerge-{board} and portageq-{board}, both of
-    // which are used by build_image.sh
-    let board_script_template = &std::fs::read(
-        r.rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/board_script.sh"),
-    )?;
-    // TODO: stop hardcoding aarch64-cros-linux-gnu.
-    let board_script = from_utf8(board_script_template)?
-        .replace("${BOARD}", &cfg.board)
-        .replace("${CHOST}", "aarch64-cros-linux-gnu");
 
     cfg.envs = env;
     cfg.envs
@@ -116,15 +107,6 @@ fn main() -> Result<()> {
         .insert("HOST_GID".to_owned(), users::get_current_gid().to_string());
 
     let mut sdk = MountedSDK::new(cfg)?;
-    sdk.write(
-        format!("/usr/bin/emerge-{}", &sdk.board),
-        board_script.replace("${COMMAND}", "emerge --root-deps"),
-    )?;
-    sdk.write(
-        format!("/usr/bin/portageq-{}", &sdk.board),
-        board_script.replace("${COMMAND}", "portageq"),
-    )?;
-
     sdk.run_cmd(&[
         MAIN_SCRIPT,
         &format!("--board={}", &sdk.board),
