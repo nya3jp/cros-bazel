@@ -40,6 +40,7 @@ pub struct MountedSDK {
     pub board: String,
     root_dir: fileutil::DualPath,
     diff_dir: PathBuf,
+    privileged: bool,
 
     // Required for RAII.
     cmd: Option<Command>,
@@ -128,6 +129,7 @@ impl MountedSDK {
             cmd: Some(cmd),
             root_dir,
             diff_dir,
+            privileged: cfg.privileged,
             tmp_dir,
             _control_channel: control_channel,
         })
@@ -166,7 +168,11 @@ impl MountedSDK {
 
 impl Drop for MountedSDK {
     fn drop(&mut self) {
-        fileutil::remove_dir_all_with_chmod(self.tmp_dir.path()).unwrap()
+        if self.privileged {
+            fileutil::remove_dir_all_with_sudo(self.tmp_dir.path()).unwrap()
+        } else {
+            fileutil::remove_dir_all_with_chmod(self.tmp_dir.path()).unwrap()
+        }
     }
 }
 

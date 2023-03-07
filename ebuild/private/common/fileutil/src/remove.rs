@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use std::fs::{metadata, remove_dir_all, remove_file, set_permissions, Permissions};
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::Path;
+use std::process::Command;
 use walkdir::WalkDir;
 
 const S_IRWXU: u32 = 0o700;
@@ -80,4 +81,17 @@ pub fn remove_dir_all_with_chmod(path: &Path) -> Result<()> {
     with_permissions(parent, S_IRWXU, || {
         remove_dir_all(&path).with_context(|| format!("Failed to delete {:?}", path))
     })
+}
+
+/// Removes the directory with the root privilege using sudo.
+pub fn remove_dir_all_with_sudo(path: &Path) -> Result<()> {
+    let status = Command::new("/usr/bin/sudo")
+        .args(["rm", "-rf", "--"])
+        .arg(path)
+        .status()
+        .with_context(|| format!("sudo rm -rf {}", path.display()))?;
+    if !status.success() {
+        bail!("{:?}: sudo rm -rf {}", status, path.display());
+    }
+    Ok(())
 }
