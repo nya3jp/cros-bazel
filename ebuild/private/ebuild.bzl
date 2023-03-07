@@ -130,10 +130,11 @@ def _compute_build_package_args(ctx, output_path):
     direct_inputs.extend(ctx.files.git_trees)
 
     # Consume interface libraries.
-    add_interface_library_args(
+    interface_library_inputs = add_interface_library_args(
         input_targets = ctx.attr.shared_lib_deps,
         args = args,
     )
+    transitive_inputs.append(interface_library_inputs)
 
     inputs = depset(direct_inputs, transitive = transitive_inputs)
     return args, inputs
