@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageInfo", "OverlaySetInfo", "SDKBaseInfo", "SDKInfo")
+load("common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKBaseInfo", "SDKInfo")
 load("install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
@@ -59,13 +59,13 @@ def _sdk_impl(ctx):
 
     host_installs = depset(
         transitive = [
-            target[BinaryPackageInfo].all_files
+            target[BinaryPackageSetInfo].files
             for target in ctx.attr.host_deps
         ],
     )
     target_installs = depset(
         transitive = [
-            target[BinaryPackageInfo].all_files
+            target[BinaryPackageSetInfo].files
             for target in ctx.attr.target_deps
         ],
     )
@@ -132,10 +132,10 @@ sdk = rule(
             mandatory = True,
         ),
         "host_deps": attr.label_list(
-            providers = [BinaryPackageInfo],
+            providers = [BinaryPackageSetInfo],
         ),
         "target_deps": attr.label_list(
-            providers = [BinaryPackageInfo],
+            providers = [BinaryPackageSetInfo],
         ),
         "extra_tarballs": attr.label_list(
             allow_files = True,
@@ -161,8 +161,7 @@ def _sdk_update_impl(ctx):
     sdk = ctx.attr.base[SDKInfo]
 
     install_set = depset(
-        [dep[BinaryPackageInfo] for dep in ctx.attr.target_deps],
-        transitive = [dep[BinaryPackageInfo].transitive_runtime_deps for dep in ctx.attr.target_deps],
+        transitive = [dep[BinaryPackageSetInfo].packages for dep in ctx.attr.target_deps],
         order = "postorder",
     )
 
@@ -199,7 +198,7 @@ sdk_update = rule(
             doc = """
             Target packages to install in the SDK.
             """,
-            providers = [BinaryPackageInfo],
+            providers = [BinaryPackageSetInfo],
         ),
         "progress_message": attr.string(
             doc = """

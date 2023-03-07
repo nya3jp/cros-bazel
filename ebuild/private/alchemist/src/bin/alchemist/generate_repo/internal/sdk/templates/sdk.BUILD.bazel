@@ -1,4 +1,4 @@
-load("@//bazel/ebuild:defs.bzl", "sdk", "sdk_update", "overlay_set")
+load("@//bazel/ebuild:defs.bzl", "sdk", "sdk_update", "overlay_set", "package_set")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 
@@ -80,23 +80,9 @@ overlay_set(
     ],
 )
 
-sdk(
-    name = "base",
-    base = "@//bazel/sdk:base_sdk",
-    # TODO: Maybe split installing the host deps from installing the board
-    # specific items.
-    board = "{{ board }}",
-    extra_tarballs = [
-        "@//bazel/sdk:extra_tarball",
-        ":board_extra_tarball",
-    ],
-    host_deps = [
-        # Should we consider adding BDEPEND support to remove these 5?
-        "@//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
-        "@//bazel/prebuilts/amd64-host:meson-format-array",
-        "@//bazel/prebuilts/amd64-host:xcb-proto",
-        "@//bazel/prebuilts/amd64-host:hps-sdk",
-        "@//bazel/prebuilts/amd64-host:rust",
+package_set(
+    name = "cross-packages",
+    deps = [
         {% for triple in triples -%}
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:binutils",
         {% if triple == "aarch64-cros-linux-gnu" -%}
@@ -111,6 +97,27 @@ sdk(
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:linux-headers",
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:llvm-libunwind",
         {%- endfor %}
+    ],
+)
+
+sdk(
+    name = "base",
+    base = "@//bazel/sdk:base_sdk",
+    # TODO: Maybe split installing the host deps from installing the board
+    # specific items.
+    board = "{{ board }}",
+    extra_tarballs = [
+        "@//bazel/sdk:extra_tarball",
+        ":board_extra_tarball",
+    ],
+    host_deps = [
+        ":cross-packages",
+        # Should we consider adding BDEPEND support to remove these 5?
+        "@//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
+        "@//bazel/prebuilts/amd64-host:meson-format-array",
+        "@//bazel/prebuilts/amd64-host:xcb-proto",
+        "@//bazel/prebuilts/amd64-host:hps-sdk",
+        "@//bazel/prebuilts/amd64-host:rust",
     ],
     overlays = ":overlays",
     visibility = ["//:__subpackages__"],
