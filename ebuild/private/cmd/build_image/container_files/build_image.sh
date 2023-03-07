@@ -6,6 +6,15 @@
 # Some scripts call build_dlc, which is in the chromite bin directory.
 export PATH="${PATH}:/mnt/host/source/chromite/bin"
 
+# HACK: Rewrite base_image_util.sh to skip some steps we don't support yet.
+# TODO: Remove these hacks.
+if [[ -n "${BASE_PACKAGE}" ]]; then
+  readonly base_image_util_path="/mnt/host/source/src/scripts/build_library/base_image_util.sh"
+  sed -i 's,\${BASE_PACKAGE},'"${BASE_PACKAGE}"',g' "${base_image_util_path}"
+  sed -i 's,sudo "\${GCLIENT_ROOT}/chromite/licensing/licenses",: &,' "${base_image_util_path}"
+  sed -i 's,build_dlc,: &,' "${base_image_util_path}"
+fi
+unset BASE_PACKAGE
 
 /mnt/host/source/chromite/bin/build_image "$@"
 RC=$?

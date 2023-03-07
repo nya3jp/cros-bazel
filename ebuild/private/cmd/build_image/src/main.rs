@@ -29,6 +29,9 @@ pub struct Cli {
     /// build_image script.
     #[arg(long)]
     host_package: Vec<PathBuf>,
+
+    #[arg(long)]
+    override_base_package: Vec<String>,
 }
 
 fn main() -> Result<()> {
@@ -90,6 +93,10 @@ fn main() -> Result<()> {
     }
 
     cfg.envs.insert("BOARD".to_owned(), cfg.board.clone());
+    cfg.envs.insert(
+        "BASE_PACKAGE".to_owned(),
+        args.override_base_package.join(" "),
+    );
     cfg.envs
         .insert("HOST_UID".to_owned(), users::get_current_uid().to_string());
     cfg.envs
