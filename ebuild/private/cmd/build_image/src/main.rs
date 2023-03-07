@@ -47,6 +47,14 @@ fn main() -> Result<()> {
     });
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation(
+            "cros/bazel/ebuild/private/cmd/build_image/container_files/package.accept_keywords",
+        ),
+        mount_path: Path::new("/build")
+            .join(&cfg.board)
+            .join("etc/portage/package.accept_keywords/accept_all"),
+    });
+    cfg.bind_mounts.push(BindMount {
+        source: r.rlocation(
             "cros/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
         ),
         mount_path: Path::new("/build")
