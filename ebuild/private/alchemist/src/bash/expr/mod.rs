@@ -149,7 +149,6 @@ mod tests {
         Ok(())
     }
 
-
     #[test]
     fn test_parse_use_invalid() -> Result<()> {
         let expr = BashExpr::from_str("use foo bar")?;

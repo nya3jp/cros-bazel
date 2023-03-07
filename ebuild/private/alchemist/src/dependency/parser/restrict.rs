@@ -42,16 +42,17 @@ impl<'i> DependencyParserCommon<'i, RestrictAtom> for RestrictDependencyParser {
 impl RestrictDependencyParser {
     fn restrict(input: &str) -> IResult<&str, RestrictDependency> {
         let first = Cell::new(true);
-        let (input, value) = map_res(take_while1(|c| {
-            if first.get() {
-                first.set(false);
-                char::is_alphabetic(c)
-            } else {
-                char::is_alphabetic(c) || c == '-'
-            }
-        }), |s: &str| {
-            s.parse::<RestrictAtom>()
-        })(input)?;
+        let (input, value) = map_res(
+            take_while1(|c| {
+                if first.get() {
+                    first.set(false);
+                    char::is_alphabetic(c)
+                } else {
+                    char::is_alphabetic(c) || c == '-'
+                }
+            }),
+            |s: &str| s.parse::<RestrictAtom>(),
+        )(input)?;
 
         Ok((input, Dependency::Leaf(value)))
     }
@@ -119,9 +120,7 @@ mod tests {
     #[test]
     fn test_parse_negative_atom() -> Result<()> {
         let deps = RestrictDependency::from_str("-mirror");
-        assert!(
-            deps.is_err()
-        );
+        assert!(deps.is_err());
         Ok(())
     }
 
