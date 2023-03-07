@@ -136,11 +136,11 @@ sdk(
     host_deps = [
         ":cross-packages",
         # Should we consider adding BDEPEND support to remove these 5?
-        "@//bazel/prebuilts/amd64-host:docbook-xml-dtd-4_4",
-        "@//bazel/prebuilts/amd64-host:meson-format-array",
-        "@//bazel/prebuilts/amd64-host:xcb-proto",
-        "@//bazel/prebuilts/amd64-host:hps-sdk",
-        "@//bazel/prebuilts/amd64-host:rust",
+        "@//bazel/prebuilts/amd64-host/app-text:docbook-xml-dtd-4_4",
+        "@//bazel/prebuilts/amd64-host/dev-util:meson-format-array",
+        "@//bazel/prebuilts/amd64-host/x11-base:xcb-proto",
+        "@//bazel/prebuilts/amd64-host/dev-embedded:hps-sdk",
+        "@//bazel/prebuilts/amd64-host/dev-lang:rust",
     ],
     overlays = ":overlays",
     visibility = ["//:__subpackages__"],

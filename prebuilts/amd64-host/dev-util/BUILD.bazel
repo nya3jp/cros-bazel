@@ -1,0 +1,13 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "binary_package")
+
+# dev-libs/glib needs this, but it looks missing in SDK and instead pulled in by
+# BDEPEND.
+binary_package(
+    name = "meson-format-array",
+    src = "@amd64_host_meson_format_array_0//file",
+    visibility = ["//visibility:public"],
+)

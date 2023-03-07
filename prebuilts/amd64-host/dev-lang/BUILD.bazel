@@ -1,0 +1,12 @@
+# Copyright 2022 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "binary_package")
+
+# We need to pull in the rust cross compiler libs
+binary_package(
+    name = "rust",
+    src = "@amd64_host_rust_1_62_1//file",
+    visibility = ["//visibility:public"],
+)

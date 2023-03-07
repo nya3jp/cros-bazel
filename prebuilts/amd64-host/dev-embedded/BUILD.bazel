@@ -1,0 +1,12 @@
+# Copyright 2023 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "binary_package")
+
+# Needed for hps-firmware
+binary_package(
+    name = "hps-sdk",
+    src = "@amd64_host_hps_sdk_0_0_0_r4//file",
+    visibility = ["//visibility:public"],
+)

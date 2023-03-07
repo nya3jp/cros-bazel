@@ -1,0 +1,13 @@
+# Copyright 2023 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/ebuild:defs.bzl", "binary_package")
+
+# sys-libs/pam needs this, but it looks missing in SDK and instead pulled in by
+# BDEPEND.
+binary_package(
+    name = "docbook-xml-dtd-4_4",
+    src = "@amd64_host_docbook_xml_dtd_4_4_r3//file",
+    visibility = ["//visibility:public"],
+)
