@@ -7,6 +7,9 @@ load("//bazel/ebuild:defs.bzl", "binary_package")
 # Needed for hps-firmware
 binary_package(
     name = "hps-sdk",
-    src = "@amd64_host_hps_sdk_0_0_0_r4//file",
+    src = select({
+        "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_03_04_201551_dev_embedded_hps_sdk_0_0_1_r5//file",
+        "//conditions:default": "@amd64_host_hps_sdk_0_0_0_r4//file",
+    }),
     visibility = ["//visibility:public"],
 )

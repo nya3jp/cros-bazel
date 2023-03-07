@@ -194,3 +194,10 @@ inspect it, you can use the `xpak split` CLI.
 ```sh
 bazel run //bazel/ebuild/cmd/xpak:xpak -- split --extract libffi-3.1-r8.tbz2 libusb-0-r2.tbz2
 ```
+
+
+## Building ToT
+
+The cros-bazel-manifest was created from a snapshot from Aug 2022. We also
+pinned the SDK at that time as well. If you are working on ToT (as of Mar 2023)
+you can use the newer SDK by passing in the `--//bazel/sdk:new-sdk` flag.

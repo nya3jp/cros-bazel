@@ -8,6 +8,10 @@ load("//bazel/ebuild:defs.bzl", "binary_package")
 # BDEPEND.
 binary_package(
     name = "meson-format-array",
-    src = "@amd64_host_meson_format_array_0//file",
+    src =
+        select({
+            "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_03_04_201551_dev_util_meson_format_array_0//file",
+            "//conditions:default": "@amd64_host_meson_format_array_0//file",
+        }),
     visibility = ["//visibility:public"],
 )
