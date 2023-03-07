@@ -118,6 +118,9 @@ package_set(
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:llvm-libunwind",
         {%- endfor %}
     ],
+    visibility = [
+        "@//:__pkg__",  # for build_image targets
+    ],
 )
 
 sdk(
