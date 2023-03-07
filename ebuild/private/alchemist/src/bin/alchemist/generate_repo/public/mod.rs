@@ -70,7 +70,7 @@ fn generate_public_package(
                 _ => return Vec::new(),
             };
             let internal_package_location = format!(
-                "//internal/overlays/{}",
+                "//internal/packages/{}",
                 package_relative_dir.to_string_lossy(),
             );
             ["", "_debug", "_package_set", "_test"]

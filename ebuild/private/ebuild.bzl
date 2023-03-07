@@ -93,7 +93,7 @@ def _compute_build_package_args(ctx, output_path):
     # --ebuild
     ebuild_inside_path = ctx.file.ebuild.path.removeprefix(
         ctx.file.ebuild.owner.workspace_root + "/",
-    ).removeprefix("internal/overlays/")
+    ).removeprefix("internal/packages/")
     args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
 
     # --file

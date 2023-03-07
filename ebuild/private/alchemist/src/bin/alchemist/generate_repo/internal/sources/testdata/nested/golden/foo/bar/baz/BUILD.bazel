@@ -44,7 +44,7 @@ filegroup(
         ":__tarball__",
     ],
     visibility = [
-        "//internal/overlays:__subpackages__",
+        "//internal/packages:__subpackages__",
         "//internal/sources:__subpackages__",
     ],
 )

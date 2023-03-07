@@ -3,5 +3,6 @@
 // found in the LICENSE file.
 
 pub mod overlays;
+pub mod packages;
 pub mod sdk;
 pub mod sources;
