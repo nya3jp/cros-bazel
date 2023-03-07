@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{Context, Error, Result};
+use anyhow::{Error, Result};
 use binarypackage::BinaryPackage;
 use makechroot::BindMount;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::str::{from_utf8, FromStr};
+use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub struct InstallGroup {
@@ -29,18 +29,13 @@ impl InstallGroup {
         let mut bind_mounts: Vec<BindMount> = Vec::new();
         let mut atoms: Vec<String> = Vec::new();
         for package in &self.packages {
-            let xp = BinaryPackage::new(package)?.xpak()?;
-            let category = from_utf8(
-                xp.get("CATEGORY")
-                    .with_context(|| "Ebuild must have category")?,
-            )?
-            .trim();
-            let pf = from_utf8(xp.get("PF").with_context(|| "Ebuild must have PF")?)?.trim();
+            let bp = BinaryPackage::open(package)?;
+            let category_pf = bp.category_pf();
             bind_mounts.push(BindMount {
                 source: package.into(),
-                mount_path: dir.join(category).join(format!("{}.tbz2", pf)),
+                mount_path: dir.join(format!("{}.tbz2", category_pf)),
             });
-            atoms.push(format!("={}/{}", category, pf));
+            atoms.push(format!("={}", category_pf));
         }
         Ok((bind_mounts, atoms))
     }

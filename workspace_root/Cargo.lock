@@ -139,11 +139,8 @@ dependencies = [
  "anyhow",
  "bytes",
  "cliutil",
- "nix",
  "runfiles",
- "tar 0.4.38",
  "tempfile",
- "zstd",
 ]
 
 [[package]]
@@ -423,6 +420,11 @@ dependencies = [
  "anyhow",
  "binarypackage",
  "clap",
+ "cliutil",
+ "runfiles",
+ "tar 0.4.38",
+ "tempfile",
+ "zstd",
 ]
 
 [[package]]

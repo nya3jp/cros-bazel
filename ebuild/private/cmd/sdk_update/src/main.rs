@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use anyhow::{Context, Result};
+use binarypackage::BinaryPackage;
 use clap::Parser;
 use makechroot::BindMount;
 use std::path::{Path, PathBuf};
@@ -42,18 +43,14 @@ fn bind_binary_packages(
     package_paths
         .into_iter()
         .map(|package_path| {
-            let xp = binarypackage::BinaryPackage::new(&package_path)?.xpak()?;
-
-            let category = std::str::from_utf8(&xp["CATEGORY"])?.trim();
-            let pf = std::str::from_utf8(&xp["PF"])?.trim();
-
-            let mount_path = packages_dir.join(category).join(pf.to_owned() + BINARY_EXT);
+            let bp = BinaryPackage::open(&package_path)?;
+            let category_pf = bp.category_pf();
+            let mount_path = packages_dir.join(format!("{}{}", category_pf, BINARY_EXT));
             cfg.bind_mounts.push(BindMount {
                 source: package_path,
                 mount_path,
             });
-
-            Ok(format!("={}/{}", category, pf))
+            Ok(format!("={}", category_pf))
         })
         .collect()
 }

@@ -3,10 +3,14 @@ load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_t
 rust_binary_crate(
     name = "extract_interface",
     visibility = ["//visibility:public"],
-    deps = ["//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust"],
+    deps = [
+        "//bazel/ebuild/private/common/cliutil:cliutil_rust",
+        "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+    ],
 )
 
 rust_crate_test(
     name = "extract_interface_test",
     crate = ":extract_interface",
+    data = glob(["testdata/*"]),
 )

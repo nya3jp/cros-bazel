@@ -350,6 +350,8 @@ _NORMAL_DEPENDENCIES = {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
             "clap": "@update_all_crates__clap-4.0.32//:clap",
+            "tar": "@update_all_crates__tar-0.4.38//:tar",
+            "zstd": "@update_all_crates__zstd-0.12.2-zstd.1.5.2//:zstd",
         },
     },
     "bazel/ebuild/private/cmd/install_deps": {
@@ -430,9 +432,6 @@ _NORMAL_DEPENDENCIES = {
         _COMMON_CONDITION: {
             "anyhow": "@update_all_crates__anyhow-1.0.68//:anyhow",
             "bytes": "@update_all_crates__bytes-0.4.12//:bytes",
-            "nix": "@update_all_crates__nix-0.26.1//:nix",
-            "tar": "@update_all_crates__tar-0.4.38//:tar",
-            "zstd": "@update_all_crates__zstd-0.12.2-zstd.1.5.2//:zstd",
         },
     },
     "bazel/ebuild/private/common/run_in_container_lib": {
@@ -569,6 +568,10 @@ _NORMAL_DEV_DEPENDENCIES = {
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
+        _COMMON_CONDITION: {
+            "runfiles": "@update_all_crates__runfiles-0.1.0//:runfiles",
+            "tempfile": "@update_all_crates__tempfile-3.3.0//:tempfile",
+        },
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
@@ -628,6 +631,8 @@ _NORMAL_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },
@@ -833,6 +838,8 @@ _PROC_MACRO_DEV_ALIASES = {
     "bazel/ebuild/private/cmd/build_package": {
     },
     "bazel/ebuild/private/cmd/extract_interface": {
+        _COMMON_CONDITION: {
+        },
     },
     "bazel/ebuild/private/cmd/install_deps": {
     },

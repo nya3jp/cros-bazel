@@ -7,6 +7,13 @@ edition = "2021"
 
 [dependencies]
 binarypackage = { path = "../../common/portage/binarypackage" }
+cliutil = { path = "../../common/cliutil" }
 
-clap.workspace = true
 anyhow.workspace = true
+clap.workspace = true
+tar.workspace = true
+zstd.workspace = true
+
+[dev-dependencies]
+runfiles.workspace = true
+tempfile.workspace = true
