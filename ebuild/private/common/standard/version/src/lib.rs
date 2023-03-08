@@ -1,3 +1,3 @@
 mod version;
 
-pub use version::*;
+pub use crate::version::*;

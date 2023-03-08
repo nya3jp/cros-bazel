@@ -46,7 +46,7 @@ impl Version {
     /// # Example
     ///
     /// ```
-    /// # use alchemist::version::Version;
+    /// # use version::Version;
     /// assert_eq!(("sys-apps/attr", Version::try_new("2.5.1")?), Version::from_str_suffix("sys-apps/attr-2.5.1")?);
     /// # Ok::<(), anyhow::Error>(())
     /// ```
@@ -64,7 +64,7 @@ impl Version {
     /// # Example
     ///
     /// ```
-    /// # use alchemist::version::Version;
+    /// # use version::Version;
     /// assert_eq!(&vec!["1".to_string(), "2".to_string(), "3".to_string()], Version::try_new("1.2.3g_beta7_p4-r8")?.main());
     /// # Ok::<(), anyhow::Error>(())
     /// ```
@@ -77,7 +77,7 @@ impl Version {
     /// # Example
     ///
     /// ```
-    /// # use alchemist::version::Version;
+    /// # use version::Version;
     /// assert_eq!("", Version::try_new("1.2.3_beta7_p4-r8")?.letter());
     /// assert_eq!("g", Version::try_new("1.2.3g_beta7_p4-r8")?.letter());
     /// # Ok::<(), anyhow::Error>(())
@@ -91,7 +91,7 @@ impl Version {
     /// # Example
     ///
     /// ```
-    /// # use alchemist::version::{Version, VersionSuffix, VersionSuffixLabel};
+    /// # use version::{Version, VersionSuffix, VersionSuffixLabel};
     /// let version = Version::try_new("1.2.3g_beta7_p4-r8")?;
     /// let suffixes = version.suffixes();
     /// assert_eq!(2, suffixes.len());
@@ -110,7 +110,7 @@ impl Version {
     /// # Example
     ///
     /// ```
-    /// # use alchemist::version::Version;
+    /// # use version::Version;
     /// assert_eq!("", Version::try_new("1.2.3g_beta7_p4")?.revision());
     /// assert_eq!("8", Version::try_new("1.2.3g_beta7_p4-r8")?.revision());
     /// # Ok::<(), anyhow::Error>(())
@@ -124,7 +124,7 @@ impl Version {
     /// # Example
     ///
     /// ```
-    /// # use alchemist::version::Version;
+    /// # use version::Version;
     /// assert_eq!("1.2.3g_beta7_p4", Version::try_new("1.2.3g_beta7_p4-r8")?.without_revision().to_string());
     /// # Ok::<(), anyhow::Error>(())
     /// ```
@@ -142,8 +142,9 @@ impl Version {
     /// # Example
     ///
     /// ```
-    /// # use alchemist::version::Version;
+    /// # use version::Version;
     /// assert_eq!(true, Version::try_new("1.2.3g_beta7_p4-r8")?.starts_with(&Version::try_new("1.2.3g_beta7")?));
+    /// assert_eq!(true, Version::try_new("1.2.3g_beta7_p4-r8")?.starts_with(&Version::try_new("1.2.3g_beta")?));
     /// assert_eq!(true, Version::try_new("1.2.3g_beta7_p4-r8")?.starts_with(&Version::try_new("1.2")?));
     /// assert_eq!(false, Version::try_new("1.2.3g_beta7_p4-r8")?.starts_with(&Version::try_new("1.2.4")?));
     /// assert_eq!(false, Version::try_new("1.2.3g_beta7_p4-r8")?.starts_with(&Version::try_new("1.2.3g_p4-r8")?));
@@ -160,6 +161,13 @@ impl Version {
 
             if copy.suffixes.len() > prefix.suffixes.len() {
                 copy.suffixes.truncate(prefix.suffixes.len());
+            }
+            if copy.suffixes.len() == prefix.suffixes.len() {
+                if let Some(suffix) = prefix.suffixes.last() {
+                    if suffix.number.is_empty() {
+                        copy.suffixes.last_mut().unwrap().number.clear();
+                    }
+                }
             }
             if !prefix.suffixes.is_empty() {
                 return copy;
