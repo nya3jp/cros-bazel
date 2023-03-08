@@ -1,4 +1,4 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 {% set files_target = name ~ "_tarfiles" %}
@@ -36,6 +36,10 @@ pkg_files(
         "**/package.unmask",
     ]),
     prefix = "{{ "mnt/host/source/" ~ mount_path }}",
+    # chromeos/scripts/config_wrapper must be executable
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
