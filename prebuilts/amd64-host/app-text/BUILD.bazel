@@ -14,3 +14,19 @@ binary_package(
     }),
     visibility = ["//visibility:public"],
 )
+
+binary_package(
+    name = "docbook-xml-dtd-4_1",
+    src = select({
+        "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_03_04_201551_app_text_docbook_xml_dtd_4_1_2_r7//file",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+binary_package(
+    name = "docbook-xml-dtd-4_3",
+    src = select({
+        "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_03_04_201551_app_text_docbook_xml_dtd_4_3_r2//file",
+    }),
+    visibility = ["//visibility:public"],
+)

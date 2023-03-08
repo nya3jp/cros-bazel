@@ -144,6 +144,8 @@ sdk(
     ] + select({
         "@//bazel/sdk:new-sdk-enabled": [
             "@//bazel/prebuilts/amd64-host/dev-util:b2",
+            "@//bazel/prebuilts/amd64-host/app-text:docbook-xml-dtd-4_1",
+            "@//bazel/prebuilts/amd64-host/app-text:docbook-xml-dtd-4_3",
         ],
         "//conditions:default": [],
     }),
