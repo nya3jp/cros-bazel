@@ -71,6 +71,7 @@ impl EBuildEntry {
             .local_sources
             .iter()
             .map(|source| match source {
+                PackageLocalSource::BazelTarget(target) => target.clone(),
                 PackageLocalSource::Src(src) => {
                     format!("//internal/sources/{}:__tarballs__", src.to_string_lossy())
                 }

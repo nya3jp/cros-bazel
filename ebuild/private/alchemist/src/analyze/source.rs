@@ -39,6 +39,11 @@ pub type ChromeVersion = String;
 /// Represents an origin of local source code.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum PackageLocalSource {
+    /// A pre-configured bazel target.
+    /// We make this the first item in the enum, so that when the sources get
+    /// sorted, this comes first, and thus results in being in the higher
+    /// overlay fs layer.
+    BazelTarget(String),
     /// ChromeOS source code at `/mnt/host/source/src`.
     Src(PathBuf),
     /// Chromite source code at `/mnt/host/source/chromite`.
@@ -330,6 +335,13 @@ fn apply_local_sources_workarounds(
         || details.package_name == "dev-libs/gobject-introspection"
     {
         local_sources.push(PackageLocalSource::Chromite)
+    }
+
+    // TODO(b/272275535): Delete this once platform2_test.py works
+    if details.inherited.contains("meson") {
+        local_sources.push(PackageLocalSource::BazelTarget(
+            "@//bazel/sdk:meson_test_disable_hack".to_string(),
+        ))
     }
 
     Ok(())
