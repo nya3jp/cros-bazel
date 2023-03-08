@@ -399,6 +399,7 @@ static PUBLIC_GS_BUCKETS: &[&str] = &[
     // See b/271483241.
     "chromium-nodejs",
     "chromeos-prebuilt",
+    "termina-component-testing",
 ];
 
 // For the public mirrors, lets prefer using HTTPS to download the files.
