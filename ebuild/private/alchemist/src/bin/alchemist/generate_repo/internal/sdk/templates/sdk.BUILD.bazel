@@ -141,7 +141,12 @@ sdk(
         "@//bazel/prebuilts/amd64-host/x11-base:xcb-proto",
         "@//bazel/prebuilts/amd64-host/dev-embedded:hps-sdk",
         "@//bazel/prebuilts/amd64-host/dev-lang:rust",
-    ],
+    ] + select({
+        "@//bazel/sdk:new-sdk-enabled": [
+            "@//bazel/prebuilts/amd64-host/dev-util:b2",
+        ],
+        "//conditions:default": [],
+    }),
     overlays = ":overlays",
     visibility = ["//:__subpackages__"],
 )

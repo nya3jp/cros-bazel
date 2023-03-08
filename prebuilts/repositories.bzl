@@ -333,6 +333,12 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-lang/rust-llvm-sources-1.67.1.tbz2"],
     )
     http_file(
+        name = "amd64_host_2023_03_04_201551_dev_util_b2_4_9_3",
+        downloaded_file_path = "b2-4.9.3.tbz2",
+        sha256 = "9ee3363e98b228727eeff5c678743299a02ac2099053e49955fd7589ac6df988",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-util/b2-4.9.3.tbz2"],
+    )
+    http_file(
         name = "amd64_host_2023_03_04_201551_dev_util_meson_format_array_0",
         downloaded_file_path = "meson-format-array-0.tbz2",
         sha256 = "a51bf2e76402c5526224d09d3b501b1c86f569d8274f6d8fe730edfd82602f37",

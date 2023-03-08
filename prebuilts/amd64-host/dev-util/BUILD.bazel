@@ -15,3 +15,13 @@ binary_package(
         }),
     visibility = ["//visibility:public"],
 )
+
+# Needed by boost 1.81
+binary_package(
+    name = "b2",
+    src =
+        select({
+            "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_03_04_201551_dev_util_b2_4_9_3//file",
+        }),
+    visibility = ["//visibility:public"],
+)

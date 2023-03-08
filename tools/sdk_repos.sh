@@ -37,6 +37,7 @@ PACKAGES=(
 	cross-x86_64-cros-linux-gnu/llvm-libunwind
 	app-text/docbook-xml-dtd
 	dev-util/meson-format-array
+	dev-util/b2
 	dev-lang/rust
 	dev-embedded/hps-sdk
 	x11-base/xcb-proto
