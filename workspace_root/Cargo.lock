@@ -752,6 +752,7 @@ dependencies = [
  "binarypackage",
  "clap",
  "fileutil",
+ "itertools",
  "libc",
  "makechroot",
  "nix",

@@ -3,9 +3,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Some scripts call build_dlc, which is in the chromite bin directory.
-export PATH="${PATH}:/mnt/host/source/chromite/bin"
-
 # HACK: Rewrite base_image_util.sh to skip some steps we don't support yet.
 # TODO: Remove these hacks.
 if [[ -n "${BASE_PACKAGE}" ]]; then

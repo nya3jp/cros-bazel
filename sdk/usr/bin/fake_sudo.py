@@ -15,7 +15,7 @@ class Cmd:
   env: Mapping[str, str]
 
 
-SUDO_PATH = '/usr/sbin:/usr/bin:/sbin:/bin'
+SUDO_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools'
 # It probably expects a value, and a valid one. Since we're not actually
 # changing the user, we should preserve these values.
 _PRESERVED_KEYS = re.compile('^USER|HOME|SUDO_PRESERVED_.*$')

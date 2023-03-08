@@ -4,12 +4,13 @@
 
 use crate::control::ControlChannel;
 use anyhow::{anyhow, bail, Context, Result};
+use itertools::Itertools;
 use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Command;
 use strum_macros::EnumString;
 use tempfile::{tempdir, TempDir};
 
@@ -69,38 +70,18 @@ impl MountedSDK {
 
         std::fs::create_dir_all(&bazel_build_dir.outside)?;
 
-        let layer_paths: Vec<PathBuf> = [root_dir.outside.clone()]
-            .into_iter()
-            .chain(cfg.layer_paths)
-            .collect();
+        // TODO: Do not inherit the current environment. It can lead to
+        // unexpected leakage of environment variables.
+        let mut envs: HashMap<String, String> = std::env::vars().collect();
         let mut bind_mounts: Vec<BindMount> = cfg.bind_mounts;
-        let mut cmd = if cfg.privileged {
-            let mut cmd = Command::new("/usr/bin/sudo");
-            // We have no idea why, but run_in_container fails on pivot_root(2)
-            // for EINVAL if we don't enter a mount namespace in advance.
-            // TODO: Investigate the cause.
-            cmd.args(["--preserve-env", "unshare", "--mount", "--"]);
-            cmd.arg(run_in_container_path);
-            cmd.arg("--privileged");
-            cmd
-        } else {
-            Command::new(run_in_container_path)
-        };
-        cmd.stdin(Stdio::inherit())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit());
-        let serialized_path = tmp_dir.path().join("run_in_container_args.json");
-        cmd.arg("--cfg").arg(&serialized_path);
 
-        let setup_script_path = bazel_build_dir.join("setup.sh");
-        std::fs::copy(
-            r.rlocation("cros/bazel/ebuild/private/common/mountsdk/setup.sh"),
-            setup_script_path.outside,
-        )?;
-        cmd.envs(std::env::vars());
-        cmd.envs(cfg.envs);
-        cmd.env("PATH", "/usr/sbin:/usr/bin:/sbin:/bin");
-        cmd.env("BOARD", &cfg.board);
+        envs.extend([
+            ("PATH".to_owned(), "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools".to_owned()),
+            // TODO: Do not set $BOARD here. Callers may not be interested in
+            // particular boards.
+            ("BOARD".to_owned(), cfg.board.clone()),
+        ]);
+
         let control_channel = if cfg.login_mode != LoginMode::Never {
             // Named pipes created using `mkfifo` use the inode number as the address.
             // We need to bind mount the control fifo on top of the overlayfs mounts to
@@ -109,21 +90,65 @@ impl MountedSDK {
                 mount_path: control_channel_path.inside,
                 source: control_channel_path.outside.clone(),
             });
-            cmd.env("_LOGIN_MODE", cfg.login_mode.to_string());
+            envs.insert("_LOGIN_MODE".to_owned(), cfg.login_mode.to_string());
             Some(ControlChannel::new(control_channel_path.outside)?)
         } else {
             None
         };
 
-        cmd.arg("--cmd").arg(setup_script_path.inside);
-        RunInContainerConfig {
+        envs.extend(cfg.envs);
+
+        let mut cmd = if cfg.privileged {
+            let mut cmd = Command::new("/usr/bin/sudo");
+            // We have no idea why, but run_in_container fails on pivot_root(2)
+            // for EINVAL if we don't enter a mount namespace in advance.
+            // TODO: Investigate the cause.
+            cmd.args([
+                "--preserve-env",
+                "unshare",
+                "--mount",
+                "--",
+                "/usr/bin/env",
+                "-i",
+            ]);
+            cmd.args(
+                envs.into_iter()
+                    .sorted()
+                    .map(|(k, v)| format!("{}={}", k, v)),
+            );
+            cmd.arg(run_in_container_path);
+            cmd.arg("--privileged");
+            cmd.env_clear();
+            cmd
+        } else {
+            let mut cmd = Command::new(run_in_container_path);
+            cmd.env_clear();
+            cmd.envs(envs);
+            cmd
+        };
+
+        let layer_paths: Vec<PathBuf> = [root_dir.outside.clone()]
+            .into_iter()
+            .chain(cfg.layer_paths)
+            .collect();
+        let serialized_config = RunInContainerConfig {
             staging_dir: scratch_dir,
             chdir: PathBuf::from("/"),
             layer_paths,
             bind_mounts,
             keep_host_mount: false,
-        }
-        .serialize_to(&serialized_path)?;
+        };
+        let serialized_path = tmp_dir.path().join("run_in_container_args.json");
+        serialized_config.serialize_to(&serialized_path)?;
+        cmd.arg("--cfg").arg(&serialized_path);
+
+        let setup_script_path = bazel_build_dir.join("setup.sh");
+        std::fs::copy(
+            r.rlocation("cros/bazel/ebuild/private/common/mountsdk/setup.sh"),
+            setup_script_path.outside,
+        )?;
+        cmd.arg("--cmd").arg(setup_script_path.inside);
+
         Ok(Self {
             board: cfg.board,
             cmd: Some(cmd),
