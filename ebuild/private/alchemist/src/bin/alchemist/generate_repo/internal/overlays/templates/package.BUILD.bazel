@@ -1,4 +1,5 @@
-load("@//bazel/ebuild:defs.bzl", "binary_package", "ebuild", "package_set")
+load("@//bazel/ebuild:defs.bzl", "binary_package", "ebuild", "ebuild_debug", "ebuild_test_run", "package_set", "sdk_update")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 {%- for ebuild in ebuilds %}
 {%- if ebuild.binary_package_src %}
@@ -15,6 +16,24 @@ binary_package(
     visibility = ["//visibility:public"],
 )
 {%- else %}
+string_flag(
+    name = "{{ ebuild.version }}_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+sdk_update(
+    name = "{{ ebuild.version }}_deps",
+    base = "{{ ebuild.sdk }}",
+    target_deps = [
+        {%- for dep in ebuild.build_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    progress_message = "Installing dependencies for {{ ebuild.ebuild_name }}",
+    visibility = ["//visibility:private"],
+)
+
 ebuild(
     name = "{{ ebuild.version }}",
     ebuild = "{{ ebuild.ebuild_name }}",
@@ -37,10 +56,38 @@ ebuild(
         {%- endfor %}
     ],
     {%- endif %}
-    {%- if ebuild.build_deps %}
-    build_deps = [
-        {%- for dep in ebuild.build_deps %}
+    {%- if ebuild.runtime_deps %}
+    runtime_deps = [
+        {%- for dep in ebuild.runtime_deps %}
         "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":{{ ebuild.version }}_deps",
+    prebuilt = ":{{ ebuild.version }}_prebuilt",
+    visibility = ["//visibility:public"],
+)
+
+ebuild_debug(
+    name = "{{ ebuild.version }}_debug",
+    ebuild = "{{ ebuild.ebuild_name }}",
+    distfiles = {
+        {%- for dist in ebuild.dists %}
+        "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
+        {%- endfor %}
+    },
+    {%- if ebuild.sources %}
+    srcs = [
+        {%- for source in ebuild.sources %}
+        "{{ source }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.git_trees %}
+    git_trees = [
+        {%- for git_tree in ebuild.git_trees %}
+        "{{ git_tree }}",
         {%- endfor %}
     ],
     {%- endif %}
@@ -52,8 +99,42 @@ ebuild(
     ],
     {%- endif %}
     files = glob(["files/**", "*.bashrc"]),
-    sdk = "{{ ebuild.sdk }}",
-    visibility = ["//visibility:public"],
+    sdk = ":{{ ebuild.version }}_deps",
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_test_run(
+    name = "{{ ebuild.version }}_test",
+    ebuild = "{{ ebuild.ebuild_name }}",
+    distfiles = {
+        {%- for dist in ebuild.dists %}
+        "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
+        {%- endfor %}
+    },
+    {%- if ebuild.sources %}
+    srcs = [
+        {%- for source in ebuild.sources %}
+        "{{ source }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.git_trees %}
+    git_trees = [
+        {%- for git_tree in ebuild.git_trees %}
+        "{{ git_tree }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.runtime_deps %}
+    runtime_deps = [
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":{{ ebuild.version }}_deps",
+    visibility = ["//:__subpackages__"],
 )
 {%- endif %}
 

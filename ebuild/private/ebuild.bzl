@@ -4,8 +4,7 @@
 
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "SDKInfo", "relative_path_in_package")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
-load("//bazel/ebuild/private:sdk.bzl", "sdk_update")
-load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 
 def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
@@ -228,8 +227,9 @@ def _ebuild_impl(ctx):
         ),
     ] + interface_library_providers
 
-_ebuild = rule(
+ebuild = rule(
     implementation = _ebuild_impl,
+    doc = "Builds a Portage binary package from an ebuild file.",
     attrs = dict(
         headers = attr.string_list(
             allow_empty = True,
@@ -308,9 +308,10 @@ def _ebuild_debug_impl(ctx):
         ),
     ]
 
-_ebuild_debug = rule(
+ebuild_debug = rule(
     implementation = _ebuild_debug_impl,
     executable = True,
+    doc = "Enters the ephemeral chroot to build a Portage binary package in.",
     attrs = dict(
         _bash_runfiles = attr.label(default = "@bazel_tools//tools/bash/runfiles"),
         _create_debug_script = attr.label(
@@ -347,10 +348,11 @@ def _ebuild_test_impl(ctx):
         runfiles = runfiles,
     )]
 
-# TODO(b/269558613) Rename this to _ebuild_test.
+# TODO(b/269558613) Rename this to ebuild_test.
 # A rule name can end with "_test" only when test = True.
-_ebuild_test_run = rule(
+ebuild_test_run = rule(
     implementation = _ebuild_test_impl,
+    doc = "Runs ebuild tests.",
     attrs = dict(
         _generate_test_runner = attr.label(
             default = ":generate_test_runner",
@@ -362,39 +364,3 @@ _ebuild_test_run = rule(
     # TODO(b/269558613) Change this to "test = True".
     executable = True,
 )
-
-def ebuild(name, ebuild, sdk, build_deps = [], visibility = None, **kwargs):
-    string_flag(
-        name = name + "_prebuilt",
-        build_setting_default = "",
-        visibility = visibility,
-    )
-    sdk_update(
-        name = name + "_deps",
-        base = sdk,
-        target_deps = build_deps,
-        progress_message = "Installing dependencies for " + ebuild,
-        visibility = ["//visibility:private"],
-    )
-    _ebuild(
-        name = name,
-        ebuild = ebuild,
-        sdk = ":%s_deps" % name,
-        prebuilt = ":%s_prebuilt" % name,
-        visibility = visibility,
-        **kwargs
-    )
-    _ebuild_debug(
-        name = name + "_debug",
-        ebuild = ebuild,
-        sdk = ":%s_deps" % name,
-        visibility = visibility,
-        **kwargs
-    )
-    _ebuild_test_run(
-        name = name + "_test",
-        ebuild = ebuild,
-        sdk = ":%s_deps" % name,
-        visibility = visibility,
-        **kwargs
-    )

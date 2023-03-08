@@ -73,23 +73,15 @@ fn generate_public_package(
                 "//internal/overlays/{}",
                 package_relative_dir.to_string_lossy(),
             );
-            vec![
-                AliasEntry {
-                    name: details.version.to_string(),
-                    actual: format!("{}:{}", &internal_package_location, details.version),
-                },
-                AliasEntry {
-                    name: format!("{}_debug", details.version),
-                    actual: format!("{}:{}_debug", &internal_package_location, details.version),
-                },
-                AliasEntry {
-                    name: format!("{}_package_set", details.version),
+            ["", "_debug", "_package_set", "_test"]
+                .map(|suffix| AliasEntry {
+                    name: format!("{}{}", details.version, suffix),
                     actual: format!(
-                        "{}:{}_package_set",
-                        &internal_package_location, details.version
+                        "{}:{}{}",
+                        &internal_package_location, details.version, suffix
                     ),
-                },
-            ]
+                })
+                .into()
         })
         .collect();
 
@@ -99,20 +91,14 @@ fn generate_public_package(
     {
         let best_version = &best_package.version;
         let short_package_name = &*package_output_dir.file_name().unwrap().to_string_lossy();
-        aliases.extend([
-            AliasEntry {
-                name: short_package_name.to_owned(),
-                actual: format!(":{}", &best_version),
-            },
-            AliasEntry {
-                name: "debug".to_owned(),
-                actual: format!(":{}_debug", &best_version),
-            },
-            AliasEntry {
-                name: "package_set".to_owned(),
-                actual: format!(":{}_package_set", &best_version),
-            },
-        ]);
+        aliases.push(AliasEntry {
+            name: short_package_name.to_owned(),
+            actual: format!(":{}", &best_version),
+        });
+        aliases.extend(["debug", "package_set", "test"].map(|suffix| AliasEntry {
+            name: suffix.to_owned(),
+            actual: format!(":{}_{}", &best_version, suffix),
+        }));
     }
 
     let context = BuildTemplateContext { aliases };
