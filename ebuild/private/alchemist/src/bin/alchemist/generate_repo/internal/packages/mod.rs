@@ -52,7 +52,6 @@ pub struct EBuildEntry {
     runtime_deps: Vec<String>,
     install_set: Vec<String>,
     sdk: String,
-    binary_package_src: Option<String>,
 }
 
 impl EBuildEntry {
@@ -127,16 +126,6 @@ impl EBuildEntry {
         }
         .to_owned();
 
-        // HACK: Some packages don't build yet. To unblock the prototype effort
-        // we just use prebuilt binaries for them.
-        let binary_package_src = match package.details.package_name.as_str() {
-            // Uses sudo and qemu (b/262458823).
-            "chromeos-base/chromeos-fonts" => {
-                Some("@arm64_generic_chromeos_fonts_0_0_1_r52//file".to_owned())
-            }
-            _ => None,
-        };
-
         Ok(Self {
             ebuild_name,
             version,
@@ -147,7 +136,6 @@ impl EBuildEntry {
             runtime_deps,
             install_set,
             sdk,
-            binary_package_src,
         })
     }
 }

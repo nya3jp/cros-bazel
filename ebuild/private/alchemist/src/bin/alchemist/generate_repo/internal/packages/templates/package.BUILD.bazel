@@ -1,21 +1,7 @@
-load("@//bazel/ebuild:defs.bzl", "binary_package", "ebuild", "ebuild_debug", "ebuild_test_run", "package_set", "sdk_update")
+load("@//bazel/ebuild:defs.bzl", "ebuild", "ebuild_debug", "ebuild_test_run", "package_set", "sdk_update")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 {%- for ebuild in ebuilds %}
-{%- if ebuild.binary_package_src %}
-binary_package(
-    name = "{{ ebuild.version }}",
-    src = "{{ ebuild.binary_package_src }}",
-    {%- if ebuild.runtime_deps %}
-    runtime_deps = [
-        {%- for dep in ebuild.runtime_deps %}
-        "{{ dep }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    visibility = ["//visibility:public"],
-)
-{%- else %}
 string_flag(
     name = "{{ ebuild.version }}_prebuilt",
     build_setting_default = "",
@@ -136,7 +122,6 @@ ebuild_test_run(
     sdk = ":{{ ebuild.version }}_deps",
     visibility = ["//:__subpackages__"],
 )
-{%- endif %}
 
 package_set(
     name = "{{ ebuild.version }}_package_set",
