@@ -51,6 +51,7 @@ pub struct EBuildEntry {
     build_deps: Vec<String>,
     runtime_deps: Vec<String>,
     install_set: Vec<String>,
+    uses: String,
     sdk: String,
 }
 
@@ -116,6 +117,17 @@ impl EBuildEntry {
 
         let install_set = format_dependencies(&package.install_set)?;
 
+        let uses = package
+            .details
+            .use_map
+            .iter()
+            .sorted_by(|(a_name, a_value), (b_name, b_value)| {
+                // Enabled ones comes before disabled ones.
+                a_value.cmp(b_value).reverse().then(a_name.cmp(b_name))
+            })
+            .map(|(name, value)| format!("{}{}", if *value { "" } else { "-" }, name))
+            .join(" ");
+
         let sdk = if PRIMORDIAL_PACKAGES
             .iter()
             .any(|v| v == &package.details.package_name)
@@ -135,6 +147,7 @@ impl EBuildEntry {
             build_deps,
             runtime_deps,
             install_set,
+            uses,
             sdk,
         })
     }

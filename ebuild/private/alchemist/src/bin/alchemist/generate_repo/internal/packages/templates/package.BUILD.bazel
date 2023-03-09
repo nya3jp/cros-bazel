@@ -49,6 +49,7 @@ ebuild(
         {%- endfor %}
     ],
     {%- endif %}
+    # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":{{ ebuild.version }}_deps",
     prebuilt = ":{{ ebuild.version }}_prebuilt",
@@ -84,6 +85,7 @@ ebuild_debug(
         {%- endfor %}
     ],
     {%- endif %}
+    # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":{{ ebuild.version }}_deps",
     visibility = ["//:__subpackages__"],
@@ -118,6 +120,7 @@ ebuild_test_run(
         {%- endfor %}
     ],
     {%- endif %}
+    # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":{{ ebuild.version }}_deps",
     visibility = ["//:__subpackages__"],
