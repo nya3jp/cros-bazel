@@ -17,7 +17,6 @@ use regex::Regex;
 
 use super::{CompositeDependency, Dependency};
 
-pub mod package;
 pub mod restrict;
 pub mod uri;
 
@@ -43,7 +42,7 @@ pub trait DependencyParser<D> {
 }
 
 /// Provides the common implementation of dependency expression parser.
-trait DependencyParserCommon<'i, L> {
+pub trait DependencyParserCommon<'i, L> {
     fn new_all_of(children: Vec<Dependency<L>>) -> Dependency<L>;
     fn expression(input: &'i str) -> IResult<&'i str, Dependency<L>>;
 

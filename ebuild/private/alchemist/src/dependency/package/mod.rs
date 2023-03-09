@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+pub mod parser;
+
 use anyhow::{Error, Result};
 use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
@@ -9,10 +11,8 @@ use version::Version;
 
 use crate::data::{Slot, UseMap};
 
-use super::{
-    parser::{package::PackageDependencyParser, DependencyParserType},
-    Dependency, Predicate,
-};
+use super::{parser::DependencyParserType, Dependency, Predicate};
+use parser::PackageDependencyParser;
 
 /// Alias of Dependency specialized to package dependencies.
 pub type PackageDependency = Dependency<PackageAtomDependency>;
@@ -248,22 +248,6 @@ pub struct PackageAtomDependency {
 }
 
 impl PackageAtomDependency {
-    pub(super) fn new(
-        package_name: String,
-        version: Option<PackageVersionDependency>,
-        slot: Option<PackageSlotDependency>,
-        uses: Vec<PackageUseDependency>,
-        block: PackageBlock,
-    ) -> Self {
-        Self {
-            package_name,
-            version,
-            slot,
-            uses,
-            block,
-        }
-    }
-
     /// Constructs a simple atom that consists of a package name only.
     pub fn new_simple(package_name: &str) -> Self {
         Self {

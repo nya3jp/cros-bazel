@@ -22,10 +22,9 @@ use crate::dependency::{
         PackageAtomDependency, PackageBlock, PackageDependency, PackageSlotDependency,
         PackageUseDependency, PackageVersionDependency, PackageVersionOp,
     },
+    parser::{DependencyParser, DependencyParserCommon},
     CompositeDependency, Dependency,
 };
-
-use super::{DependencyParser, DependencyParserCommon};
 
 /// Raw regular expression string matching a valid package name.
 pub const PACKAGE_NAME_RE_RAW: &str = r"[A-Za-z0-9_][A-Za-z0-9+_.-]*/[A-Za-z0-9_][A-Za-z0-9+_-]*";
@@ -179,13 +178,13 @@ impl PackageDependencyParser {
         let (input, uses) = opt(Self::uses)(input)?;
         Ok((
             input,
-            PackageAtomDependency::new(
-                package_name.to_owned(),
+            PackageAtomDependency {
+                package_name: package_name.to_owned(),
                 version,
                 slot,
-                uses.unwrap_or_default(),
+                uses: uses.unwrap_or_default(),
                 block,
-            ),
+            },
         ))
     }
 
