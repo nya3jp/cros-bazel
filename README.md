@@ -37,7 +37,7 @@ cd cros-bazel/src/bazel
 ln -s tools/run_tests.sh .git/hooks/pre-commit
 ```
 
-## Building
+## Building packages
 
 To build sys-apps/attr:
 
@@ -52,6 +52,30 @@ $ BOARD=arm64-generic bazel build --keep_going //:all_target_packages
 ```
 
 This is a short-cut to build `@portage//virtual/target-os:package_set`.
+
+## Building images
+
+We have two targets to build images:
+
+- `//:chromiumos_minimal_image`: Minimal image that contains
+  `sys-apps/baselayout` and `sys-kernel/chromeos-kernel` only.
+- `//:chromiumos_base_image`: Base image.
+
+As of 2023-03-09, we support building images for amd64-generic only. We have
+known build issues in some packages:
+- `chromeos-base/chromeos-chrome`: Takes too long time (multiple hours) to
+  build. Also randomly fails to build.
+- `chromeos-base/chromeos-fonts`: Requires root to install binfmt_misc handlers
+  ([b/262458823](http://262458823)).
+
+You can inject prebuilt binary packages to bypass building those packages to
+build a base image.
+See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
+for more details.
+
+```
+$ BOARD=amd64-generic bazel build //:chromiumos_base_image --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2 --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
+```
 
 ## Directory structure
 
@@ -135,6 +159,22 @@ an interactive console:
 - `--login=before`: before building the package
 - `--login=after`: after building the package
 - `--login=after-fail`: after failing to build the package
+
+### Injecting prebuilt binary packages
+
+In the case your work is blocked by some package build failures, you can
+workaround them by injecting prebuilt binary packages via command line flags.
+
+For every `ebuild` target under `@portage//internal/packages/...`, an associated
+string flag target is defined. You can set a `gs://` URL of a prebuilt binary
+package to inject it.
+
+For example, to build a base image with injecting prebuilt binary packages for
+`chromeos-chrome` and `chromeos-fonts`:
+
+```
+$ BOARD=amd64-generic bazel build //:chromiumos_base_image --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2 --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
+```
 
 ### Extracting binary packages
 
