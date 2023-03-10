@@ -25,6 +25,11 @@ set -x
 cargo test --package alchemist -- --nocapture &
 
 # Despite the name, bazel test also builds non-test targets if they're listed.
-bazel test --test_size_filters=small -- "${TARGETS[@]}"
+bazel test \
+  --test_size_filters=small \
+  --config=format \
+  --keep_going \
+  -- \
+  "${TARGETS[@]}"
 
 wait
