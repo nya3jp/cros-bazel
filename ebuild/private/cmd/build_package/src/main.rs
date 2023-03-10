@@ -222,7 +222,7 @@ fn main() -> Result<()> {
     if let Some(output) = args.output {
         std::fs::copy(
             sdk.diff_dir().join(binary_out_path.strip_prefix("/")?),
-            &output,
+            output,
         )
         .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
     }

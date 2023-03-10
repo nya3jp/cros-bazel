@@ -27,7 +27,7 @@ impl BinaryPackage {
     /// Opens a Portage binary package file.
     pub fn open(path: &Path) -> Result<Self> {
         let mut file = File::open(path)?;
-        let metadata = std::fs::metadata(&path)?;
+        let metadata = std::fs::metadata(path)?;
         let size = metadata.size();
 
         if size < 24 {

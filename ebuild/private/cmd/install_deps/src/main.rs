@@ -49,7 +49,7 @@ fn main() -> Result<()> {
     let out_dir = sdk
         .root_dir()
         .outside
-        .join(&target_packages_dir.strip_prefix("/")?);
+        .join(target_packages_dir.strip_prefix("/")?);
     std::fs::create_dir_all(out_dir)?;
     std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
 

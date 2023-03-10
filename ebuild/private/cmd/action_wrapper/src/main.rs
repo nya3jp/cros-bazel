@@ -34,7 +34,7 @@ struct Cli {
 ///     we want to avoid that.
 fn run(cmd: &mut Command) -> Result<ExitStatus> {
     // Register the signal handler before spawning the process to ensure we don't drop any signals.
-    let mut signals = Signals::new(&[SIGCHLD, SIGINT, SIGTERM])?;
+    let mut signals = Signals::new([SIGCHLD, SIGINT, SIGTERM])?;
 
     let mut child = cmd.spawn()?;
 
@@ -63,7 +63,7 @@ fn main() -> Result<ExitCode> {
 
     // Redirect output to a file if `--output` was specified.
     if let Some(log_name) = &args.output {
-        let log_out = File::create(&log_name)?;
+        let log_out = File::create(log_name)?;
         let log_err = log_out.try_clone()?;
         command
             .stdout(Stdio::from(log_out))
@@ -75,7 +75,7 @@ fn main() -> Result<ExitCode> {
     // If the command failed , then print saved output on the stderr.
     if !status.success() {
         if let Some(log_name) = &args.output {
-            let mut read_file = File::open(&log_name)?;
+            let mut read_file = File::open(log_name)?;
             std::io::copy(&mut read_file, &mut std::io::stderr())?;
         }
     }

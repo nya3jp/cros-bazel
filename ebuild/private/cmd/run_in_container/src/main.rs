@@ -264,7 +264,7 @@ fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()>
     let orig_wd = std::env::current_dir()?;
     std::env::set_current_dir(&lowers_dir)?;
     let relative_dir = |p| {
-        pathdiff::diff_paths(&p, &lowers_dir)
+        pathdiff::diff_paths(p, &lowers_dir)
             .with_context(|| format!("Unable to make {p:?} relative to {lowers_dir:?}"))
     };
 

@@ -36,7 +36,7 @@ impl ControlChannel {
         // makes the open call not block waiting for a writer to open the FIFO. It
         // also allows writers to open/close the FIFO without causing the reader (us)
         // to close.
-        let mut fifo = OpenOptions::new().read(true).write(true).open(&path)?;
+        let mut fifo = OpenOptions::new().read(true).write(true).open(path)?;
         let fifo_fd = fifo.as_raw_fd();
         loop {
             let mut read_fds = FdSet::new();

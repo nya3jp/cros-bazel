@@ -58,7 +58,7 @@ pub fn remove_dir_all_with_chmod(path: &Path) -> Result<()> {
         return Err(anyhow::Error::new(e));
     }
 
-    for entry in WalkDir::new(&path)
+    for entry in WalkDir::new(path)
         .into_iter()
         // walk isn't lazy, so if we have a directory with no permissions, it attempts to list its
         // contents (which fails since it has no permissions), then sets permissions.
@@ -79,7 +79,7 @@ pub fn remove_dir_all_with_chmod(path: &Path) -> Result<()> {
     // Ensure we have u+rwx on the parent directory so we can unlink any files
     let parent = path.parent().unwrap();
     with_permissions(parent, S_IRWXU, || {
-        remove_dir_all(&path).with_context(|| format!("Failed to delete {:?}", path))
+        remove_dir_all(path).with_context(|| format!("Failed to delete {:?}", path))
     })
 }
 

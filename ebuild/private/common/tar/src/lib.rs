@@ -16,7 +16,7 @@ pub fn move_symlinks_into_tar(src: &Path, dest: &Path) -> Result<()> {
 
     let mut written_parents = HashSet::new();
 
-    for entry in WalkDir::new(&src).sort_by_file_name()
+    for entry in WalkDir::new(src).sort_by_file_name()
     // To make the output deterministic.
     {
         let entry = entry?;
@@ -25,7 +25,7 @@ pub fn move_symlinks_into_tar(src: &Path, dest: &Path) -> Result<()> {
         }
 
         let link_source = entry.path().strip_prefix(src)?;
-        let link_target = std::fs::read_link(&entry.path())?;
+        let link_target = std::fs::read_link(entry.path())?;
 
         // Write all parent directories if not written yet.
         // rev() to write parents before children.
