@@ -10,12 +10,6 @@ sh_binary(
     visibility = ["//visibility:public"],
 )
 
-sh_binary(
-    name = "generate_test_runner",
-    srcs = ["generate_test_runner.sh"],
-    visibility = ["//visibility:public"],
-)
-
 # The path to your gsutil
 string_flag(
     name = "gsutil_path",

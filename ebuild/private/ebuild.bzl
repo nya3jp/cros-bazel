@@ -4,6 +4,7 @@
 
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
+load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 
 def _format_file_arg(file):
@@ -293,6 +294,21 @@ ebuild = rule(
     ),
 )
 
+_DEBUG_SCRIPT = """
+# Arguments passed in during build time are passed in relative to the execroot,
+# which means all files passed in are relative paths starting with bazel-out/
+# Thus, we cd to the directory in our working directory containing a bazel-out.
+
+wd="$(pwd)"
+cd "${wd%%/bazel-out/*}"
+
+# The runfiles manifest file contains relative paths, which are evaluated
+# relative to the working directory. Since we provide our own working directory,
+# we need to use the RUNFILES_DIR instead.
+export RUNFILES_DIR="${RUNFILES_MANIFEST_FILE%_manifest}"
+unset RUNFILES_MANIFEST_FILE
+"""
+
 def _ebuild_debug_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
 
@@ -301,39 +317,21 @@ def _ebuild_debug_impl(ctx):
 
     # Compute arguments and inputs to build_package.
     args, inputs = _compute_build_package_args(ctx, output_path = None)
-
-    # Define the main action.
-    ctx.actions.run(
-        executable = ctx.executable._create_debug_script,
-        arguments = [output_debug_script.path, ctx.executable._build_package.path, args],
-        outputs = [output_debug_script],
+    return wrap_binary_with_args(
+        ctx,
+        out = output_debug_script,
+        binary = ctx.attr._build_package,
+        args = args,
+        content_prefix = _DEBUG_SCRIPT,
+        runfiles = ctx.runfiles(transitive_files = inputs),
     )
-
-    # Compute provider data.
-    runfiles = ctx.runfiles(transitive_files = inputs)
-    runfiles = runfiles.merge_all([
-        ctx.attr._build_package[DefaultInfo].default_runfiles,
-        ctx.attr._bash_runfiles[DefaultInfo].default_runfiles,
-    ])
-    return [
-        DefaultInfo(
-            files = depset([output_debug_script]),
-            executable = output_debug_script,
-            runfiles = runfiles,
-        ),
-    ]
 
 ebuild_debug = rule(
     implementation = _ebuild_debug_impl,
     executable = True,
     doc = "Enters the ephemeral chroot to build a Portage binary package in.",
     attrs = dict(
-        _bash_runfiles = attr.label(default = "@bazel_tools//tools/bash/runfiles"),
-        _create_debug_script = attr.label(
-            default = "//bazel/ebuild/private/common/mountsdk:create_debug_file",
-            executable = True,
-            cfg = "exec",
-        ),
+        _bash_runfiles = BASH_RUNFILES_ATTR,
         **_EBUILD_COMMON_ATTRS
     ),
 )
@@ -348,30 +346,19 @@ def _ebuild_test_impl(ctx):
     args, inputs = _compute_build_package_args(ctx, output_path = None)
     args.add("--test")
 
-    # Generate the test runner.
-    ctx.actions.run(
-        executable = ctx.executable._generate_test_runner,
-        arguments = [output_runner_script.path, ctx.executable._build_package.path, args],
-        outputs = [output_runner_script],
+    return wrap_binary_with_args(
+        ctx,
+        out = output_runner_script,
+        binary = ctx.attr._build_package,
+        args = args,
+        runfiles = ctx.runfiles(transitive_files = inputs),
     )
-
-    runfiles = ctx.runfiles(transitive_files = inputs)
-    runfiles = runfiles.merge(ctx.attr._build_package[DefaultInfo].default_runfiles)
-    return [DefaultInfo(
-        files = depset([output_runner_script]),
-        executable = output_runner_script,
-        runfiles = runfiles,
-    )]
 
 ebuild_test = rule(
     implementation = _ebuild_test_impl,
     doc = "Runs ebuild tests.",
     attrs = dict(
-        _generate_test_runner = attr.label(
-            default = ":generate_test_runner",
-            executable = True,
-            cfg = "exec",
-        ),
+        _bash_runfiles = BASH_RUNFILES_ATTR,
         **_EBUILD_COMMON_ATTRS
     ),
     test = True,

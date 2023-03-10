@@ -6,12 +6,6 @@ load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_c
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
 
-sh_binary(
-    name = "create_debug_file",
-    srcs = ["create_debug_file.sh"],
-    visibility = ["//visibility:public"],
-)
-
 rust_library_crate(
     name = "mountsdk",
     data = [
