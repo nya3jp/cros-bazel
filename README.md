@@ -69,13 +69,15 @@ known build issues in some packages:
   ([b/262458823](http://262458823)).
 
 You can inject prebuilt binary packages to bypass building those packages to
-build a base image.
-See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
-for more details.
+build a base image. You can pass `--config=prebuilts/amd64-generic` to do this
+easily.
 
 ```
-$ BOARD=amd64-generic bazel build //:chromiumos_base_image --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2 --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
+$ BOARD=amd64-generic bazel build --config=prebuilts/amd64-generic //:chromiumos_base_image
 ```
+
+See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
+for more details.
 
 ## Directory structure
 
@@ -169,12 +171,20 @@ For every `ebuild` target under `@portage//internal/packages/...`, an associated
 string flag target is defined. You can set a `gs://` URL of a prebuilt binary
 package to inject it.
 
-For example, to build a base image with injecting prebuilt binary packages for
-`chromeos-chrome` and `chromeos-fonts`:
+For example, to inject a prebuilt binary packages for `chromeos-chrome`, you can
+set this option:
 
 ```
-$ BOARD=amd64-generic bazel build //:chromiumos_base_image --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2 --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
+--@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2
 ```
+
+We have several named config groupings in [prebuilts.bazelrc] that define
+typical options to inject prebuilts. You can specify `--config` to use them.
+
+- `--config=prebuilts/amd64-generic`: Injects prebuilt binary packages needed to
+  build amd64-generic images.
+
+[prebuilts.bazelrc]: ./bazelrcs/prebuilts.bazelrc
 
 ### Extracting binary packages
 

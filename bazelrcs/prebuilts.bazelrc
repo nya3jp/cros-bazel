@@ -1,0 +1,3 @@
+# Injects prebuilt binary packages needed to build amd64-generic images.
+common:prebuilts/amd64-generic --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2
+common:prebuilts/amd64-generic --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
