@@ -3,25 +3,43 @@
 # found in the LICENSE file.
 
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageSetInfo", "SDKInfo")
+load("//bazel/ebuild/private:install_deps.bzl", "install_deps")
 
 def _build_image_impl(ctx):
     # Declare outputs.
     output_image_file = ctx.actions.declare_file(ctx.attr.name + ".bin")
     output_log_file = ctx.actions.declare_file(ctx.attr.name + ".log")
 
+    # Install all target dependencies to the SDK.
+    install_set = depset(
+        transitive = [
+            packages[BinaryPackageSetInfo].packages
+            for packages in ctx.attr.target_packages
+        ],
+    )
+    sdk = ctx.attr.sdk[SDKInfo]
+    deps_layers = install_deps(
+        ctx = ctx,
+        output_prefix = ctx.attr.name + "-deps",
+        sdk = sdk,
+        install_set = install_set,
+        executable_action_wrapper = ctx.executable._action_wrapper,
+        executable_install_deps = ctx.executable._install_deps,
+        progress_message = "Setting up SDK to build image",
+    )
+
     # Compute arguments and inputs to build_image.
     args = ctx.actions.args()
     direct_inputs = []
     transitive_inputs = []
 
-    sdk = ctx.attr.sdk[SDKInfo]
     args.add_all([
         "--output=" + output_image_file.path,
         "--board=" + sdk.board,
     ])
 
-    args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(sdk.layers)
+    args.add_all(deps_layers + sdk.layers, format_each = "--layer=%s", expand_directories = False)
+    direct_inputs.extend(deps_layers + sdk.layers)
 
     for overlay in sdk.overlays.overlays:
         args.add("--layer=%s" % overlay.file.path)
@@ -117,6 +135,11 @@ build_image = rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/build_image"),
+        ),
+        _install_deps = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/install_deps"),
         ),
     ),
 )
