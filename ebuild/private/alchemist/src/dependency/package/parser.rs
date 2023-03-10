@@ -5,10 +5,10 @@
 use anyhow::{Error, Result};
 use nom::{
     branch::alt,
-    bytes::complete::{is_not, tag, take_while, take_while1},
+    bytes::complete::{tag, take_while, take_while1},
     character::{complete::multispace0, is_alphanumeric},
     combinator::{eof, map, opt, recognize, value},
-    multi::many0,
+    multi::separated_list1,
     sequence::{delimited, pair},
     IResult,
 };
@@ -25,6 +25,8 @@ use crate::dependency::{
     parser::{DependencyParser, DependencyParserCommon},
     CompositeDependency, Dependency,
 };
+
+use super::PackageUseDependencyOp;
 
 /// Raw regular expression string matching a valid package name.
 pub const PACKAGE_NAME_RE_RAW: &str = r"[A-Za-z0-9_][A-Za-z0-9+_.-]*/[A-Za-z0-9_][A-Za-z0-9+_-]*";
@@ -157,13 +159,79 @@ impl PackageDependencyParser {
         alt((Self::slot_specific, Self::slot_wildcard))(input)
     }
 
+    fn use_item_default(input: &str) -> IResult<&str, bool> {
+        delimited(
+            tag("("),
+            alt((value(true, tag("+")), value(false, tag("-")))),
+            tag(")"),
+        )(input)
+    }
+
     fn use_item(input: &str) -> IResult<&str, PackageUseDependency> {
-        let (input, raw) = is_not("]")(input)?;
-        Ok((input, PackageUseDependency::new(raw.to_owned())))
+        let (input, negate) = opt(tag("-"))(input)?;
+        if negate.is_some() {
+            let (input, (flag, missing_default)) =
+                pair(Self::use_name, opt(Self::use_item_default))(input)?;
+
+            return Ok((
+                input,
+                PackageUseDependency {
+                    negate: true,
+                    flag: flag.to_string(),
+                    op: PackageUseDependencyOp::Required,
+                    missing_default,
+                },
+            ));
+        }
+
+        let (input, not_op) = opt(tag("!"))(input)?;
+        if not_op.is_some() {
+            let (input, (flag, missing_default)) =
+                pair(Self::use_name, opt(Self::use_item_default))(input)?;
+
+            let (input, op) = alt((
+                value(PackageUseDependencyOp::Synchronized, tag("=")),
+                value(PackageUseDependencyOp::ConditionalRequired, tag("?")),
+            ))(input)?;
+
+            return Ok((
+                input,
+                PackageUseDependency {
+                    negate: true,
+                    flag: flag.to_string(),
+                    op,
+                    missing_default,
+                },
+            ));
+        }
+
+        let (input, (flag, missing_default)) =
+            pair(Self::use_name, opt(Self::use_item_default))(input)?;
+
+        let (input, op) = opt(alt((
+            value(PackageUseDependencyOp::Synchronized, tag("=")),
+            value(PackageUseDependencyOp::ConditionalRequired, tag("?")),
+        )))(input)?;
+
+        let op = op.unwrap_or(PackageUseDependencyOp::Required);
+
+        Ok((
+            input,
+            PackageUseDependency {
+                negate: negate.is_some(),
+                flag: flag.to_string(),
+                op,
+                missing_default,
+            },
+        ))
     }
 
     fn uses(input: &str) -> IResult<&str, Vec<PackageUseDependency>> {
-        delimited(tag("["), many0(Self::use_item), tag("]"))(input)
+        delimited(
+            tag("["),
+            separated_list1(tag(","), Self::use_item),
+            tag("]"),
+        )(input)
     }
 
     fn atom(input: &str) -> IResult<&str, PackageAtomDependency> {
@@ -213,5 +281,354 @@ impl DependencyParser<PackageDependency> for PackageDependencyParser {
     fn parse(input: &str) -> Result<PackageDependency> {
         let (_, deps) = Self::full(input).map_err(|err| err.to_owned())?;
         Ok(deps)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::HashMap, str::FromStr};
+
+    use anyhow::Result;
+    use nom::sequence::terminated;
+
+    use crate::dependency::package::PackageUseDependencyOp;
+
+    use super::*;
+
+    #[test]
+    fn test_parse_simple() -> Result<()> {
+        let expr = PackageDependencyParser::parse_atom("sys-apps/systemd-utils")?;
+
+        assert_eq!(
+            expr,
+            PackageAtomDependency {
+                package_name: "sys-apps/systemd-utils".to_owned(),
+                version: None,
+                slot: None,
+                uses: vec![],
+                block: PackageBlock::None
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_version_eq() -> Result<()> {
+        let expr = PackageDependencyParser::parse_atom("=sys-apps/systemd-utils-9999")?;
+
+        assert_eq!(
+            expr,
+            PackageAtomDependency {
+                package_name: "sys-apps/systemd-utils".to_owned(),
+                version: Some(PackageVersionDependency {
+                    op: PackageVersionOp::Equal { wildcard: false },
+                    version: Version::from_str("9999")?,
+                }),
+                slot: None,
+                uses: vec![],
+                block: PackageBlock::None
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_version_eq_wildcard() -> Result<()> {
+        let expr = PackageDependencyParser::parse_atom("=sys-apps/systemd-utils-9*")?;
+
+        assert_eq!(
+            expr,
+            PackageAtomDependency {
+                package_name: "sys-apps/systemd-utils".to_owned(),
+                version: Some(PackageVersionDependency {
+                    op: PackageVersionOp::Equal { wildcard: true },
+                    version: Version::from_str("9")?,
+                }),
+                slot: None,
+                uses: vec![],
+                block: PackageBlock::None
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_slot() -> Result<()> {
+        let expr = PackageDependencyParser::parse_atom("sys-apps/systemd-utils:1")?;
+
+        assert_eq!(
+            expr,
+            PackageAtomDependency {
+                package_name: "sys-apps/systemd-utils".to_owned(),
+                version: None,
+                slot: Some(PackageSlotDependency {
+                    slot: Some(("1".to_owned(), None)),
+                    rebuild_on_slot_change: false,
+                }),
+                uses: vec![],
+                block: PackageBlock::None
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_slot_rebuild() -> Result<()> {
+        let expr = PackageDependencyParser::parse_atom("sys-apps/systemd-utils:1=")?;
+
+        assert_eq!(
+            expr,
+            PackageAtomDependency {
+                package_name: "sys-apps/systemd-utils".to_owned(),
+                version: None,
+                slot: Some(PackageSlotDependency {
+                    slot: Some(("1".to_owned(), None)),
+                    rebuild_on_slot_change: true,
+                }),
+                uses: vec![],
+                block: PackageBlock::None
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_use_item() -> Result<()> {
+        let test_cases = HashMap::from([
+            (
+                "udev",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Required,
+                    missing_default: None,
+                },
+            ),
+            (
+                "-udev",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Required,
+                    missing_default: None,
+                },
+            ),
+            (
+                "udev=",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Synchronized,
+                    missing_default: None,
+                },
+            ),
+            (
+                "!udev=",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Synchronized,
+                    missing_default: None,
+                },
+            ),
+            (
+                "udev?",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::ConditionalRequired,
+                    missing_default: None,
+                },
+            ),
+            (
+                "!udev?",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::ConditionalRequired,
+                    missing_default: None,
+                },
+            ),
+            (
+                "udev(+)",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Required,
+                    missing_default: Some(true),
+                },
+            ),
+            (
+                "-udev(+)",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Required,
+                    missing_default: Some(true),
+                },
+            ),
+            (
+                "udev(+)=",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Synchronized,
+                    missing_default: Some(true),
+                },
+            ),
+            (
+                "!udev(+)=",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Synchronized,
+                    missing_default: Some(true),
+                },
+            ),
+            (
+                "udev(+)?",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::ConditionalRequired,
+                    missing_default: Some(true),
+                },
+            ),
+            (
+                "!udev(+)?",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::ConditionalRequired,
+                    missing_default: Some(true),
+                },
+            ),
+            (
+                "udev(-)",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Required,
+                    missing_default: Some(false),
+                },
+            ),
+            (
+                "-udev(-)",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Required,
+                    missing_default: Some(false),
+                },
+            ),
+            (
+                "udev(-)=",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Synchronized,
+                    missing_default: Some(false),
+                },
+            ),
+            (
+                "!udev(-)=",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::Synchronized,
+                    missing_default: Some(false),
+                },
+            ),
+            (
+                "udev(-)?",
+                PackageUseDependency {
+                    negate: false,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::ConditionalRequired,
+                    missing_default: Some(false),
+                },
+            ),
+            (
+                "!udev(-)?",
+                PackageUseDependency {
+                    negate: true,
+                    flag: "udev".to_owned(),
+                    op: PackageUseDependencyOp::ConditionalRequired,
+                    missing_default: Some(false),
+                },
+            ),
+        ]);
+
+        for (input, expected) in test_cases {
+            let (output, actual) = PackageDependencyParser::use_item(input)?;
+            assert_eq!(0, output.len());
+
+            assert_eq!(expected, actual, "input: {}", input);
+            assert_eq!(input, format!("{}", actual));
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_use_item_invalid() -> Result<()> {
+        let test_cases = vec!["!udev", "-udev=", "-udev?"];
+
+        for input in test_cases {
+            let result = terminated(PackageDependencyParser::use_item, eof)(input);
+            assert!(result.is_err(), "input: {}", input);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_uses() -> Result<()> {
+        let expr = PackageDependencyParser::parse_atom(
+            "sys-apps/systemd-utils[-udev,!selinux(-)=,boot(-)=,sysusers(+)?]",
+        )?;
+
+        assert_eq!(
+            expr,
+            PackageAtomDependency {
+                package_name: "sys-apps/systemd-utils".to_owned(),
+                version: None,
+                slot: None,
+                uses: vec![
+                    PackageUseDependency {
+                        negate: true,
+                        flag: "udev".to_owned(),
+                        op: PackageUseDependencyOp::Required,
+                        missing_default: None,
+                    },
+                    PackageUseDependency {
+                        negate: true,
+                        flag: "selinux".to_owned(),
+                        op: PackageUseDependencyOp::Synchronized,
+                        missing_default: Some(false),
+                    },
+                    PackageUseDependency {
+                        negate: false,
+                        flag: "boot".to_owned(),
+                        op: PackageUseDependencyOp::Synchronized,
+                        missing_default: Some(false),
+                    },
+                    PackageUseDependency {
+                        negate: false,
+                        flag: "sysusers".to_owned(),
+                        op: PackageUseDependencyOp::ConditionalRequired,
+                        missing_default: Some(true),
+                    },
+                ],
+                block: PackageBlock::None
+            }
+        );
+
+        Ok(())
     }
 }

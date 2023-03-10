@@ -75,7 +75,7 @@ pub trait DependencyParserCommon<'i, L> {
     fn use_conditional(input: &'i str) -> IResult<&'i str, Dependency<L>> {
         let (input, negate) = opt(tag("!"))(input)?;
         let expect = negate.is_none();
-        let (input, name) = re_find(USE_NAME_RE.clone())(input)?;
+        let (input, name) = Self::use_name(input)?;
         let (input, _) = tag("?")(input)?;
         let (input, _) = multispace1(input)?;
         let (input, children) = delimited(
@@ -100,5 +100,9 @@ pub trait DependencyParserCommon<'i, L> {
         )(input)?;
         let exprs = exprs.into_iter().collect_vec();
         Ok((input, exprs))
+    }
+
+    fn use_name(input: &'i str) -> IResult<&'i str, &'i str> {
+        re_find(USE_NAME_RE.clone())(input)
     }
 }

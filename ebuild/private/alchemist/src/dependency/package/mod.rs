@@ -110,6 +110,18 @@ impl Display for PackageSlotDependency {
     }
 }
 
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+enum PackageUseDependencyOp {
+    /// The USE flag must be set.
+    Required,
+    /// The target package's USE flag must have the same value as the package
+    /// declaring this dependency.
+    Synchronized,
+    /// The target package's USE flag must be enabled if the package declaring
+    /// this dependency has the flag enabled.
+    ConditionalRequired,
+}
+
 /// Represents a package USE dependency.
 ///
 /// This is a subcomponent of [`PackageAtomDependency`].
@@ -118,13 +130,13 @@ impl Display for PackageSlotDependency {
 /// https://projects.gentoo.org/pms/8/pms.html#x1-830008.3.4
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct PackageUseDependency {
-    raw: String,
-}
-
-impl PackageUseDependency {
-    pub(super) fn new(raw: String) -> Self {
-        Self { raw }
-    }
+    negate: bool,
+    flag: String,
+    op: PackageUseDependencyOp,
+    /// If the target package doesn't declare the USE flag, use the following
+    /// value in the computation. If this is None and the package doesn't
+    /// declare the USE flag, then an error should be reported.
+    missing_default: Option<bool>,
 }
 
 impl Predicate<UseMap> for PackageUseDependency {
@@ -136,7 +148,30 @@ impl Predicate<UseMap> for PackageUseDependency {
 
 impl Display for PackageUseDependency {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", &self.raw)
+        if self.negate {
+            match self.op {
+                PackageUseDependencyOp::Required => write!(f, "-")?,
+                _ => write!(f, "!")?,
+            }
+        }
+
+        write!(f, "{}", &self.flag)?;
+
+        if let Some(default) = self.missing_default {
+            if default {
+                write!(f, "(+)")?;
+            } else {
+                write!(f, "(-)")?;
+            }
+        }
+
+        match self.op {
+            PackageUseDependencyOp::Synchronized => write!(f, "=")?,
+            PackageUseDependencyOp::ConditionalRequired => write!(f, "?")?,
+            _ => {}
+        }
+
+        Ok(())
     }
 }
 
