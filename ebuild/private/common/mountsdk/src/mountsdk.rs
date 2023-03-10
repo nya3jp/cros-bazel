@@ -70,9 +70,8 @@ impl MountedSDK {
 
         std::fs::create_dir_all(&bazel_build_dir.outside)?;
 
-        // TODO: Do not inherit the current environment. It can lead to
-        // unexpected leakage of environment variables.
-        let mut envs: HashMap<String, String> = std::env::vars().collect();
+        // Start with a clean environment.
+        let mut envs: HashMap<String, String> = HashMap::new();
         let mut bind_mounts: Vec<BindMount> = cfg.bind_mounts;
 
         envs.extend([
@@ -103,14 +102,7 @@ impl MountedSDK {
             // We have no idea why, but run_in_container fails on pivot_root(2)
             // for EINVAL if we don't enter a mount namespace in advance.
             // TODO: Investigate the cause.
-            cmd.args([
-                "--preserve-env",
-                "unshare",
-                "--mount",
-                "--",
-                "/usr/bin/env",
-                "-i",
-            ]);
+            cmd.args(["unshare", "--mount", "--", "/usr/bin/env", "-i"]);
             cmd.args(
                 envs.into_iter()
                     .sorted()
