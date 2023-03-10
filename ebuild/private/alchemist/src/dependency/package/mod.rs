@@ -4,7 +4,7 @@
 
 pub mod parser;
 
-use anyhow::{Error, Result};
+use anyhow::{bail, ensure, Error, Result};
 use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
 use version::Version;
@@ -228,6 +228,7 @@ impl Predicate<Version> for PackageVersionDependency {
         match self.op {
             PackageVersionOp::Equal { wildcard } => {
                 if wildcard {
+                    // TODO(b/272798056): Support real wildcards.
                     version.starts_with(&self.version)
                 } else {
                     version == &self.version
@@ -390,5 +391,263 @@ impl Predicate<ThinPackageRef<'_>> for PackageDependencyAtom {
         })();
 
         match_except_block == (self.block == PackageBlock::None)
+    }
+}
+
+/// Represents a package atom.
+///
+/// This should be used when parsing user configuration files or user input.
+///
+/// See the PMS for the specification:
+/// https://projects.gentoo.org/pms/8/pms.html#x1-790008.3
+///
+/// TODO: Do we want to implement simple USE dependencies that don't require a
+/// declaring package to compute? i.e., [udev,-boot]
+///
+/// TODO(b/268153190): Implement repository constraints. i.e., ::portage-stable
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct PackageAtom {
+    package_name: String,
+    version: Option<PackageVersionDependency>,
+    /// Slot and Sub-Slot
+    slot: Option<(String, Option<String>)>,
+}
+
+impl PackageAtom {
+    pub fn package_name(&self) -> &String {
+        &self.package_name
+    }
+
+    pub fn version(&self) -> &Option<PackageVersionDependency> {
+        &self.version
+    }
+
+    pub fn slot(&self) -> &Option<(String, Option<String>)> {
+        &self.slot
+    }
+}
+
+impl FromStr for PackageAtom {
+    type Err = Error;
+
+    /// Parses a package atom string.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // We use the same parser as `PackageDependencyAtom` since `PackageAtom`
+        // is just a subset.
+        let atom = PackageDependencyParser::parse_atom(s)?;
+
+        ensure!(
+            atom.block == PackageBlock::None,
+            "Blockers are invalid in this context."
+        );
+
+        ensure!(
+            atom.uses.is_empty(),
+            "USE constraints are invalid in this context."
+        );
+
+        let slot = if let Some(slot) = atom.slot {
+            ensure!(
+                !slot.rebuild_on_slot_change,
+                "Slot operators are invalid in this context"
+            );
+
+            if let Some(slot) = slot.slot {
+                Some(slot)
+            } else {
+                bail!("Slot name is required");
+            }
+        } else {
+            None
+        };
+
+        Ok(PackageAtom {
+            package_name: atom.package_name,
+            version: atom.version,
+            slot,
+        })
+    }
+}
+
+impl Display for PackageAtom {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(version) = &self.version {
+            write!(f, "{}", version.op)?;
+        }
+        write!(f, "{}", &self.package_name)?;
+        if let Some(version) = &self.version {
+            write!(f, "-{}", version.version)?;
+            if let PackageVersionOp::Equal { wildcard: true } = version.op {
+                write!(f, "*")?;
+            }
+        }
+        if let Some((slot, subslot)) = &self.slot {
+            write!(f, ":{}", slot)?;
+            if let Some(subslot) = subslot {
+                write!(f, "/{}", subslot)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Predicate<PackageRef<'_>> for PackageAtom {
+    fn matches(&self, package: &PackageRef<'_>) -> bool {
+        if package.package_name != self.package_name {
+            return false;
+        }
+        if let Some(p) = &self.version {
+            if !p.matches(package.version) {
+                return false;
+            }
+        }
+        if let Some((slot, subslot)) = &self.slot {
+            if slot != package.slot.main {
+                return false;
+            }
+
+            if let Some(subslot) = subslot {
+                if subslot != package.slot.sub {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::HashMap, str::FromStr};
+
+    use anyhow::Result;
+
+    use super::*;
+
+    #[test]
+    fn test_parse_package_atom() -> Result<()> {
+        let test_cases = HashMap::from([
+            (
+                "sys-apps/systemd-utils",
+                PackageAtom {
+                    package_name: "sys-apps/systemd-utils".to_owned(),
+                    version: None,
+                    slot: None,
+                },
+            ),
+            (
+                "=sys-apps/systemd-utils-9999",
+                PackageAtom {
+                    package_name: "sys-apps/systemd-utils".to_owned(),
+                    version: Some(PackageVersionDependency {
+                        op: PackageVersionOp::Equal { wildcard: false },
+                        version: Version::try_new("9999")?,
+                    }),
+                    slot: None,
+                },
+            ),
+            (
+                "=sys-apps/systemd-utils-1*",
+                PackageAtom {
+                    package_name: "sys-apps/systemd-utils".to_owned(),
+                    version: Some(PackageVersionDependency {
+                        op: PackageVersionOp::Equal { wildcard: true },
+                        version: Version::try_new("1")?,
+                    }),
+                    slot: None,
+                },
+            ),
+            (
+                "~sys-apps/systemd-utils-1",
+                PackageAtom {
+                    package_name: "sys-apps/systemd-utils".to_owned(),
+                    version: Some(PackageVersionDependency {
+                        op: PackageVersionOp::EqualExceptRevision,
+                        version: Version::try_new("1")?,
+                    }),
+                    slot: None,
+                },
+            ),
+            (
+                "sys-apps/systemd-utils:1",
+                PackageAtom {
+                    package_name: "sys-apps/systemd-utils".to_owned(),
+                    version: None,
+                    slot: Some(("1".to_string(), None)),
+                },
+            ),
+            (
+                "sys-apps/systemd-utils:1/2",
+                PackageAtom {
+                    package_name: "sys-apps/systemd-utils".to_owned(),
+                    version: None,
+                    slot: Some(("1".to_string(), Some("2".to_string()))),
+                },
+            ),
+        ]);
+
+        for (input, expected) in test_cases {
+            let actual = PackageAtom::from_str(input)?;
+
+            assert_eq!(expected, actual, "input: {}", input);
+            assert_eq!(input, format!("{}", actual));
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_package_atom_invalid() -> Result<()> {
+        let test_cases = vec![
+            "=sys-apps/systemd-utils",
+            "=sys-apps/systemd-utils-",
+            "sys-apps/systemd-utils:=",
+            "sys-apps/systemd-utils:*",
+            "sys-apps/systemd-utils:1=",
+            "sys-apps/systemd-utils[udev]",
+        ];
+
+        for input in test_cases {
+            let result = PackageAtom::from_str(input);
+
+            assert!(result.is_err(), "input: {}", input);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_package_atom_match() -> Result<()> {
+        let package = PackageRef {
+            package_name: "sys-apps/systemd-utils",
+            version: &Version::try_new("9999")?,
+            slot: Slot {
+                main: "1",
+                sub: "2",
+            },
+            use_map: &UseMap::new(),
+        };
+
+        let test_cases = HashMap::from([
+            ("sys-apps/systemd-utils", true),
+            ("=sys-apps/systemd-utils-9999", true),
+            // TODO(b/272798056): Wildcard matching doesn't quite work right.
+            // ("=sys-apps/systemd-utils-9*", true),
+            ("=sys-apps/systemd-utils-1*", false),
+            ("~sys-apps/systemd-utils-1", false),
+            ("sys-apps/systemd-utils:1", true),
+            ("sys-apps/systemd-utils:2", false),
+            ("sys-apps/systemd-utils:1/2", true),
+            ("sys-apps/systemd-utils:1/4", false),
+        ]);
+
+        for (input, expected) in test_cases {
+            let atom = PackageAtom::from_str(input)?;
+            let actual = atom.matches(&package);
+
+            assert_eq!(expected, actual, "input: {}", input);
+        }
+
+        Ok(())
     }
 }
