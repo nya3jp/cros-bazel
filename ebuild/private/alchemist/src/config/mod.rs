@@ -14,7 +14,7 @@ use version::Version;
 
 use crate::{
     data::Vars,
-    dependency::package::{PackageAtomDependency, ThinPackageRef},
+    dependency::package::{PackageDependencyAtom, ThinPackageRef},
 };
 
 /// Represents a kind of a USE flag update entry.
@@ -42,7 +42,7 @@ pub struct UseUpdateFilter {
     /// If it is [None], the update applies to all packages.
     /// This is unset for configurations such as `use.mask`; set for others
     /// such as `package.use.mask`.
-    pub atom: Option<PackageAtomDependency>,
+    pub atom: Option<PackageDependencyAtom>,
     /// If it is true, this update applies to stable packages only.
     /// This is set for configurations such as `package.use.stable`.
     pub stable_only: bool,
@@ -87,7 +87,7 @@ pub enum PackageMaskKind {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PackageMaskUpdate {
     pub kind: PackageMaskKind,
-    pub atom: PackageAtomDependency,
+    pub atom: PackageDependencyAtom,
 }
 
 /// Represents a package pretended as provided.

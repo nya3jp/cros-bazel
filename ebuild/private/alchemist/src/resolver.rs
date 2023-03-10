@@ -10,7 +10,7 @@ use version::Version;
 
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
-    dependency::{package::PackageAtomDependency, Predicate},
+    dependency::{package::PackageDependencyAtom, Predicate},
     ebuild::{CachedPackageLoader, PackageDetails, Stability},
     repository::RepositorySet,
 };
@@ -55,7 +55,7 @@ impl<'a> PackageResolver<'a> {
     ///
     /// Packages from a lower-priority repository come before packages from a
     /// higher-priority repository.
-    pub fn find_packages(&self, atom: &PackageAtomDependency) -> Result<Vec<Arc<PackageDetails>>> {
+    pub fn find_packages(&self, atom: &PackageDependencyAtom) -> Result<Vec<Arc<PackageDetails>>> {
         let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
 
         let packages = ebuild_paths
@@ -76,7 +76,7 @@ impl<'a> PackageResolver<'a> {
     /// for the package.
     pub fn find_best_package(
         &self,
-        atom: &PackageAtomDependency,
+        atom: &PackageDependencyAtom,
     ) -> Result<Option<Arc<PackageDetails>>> {
         self.find_best_package_in(&self.find_packages(atom)?)
     }
@@ -129,7 +129,7 @@ impl<'a> PackageResolver<'a> {
     /// `package.provided`. This method allows accessing the list.
     pub fn find_provided_packages(
         &self,
-        atom: &'a PackageAtomDependency,
+        atom: &'a PackageDependencyAtom,
     ) -> impl Iterator<Item = &'a ProvidedPackage> {
         self.config
             .provided_packages()

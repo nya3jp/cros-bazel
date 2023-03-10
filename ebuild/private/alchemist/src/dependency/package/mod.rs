@@ -15,7 +15,7 @@ use super::{parser::DependencyParserType, Dependency, Predicate};
 use parser::PackageDependencyParser;
 
 /// Alias of Dependency specialized to package dependencies.
-pub type PackageDependency = Dependency<PackageAtomDependency>;
+pub type PackageDependency = Dependency<PackageDependencyAtom>;
 
 /// A borrowed subset of package data to be passed to package-related predicates.
 #[derive(Clone, Copy, Debug)]
@@ -271,10 +271,12 @@ pub enum PackageBlock {
 
 /// Represents an atom in package dependency specifications.
 ///
+/// This should only be used when parsing DEPEND, RDEPEND, BDEPEND, and PDEPEND.
+///
 /// See the PMS for the specification:
 /// https://projects.gentoo.org/pms/8/pms.html#x1-790008.3
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct PackageAtomDependency {
+pub struct PackageDependencyAtom {
     package_name: String,
     version: Option<PackageVersionDependency>,
     slot: Option<PackageSlotDependency>,
@@ -282,7 +284,7 @@ pub struct PackageAtomDependency {
     block: PackageBlock,
 }
 
-impl PackageAtomDependency {
+impl PackageDependencyAtom {
     /// Constructs a simple atom that consists of a package name only.
     pub fn new_simple(package_name: &str) -> Self {
         Self {
@@ -311,7 +313,7 @@ impl PackageAtomDependency {
     }
 }
 
-impl FromStr for PackageAtomDependency {
+impl FromStr for PackageDependencyAtom {
     type Err = Error;
 
     /// Parses a package dependency atom string.
@@ -320,11 +322,11 @@ impl FromStr for PackageAtomDependency {
     }
 }
 
-impl DependencyParserType<PackageAtomDependency> for PackageAtomDependency {
+impl DependencyParserType<PackageDependencyAtom> for PackageDependencyAtom {
     type Parser = PackageDependencyParser;
 }
 
-impl Display for PackageAtomDependency {
+impl Display for PackageDependencyAtom {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.block)?;
         if let Some(version) = &self.version {
@@ -347,7 +349,7 @@ impl Display for PackageAtomDependency {
     }
 }
 
-impl Predicate<PackageRef<'_>> for PackageAtomDependency {
+impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
     fn matches(&self, package: &PackageRef<'_>) -> bool {
         let match_except_block = (|| {
             if package.package_name != self.package_name {
@@ -373,7 +375,7 @@ impl Predicate<PackageRef<'_>> for PackageAtomDependency {
     }
 }
 
-impl Predicate<ThinPackageRef<'_>> for PackageAtomDependency {
+impl Predicate<ThinPackageRef<'_>> for PackageDependencyAtom {
     fn matches(&self, package: &ThinPackageRef<'_>) -> bool {
         let match_except_block = (|| {
             if package.package_name != self.package_name {

@@ -19,7 +19,7 @@ use version::Version;
 
 use crate::dependency::{
     package::{
-        PackageAtomDependency, PackageBlock, PackageDependency, PackageSlotDependency,
+        PackageBlock, PackageDependency, PackageDependencyAtom, PackageSlotDependency,
         PackageUseDependency, PackageVersionDependency, PackageVersionOp,
     },
     parser::{DependencyParser, DependencyParserCommon},
@@ -49,7 +49,7 @@ static PACKAGE_NAME_WITH_VERSION_RE: Lazy<Regex> = Lazy::new(|| {
 /// Implements the package dependency expression parser.
 pub struct PackageDependencyParser {}
 
-impl<'i> DependencyParserCommon<'i, PackageAtomDependency> for PackageDependencyParser {
+impl<'i> DependencyParserCommon<'i, PackageDependencyAtom> for PackageDependencyParser {
     fn new_all_of(children: Vec<PackageDependency>) -> PackageDependency {
         Dependency::new_composite(CompositeDependency::AllOf { children })
     }
@@ -234,7 +234,7 @@ impl PackageDependencyParser {
         )(input)
     }
 
-    fn atom(input: &str) -> IResult<&str, PackageAtomDependency> {
+    fn atom(input: &str) -> IResult<&str, PackageDependencyAtom> {
         let (input, block) = Self::block(input)?;
         let (input, (package_name, version)) = alt((
             map(Self::package_name_plain, |name| (name, None)),
@@ -246,7 +246,7 @@ impl PackageDependencyParser {
         let (input, uses) = opt(Self::uses)(input)?;
         Ok((
             input,
-            PackageAtomDependency {
+            PackageDependencyAtom {
                 package_name: package_name.to_owned(),
                 version,
                 slot,
@@ -256,7 +256,7 @@ impl PackageDependencyParser {
         ))
     }
 
-    fn full_atom(input: &str) -> IResult<&str, PackageAtomDependency> {
+    fn full_atom(input: &str) -> IResult<&str, PackageDependencyAtom> {
         let (input, atom) = Self::atom(input)?;
         let (input, _) = eof(input)?;
         Ok((input, atom))
@@ -269,7 +269,7 @@ impl PackageDependencyParser {
         Ok((input, Self::new_all_of(children)))
     }
 
-    pub fn parse_atom(input: &str) -> Result<PackageAtomDependency> {
+    pub fn parse_atom(input: &str) -> Result<PackageDependencyAtom> {
         let (_, atom) = PackageDependencyParser::full_atom(input).map_err(|err| err.to_owned())?;
         Ok(atom)
     }
@@ -301,7 +301,7 @@ mod tests {
 
         assert_eq!(
             expr,
-            PackageAtomDependency {
+            PackageDependencyAtom {
                 package_name: "sys-apps/systemd-utils".to_owned(),
                 version: None,
                 slot: None,
@@ -319,7 +319,7 @@ mod tests {
 
         assert_eq!(
             expr,
-            PackageAtomDependency {
+            PackageDependencyAtom {
                 package_name: "sys-apps/systemd-utils".to_owned(),
                 version: Some(PackageVersionDependency {
                     op: PackageVersionOp::Equal { wildcard: false },
@@ -340,7 +340,7 @@ mod tests {
 
         assert_eq!(
             expr,
-            PackageAtomDependency {
+            PackageDependencyAtom {
                 package_name: "sys-apps/systemd-utils".to_owned(),
                 version: Some(PackageVersionDependency {
                     op: PackageVersionOp::Equal { wildcard: true },
@@ -361,7 +361,7 @@ mod tests {
 
         assert_eq!(
             expr,
-            PackageAtomDependency {
+            PackageDependencyAtom {
                 package_name: "sys-apps/systemd-utils".to_owned(),
                 version: None,
                 slot: Some(PackageSlotDependency {
@@ -382,7 +382,7 @@ mod tests {
 
         assert_eq!(
             expr,
-            PackageAtomDependency {
+            PackageDependencyAtom {
                 package_name: "sys-apps/systemd-utils".to_owned(),
                 version: None,
                 slot: Some(PackageSlotDependency {
@@ -595,7 +595,7 @@ mod tests {
 
         assert_eq!(
             expr,
-            PackageAtomDependency {
+            PackageDependencyAtom {
                 package_name: "sys-apps/systemd-utils".to_owned(),
                 version: None,
                 slot: None,

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use alchemist::{dependency::package::PackageAtomDependency, resolver::PackageResolver};
+use alchemist::{dependency::package::PackageDependencyAtom, resolver::PackageResolver};
 use anyhow::Result;
 use colored::Colorize;
 use itertools::Itertools;
 
 pub fn dump_package_main(
     resolver: &PackageResolver,
-    atoms: Vec<PackageAtomDependency>,
+    atoms: Vec<PackageDependencyAtom>,
 ) -> Result<()> {
     for atom in atoms {
         let mut packages = resolver.find_packages(&atom)?;

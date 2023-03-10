@@ -84,7 +84,7 @@ mod tests {
             ConfigNodeValue, PackageMaskKind, PackageMaskUpdate, ProvidedPackage, UseUpdate,
             UseUpdateFilter, UseUpdateKind,
         },
-        dependency::package::PackageAtomDependency,
+        dependency::package::PackageDependencyAtom,
         testutils::write_files,
     };
 
@@ -134,7 +134,7 @@ mod tests {
                     source: dir.join("etc/portage/profile/package.mask"),
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
-                        atom: PackageAtomDependency::from_str("pkg/x").unwrap(),
+                        atom: PackageDependencyAtom::from_str("pkg/x").unwrap(),
                     }]),
                 },
                 ConfigNode {
@@ -142,7 +142,7 @@ mod tests {
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Set,
                         filter: UseUpdateFilter {
-                            atom: Some(PackageAtomDependency::from_str("pkg/x").unwrap()),
+                            atom: Some(PackageDependencyAtom::from_str("pkg/x").unwrap()),
                             stable_only: false,
                         },
                         use_tokens: "foo -bar baz".to_owned(),
@@ -159,7 +159,7 @@ mod tests {
                     source: dir.join("etc/portage/package.mask"),
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
-                        atom: PackageAtomDependency::from_str("pkg/x").unwrap(),
+                        atom: PackageDependencyAtom::from_str("pkg/x").unwrap(),
                     }]),
                 },
                 ConfigNode {
@@ -167,7 +167,7 @@ mod tests {
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Set,
                         filter: UseUpdateFilter {
-                            atom: Some(PackageAtomDependency::from_str("pkg/x").unwrap()),
+                            atom: Some(PackageDependencyAtom::from_str("pkg/x").unwrap()),
                             stable_only: false,
                         },
                         use_tokens: "foo -bar baz".to_owned(),

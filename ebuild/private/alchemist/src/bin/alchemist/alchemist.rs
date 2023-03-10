@@ -15,7 +15,7 @@ use alchemist::{
         bundle::ConfigBundle, profile::Profile, site::SiteSettings, ConfigNode, ConfigNodeValue,
         ConfigSource, PackageMaskKind, PackageMaskUpdate, ProvidedPackage, SimpleConfigSource,
     },
-    dependency::package::PackageAtomDependency,
+    dependency::package::PackageDependencyAtom,
     ebuild::{CachedPackageLoader, PackageLoader},
     fakechroot::enter_fake_chroot,
     repository::RepositorySet,
@@ -185,7 +185,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         Commands::DumpPackage { packages } => {
             let atoms = packages
                 .iter()
-                .map(|raw| raw.parse::<PackageAtomDependency>())
+                .map(|raw| raw.parse::<PackageDependencyAtom>())
                 .collect::<Result<Vec<_>>>()?;
             dump_package_main(&resolver, atoms)?;
         }
