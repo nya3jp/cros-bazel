@@ -7,7 +7,7 @@ use std::{fs::read_to_string, path::Path};
 
 use crate::{
     config::{ConfigNode, ConfigNodeValue, PackageMaskKind, PackageMaskUpdate},
-    dependency::package::PackageDependencyAtom,
+    dependency::package::PackageAtom,
 };
 
 fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<ConfigNode>> {
@@ -43,16 +43,13 @@ fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<Confi
         .enumerate()
         .filter(|(_, line)| !line.is_empty() && !line.starts_with('#'))
     {
-        let atom = line
-            .trim()
-            .parse::<PackageDependencyAtom>()
-            .with_context(|| {
-                format!(
-                    "Failed to load {}: syntax error at line {}",
-                    source.display(),
-                    lineno + 1
-                )
-            })?;
+        let atom = line.trim().parse::<PackageAtom>().with_context(|| {
+            format!(
+                "Failed to load {}: syntax error at line {}",
+                source.display(),
+                lineno + 1
+            )
+        })?;
         updates.push(PackageMaskUpdate { kind, atom })
     }
 
@@ -97,15 +94,15 @@ mod tests {
                     value: ConfigNodeValue::PackageMasks(vec![
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Mask,
-                            atom: PackageDependencyAtom::new_simple("pkg/a"),
+                            atom: PackageAtom::from_str("pkg/a")?,
                         },
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Mask,
-                            atom: PackageDependencyAtom::from_str("=pkg/b-1.0.0").unwrap(),
+                            atom: PackageAtom::from_str("=pkg/b-1.0.0")?,
                         },
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Mask,
-                            atom: PackageDependencyAtom::from_str("pkg/c:3")?,
+                            atom: PackageAtom::from_str("pkg/c:3")?,
                         },
                     ]),
                 },
@@ -114,11 +111,11 @@ mod tests {
                     value: ConfigNodeValue::PackageMasks(vec![
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Unmask,
-                            atom: PackageDependencyAtom::new_simple("pkg/c"),
+                            atom: PackageAtom::from_str("pkg/c")?,
                         },
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Unmask,
-                            atom: PackageDependencyAtom::from_str("=pkg/d-1.0.0").unwrap(),
+                            atom: PackageAtom::from_str("=pkg/d-1.0.0")?,
                         },
                     ]),
                 },
@@ -150,28 +147,28 @@ mod tests {
                     source: dir.join("package.mask/a.conf"),
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
-                        atom: PackageDependencyAtom::from_str("pkg/a").unwrap(),
+                        atom: PackageAtom::from_str("pkg/a").unwrap(),
                     }]),
                 },
                 ConfigNode {
                     source: dir.join("package.mask/b.conf"),
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
-                        atom: PackageDependencyAtom::from_str("pkg/b").unwrap(),
+                        atom: PackageAtom::from_str("pkg/b").unwrap(),
                     }]),
                 },
                 ConfigNode {
                     source: dir.join("package.unmask/c.conf"),
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Unmask,
-                        atom: PackageDependencyAtom::from_str("pkg/c").unwrap(),
+                        atom: PackageAtom::from_str("pkg/c").unwrap(),
                     }]),
                 },
                 ConfigNode {
                     source: dir.join("package.unmask/d.conf"),
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Unmask,
-                        atom: PackageDependencyAtom::from_str("pkg/d").unwrap(),
+                        atom: PackageAtom::from_str("pkg/d").unwrap(),
                     }]),
                 },
             ],

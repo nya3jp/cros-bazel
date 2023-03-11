@@ -10,7 +10,10 @@ use version::Version;
 
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
-    dependency::{package::PackageDependencyAtom, Predicate},
+    dependency::{
+        package::{PackageAtom, PackageDependencyAtom},
+        Predicate,
+    },
     ebuild::{CachedPackageLoader, PackageDetails, Stability},
     repository::RepositorySet,
 };
@@ -51,18 +54,18 @@ impl<'a> PackageResolver<'a> {
         }
     }
 
-    /// Finds all packages matching the specified [`PackageAtomDependency`].
+    /// Finds all packages matching the specified [`PackageAtom`].
     ///
     /// Packages from a lower-priority repository come before packages from a
     /// higher-priority repository.
-    pub fn find_packages(&self, atom: &PackageDependencyAtom) -> Result<Vec<Arc<PackageDetails>>> {
+    pub fn find_packages(&self, atom: &PackageAtom) -> Result<Vec<Arc<PackageDetails>>> {
         let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
 
         let packages = ebuild_paths
             .into_par_iter()
             .map(|ebuild_path| self.loader.load_package(&ebuild_path))
             .filter(|details| match details {
-                Ok(details) => atom.matches(&details.as_package_ref()),
+                Ok(details) => atom.matches(&details.as_thin_package_ref()),
                 Err(_) => true,
             })
             .collect::<Result<Vec<_>>>()?;
@@ -78,7 +81,18 @@ impl<'a> PackageResolver<'a> {
         &self,
         atom: &PackageDependencyAtom,
     ) -> Result<Option<Arc<PackageDetails>>> {
-        self.find_best_package_in(&self.find_packages(atom)?)
+        let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
+
+        let packages = ebuild_paths
+            .into_par_iter()
+            .map(|ebuild_path| self.loader.load_package(&ebuild_path))
+            .filter(|details| match details {
+                Ok(details) => atom.matches(&details.as_package_ref()),
+                Err(_) => true,
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        self.find_best_package_in(&packages)
     }
 
     fn is_allowed_9999_ebuild(&self, package: &PackageDetails) -> bool {

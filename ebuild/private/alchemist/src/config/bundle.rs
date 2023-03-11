@@ -9,10 +9,7 @@ use version::Version;
 
 use crate::{
     data::{IUseMap, Slot, UseMap, Vars},
-    dependency::{
-        package::{PackageRef, ThinPackageRef},
-        Predicate,
-    },
+    dependency::{package::ThinPackageRef, Predicate},
 };
 
 use super::{
@@ -215,7 +212,7 @@ impl ConfigBundle {
     }
 
     /// Returns if a package is masked by package.mask and friends.
-    pub fn is_package_masked(&self, package: &PackageRef) -> bool {
+    pub fn is_package_masked(&self, package: &ThinPackageRef) -> bool {
         let status = self
             .nodes
             .iter()

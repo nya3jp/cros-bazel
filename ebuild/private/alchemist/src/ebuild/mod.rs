@@ -18,7 +18,7 @@ use crate::{
     bash::vars::BashVars,
     config::bundle::ConfigBundle,
     data::{IUseMap, Slot, UseMap},
-    dependency::package::PackageRef,
+    dependency::package::{PackageRef, ThinPackageRef},
     repository::RepositorySet,
 };
 
@@ -109,6 +109,17 @@ impl PackageDetails {
             use_map: &self.use_map,
         }
     }
+
+    pub fn as_thin_package_ref(&self) -> ThinPackageRef {
+        ThinPackageRef {
+            package_name: &self.package_name,
+            version: &self.version,
+            slot: Slot {
+                main: self.slot.main.as_str(),
+                sub: self.slot.sub.as_str(),
+            },
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -158,14 +169,13 @@ impl PackageLoader {
             &iuse_map,
         );
 
-        let masked = self.config.is_package_masked(&PackageRef {
+        let masked = self.config.is_package_masked(&ThinPackageRef {
             package_name: package_name.as_str(),
             version: &metadata.path_info.version,
             slot: Slot {
                 main: &slot.main,
                 sub: &slot.sub,
             },
-            use_map: &use_map,
         });
 
         let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;

@@ -290,17 +290,6 @@ pub struct PackageDependencyAtom {
 }
 
 impl PackageDependencyAtom {
-    /// Constructs a simple atom that consists of a package name only.
-    pub fn new_simple(package_name: &str) -> Self {
-        Self {
-            package_name: package_name.to_owned(),
-            version: None,
-            slot: None,
-            uses: Vec::new(),
-            block: PackageBlock::None,
-        }
-    }
-
     pub fn package_name(&self) -> &str {
         self.package_name.as_ref()
     }
@@ -372,29 +361,6 @@ impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
             }
             if !self.uses.iter().all(|p| p.matches(package.use_map)) {
                 return false;
-            }
-            true
-        })();
-
-        match_except_block == (self.block == PackageBlock::None)
-    }
-}
-
-impl Predicate<ThinPackageRef<'_>> for PackageDependencyAtom {
-    fn matches(&self, package: &ThinPackageRef<'_>) -> bool {
-        let match_except_block = (|| {
-            if package.package_name != self.package_name {
-                return false;
-            }
-            if let Some(p) = &self.version {
-                if !p.matches(package.version) {
-                    return false;
-                }
-            }
-            if let Some(p) = &self.slot {
-                if !p.matches(&package.slot) {
-                    return false;
-                }
             }
             true
         })();
@@ -527,8 +493,8 @@ impl Display for PackageAtom {
     }
 }
 
-impl Predicate<PackageRef<'_>> for PackageAtom {
-    fn matches(&self, package: &PackageRef<'_>) -> bool {
+impl Predicate<ThinPackageRef<'_>> for PackageAtom {
+    fn matches(&self, package: &ThinPackageRef<'_>) -> bool {
         if package.package_name != self.package_name {
             return false;
         }
@@ -654,14 +620,13 @@ mod tests {
 
     #[test]
     fn test_parse_package_atom_match() -> Result<()> {
-        let package = PackageRef {
+        let package = ThinPackageRef {
             package_name: "sys-apps/systemd-utils",
             version: &Version::try_new("9999")?,
             slot: Slot {
                 main: "1",
                 sub: "2",
             },
-            use_map: &UseMap::new(),
         };
 
         let test_cases = HashMap::from([

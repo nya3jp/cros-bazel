@@ -7,7 +7,7 @@ use std::{fs::read_to_string, path::Path};
 
 use crate::{
     config::{ConfigNode, ConfigNodeValue, UseUpdate, UseUpdateFilter, UseUpdateKind},
-    dependency::package::PackageDependencyAtom,
+    dependency::package::PackageAtom,
 };
 
 fn load_wildcard_use_config(
@@ -104,7 +104,7 @@ fn load_package_use_config(
             .split_once(|c: char| c.is_ascii_whitespace())
             .unwrap_or((line, ""));
         let atom = raw_atom
-            .parse::<PackageDependencyAtom>()
+            .parse::<PackageAtom>()
             .with_context(|| format!("Failed to load {}: line {}", source.display(), lineno + 1))?;
         updates.push(UseUpdate {
             kind,
@@ -184,7 +184,7 @@ mod tests {
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Set,
                         filter: UseUpdateFilter {
-                            atom: Some(PackageDependencyAtom::from_str("pkg/a").unwrap()),
+                            atom: Some(PackageAtom::from_str("pkg/a").unwrap()),
                             stable_only: false,
                         },
                         use_tokens: "foo -bar baz".to_owned(),
@@ -217,7 +217,7 @@ mod tests {
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Mask,
                         filter: UseUpdateFilter {
-                            atom: Some(PackageDependencyAtom::from_str("pkg/b").unwrap()),
+                            atom: Some(PackageAtom::from_str("pkg/b").unwrap()),
                             stable_only: false,
                         },
                         use_tokens: "foo -bar baz".to_owned(),
@@ -228,7 +228,7 @@ mod tests {
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Mask,
                         filter: UseUpdateFilter {
-                            atom: Some(PackageDependencyAtom::from_str("pkg/c").unwrap()),
+                            atom: Some(PackageAtom::from_str("pkg/c").unwrap()),
                             stable_only: true,
                         },
                         use_tokens: "foo -bar baz".to_owned(),
@@ -261,7 +261,7 @@ mod tests {
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Force,
                         filter: UseUpdateFilter {
-                            atom: Some(PackageDependencyAtom::from_str("pkg/d").unwrap()),
+                            atom: Some(PackageAtom::from_str("pkg/d").unwrap()),
                             stable_only: false,
                         },
                         use_tokens: "foo -bar baz".to_owned(),
@@ -272,7 +272,7 @@ mod tests {
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Force,
                         filter: UseUpdateFilter {
-                            atom: Some(PackageDependencyAtom::from_str("pkg/e").unwrap()),
+                            atom: Some(PackageAtom::from_str("pkg/e").unwrap()),
                             stable_only: true,
                         },
                         use_tokens: "foo -bar baz".to_owned(),
