@@ -41,6 +41,14 @@ _EBUILD_COMMON_ATTRS = dict(
         """,
         providers = [EbuildLibraryInfo],
     ),
+    allow_network_access = attr.bool(
+        default = False,
+        doc = """
+        Allows the build process to access the network. This should be True only
+        when the package explicitly requests network access, e.g.
+        RESTRICT=network-sandbox.
+        """,
+    ),
     sdk = attr.label(
         providers = [SDKInfo],
         mandatory = True,
@@ -127,6 +135,10 @@ def _compute_build_package_args(ctx, output_path):
     # --git-tree
     args.add_all(ctx.files.git_trees, format_each = "--git-tree=%s")
     direct_inputs.extend(ctx.files.git_trees)
+
+    # --allow-network-access
+    if ctx.attr.allow_network_access:
+        args.add("--allow-network-access")
 
     # Consume interface libraries.
     interface_library_inputs = add_interface_library_args(

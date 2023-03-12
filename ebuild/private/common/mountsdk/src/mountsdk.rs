@@ -31,6 +31,10 @@ pub struct Config {
     pub bind_mounts: Vec<BindMount>,
     pub envs: HashMap<String, String>,
 
+    /// If set to true, allows network access. This flag should be used only
+    /// when it's absolutely needed since it reduces hermeticity.
+    pub allow_network_access: bool,
+
     /// If set to true, runs a privileged container.
     pub privileged: bool,
 
@@ -134,6 +138,10 @@ impl MountedSDK {
         serialized_config.serialize_to(&serialized_path)?;
         cmd.arg("--cfg").arg(&serialized_path);
 
+        if cfg.allow_network_access {
+            cmd.arg("--allow-network-access");
+        }
+
         let setup_script_path = bazel_build_dir.join("setup.sh");
         std::fs::copy(
             r.rlocation("cros/bazel/ebuild/private/common/mountsdk/setup.sh"),
@@ -229,6 +237,7 @@ mod tests {
                 },
             ],
             envs: HashMap::new(),
+            allow_network_access: false,
             privileged: false,
             login_mode: Never,
         };

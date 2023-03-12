@@ -36,6 +36,11 @@ struct Cli {
     #[arg(long, required = true)]
     cfg: PathBuf,
 
+    /// Allows network access. This flag should be used only when it's
+    /// absolutely needed since it reduces hermeticity.
+    #[arg(long)]
+    allow_network_access: bool,
+
     /// Enters a privileged container. In order for this flag to work, the
     /// calling process must have privileges (e.g. root).
     #[arg(long)]
@@ -55,9 +60,13 @@ pub fn main() -> Result<()> {
 
     if !args.already_in_namespace {
         fix_runfiles_env()?;
-        enter_namespace(args.privileged)?
+        enter_namespace(args.allow_network_access, args.privileged)?
     } else {
-        continue_namespace(RunInContainerConfig::deserialize_from(&args.cfg)?, args.cmd)?
+        continue_namespace(
+            RunInContainerConfig::deserialize_from(&args.cfg)?,
+            args.cmd,
+            args.allow_network_access,
+        )?
     }
     Ok(())
 }
@@ -118,21 +127,22 @@ fn fix_runfiles_env() -> Result<()> {
     Ok(())
 }
 
-fn enter_namespace(privileged: bool) -> Result<()> {
+fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<()> {
     let r = runfiles::Runfiles::create()?;
     let dumb_init_path = r.rlocation("dumb_init/file/downloaded");
 
     // Enter a new namespace.
-    const UNSHARE_FLAGS: CloneFlags = CloneFlags::CLONE_NEWNS
-        .union(CloneFlags::CLONE_NEWPID)
-        .union(CloneFlags::CLONE_NEWNET)
-        .union(CloneFlags::CLONE_NEWIPC);
+    let mut unshare_flags =
+        CloneFlags::CLONE_NEWNS | CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWIPC;
+    if !allow_network_access {
+        unshare_flags |= CloneFlags::CLONE_NEWNET;
+    }
     if privileged {
-        unshare(UNSHARE_FLAGS).with_context(|| "Failed to create a privileged container")?;
+        unshare(unshare_flags).with_context(|| "Failed to create a privileged container")?;
     } else {
         let uid = getuid();
         let gid = getgid();
-        unshare(CloneFlags::CLONE_NEWUSER | UNSHARE_FLAGS)
+        unshare(CloneFlags::CLONE_NEWUSER | unshare_flags)
             .with_context(|| "Failed to create an unprivileged container")?;
         std::fs::write("/proc/self/setgroups", "deny")
             .with_context(|| "Writing /proc/self/setgroups")?;
@@ -172,16 +182,22 @@ fn enter_namespace(privileged: bool) -> Result<()> {
     unreachable!();
 }
 
-fn continue_namespace(cfg: RunInContainerConfig, cmd: Vec<String>) -> Result<()> {
+fn continue_namespace(
+    cfg: RunInContainerConfig,
+    cmd: Vec<String>,
+    allow_network_access: bool,
+) -> Result<()> {
     let stage_dir = cfg.staging_dir.absolutize()?;
 
-    // Enable the loopback networking.
-    if !Command::new("/usr/sbin/ifconfig")
-        .args(["lo", "up"])
-        .status()?
-        .success()
-    {
-        bail!("Failed to run ifconfig in container");
+    if !allow_network_access {
+        // Enable the loopback networking.
+        if !Command::new("/usr/sbin/ifconfig")
+            .args(["lo", "up"])
+            .status()?
+            .success()
+        {
+            bail!("Failed to run ifconfig in container");
+        }
     }
 
     // We keep all the directories in the stage dir to keep relative file paths short.

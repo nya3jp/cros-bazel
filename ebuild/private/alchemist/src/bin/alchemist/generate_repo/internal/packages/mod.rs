@@ -11,7 +11,11 @@ use std::{
     sync::Arc,
 };
 
-use alchemist::{analyze::source::PackageLocalSource, ebuild::PackageDetails};
+use alchemist::{
+    analyze::{restrict::analyze_restricts, source::PackageLocalSource},
+    dependency::restrict::RestrictAtom,
+    ebuild::PackageDetails,
+};
 use anyhow::Result;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -51,6 +55,7 @@ pub struct EBuildEntry {
     build_deps: Vec<String>,
     runtime_deps: Vec<String>,
     install_set: Vec<String>,
+    allow_network_access: bool,
     uses: String,
     sdk: String,
 }
@@ -118,6 +123,9 @@ impl EBuildEntry {
 
         let install_set = format_dependencies(&package.install_set)?;
 
+        let restricts = analyze_restricts(&package.details)?;
+        let allow_network_access = restricts.contains(&RestrictAtom::NetworkSandbox);
+
         let uses = package
             .details
             .use_map
@@ -148,6 +156,7 @@ impl EBuildEntry {
             build_deps,
             runtime_deps,
             install_set,
+            allow_network_access,
             uses,
             sdk,
         })

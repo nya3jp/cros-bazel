@@ -52,6 +52,10 @@ ebuild(
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":{{ ebuild.version }}_deps",
+    {%- if ebuild.allow_network_access %}
+    # This ebuild declares RESTRICT="network-sandbox".
+    allow_network_access = True,
+    {%- endif %}
     prebuilt = ":{{ ebuild.version }}_prebuilt",
     visibility = ["//visibility:public"],
 )
@@ -88,6 +92,10 @@ ebuild_debug(
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":{{ ebuild.version }}_deps",
+    {%- if ebuild.allow_network_access %}
+    # This ebuild declares RESTRICT="network-sandbox".
+    allow_network_access = True,
+    {%- endif %}
     visibility = ["//:__subpackages__"],
 )
 
@@ -123,6 +131,10 @@ ebuild_test(
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":{{ ebuild.version }}_deps",
+    {%- if ebuild.allow_network_access %}
+    # This ebuild declares RESTRICT="network-sandbox".
+    allow_network_access = True,
+    {%- endif %}
     visibility = ["//:__subpackages__"],
 )
 

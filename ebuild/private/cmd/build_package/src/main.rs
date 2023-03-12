@@ -43,6 +43,9 @@ struct Cli {
     )]
     sysroot_file: Vec<SysrootFileSpec>,
 
+    #[arg(long, help = "Allows network access during build")]
+    allow_network_access: bool,
+
     #[arg(long)]
     test: bool,
 }
@@ -181,6 +184,10 @@ fn main() -> Result<()> {
             mount_path: PathBuf::from("/var/cache/trees")
                 .join(file.file_name().expect("path to contain file name")),
         })
+    }
+
+    if args.allow_network_access {
+        cfg.allow_network_access = true;
     }
 
     let target_packages_dir: PathBuf = ["/build", &cfg.board, "packages"].iter().collect();
