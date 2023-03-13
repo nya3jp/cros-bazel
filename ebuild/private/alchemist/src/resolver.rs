@@ -134,6 +134,6 @@ impl<'a> PackageResolver<'a> {
         self.config
             .provided_packages()
             .iter()
-            .filter(|provided| atom.matches(&provided.as_thin_package_ref()))
+            .filter(|provided| atom.matches(provided))
     }
 }

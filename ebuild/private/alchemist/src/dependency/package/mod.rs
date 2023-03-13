@@ -9,7 +9,10 @@ use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
 use version::Version;
 
-use crate::data::{Slot, UseMap};
+use crate::{
+    config::ProvidedPackage,
+    data::{Slot, UseMap},
+};
 
 use super::{parser::DependencyParserType, Dependency, Predicate};
 use parser::PackageDependencyParser;
@@ -384,6 +387,33 @@ impl Predicate<ThinPackageRef<'_>> for PackageDependencyAtom {
             }
             if let Some(p) = &self.version {
                 if !p.matches(package.version) {
+                    return false;
+                }
+            }
+            true
+        })();
+
+        match_except_block == (self.block == PackageBlock::None)
+    }
+}
+
+impl Predicate<&ProvidedPackage> for PackageDependencyAtom {
+    /// Checks is the [`ProvidedPackage`] matches the `atom`.
+    ///
+    /// A ProvidedPackage only contains a package_name and a version. This
+    /// unfortunately means we can't match against `slot` or `USE` dependencies.
+    /// These constraints are ignored when matching against a provided package.
+    ///
+    /// Due to these limitations, the EAPI7 has deprecated and strongly
+    /// discourages the use of package.provided.
+    fn matches(&self, package: &&ProvidedPackage) -> bool {
+        let match_except_block = (|| {
+            if package.package_name != self.package_name {
+                return false;
+            }
+
+            if let Some(p) = &self.version {
+                if !p.matches(&package.version) {
                     return false;
                 }
             }

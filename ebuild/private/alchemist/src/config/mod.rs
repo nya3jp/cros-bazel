@@ -12,10 +12,7 @@ use std::path::{Path, PathBuf};
 
 use version::Version;
 
-use crate::{
-    data::Vars,
-    dependency::package::{PackageDependencyAtom, ThinPackageRef},
-};
+use crate::{data::Vars, dependency::package::PackageDependencyAtom};
 
 /// Represents a kind of a USE flag update entry.
 ///
@@ -98,15 +95,6 @@ pub struct PackageMaskUpdate {
 pub struct ProvidedPackage {
     pub package_name: String,
     pub version: Version,
-}
-
-impl ProvidedPackage {
-    pub fn as_thin_package_ref(&self) -> ThinPackageRef<'_> {
-        ThinPackageRef {
-            package_name: &self.package_name,
-            version: &self.version,
-        }
-    }
 }
 
 /// Configurations provided by a [`ConfigNode`].
