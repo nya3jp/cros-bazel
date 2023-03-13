@@ -1,3 +1,17 @@
-# Injects prebuilt binary packages needed to build amd64-generic images.
+# This file defines named config groups to inject prebuilt binary packages to
+# workaround known package build failures/slowness.
+#
+# Example usage:
+#   BOARD=amd64-generic bazel build --config=prebuilts/amd64-generic ...
+
+### arm64-generic
+common:prebuilts/arm64-generic --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2
+common:prebuilts/arm64-generic --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/arm64-generic/postsubmit-R107-15066.0.0-38990-8804972997102079969/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
+
+### amd64-generic
 common:prebuilts/amd64-generic --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2
 common:prebuilts/amd64-generic --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
+
+### eve
+# Unfortunately we don't have a prebuilt for chromeos-base/chromeos-chrome.
+common:prebuilts/eve --@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-fonts:0.0.1-r52_prebuilt=gs://chromeos-prebuilt/board/eve/full-R107-15065.0.0-rc1/packages/chromeos-base/chromeos-fonts-0.0.1-r52.tbz2
