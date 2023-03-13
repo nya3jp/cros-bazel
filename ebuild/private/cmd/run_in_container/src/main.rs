@@ -88,7 +88,10 @@ pub fn main() -> Result<()> {
 /// been passed in by bazel.
 fn resolve_layer_source_path(input_path: &Path) -> Result<PathBuf> {
     // Resolve the symlink so we always return an absolute path.
-    let info = std::fs::symlink_metadata(input_path)?;
+    let info = std::fs::symlink_metadata(input_path).context(format!(
+        "failed to get the metadata of a layer {:?}",
+        input_path
+    ))?;
     if info.is_symlink() {
         return Ok(std::fs::read_link(input_path)?);
     } else if !info.is_dir() {
@@ -357,7 +360,10 @@ fn continue_namespace(
 
         // When bind-mounting, the destination must exist.
         if !target.try_exists()? {
-            let info = std::fs::metadata(&source)?;
+            let info = std::fs::metadata(&source).context(format!(
+                "failed to get the metadata of a bind-mount source {:?}",
+                source
+            ))?;
             if info.is_dir() {
                 dir_builder.create(&target)?;
             } else {
