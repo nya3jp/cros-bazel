@@ -10,6 +10,12 @@ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
 
+def _format_file_arg_for_test(file):
+    return "--file=%s=%%runfiles/cros/%s" % (relative_path_in_package(file), file.short_path)
+
+def _format_layer_arg_for_test(layer):
+    return "--layer=%%runfiles/cros/%s" % layer.short_path
+
 # Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
 _EBUILD_COMMON_ATTRS = dict(
     ebuild = attr.label(
@@ -71,7 +77,8 @@ _EBUILD_COMMON_ATTRS = dict(
     ),
 )
 
-def _compute_build_package_args(ctx, output_path):
+# TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
+def _compute_build_package_args(ctx, output_path, for_test = False):
     """
     Computes the arguments to pass to build_package.
 
@@ -83,6 +90,7 @@ def _compute_build_package_args(ctx, output_path):
         ctx: ctx: A context objected passed to the rule implementation.
         output_path: Optional[str]: A file path where an output binary package
             file is saved. If None, a binary package file is not saved.
+        for_test: True when called by _ebuild_test_impl.
 
     Returns:
         (args, inputs) where:
@@ -103,11 +111,18 @@ def _compute_build_package_args(ctx, output_path):
     ebuild_inside_path = ctx.file.ebuild.path.removeprefix(
         ctx.file.ebuild.owner.workspace_root + "/",
     ).removeprefix("internal/packages/")
-    args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
+    if for_test:
+        args.add("--ebuild=%s=%%runfiles/cros/%s" % (ebuild_inside_path, ctx.file.ebuild.short_path))
+    else:
+        args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
+    direct_inputs.append(ctx.file.ebuild)
 
     # --file
     for file in ctx.attr.files:
-        args.add_all(file.files, map_each = _format_file_arg)
+        if for_test:
+            args.add_all(file.files, map_each = _format_file_arg_for_test)
+        else:
+            args.add_all(file.files, map_each = _format_file_arg)
         transitive_inputs.append(file.files)
 
     # --distfile
@@ -116,21 +131,33 @@ def _compute_build_package_args(ctx, output_path):
         if len(files) != 1:
             fail("cannot refer to multi-file rule in distfiles")
         file = files[0]
-        args.add("--distfile=%s=%s" % (distfile_name, file.path))
+        if for_test:
+            args.add("--distfile=%s=%%runfiles/cros/%s" % (distfile_name, file.short_path))
+        else:
+            args.add("--distfile=%s=%s" % (distfile_name, file.path))
         direct_inputs.append(file)
 
     # --layer for SDK
-    args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
+    if for_test:
+        args.add_all(sdk.layers, map_each = _format_layer_arg_for_test, expand_directories = False)
+    else:
+        args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(sdk.layers)
 
     # --layer for overlays
     for overlay in sdk.overlays.overlays:
-        args.add("--layer=%s" % overlay.file.path)
+        if for_test:
+            args.add("--layer=%%runfiles/cros/%s" % overlay.file.short_path)
+        else:
+            args.add("--layer=%s" % overlay.file.path)
         direct_inputs.append(overlay.file)
 
     # --layer for source code
     for file in ctx.files.srcs:
-        args.add("--layer=%s" % file.path)
+        if for_test:
+            args.add("--layer=%%runfiles/cros/%s" % file.short_path)
+        else:
+            args.add("--layer=%s" % file.path)
         direct_inputs.append(file)
 
     # --git-tree
@@ -343,7 +370,7 @@ def _ebuild_test_impl(ctx):
     output_runner_script = ctx.actions.declare_file(src_basename + "_test.sh")
 
     # Compute arguments and inputs to build_package.
-    args, inputs = _compute_build_package_args(ctx, output_path = None)
+    args, inputs = _compute_build_package_args(ctx, output_path = None, for_test = True)
     args.add("--test")
 
     return wrap_binary_with_args(

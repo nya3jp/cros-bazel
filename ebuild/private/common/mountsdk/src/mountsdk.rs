@@ -128,7 +128,18 @@ impl MountedSDK {
 
         let layer_paths: Vec<PathBuf> = [root_dir.outside.clone()]
             .into_iter()
-            .chain(cfg.layer_paths)
+            .chain(cfg.layer_paths.into_iter().map(
+                |layer|
+                // Convert the path to an absolute path if it's a runfile path prefixed with
+                // "%runfiles/".
+                // TODO(b/269558613): Fix all call sites to always use runfile paths and delete this
+                // hack.
+                if let Ok(path) = layer.strip_prefix("%runfiles") {
+                    r.rlocation(path)
+                } else {
+                    layer
+                }
+            ))
             .collect();
         let serialized_config = RunInContainerConfig {
             staging_dir: scratch_dir,
