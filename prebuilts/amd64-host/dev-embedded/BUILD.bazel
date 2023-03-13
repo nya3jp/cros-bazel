@@ -13,3 +13,13 @@ binary_package(
     }),
     visibility = ["//visibility:public"],
 )
+
+# Needed for chromeos-ec
+binary_package(
+    name = "coreboot-sdk",
+    src = select({
+        "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_03_04_201551_dev_embedded_coreboot_sdk_0_0_1_r119//file",
+        "//conditions:default": "@amd64_host_coreboot_sdk_0_0_1_r116//file",
+    }),
+    visibility = ["//visibility:public"],
+)

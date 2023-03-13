@@ -151,6 +151,12 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-embedded/hps-sdk-0.0.1-r4.tbz2"],
     )
     http_file(
+        name = "amd64_host_coreboot_sdk_0_0_1_r116",
+        downloaded_file_path = "coreboot-sdk-0.0.1-r116.tbz2",
+        sha256 = "a9f4e06058918a201a5aa5a9ab55be2ae9695e4ec47a731633fc92442a10cdaf",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/dev-embedded/coreboot-sdk-0.0.1-r116.tbz2"],
+    )
+    http_file(
         name = "amd64_host_xcb_proto_1_14_1",
         downloaded_file_path = "xcb-proto-1.14.1.tbz2",
         sha256 = "848f74ec91f249c11ca462729ede8136190e8fbdce647782c8d0b2fd2531a2f9",
@@ -307,6 +313,12 @@ def prebuilts_dependencies():
         downloaded_file_path = "hps-sdk-0.0.1-r5.tbz2",
         sha256 = "37c1f6863b117dfc7b5f60f12f2bd83670beb834a5edcf4d1b091ebff18d4831",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-embedded/hps-sdk-0.0.1-r5.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_dev_embedded_coreboot_sdk_0_0_1_r119",
+        downloaded_file_path = "coreboot-sdk-0.0.1-r119",
+        sha256 = "029f59e647d8f00654dff0e5333a93c2a3aa98c29f6b3adf3fc203340a8f8066",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-embedded/coreboot-sdk-0.0.1-r119.tbz2"],
     )
     http_file(
         name = "amd64_host_2023_03_04_201551_dev_lang_rust_1_67_1",
