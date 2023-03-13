@@ -84,7 +84,7 @@ mod tests {
         write_files(
             dir,
             [
-                ("package.mask", "pkg/a\n=pkg/b-1.0.0"),
+                ("package.mask", "pkg/a\n=pkg/b-1.0.0\npkg/c:3"),
                 ("package.unmask", "pkg/c\n=pkg/d-1.0.0"),
             ],
         )?;
@@ -102,6 +102,10 @@ mod tests {
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Mask,
                             atom: PackageDependencyAtom::from_str("=pkg/b-1.0.0").unwrap(),
+                        },
+                        PackageMaskUpdate {
+                            kind: PackageMaskKind::Mask,
+                            atom: PackageDependencyAtom::from_str("pkg/c:3")?,
                         },
                     ]),
                 },

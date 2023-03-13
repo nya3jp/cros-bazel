@@ -8,7 +8,7 @@ use itertools::Itertools;
 use version::Version;
 
 use crate::{
-    data::{IUseMap, UseMap, Vars},
+    data::{IUseMap, Slot, UseMap, Vars},
     dependency::{
         package::{PackageRef, ThinPackageRef},
         Predicate,
@@ -175,11 +175,16 @@ impl ConfigBundle {
         package_name: &str,
         version: &Version,
         stable: bool,
+        slot: &Slot<String>,
         ebuild_iuse_map: &IUseMap,
     ) -> UseMap {
         let package = &ThinPackageRef {
             package_name,
             version,
+            slot: Slot {
+                main: slot.main.as_ref(),
+                sub: slot.sub.as_ref(),
+            },
         };
 
         let effective_iuse_map = self.compute_effective_iuse_map(ebuild_iuse_map);

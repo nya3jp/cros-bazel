@@ -154,6 +154,7 @@ impl PackageLoader {
             &package_name,
             &metadata.path_info.version,
             stable,
+            &slot,
             &iuse_map,
         );
 

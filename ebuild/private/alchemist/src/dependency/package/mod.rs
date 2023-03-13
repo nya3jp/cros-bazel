@@ -36,14 +36,15 @@ impl AsRef<UseMap> for PackageRef<'_> {
 }
 
 /// Similar to [`PackageRef`], but it contains an even smaller subset of fields
-/// that are available before evaluating ebuild metadata.
+/// that are available before computing package USE flags.
 ///
 /// We use this struct to work with package dependency atoms evaluated before
-/// package metadata generation, e.g. on processing `package.use`.
+/// computing package USE flags, e.g. on processing `package.use`.
 #[derive(Clone, Copy, Debug)]
 pub struct ThinPackageRef<'a> {
     pub package_name: &'a str,
     pub version: &'a Version,
+    pub slot: Slot<&'a str>,
 }
 
 /// Represents a package SLOT dependency.
@@ -387,6 +388,11 @@ impl Predicate<ThinPackageRef<'_>> for PackageDependencyAtom {
             }
             if let Some(p) = &self.version {
                 if !p.matches(package.version) {
+                    return false;
+                }
+            }
+            if let Some(p) = &self.slot {
+                if !p.matches(&package.slot) {
                     return false;
                 }
             }
