@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use crate::control::ControlChannel;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use itertools::Itertools;
 use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
@@ -13,6 +13,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use strum_macros::EnumString;
 use tempfile::{tempdir, TempDir};
+
+const SUDO_PATH: &str = "/usr/bin/sudo";
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumString, strum_macros::Display)]
 #[strum(serialize_all = "kebab-case")]
@@ -102,7 +104,8 @@ impl MountedSDK {
         envs.extend(cfg.envs);
 
         let mut cmd = if cfg.privileged {
-            let mut cmd = Command::new("/usr/bin/sudo");
+            ensure_passwordless_sudo()?;
+            let mut cmd = Command::new(SUDO_PATH);
             // We have no idea why, but run_in_container fails on pivot_root(2)
             // for EINVAL if we don't enter a mount namespace in advance.
             // TODO: Investigate the cause.
@@ -199,6 +202,18 @@ impl Drop for MountedSDK {
             fileutil::remove_dir_all_with_chmod(self.tmp_dir.path()).unwrap()
         }
     }
+}
+
+fn ensure_passwordless_sudo() -> Result<()> {
+    let status = Command::new(SUDO_PATH)
+        .args(["-n", "true"])
+        .status()
+        .context("Failed to run sudo")?;
+    ensure!(
+        status.success(),
+        "Failed to run sudo without password; run \"sudo true\" and try again"
+    );
+    Ok(())
 }
 
 #[cfg(test)]
