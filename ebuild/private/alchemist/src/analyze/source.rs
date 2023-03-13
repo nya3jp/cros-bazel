@@ -3,9 +3,7 @@
 // found in the LICENSE file.
 
 use crate::{
-    bash::expr::BashExpr,
-    config::bundle::ConfigBundle,
-    dependency::restrict::{RestrictAtom, RestrictDependency},
+    bash::expr::BashExpr, config::bundle::ConfigBundle, dependency::restrict::RestrictAtom,
 };
 use anyhow::{ensure, Context};
 use std::{
@@ -31,6 +29,8 @@ use crate::{
     },
     ebuild::PackageDetails,
 };
+
+use super::restrict::analyze_restricts;
 
 /// Represents a chrome version number
 /// i.e., 113.0.5623.0
@@ -353,15 +353,6 @@ fn parse_uri_dependencies(deps: UriDependency, use_map: &UseMap) -> Result<Vec<U
     parse_simplified_dependency(deps)
 }
 
-fn parse_restrict_dependencies(
-    deps: RestrictDependency,
-    use_map: &UseMap,
-) -> Result<Vec<RestrictAtom>> {
-    let deps = elide_use_conditions(deps, use_map).unwrap_or_default();
-    let deps = simplify(deps);
-    parse_simplified_dependency(deps)
-}
-
 struct DistEntry {
     pub filename: String,
     pub size: u64,
@@ -431,16 +422,14 @@ fn extract_remote_sources(
     config: &ConfigBundle,
     details: &PackageDetails,
 ) -> Result<Vec<PackageDistSource>> {
-    let restrict = details.vars.get_scalar_or_default("RESTRICT")?;
-    let restrict_deps = restrict.parse::<RestrictDependency>()?;
-    let restrict_atoms = parse_restrict_dependencies(restrict_deps, &details.use_map)?;
+    let restricts = analyze_restricts(details)?;
 
     // TODO: We should read the FEATURES field from the portage config and check
     // for `mirror` and `force-mirror`. For our purposes we always want
     // force-mirror so let's just hard code it for now.
     let force_mirror = true;
 
-    let use_mirror = force_mirror && !restrict_atoms.contains(&RestrictAtom::Mirror);
+    let use_mirror = force_mirror && !restricts.contains(&RestrictAtom::Mirror);
 
     let mirrors = if use_mirror {
         let mirrors = config

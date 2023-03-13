@@ -3,4 +3,5 @@
 // found in the LICENSE file.
 
 pub mod dependency;
+pub mod restrict;
 pub mod source;

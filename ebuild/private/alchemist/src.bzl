@@ -5,6 +5,7 @@ ALCHEMIST_SRCS = [
     Label("//:Cargo.toml"),
     Label("//bazel/ebuild/private/alchemist:src/analyze/dependency.rs"),
     Label("//bazel/ebuild/private/alchemist:src/analyze/mod.rs"),
+    Label("//bazel/ebuild/private/alchemist:src/analyze/restrict.rs"),
     Label("//bazel/ebuild/private/alchemist:src/analyze/source.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bash/expr/eval.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bash/expr/mod.rs"),
