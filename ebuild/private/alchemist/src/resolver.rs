@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::sync::Arc;
@@ -10,6 +10,7 @@ use version::Version;
 
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
+    data::UseMap,
     dependency::{
         package::{PackageAtom, PackageDependencyAtom},
         Predicate,
@@ -74,11 +75,17 @@ impl<'a> PackageResolver<'a> {
 
     /// Finds a package best matching the specified [`PackageAtomDependency`].
     ///
+    /// # Arguments
+    ///
+    /// * `use_map` - The [`UseMap`] for the package that specified the `atom`.
+    /// * `atom` - The `atom` used to filter the packages.
+    ///
     /// If Ok(None) is returned that means that no suitable packages were found.
     /// If Err(_) is returned, that means there was an unexpected error looking
     /// for the package.
     pub fn find_best_package(
         &self,
+        use_map: &UseMap,
         atom: &PackageDependencyAtom,
     ) -> Result<Option<Arc<PackageDetails>>> {
         let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
@@ -86,13 +93,28 @@ impl<'a> PackageResolver<'a> {
         let packages = ebuild_paths
             .into_par_iter()
             .map(|ebuild_path| self.loader.load_package(&ebuild_path))
-            .filter(|details| match details {
-                Ok(details) => atom.matches(&details.as_package_ref()),
-                Err(_) => true,
-            })
             .collect::<Result<Vec<_>>>()?;
 
-        self.find_best_package_in(&packages)
+        let mut matches = Vec::with_capacity(packages.len());
+        for details in packages {
+            match atom.package_matches(use_map, &details.as_package_ref()) {
+                Ok(result) => {
+                    if result {
+                        matches.push(details);
+                    }
+                }
+                // We don't use with_context because we want to manually format
+                // the error.
+                Err(err) => bail!(
+                    "target: {}-{}: {}",
+                    details.package_name,
+                    details.version,
+                    err
+                ),
+            }
+        }
+
+        self.find_best_package_in(&matches)
     }
 
     fn is_allowed_9999_ebuild(&self, package: &PackageDetails) -> bool {

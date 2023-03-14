@@ -4,7 +4,7 @@
 
 pub mod parser;
 
-use anyhow::{bail, ensure, Error, Result};
+use anyhow::{bail, ensure, Context, Error, Result};
 use itertools::Itertools;
 use std::{fmt::Display, str::FromStr};
 use version::Version;
@@ -143,10 +143,43 @@ pub struct PackageUseDependency {
     missing_default: Option<bool>,
 }
 
-impl Predicate<UseMap> for PackageUseDependency {
-    fn matches(&self, _uses: &UseMap) -> bool {
-        // TODO: Implement USE dependencies.
-        true
+impl PackageUseDependency {
+    fn matches(&self, source_use_map: &UseMap, target_use_map: &UseMap) -> Result<bool> {
+        let target_value = target_use_map
+            .get(&self.flag)
+            .copied()
+            .or(self.missing_default)
+            .with_context(|| {
+                format!(
+                    "Target is missing '{}' USE flag and no default specified",
+                    self.flag
+                )
+            })?;
+
+        let result = match self.op {
+            PackageUseDependencyOp::Required => target_value ^ self.negate,
+            PackageUseDependencyOp::Synchronized => {
+                let source_value = source_use_map
+                    .get(&self.flag)
+                    .copied()
+                    .with_context(|| format!("Missing source USE flag '{}'", self.flag))?;
+
+                source_value == (target_value ^ self.negate)
+            }
+            PackageUseDependencyOp::ConditionalRequired => {
+                let source_value = source_use_map
+                    .get(&self.flag)
+                    .copied()
+                    .with_context(|| format!("Missing source USE flag '{}'", self.flag))?;
+
+                if self.negate {
+                    source_value || !target_value
+                } else {
+                    !source_value || target_value
+                }
+            }
+        };
+        Ok(result)
     }
 }
 
@@ -343,29 +376,38 @@ impl Display for PackageDependencyAtom {
     }
 }
 
-impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
-    fn matches(&self, package: &PackageRef<'_>) -> bool {
-        let match_except_block = (|| {
-            if package.package_name != self.package_name {
-                return false;
-            }
-            if let Some(p) = &self.version {
-                if !p.matches(package.version) {
-                    return false;
-                }
-            }
-            if let Some(p) = &self.slot {
-                if !p.matches(&package.slot) {
-                    return false;
-                }
-            }
-            if !self.uses.iter().all(|p| p.matches(package.use_map)) {
-                return false;
-            }
-            true
-        })();
+impl PackageDependencyAtom {
+    pub fn package_matches(
+        &self,
+        source_use_map: &UseMap,
+        package: &PackageRef<'_>,
+    ) -> Result<bool> {
+        if self.block != PackageBlock::None {
+            // TODO: This should probably be an error.
+            return Ok(false);
+        }
 
-        match_except_block == (self.block == PackageBlock::None)
+        if package.package_name != self.package_name {
+            return Ok(false);
+        }
+        if let Some(p) = &self.version {
+            if !p.matches(package.version) {
+                return Ok(false);
+            }
+        }
+        if let Some(p) = &self.slot {
+            if !p.matches(&package.slot) {
+                return Ok(false);
+            }
+        }
+
+        for uses in &self.uses {
+            if !uses.matches(source_use_map, package.use_map)? {
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
     }
 }
 
@@ -522,7 +564,7 @@ impl Predicate<ThinPackageRef<'_>> for PackageAtom {
 mod tests {
     use std::{collections::HashMap, str::FromStr};
 
-    use anyhow::Result;
+    use anyhow::{anyhow, Result};
 
     use super::*;
 
@@ -647,6 +689,295 @@ mod tests {
             let actual = atom.matches(&package);
 
             assert_eq!(expected, actual, "input: {}", input);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_use_match() -> Result<()> {
+        let test_cases: Vec<(&str, UseMap, UseMap, Result<bool>)> = vec![
+            // Simple flag
+            (
+                "udev",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "udev",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(false),
+            ),
+            (
+                "udev",
+                UseMap::new(),
+                UseMap::new(),
+                Err(anyhow!("Missing target USE flag")),
+            ),
+            // Simple negate
+            (
+                "-udev",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(false),
+            ),
+            (
+                "-udev",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            (
+                "-udev",
+                UseMap::new(),
+                UseMap::new(),
+                Err(anyhow!("Missing target USE flag")),
+            ),
+            // Default (+) ignored
+            (
+                "udev(+)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "udev(+)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(false),
+            ),
+            (
+                "-udev(+)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(false),
+            ),
+            (
+                "-udev(+)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            // Default (-) ignored
+            (
+                "udev(-)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "udev(-)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(false),
+            ),
+            (
+                "-udev(-)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(false),
+            ),
+            (
+                "-udev(-)",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            // Default (+)
+            ("udev(+)", UseMap::new(), UseMap::new(), Ok(true)),
+            ("-udev(+)", UseMap::new(), UseMap::new(), Ok(false)),
+            // Default (-)
+            ("udev(-)", UseMap::new(), UseMap::new(), Ok(false)),
+            ("-udev(-)", UseMap::new(), UseMap::new(), Ok(true)),
+            // Synchronized
+            (
+                "udev=",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "udev=",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            (
+                "udev=",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(false),
+            ),
+            (
+                "udev=",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(false),
+            ),
+            (
+                "udev=",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Err(anyhow!("Missing source USE flag")),
+            ),
+            // Synchronized not
+            (
+                "!udev=",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(false),
+            ),
+            (
+                "!udev=",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(false),
+            ),
+            (
+                "!udev=",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            (
+                "!udev=",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "!udev=",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Err(anyhow!("Missing source USE flag")),
+            ),
+            // Conditionally required
+            (
+                "udev?",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "udev?",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            (
+                "udev?",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(false),
+            ),
+            (
+                "udev?",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "udev?",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Err(anyhow!("Missing source USE flag")),
+            ),
+            // Conditionally required not
+            (
+                "!udev?",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(true),
+            ),
+            (
+                "!udev?",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            (
+                "!udev?",
+                UseMap::from([("udev".to_string(), true)]),
+                UseMap::from([("udev".to_string(), false)]),
+                Ok(true),
+            ),
+            (
+                "!udev?",
+                UseMap::from([("udev".to_string(), false)]),
+                UseMap::from([("udev".to_string(), true)]),
+                Ok(false),
+            ),
+            (
+                "!udev?",
+                UseMap::new(),
+                UseMap::from([("udev".to_string(), true)]),
+                Err(anyhow!("Missing source USE flag")),
+            ),
+        ];
+
+        for (input, source_use, target_use, expected) in test_cases {
+            // We only want to unit test the USE matching
+            let mut uses =
+                PackageDependencyAtom::from_str(&format!("sys-apps/systemd-utils[{input}]"))?
+                    .uses
+                    .into_iter();
+            let atom = uses.next().unwrap();
+            assert!(uses.next().is_none());
+
+            let actual = atom.matches(&source_use, &target_use);
+
+            match expected {
+                Ok(expected) => {
+                    assert_eq!(
+                        expected,
+                        actual.unwrap(),
+                        "input: {}, source_use: {:?}, target_use: {:?}",
+                        input,
+                        source_use,
+                        target_use
+                    );
+                }
+                Err(_) => {
+                    assert!(actual.is_err(), "input: {}", input);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_all_use_match() -> Result<()> {
+        let atom = PackageDependencyAtom::from_str("sys-apps/systemd-utils[udev,-boot]")?;
+
+        {
+            let package = PackageRef {
+                package_name: "sys-apps/systemd-utils",
+                version: &Version::try_new("9999")?,
+                slot: Slot {
+                    main: "1",
+                    sub: "2",
+                },
+                use_map: &UseMap::from([("udev".to_string(), true), ("boot".to_string(), false)]),
+            };
+
+            assert!(atom.package_matches(&UseMap::new(), &package)?);
+        }
+
+        {
+            let package = PackageRef {
+                package_name: "sys-apps/systemd-utils",
+                version: &Version::try_new("9999")?,
+                slot: Slot {
+                    main: "1",
+                    sub: "2",
+                },
+                use_map: &UseMap::from([("udev".to_string(), true), ("boot".to_string(), true)]),
+            };
+
+            assert!(!atom.package_matches(&UseMap::new(), &package)?);
         }
 
         Ok(())

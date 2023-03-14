@@ -73,12 +73,22 @@ fn parse_dependencies(
                 }
 
                 // Remove non-existent packages.
-                if resolver.find_best_package(&atom)?.is_none() {
-                    return Ok(Dependency::new_constant(
-                        false,
-                        &format!("No package satisfies {}", atom),
-                    ));
-                };
+                match resolver.find_best_package(use_map, &atom) {
+                    Ok(result) => {
+                        if result.is_none() {
+                            return Ok(Dependency::new_constant(
+                                false,
+                                &format!("No package satisfies {}", atom),
+                            ));
+                        };
+                    }
+                    Err(err) => {
+                        return Ok(Dependency::new_constant(
+                            false,
+                            &format!("Error matching {}: {:?}", atom, err),
+                        ));
+                    }
+                }
 
                 Ok(Dependency::Leaf(atom))
             }
@@ -108,7 +118,7 @@ fn parse_dependencies(
         .map(|atom| {
             Ok(
                 resolver
-                    .find_best_package(&atom)?
+                    .find_best_package(use_map, &atom)?
                     .expect("package to exist"), // missing packages were filtered above
             )
         })
