@@ -515,8 +515,8 @@ fn extract_remote_sources(
             for url in &urls {
                 ensure!(
                     // Some ebuilds specify http://
-                    url.scheme() == "https" || url.scheme() == "http",
-                    "Only https urls are supported, got {}",
+                    url.scheme() == "https" || url.scheme() == "http" || url.scheme() == "cipd",
+                    "Only http, https, and cipd urls are supported, got {}",
                     url
                 );
             }

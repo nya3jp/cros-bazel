@@ -1,9 +1,18 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("@//bazel:repo/repo_repository.bzl", "repo_repository")
+load("@//bazel:repo/cipd.bzl", "cipd_file")
 load("@//bazel/chrome:cros_chrome_repository.bzl", "cros_chrome_repository")
 
 def portage_dependencies():
     {% for dist in dists -%}
+    {% set url = dist.urls[0] %}
+    {% if url is starting_with("cipd") %}
+    cipd_file(
+        name = "{{ dist.repository_name }}",
+        downloaded_file_path = "{{ dist.filename }}",
+        url = "{{ url }}"
+    )
+    {% else %}
     http_file(
         name = "{{ dist.repository_name }}",
         downloaded_file_path = "{{ dist.filename }}",
@@ -14,6 +23,7 @@ def portage_dependencies():
             {%- endfor %}
         ],
     )
+    {% endif %}
     {% endfor %}
 
     {% for repo in repos -%}
