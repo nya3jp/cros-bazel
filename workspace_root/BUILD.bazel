@@ -81,3 +81,13 @@ build_image(
 )
 
 exports_files(["tools/bazel"])
+
+# A convenient alias to run alchemist.
+#
+# Example:
+#   bazel run //:alchemist -- --board=amd64-generic dump-package sys-apps/attr
+alias(
+    name = "alchemist",
+    actual = "@alchemist//:release/alchemist",
+    visibility = ["//visibility:private"],
+)
