@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use alchemist::{
     analyze::{
@@ -14,6 +14,7 @@ use alchemist::{
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
+use version::Version;
 
 pub static CHROOT_SRC_DIR: &str = "/mnt/host/source/src";
 
@@ -49,6 +50,13 @@ pub struct Package {
     /// RDEPEND and PDEPEND. Alchemist needs to compute it, instead of letting
     /// Bazel compute it, because there can be circular dependencies.
     pub install_set: Vec<Arc<PackageDetails>>,
+}
+
+/// Holds the error that occurred during analysis
+pub struct AnalysisError {
+    pub ebuild: PathBuf,
+    pub version: Version,
+    pub error: String,
 }
 
 #[derive(Serialize)]

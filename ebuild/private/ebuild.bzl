@@ -390,3 +390,24 @@ ebuild_test = rule(
     ),
     test = True,
 )
+
+def _ebuild_failure_impl(ctx):
+    fail("\n--\nError analyzing ebuild!\ntarget: {}\nebuild: {}\n\n{}\n--".format(
+        ctx.label,
+        ctx.file.ebuild.path,
+        ctx.attr.error,
+    ))
+
+ebuild_failure = rule(
+    implementation = _ebuild_failure_impl,
+    doc = "Indicates a failure analyzing the ebuild.",
+    attrs = {
+        "ebuild": attr.label(
+            mandatory = True,
+            allow_single_file = [".ebuild"],
+        ),
+        "error": attr.string(
+            mandatory = True,
+        ),
+    },
+)

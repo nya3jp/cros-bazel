@@ -1,4 +1,4 @@
-load("@//bazel/ebuild:defs.bzl", "ebuild", "ebuild_debug", "ebuild_test", "package_set", "sdk_update")
+load("@//bazel/ebuild:defs.bzl", "ebuild", "ebuild_debug", "ebuild_test", "ebuild_failure", "package_set", "sdk_update")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 {%- for ebuild in ebuilds %}
@@ -148,4 +148,12 @@ package_set(
     visibility = ["//visibility:public"],
 )
 
+{% endfor %}
+{%- for failure in failures %}
+ebuild_failure(
+    name = "{{ failure.version }}",
+    ebuild = "{{ failure.ebuild_name }}",
+    error = """{{ failure.error }}""",
+    visibility = ["//visibility:public"],
+)
 {% endfor %}

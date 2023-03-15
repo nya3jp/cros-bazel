@@ -31,11 +31,11 @@ use alchemist::{
     toolchain::ToolchainConfig,
 };
 use anyhow::Result;
-use itertools::Itertools;
+use itertools::{Either, Itertools};
 use rayon::prelude::*;
 
 use self::{
-    common::Package,
+    common::{AnalysisError, Package},
     internal::overlays::generate_internal_overlays,
     internal::packages::generate_internal_packages,
     internal::{sdk::generate_sdk, sources::generate_internal_sources},
@@ -116,12 +116,10 @@ fn analyze_packages(
     src_dir: &Path,
     resolver: &PackageResolver,
     verbose: bool,
-) -> Vec<Package> {
+) -> (Vec<Package>, Vec<AnalysisError>) {
     // Analyze packages in parallel.
-    let fail_count = AtomicUsize::new(0);
-    let all_partials: Vec<PackagePartial> = all_details
-        .par_iter()
-        .flat_map(|details| {
+    let (all_partials, failures): (Vec<PackagePartial>, Vec<AnalysisError>) =
+        all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
                 let dependencies = analyze_dependencies(details, resolver)?;
                 let sources = analyze_sources(config, details, src_dir)?;
@@ -132,29 +130,28 @@ fn analyze_packages(
                 })
             })();
             match result {
-                Ok(package) => Some(package),
-                Err(err) => {
-                    fail_count.fetch_add(1, Ordering::SeqCst);
-                    if verbose {
-                        eprintln!(
-                            "WARNING: {}: Analysis failed: {:#}",
-                            details.ebuild_path.to_string_lossy(),
-                            err
-                        );
-                    }
-                    None
-                }
+                Ok(package) => Either::Left(package),
+                Err(err) => Either::Right(AnalysisError {
+                    ebuild: details.ebuild_path.clone(),
+                    version: details.version.clone(),
+                    error: format!("{err:#}"),
+                }),
             }
-        })
-        .collect();
+        });
 
-    if !verbose {
-        let fail_count = fail_count.load(Ordering::SeqCst);
-        if fail_count > 0 {
+    if verbose {
+        for failure in &failures {
             eprintln!(
-                "WARNING: Analysis failed for {fail_count} packages; use --verbose to see details"
+                "WARNING: {}: Analysis failed: {}",
+                failure.ebuild.to_string_lossy(),
+                failure.error
             );
         }
+    } else if !failures.is_empty() {
+        eprintln!(
+            "WARNING: Analysis failed for {} packages; use --verbose to see details",
+            failures.len()
+        );
     }
 
     // Compute install sets.
@@ -209,7 +206,7 @@ fn analyze_packages(
         })
         .collect();
 
-    all_partials
+    let packages = all_partials
         .into_iter()
         .map(|partial| {
             let install_set = install_set_by_path
@@ -222,7 +219,9 @@ fn analyze_packages(
                 sources: partial.sources,
             }
         })
-        .collect()
+        .collect();
+
+    (packages, failures)
 }
 
 /// The entry point of "generate-repo" subcommand.
@@ -256,7 +255,8 @@ pub fn generate_repo_main(
 
     eprintln!("Analyzing packages...");
 
-    let all_packages = analyze_packages(config, all_details, src_dir, resolver, verbose);
+    let (all_packages, failures) =
+        analyze_packages(config, all_details, src_dir, resolver, verbose);
 
     let all_local_sources = all_packages
         .iter()
@@ -265,7 +265,7 @@ pub fn generate_repo_main(
     eprintln!("Generating @portage...");
 
     generate_internal_overlays(src_dir, repos, output_dir)?;
-    generate_internal_packages(src_dir, &all_packages, output_dir)?;
+    generate_internal_packages(src_dir, &all_packages, &failures, output_dir)?;
     generate_internal_sources(all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&all_packages, resolver, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
