@@ -97,10 +97,6 @@ fn main() -> Result<()> {
         "BASE_PACKAGE".to_owned(),
         args.override_base_package.join(" "),
     );
-    cfg.envs
-        .insert("HOST_UID".to_owned(), users::get_current_uid().to_string());
-    cfg.envs
-        .insert("HOST_GID".to_owned(), users::get_current_gid().to_string());
 
     let mut sdk = MountedSDK::new(cfg)?;
     sdk.run_cmd(&[

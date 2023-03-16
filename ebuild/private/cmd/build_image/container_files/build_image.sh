@@ -17,18 +17,4 @@ sed -i 's,build_dlc,true &,' "${base_image_util_path}"
 sed -i 's,create_dev_install_lists ,true &,' "${base_image_util_path}"
 sed -i 's,"\${GCLIENT_ROOT}/chromite/scripts/pkg_size",true &,' "${base_image_util_path}"
 
-/mnt/host/source/chromite/bin/build_image "$@"
-RC=$?
-
-set -ex
-
-# TODO: scripts/build_image.sh builds a base image, then copies it and modifies
-# the copy to build dev / test images. We should convert base / dev / test
-# images to three seperate bazel rules, so that changing a dev image package
-# doesn't rebuild the whole base image.
-if [ "${RC}" -eq 0 ]; then
-  chown "${HOST_UID}:${HOST_GID}" "/mnt/host/source/src/build/images/${BOARD}/latest/chromiumos_base_image.bin"
-fi
-
-# TODO: remove temporary files owned by root, handle sigint / sigterm so that we still remove those files on error.
-exit "${RC}"
+exec /mnt/host/source/chromite/bin/build_image "$@"
