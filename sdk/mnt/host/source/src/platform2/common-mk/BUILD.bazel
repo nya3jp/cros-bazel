@@ -12,6 +12,7 @@ pkg_files(
     prefix = "mnt/host/source/src/platform2/common-mk",
     srcs = [
         "meson_test.py",
+        "platform2_test.py",
     ],
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//bazel/sdk:__subpackages__"],
