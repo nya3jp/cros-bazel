@@ -56,7 +56,7 @@ impl BinaryPackage {
                 .with_context(|| "Binary package missing PF")?,
         )?
         .trim();
-        let category_pf = format!("{}/{}", category, pf);
+        let category_pf = format!("{category}/{pf}");
 
         Ok(Self {
             file,

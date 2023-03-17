@@ -110,11 +110,7 @@ impl MountedSDK {
             // for EINVAL if we don't enter a mount namespace in advance.
             // TODO: Investigate the cause.
             cmd.args(["unshare", "--mount", "--", "/usr/bin/env", "-i"]);
-            cmd.args(
-                envs.into_iter()
-                    .sorted()
-                    .map(|(k, v)| format!("{}={}", k, v)),
-            );
+            cmd.args(envs.into_iter().sorted().map(|(k, v)| format!("{k}={v}")));
             cmd.arg(run_in_container_path);
             cmd.arg("--privileged");
             cmd.env_clear();

@@ -45,12 +45,12 @@ fn bind_binary_packages(
         .map(|package_path| {
             let bp = BinaryPackage::open(&package_path)?;
             let category_pf = bp.category_pf();
-            let mount_path = packages_dir.join(format!("{}{}", category_pf, BINARY_EXT));
+            let mount_path = packages_dir.join(format!("{category_pf}{BINARY_EXT}"));
             cfg.bind_mounts.push(BindMount {
                 source: package_path,
                 mount_path,
             });
-            Ok(format!("={}", category_pf))
+            Ok(format!("={category_pf}"))
         })
         .collect()
 }

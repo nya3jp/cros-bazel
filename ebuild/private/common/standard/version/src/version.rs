@@ -14,7 +14,7 @@ use std::{
 pub const VERSION_RE_RAW: &str =
     r"[0-9]+(?:\.[0-9]+)*[a-z]?(?:_(?:alpha|beta|pre|rc|p)[0-9]*)*(?:-r[0-9]+)?";
 static VERSION_SUFFIX_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(&format!("-{}$", VERSION_RE_RAW)).unwrap());
+    Lazy::new(|| Regex::new(&format!("-{VERSION_RE_RAW}$")).unwrap());
 
 /// Represents a version of Portage packages.
 ///
@@ -204,7 +204,7 @@ impl Display for Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.main[0])?;
         for v in self.main[1..].iter() {
-            write!(f, ".{}", v)?;
+            write!(f, ".{v}")?;
         }
         write!(f, "{}", self.letter)?;
         for suffix in self.suffixes.iter() {

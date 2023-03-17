@@ -89,7 +89,7 @@ pub fn main() -> Result<()> {
 fn resolve_layer_source_path(input_path: &Path) -> Result<PathBuf> {
     // Resolve the symlink so we always return an absolute path.
     let info = std::fs::symlink_metadata(input_path)
-        .with_context(|| format!("failed to get the metadata of a layer {:?}", input_path))?;
+        .with_context(|| format!("failed to get the metadata of a layer {input_path:?}"))?;
     if info.is_symlink() {
         return Ok(std::fs::read_link(input_path)?);
     } else if !info.is_dir() {
@@ -147,9 +147,9 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<()> {
             .with_context(|| "Failed to create an unprivileged container")?;
         std::fs::write("/proc/self/setgroups", "deny")
             .with_context(|| "Writing /proc/self/setgroups")?;
-        std::fs::write("/proc/self/uid_map", format!("0 {} 1\n", uid))
+        std::fs::write("/proc/self/uid_map", format!("0 {uid} 1\n"))
             .with_context(|| "Writing /proc/self/uid_map")?;
-        std::fs::write("/proc/self/gid_map", format!("0 {} 1\n", gid))
+        std::fs::write("/proc/self/gid_map", format!("0 {gid} 1\n"))
             .with_context(|| "Writing /proc/self/gid_map")?;
     }
 
@@ -359,10 +359,7 @@ fn continue_namespace(
         // When bind-mounting, the destination must exist.
         if !target.try_exists()? {
             let info = std::fs::metadata(&source).with_context(|| {
-                format!(
-                    "failed to get the metadata of a bind-mount source {:?}",
-                    source
-                )
+                format!("failed to get the metadata of a bind-mount source {source:?}")
             })?;
             if info.is_dir() {
                 dir_builder.create(&target)?;
@@ -378,7 +375,7 @@ fn continue_namespace(
         // Unfortunately, the unix.MS_RDONLY flag is ignored for bind-mounts.
         // Thus, we mount a bind-mount, then remount it as readonly.
         mount(Some(&source), &target, NONE_STR, MsFlags::MS_BIND, NONE_STR)
-            .with_context(|| format!("Failed bind-mounting {:?} to {:?}", source, target))?;
+            .with_context(|| format!("Failed bind-mounting {source:?} to {target:?}"))?;
         mount(
             NONE_STR,
             &target,

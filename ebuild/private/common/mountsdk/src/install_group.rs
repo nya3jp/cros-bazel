@@ -33,9 +33,9 @@ impl InstallGroup {
             let category_pf = bp.category_pf();
             bind_mounts.push(BindMount {
                 source: package.into(),
-                mount_path: dir.join(format!("{}.tbz2", category_pf)),
+                mount_path: dir.join(format!("{category_pf}.tbz2")),
             });
-            atoms.push(format!("={}", category_pf));
+            atoms.push(format!("={category_pf}"));
         }
         Ok((bind_mounts, atoms))
     }
@@ -49,7 +49,7 @@ impl InstallGroup {
         for (i, install_group) in install_groups.iter().enumerate() {
             let (mut group_mounts, atoms) = install_group.get_config(dir.as_ref())?;
             bind_mounts.append(&mut group_mounts);
-            env.insert(format!("INSTALL_ATOMS_TARGET_{}", i), atoms.join(" "));
+            env.insert(format!("INSTALL_ATOMS_TARGET_{i}"), atoms.join(" "));
         }
         Ok((bind_mounts, env))
     }

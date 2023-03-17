@@ -22,16 +22,15 @@ fn with_permissions(
     let new_mode = mode | permissions;
 
     if mode != new_mode {
-        set_permissions(path, Permissions::from_mode(new_mode)).with_context(|| {
-            format!("Failed to set permissions for {:?} to {:o}", path, new_mode)
-        })?;
+        set_permissions(path, Permissions::from_mode(new_mode))
+            .with_context(|| format!("Failed to set permissions for {path:?} to {new_mode:o}"))?;
     }
 
     let result = action();
 
     if mode != new_mode {
         set_permissions(path, Permissions::from_mode(mode)).with_context(|| {
-            format!("Failed to restore permissions of {:?} to {:o}", path, mode)
+            format!("Failed to restore permissions of {path:?} to {new_mode:o}")
         })?;
     }
 
@@ -43,7 +42,7 @@ fn with_permissions(
 pub fn remove_file_with_chmod(path: &Path) -> Result<()> {
     let parent = path.parent().unwrap();
     with_permissions(parent, S_IRWXU, || {
-        remove_file(path).with_context(|| format!("Failed to delete {:?}", path))
+        remove_file(path).with_context(|| format!("Failed to delete {path:?}"))
     })
 }
 
@@ -71,7 +70,7 @@ pub fn remove_dir_all_with_chmod(path: &Path) -> Result<()> {
         if mode & S_IRWXU != S_IRWXU {
             let new_mode = mode | S_IRWXU;
             set_permissions(entry.path(), Permissions::from_mode(new_mode)).with_context(|| {
-                format!("Failed to set permissions for {:?} to {:o}", path, new_mode)
+                format!("Failed to set permissions for {path:?} to {new_mode:o}")
             })?;
         }
     }
@@ -79,7 +78,7 @@ pub fn remove_dir_all_with_chmod(path: &Path) -> Result<()> {
     // Ensure we have u+rwx on the parent directory so we can unlink any files
     let parent = path.parent().unwrap();
     with_permissions(parent, S_IRWXU, || {
-        remove_dir_all(path).with_context(|| format!("Failed to delete {:?}", path))
+        remove_dir_all(path).with_context(|| format!("Failed to delete {path:?}"))
     })
 }
 
