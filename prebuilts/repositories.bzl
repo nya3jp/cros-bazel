@@ -316,7 +316,7 @@ def prebuilts_dependencies():
     )
     http_file(
         name = "amd64_host_2023_03_04_201551_dev_embedded_coreboot_sdk_0_0_1_r119",
-        downloaded_file_path = "coreboot-sdk-0.0.1-r119",
+        downloaded_file_path = "coreboot-sdk-0.0.1-r119.tbz2",
         sha256 = "029f59e647d8f00654dff0e5333a93c2a3aa98c29f6b3adf3fc203340a8f8066",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-embedded/coreboot-sdk-0.0.1-r119.tbz2"],
     )
