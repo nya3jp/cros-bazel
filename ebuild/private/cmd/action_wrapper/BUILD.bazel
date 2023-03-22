@@ -1,11 +1,20 @@
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
-rust_binary_crate(
+rust_binary(
     name = "action_wrapper",
+    srcs = glob(["src/*.rs"]),
     visibility = ["//visibility:public"],
+    deps = [
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:libc",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:signal-hook",
+        "@alchemy_crates//:tempfile",
+    ],
 )
 
-rust_crate_test(
+rust_test(
     name = "action_wrapper_test",
     crate = ":action_wrapper",
 )

@@ -2,11 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 
-rust_binary_crate(
+rust_binary(
     name = "sdk_update",
-    crate_name = "sdk_update",
+    srcs = ["src/main.rs"],
     data = [
         ":setup.sh",
         "//bazel/ebuild/private/cmd/run_in_container",
@@ -18,5 +18,9 @@ rust_binary_crate(
         "//bazel/ebuild/private/common/mountsdk",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "//bazel/ebuild/private/common/tar:tar_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
     ],
 )

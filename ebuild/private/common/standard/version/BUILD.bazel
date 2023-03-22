@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("@rules_go//go:def.bzl", "go_library", "go_test")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
@@ -20,12 +20,26 @@ go_test(
     deps = [":version"],
 )
 
-rust_library_crate(
+rust_library(
     name = "version_rust",
+    srcs = glob(["src/*.rs"]),
     crate_name = "version",
+    proc_macro_deps = [
+        "@alchemy_crates//:strum_macros",
+    ],
+    deps = [
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:nom",
+        "@alchemy_crates//:once_cell",
+        "@alchemy_crates//:regex",
+        "@alchemy_crates//:strum",
+    ],
 )
 
-rust_crate_test(
+rust_test(
     name = "version_rust_test",
     crate = ":version_rust",
+    deps = [
+        "@alchemy_crates//:proptest",
+    ],
 )

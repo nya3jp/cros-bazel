@@ -2,21 +2,34 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
 
-rust_library_crate(
+rust_library(
     name = "mountsdk",
+    srcs = glob(["src/*.rs"]),
     data = [
         "setup.sh",
         "//bazel/ebuild/private/cmd/run_in_container",
+    ],
+    proc_macro_deps = [
+        "@alchemy_crates//:strum_macros",
     ],
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "//bazel/ebuild/private/common/run_in_container_lib",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:itertools",
+        "@alchemy_crates//:libc",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:scopeguard",
+        "@alchemy_crates//:strum",
+        "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
@@ -24,7 +37,7 @@ rust_library_crate(
 # eg. //third_party/portage-stable/category/pkg:0
 # If you do so, if there's a problem with the mountsdk library, the test will
 # be unable to build (and therefore you can't even run the test).
-rust_crate_test(
+rust_test(
     name = "mountsdk_test",
     crate = ":mountsdk",
     data = [

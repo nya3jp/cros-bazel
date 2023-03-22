@@ -2,10 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
-rust_binary_crate(
+rust_binary(
     name = "build_package",
+    srcs = glob(["src/*.rs"]),
     crate_name = "build_package",
     data = [":build_package.sh"],
     visibility = ["//visibility:public"],
@@ -14,10 +15,14 @@ rust_binary_crate(
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/mountsdk",
         "//bazel/ebuild/private/common/standard/version:version_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:nix",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
-rust_crate_test(
+rust_test(
     name = "build_package_test",
     crate = ":build_package",
 )

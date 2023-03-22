@@ -2,13 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
 # Note that the go and rust run_in_container are *not* CLI-compatible.
 # rust serializes and deserializes its arguments to a file, while go takes all
 # arguments on the command-line.
-rust_binary_crate(
+rust_binary(
     name = "run_in_container",
+    srcs = glob(["src/*.rs"]),
     data = [
         "@dumb_init//file",
     ],
@@ -17,10 +18,23 @@ rust_binary_crate(
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/run_in_container_lib",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:itertools",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:path-absolutize",
+        "@alchemy_crates//:pathdiff",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:tar",
+        "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:walkdir",
+        "@alchemy_crates//:zstd",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
-rust_crate_test(
+rust_test(
     name = "run_in_container_test",
     crate = ":run_in_container",
 )

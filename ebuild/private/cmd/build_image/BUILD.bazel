@@ -2,22 +2,27 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("//bazel/ebuild:defs.bzl", "overlay_set")
 
-rust_binary_crate(
+rust_binary(
     name = "build_image",
+    srcs = glob(["src/*.rs"]),
     crate_name = "build_image",
     data = glob(["container_files/*"]),
+    visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/mountsdk",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:users",
+        "@rules_rust//tools/runfiles",
     ],
-    visibility = ["//visibility:public"],
 )
 
-rust_crate_test(
+rust_test(
     name = "build_image_test",
     crate = ":build_image",
 )

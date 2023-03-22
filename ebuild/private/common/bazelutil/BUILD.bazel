@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_crate_test", "rust_library_crate")
+load("@rules_rust//rust:defs.bzl", "rust_test", "rust_library")
 load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -15,9 +15,10 @@ go_library(
     visibility = ["//visibility:public"],
 )
 
-rust_library_crate(name = "bazelutil_rust")
+rust_library(
+    srcs = glob(["src/*.rs"]),name = "bazelutil_rust")
 
-rust_crate_test(
+rust_test(
     name = "bazelutil_rust_test",
     crate = ":bazelutil_rust",
 )

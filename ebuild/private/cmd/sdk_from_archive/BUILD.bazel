@@ -2,12 +2,23 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
-rust_binary_crate(
+rust_binary(
     name = "sdk_from_archive",
+    srcs = glob(["src/*.rs"]),
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/tar:tar_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+    ],
+)
+
+rust_test(
+    name = "sdk_from_archive_test",
+    crate = "sdk_from_archive",
+    deps = [
+        "@alchemy_crates//:tempfile",
     ],
 )

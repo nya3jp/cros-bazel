@@ -1,16 +1,25 @@
-load("//rules_cros/toolchains/rust:defs.bzl", "rust_binary_crate", "rust_crate_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
-rust_binary_crate(
+rust_binary(
     name = "extract_interface",
+    srcs = glob(["src/*.rs"]),
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:tar",
+        "@alchemy_crates//:zstd",
     ],
 )
 
-rust_crate_test(
+rust_test(
     name = "extract_interface_test",
     crate = ":extract_interface",
     data = glob(["testdata/*"]),
+    deps = [
+        "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
+    ],
 )
