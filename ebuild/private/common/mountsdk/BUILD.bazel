@@ -39,6 +39,7 @@ rust_library(
 # be unable to build (and therefore you can't even run the test).
 rust_test(
     name = "mountsdk_test",
+    size = "medium",
     crate = ":mountsdk",
     data = [
         "testdata/mypkg.ebuild",

@@ -24,6 +24,7 @@ go_library(
 
 go_test(
     name = "dependency_test",
+    size = "small",
     srcs = [
         "atom_test.go",
         "expr_compile_test.go",

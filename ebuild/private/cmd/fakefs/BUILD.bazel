@@ -21,6 +21,7 @@ go_binary(
 
 go_test(
     name = "fakefs_test",
+    size = "small",
     srcs = ["main_test.go"],
     data = [
         ":fakefs",

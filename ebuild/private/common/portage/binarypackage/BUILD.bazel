@@ -23,6 +23,7 @@ go_library(
 
 go_test(
     name = "binarypackage_test",
+    size = "small",
     srcs = ["binarypackage_test.go"],
     data = [
         "testdata/nano.tar.bz2",
@@ -47,6 +48,7 @@ rust_library(
 
 rust_test(
     name = "binarypackage_rust_test",
+    size = "small",
     crate = ":binarypackage_rust",
     data = glob(["testdata/*"]),
     deps = [

@@ -16,6 +16,7 @@ rust_binary(
 
 rust_test(
     name = "extract_interface_test",
+    size = "small",
     crate = ":extract_interface",
     data = glob(["testdata/*"]),
     deps = [

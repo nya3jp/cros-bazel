@@ -24,5 +24,6 @@ rust_binary(
 
 rust_test(
     name = "build_package_test",
+    size = "small",
     crate = ":build_package",
 )

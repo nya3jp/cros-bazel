@@ -35,5 +35,6 @@ rust_library(
 
 rust_test(
     name = "fileutil_rust_test",
+    size = "small",
     crate = ":fileutil_rust",
 )

@@ -17,6 +17,7 @@ rust_binary(
 
 rust_test(
     name = "sdk_from_archive_test",
+    size = "small",
     crate = "sdk_from_archive",
     deps = [
         "@alchemy_crates//:tempfile",

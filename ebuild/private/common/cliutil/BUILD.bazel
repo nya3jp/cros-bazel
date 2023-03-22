@@ -21,5 +21,6 @@ rust_library(
 
 rust_test(
     name = "cliutil_rust_test",
+    size = "small",
     crate = ":cliutil_rust",
 )

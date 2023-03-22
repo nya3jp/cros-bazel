@@ -14,5 +14,6 @@ rust_library(
 
 rust_test(
     name = "run_in_container_lib_test",
+    size = "small",
     crate = ":run_in_container_lib",
 )

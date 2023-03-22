@@ -16,6 +16,7 @@ go_library(
 
 go_test(
     name = "version_test",
+    size = "small",
     srcs = ["version_test.go"],
     deps = [":version"],
 )
@@ -38,6 +39,7 @@ rust_library(
 
 rust_test(
     name = "version_rust_test",
+    size = "small",
     crate = ":version_rust",
     deps = [
         "@alchemy_crates//:proptest",

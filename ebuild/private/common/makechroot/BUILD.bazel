@@ -24,6 +24,7 @@ rust_library(
 
 rust_test(
     name = "makechroot_test",
+    size = "small",
     crate = ":makechroot",
     data = glob(["testdata/*"]),
 )

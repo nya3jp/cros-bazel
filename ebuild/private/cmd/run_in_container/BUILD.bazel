@@ -36,5 +36,6 @@ rust_binary(
 
 rust_test(
     name = "run_in_container_test",
+    size = "small",
     crate = ":run_in_container",
 )

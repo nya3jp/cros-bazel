@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_test", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -16,9 +16,12 @@ go_library(
 )
 
 rust_library(
-    srcs = glob(["src/*.rs"]),name = "bazelutil_rust")
+    name = "bazelutil_rust",
+    srcs = glob(["src/*.rs"]),
+)
 
 rust_test(
     name = "bazelutil_rust_test",
+    size = "small",
     crate = ":bazelutil_rust",
 )

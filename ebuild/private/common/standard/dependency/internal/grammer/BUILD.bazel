@@ -17,6 +17,7 @@ go_library(
 
 go_test(
     name = "grammer_test",
+    size = "small",
     srcs = ["grammer_test.go"],
     deps = [
         ":grammer",

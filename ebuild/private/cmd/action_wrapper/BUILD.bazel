@@ -16,5 +16,6 @@ rust_binary(
 
 rust_test(
     name = "action_wrapper_test",
+    size = "small",
     crate = ":action_wrapper",
 )
