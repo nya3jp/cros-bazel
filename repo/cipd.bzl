@@ -24,9 +24,7 @@ def _cipd_file_impl(repository_ctx):
     repository_ctx.report_progress("Downloading from CIPD.")
     repository_ctx.execute(["mkdir", "file"])
     repository_ctx.execute([
-        # `cipd` command is a part of depot_tools, which are required
-        # to check out ChromeOS, so it should be available in the user's enviroment.
-        "cipd",
+        repository_ctx.attr._cipd,
         "pkg-fetch",
         package,
         "-version",
@@ -53,6 +51,11 @@ cipd_file = repository_rule(
 It must start with cipd://, contain file path and version,
 For example, cipd://some/tool/linux-amd64:abc1234""",
             mandatory = True
+        ),
+        "_cipd": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("@depot_tools//:cipd"),
         ),
     },
 )
