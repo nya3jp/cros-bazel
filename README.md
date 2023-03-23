@@ -64,9 +64,9 @@ We have two targets to build images:
 As of 2023-03-09, we support building images for amd64-generic only. We have
 known build issues in some packages:
 - `chromeos-base/chromeos-chrome`: Takes too long time (multiple hours) to
-  build. Also randomly fails to build.
+  build. Also randomly fails to build ([b/273830995](http://b/273830995)).
 - `chromeos-base/chromeos-fonts`: Requires root to install binfmt_misc handlers
-  ([b/262458823](http://262458823)).
+  ([b/262458823](http://b/262458823)).
 
 You can inject prebuilt binary packages to bypass building those packages to
 build a base image. You can pass `--config=prebuilts/amd64-generic` to do this
@@ -78,6 +78,15 @@ $ BOARD=amd64-generic bazel build --config=prebuilts/amd64-generic //:chromiumos
 
 See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
 for more details.
+
+After building an image, you can use `cros_vm` command available in CrOS SDK
+to run a VM locally. Make sure to copy an image out from `bazel-bin` as it's not
+writable by default.
+
+```
+$ cp /mnt/host/source/src/bazel-bin/chromiumos_base_image.bin /tmp/
+$ cros_vm --start --board=amd64-generic /tmp/chromiumos_base_image.bin
+```
 
 ## Directory structure
 
