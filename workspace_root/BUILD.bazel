@@ -46,6 +46,7 @@ pkg_tar(
 # test the functionality to build images.
 build_image(
     name = "chromiumos_minimal_image",
+    image_to_build = "base",
     files = [
         "//:scripts_src",
         "@chromite//:src",
@@ -67,12 +68,31 @@ build_image(
 # Builds the base image.
 build_image(
     name = "chromiumos_base_image",
+    image_to_build = "base",
     files = [
         "//:scripts_src",
         "@chromite//:src",
     ],
     target_packages = [
         "@portage//virtual/target-os:package_set",
+    ],
+    host_packages = [
+        "@portage//internal/sdk:cross-packages",
+    ],
+    sdk = "@portage//internal/sdk",
+)
+
+# Builds the dev image.
+build_image(
+    name = "chromiumos_dev_image",
+    image_to_build = "dev",
+    files = [
+        "//:scripts_src",
+        "@chromite//:src",
+    ],
+    target_packages = [
+        "@portage//virtual/target-os:package_set",
+        "@portage//virtual/target-os-dev:package_set",
     ],
     host_packages = [
         "@portage//internal/sdk:cross-packages",

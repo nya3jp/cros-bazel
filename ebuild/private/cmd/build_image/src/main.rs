@@ -18,8 +18,12 @@ pub struct Cli {
     mountsdk_config: mountsdk::ConfigArgs,
 
     /// Output file path.
-    #[arg(long)]
+    #[arg(long, required = true)]
     output: PathBuf,
+
+    /// Image to build.
+    #[arg(long, required = true)]
+    image_to_build: String,
 
     /// File paths to binary packages to be installed on the output image.
     #[arg(long)]
@@ -102,8 +106,7 @@ fn main() -> Result<()> {
     sdk.run_cmd(&[
         MAIN_SCRIPT,
         &format!("--board={}", &sdk.board),
-        // TODO: at some point, we should support a variety of image types
-        "base",
+        &args.image_to_build,
         // TODO: add unparsed command-line args.
     ])?;
 

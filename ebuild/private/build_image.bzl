@@ -36,6 +36,7 @@ def _build_image_impl(ctx):
     args.add_all([
         "--output=" + output_image_file.path,
         "--board=" + sdk.board,
+        "--image-to-build=" + ctx.attr.image_to_build,
     ])
 
     args.add_all(deps_layers + sdk.layers, format_each = "--layer=%s", expand_directories = False)
@@ -95,6 +96,12 @@ build_image = rule(
     implementation = _build_image_impl,
     doc = "Builds a ChromeOS image.",
     attrs = dict(
+        image_to_build = attr.string(
+            doc = """
+            The name of the image to build (e.g. "base", "dev", or "test").
+            """,
+            mandatory = True,
+        ),
         target_packages = attr.label_list(
             providers = [BinaryPackageSetInfo],
             mandatory = True,
