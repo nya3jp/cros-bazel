@@ -7,6 +7,7 @@ default-run = "alchemist"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# When you add local dependencies here, remember to update regen-srcs.sh.
 version = { path = "../common/standard/version" }
 
 anyhow.workspace = true

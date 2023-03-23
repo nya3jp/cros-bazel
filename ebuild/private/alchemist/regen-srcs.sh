@@ -19,8 +19,9 @@ cd "$(dirname -- "$0")"
 		# TODO: Check if `cargo_bootstrap_repository` derives this from the project's
 		# Cargo.toml.
 		echo '    Label("//:Cargo.toml"),'
-		find src -type f \
-			-printf '    Label("//bazel/ebuild/private/alchemist:%p"),\n'
+		find src \
+			-name testdata -prune -or \
+			-type f -printf '    Label("//bazel/ebuild/private/alchemist:%p"),\n'
 
 		find ../common/standard/version \
 			-type f \
