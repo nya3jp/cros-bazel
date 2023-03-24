@@ -116,7 +116,7 @@ def _sdk_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             board = ctx.attr.board,
-            layers = [output_root, output_symlink_tar] + base_sdk.layers,
+            layers = base_sdk.layers + [output_root, output_symlink_tar],
             overlays = ctx.attr.overlays[OverlaySetInfo],
         ),
     ]
@@ -179,7 +179,7 @@ def _sdk_update_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             board = sdk.board,
-            layers = outputs + sdk.layers,
+            layers = sdk.layers + outputs,
             overlays = sdk.overlays,
         ),
     ]

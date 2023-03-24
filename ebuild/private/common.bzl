@@ -74,8 +74,9 @@ SDKBaseInfo = provider(
         "layers": """
             File[]: A list of files each of which represents a file system layer
             of the SDK. A layer file can be a directory or a tar file (.tar or
-            .tar.zst). The order matters; the first image must be overlayed
-            on top of the second image, and so on.
+            .tar.zst). Layers are ordered from lower to upper; in other words,
+            a file from a layer can be overridden by one in another layer that
+            appears later in the list.
         """,
     },
 )
@@ -88,9 +89,10 @@ SDKInfo = provider(
         """,
         "layers": """
             File[]: A list of files each of which represents a file system layer
-            of the SDK.  A layer file can be a directory or a tar file (.tar or
-            .tar.zst). The order matters; the first image must be overlayed
-            on top of the second image, and so on.
+            of the SDK. A layer file can be a directory or a tar file (.tar or
+            .tar.zst). Layers are ordered from lower to upper; in other words,
+            a file from a layer can be overridden by one in another layer that
+            appears later in the list.
         """,
         "overlays": """
             OverlaySetInfo: The set of overlays that makeup the board. This will

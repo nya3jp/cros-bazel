@@ -129,9 +129,7 @@ impl MountedSDK {
             cmd
         };
 
-        let layer_paths: Vec<PathBuf> = [root_dir.outside.clone()]
-            .into_iter()
-            .chain(cfg.layer_paths.into_iter().map(
+        let layer_paths: Vec<PathBuf> = cfg.layer_paths.into_iter().map(
                 |layer|
                 // Convert the path to an absolute path if it's a runfile path prefixed with
                 // "%runfiles/".
@@ -142,7 +140,7 @@ impl MountedSDK {
                 } else {
                     layer
                 }
-            ))
+            ).chain([root_dir.outside.clone()])
             .collect();
         let serialized_config = RunInContainerConfig {
             staging_dir: scratch_dir,

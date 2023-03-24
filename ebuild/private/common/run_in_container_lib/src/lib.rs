@@ -18,8 +18,8 @@ pub struct RunInContainerConfig {
     pub chdir: PathBuf,
 
     /// File system layers to be mounted in the namespace. The earlier layers
-    /// are mounted as the higher layer, and the later layers are mounted as
-    /// the lower layer.
+    /// are mounted as the lower layer, and the later layers are mounted as
+    /// the upper layer.
     pub layer_paths: Vec<PathBuf>,
 
     /// Bind-mounts to apply. Applies on top of file system layers, and can

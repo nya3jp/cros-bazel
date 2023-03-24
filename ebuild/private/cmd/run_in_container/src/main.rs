@@ -239,7 +239,8 @@ fn continue_namespace(
     }
 
     // Set up lower directories.
-    let mut lower_dirs: Vec<PathBuf> = Vec::new();
+    // Directories are ordered from most lower to least lower.
+    let mut lower_dirs: Vec<PathBuf> = [base_dir].into();
     for (i, layer_path) in cfg.layer_paths.iter().enumerate() {
         let layer_path = resolve_layer_source_path(layer_path)?;
         let mut lower_dir = lowers_dir.join(i.to_string());
@@ -269,9 +270,6 @@ fn continue_namespace(
         lower_dirs.push(lower_dir);
     }
 
-    // Insert the base directory as the lowest layer.
-    lower_dirs.push(base_dir);
-
     // Set up the store directories.
     dir_builder.create(&diff_dir)?;
     dir_builder.create(&work_dir)?;
@@ -289,6 +287,9 @@ fn continue_namespace(
     let short_work_dir = relative_dir(&work_dir)?;
     let short_lower_dirs = lower_dirs
         .iter()
+        // Overlayfs option treats the first lower directory as the least lower
+        // directory, while we order filesystem layers in the opposite order.
+        .rev()
         .map(|abs_lower_dir| {
             let rel_lower_dir: PathBuf = relative_dir(abs_lower_dir)?;
             let abs_lower_dir = abs_lower_dir.to_string_lossy();

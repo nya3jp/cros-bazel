@@ -40,8 +40,8 @@ def _build_image_impl(ctx):
         "--image-file-name=" + ctx.attr.image_file_name,
     ])
 
-    args.add_all(deps_layers + sdk.layers, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(deps_layers + sdk.layers)
+    args.add_all(sdk.layers + deps_layers, format_each = "--layer=%s", expand_directories = False)
+    direct_inputs.extend(sdk.layers + deps_layers)
 
     for overlay in sdk.overlays.overlays:
         args.add("--layer=%s" % overlay.file.path)
