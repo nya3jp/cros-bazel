@@ -8,6 +8,10 @@ pkg_files(
     srcs = glob(["**"], exclude=[
         "**/.git",
         "**/.git/**",
+        "BUILD.bazel",
+        "BUILD",
+        "WORKSPACE.bazel",
+        "WORKSPACE"
     ]),
     renames = {
     },

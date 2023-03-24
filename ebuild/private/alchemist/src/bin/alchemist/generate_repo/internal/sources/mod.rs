@@ -65,6 +65,7 @@ fn escape_file_name_for_bazel_target_name(s: &str) -> String {
         .join("")
 }
 
+// These files also need to be excluded in `source.BUILD.bazel`.
 const BAZEL_SPECIAL_FILE_NAMES: &[&str] = &["BUILD.bazel", "BUILD", "WORKSPACE.bazel", "WORKSPACE"];
 
 /// Checks if a file name needs renaming.

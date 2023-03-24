@@ -9,6 +9,10 @@ pkg_files(
         "**/.git",
         "**/.git/**",
         "hello world/file.txt",
+        "BUILD.bazel",
+        "BUILD",
+        "WORKSPACE.bazel",
+        "WORKSPACE"
     ]),
     renames = {
         "__rename__0": "hello world/file.txt",

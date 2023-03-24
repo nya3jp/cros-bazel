@@ -11,6 +11,10 @@ pkg_files(
         {%- for path in excludes %}
         "{{ path }}",
         {%- endfor %}
+        "BUILD.bazel",
+        "BUILD",
+        "WORKSPACE.bazel",
+        "WORKSPACE"
     ]),
     renames = {
         {%- for rename in renames %}

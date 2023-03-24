@@ -11,6 +11,10 @@ pkg_files(
         "BUILD.bazel",
         "WORKSPACE.bazel",
         "hello world.txt",
+        "BUILD.bazel",
+        "BUILD",
+        "WORKSPACE.bazel",
+        "WORKSPACE"
     ]),
     renames = {
         "__rename__0": "BUILD.bazel",
