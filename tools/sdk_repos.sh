@@ -13,7 +13,9 @@ fi
 
 VERSION="$1"
 
-WORK_DIR="$(mktemp -d)"
+if [[ ! -v WORK_DIR ]]; then
+	WORK_DIR="$(mktemp -d)"
+fi
 
 PACKAGES=(
 	cross-aarch64-cros-linux-gnu/binutils
@@ -26,6 +28,18 @@ PACKAGES=(
 	cross-aarch64-cros-linux-gnu/libxcrypt
 	cross-aarch64-cros-linux-gnu/linux-headers
 	cross-aarch64-cros-linux-gnu/llvm-libunwind
+
+	cross-armv7a-cros-linux-gnueabihf/binutils
+	cross-armv7a-cros-linux-gnueabihf/compiler-rt
+	cross-armv7a-cros-linux-gnueabihf/gcc
+	cross-armv7a-cros-linux-gnueabihf/gdb
+	cross-armv7a-cros-linux-gnueabihf/glibc
+	cross-armv7a-cros-linux-gnueabihf/go
+	cross-armv7a-cros-linux-gnueabihf/libcxx
+	cross-armv7a-cros-linux-gnueabihf/libxcrypt
+	cross-armv7a-cros-linux-gnueabihf/linux-headers
+	cross-armv7a-cros-linux-gnueabihf/llvm-libunwind
+
 	cross-x86_64-cros-linux-gnu/binutils
 	cross-x86_64-cros-linux-gnu/gcc
 	cross-x86_64-cros-linux-gnu/gdb
@@ -39,6 +53,7 @@ PACKAGES=(
 	dev-util/meson-format-array
 	dev-util/b2
 	dev-lang/rust
+	dev-embedded/coreboot-sdk
 	dev-embedded/hps-sdk
 	x11-base/xcb-proto
 )
@@ -64,7 +79,7 @@ do
 	echo "http_file(
 	name = \"amd64_host_${VERSION//./_}_${CATEGORY//[-\/]/_}_${WITHOUT_EXT//[.-]/_}\",
 	downloaded_file_path = \"${FILE_NAME}\",
-	sha256 = \"$(sha256sum "${PACKAGE}/${FILE_NAME}" | cut -d' ' -f 1)\",
+	sha256 = \"$(sha256sum "${WORK_DIR}/${FULL_PATH}" | cut -d' ' -f 1)\",
 	urls = [\"https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-${VERSION}/packages/${CATEGORY}/${FILE_NAME}\"],
 )"
 done < <(find "${WORK_DIR}/" -mindepth 1 -type f -name "*.tbz2" -printf "%P\n" | sort)

@@ -73,6 +73,66 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-aarch64-cros-linux-gnu/llvm-libunwind-15.0_pre458507-r4.tbz2"],
     )
     http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_binutils_2_36_1_r8",
+        downloaded_file_path = "binutils-2.36.1-r8.tbz2",
+        sha256 = "d26d09eee499a42b3c7889b34621b8c6021e8f76da75df80d8cabbd9f2eeeba8",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/binutils-2.36.1-r8.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_compiler_rt_15_0_pre458507_r6",
+        downloaded_file_path = "compiler-rt-15.0_pre458507-r6.tbz2",
+        sha256 = "33dd045111be165c3af39c035c07c825145604c6e6dde39be640b255d4418611",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/compiler-rt-15.0_pre458507-r6.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_gcc_10_2_0_r28",
+        downloaded_file_path = "gcc-10.2.0-r28.tbz2",
+        sha256 = "23d8b96c583c8284d45146dba7cd31a8271ffbc6991713f289b2ddaddf6efdac",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/gcc-10.2.0-r28.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_gdb_9_2_20200923_r9",
+        downloaded_file_path = "gdb-9.2.20200923-r9.tbz2",
+        sha256 = "78131596711c47141e9e64e961bada04268c2679b4f283df3441b9a1762e6440",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/gdb-9.2.20200923-r9.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_glibc_2_33_r17",
+        downloaded_file_path = "glibc-2.33-r17.tbz2",
+        sha256 = "ae3893b911af0ae6e5a7afdf187866b7e5b5f01a7c6cf25a780fa89c3177fb3f",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/glibc-2.33-r17.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_go_1_18_r2",
+        downloaded_file_path = "go-1.18-r2.tbz2",
+        sha256 = "146d524dbfae84da223693aefec3b86bfbdd7a4f9ab6be7d3b41feeb663e46fa",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/go-1.18-r2.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_libcxx_15_0_pre458507_r6",
+        downloaded_file_path = "libcxx-15.0_pre458507-r6.tbz2",
+        sha256 = "4b82d1057d031559ded601c92f25149d834c2773f90b8e6e227b656d240e6fcb",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/libcxx-15.0_pre458507-r6.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_libxcrypt_4_4_28_r1",
+        downloaded_file_path = "libxcrypt-4.4.28-r1.tbz2",
+        sha256 = "f2ca1bc9f21b7800fc27f392d299f13b3744afca97f5a89d86e1b186828072c3",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/libxcrypt-4.4.28-r1.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_linux_headers_4_14_r56",
+        downloaded_file_path = "linux-headers-4.14-r56.tbz2",
+        sha256 = "3c7a775af44c9dc6ec086ecb11e180437c6299527d412e162ba80e729cb9f7ea",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/linux-headers-4.14-r56.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_cross_armv7a_cros_linux_gnueabihf_llvm_libunwind_15_0_pre458507_r4",
+        downloaded_file_path = "llvm-libunwind-15.0_pre458507-r4.tbz2",
+        sha256 = "02452104a0260b46dcd17f3432d026bcf00d083a99e193dca6c7d06f1eacac00",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2022.08.22.085953/packages/cross-armv7a-cros-linux-gnueabihf/llvm-libunwind-15.0_pre458507-r4.tbz2"],
+    )
+    http_file(
         name = "amd64_host_cross_x86_64_cros_linux_gnu_binutils_2_36_1_r8",
         downloaded_file_path = "binutils-2.36.1-r8.tbz2",
         sha256 = "02bebcd7e6a914f4dcc01c945e54ab0cb3d63542ebef1db95effa588fdff14e0",
@@ -255,6 +315,66 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-aarch64-cros-linux-gnu/llvm-libunwind-16.0_pre475826-r2.tbz2"],
     )
     http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_binutils_2_36_1_r9",
+        downloaded_file_path = "binutils-2.36.1-r9.tbz2",
+        sha256 = "bd2dadd6f2148e113a9b24f284988cf0cad440a974d8e4f5b49d50a22fb73d60",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/binutils-2.36.1-r9.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_compiler_rt_16_0_pre475826_r3",
+        downloaded_file_path = "compiler-rt-16.0_pre475826-r3.tbz2",
+        sha256 = "68c4a925230bcfd535b9b605eccb3ac5f89e8e9e63913cae9a89b477a3e0a7dd",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/compiler-rt-16.0_pre475826-r3.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_gcc_10_2_0_r30",
+        downloaded_file_path = "gcc-10.2.0-r30.tbz2",
+        sha256 = "367fb8d3725c9065587be27549b0c34eac95594b210612cfee1d4ae658157fdd",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/gcc-10.2.0-r30.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_gdb_11_2_r2",
+        downloaded_file_path = "gdb-11.2-r2.tbz2",
+        sha256 = "4e88f0fdf4fd96cee7f17965fda0fdf678bb8b34b994f4d95839a24616c55e91",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/gdb-11.2-r2.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_glibc_2_35_r17",
+        downloaded_file_path = "glibc-2.35-r17.tbz2",
+        sha256 = "fdd70910aab045cd74db0087b668491b7a463067edf5de6a7b62e3220e6ca664",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/glibc-2.35-r17.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_go_1_19_4_r1",
+        downloaded_file_path = "go-1.19.4-r1.tbz2",
+        sha256 = "4825ab644e281ba0c699f14784e23d3e1b537e2b8b562fb99a6c4c02505e1f91",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/go-1.19.4-r1.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_libcxx_16_0_pre475826_r2",
+        downloaded_file_path = "libcxx-16.0_pre475826-r2.tbz2",
+        sha256 = "1ce3053548316158eb9147f9a31a83ad938bed9a428f7faca65bac6ba23a04ed",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/libcxx-16.0_pre475826-r2.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_libxcrypt_4_4_28_r2",
+        downloaded_file_path = "libxcrypt-4.4.28-r2.tbz2",
+        sha256 = "7723ea21a85561462164a3dbd6e966407b1a3abc273969f7565aae0f9bba2811",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/libxcrypt-4.4.28-r2.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_linux_headers_4_14_r61",
+        downloaded_file_path = "linux-headers-4.14-r61.tbz2",
+        sha256 = "5022dbb76919a95848a829ec8b8a43a0074017cd41ea64c235a93cb46043a2ad",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/linux-headers-4.14-r61.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_cross_armv7a_cros_linux_gnueabihf_llvm_libunwind_16_0_pre475826_r2",
+        downloaded_file_path = "llvm-libunwind-16.0_pre475826-r2.tbz2",
+        sha256 = "af1c82e3de9c29c0f7b37f58012021c93ca1dd5f70169f4409faf5ade03d9656",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-armv7a-cros-linux-gnueabihf/llvm-libunwind-16.0_pre475826-r2.tbz2"],
+    )
+    http_file(
         name = "amd64_host_2023_03_04_201551_cross_x86_64_cros_linux_gnu_binutils_2_36_1_r9",
         downloaded_file_path = "binutils-2.36.1-r9.tbz2",
         sha256 = "135e2997bed5194dc2249911b9ed8a4059fcf59465c4b7bcb157501f0b69efd9",
@@ -309,16 +429,16 @@ def prebuilts_dependencies():
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/cross-x86_64-cros-linux-gnu/llvm-libunwind-16.0_pre475826-r2.tbz2"],
     )
     http_file(
-        name = "amd64_host_2023_03_04_201551_dev_embedded_hps_sdk_0_0_1_r5",
-        downloaded_file_path = "hps-sdk-0.0.1-r5.tbz2",
-        sha256 = "37c1f6863b117dfc7b5f60f12f2bd83670beb834a5edcf4d1b091ebff18d4831",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-embedded/hps-sdk-0.0.1-r5.tbz2"],
-    )
-    http_file(
         name = "amd64_host_2023_03_04_201551_dev_embedded_coreboot_sdk_0_0_1_r119",
         downloaded_file_path = "coreboot-sdk-0.0.1-r119.tbz2",
         sha256 = "029f59e647d8f00654dff0e5333a93c2a3aa98c29f6b3adf3fc203340a8f8066",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-embedded/coreboot-sdk-0.0.1-r119.tbz2"],
+    )
+    http_file(
+        name = "amd64_host_2023_03_04_201551_dev_embedded_hps_sdk_0_0_1_r5",
+        downloaded_file_path = "hps-sdk-0.0.1-r5.tbz2",
+        sha256 = "37c1f6863b117dfc7b5f60f12f2bd83670beb834a5edcf4d1b091ebff18d4831",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.03.04.201551/packages/dev-embedded/hps-sdk-0.0.1-r5.tbz2"],
     )
     http_file(
         name = "amd64_host_2023_03_04_201551_dev_lang_rust_1_67_1",

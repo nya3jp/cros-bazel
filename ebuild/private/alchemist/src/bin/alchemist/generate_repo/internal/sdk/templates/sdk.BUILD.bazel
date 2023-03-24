@@ -105,7 +105,7 @@ package_set(
     deps = [
         {% for triple in triples -%}
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:binutils",
-        {% if triple == "aarch64-cros-linux-gnu" -%}
+        {% if triple == "aarch64-cros-linux-gnu" or triple == "armv7a-cros-linux-gnueabihf" -%}
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:compiler-rt",
         {% endif -%}
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:gcc",

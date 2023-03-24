@@ -151,7 +151,11 @@ fn generate_sdk_build(
             // TODO: We only have the prebuilds for the following two
             // toolchains defined. Add the rest of the prebuilds and then
             // remove this.
-            .filter(|t| t.name == "x86_64-cros-linux-gnu" || t.name == "aarch64-cros-linux-gnu")
+            .filter(|t| {
+                t.name == "x86_64-cros-linux-gnu"
+                    || t.name == "aarch64-cros-linux-gnu"
+                    || t.name == "armv7a-cros-linux-gnueabihf"
+            })
             .map(|t| t.name.as_ref())
             .collect(),
         overlays: overlays_targets,
