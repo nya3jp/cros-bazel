@@ -96,6 +96,13 @@ impl MountedSDK {
                 source: control_channel_path.outside.clone(),
             });
             envs.insert("_LOGIN_MODE".to_owned(), cfg.login_mode.to_string());
+
+            // Ensure we forward the TERM variable so bash behaves correctly.
+            if let Some(term) = std::env::var_os("TERM") {
+                // TODO: Switch envs over to store OsStrings
+                envs.insert("_TERM".to_owned(), term.to_string_lossy().to_string());
+            }
+
             Some(ControlChannel::new(control_channel_path.outside)?)
         } else {
             None

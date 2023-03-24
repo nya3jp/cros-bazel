@@ -26,6 +26,12 @@ else
   LOGIN_MODE=""
 fi
 
+if [[ -v _TERM ]]; then
+  TERM="${_TERM}"
+  # Remove our private variable from the environment
+  unset _TERM
+fi
+
 invoke-bash() {
   # When bash runs in interactive mode, it creates a new processes group
   # id (PGID) and sets the terminal's processes group id (TPGID) to the newly
@@ -37,7 +43,11 @@ invoke-bash() {
   # the PGID that this script is currently executing as. The problem is that
   # `tcgetpgrp` returns 0 because the PGID that we are executing with was
   # created outside of the PID namespace, so we no longer have access to it.
-  bash || true
+  if [[ -v TERM ]]; then
+    TERM="${TERM}" bash || true
+  else
+    bash || true
+  fi
 
   # Notify the ancestor that is outside the container to reset the TPGID
   printf 't' >/mnt/host/bazel-build/control
