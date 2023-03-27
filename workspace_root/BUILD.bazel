@@ -106,6 +106,27 @@ build_image(
     sdk = "@portage//internal/sdk",
 )
 
+# Builds the test image.
+build_image(
+    name = "chromiumos_test_image",
+    image_to_build = "test",
+    image_file_name = "chromiumos_test_image",
+    output_image_file_name = "chromiumos_test_image",
+    files = [
+        "//:scripts_src",
+        "@chromite//:src",
+    ],
+    target_packages = [
+        "@portage//virtual/target-os:package_set",
+        "@portage//virtual/target-os-dev:package_set",
+        "@portage//virtual/target-os-test:package_set",
+    ],
+    host_packages = [
+        "@portage//internal/sdk:cross-packages",
+    ],
+    sdk = "@portage//internal/sdk",
+)
+
 exports_files(["tools/bazel"])
 
 # A convenient alias to run alchemist.
