@@ -84,8 +84,19 @@ to run a VM locally. Make sure to copy an image out from `bazel-bin` as it's not
 writable by default.
 
 ```
-$ cp /mnt/host/source/src/bazel-bin/chromiumos_base_image.bin /tmp/
-$ cros_vm --start --board=amd64-generic /tmp/chromiumos_base_image.bin
+~/cros-bazel$ cp src/bazel-bin/chromiumos_base_image.bin /tmp/
+~/cros-bazel$ chmod +w /tmp/chromiumos_base_image.bin
+~/cros-bazel$ chromite/bin/cros_vm --start --board=amd64-generic --image-path /tmp/chromiumos_base_image.bin
+```
+
+You can use VNC viewer to view the VM.
+```
+~/$ vncviewer localhost:5900
+```
+
+You can also use `cros_vm` command to stop the VM.
+```
+~/cros-bazel$ chromite/bin/cros_vm --stop
 ```
 
 ## Directory structure
