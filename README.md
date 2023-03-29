@@ -55,11 +55,17 @@ This is a short-cut to build `@portage//virtual/target-os:package_set`.
 
 ## Building images
 
-We have two targets to build images:
+We have the following targets to build images:
 
 - `//:chromiumos_minimal_image`: Minimal image that contains
   `sys-apps/baselayout` and `sys-kernel/chromeos-kernel` only.
 - `//:chromiumos_base_image`: Base image.
+- `//:chromiumos_dev_image`: Dev image.
+- `//:chromiumos_test_image`: Test image.
+
+*** note
+For historical reasons, the output file name of the dev image is chromiumos_image.bin, not chromiumos_dev_image.bin.
+***
 
 As of 2023-03-09, we support building images for amd64-generic only. We have
 known build issues in some packages:
