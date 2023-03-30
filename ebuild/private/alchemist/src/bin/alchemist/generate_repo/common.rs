@@ -22,8 +22,10 @@ pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n"
 pub static PRIMORDIAL_PACKAGES: &[&str] = &[
     "sys-kernel/linux-headers",
     "sys-libs/gcc-libs",
+    "sys-libs/glibc",
     "sys-libs/libcxx",
     "sys-libs/llvm-libunwind",
+    "virtual/os-headers",
 ];
 
 fn file_name_to_repository_name(file_name: &str) -> String {

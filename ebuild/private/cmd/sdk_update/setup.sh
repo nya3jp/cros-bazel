@@ -42,17 +42,3 @@ if (( ${#atoms[@]} )); then
   # TODO: emerge is too slow! Find a way to speed up.
   time emerge --oneshot --usepkgonly --nodeps --jobs=16 "${atoms[@]}"
 fi
-
-# Install libc to sysroot.
-# Logic borrowed from chromite/lib/toolchain.py.
-# TODO: Can we install just the primary tool chain, or do we need them all?
-while read -r TOOLCHAIN
-do
-  rm -rf /tmp/libc
-  mkdir -p /tmp/libc
-
-  tar -I "zstd -f" -x -f "${TOOLCHAIN}" -C /tmp/libc
-  mkdir -p "/build/${BOARD}" "/build/${BOARD}/usr/lib/debug"
-  rsync --archive --hard-links /tmp/libc/usr/*-cros-linux-gnu/ "/build/${BOARD}/"
-  rsync --archive --hard-links /tmp/libc/usr/lib/debug/usr/*-cros-linux-gnu/ "/build/${BOARD}/usr/lib/debug/"
-done < <(find /var/lib/portage/pkgs -path "*/cross-*-cros-linux-gnu/glibc-*.tbz2")
