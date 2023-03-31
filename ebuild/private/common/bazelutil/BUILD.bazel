@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -13,15 +12,4 @@ go_library(
     ],
     importpath = "cros.local/bazel/ebuild/private/common/bazelutil",
     visibility = ["//visibility:public"],
-)
-
-rust_library(
-    name = "bazelutil_rust",
-    srcs = glob(["src/*.rs"]),
-)
-
-rust_test(
-    name = "bazelutil_rust_test",
-    size = "small",
-    crate = ":bazelutil_rust",
 )
