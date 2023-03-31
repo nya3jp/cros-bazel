@@ -51,7 +51,13 @@ fn run_ebuild(
         .context("Failed to spawn bash for ebuild metadata evaluation")?;
 
     if !output.status.success() {
-        bail!("ebuild failed to evaluate: {}", &output.status);
+        bail!(
+            "ebuild failed to evaluate {}: {}\nstdout: {}\nstderr: {}",
+            ebuild_path.display(),
+            &output.status,
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
     if !output.stdout.is_empty() || !output.stderr.is_empty() {
         bail!(
