@@ -23,6 +23,12 @@ pub struct ConfigArgs {
     layer: Vec<PathBuf>,
 
     #[arg(
+        long,
+        help = "enables the runfiles mode in which input paths are handled as runfile paths."
+    )]
+    runfiles_mode: bool,
+
+    #[arg(
         long = "login",
         help = "logs in to the SDK before installing deps, before building, after \
             building, or after failing to build respectively.",
@@ -31,11 +37,26 @@ pub struct ConfigArgs {
     login_mode: LoginMode,
 }
 
+impl ConfigArgs {
+    pub fn runfiles_mode(&self) -> bool {
+        self.runfiles_mode
+    }
+}
+
 impl Config {
     pub fn try_from(args: ConfigArgs) -> Result<Config> {
+        let layer_paths = if args.runfiles_mode {
+            let r = runfiles::Runfiles::create()?;
+            args.layer
+                .into_iter()
+                .map(|layer| r.rlocation(layer))
+                .collect()
+        } else {
+            args.layer
+        };
         Ok(Config {
             board: args.board,
-            layer_paths: args.layer,
+            layer_paths,
             login_mode: args.login_mode,
             allow_network_access: false,
             privileged: false,

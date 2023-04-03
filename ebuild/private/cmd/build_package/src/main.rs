@@ -129,22 +129,20 @@ impl FromStr for EbuildMetadata {
     }
 }
 
-/// Converts the path to an absolute path if it's a runfile path prefixed with "%runfiles/".
-/// TODO(b/269558613): Fix all call sites to always use runfile paths and delete this function.
-fn fix_runfile_path(path: PathBuf) -> Result<PathBuf> {
-    let r = runfiles::Runfiles::create()?;
-    if let Ok(path) = path.strip_prefix("%runfiles") {
-        Ok(r.rlocation(path))
-    } else {
-        Ok(path)
-    }
-}
-
 fn main() -> Result<()> {
     let args = Cli::parse();
+    let runfiles_mode = args.mountsdk_config.runfiles_mode();
     let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
 
     let r = runfiles::Runfiles::create()?;
+
+    let fix_runfile_path = |path| {
+        if runfiles_mode {
+            r.rlocation(path)
+        } else {
+            path
+        }
+    };
 
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation("cros/bazel/ebuild/private/cmd/build_package/build_package.sh"),
@@ -162,20 +160,20 @@ fn main() -> Result<()> {
     .collect();
     let ebuild_path = ebuild_mount_dir.join(&args.ebuild.file_name);
     cfg.bind_mounts.push(BindMount {
-        source: fix_runfile_path(args.ebuild.source)?,
+        source: fix_runfile_path(args.ebuild.source),
         mount_path: ebuild_path.clone(),
     });
 
     for mount in args.file {
         cfg.bind_mounts.push(BindMount {
-            source: fix_runfile_path(mount.source)?,
+            source: fix_runfile_path(mount.source),
             mount_path: ebuild_mount_dir.join(mount.mount_path),
         })
     }
 
     for mount in args.distfile {
         cfg.bind_mounts.push(BindMount {
-            source: fix_runfile_path(mount.source)?,
+            source: fix_runfile_path(mount.source),
             mount_path: PathBuf::from("/var/cache/distfiles").join(mount.mount_path),
         })
     }

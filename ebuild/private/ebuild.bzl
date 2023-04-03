@@ -11,10 +11,10 @@ def _format_file_arg(file):
     return "--file=%s=%s" % (relative_path_in_package(file), file.path)
 
 def _format_file_arg_for_test(file):
-    return "--file=%s=%%runfiles/cros/%s" % (relative_path_in_package(file), file.short_path)
+    return "--file=%s=cros/%s" % (relative_path_in_package(file), file.short_path)
 
 def _format_layer_arg_for_test(layer):
-    return "--layer=%%runfiles/cros/%s" % layer.short_path
+    return "--layer=cros/%s" % layer.short_path
 
 # Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
 _EBUILD_COMMON_ATTRS = dict(
@@ -106,13 +106,15 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     args.add("--board=" + sdk.board)
     if output_path:
         args.add("--output=" + output_path)
+    if for_test:
+        args.add("--runfiles-mode")
 
     # --ebuild
     ebuild_inside_path = ctx.file.ebuild.path.removeprefix(
         ctx.file.ebuild.owner.workspace_root + "/",
     ).removeprefix("internal/packages/")
     if for_test:
-        args.add("--ebuild=%s=%%runfiles/cros/%s" % (ebuild_inside_path, ctx.file.ebuild.short_path))
+        args.add("--ebuild=%s=cros/%s" % (ebuild_inside_path, ctx.file.ebuild.short_path))
     else:
         args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
     direct_inputs.append(ctx.file.ebuild)
@@ -132,7 +134,7 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
             fail("cannot refer to multi-file rule in distfiles")
         file = files[0]
         if for_test:
-            args.add("--distfile=%s=%%runfiles/cros/%s" % (distfile_name, file.short_path))
+            args.add("--distfile=%s=cros/%s" % (distfile_name, file.short_path))
         else:
             args.add("--distfile=%s=%s" % (distfile_name, file.path))
         direct_inputs.append(file)
@@ -147,7 +149,7 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     # --layer for overlays
     for overlay in sdk.overlays.overlays:
         if for_test:
-            args.add("--layer=%%runfiles/cros/%s" % overlay.file.short_path)
+            args.add("--layer=cros/%s" % overlay.file.short_path)
         else:
             args.add("--layer=%s" % overlay.file.path)
         direct_inputs.append(overlay.file)
@@ -155,7 +157,7 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     # --layer for source code
     for file in ctx.files.srcs:
         if for_test:
-            args.add("--layer=%%runfiles/cros/%s" % file.short_path)
+            args.add("--layer=cros/%s" % file.short_path)
         else:
             args.add("--layer=%s" % file.path)
         direct_inputs.append(file)
