@@ -122,7 +122,8 @@ fn setup_tools() -> Result<TempDir> {
 
     let tools_dir = tempfile::tempdir()?;
 
-    fs::symlink(current_exec, tools_dir.path().join("ver_test"))?;
+    fs::symlink(&current_exec, tools_dir.path().join("ver_test"))?;
+    fs::symlink(&current_exec, tools_dir.path().join("ver_rs"))?;
 
     Ok(tools_dir)
 }

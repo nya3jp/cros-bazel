@@ -13,6 +13,7 @@ pub mod fakechroot;
 pub mod fileops;
 pub mod repository;
 pub mod resolver;
+pub mod simpleversion;
 #[cfg(test)]
 pub(crate) mod testutils;
 pub mod toolchain;
