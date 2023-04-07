@@ -543,10 +543,13 @@ pub fn analyze_sources(
 ) -> Result<PackageSources> {
     let (mut local_sources, repo_sources) = extract_cros_workon_sources(details, src_dir)?;
 
-    apply_local_sources_workarounds(details, &mut local_sources)?;
-
+    // We sort before applying the workarounds because we want the
+    // meson_test_disable_hack layer to be last so it overrides the common-mk
+    // layer.
     local_sources.sort();
     local_sources.dedup();
+
+    apply_local_sources_workarounds(details, &mut local_sources)?;
 
     Ok(PackageSources {
         local_sources,
