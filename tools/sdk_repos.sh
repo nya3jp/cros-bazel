@@ -49,13 +49,9 @@ PACKAGES=(
 	cross-x86_64-cros-linux-gnu/libxcrypt
 	cross-x86_64-cros-linux-gnu/linux-headers
 	cross-x86_64-cros-linux-gnu/llvm-libunwind
-	app-text/docbook-xml-dtd
-	dev-util/meson-format-array
-	dev-util/b2
 	dev-lang/rust
 	dev-embedded/coreboot-sdk
 	dev-embedded/hps-sdk
-	x11-base/xcb-proto
 )
 
 for PACKAGE in "${PACKAGES[@]}"; do

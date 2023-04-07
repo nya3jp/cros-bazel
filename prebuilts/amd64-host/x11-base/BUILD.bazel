@@ -8,9 +8,6 @@ load("//bazel/ebuild:defs.bzl", "binary_package")
 # by BDEPEND.
 binary_package(
     name = "xcb-proto",
-    src = select({
-        "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_03_04_201551_x11_base_xcb_proto_1_15_2//file",
-        "//conditions:default": "@amd64_host_xcb_proto_1_14_1//file",
-    }),
+    src = "@amd64_host_xcb_proto_1_14_1//file",
     visibility = ["//visibility:public"],
 )

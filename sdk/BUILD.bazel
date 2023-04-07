@@ -47,7 +47,7 @@ config_setting(
 sdk_from_archive(
     name = "base_sdk",
     src = select({
-        ":new-sdk-enabled": "@cros-sdk-2023.03.04.201551//file",
+        ":new-sdk-enabled": "@cros-sdk-2023.04.05.144808//file",
         "//conditions:default": "@cros-sdk-2022.08.25.153812//file",
     }),
     # This rule just extracts an archive, do not bother dispatching to remotes.
