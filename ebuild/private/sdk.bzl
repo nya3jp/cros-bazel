@@ -165,6 +165,14 @@ def _sdk_update_impl(ctx):
         order = "postorder",
     )
 
+    if "{dep_count}" in ctx.attr.progress_message:
+        progress_message = ctx.attr.progress_message.replace(
+            "{dep_count}",
+            str(len(install_set.to_list())),
+        )
+    else:
+        progress_message = ctx.attr.progress_message
+
     outputs = install_deps(
         ctx = ctx,
         output_prefix = ctx.attr.name,
@@ -172,7 +180,7 @@ def _sdk_update_impl(ctx):
         install_set = install_set,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
-        progress_message = ctx.attr.progress_message,
+        progress_message = progress_message,
     )
 
     return [
@@ -203,6 +211,8 @@ sdk_update = rule(
         "progress_message": attr.string(
             doc = """
             Progress message for this target.
+            If the message contains `{dep_count}' it will be replaced with the
+            total number of dependencies that need to be installed.
             """,
             default = "Updating SDK",
         ),

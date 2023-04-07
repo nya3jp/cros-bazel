@@ -16,7 +16,7 @@ sdk_update(
         "{{ dep }}",
         {%- endfor %}
     ],
-    progress_message = "Installing dependencies for {{ ebuild.ebuild_name }}",
+    progress_message = "Installing {dep_count} dependencies for {{ ebuild.ebuild_name }}",
     visibility = ["//visibility:private"],
 )
 
