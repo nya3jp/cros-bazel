@@ -318,14 +318,19 @@ pub fn enter_fake_chroot(board: &str, source_dir: &Path) -> Result<PathTranslato
 
     enter_namespaces()?;
 
-    hide_directories(&[
-        Path::new("/build"),
-        Path::new("/etc"),
-        Path::new("/mnt/host"),
-    ])?;
+    let source_mount_point = Path::new("/mnt/host/source");
+    let inside_cros_chroot = source_mount_point.try_exists()?;
+    let mut dirs_to_hide = vec![Path::new("/build"), Path::new("/etc")];
+    if !inside_cros_chroot {
+        dirs_to_hide.push(Path::new("/mnt/host"));
+    }
+
+    hide_directories(&dirs_to_hide)?;
 
     // Create /mnt/host/source symlink.
-    symlink(&source_dir, Path::new("/mnt/host/source"))?;
+    if !inside_cros_chroot {
+        symlink(&source_dir, source_mount_point)?;
+    }
 
     let translator = PathTranslator::new(CHROOT_SOURCE_DIR, &source_dir);
 
