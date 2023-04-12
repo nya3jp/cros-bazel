@@ -26,6 +26,8 @@ use nix::{
 };
 use walkdir::WalkDir;
 
+const OLD_ROOT_NAME: &str = ".old-root";
+
 /// Provides a way to translate paths inner and outer paths.
 /// This is useful when running inside a container and you have a "bind mount"
 /// between the host and container.
@@ -101,7 +103,6 @@ fn enter_namespaces() -> Result<()> {
 ///
 /// You need to call [`enter_namespaces`] in advance.
 fn hide_directories(dirs_to_hide: &[&Path]) -> Result<()> {
-    let old_root_name = ".old-root";
     let root_dir = Path::new("/");
 
     // Make a temporary directory that would be the new root.
@@ -172,7 +173,7 @@ fn hide_directories(dirs_to_hide: &[&Path]) -> Result<()> {
             let orig_dir_entry = orig_dir_entry?;
             let source = new_dir_entry.path().join(orig_dir_entry.file_name());
             let target = root_dir
-                .join(old_root_name)
+                .join(OLD_ROOT_NAME)
                 .join(rel_path)
                 .join(orig_dir_entry.file_name());
             match symlink(target, source) {
@@ -187,10 +188,10 @@ fn hide_directories(dirs_to_hide: &[&Path]) -> Result<()> {
 
     // Create the directory to mount the old filesystem root after
     // pivot_root(2).
-    create_dir(new_root_dir.join(old_root_name))?;
+    create_dir(new_root_dir.join(OLD_ROOT_NAME))?;
 
     // Finally, call pivot_root(2).
-    pivot_root(new_root_dir, &new_root_dir.join(old_root_name))?;
+    pivot_root(new_root_dir, &new_root_dir.join(OLD_ROOT_NAME))?;
 
     Ok(())
 }
@@ -203,6 +204,18 @@ fn hide_directories(dirs_to_hide: &[&Path]) -> Result<()> {
 fn generate_host_configs() -> Result<()> {
     let ops = vec![
         // Host specific files
+        FileOps::symlink(
+            "/etc/ld.so.cache",
+            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.cache"),
+        ),
+        FileOps::symlink(
+            "/etc/ld.so.conf",
+            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.conf"),
+        ),
+        FileOps::symlink(
+            "/etc/ld.so.conf.d",
+            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.conf.d"),
+        ),
         FileOps::symlink(
             "/etc/make.conf",
             "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
