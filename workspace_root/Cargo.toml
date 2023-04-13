@@ -13,6 +13,7 @@ members = [
     "bazel/ebuild/private/cmd/sdk_from_archive",
     "bazel/ebuild/private/cmd/sdk_update",
     "bazel/ebuild/private/common/cliutil",
+    "bazel/ebuild/private/common/durabletree",
     "bazel/ebuild/private/common/fileutil",
     "bazel/ebuild/private/common/makechroot",
     "bazel/ebuild/private/common/mountsdk",
@@ -64,4 +65,5 @@ topological-sort = "0.2.2"
 url = "2.3.1"
 users = "0.11.0"
 walkdir = "2.3.2"
+xattr = "1.0.0"
 zstd = "0.12.1"
