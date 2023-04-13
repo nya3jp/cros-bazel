@@ -30,9 +30,9 @@ fn main() -> Result<ExitCode> {
     std::fs::create_dir_all(&args.output_dir)?;
 
     // TODO: Remove the dependency to the system pixz.
-    let status = Command::new("/usr/bin/tar")
+    let status = Command::new("tar")
         .args([
-            "-I/usr/bin/pixz",
+            "-Ipixz",
             "-xf",
             &args.input.to_string_lossy(),
             "-C",
