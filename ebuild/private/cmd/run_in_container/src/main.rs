@@ -192,7 +192,7 @@ fn continue_namespace(
 
     if !allow_network_access {
         // Enable the loopback networking.
-        if !Command::new("/usr/sbin/ifconfig")
+        if !Command::new("ifconfig")
             .args(["lo", "up"])
             .status()?
             .success()
