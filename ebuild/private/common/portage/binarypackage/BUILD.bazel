@@ -52,7 +52,6 @@ rust_test(
     crate = ":binarypackage_rust",
     data = glob(["testdata/*"]),
     deps = [
-        "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",
     ],
 )

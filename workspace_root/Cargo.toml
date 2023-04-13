@@ -4,11 +4,25 @@
 # List all local crates required by repo rules here.
 members = [
     "bazel/ebuild/private/alchemist",
+    "bazel/ebuild/private/cmd/action_wrapper",
+    "bazel/ebuild/private/cmd/build_image",
+    "bazel/ebuild/private/cmd/build_package",
+    "bazel/ebuild/private/cmd/extract_interface",
+    "bazel/ebuild/private/cmd/install_deps",
+    "bazel/ebuild/private/cmd/run_in_container",
+    "bazel/ebuild/private/cmd/sdk_from_archive",
+    "bazel/ebuild/private/cmd/sdk_update",
+    "bazel/ebuild/private/common/cliutil",
+    "bazel/ebuild/private/common/fileutil",
+    "bazel/ebuild/private/common/makechroot",
+    "bazel/ebuild/private/common/mountsdk",
+    "bazel/ebuild/private/common/portage/binarypackage",
+    "bazel/ebuild/private/common/run_in_container_lib",
     "bazel/ebuild/private/common/standard/version",
+    "bazel/ebuild/private/common/tar",
 ]
 
 [workspace.dependencies]
-
 # List third-party deps here.
 anyhow = { version = "1.0.66", features = ["backtrace"] }
 base64 = "0.20.0"
