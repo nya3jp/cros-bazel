@@ -58,6 +58,9 @@ fn run(cmd: &mut Command) -> Result<ExitStatus> {
 fn main() -> Result<ExitCode> {
     let args = Cli::parse();
 
+    // Always enable Rust backtraces.
+    std::env::set_var("RUST_BACKTRACE", "1");
+
     let mut command = Command::new(&args.command_line[0]);
     command.args(&args.command_line[1..]);
 

@@ -85,6 +85,8 @@ impl MountedSDK {
             // TODO: Do not set $BOARD here. Callers may not be interested in
             // particular boards.
             ("BOARD".to_owned(), cfg.board.clone()),
+            // Always enable Rust backtrace.
+            ("RUST_BACKTRACE".to_owned(), "1".to_owned()),
         ]);
 
         let control_channel = if cfg.login_mode != LoginMode::Never {
