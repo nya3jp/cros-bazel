@@ -13,12 +13,12 @@ go_library(
         "expr.go",
         "expr_compile.go",
     ],
-    importpath = "cros.local/bazel/ebuild/private/common/standard/dependency",
+    importpath = "cros.local/bazel/ebuild/private/common/portage/dependency",
     visibility = ["//visibility:public"],
     deps = [
-        "//bazel/ebuild/private/common/standard/dependency/internal/grammer",
-        "//bazel/ebuild/private/common/standard/naming",
-        "//bazel/ebuild/private/common/standard/version",
+        "//bazel/ebuild/private/common/portage/dependency/internal/grammer",
+        "//bazel/ebuild/private/common/portage/naming",
+        "//bazel/ebuild/private/common/portage/version",
     ],
 )
 
@@ -31,7 +31,7 @@ go_test(
     ],
     deps = [
         ":dependency",
-        "//bazel/ebuild/private/common/standard/version",
+        "//bazel/ebuild/private/common/portage/version",
         "@com_github_google_go_cmp//cmp",
     ],
 )

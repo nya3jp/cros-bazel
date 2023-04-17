@@ -8,7 +8,7 @@ import (
 	"errors"
 	"strings"
 
-	"cros.local/bazel/ebuild/private/common/standard/dependency/internal/grammer"
+	"cros.local/bazel/ebuild/private/common/portage/dependency/internal/grammer"
 )
 
 func Parse(s string) (*Deps, error) {

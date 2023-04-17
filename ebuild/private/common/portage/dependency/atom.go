@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	"cros.local/bazel/ebuild/private/common/standard/naming"
-	"cros.local/bazel/ebuild/private/common/standard/version"
+	"cros.local/bazel/ebuild/private/common/portage/naming"
+	"cros.local/bazel/ebuild/private/common/portage/version"
 )
 
 type TargetPackage struct {

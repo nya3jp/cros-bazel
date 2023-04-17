@@ -17,8 +17,8 @@ members = [
     "bazel/ebuild/private/common/makechroot",
     "bazel/ebuild/private/common/mountsdk",
     "bazel/ebuild/private/common/portage/binarypackage",
+    "bazel/ebuild/private/common/portage/version",
     "bazel/ebuild/private/common/run_in_container_lib",
-    "bazel/ebuild/private/common/standard/version",
     "bazel/ebuild/private/common/tar",
 ]
 

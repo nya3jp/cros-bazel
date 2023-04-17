@@ -14,7 +14,7 @@ rust_binary(
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/mountsdk",
-        "//bazel/ebuild/private/common/standard/version:version_rust",
+        "//bazel/ebuild/private/common/portage/version:version_rust",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:nix",

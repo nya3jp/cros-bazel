@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"cros.local/bazel/ebuild/private/common/standard/version"
+	"cros.local/bazel/ebuild/private/common/portage/version"
 )
 
 var categoryRe = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9+_.-]*$`)

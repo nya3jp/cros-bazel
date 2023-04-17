@@ -69,7 +69,7 @@ ALCHEMIST_SRCS = [
     Label("//bazel/ebuild/private/alchemist:src/resolver.rs"),
     Label("//bazel/ebuild/private/alchemist:src/testutils.rs"),
     Label("//bazel/ebuild/private/alchemist:src/toolchain/mod.rs"),
-    Label("//bazel/ebuild/private/common/standard/version:Cargo.toml"),
-    Label("//bazel/ebuild/private/common/standard/version:src/lib.rs"),
-    Label("//bazel/ebuild/private/common/standard/version:src/version.rs"),
+    Label("//bazel/ebuild/private/common/portage/version:Cargo.toml"),
+    Label("//bazel/ebuild/private/common/portage/version:src/lib.rs"),
+    Label("//bazel/ebuild/private/common/portage/version:src/version.rs"),
 ]

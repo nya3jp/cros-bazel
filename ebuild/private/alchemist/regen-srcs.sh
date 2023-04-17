@@ -23,10 +23,10 @@ cd "$(dirname -- "$0")"
 			-name testdata -prune -or \
 			-type f -printf '    Label("//bazel/ebuild/private/alchemist:%p"),\n'
 
-		find ../common/standard/version \
+		find ../common/portage/version \
 			-type f \
 			! \( -name '*.go' -or -name 'BUILD.bazel' \) \
-			-printf '    Label("//bazel/ebuild/private/common/standard/version:%P"),\n'
+			-printf '    Label("//bazel/ebuild/private/common/portage/version:%P"),\n'
 	) | LC_ALL=C sort
 
 	echo "]"

@@ -7,8 +7,8 @@ package dependency_test
 import (
 	"testing"
 
-	"cros.local/bazel/ebuild/private/common/standard/dependency"
-	"cros.local/bazel/ebuild/private/common/standard/version"
+	"cros.local/bazel/ebuild/private/common/portage/dependency"
+	"cros.local/bazel/ebuild/private/common/portage/version"
 )
 
 func verifyParseAtom(t *testing.T, atomStr string) {

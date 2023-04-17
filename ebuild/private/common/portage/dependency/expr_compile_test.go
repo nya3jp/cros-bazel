@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"cros.local/bazel/ebuild/private/common/standard/dependency"
+	"cros.local/bazel/ebuild/private/common/portage/dependency"
 )
 
 func TestParseUri(t *testing.T) {

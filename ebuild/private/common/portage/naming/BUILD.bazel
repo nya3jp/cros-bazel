@@ -7,7 +7,7 @@ load("@rules_go//go:def.bzl", "go_library")
 go_library(
     name = "naming",
     srcs = ["check.go"],
-    importpath = "cros.local/bazel/ebuild/private/common/standard/naming",
+    importpath = "cros.local/bazel/ebuild/private/common/portage/naming",
     visibility = ["//visibility:public"],
-    deps = ["//bazel/ebuild/private/common/standard/version"],
+    deps = ["//bazel/ebuild/private/common/portage/version"],
 )

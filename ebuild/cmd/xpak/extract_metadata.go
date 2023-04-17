@@ -16,7 +16,7 @@ import (
 
 	"cros.local/bazel/ebuild/private/common/bazelutil"
 	"cros.local/bazel/ebuild/private/common/portage/binarypackage"
-	"cros.local/bazel/ebuild/private/common/standard/dependency"
+	"cros.local/bazel/ebuild/private/common/portage/dependency"
 	"cros.local/bazel/ebuild/private/common/tar"
 )
 
