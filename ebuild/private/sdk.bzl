@@ -7,17 +7,15 @@ load("install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
     output_root = ctx.actions.declare_directory(ctx.attr.name)
-    output_symlink_tar = ctx.actions.declare_file(ctx.attr.name + "-symlinks.tar")
 
     args = ctx.actions.args()
     args.add_all([
         "--input=" + ctx.file.src.path,
-        "--output-dir=" + output_root.path,
-        "--output-symlink-tar=" + output_symlink_tar.path,
+        "--output=" + output_root.path,
     ])
 
     inputs = [ctx.executable._sdk_from_archive, ctx.file.src]
-    outputs = [output_root, output_symlink_tar]
+    outputs = [output_root]
 
     ctx.actions.run(
         inputs = inputs,
@@ -31,7 +29,7 @@ def _sdk_from_archive_impl(ctx):
     return [
         DefaultInfo(files = depset(outputs)),
         SDKBaseInfo(
-            layers = [output_root, output_symlink_tar],
+            layers = [output_root],
         ),
     ]
 

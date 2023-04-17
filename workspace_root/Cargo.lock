@@ -1233,7 +1233,7 @@ dependencies = [
  "anyhow",
  "clap",
  "cliutil",
- "tar 0.1.0",
+ "durabletree",
  "tempfile",
 ]
 

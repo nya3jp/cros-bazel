@@ -10,7 +10,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
-        "//bazel/ebuild/private/common/tar:tar_rust",
+        "//bazel/ebuild/private/common/durabletree",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
     ],
