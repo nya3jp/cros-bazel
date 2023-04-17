@@ -127,7 +127,6 @@ See [manifest/_bazel.xml] for details on how this repository is organized.
                     * `run_in_container/` ... runs a program within an unprivileged Linux container; used by other programs such as `build_sdk` and `build_package`
                     * `build_sdk/` ... builds SDK squashfs; used by `sdk` rule
                     * `build_package/` ... builds a Portage binary package; used by `ebuild` rule
-                    * `ver_test/` ... **DEPRECATED** implements `ver_test` function in ebuilds
                 * `common/` ... common Rust/Go libraries
         * `config/` ... contains build configs like which overlays to use
         * `prebuilts/` ... defines prebuilt binaries
