@@ -97,7 +97,8 @@ def generate_interface_libraries(
         pkg_configs,
         shared_libs,
         static_libs,
-        extract_interface_executable):
+        extract_interface_executable,
+        action_wrapper_executable):
     """
     Declares an action to generate interface libraries from a binary package.
 
@@ -123,6 +124,7 @@ def generate_interface_libraries(
             file paths.
         extract_interface_executable: File: The "extract_interface" executable
             file.
+        action_wrapper_executable: File: The "action_wrapper" executable file.
 
     Returns:
         (outputs, providers) where:
@@ -130,8 +132,14 @@ def generate_interface_libraries(
             providers: list[Provider]: A list of providers that should be
                 attached to the current build target.
     """
+    output_log = ctx.actions.declare_file(output_base_dir + ".extract_interface.log")
+
     args = ctx.actions.args()
-    args.add("--binpkg=%s" % input_binary_package_file.path)
+    args.add_all([
+        "--output=%s" % output_log.path,
+        extract_interface_executable,
+        "--binpkg=%s" % input_binary_package_file.path
+    ])
 
     xpak_outputs = []
     for xpak_file in ["NEEDED", "REQUIRES", "PROVIDES"]:
@@ -170,12 +178,13 @@ def generate_interface_libraries(
     )
 
     files_outputs = header_outputs + pkg_config_outputs + shared_lib_outputs + static_lib_outputs
-    outputs = xpak_outputs + files_outputs
+    outputs = xpak_outputs + files_outputs + [output_log]
 
     ctx.actions.run(
         inputs = [input_binary_package_file],
         outputs = outputs,
-        executable = extract_interface_executable,
+        executable = action_wrapper_executable,
+        tools = [extract_interface_executable],
         arguments = [args],
         progress_message = "Generating interface libraries for %s" % paths.basename(input_binary_package_file.path),
     )

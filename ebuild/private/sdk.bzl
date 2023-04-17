@@ -7,20 +7,24 @@ load("install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
     output_root = ctx.actions.declare_directory(ctx.attr.name)
+    output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
 
     args = ctx.actions.args()
     args.add_all([
+        "--output=" + output_log.path,
+        ctx.executable._sdk_from_archive,
         "--input=" + ctx.file.src.path,
         "--output=" + output_root.path,
     ])
 
     inputs = [ctx.executable._sdk_from_archive, ctx.file.src]
-    outputs = [output_root]
+    outputs = [output_root, output_log]
 
     ctx.actions.run(
         inputs = inputs,
         outputs = outputs,
-        executable = ctx.executable._sdk_from_archive,
+        executable = ctx.executable._action_wrapper,
+        tools = [ctx.executable._sdk_from_archive],
         arguments = [args],
         mnemonic = "SdkFromArchive",
         progress_message = "Extracting SDK archive",
@@ -39,6 +43,11 @@ sdk_from_archive = rule(
         "src": attr.label(
             mandatory = True,
             allow_single_file = True,
+        ),
+        "_action_wrapper": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
         ),
         "_sdk_from_archive": attr.label(
             executable = True,

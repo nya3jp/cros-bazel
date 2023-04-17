@@ -236,6 +236,7 @@ def _ebuild_impl(ctx):
         shared_libs = ctx.attr.shared_libs,
         static_libs = ctx.attr.static_libs,
         extract_interface_executable = ctx.executable._extract_interface,
+        action_wrapper_executable = ctx.executable._action_wrapper,
     )
 
     # Compute provider data.
