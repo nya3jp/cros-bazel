@@ -52,7 +52,6 @@ def _sdk_impl(ctx):
     base_sdk = ctx.attr.base[SDKBaseInfo]
 
     output_root = ctx.actions.declare_directory(ctx.attr.name)
-    output_symlink_tar = ctx.actions.declare_file(ctx.attr.name + "-symlinks.tar")
     output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
 
     host_installs = depset(
@@ -73,8 +72,7 @@ def _sdk_impl(ctx):
         "--output=" + output_log.path,
         ctx.executable._sdk_update,
         "--board=" + ctx.attr.board,
-        "--output-dir=" + output_root.path,
-        "--output-symlink-tar=" + output_symlink_tar.path,
+        "--output=" + output_root.path,
     ])
     args.add_all(base_sdk.layers, format_each = "--layer=%s", expand_directories = False)
     args.add_all(host_installs, format_each = "--install-host=%s")
@@ -91,7 +89,7 @@ def _sdk_impl(ctx):
         transitive = [host_installs, target_installs],
     )
 
-    outputs = [output_root, output_symlink_tar, output_log]
+    outputs = [output_root, output_log]
 
     ctx.actions.run(
         inputs = inputs,
@@ -114,7 +112,7 @@ def _sdk_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             board = ctx.attr.board,
-            layers = base_sdk.layers + [output_root, output_symlink_tar],
+            layers = base_sdk.layers + [output_root],
             overlays = ctx.attr.overlays[OverlaySetInfo],
         ),
     ]

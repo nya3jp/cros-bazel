@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use cliutil::cli_main;
+use durabletree::DurableTree;
 use makechroot::BindMount;
 use std::{
     path::{Path, PathBuf},
@@ -21,13 +22,9 @@ struct Cli {
     #[command(flatten)]
     mountsdk_config: mountsdk::ConfigArgs,
 
-    /// A path to a directory to write non-symlink files under
+    /// A path to a directory where the output durable tree is written.
     #[arg(long, required = true)]
-    output_dir: PathBuf,
-
-    /// A path to write a symlink tar to
-    #[arg(long, required = true)]
-    output_symlink_tar: PathBuf,
+    output: PathBuf,
 
     #[arg(long)]
     install_host: Vec<PathBuf>,
@@ -102,14 +99,13 @@ fn do_main() -> Result<()> {
     sdk.run_cmd(&[MAIN_SCRIPT])
         .with_context(|| "Failed to run the command.")?;
 
-    fileutil::move_dir_contents(sdk.diff_dir(), &args.output_dir)
+    fileutil::move_dir_contents(sdk.diff_dir(), &args.output)
         .with_context(|| "Failed to move the diff dir.")?;
 
-    makechroot::clean_layer(Some(&sdk.board), &args.output_dir)
+    makechroot::clean_layer(Some(&sdk.board), &args.output)
         .with_context(|| "Failed to clean the output dir.")?;
 
-    tar::move_symlinks_into_tar(&args.output_dir, &args.output_symlink_tar)
-        .with_context(|| "Failed to move symlinks into a tarball.")?;
+    DurableTree::convert(&args.output)?;
 
     Ok(())
 }
