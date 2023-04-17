@@ -27,6 +27,7 @@ rust_binary(
         "@alchemy_crates//:pathdiff",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:shell-escape",
         "@alchemy_crates//:tar",
         "@alchemy_crates//:tempfile",
         "@alchemy_crates//:walkdir",

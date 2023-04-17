@@ -1145,6 +1145,7 @@ dependencies = [
  "runfiles",
  "serde",
  "serde_json",
+ "shell-escape",
  "tar",
  "tempfile",
  "walkdir",

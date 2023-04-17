@@ -5,6 +5,7 @@ use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cliutil::cli_main;
 use durabletree::DurableTree;
+use itertools::Itertools;
 use makechroot::LayerType;
 use nix::{
     mount::MntFlags,
@@ -490,6 +491,9 @@ fn continue_namespace(
     std::env::remove_var("RUNFILES_MANIFEST_FILE");
 
     std::env::set_current_dir(&cfg.chdir).with_context(|| format!("chdir to {:?}", cfg.chdir))?;
+
+    let escaped_command = cmd.iter().map(|s| shell_escape::escape(s.into())).join(" ");
+    eprintln!("COMMAND(container): {}", escaped_command);
 
     let cmd = cmd
         .into_iter()
