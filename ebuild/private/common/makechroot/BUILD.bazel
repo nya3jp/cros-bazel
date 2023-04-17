@@ -13,6 +13,7 @@ rust_library(
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
+        "//bazel/ebuild/private/common/durabletree",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:path-absolutize",
@@ -27,6 +28,7 @@ rust_test(
     crate = ":makechroot",
     data = glob(["testdata/*"]),
     deps = [
+        "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",
     ],
 )

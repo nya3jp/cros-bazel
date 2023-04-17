@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
+durabletree = { path = "../../common/durabletree" }
 makechroot = { path = "../../common/makechroot" }
 run_in_container_lib = { path = "../../common/run_in_container_lib" }
 

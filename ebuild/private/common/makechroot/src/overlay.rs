@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 use anyhow::{bail, Result};
+use durabletree::DurableTree;
 use path_absolutize::Absolutize;
 use serde::{Deserialize, Serialize};
 use std::{path::Path, path::PathBuf, str::FromStr};
@@ -29,6 +30,7 @@ impl FromStr for BindMount {
 pub enum LayerType {
     Dir,
     Tar,
+    DurableTree,
 }
 
 impl LayerType {
@@ -39,7 +41,9 @@ impl LayerType {
             .file_name()
             .and_then(|x| x.to_str())
             .unwrap_or_default();
-        if std::fs::metadata(&layer_path)?.is_dir() {
+        if DurableTree::try_exists(&layer_path)? {
+            Ok(LayerType::DurableTree)
+        } else if std::fs::metadata(&layer_path)?.is_dir() {
             Ok(LayerType::Dir)
         } else if file_name.ends_with(".tar.zst") || file_name.ends_with(".tar") {
             Ok(LayerType::Tar)
@@ -53,11 +57,13 @@ impl LayerType {
 mod tests {
     use super::*;
     use runfiles::Runfiles;
+    use tempfile::TempDir;
 
     #[test]
     fn detect_layer_type_works() -> Result<()> {
         let r = Runfiles::create()?;
         let testdata = PathBuf::from("cros/bazel/ebuild/private/common/makechroot/testdata/");
+
         assert_eq!(
             LayerType::detect(r.rlocation(testdata.join("example.tar.zst")))?,
             LayerType::Tar
@@ -66,7 +72,15 @@ mod tests {
             LayerType::detect(r.rlocation(testdata.join("example.tar")))?,
             LayerType::Tar
         );
-        assert_eq!(LayerType::detect(Path::new("/dev"))?, LayerType::Dir);
+
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        assert_eq!(LayerType::detect(temp_dir)?, LayerType::Dir);
+
+        DurableTree::convert(temp_dir)?;
+        assert_eq!(LayerType::detect(temp_dir)?, LayerType::DurableTree);
+
         assert!(LayerType::detect(Path::new("/dev/null")).is_err());
 
         Ok(())

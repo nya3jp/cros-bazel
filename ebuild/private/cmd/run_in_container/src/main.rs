@@ -4,6 +4,7 @@
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cliutil::cli_main;
+use durabletree::DurableTree;
 use makechroot::LayerType;
 use nix::{
     mount::MntFlags,
@@ -16,7 +17,7 @@ use path_absolutize::Absolutize;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
     ffi::CString,
-    ffi::OsStr,
+    ffi::{OsStr, OsString},
     fs::File,
     io::Read,
     os::unix::fs::DirBuilderExt,
@@ -25,10 +26,43 @@ use std::{
     process::{Command, ExitCode},
 };
 use tar::Archive;
+use tempfile::TempDir;
 use walkdir::WalkDir;
 
 const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
 const NONE_STR: Option<&str> = None::<&str>;
+
+struct StashVar {
+    key: OsString,
+    original_value: Option<OsString>,
+}
+
+impl StashVar {
+    /// Sets an environment variable value. The original value is restored when
+    /// the returned [`StashVar`] is dropped.
+    pub fn set(key: impl AsRef<OsStr>, value: impl AsRef<OsStr>) -> StashVar {
+        let key = key.as_ref();
+        let original_value = std::env::var_os(key);
+        std::env::set_var(key, value);
+        StashVar {
+            key: key.to_owned(),
+            original_value,
+        }
+    }
+}
+
+impl Drop for StashVar {
+    fn drop(&mut self) {
+        match &self.original_value {
+            Some(original_value) => {
+                std::env::set_var(&self.key, original_value);
+            }
+            None => {
+                std::env::remove_var(&self.key);
+            }
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 #[clap(trailing_var_arg = true)]
@@ -212,7 +246,7 @@ fn continue_namespace(
     let lowers_dir = stage_dir.join("lowers");
     let diff_dir = stage_dir.join("diff");
     let work_dir = stage_dir.join("work");
-    let tar_dir = stage_dir.join("tar");
+    let tmp_dir = stage_dir.join("tmp");
 
     let mut binding = std::fs::DirBuilder::new();
     let dir_builder = binding.recursive(true).mode(0o755);
@@ -222,10 +256,17 @@ fn continue_namespace(
         &lowers_dir,
         &diff_dir,
         &work_dir,
-        &tar_dir,
+        &tmp_dir,
     ] {
         dir_builder.create(dir)?;
     }
+
+    // Set $TMPDIR to a directory under the given staging dir so that we create
+    // temporary files under the directory for the rest of run_in_container.
+    // We don't use the given $TMPDIR as it's a directory intended to be used by
+    // the programs within the container. Also note that temporary files created
+    // by run_in_container will NOT be cleaned up as we will call execve(2).
+    let stashed_tmp_dir = StashVar::set("TMPDIR", tmp_dir.as_os_str());
 
     for dir in [&root_dir, &base_dir, &lowers_dir] {
         // Mount a tmpfs so that files are purged automatically on exit.
@@ -246,21 +287,28 @@ fn continue_namespace(
     // Set up lower directories.
     // Directories are ordered from most lower to least lower.
     let mut lower_dirs: Vec<PathBuf> = [base_dir].into();
-    for (i, layer_path) in cfg.layer_paths.iter().enumerate() {
+    let mut durable_trees: Vec<DurableTree> = Vec::new();
+    let mut temp_dirs: Vec<TempDir> = Vec::new();
+
+    for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
         let layer_path = resolve_layer_source_path(layer_path)?;
-        let mut lower_dir = lowers_dir.join(i.to_string());
-        dir_builder.create(&lower_dir)?;
 
         match LayerType::detect(&layer_path)? {
-            LayerType::Dir => mount(Some(&layer_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
-                .with_context(|| format!("Failed bind-mounting {layer_path:?}"))?,
+            LayerType::Dir => {
+                let lower_dir = lowers_dir.join(format!("{}", layer_index));
+                dir_builder.create(&lower_dir)?;
 
+                mount(Some(&layer_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
+                    .with_context(|| format!("Failed bind-mounting {layer_path:?}"))?;
+
+                lower_dirs.push(lower_dir);
+            }
             LayerType::Tar => {
-                // We use a dedicated directory for the extracted artifacts instead of
+                // We use a temporary directory for the extracted artifacts instead of
                 // putting them in the lower directory because the lower directory is a
                 // tmpfs mount and we don't want to use up all the RAM.
-                lower_dir = tar_dir.join(i.to_string());
-                dir_builder.create(&lower_dir)?;
+                let temp_dir = TempDir::new()?;
+
                 let f = File::open(&layer_path)?;
                 let decompressed: Box<dyn Read> =
                     if layer_path.extension() == Some(OsStr::new("zst")) {
@@ -268,16 +316,48 @@ fn continue_namespace(
                     } else {
                         Box::new(f)
                     };
-                Archive::new(decompressed).unpack(&lower_dir)?;
+                Archive::new(decompressed).unpack(temp_dir.path())?;
+
+                let lower_dir = lowers_dir.join(format!("{}", layer_index));
+                dir_builder.create(&lower_dir)?;
+
+                mount(
+                    Some(temp_dir.path()),
+                    &lower_dir,
+                    NONE_STR,
+                    BIND_REC,
+                    NONE_STR,
+                )
+                .with_context(|| format!("Failed bind-mounting {:?}", temp_dir.path()))?;
+
+                lower_dirs.push(lower_dir);
+                temp_dirs.push(temp_dir);
+            }
+            LayerType::DurableTree => {
+                let durable_tree = DurableTree::expand(&layer_path)
+                    .with_context(|| format!("Expanding a durable tree at {layer_path:?}"))?;
+
+                for (sublayer_index, sublayer_path) in durable_tree.layers().into_iter().enumerate()
+                {
+                    let lower_dir = lowers_dir.join(format!("{}.{}", layer_index, sublayer_index));
+                    dir_builder.create(&lower_dir)?;
+
+                    mount(
+                        Some(sublayer_path),
+                        &lower_dir,
+                        NONE_STR,
+                        BIND_REC,
+                        NONE_STR,
+                    )
+                    .with_context(|| format!("Failed bind-mounting {sublayer_path:?}"))?;
+
+                    lower_dirs.push(lower_dir);
+                }
+
+                durable_trees.push(durable_tree);
             }
         }
-
-        lower_dirs.push(lower_dir);
     }
-
-    // Set up the store directories.
-    dir_builder.create(&diff_dir)?;
-    dir_builder.create(&work_dir)?;
 
     // Change the current directory to minimize the option string passed to
     // mount(2) as its length is constrained.
@@ -401,6 +481,9 @@ fn continue_namespace(
         // file descriptors such as /host/usr/lib/x86_64-linux-gnu/libc.so.6 open.
         umount2("/host", MntFlags::MNT_DETACH).with_context(|| "unmounting host")?;
     }
+
+    // Restore $TMPDIR to the given one.
+    drop(stashed_tmp_dir);
 
     // These are absolute paths that are no longer valid after we pivot.
     std::env::remove_var("RUNFILES_DIR");

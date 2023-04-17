@@ -710,11 +710,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cliutil",
+ "durabletree",
  "fileutil",
  "itertools",
  "path-absolutize",
  "runfiles",
  "serde",
+ "tempfile",
  "walkdir",
 ]
 
@@ -1133,6 +1135,7 @@ dependencies = [
  "anyhow",
  "clap",
  "cliutil",
+ "durabletree",
  "itertools",
  "makechroot",
  "nix",
