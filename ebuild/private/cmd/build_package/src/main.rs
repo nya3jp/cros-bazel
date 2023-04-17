@@ -4,11 +4,13 @@
 
 use anyhow::{anyhow, bail, Context, Result};
 use clap::{command, Parser};
+use cliutil::cli_main;
 use makechroot::BindMount;
 use mountsdk::{ConfigArgs, MountedSDK};
 use std::{
     collections::HashSet,
     path::{Path, PathBuf},
+    process::ExitCode,
     str::FromStr,
 };
 use version::Version;
@@ -129,7 +131,7 @@ impl FromStr for EbuildMetadata {
     }
 }
 
-fn main() -> Result<()> {
+fn do_main() -> Result<()> {
     let args = Cli::parse();
     let runfiles_mode = args.mountsdk_config.runfiles_mode();
     let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
@@ -244,4 +246,8 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn main() -> ExitCode {
+    cli_main(do_main)
 }

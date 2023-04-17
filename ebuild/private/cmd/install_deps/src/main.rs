@@ -4,9 +4,10 @@
 
 use anyhow::Result;
 use clap::Parser;
+use cliutil::cli_main;
 use makechroot::BindMount;
 use mountsdk::{InstallGroup, MountedSDK};
-use std::path::PathBuf;
+use std::{path::PathBuf, process::ExitCode};
 
 const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/install_deps.sh";
 
@@ -26,7 +27,7 @@ struct Cli {
     output_symlink_tar: PathBuf,
 }
 
-fn main() -> Result<()> {
+fn do_main() -> Result<()> {
     let args = Cli::parse();
     let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
 
@@ -60,4 +61,8 @@ fn main() -> Result<()> {
     tar::move_symlinks_into_tar(args.output_dir.as_path(), args.output_symlink_tar.as_path())?;
 
     Ok(())
+}
+
+fn main() -> ExitCode {
+    cli_main(do_main)
 }

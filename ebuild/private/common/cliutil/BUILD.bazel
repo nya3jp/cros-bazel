@@ -16,6 +16,8 @@ rust_library(
     crate_name = "cliutil",
     deps = [
         "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:itertools",
+        "@alchemy_crates//:shell-escape",
     ],
 )
 

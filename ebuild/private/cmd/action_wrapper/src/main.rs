@@ -4,6 +4,7 @@
 
 use anyhow::Result;
 use clap::Parser;
+use cliutil::cli_main_quiet;
 use nix::sys::signal::Signal;
 use signal_hook::consts::signal::{SIGCHLD, SIGINT, SIGTERM};
 use signal_hook::iterator::Signals;
@@ -55,7 +56,7 @@ fn run(cmd: &mut Command) -> Result<ExitStatus> {
     unreachable!()
 }
 
-fn main() -> Result<ExitCode> {
+fn do_main() -> Result<ExitCode> {
     let args = Cli::parse();
 
     // Always enable Rust backtraces.
@@ -92,6 +93,15 @@ fn main() -> Result<ExitCode> {
             Ok(ExitCode::from(128 + signal as u8))
         }
     }
+}
+
+fn main() -> ExitCode {
+    // We use `cli_main_quiet` instead of `cli_main` to suppress the preamble
+    // logs because action_wrapper must queue stdout/stderr until it sees the
+    // wrapped program to exit abnormally. This means we don't log the arguments
+    // passed to action_wrapper itself, but the wrapped program should soon
+    // print one with `cli_main`.
+    cli_main_quiet(do_main)
 }
 
 #[cfg(test)]

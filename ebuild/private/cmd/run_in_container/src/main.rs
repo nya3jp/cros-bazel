@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 use anyhow::{bail, Context, Result};
 use clap::Parser;
+use cliutil::cli_main;
 use makechroot::LayerType;
 use nix::{
     mount::MntFlags,
@@ -21,7 +22,7 @@ use std::{
     os::unix::fs::DirBuilderExt,
     os::unix::fs::OpenOptionsExt,
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, ExitCode},
 };
 use tar::Archive;
 use walkdir::WalkDir;
@@ -55,7 +56,11 @@ struct Cli {
     cmd: Vec<String>,
 }
 
-pub fn main() -> Result<()> {
+pub fn main() -> ExitCode {
+    cli_main(do_main)
+}
+
+fn do_main() -> Result<()> {
     let args = Cli::parse();
 
     if !args.already_in_namespace {

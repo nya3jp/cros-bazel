@@ -12,6 +12,7 @@ rust_binary(
     data = glob(["container_files/*"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/mountsdk",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",

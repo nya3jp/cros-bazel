@@ -5,8 +5,12 @@
 use anyhow::{Context, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
+use cliutil::cli_main;
 use makechroot::BindMount;
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
 
 const BINARY_EXT: &str = ".tbz2";
 const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/setup.sh";
@@ -55,7 +59,7 @@ fn bind_binary_packages(
         .collect()
 }
 
-fn main() -> Result<()> {
+fn do_main() -> Result<()> {
     let args = Cli::parse();
     let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
 
@@ -108,4 +112,8 @@ fn main() -> Result<()> {
         .with_context(|| "Failed to move symlinks into a tarball.")?;
 
     Ok(())
+}
+
+fn main() -> ExitCode {
+    cli_main(do_main)
 }

@@ -4,6 +4,7 @@
 
 use anyhow::Result;
 use clap::Parser;
+use cliutil::cli_main;
 use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
@@ -24,7 +25,7 @@ struct Cli {
     output_symlink_tar: PathBuf,
 }
 
-fn main() -> Result<ExitCode> {
+fn do_main() -> Result<ExitCode> {
     let args = Cli::parse();
 
     std::fs::create_dir_all(&args.output_dir)?;
@@ -52,4 +53,8 @@ fn main() -> Result<ExitCode> {
     tar::move_symlinks_into_tar(&args.output_dir, &args.output_symlink_tar)?;
 
     Ok(ExitCode::SUCCESS)
+}
+
+fn main() -> ExitCode {
+    cli_main(do_main)
 }

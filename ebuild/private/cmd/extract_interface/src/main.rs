@@ -7,12 +7,14 @@ mod specs;
 use anyhow::{anyhow, bail, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
+use cliutil::cli_main;
 use specs::{OutputFileSpec, XpakSpec};
 use std::{
     collections::HashMap,
     fs::OpenOptions,
     os::unix::prelude::OpenOptionsExt,
     path::{Path, PathBuf},
+    process::ExitCode,
 };
 use tar::EntryType;
 
@@ -131,10 +133,14 @@ fn extract_files(
     Ok(())
 }
 
-fn main() -> Result<()> {
+fn do_main() -> Result<()> {
     let args = Cli::parse();
 
     extract_files(&args.binpkg, &args.xpak, &args.output_file)
+}
+
+fn main() -> ExitCode {
+    cli_main(do_main)
 }
 
 #[cfg(test)]

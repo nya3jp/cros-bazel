@@ -5,9 +5,13 @@
 use anyhow::Result;
 use binarypackage::BinaryPackage;
 use clap::Parser;
+use cliutil::cli_main;
 use makechroot::BindMount;
 use mountsdk::MountedSDK;
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
 
 const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_image.sh";
 
@@ -42,7 +46,7 @@ pub struct Cli {
     override_base_package: Vec<String>,
 }
 
-fn main() -> Result<()> {
+fn do_main() -> Result<()> {
     let args = Cli::parse();
     let r = runfiles::Runfiles::create()?;
 
@@ -121,4 +125,8 @@ fn main() -> Result<()> {
     std::fs::copy(sdk.diff_dir().join(path), args.output)?;
 
     Ok(())
+}
+
+fn main() -> ExitCode {
+    cli_main(do_main)
 }
