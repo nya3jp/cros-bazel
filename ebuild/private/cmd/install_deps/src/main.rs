@@ -5,6 +5,7 @@
 use anyhow::Result;
 use clap::Parser;
 use cliutil::cli_main;
+use durabletree::DurableTree;
 use makechroot::BindMount;
 use mountsdk::{InstallGroup, MountedSDK};
 use std::{path::PathBuf, process::ExitCode};
@@ -20,11 +21,9 @@ struct Cli {
     #[arg(long)]
     install_target: Vec<InstallGroup>,
 
+    /// A path to a directory where the output durable tree is written.
     #[arg(long, required = true)]
-    output_dir: PathBuf,
-
-    #[arg(long, required = true)]
-    output_symlink_tar: PathBuf,
+    output: PathBuf,
 }
 
 fn do_main() -> Result<()> {
@@ -56,9 +55,9 @@ fn do_main() -> Result<()> {
 
     sdk.run_cmd(&[MAIN_SCRIPT])?;
 
-    fileutil::move_dir_contents(sdk.diff_dir().as_path(), args.output_dir.as_path())?;
-    makechroot::clean_layer(Some(&sdk.board), args.output_dir.as_path())?;
-    tar::move_symlinks_into_tar(args.output_dir.as_path(), args.output_symlink_tar.as_path())?;
+    fileutil::move_dir_contents(sdk.diff_dir().as_path(), &args.output)?;
+    makechroot::clean_layer(Some(&sdk.board), &args.output)?;
+    DurableTree::convert(&args.output)?;
 
     Ok(())
 }

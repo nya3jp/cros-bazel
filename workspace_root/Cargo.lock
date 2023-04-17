@@ -599,11 +599,11 @@ dependencies = [
  "anyhow",
  "clap",
  "cliutil",
+ "durabletree",
  "fileutil",
  "makechroot",
  "mountsdk",
  "runfiles",
- "tar 0.1.0",
 ]
 
 [[package]]

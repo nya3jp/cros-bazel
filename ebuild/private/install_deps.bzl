@@ -89,8 +89,7 @@ def install_deps(
     Returns:
         list[File]: Files representing file system layers.
     """
-    output_directory = ctx.actions.declare_directory(output_prefix)
-    output_tarball = ctx.actions.declare_file(output_prefix + "-symlinks.tar")
+    output_root = ctx.actions.declare_directory(output_prefix)
     output_log_file = ctx.actions.declare_file(output_prefix + ".log")
 
     args = ctx.actions.args()
@@ -98,8 +97,7 @@ def install_deps(
         "--output=" + output_log_file.path,
         executable_install_deps.path,
         "--board=" + sdk.board,
-        "--output-dir=" + output_directory.path,
-        "--output-symlink-tar=" + output_tarball.path,
+        "--output=" + output_root.path,
     ])
 
     # TODO: Can we avoid the costly to_list() operation?
@@ -118,7 +116,7 @@ def install_deps(
 
     ctx.actions.run(
         inputs = depset(direct_inputs),
-        outputs = [output_directory, output_tarball, output_log_file],
+        outputs = [output_root, output_log_file],
         executable = executable_action_wrapper,
         tools = [executable_install_deps],
         arguments = [args],
@@ -133,4 +131,4 @@ def install_deps(
         progress_message = progress_message,
     )
 
-    return [output_tarball, output_directory]
+    return [output_root]
