@@ -20,7 +20,6 @@ members = [
     "bazel/ebuild/private/common/portage/binarypackage",
     "bazel/ebuild/private/common/portage/version",
     "bazel/ebuild/private/common/run_in_container_lib",
-    "bazel/ebuild/private/common/tar",
 ]
 
 [workspace.dependencies]

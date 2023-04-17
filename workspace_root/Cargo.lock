@@ -385,7 +385,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "tar 0.4.38",
+ "tar",
  "tempfile",
  "walkdir",
  "xattr 1.0.0",
@@ -428,7 +428,7 @@ dependencies = [
  "clap",
  "cliutil",
  "runfiles",
- "tar 0.4.38",
+ "tar",
  "tempfile",
  "zstd",
 ]
@@ -1145,7 +1145,7 @@ dependencies = [
  "runfiles",
  "serde",
  "serde_json",
- "tar 0.4.38",
+ "tar",
  "tempfile",
  "walkdir",
  "zstd",
@@ -1360,16 +1360,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "tar"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "fileutil",
- "tar 0.4.38",
- "walkdir",
 ]
 
 [[package]]
