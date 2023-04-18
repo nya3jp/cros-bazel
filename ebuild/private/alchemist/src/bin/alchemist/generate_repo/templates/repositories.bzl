@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("@//bazel:repo/repo_repository.bzl", "repo_repository")
 load("@//bazel:repo/cipd.bzl", "cipd_file")
