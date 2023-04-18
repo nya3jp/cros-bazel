@@ -33,6 +33,14 @@ func writeOverrideData(fd int, data *overrideData) error {
 	return unix.Fsetxattr(fd, xattrKeyOverride, data.Marshal(), 0)
 }
 
+func clearOverrideData(fd int) error {
+	err := unix.Fremovexattr(fd, xattrKeyOverride)
+	if err == unix.ENODATA {
+		return nil
+	}
+	return err
+}
+
 // upgradeFd upgrades a file descriptor opened with O_PATH to a regular file
 // descriptor.
 func upgradeFd(fd int) (int, error) {
@@ -215,12 +223,18 @@ func Fchown(fd int, uid int, gid int) error {
 		}
 		defer unix.Close(ufd)
 
-		data := &overrideData{
-			Uid: uid,
-			Gid: gid,
-		}
-		if err := writeOverrideData(ufd, data); err != nil {
-			return err
+		if uid == int(stat.Uid) && gid == int(stat.Gid) {
+			if err := clearOverrideData(ufd); err != nil {
+				return err
+			}
+		} else {
+			data := &overrideData{
+				Uid: uid,
+				Gid: gid,
+			}
+			if err := writeOverrideData(ufd, data); err != nil {
+				return err
+			}
 		}
 
 	default:
