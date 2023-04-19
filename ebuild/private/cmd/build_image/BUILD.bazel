@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
-load("//bazel/ebuild:defs.bzl", "overlay_set")
 
 rust_binary(
     name = "build_image",

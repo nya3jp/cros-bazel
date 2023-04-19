@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "binary_package")
+load("//bazel/ebuild/private:binary_package.bzl", "binary_package")
 
 # sys-libs/pam needs this, but it looks missing in SDK and instead pulled in by
 # BDEPEND.

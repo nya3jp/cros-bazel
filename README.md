@@ -116,7 +116,6 @@ See [manifest/_bazel.xml] for details on how this repository is organized.
     * `BUILD.bazel` ... Bazel top-level target definitions; symlink to `bazel/workspace_root/BUILD.bazel`
     * `bazel/` ... contains Bazel-related files
         * `ebuild/`
-            * `defs.bzl` ... provides Bazel rules
             * `cmd` ... commands for development
                 * `extract_deps/` ... **DEPRECATED** extracts dependency graph from ebuilds
                 * `generate_stats/` ... **DEPRECATED** generates package coverage stats

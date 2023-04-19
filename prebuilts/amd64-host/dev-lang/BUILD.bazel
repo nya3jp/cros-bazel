@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild:defs.bzl", "binary_package")
+load("//bazel/ebuild/private:binary_package.bzl", "binary_package")
 
 # We need to pull in the rust cross compiler libs
 binary_package(

@@ -1,4 +1,6 @@
-load("@//bazel/ebuild:defs.bzl", "ebuild", "ebuild_debug", "ebuild_test", "ebuild_failure", "package_set", "sdk_update")
+load("@//bazel/ebuild/private:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_test", "ebuild_failure")
+load("@//bazel/ebuild/private:package_set.bzl", "package_set")
+load("@//bazel/ebuild/private:sdk.bzl", "sdk_update")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 {%- for ebuild in ebuilds %}
