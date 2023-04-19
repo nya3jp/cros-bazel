@@ -16,7 +16,7 @@ pkg_tar(
         "//bazel/sdk/usr/src",
     ],
     extension = "tar.gz",
-    visibility = ["//visibility:public"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 # TODO(b/272275535): Delete all this once platform2_test.py is working
@@ -29,7 +29,7 @@ pkg_tar(
         "//bazel/sdk/mnt/host/source/src/platform2/common-mk",
     ],
     extension = "tar",
-    visibility = ["//visibility:public"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 bool_flag(
@@ -43,13 +43,14 @@ config_setting(
         ":new-sdk": "True",
     },
 )
+
 sdk_from_archive(
-    name = "base_sdk",
+    name = "sdk_from_archive",
     src = select({
         ":new-sdk-enabled": "@cros-sdk-2023.04.05.144808//file",
         "//conditions:default": "@cros-sdk-2022.08.25.153812//file",
     }),
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
-    visibility = ["//visibility:public"],
+    visibility = ["@portage//:__subpackages__"],
 )

@@ -62,42 +62,27 @@ BinaryPackageSetInfo = provider(
 OverlaySetInfo = provider(
     "Portage overlay set info",
     fields = {
-        "overlays": """
-            PackageArtifactInfo[]: Overlays in .tar.zst format.
-        """,
-    },
-)
-
-SDKBaseInfo = provider(
-    "ChromiumOS SDK",
-    fields = {
         "layers": """
-            File[]: A list of files each of which represents a file system layer
-            of the SDK. A layer file can be a directory or a tar file (.tar or
-            .tar.zst). Layers are ordered from lower to upper; in other words,
-            a file from a layer can be overridden by one in another layer that
-            appears later in the list.
+            File[]: A list of files each of which represents an overlay. A layer
+            file can be a directory or a tar file (.tar or .tar.zst). Layers are
+            ordered from lower to upper; in other words, a file from a layer can
+            be overridden by one in another layer that appears later in the
+            list.
         """,
     },
 )
 
 SDKInfo = provider(
-    "ChromiumOS Board SDK info",
+    """
+    Contains information necessary to mount an ephemeral CrOS SDK.
+    """,
     fields = {
-        "board": """
-            str: A board name.
-        """,
         "layers": """
             File[]: A list of files each of which represents a file system layer
             of the SDK. A layer file can be a directory or a tar file (.tar or
             .tar.zst). Layers are ordered from lower to upper; in other words,
             a file from a layer can be overridden by one in another layer that
             appears later in the list.
-        """,
-        "overlays": """
-            OverlaySetInfo: The set of overlays that makeup the board. This will
-            generally contain the overlay-<board> or overlay-<board>-private
-            overlay and all the parents of that overlay.
         """,
     },
 )

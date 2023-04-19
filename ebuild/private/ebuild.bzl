@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
@@ -56,8 +56,18 @@ _EBUILD_COMMON_ATTRS = dict(
         RESTRICT=network-sandbox.
         """,
     ),
+    board = attr.string(
+        mandatory = True,
+        doc = """
+        The target board name to build the package for.
+        """,
+    ),
     sdk = attr.label(
         providers = [SDKInfo],
+        mandatory = True,
+    ),
+    overlays = attr.label(
+        providers = [OverlaySetInfo],
         mandatory = True,
     ),
     _action_wrapper = attr.label(
@@ -102,8 +112,7 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     transitive_inputs = []
 
     # Basic arguments
-    sdk = ctx.attr.sdk[SDKInfo]
-    args.add("--board=" + sdk.board)
+    args.add("--board=" + ctx.attr.board)
     if output_path:
         args.add("--output=" + output_path)
     if for_test:
@@ -139,20 +148,15 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
             args.add("--distfile=%s=%s" % (distfile_name, file.path))
         direct_inputs.append(file)
 
-    # --layer for SDK
+    # --layer for SDK and overlays
+    sdk = ctx.attr.sdk[SDKInfo]
+    overlays = ctx.attr.overlays[OverlaySetInfo]
+    layer_inputs = sdk.layers + overlays.layers
     if for_test:
-        args.add_all(sdk.layers, map_each = _format_layer_arg_for_test, expand_directories = False)
+        args.add_all(layer_inputs, map_each = _format_layer_arg_for_test, expand_directories = False)
     else:
-        args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(sdk.layers)
-
-    # --layer for overlays
-    for overlay in sdk.overlays.overlays:
-        if for_test:
-            args.add("--layer=cros/%s" % overlay.file.short_path)
-        else:
-            args.add("--layer=%s" % overlay.file.path)
-        direct_inputs.append(overlay.file)
+        args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
+    direct_inputs.extend(layer_inputs)
 
     # --layer for source code
     for file in ctx.files.srcs:

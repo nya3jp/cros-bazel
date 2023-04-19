@@ -39,6 +39,7 @@ def _alchemist_repo_repository_impl(ctx):
             fail("Error running command %s:\n%s%s" % (args, st.stdout, st.stderr))
     else:
         ctx.file("repositories.bzl", content = _ALCHEMIST_REPO_REPOSITORIES_FILE)
+        ctx.file("settings.bzl", content = "BOARD = None")
         ctx.file("BUILD.bazel", content = "")
 
 # TODO: This rule depend on the user having ran `setup_board --board <BOARD>`

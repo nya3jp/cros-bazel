@@ -2,13 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageSetInfo", "SDKInfo")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load("//bazel/ebuild/private:install_deps.bzl", "install_deps")
 
 def _build_image_impl(ctx):
     # Declare outputs.
     output_image_file = ctx.actions.declare_file(ctx.attr.output_image_file_name + ".bin")
     output_log_file = ctx.actions.declare_file(ctx.attr.output_image_file_name + ".log")
+
+    sdk = ctx.attr.sdk[SDKInfo]
+    overlays = ctx.attr.overlays[OverlaySetInfo]
 
     # Install all target dependencies to the SDK.
     install_set = depset(
@@ -17,11 +20,12 @@ def _build_image_impl(ctx):
             for packages in ctx.attr.target_packages
         ],
     )
-    sdk = ctx.attr.sdk[SDKInfo]
     deps_layers = install_deps(
         ctx = ctx,
         output_prefix = ctx.attr.output_image_file_name + "-deps",
+        board = ctx.attr.board,
         sdk = sdk,
+        overlays = overlays,
         install_set = install_set,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
@@ -35,7 +39,7 @@ def _build_image_impl(ctx):
 
     args.add_all([
         "--output=" + output_image_file.path,
-        "--board=" + sdk.board,
+        "--board=" + ctx.attr.board,
         "--image-to-build=" + ctx.attr.image_to_build,
         "--image-file-name=" + ctx.attr.image_file_name,
     ])
@@ -43,9 +47,8 @@ def _build_image_impl(ctx):
     args.add_all(sdk.layers + deps_layers, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(sdk.layers + deps_layers)
 
-    for overlay in sdk.overlays.overlays:
-        args.add("--layer=%s" % overlay.file.path)
-        direct_inputs.append(overlay.file)
+    args.add_all(overlays.layers + deps_layers, format_each = "--layer=%s", expand_directories = False)
+    direct_inputs.extend(overlays.layers + deps_layers)
 
     args.add_all(ctx.files.files, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(ctx.files.files)
@@ -142,8 +145,18 @@ build_image = rule(
             Extra files to be made available in the ephemeral chroot.
             """,
         ),
+        board = attr.string(
+            mandatory = True,
+            doc = """
+            The target board name to build the package for.
+            """,
+        ),
         sdk = attr.label(
             providers = [SDKInfo],
+            mandatory = True,
+        ),
+        overlays = attr.label(
+            providers = [OverlaySetInfo],
             mandatory = True,
         ),
         _action_wrapper = attr.label(

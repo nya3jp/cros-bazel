@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@//bazel/ebuild/private:overlay.bzl", "overlay_set")
 load("@//bazel/ebuild/private:package_set.bzl", "package_set")
 load("@//bazel/ebuild/private:sdk.bzl", "sdk", "sdk_update")
@@ -100,6 +104,12 @@ overlay_set(
         "{{ overlay }}",
         {%- endfor %}
     ],
+    visibility = [
+        "//:__subpackages__",
+        # For image targets.
+        # TODO: Remove this.
+        "@//:__pkg__",
+    ],
 )
 
 package_set(
@@ -127,7 +137,7 @@ package_set(
 
 sdk(
     name = "base",
-    base = "@//bazel/sdk:base_sdk",
+    base = "@//bazel/sdk:sdk_from_archive",
     # TODO: Maybe split installing the host deps from installing the board
     # specific items.
     board = "{{ board }}",
@@ -155,6 +165,8 @@ sdk(
 sdk_update(
     name = "sdk",
     base = ":base",
+    board = "{{ board }}",
+    overlays = ":overlays",
     target_deps = [
         "//sys-kernel/linux-headers",
         "//sys-libs/gcc-libs",
@@ -163,7 +175,7 @@ sdk_update(
     ],
     visibility = [
         "//:__subpackages__",
-        # For @//:build_image_demo.
+        # For image targets.
         # TODO: Remove this.
         "@//:__pkg__",
     ],

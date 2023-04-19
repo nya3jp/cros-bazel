@@ -6,6 +6,7 @@ pub(self) mod common;
 pub mod internal;
 pub(self) mod public;
 pub(self) mod repositories;
+pub(self) mod settings;
 
 use std::{
     collections::HashMap,
@@ -41,6 +42,7 @@ use self::{
     internal::{sdk::generate_sdk, sources::generate_internal_sources},
     public::generate_public_packages,
     repositories::generate_repositories_file,
+    settings::generate_settings_bzl,
 };
 
 fn evaluate_all_packages(
@@ -269,6 +271,7 @@ pub fn generate_repo_main(
     generate_internal_sources(all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&all_packages, resolver, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
+    generate_settings_bzl(board, &output_dir.join("settings.bzl"))?;
     generate_sdk(board, repos, toolchain_config, translator, output_dir)?;
 
     File::create(output_dir.join("BUILD.bazel"))?.write_all(&[])?;

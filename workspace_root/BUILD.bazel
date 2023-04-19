@@ -5,6 +5,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/ebuild/private:build_image.bzl", "build_image")
+load("@portage//:settings.bzl", "BOARD")
 
 exports_files([
     "Cargo.toml",
@@ -64,7 +65,9 @@ build_image(
         "sys-apps/baselayout",
         "sys-kernel/chromeos-kernel-5_15",
     ],
+    board = BOARD,
     sdk = "@portage//internal/sdk",
+    overlays = "@portage//internal/sdk:overlays",
 )
 
 # Builds the base image.
@@ -83,7 +86,9 @@ build_image(
     host_packages = [
         "@portage//internal/sdk:cross-packages",
     ],
+    board = BOARD,
     sdk = "@portage//internal/sdk",
+    overlays = "@portage//internal/sdk:overlays",
 )
 
 # Builds the dev image.
@@ -103,7 +108,9 @@ build_image(
     host_packages = [
         "@portage//internal/sdk:cross-packages",
     ],
+    board = BOARD,
     sdk = "@portage//internal/sdk",
+    overlays = "@portage//internal/sdk:overlays",
 )
 
 # Builds the test image.
@@ -124,7 +131,9 @@ build_image(
     host_packages = [
         "@portage//internal/sdk:cross-packages",
     ],
+    board = BOARD,
     sdk = "@portage//internal/sdk",
+    overlays = "@portage//internal/sdk:overlays",
 )
 
 exports_files(["tools/bazel"])

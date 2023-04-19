@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKBaseInfo", "SDKInfo")
+load("common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load("install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
@@ -32,7 +32,7 @@ def _sdk_from_archive_impl(ctx):
 
     return [
         DefaultInfo(files = depset(outputs)),
-        SDKBaseInfo(
+        SDKInfo(
             layers = [output_root],
         ),
     ]
@@ -58,8 +58,6 @@ sdk_from_archive = rule(
 )
 
 def _sdk_impl(ctx):
-    base_sdk = ctx.attr.base[SDKBaseInfo]
-
     output_root = ctx.actions.declare_directory(ctx.attr.name)
     output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
 
@@ -83,15 +81,15 @@ def _sdk_impl(ctx):
         "--board=" + ctx.attr.board,
         "--output=" + output_root.path,
     ])
-    args.add_all(base_sdk.layers, format_each = "--layer=%s", expand_directories = False)
+
+    base_sdk = ctx.attr.base[SDKInfo]
+    overlays = ctx.attr.overlays[OverlaySetInfo]
+    layer_inputs = base_sdk.layers + overlays.layers
+    args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
+
     args.add_all(host_installs, format_each = "--install-host=%s")
     args.add_all(target_installs, format_each = "--install-target=%s")
     args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
-
-    layer_inputs = base_sdk.layers[:]
-    for overlay in ctx.attr.overlays[OverlaySetInfo].overlays:
-        args.add("--layer=%s" % overlay.file.path)
-        layer_inputs.append(overlay.file)
 
     inputs = depset(
         [ctx.executable._sdk_update] + layer_inputs + ctx.files.extra_tarballs,
@@ -120,9 +118,7 @@ def _sdk_impl(ctx):
     return [
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
-            board = ctx.attr.board,
             layers = base_sdk.layers + [output_root],
-            overlays = ctx.attr.overlays[OverlaySetInfo],
         ),
     ]
 
@@ -131,10 +127,13 @@ sdk = rule(
     attrs = {
         "base": attr.label(
             mandatory = True,
-            providers = [SDKBaseInfo],
+            providers = [SDKInfo],
         ),
         "board": attr.string(
             mandatory = True,
+            doc = """
+            The target board name to build the package for.
+            """,
         ),
         "host_deps": attr.label_list(
             providers = [BinaryPackageSetInfo],
@@ -181,7 +180,9 @@ def _sdk_update_impl(ctx):
     outputs = install_deps(
         ctx = ctx,
         output_prefix = ctx.attr.name,
+        board = ctx.attr.board,
         sdk = sdk,
+        overlays = ctx.attr.overlays[OverlaySetInfo],
         install_set = install_set,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
@@ -191,9 +192,7 @@ def _sdk_update_impl(ctx):
     return [
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
-            board = sdk.board,
             layers = sdk.layers + outputs,
-            overlays = sdk.overlays,
         ),
     ]
 
@@ -206,6 +205,16 @@ sdk_update = rule(
             """,
             mandatory = True,
             providers = [SDKInfo],
+        ),
+        "board": attr.string(
+            mandatory = True,
+            doc = """
+            The target board name to build the package for.
+            """,
+        ),
+        "overlays": attr.label(
+            providers = [OverlaySetInfo],
+            mandatory = True,
         ),
         "target_deps": attr.label_list(
             doc = """

@@ -8,7 +8,7 @@ load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 def _overlay_set_impl(ctx):
     return [
         OverlaySetInfo(
-            overlays = [file[PackageArtifactInfo] for file in ctx.attr.overlays],
+            layers = [pkg[PackageArtifactInfo].file for pkg in ctx.attr.overlays],
         ),
     ]
 

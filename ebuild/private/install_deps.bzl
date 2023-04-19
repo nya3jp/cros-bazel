@@ -65,7 +65,9 @@ def _calculate_install_groups(install_list):
 def install_deps(
         ctx,
         output_prefix,
+        board,
         sdk,
+        overlays,
         install_set,
         executable_action_wrapper,
         executable_install_deps,
@@ -77,7 +79,9 @@ def install_deps(
         ctx: ctx: A context object passed to the rule implementation.
         output_prefix: str: A file name prefix to prepend to output files
             defined in this function.
+        board: str: The target board name to install dependencies for.
         sdk: SDKInfo: The provider describing the base file system layers.
+        overlays: OverlaySetInfo: Overlays providing packages.
         install_set: Depset[BinaryPackageInfo]: Binary package targets to
             install. This depset must be closed over transitive runtime
             dependencies; that is, if the depset contains a package X, it must
@@ -96,7 +100,7 @@ def install_deps(
     args.add_all([
         "--output=" + output_log_file.path,
         executable_install_deps.path,
-        "--board=" + sdk.board,
+        "--board=" + board,
         "--output=" + output_root.path,
     ])
 
@@ -104,12 +108,9 @@ def install_deps(
     install_list = install_set.to_list()
     direct_inputs = [pkg.file for pkg in install_list]
 
-    args.add_all(sdk.layers, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(sdk.layers)
-
-    for overlay in sdk.overlays.overlays:
-        args.add("--layer=%s" % overlay.file.path)
-        direct_inputs.append(overlay.file)
+    layer_inputs = sdk.layers + overlays.layers
+    args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
+    direct_inputs.extend(layer_inputs)
 
     install_groups = _calculate_install_groups(install_list)
     args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")

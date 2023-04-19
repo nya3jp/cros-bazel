@@ -1,7 +1,12 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@//bazel/ebuild/private:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_test", "ebuild_failure")
 load("@//bazel/ebuild/private:package_set.bzl", "package_set")
 load("@//bazel/ebuild/private:sdk.bzl", "sdk_update")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("//:settings.bzl", "BOARD")
 
 {%- for ebuild in ebuilds %}
 string_flag(
@@ -13,6 +18,8 @@ string_flag(
 sdk_update(
     name = "{{ ebuild.version }}_deps",
     base = "{{ ebuild.sdk }}",
+    board = BOARD,
+    overlays = "@portage//internal/sdk:overlays",
     target_deps = [
         {%- for dep in ebuild.build_deps %}
         "{{ dep }}",
@@ -53,7 +60,9 @@ ebuild(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
+    board = BOARD,
     sdk = ":{{ ebuild.version }}_deps",
+    overlays = "@portage//internal/sdk:overlays",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
@@ -93,7 +102,9 @@ ebuild_debug(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
+    board = BOARD,
     sdk = ":{{ ebuild.version }}_deps",
+    overlays = "@portage//internal/sdk:overlays",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
@@ -132,7 +143,9 @@ ebuild_test(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
+    board = BOARD,
     sdk = ":{{ ebuild.version }}_deps",
+    overlays = "@portage//internal/sdk:overlays",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
