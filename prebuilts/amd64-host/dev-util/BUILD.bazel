@@ -9,5 +9,5 @@ load("//bazel/ebuild/private:binary_package.bzl", "binary_package")
 binary_package(
     name = "meson-format-array",
     src = "@amd64_host_meson_format_array_0//file",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )

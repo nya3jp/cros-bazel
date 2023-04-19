@@ -5,13 +5,11 @@
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("@rules_go//go:def.bzl", "go_library", "go_test")
 
-package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
-
 go_library(
     name = "version",
     srcs = ["version.go"],
     importpath = "cros.local/bazel/ebuild/private/common/portage/version",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 go_test(
@@ -35,6 +33,7 @@ rust_library(
         "@alchemy_crates//:regex",
         "@alchemy_crates//:strum",
     ],
+    visibility = ["//bazel:internal"],
 )
 
 rust_test(

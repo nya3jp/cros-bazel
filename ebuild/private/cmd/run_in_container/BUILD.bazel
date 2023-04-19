@@ -13,7 +13,7 @@ rust_binary(
     data = [
         "@dumb_init//file",
     ],
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/durabletree",

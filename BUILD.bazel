@@ -1,3 +1,21 @@
 # Copyright 2022 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+
+# The group of packages considered internal to Alchemy.
+# If you need to make an Alchemy target accessible from other Alchemy targets,
+# this is a good default. Of course it's even better if you could use a smaller
+# group though. Never use //visibility:public in Alchemy targets to avoid
+# unexpected dependencies.
+package_group(
+    name = "internal",
+    packages = [
+        # Note: External repositories (@foo//...) are not accepted here.
+        # Define a package group in each external repository and include it
+        # instead.
+        "//bazel/...",
+    ],
+    includes = [
+        "@portage//:all_packages",
+    ],
+)

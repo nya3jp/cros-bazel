@@ -36,5 +36,5 @@ pkg_filegroup(
         ":make_conf",
         ":portage_make_profile",
     ],
-    visibility = ["//bazel/sdk:__subpackages__"],
+    visibility = ["//bazel/sdk:__pkg__"],
 )

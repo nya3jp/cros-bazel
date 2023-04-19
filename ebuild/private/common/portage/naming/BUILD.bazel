@@ -8,6 +8,6 @@ go_library(
     name = "naming",
     srcs = ["check.go"],
     importpath = "cros.local/bazel/ebuild/private/common/portage/naming",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
     deps = ["//bazel/ebuild/private/common/portage/version"],
 )

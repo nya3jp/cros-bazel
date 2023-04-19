@@ -1,9 +1,13 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
 rust_binary(
     name = "action_wrapper",
     srcs = glob(["src/*.rs"]),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "@alchemy_crates//:anyhow",

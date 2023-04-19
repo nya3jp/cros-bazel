@@ -14,5 +14,5 @@ pkg_files(
     renames = {
         "//bazel/ebuild/private/cmd/fakefs:fakefs_preload": "libfakefs_preload.so",
     },
-    visibility = ["//bazel/sdk:__subpackages__"],
+    visibility = ["//bazel/sdk:__pkg__"],
 )

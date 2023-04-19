@@ -2,12 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/ebuild/private:build_image.bzl", "build_image")
-load("@portage//:settings.bzl", "BOARD")
-
 exports_files([
+    "tools/bazel",
     "Cargo.toml",
     "Cargo.lock",
 ])
@@ -17,126 +13,25 @@ alias(
     actual = "@portage//virtual/target-os:package_set",
 )
 
-pkg_files(
-    name = "scripts_src_files",
-    srcs = glob(
-        ["scripts/**"],
-        exclude = ["scripts/.git/**"],
-    ),
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "/mnt/host/source/src",
-    strip_prefix = strip_prefix.from_root(),
-    visibility = ["//visibility:private"],
-)
-
-pkg_tar(
-    name = "scripts_src",
-    srcs = [
-        ":scripts_src_files",
-    ],
-    compressor = "//bazel/ebuild/private:zstd",
-    compressor_args = "--threads=0",
-    extension = "tar.zst",
-    visibility = ["//bazel/ebuild/private/cmd/build_image:__pkg__"],
-)
-
-# Builds a very minimal image that contains Linux kernel and basic files only.
-# The generated image doesn't boot of course, but this target can be useful to
-# test the functionality to build images.
-build_image(
+alias(
     name = "chromiumos_minimal_image",
-    image_to_build = "base",
-    image_file_name = "chromiumos_base_image",
-    output_image_file_name = "chromiumos_minimal_image",
-    files = [
-        "//:scripts_src",
-        "@chromite//:src",
-    ],
-    target_packages = [
-        "@portage//sys-apps/baselayout",
-        "@portage//sys-kernel/chromeos-kernel-5_15",
-    ],
-    host_packages = [
-        "@portage//internal/sdk:cross-packages",
-    ],
-    override_base_packages = [
-        "sys-apps/baselayout",
-        "sys-kernel/chromeos-kernel-5_15",
-    ],
-    board = BOARD,
-    sdk = "@portage//internal/sdk",
-    overlays = "@portage//internal/sdk:overlays",
+    actual = "//bazel/images:chromiumos_minimal_image",
 )
 
-# Builds the base image.
-build_image(
+alias(
     name = "chromiumos_base_image",
-    image_to_build = "base",
-    image_file_name = "chromiumos_base_image",
-    output_image_file_name = "chromiumos_base_image",
-    files = [
-        "//:scripts_src",
-        "@chromite//:src",
-    ],
-    target_packages = [
-        "@portage//virtual/target-os:package_set",
-    ],
-    host_packages = [
-        "@portage//internal/sdk:cross-packages",
-    ],
-    board = BOARD,
-    sdk = "@portage//internal/sdk",
-    overlays = "@portage//internal/sdk:overlays",
+    actual = "//bazel/images:chromiumos_base_image",
 )
 
-# Builds the dev image.
-build_image(
+alias(
     name = "chromiumos_dev_image",
-    image_to_build = "dev",
-    image_file_name = "chromiumos_image",
-    output_image_file_name = "chromiumos_image",
-    files = [
-        "//:scripts_src",
-        "@chromite//:src",
-    ],
-    target_packages = [
-        "@portage//virtual/target-os:package_set",
-        "@portage//virtual/target-os-dev:package_set",
-    ],
-    host_packages = [
-        "@portage//internal/sdk:cross-packages",
-    ],
-    board = BOARD,
-    sdk = "@portage//internal/sdk",
-    overlays = "@portage//internal/sdk:overlays",
+    actual = "//bazel/images:chromiumos_dev_image",
 )
 
-# Builds the test image.
-build_image(
+alias(
     name = "chromiumos_test_image",
-    image_to_build = "test",
-    image_file_name = "chromiumos_test_image",
-    output_image_file_name = "chromiumos_test_image",
-    files = [
-        "//:scripts_src",
-        "@chromite//:src",
-    ],
-    target_packages = [
-        "@portage//virtual/target-os:package_set",
-        "@portage//virtual/target-os-dev:package_set",
-        "@portage//virtual/target-os-test:package_set",
-    ],
-    host_packages = [
-        "@portage//internal/sdk:cross-packages",
-    ],
-    board = BOARD,
-    sdk = "@portage//internal/sdk",
-    overlays = "@portage//internal/sdk:overlays",
+    actual = "//bazel/images:chromiumos_test_image",
 )
-
-exports_files(["tools/bazel"])
 
 # A convenient alias to run alchemist.
 #

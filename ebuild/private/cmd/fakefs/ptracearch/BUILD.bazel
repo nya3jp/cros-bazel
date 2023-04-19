@@ -1,10 +1,14 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "ptracearch",
     srcs = ["ptrace_amd64.go"],
     importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/ptracearch",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel/ebuild/private/cmd/fakefs:__subpackages__"],
     deps = select({
         "@rules_go//go/platform:amd64": [
             "@org_golang_x_sys//unix",

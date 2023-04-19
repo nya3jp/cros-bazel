@@ -12,5 +12,5 @@ pkg_files(
     prefix = "usr/src",
     srcs = glob(["**/*"], exclude=["BUILD.bazel"]),
     strip_prefix = strip_prefix.from_pkg(),
-    visibility = ["//bazel/sdk:__subpackages__"],
+    visibility = ["//bazel/sdk:__pkg__"],
 )

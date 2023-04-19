@@ -14,7 +14,7 @@ go_library(
         "expr_compile.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/common/portage/dependency",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/portage/dependency/internal/grammer",
         "//bazel/ebuild/private/common/portage/naming",

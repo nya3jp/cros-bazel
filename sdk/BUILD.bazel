@@ -16,7 +16,7 @@ pkg_tar(
         "//bazel/sdk/usr/src",
     ],
     extension = "tar.gz",
-    visibility = ["@portage//:__subpackages__"],
+    visibility = ["//bazel:internal"],
 )
 
 # TODO(b/272275535): Delete all this once platform2_test.py is working
@@ -29,7 +29,7 @@ pkg_tar(
         "//bazel/sdk/mnt/host/source/src/platform2/common-mk",
     ],
     extension = "tar",
-    visibility = ["@portage//:__subpackages__"],
+    visibility = ["//bazel:internal"],
 )
 
 bool_flag(
@@ -52,5 +52,5 @@ sdk_from_archive(
     }),
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
-    visibility = ["@portage//:__subpackages__"],
+    visibility = ["//bazel:internal"],
 )

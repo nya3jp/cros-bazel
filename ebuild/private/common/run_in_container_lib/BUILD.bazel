@@ -1,9 +1,13 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
     name = "run_in_container_lib",
     srcs = glob(["src/*.rs"]),
-    visibility = ["//bazel/ebuild/private:__subpackages__"],
+    visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/makechroot",
         "@alchemy_crates//:anyhow",

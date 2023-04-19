@@ -9,7 +9,7 @@ rust_binary(
     srcs = glob(["src/*.rs"]),
     crate_name = "build_image",
     data = glob(["container_files/*"]),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/makechroot",

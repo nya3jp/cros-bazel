@@ -274,7 +274,8 @@ pub fn generate_repo_main(
     generate_settings_bzl(board, &output_dir.join("settings.bzl"))?;
     generate_sdk(board, repos, toolchain_config, translator, output_dir)?;
 
-    File::create(output_dir.join("BUILD.bazel"))?.write_all(&[])?;
+    File::create(output_dir.join("BUILD.bazel"))?
+        .write_all(include_bytes!("templates/root.BUILD.bazel"))?;
     File::create(output_dir.join("WORKSPACE.bazel"))?.write_all(&[])?;
 
     eprintln!("Generated @portage.");

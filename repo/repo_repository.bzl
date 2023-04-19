@@ -5,11 +5,10 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
 _BUILD_TEMPLATE = """
-package(default_visibility = ["//visibility:public"])
-
 filegroup(
     name = "src",
     srcs = ["{file}"],
+    visibility = ["@//bazel:internal"],
 )
 """
 

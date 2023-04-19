@@ -11,11 +11,10 @@ _BUILD_TEMPLATE = """
 #
 # File downloaded from CIPD.
 
-package(default_visibility = ["//visibility:public"])
-
 filegroup(
     name = "file",
     srcs = ["{file}"],
+    visibility = ["@//bazel:internal"],
 )
 """
 

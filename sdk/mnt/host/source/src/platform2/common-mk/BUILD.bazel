@@ -15,5 +15,5 @@ pkg_files(
         "platform2_test.py",
     ],
     strip_prefix = strip_prefix.from_pkg(),
-    visibility = ["//bazel/sdk:__subpackages__"],
+    visibility = ["//bazel/sdk:__pkg__"],
 )

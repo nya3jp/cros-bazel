@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
@@ -8,7 +12,7 @@ go_library(
         "utils.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/cmd/fakefs/tracer",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel/ebuild/private/cmd/fakefs:__subpackages__"],
     deps = [
         "//bazel/ebuild/private/cmd/fakefs/hooks",
         "//bazel/ebuild/private/cmd/fakefs/logging",

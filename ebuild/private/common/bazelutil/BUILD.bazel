@@ -11,5 +11,5 @@ go_library(
         "workspace.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/common/bazelutil",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )

@@ -9,5 +9,5 @@ load("//bazel/ebuild/private:binary_package.bzl", "binary_package")
 binary_package(
     name = "xcb-proto",
     src = "@amd64_host_xcb_proto_1_14_1//file",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )

@@ -11,7 +11,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_binutils_2_36_1_r10//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_binutils_2_36_1_r8//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -21,7 +21,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_compiler_rt_16_0_pre475826_r6//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_compiler_rt_15_0_pre458507_r6//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -31,7 +31,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_gcc_10_2_0_r30//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_gcc_10_2_0_r28//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -41,7 +41,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_gdb_11_2_r3//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_gdb_9_2_20200923_r9//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -51,7 +51,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_glibc_2_35_r17//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_glibc_2_33_r17//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -61,7 +61,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_go_1_20_2_r2//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_go_1_18_r2//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -71,7 +71,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_libcxx_16_0_pre475826_r5//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_libcxx_15_0_pre458507_r6//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -81,7 +81,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_libxcrypt_4_4_28_r2//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_libxcrypt_4_4_28_r1//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -91,7 +91,7 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_linux_headers_4_14_r61//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_linux_headers_4_14_r56//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 binary_package(
@@ -101,5 +101,5 @@ binary_package(
             "//bazel/sdk:new-sdk-enabled": "@amd64_host_2023_04_05_144808_cross_armv7a_cros_linux_gnueabihf_llvm_libunwind_16_0_pre475826_r5//file",
             "//conditions:default": "@amd64_host_cross_armv7a_cros_linux_gnueabihf_llvm_libunwind_15_0_pre458507_r4//file",
         }),
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )

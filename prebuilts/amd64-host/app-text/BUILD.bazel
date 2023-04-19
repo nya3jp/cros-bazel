@@ -9,5 +9,5 @@ load("//bazel/ebuild/private:binary_package.bzl", "binary_package")
 binary_package(
     name = "docbook-xml-dtd-4_4",
     src = "@amd64_host_docbook_xml_dtd_4_4_r3//file",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )

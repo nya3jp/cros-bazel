@@ -4,8 +4,6 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
-package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
-
 rust_library(
     name = "makechroot",
     srcs = glob(["src/*.rs"]),
@@ -20,6 +18,7 @@ rust_library(
         "@alchemy_crates//:serde",
         "@alchemy_crates//:walkdir",
     ],
+    visibility = ["//bazel:internal"],
 )
 
 rust_test(

@@ -5,11 +5,11 @@
 alias(
     name = "src",
     actual = "src.tar.zst",
-    visibility = ["//visibility:public"],
+    visibility = ["@//bazel:internal"],
 )
 
 alias(
     name = "src-internal",
     actual = "src-internal.tar.zst",
-    visibility = ["//visibility:public"],
+    visibility = ["@//bazel:internal"],
 )

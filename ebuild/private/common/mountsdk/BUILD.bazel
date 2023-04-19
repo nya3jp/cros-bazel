@@ -4,8 +4,6 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
-package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
-
 rust_library(
     name = "mountsdk",
     srcs = glob(["src/*.rs"]),
@@ -31,6 +29,7 @@ rust_library(
         "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",
     ],
+    visibility = ["//bazel:internal"],
 )
 
 # If adding test data, do not depend on anything built by build_package.

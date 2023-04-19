@@ -7,14 +7,14 @@ load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 sh_binary(
     name = "download_prebuilt",
     srcs = ["download_prebuilt.sh"],
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 # The path to your gsutil
 string_flag(
     name = "gsutil_path",
     build_setting_default = "gsutil",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 # A tiny shell script that calls into the system-installed zstd.
@@ -22,5 +22,8 @@ string_flag(
 sh_binary(
     name = "zstd",
     srcs = ["system_zstd.sh"],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//bazel:internal",
+        "@chromite//:__pkg__",
+    ],
 )

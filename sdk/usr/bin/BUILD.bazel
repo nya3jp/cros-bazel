@@ -20,7 +20,7 @@ pkg_files(
         "//bazel/ebuild/private/cmd/fakefs": "fakeroot",
         "fake_sudo.py": "sudo",
     },
-    visibility = ["//bazel/sdk:__subpackages__"],
+    visibility = ["//bazel/sdk:__pkg__"],
 )
 
 py_library(

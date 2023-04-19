@@ -10,5 +10,5 @@ pkg_mkdirs(
     dirs = [
         "run/lock",
     ],
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel/sdk:__pkg__"],
 )

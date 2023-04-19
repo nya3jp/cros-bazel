@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 go_library(
@@ -16,7 +20,7 @@ go_library(
 go_binary(
     name = "fakefs",
     embed = [":fakefs_lib"],
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 go_test(
@@ -35,5 +39,5 @@ go_test(
 alias(
     name = "fakefs_preload",
     actual = "//bazel/ebuild/private/cmd/fakefs/preload:fakefs_preload",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )

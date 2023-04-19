@@ -5,8 +5,6 @@
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("@rules_go//go:def.bzl", "go_library")
 
-package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
-
 go_library(
     name = "fileutil",
     srcs = [
@@ -16,7 +14,7 @@ go_library(
         "remove.go",
     ],
     importpath = "cros.local/bazel/ebuild/private/common/fileutil",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
     deps = [
         "@org_golang_x_sys//unix",
     ],
@@ -31,6 +29,7 @@ rust_library(
         "@alchemy_crates//:libc",
         "@alchemy_crates//:walkdir",
     ],
+    visibility = ["//bazel:internal"],
 )
 
 rust_test(

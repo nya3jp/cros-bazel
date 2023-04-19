@@ -1,8 +1,12 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 {%- for alias in aliases %}
 alias(
     name = "{{ alias.name }}",
     actual = "{{ alias.actual }}",
-    visibility = ["//visibility:public"],
+    visibility = ["@//bazel:internal"],
 )
 
 {%- endfor %}
@@ -11,6 +15,6 @@ alias(
 test_suite(
     name = "{{ test_suite.name }}",
     tests = [ "{{ test_suite.test_name }}" ],
-    visibility = ["//visibility:public"],
+    visibility = ["@//bazel:internal"],
 )
 {%- endfor %}

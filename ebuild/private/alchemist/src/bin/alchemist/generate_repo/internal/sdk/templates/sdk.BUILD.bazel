@@ -104,12 +104,7 @@ overlay_set(
         "{{ overlay }}",
         {%- endfor %}
     ],
-    visibility = [
-        "//:__subpackages__",
-        # For image targets.
-        # TODO: Remove this.
-        "@//:__pkg__",
-    ],
+    visibility = ["@//bazel:internal"],
 )
 
 package_set(
@@ -130,9 +125,7 @@ package_set(
         "@//bazel/prebuilts/amd64-host/cross-{{ triple }}:llvm-libunwind",
         {%- endfor %}
     ],
-    visibility = [
-        "@//:__pkg__",  # for build_image targets
-    ],
+    visibility = ["@//bazel:internal"],
 )
 
 sdk_update(
@@ -159,7 +152,7 @@ sdk_update(
         ],
     }),
     overlays = ":overlays",
-    visibility = ["//:__subpackages__"],
+    visibility = ["@//bazel:internal"],
 )
 
 sdk_install_deps(
@@ -173,10 +166,5 @@ sdk_install_deps(
         "//sys-libs/libcxx",
         "//sys-libs/llvm-libunwind",
     ],
-    visibility = [
-        "//:__subpackages__",
-        # For image targets.
-        # TODO: Remove this.
-        "@//:__pkg__",
-    ],
+    visibility = ["@//bazel:internal"],
 )

@@ -1,13 +1,15 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("@rules_go//go:def.bzl", "go_library")
-
-package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
 
 go_library(
     name = "cliutil",
     srcs = ["exit.go"],
     importpath = "cros.local/bazel/ebuild/private/common/cliutil",
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel:internal"],
 )
 
 rust_library(
@@ -19,6 +21,7 @@ rust_library(
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:shell-escape",
     ],
+    visibility = ["//bazel:internal"],
 )
 
 rust_test(

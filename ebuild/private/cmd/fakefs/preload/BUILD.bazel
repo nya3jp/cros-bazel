@@ -16,5 +16,5 @@ cc_binary(
         "-l:libpthread.so.0",
     ],
     linkshared = True,
-    visibility = ["//visibility:public"],
+    visibility = ["//bazel/ebuild/private/cmd/fakefs:__subpackages__"],
 )
