@@ -4,7 +4,7 @@
 
 load("@//bazel/ebuild/private:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_test", "ebuild_failure")
 load("@//bazel/ebuild/private:package_set.bzl", "package_set")
-load("@//bazel/ebuild/private:sdk.bzl", "sdk_update")
+load("@//bazel/ebuild/private:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("//:settings.bzl", "BOARD")
 
@@ -15,7 +15,7 @@ string_flag(
     visibility = ["//:__subpackages__"],
 )
 
-sdk_update(
+sdk_install_deps(
     name = "{{ ebuild.version }}_deps",
     base = "{{ ebuild.sdk }}",
     board = BOARD,

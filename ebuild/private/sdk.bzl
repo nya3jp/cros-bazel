@@ -57,7 +57,7 @@ sdk_from_archive = rule(
     },
 )
 
-def _sdk_impl(ctx):
+def _sdk_update_impl(ctx):
     output_root = ctx.actions.declare_directory(ctx.attr.name)
     output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
 
@@ -122,8 +122,8 @@ def _sdk_impl(ctx):
         ),
     ]
 
-sdk = rule(
-    implementation = _sdk_impl,
+sdk_update = rule(
+    implementation = _sdk_update_impl,
     attrs = {
         "base": attr.label(
             mandatory = True,
@@ -161,7 +161,7 @@ sdk = rule(
     },
 )
 
-def _sdk_update_impl(ctx):
+def _sdk_install_deps_impl(ctx):
     sdk = ctx.attr.base[SDKInfo]
 
     install_set = depset(
@@ -196,8 +196,8 @@ def _sdk_update_impl(ctx):
         ),
     ]
 
-sdk_update = rule(
-    implementation = _sdk_update_impl,
+sdk_install_deps = rule(
+    implementation = _sdk_install_deps_impl,
     attrs = {
         "base": attr.label(
             doc = """
