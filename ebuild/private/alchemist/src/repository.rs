@@ -284,6 +284,13 @@ impl RepositorySet {
             .chain(secondary_repo_dirs.split_ascii_whitespace())
         {
             let repo_dir = PathBuf::from(repo_dir);
+            // TODO(b/264959615): Delete this once crossdev is deleted from
+            // the PORTDIR_OVERLAY.
+            if repo_dir == PathBuf::from("/usr/local/portage/crossdev") {
+                eprintln!("Skipping crossdev repo");
+                continue;
+            }
+
             let layout = RepositoryLayout::load(&repo_dir)?;
             let name = layout.name.to_owned();
             if let Some(old_layout) = layout_map.insert(name.to_owned(), layout) {

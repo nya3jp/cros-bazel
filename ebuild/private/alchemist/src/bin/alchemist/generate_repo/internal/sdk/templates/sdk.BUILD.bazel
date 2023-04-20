@@ -11,7 +11,11 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_fil
 pkg_files(
     name = "make_conf_board",
     srcs = [
+        {%- if board == "amd64-host" %}
+        "make.conf.host_setup",
+        {%- else %}
         "make.conf.board",
+        {%- endif %}
         "make.conf.board_setup",
     ],
     strip_prefix = strip_prefix.from_pkg(),
@@ -20,7 +24,11 @@ pkg_files(
 pkg_mklink(
     name = "make_conf",
     link_name = "make.conf",
+    {%- if board == "amd64-host" %}
+    target = "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
+    {%- else %}
     target = "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.generic-target",
+    {%- endif %}
 )
 
 pkg_mklink(

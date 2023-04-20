@@ -162,6 +162,39 @@ fn generate_make_conf_board_setup(
     Ok(())
 }
 
+fn generate_make_conf_host_setup(output_dir: &Path) -> Result<()> {
+    let vars: Vec<MakeVar> = vec![
+        // We need to override the PKGDIR, PORTAGE_TMPDIR, and PORT_LOGDIR
+        // that are defined in make.conf.amd64-host because they are pointing
+        // to the BROOT. We make our overridden values use $ROOT so that they
+        // work when building a new sysroot, and also when building host
+        // packages. We could probably upstream this change, but it changes the
+        // location of the packages directory from /var/lib/portage/pkgs to
+        // /packages.
+        MakeVar::from(("PKGDIR", "$ROOT/packages/".to_string())),
+        MakeVar::from(("PORTAGE_TMPDIR", "$ROOT/tmp/".to_string())),
+        MakeVar::from(("PORT_LOGDIR", "$ROOT/tmp/portage/logs/".to_string())),
+    ];
+
+    // TODO:
+    // * Add `source /mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.sdk-chromeos`.
+    //   Not sure how much this really buys us. I think we should have an amd64-host-private overlay
+    //   instead.
+    // * Add:
+    //       PORTDIR_OVERLAY="$PORTDIR_OVERLAY /mnt/host/source/src/private-overlays/chromeos-partner-overlay"
+    //       PORTDIR_OVERLAY="$PORTDIR_OVERLAY /mnt/host/source/src/private-overlays/chromeos-overlay"
+    //   Again, I think this should be part of the amd64-host-private overlay
+    let context = MakeConfContext {
+        sources: vec![],
+        vars,
+    };
+
+    let file = File::create(output_dir.join("make.conf.host_setup"))?;
+    TEMPLATES.render_to("make.conf", &tera::Context::from_serialize(context)?, file)?;
+
+    Ok(())
+}
+
 pub fn generate_make_conf_for_board(
     board: &str,
     repos: &RepositorySet,
@@ -169,7 +202,12 @@ pub fn generate_make_conf_for_board(
     translator: &PathTranslator,
     output_dir: &Path,
 ) -> Result<()> {
-    generate_make_conf_board(repos, translator, output_dir)?;
     generate_make_conf_board_setup(board, repos, toolchain_config, translator, output_dir)?;
+
+    if board == "amd64-host" {
+        generate_make_conf_host_setup(output_dir)?;
+    } else {
+        generate_make_conf_board(repos, translator, output_dir)?;
+    }
     Ok(())
 }

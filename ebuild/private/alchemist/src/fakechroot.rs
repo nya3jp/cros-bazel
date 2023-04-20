@@ -282,6 +282,42 @@ dev-lang/go-1.18-r2
     Ok(())
 }
 
+/// Generates the portage configuration for the board amd64-host board.
+/// It has a couple differences from the chromeos target board:
+/// 1) No need to generate a package.provided since we want the compilers
+/// 2) The make.conf target is different.
+/// 3) We need to generate a make.conf.host_setup instead of a make.conf.board.
+fn generate_sdk_board_configs(
+    board: &str,
+    profile: &str,
+    repos: &RepositorySet,
+    toolchains: &ToolchainConfig,
+    translator: &PathTranslator,
+) -> Result<()> {
+    let board_root = Path::new("/build").join(board);
+
+    let files = vec![
+        FileOps::symlink (
+            "/etc/make.conf",
+            "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
+        ),
+        FileOps::symlink (
+            "/etc/make.conf.user",
+            "/etc/make.conf.user",
+        ),
+        FileOps::symlink(
+            "/etc/portage/make.profile",
+            translator.to_inner(repos.primary().base_dir())?.join("profiles").join(profile),
+        ),
+    ];
+    execute_file_ops(&files, &board_root)?;
+
+    let board_etc = board_root.join("etc");
+    generate_make_conf_for_board(board, repos, toolchains, translator, &board_etc)?;
+
+    Ok(())
+}
+
 fn generate_configs(board: &str, profile: &str, translator: &PathTranslator) -> Result<()> {
     generate_host_configs()?;
 
@@ -297,7 +333,11 @@ fn generate_configs(board: &str, profile: &str, translator: &PathTranslator) -> 
 
     let toolchains = load_toolchains(&repos)?;
 
-    generate_board_configs(board, profile, &repos, &toolchains, translator)?;
+    if board == "amd64-host" {
+        generate_sdk_board_configs(board, profile, &repos, &toolchains, translator)?;
+    } else {
+        generate_board_configs(board, profile, &repos, &toolchains, translator)?;
+    }
 
     Ok(())
 }
