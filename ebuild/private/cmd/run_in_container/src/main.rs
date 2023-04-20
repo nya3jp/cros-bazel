@@ -12,7 +12,7 @@ use nix::{
     mount::{mount, umount2, MsFlags},
     sched::{unshare, CloneFlags},
     unistd::execvp,
-    unistd::{execv, getgid, getuid, pivot_root},
+    unistd::{getgid, getuid, pivot_root},
 };
 use path_absolutize::Absolutize;
 use run_in_container_lib::RunInContainerConfig;
@@ -21,8 +21,8 @@ use std::{
     ffi::{OsStr, OsString},
     fs::File,
     io::Read,
-    os::unix::fs::DirBuilderExt,
     os::unix::fs::OpenOptionsExt,
+    os::unix::{fs::DirBuilderExt, process::ExitStatusExt},
     path::{Path, PathBuf},
     process::{Command, ExitCode},
 };
@@ -95,20 +95,19 @@ pub fn main() -> ExitCode {
     cli_main(do_main)
 }
 
-fn do_main() -> Result<()> {
+fn do_main() -> Result<ExitCode> {
     let args = Cli::parse();
 
     if !args.already_in_namespace {
         fix_runfiles_env()?;
-        enter_namespace(args.allow_network_access, args.privileged)?
+        enter_namespace(args.allow_network_access, args.privileged)
     } else {
         continue_namespace(
             RunInContainerConfig::deserialize_from(&args.cfg)?,
             args.cmd,
             args.allow_network_access,
-        )?
+        )
     }
-    Ok(())
 }
 
 /// Translates a file system layer source path by possibly following symlinks.
@@ -168,7 +167,7 @@ fn fix_runfiles_env() -> Result<()> {
     Ok(())
 }
 
-fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<()> {
+fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitCode> {
     let r = runfiles::Runfiles::create()?;
     let dumb_init_path = r.rlocation("dumb_init/file/downloaded");
 
@@ -193,11 +192,6 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<()> {
             .with_context(|| "Writing /proc/self/gid_map")?;
     }
 
-    let dumb_init = CString::new(dumb_init_path.to_string_lossy().to_string())?;
-    let argv = std::env::args()
-        .map(CString::new)
-        .collect::<Result<Vec<CString>, _>>()?;
-
     // --single-child tells dumb-init to not create a new SID. A new SID doesn't
     // have a controlling terminal, so running `bash` won't work correctly.
     // By omitting the new SID creation, the init processes will inherit the
@@ -212,22 +206,29 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<()> {
     // `SIGINT`/`SIGTERM`, perform a `kill -TERM -1` to notify all the processes
     // in the PID namespace to shut down cleanly, then wait for all processes
     // to exit.
-    let mut execv_init: Vec<CString> = vec![
-        dumb_init,
-        CString::new("--single-child")?,
-        argv[0].clone(),
-        CString::new("--already-in-namespace")?,
-    ];
-    execv_init.extend_from_slice(&argv[1..]);
-    execv(&execv_init[0], &execv_init)?;
-    unreachable!();
+    let args: Vec<String> = std::env::args().collect();
+    let status = Command::new(dumb_init_path)
+        .arg("--single-child")
+        .arg(&args[0])
+        .arg("--already-in-namespace")
+        .args(&args[1..])
+        .status()?;
+
+    // Propagate the exit status of the command.
+    match status.code() {
+        Some(code) => Ok(ExitCode::from(code as u8)),
+        None => {
+            let signal = status.signal().expect("signal number should be present");
+            Ok(ExitCode::from(128 + signal as u8))
+        }
+    }
 }
 
 fn continue_namespace(
     cfg: RunInContainerConfig,
     cmd: Vec<String>,
     allow_network_access: bool,
-) -> Result<()> {
+) -> Result<ExitCode> {
     let stage_dir = cfg.staging_dir.absolutize()?;
 
     if !allow_network_access {
