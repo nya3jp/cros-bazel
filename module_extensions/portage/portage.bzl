@@ -11,6 +11,19 @@ package_group(
 )
 """
 
+def _write_portage_symlink(repo_ctx, out):
+    # Generate an @portage symlink in the workspace root for easy access.
+    args = [
+        "ln",
+        "-fs",
+        out,
+        "%s/@portage" % (repo_ctx.workspace_root),
+    ]
+
+    st = repo_ctx.execute(args)
+    if st.return_code:
+        fail("Error running command %s:\n%s%s" % (args, st.stdout, st.stderr))
+
 def _portage_impl(repo_ctx):
     """Repository rule to generate the board's bazel BUILD files."""
 
@@ -58,6 +71,9 @@ def _portage_impl(repo_ctx):
         repo_ctx.file(out.get_child("settings.bzl"), content = "BOARD = None")
         repo_ctx.file(out.get_child("BUILD.bazel"), content = _EMPTY_PORTAGE_BUILD)
 
+    if repo_ctx.os.environ.get("ENABLE_PORTAGE_TAB_COMPLETION", "") == "1":
+        _write_portage_symlink(repo_ctx, out)
+
 portage = repository_rule(
     implementation = _portage_impl,
     attrs = dict(
@@ -69,6 +85,17 @@ portage = repository_rule(
         ),
         alchemist = attr.label(allow_single_file = True),
     ),
+    environ = [
+        # This will generate an @portage symlink in the workspace_root. This
+        # makes it easy to find the generated BUILD files, and also allows
+        # tab completion to work correctly. It's guarded because it's possible
+        # to accidentally try and build from this repo by doing the following:
+        #     bazel build //...
+        # Only enable this flag if you are aware of this edge case.
+        #
+        # Set this flag to 1 to enable the @portage symlink.
+        "ENABLE_PORTAGE_TAB_COMPLETION",
+    ],
     # Do not set this to true. It will force the evaluation to happen every
     # bazel invocation for unknown reasons...
     local = False,
