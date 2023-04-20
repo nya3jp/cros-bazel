@@ -56,10 +56,6 @@ pub enum Commands {
         /// Output directory path.
         #[arg(short = 'o', long, value_name = "PATH")]
         output_dir: PathBuf,
-
-        /// Enables verbose output.
-        #[arg(short = 'v', long)]
-        verbose: bool,
     },
     /// Generates a digest of the repository that can be used to indicate if
     /// any of the overlays, ebuilds, eclasses, etc have changed.
@@ -190,10 +186,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 .collect::<Result<Vec<_>>>()?;
             dump_package_main(&resolver, atoms)?;
         }
-        Commands::GenerateRepo {
-            output_dir,
-            verbose,
-        } => {
+        Commands::GenerateRepo { output_dir } => {
             let toolchains = load_toolchains(&repos)?;
 
             generate_repo_main(
@@ -206,7 +199,6 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 &toolchains,
                 &src_dir,
                 &output_dir,
-                verbose,
             )?;
         }
         Commands::DigestRepo { args: _ } => {

@@ -117,7 +117,6 @@ fn analyze_packages(
     all_details: Vec<Arc<PackageDetails>>,
     src_dir: &Path,
     resolver: &PackageResolver,
-    verbose: bool,
 ) -> (Vec<Package>, Vec<AnalysisError>) {
     // Analyze packages in parallel.
     let (all_partials, failures): (Vec<PackagePartial>, Vec<AnalysisError>) =
@@ -141,19 +140,8 @@ fn analyze_packages(
             }
         });
 
-    if verbose {
-        for failure in &failures {
-            eprintln!(
-                "WARNING: {}: Analysis failed: {}",
-                failure.ebuild.to_string_lossy(),
-                failure.error
-            );
-        }
-    } else if !failures.is_empty() {
-        eprintln!(
-            "WARNING: Analysis failed for {} packages; use --verbose to see details",
-            failures.len()
-        );
+    if !failures.is_empty() {
+        eprintln!("WARNING: Analysis failed for {} packages", failures.len());
     }
 
     // Compute install sets.
@@ -237,7 +225,6 @@ pub fn generate_repo_main(
     toolchain_config: &ToolchainConfig,
     src_dir: &Path,
     output_dir: &Path,
-    verbose: bool,
 ) -> Result<()> {
     match remove_dir_all(output_dir) {
         Ok(_) => {}
@@ -257,8 +244,7 @@ pub fn generate_repo_main(
 
     eprintln!("Analyzing packages...");
 
-    let (all_packages, failures) =
-        analyze_packages(config, all_details, src_dir, resolver, verbose);
+    let (all_packages, failures) = analyze_packages(config, all_details, src_dir, resolver);
 
     let all_local_sources = all_packages
         .iter()
