@@ -247,6 +247,7 @@ PORTDIR_OVERLAY="/mnt/host/source/src/overlays/overlay-amd64-host"
 /// Generates the portage configuration for the board.
 fn generate_board_configs(
     board: &str,
+    profile: &str,
     repos: &RepositorySet,
     toolchains: &ToolchainConfig,
     translator: &PathTranslator,
@@ -264,8 +265,7 @@ fn generate_board_configs(
         ),
         FileOps::symlink(
             "/etc/portage/make.profile",
-            // TODO: Remove hard coded base profile
-            translator.to_inner(repos.primary().base_dir())?.join("profiles/base"),
+            translator.to_inner(repos.primary().base_dir())?.join("profiles").join(profile),
         ),
         // TODO(b/266979761): Remove the need for this list
         FileOps::plainfile("/etc/portage/profile/package.provided", r#"
@@ -282,7 +282,7 @@ dev-lang/go-1.18-r2
     Ok(())
 }
 
-fn generate_configs(board: &str, translator: &PathTranslator) -> Result<()> {
+fn generate_configs(board: &str, profile: &str, translator: &PathTranslator) -> Result<()> {
     generate_host_configs()?;
 
     // We throw away the repos and toolchain after we generate the files so we can
@@ -297,7 +297,7 @@ fn generate_configs(board: &str, translator: &PathTranslator) -> Result<()> {
 
     let toolchains = load_toolchains(&repos)?;
 
-    generate_board_configs(board, &repos, &toolchains, translator)?;
+    generate_board_configs(board, profile, &repos, &toolchains, translator)?;
 
     Ok(())
 }
@@ -318,12 +318,13 @@ fn generate_configs(board: &str, translator: &PathTranslator) -> Result<()> {
 /// # Arguments
 ///
 /// * `board` - The board name to generate configs for.
+/// * `profile` - The board's profile.
 /// * `source_dir` - The `repo` root directory. i.e., directory that contains
 ///   the `.repo` directory. This will be mounted at /mnt/host/source.
 ///
 /// It returns [`PathTranslator`] that can be used to translate file paths in
 /// the fake chroot to the original paths.
-pub fn enter_fake_chroot(board: &str, source_dir: &Path) -> Result<PathTranslator> {
+pub fn enter_fake_chroot(board: &str, profile: &str, source_dir: &Path) -> Result<PathTranslator> {
     // Canonicalize `source_dir` so it can be used in symlink targets.
     // Do this before entering the namespace to avoid including "/.old-root" in
     // the resolved path.
@@ -348,7 +349,7 @@ pub fn enter_fake_chroot(board: &str, source_dir: &Path) -> Result<PathTranslato
     let translator = PathTranslator::new(CHROOT_SOURCE_DIR, &source_dir);
 
     // Generate configs.
-    generate_configs(board, &translator)?;
+    generate_configs(board, profile, &translator)?;
 
     Ok(translator)
 }

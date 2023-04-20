@@ -35,6 +35,10 @@ pub struct Args {
     #[arg(short = 'b', long, value_name = "NAME")]
     board: String,
 
+    /// Profile of the board.
+    #[arg(short = 'p', long, value_name = "PROFILE", default_value = "base")]
+    profile: String,
+
     /// Path to the ChromiumOS source directory root.
     /// If unset, it is inferred from the current directory.
     #[arg(short = 's', long, value_name = "DIR")]
@@ -142,7 +146,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         }
     }
 
-    let translator = enter_fake_chroot(&args.board, &source_dir)?;
+    let translator = enter_fake_chroot(&args.board, &args.profile, &source_dir)?;
 
     let root_dir = PathBuf::from("/build").join(&args.board);
 
@@ -191,6 +195,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
             generate_repo_main(
                 &args.board,
+                &args.profile,
                 &repos,
                 &config,
                 &loader,

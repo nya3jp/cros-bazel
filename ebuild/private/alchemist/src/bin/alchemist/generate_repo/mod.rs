@@ -217,6 +217,7 @@ fn analyze_packages(
 /// The entry point of "generate-repo" subcommand.
 pub fn generate_repo_main(
     board: &str,
+    profile: &str,
     repos: &RepositorySet,
     config: &ConfigBundle,
     loader: &CachedPackageLoader,
@@ -258,7 +259,14 @@ pub fn generate_repo_main(
     generate_public_packages(&all_packages, resolver, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
     generate_settings_bzl(board, &output_dir.join("settings.bzl"))?;
-    generate_sdk(board, repos, toolchain_config, translator, output_dir)?;
+    generate_sdk(
+        board,
+        profile,
+        repos,
+        toolchain_config,
+        translator,
+        output_dir,
+    )?;
 
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;

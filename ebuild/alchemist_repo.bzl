@@ -15,6 +15,8 @@ def _alchemist_repo_repository_impl(ctx):
     # Keep all the ctx.path calls first to avoid expensive restarts
     alchemist = ctx.path(ctx.attr._alchemist)
     board = ctx.read(ctx.attr._board)
+    profile = ctx.read(ctx.attr._profile)
+
     # TODO: Alchemist doesn't like `.` as an --output-dir so pass in an absolute
     # path for now.
     out = ctx.path("")
@@ -30,11 +32,17 @@ def _alchemist_repo_repository_impl(ctx):
             board,
             "--source-dir",
             root,
+        ]
+        if profile:
+            args += ["--profile", profile]
+
+        args += [
             "generate-repo",
             "--output-dir",
             out,
         ]
-        st = ctx.execute(args, quiet=False)
+
+        st = ctx.execute(args, quiet = False)
         if st.return_code:
             fail("Error running command %s:\n%s%s" % (args, st.stdout, st.stderr))
     else:
@@ -58,6 +66,10 @@ alchemist_repo = repository_rule(
     attrs = {
         "_board": attr.label(
             default = Label("@portage_digest//:board"),
+            allow_single_file = True,
+        ),
+        "_profile": attr.label(
+            default = Label("@portage_digest//:profile"),
             allow_single_file = True,
         ),
         "_digest": attr.label(

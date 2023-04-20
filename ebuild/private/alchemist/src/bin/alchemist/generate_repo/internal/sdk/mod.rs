@@ -128,12 +128,12 @@ struct SdkTemplateContext<'a> {
 
 fn generate_sdk_build(
     board: &str,
+    profile: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
     out: &Path,
 ) -> Result<()> {
-    // TODO: Don't hard code the base profile
-    let profile_path = repos.primary().base_dir().join("profiles/base");
+    let profile_path = repos.primary().base_dir().join("profiles").join(profile);
 
     let mut overlays_targets: Vec<String> = Vec::new();
     for repo in repos.get_repos() {
@@ -176,6 +176,7 @@ fn generate_sdk_build(
 
 pub fn generate_sdk(
     board: &str,
+    profile: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
     translator: &PathTranslator,
@@ -185,7 +186,7 @@ pub fn generate_sdk(
 
     create_dir_all(&out)?;
 
-    generate_sdk_build(board, repos, toolchain_config, &out)?;
+    generate_sdk_build(board, profile, repos, toolchain_config, &out)?;
     if let Some(toolchain) = toolchain_config.primary() {
         generate_wrappers(board, &toolchain.name, &out)?;
     }

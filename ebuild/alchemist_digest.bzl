@@ -14,7 +14,15 @@ def _alchemist_digest_repository_impl(ctx):
 
     # --source-dir needs the repo root, not just the `src` directory
     root = ctx.workspace_root.dirname
+
+    # BOARD has the format <board>:<profile>
     board = ctx.os.environ.get("BOARD", "")
+    parts = board.split(":", 1)
+    if len(parts) > 1:
+        board = parts[0]
+        profile = parts[1]
+    else:
+        profile = ""
 
     # If we don't have a BOARD defined, we need to clear out the repository
     if board:
@@ -39,6 +47,7 @@ def _alchemist_digest_repository_impl(ctx):
 
     # Pass the config to the @portage repo
     ctx.file("board", content = board)
+    ctx.file("profile", content = profile)
     ctx.file("digest", content = digest)
 
 alchemist_digest = repository_rule(
