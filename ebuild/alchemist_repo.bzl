@@ -38,9 +38,18 @@ def _alchemist_repo_repository_impl(ctx):
         if st.return_code:
             fail("Error running command %s:\n%s%s" % (args, st.stdout, st.stderr))
     else:
+        # TODO: Consider running alchemist in this case as well. Then we don't
+        # need this special logic.
         ctx.file("repositories.bzl", content = _ALCHEMIST_REPO_REPOSITORIES_FILE)
         ctx.file("settings.bzl", content = "BOARD = None")
-        ctx.file("BUILD.bazel", content = "")
+        ctx.file("BUILD.bazel", content = """\
+package_group(
+    name = "all_packages",
+    packages = [
+        "//...",
+    ],
+)
+""")
 
 # TODO: This rule depend on the user having ran `setup_board --board <BOARD>`
 # inside the `cros_sdk`.
