@@ -95,6 +95,8 @@ impl Toolchain {
         match self.arch.as_str() {
             "aarch64" => Ok("arm64"),
             "arm" => Ok("arm"),
+            "armv7a" => Ok("arm"),
+            "armv7m" => Ok("arm"),
             "i686" => Ok("x86"),
             "x86_64" => Ok("amd64"),
             _ => bail!("Unknown arch {}", &self.arch),
