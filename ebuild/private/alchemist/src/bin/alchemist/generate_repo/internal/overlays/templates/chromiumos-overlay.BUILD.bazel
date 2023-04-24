@@ -36,7 +36,7 @@ pkg_files(
         "sys-apps/mawk/files/*.patch",
         "*/*/files/*_waf_config_answers",
     ]),
-    prefix = "{{ "mnt/host/source/" ~ mount_path }}",
+    prefix = "{{ mount_path }}",
     # chromeos/scripts/config_wrapper must be executable
     attributes = pkg_attributes(
         mode = "0755",

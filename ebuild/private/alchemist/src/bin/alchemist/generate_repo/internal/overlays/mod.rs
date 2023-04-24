@@ -10,7 +10,10 @@ use std::{
     path::Path,
 };
 
-use alchemist::repository::RepositorySet;
+use alchemist::{
+    fakechroot::PathTranslator,
+    repository::{Repository, RepositorySet},
+};
 use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::Serialize;
@@ -66,7 +69,7 @@ fn generate_overlay_symlinks(original_dir: &Path, output_dir: &Path) -> Result<(
             create_dir(&output_file).with_context(|| format!("mkdir {}", output_file.display()))?;
             continue;
         }
-        symlink(&original_file, &output_file).with_context(|| {
+        symlink(original_file, &output_file).with_context(|| {
             format!(
                 "ln -s {} {}",
                 original_file.display(),
@@ -83,23 +86,19 @@ struct OverlayBuildTemplateContext<'a> {
     mount_path: &'a Path,
 }
 
-fn generate_overlay_build_file(relative_dir: &Path, output_file: &Path) -> Result<()> {
-    // We don't use `relative_dir` because chromiumos != chromiumos-overlay.
-    let name = relative_dir
-        .file_name()
-        .expect("repository name")
-        .to_str()
-        .expect("valid name");
-    let mount_path = Path::new("src").join(relative_dir);
+fn generate_overlay_build_file(repo: &Repository, output_file: &Path) -> Result<()> {
     let context = OverlayBuildTemplateContext {
-        name,
-        mount_path: &mount_path,
+        name: repo.name(),
+        mount_path: repo
+            .base_dir()
+            .strip_prefix("/")
+            .unwrap_or_else(|_| repo.base_dir()),
     };
 
     // The chromiumos-overlay repo contains a pretty complex BUILD.bazel file.
     // Once the bashrc and patch files can be cleaned up hopefully we can
     // use the standard template.
-    let template = if relative_dir.to_string_lossy() == "third_party/chromiumos-overlay" {
+    let template = if repo.name() == "chromiumos" {
         "chromiumos-overlay.BUILD.bazel"
     } else {
         "overlay.BUILD.bazel"
@@ -114,7 +113,7 @@ fn generate_overlay_build_file(relative_dir: &Path, output_file: &Path) -> Resul
 }
 
 pub fn generate_internal_overlays(
-    src_dir: &Path,
+    translator: &PathTranslator,
     repos: &RepositorySet,
     output_dir: &Path,
 ) -> Result<()> {
@@ -123,16 +122,15 @@ pub fn generate_internal_overlays(
         .get_repos()
         .into_iter()
         .try_for_each(|repo| -> Result<()> {
-            let relative_dir = repo.base_dir().strip_prefix("/mnt/host/source/src")?;
-            let original_dir = src_dir.join(relative_dir);
-            let output_dir = output_overlays_dir.join(relative_dir);
+            let original_dir = translator.to_outer(repo.base_dir())?;
+            let output_dir = output_overlays_dir.join(repo.name());
 
             create_dir_all(&output_dir)
                 .with_context(|| format!("mkdir -p {}", output_dir.display()))?;
 
             generate_overlay_symlinks(&original_dir, &output_dir)?;
 
-            generate_overlay_build_file(relative_dir, &output_dir.join("BUILD.bazel"))?;
+            generate_overlay_build_file(repo, &output_dir.join("BUILD.bazel"))?;
 
             Ok(())
         })?;
@@ -147,8 +145,12 @@ mod tests {
     fn generate_overlay_build_file_succeeds() -> Result<()> {
         // Templates in this module are loaded together,
         // so syntax errors in any of them will fail the test.
-        let relative_dir = Path::new("third_party/chromiumos-overlay");
+        let repo = Repository::new_simple(
+            "chromiumos",
+            Path::new("/mnt/host/source/src/third_party/chromiumos-overlay"),
+        );
+
         let output_file = tempfile::NamedTempFile::new()?;
-        generate_overlay_build_file(relative_dir, output_file.path())
+        generate_overlay_build_file(&repo, output_file.path())
     }
 }

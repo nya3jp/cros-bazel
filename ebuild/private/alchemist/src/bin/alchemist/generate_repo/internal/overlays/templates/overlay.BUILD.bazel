@@ -15,7 +15,7 @@ pkg_files(
         "make.conf",
         "prebuilt.conf",
     ]),
-    prefix = "{{ "mnt/host/source/" ~ mount_path }}",
+    prefix = "{{ mount_path }}",
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )

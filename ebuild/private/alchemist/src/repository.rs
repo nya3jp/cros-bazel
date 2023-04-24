@@ -156,6 +156,15 @@ impl Repository {
         })
     }
 
+    /// Creates a repository with no parents. This is useful for unit testing.
+    pub fn new_simple(name: &str, path: &Path) -> Self {
+        Self {
+            name: name.to_string(),
+            location: RepositoryLocation::new(path),
+            parents: vec![],
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }

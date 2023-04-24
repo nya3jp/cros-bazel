@@ -18,7 +18,7 @@ use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
 
-use super::super::common::{AUTOGENERATE_NOTICE, CHROOT_SRC_DIR};
+use super::super::common::AUTOGENERATE_NOTICE;
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -137,8 +137,7 @@ fn generate_sdk_build(
 
     let mut overlays_targets: Vec<String> = Vec::new();
     for repo in repos.get_repos() {
-        let relative = repo.base_dir().strip_prefix(CHROOT_SRC_DIR)?;
-        overlays_targets.push(format!("//internal/overlays/{}", relative.display()));
+        overlays_targets.push(format!("//internal/overlays/{}", repo.name()));
     }
 
     let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();
