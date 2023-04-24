@@ -7,10 +7,11 @@ edition = "2021"
 
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
+processes = { path = "../../common/processes" }
 
 anyhow.workspace = true
 clap.workspace = true
-libc.workspace = true
-nix.workspace = true
-signal-hook.workspace = true
 tempfile.workspace = true
+
+[dev-dependencies]
+libc.workspace = true

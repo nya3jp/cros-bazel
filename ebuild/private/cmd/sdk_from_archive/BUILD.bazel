@@ -11,6 +11,7 @@ rust_binary(
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/durabletree",
+        "//bazel/ebuild/private/common/processes",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
     ],

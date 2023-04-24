@@ -207,12 +207,13 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
     // in the PID namespace to shut down cleanly, then wait for all processes
     // to exit.
     let args: Vec<String> = std::env::args().collect();
-    let status = Command::new(dumb_init_path)
-        .arg("--single-child")
-        .arg(&args[0])
-        .arg("--already-in-namespace")
-        .args(&args[1..])
-        .status()?;
+    let status = processes::run(
+        Command::new(dumb_init_path)
+            .arg("--single-child")
+            .arg(&args[0])
+            .arg("--already-in-namespace")
+            .args(&args[1..]),
+    )?;
 
     // Propagate the exit status of the command.
     match status.code() {

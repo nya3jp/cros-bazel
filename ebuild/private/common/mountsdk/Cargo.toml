@@ -9,6 +9,7 @@ edition = "2021"
 fileutil = { path = "../fileutil" }
 makechroot = { path = "../makechroot" }
 binarypackage = { path = "../portage/binarypackage" }
+processes = { path = "../processes" }
 run_in_container_lib = { path = "../run_in_container_lib" }
 
 anyhow.workspace = true

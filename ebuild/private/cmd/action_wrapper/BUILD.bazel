@@ -10,12 +10,9 @@ rust_binary(
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
+        "//bazel/ebuild/private/common/processes",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
-        "@alchemy_crates//:libc",
-        "@alchemy_crates//:nix",
-        "@alchemy_crates//:signal-hook",
-        "@alchemy_crates//:tempfile",
     ],
 )
 
@@ -23,4 +20,7 @@ rust_test(
     name = "action_wrapper_test",
     size = "small",
     crate = ":action_wrapper",
+    deps = [
+        "@alchemy_crates//:libc",
+    ],
 )

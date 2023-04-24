@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
 durabletree = { path = "../../common/durabletree" }
+processes = { path = "../../common/processes" }
 
 anyhow.workspace = true
 clap.workspace = true

@@ -1,0 +1,25 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
+
+rust_library(
+    name = "processes",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "processes",
+    deps = [
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:signal-hook",
+    ],
+    visibility = ["//bazel:internal"],
+)
+
+rust_test(
+    name = "processes_test",
+    crate = ":processes",
+    size = "small",
+)

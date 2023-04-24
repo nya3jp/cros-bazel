@@ -189,11 +189,8 @@ impl MountedSDK {
             .cmd
             .take()
             .with_context(|| "Can only execute a command once per SDK.")?;
-        let status = cmd.args(args).status()?;
-        if !status.success() {
-            bail!("command failed: {:?}", status);
-        }
-        Ok(())
+        cmd.args(args);
+        processes::run_and_check(&mut cmd)
     }
 }
 
@@ -238,10 +235,7 @@ mod tests {
         let ebuild_file = portage_stable.join("mypkg/mypkg.ebuild");
         let cfg = Config {
             board: "amd64-generic".to_owned(),
-            layer_paths: vec![
-                r.rlocation("cros/bazel/sdk/base_sdk"),
-                r.rlocation("cros/bazel/sdk/base_sdk-symlinks.tar"),
-            ],
+            layer_paths: vec![r.rlocation("cros/bazel/sdk/sdk_from_archive")],
             bind_mounts: vec![
                 BindMount {
                     source: r.rlocation(

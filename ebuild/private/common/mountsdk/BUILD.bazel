@@ -18,6 +18,7 @@ rust_library(
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+        "//bazel/ebuild/private/common/processes",
         "//bazel/ebuild/private/common/run_in_container_lib",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
@@ -42,6 +43,7 @@ rust_test(
     crate = ":mountsdk",
     data = [
         "testdata/mypkg.ebuild",
-        "//bazel/sdk:base_sdk",
+        "//bazel/sdk:sdk_from_archive",
     ],
+    deps = ["//bazel/ebuild/private/common/processes"],
 )

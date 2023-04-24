@@ -6,9 +6,9 @@ use anyhow::Result;
 use clap::Parser;
 use cliutil::cli_main;
 use durabletree::DurableTree;
-use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
-use std::process::{Command, ExitCode};
+use std::process::Command;
+use std::process::ExitCode;
 
 #[derive(Parser, Debug)]
 #[clap()]
@@ -22,34 +22,23 @@ struct Cli {
     output: PathBuf,
 }
 
-fn do_main() -> Result<ExitCode> {
+fn do_main() -> Result<()> {
     let args = Cli::parse();
 
     std::fs::create_dir_all(&args.output)?;
 
     // TODO: Remove the dependency to the system pixz.
-    let status = Command::new("tar")
-        .args([
-            "-Ipixz",
-            "-xf",
-            &args.input.to_string_lossy(),
-            "-C",
-            &args.output.to_string_lossy(),
-        ])
-        .status()?;
-
-    if !status.success() {
-        // Propagate the exit status of the command
-        // (128 + signal if it terminated after receiving a signal).
-        let tar_code = status
-            .code()
-            .unwrap_or_else(|| 128 + status.signal().expect("signal number should be present"));
-        return Ok(ExitCode::from(tar_code as u8));
-    }
+    processes::run_and_check(Command::new("tar").args([
+        "-Ipixz",
+        "-xf",
+        &args.input.to_string_lossy(),
+        "-C",
+        &args.output.to_string_lossy(),
+    ]))?;
 
     DurableTree::convert(&args.output)?;
 
-    Ok(ExitCode::SUCCESS)
+    Ok(())
 }
 
 fn main() -> ExitCode {

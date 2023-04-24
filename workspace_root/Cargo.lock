@@ -10,8 +10,7 @@ dependencies = [
  "clap",
  "cliutil",
  "libc",
- "nix",
- "signal-hook",
+ "processes",
  "tempfile",
 ]
 
@@ -771,6 +770,7 @@ dependencies = [
  "libc",
  "makechroot",
  "nix",
+ "processes",
  "run_in_container_lib",
  "runfiles",
  "scopeguard",
@@ -991,6 +991,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "processes"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "nix",
+ "signal-hook",
+]
+
+[[package]]
 name = "proptest"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1141,6 +1150,7 @@ dependencies = [
  "nix",
  "path-absolutize",
  "pathdiff",
+ "processes",
  "run_in_container_lib",
  "runfiles",
  "serde",
@@ -1235,6 +1245,7 @@ dependencies = [
  "clap",
  "cliutil",
  "durabletree",
+ "processes",
  "tempfile",
 ]
 
