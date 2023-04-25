@@ -84,6 +84,7 @@ impl Stability {
 
 #[derive(Clone, Debug)]
 pub struct PackageDetails {
+    pub repo_name: String,
     pub package_name: String,
     pub version: Version,
     pub vars: BashVars,
@@ -185,6 +186,7 @@ impl PackageLoader {
             .collect();
 
         Ok(PackageDetails {
+            repo_name: repo.name().to_string(),
             package_name,
             version: metadata.path_info.version,
             vars: metadata.vars,

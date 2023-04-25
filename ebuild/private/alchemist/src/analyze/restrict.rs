@@ -48,6 +48,7 @@ mod tests {
             vars.insert("RESTRICT".to_owned(), value);
         }
         PackageDetails {
+            repo_name: "baz".to_owned(),
             package_name: "foo/bar".to_owned(),
             version: "1.0".parse().unwrap(),
             vars: BashVars::new(vars),

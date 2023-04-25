@@ -587,6 +587,7 @@ mod tests {
         )?;
 
         let package = PackageDetails {
+            repo_name: "baz".to_owned(),
             package_name: "sys-libs/foo".to_owned(),
             version: Version::try_new("0.1.0").unwrap(),
             vars: BashVars::new(HashMap::from([
@@ -692,6 +693,7 @@ mod tests {
     #[test]
     fn cros_workon_pinned_package_with_subtree() -> Result<()> {
         let package = PackageDetails {
+            repo_name: "baz".to_owned(),
             package_name: "sys-boot/libpayload".to_owned(),
             version: Version::try_new("0.1.0")?,
             vars: BashVars::new(HashMap::from([
@@ -804,6 +806,7 @@ mod tests {
     #[test]
     fn cros_workon_pinned_package_without_subtree() -> Result<()> {
         let package = PackageDetails {
+            repo_name: "baz".to_owned(),
             package_name: "sys-boot/depthcharge".to_owned(),
             version: Version::try_new("0.1.0")?,
             vars: BashVars::new(HashMap::from([
@@ -896,6 +899,7 @@ mod tests {
 
     fn create_optional_subtree_package(use_map: UseMap) -> PackageDetails {
         PackageDetails {
+            repo_name: "baz".to_owned(),
             package_name: "sys-boot/libpayload".to_owned(),
             version: Version::try_new("0.1.0").unwrap(),
             vars: BashVars::new(HashMap::from([
@@ -1049,6 +1053,7 @@ mod tests {
     #[test]
     fn cros_workon_9999_package() -> Result<()> {
         let package = PackageDetails {
+            repo_name: "baz".to_owned(),
             package_name: "sys-boot/depthcharge".to_owned(),
             version: Version::try_new("9999")?,
             vars: BashVars::new(HashMap::from([

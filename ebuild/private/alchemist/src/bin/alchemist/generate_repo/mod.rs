@@ -133,6 +133,7 @@ fn analyze_packages(
             match result {
                 Ok(package) => Either::Left(package),
                 Err(err) => Either::Right(AnalysisError {
+                    repo_name: details.repo_name.clone(),
                     ebuild: details.ebuild_path.clone(),
                     version: details.version.clone(),
                     error: format!("{err:#}"),

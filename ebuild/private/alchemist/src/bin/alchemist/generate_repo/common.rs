@@ -54,6 +54,7 @@ pub struct Package {
 
 /// Holds the error that occurred during analysis
 pub struct AnalysisError {
+    pub repo_name: String,
     pub ebuild: PathBuf,
     pub version: Version,
     pub error: String,

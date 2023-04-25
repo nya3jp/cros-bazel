@@ -150,6 +150,7 @@ mod tests {
         };
 
         let details_prototype = PackageDetails {
+            repo_name: "baz".to_owned(),
             package_name: "prototype".to_owned(),
             version: Version::try_new("1.0").unwrap(),
             vars: BashVars::new(HashMap::new()),
