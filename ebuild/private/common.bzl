@@ -59,6 +59,20 @@ BinaryPackageSetInfo = provider(
     },
 )
 
+OverlayInfo = provider(
+    "Portage overlay info",
+    fields = {
+        "path": """
+            String: Path inside the container where the overlay's ebuilds are
+            mounted.
+        """,
+        "layer": """
+            File: A file which represents an overlay layer. A layer
+            file can be a tar file (.tar or .tar.zst).
+        """,
+    },
+)
+
 OverlaySetInfo = provider(
     "Portage overlay set info",
     fields = {
