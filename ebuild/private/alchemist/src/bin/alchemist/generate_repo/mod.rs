@@ -134,6 +134,7 @@ fn analyze_packages(
                 Ok(package) => Either::Left(package),
                 Err(err) => Either::Right(AnalysisError {
                     repo_name: details.repo_name.clone(),
+                    package_name: details.package_name.clone(),
                     ebuild: details.ebuild_path.clone(),
                     version: details.version.clone(),
                     error: format!("{err:#}"),
@@ -255,7 +256,7 @@ pub fn generate_repo_main(
     eprintln!("Generating @portage...");
 
     generate_internal_overlays(translator, repos, output_dir)?;
-    generate_internal_packages(src_dir, &all_packages, &failures, output_dir)?;
+    generate_internal_packages(translator, &all_packages, &failures, output_dir)?;
     generate_internal_sources(all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&all_packages, resolver, output_dir)?;
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;

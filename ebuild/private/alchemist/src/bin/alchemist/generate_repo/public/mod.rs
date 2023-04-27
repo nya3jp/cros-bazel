@@ -18,7 +18,7 @@ use serde::Serialize;
 use tera::Tera;
 use version::Version;
 
-use super::common::{Package, AUTOGENERATE_NOTICE, CHROOT_SRC_DIR};
+use super::common::{Package, AUTOGENERATE_NOTICE};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -73,13 +73,9 @@ fn generate_public_package(
 
     for package in version_to_package.values() {
         let details = &package.details;
-        let package_relative_dir = match details.ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
-            Ok(ebuild_relative_path) => ebuild_relative_path.parent().unwrap(),
-            _ => continue,
-        };
         let internal_package_location = format!(
-            "//internal/packages/{}",
-            package_relative_dir.to_string_lossy(),
+            "//internal/packages/{}/{}",
+            details.repo_name, details.package_name
         );
         for suffix in ["", "_debug", "_package_set"] {
             aliases.push(AliasEntry {

@@ -16,8 +16,6 @@ use itertools::Itertools;
 use serde::Serialize;
 use version::Version;
 
-pub static CHROOT_SRC_DIR: &str = "/mnt/host/source/src";
-
 pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n";
 
 fn file_name_to_repository_name(file_name: &str) -> String {
@@ -55,6 +53,7 @@ pub struct Package {
 /// Holds the error that occurred during analysis
 pub struct AnalysisError {
     pub repo_name: String,
+    pub package_name: String,
     pub ebuild: PathBuf,
     pub version: Version,
     pub error: String,

@@ -13,7 +13,6 @@ use std::{
     process::ExitCode,
     str::FromStr,
 };
-use version::Version;
 
 const EBUILD_EXT: &str = ".ebuild";
 const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_package.sh";
@@ -93,9 +92,9 @@ impl SysrootFileSpec {
 #[derive(Debug, Clone)]
 struct EbuildMetadata {
     source: PathBuf,
-    overlay: String,
+    mount_path: PathBuf,
     category: String,
-    package_name: String,
+    _package_name: String,
     file_name: String,
 }
 
@@ -105,29 +104,20 @@ impl FromStr for EbuildMetadata {
     fn from_str(spec: &str) -> Result<Self> {
         let (path, source) = cliutil::split_key_value(spec)?;
         // We expect path to be in the following form:
-        // <overlay>/<category>/<packageName>/<packageName>-<version>.ebuild
+        // <category>/<packageName>/<packageName>-<version>.ebuild
         // i.e., third_party/chromiumos-overlay/app-accessibility/brltty/brltty-6.3-r6.ebuild
-        // TODO: this currently fails with absolute paths.
-        let stripped = path
-            .strip_suffix(EBUILD_EXT)
-            .ok_or_else(|| anyhow!("ebuild must have .ebuild suffix (got {:?}", path))?;
-        let (rest, _) = Version::from_str_suffix(stripped)?;
-        let parts: Vec<_> = rest.split('/').collect();
-        if parts.len() < 4 {
+        let parts: Vec<_> = path.split('/').collect();
+        if parts.len() < 3 {
             bail!("unable to parse ebuild path: {:?}", path)
         }
 
-        return Ok(Self {
+        Ok(Self {
             source: source.into(),
-            package_name: parts[parts.len() - 2].into(),
+            mount_path: path.into(),
             category: parts[parts.len() - 3].into(),
-            overlay: parts[0..parts.len() - 3].join("/"),
-            file_name: Path::new(source)
-                .file_name()
-                .with_context(|| "Ebuild must have a file name")?
-                .to_string_lossy()
-                .into(),
-        });
+            _package_name: parts[parts.len() - 2].into(),
+            file_name: parts[parts.len() - 1].into(),
+        })
     }
 }
 
@@ -151,20 +141,12 @@ fn do_main() -> Result<()> {
         mount_path: PathBuf::from(MAIN_SCRIPT),
     });
 
-    let ebuild_mount_dir: PathBuf = [
-        mountsdk::SOURCE_DIR,
-        "src",
-        &args.ebuild.overlay,
-        &args.ebuild.category,
-        &args.ebuild.package_name,
-    ]
-    .iter()
-    .collect();
-    let ebuild_path = ebuild_mount_dir.join(&args.ebuild.file_name);
     cfg.bind_mounts.push(BindMount {
         source: fix_runfile_path(args.ebuild.source),
-        mount_path: ebuild_path.clone(),
+        mount_path: args.ebuild.mount_path.clone(),
     });
+
+    let ebuild_mount_dir = args.ebuild.mount_path.parent().unwrap();
 
     for mount in args.file {
         cfg.bind_mounts.push(BindMount {
@@ -215,7 +197,7 @@ fn do_main() -> Result<()> {
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
     }
-    let ebuild_path_str = ebuild_path.to_string_lossy();
+    let ebuild_path_str = args.ebuild.mount_path.to_string_lossy();
     let mut cmd_args = vec![
         MAIN_SCRIPT,
         "ebuild",

@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
@@ -21,6 +21,13 @@ _EBUILD_COMMON_ATTRS = dict(
     ebuild = attr.label(
         mandatory = True,
         allow_single_file = [".ebuild"],
+    ),
+    overlay = attr.label(
+        mandatory = True,
+        providers = [OverlayInfo],
+        doc = """
+        The overlay this package belongs to.
+        """,
     ),
     distfiles = attr.label_keyed_string_dict(
         allow_files = True,
@@ -118,10 +125,11 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     if for_test:
         args.add("--runfiles-mode")
 
+    # We extract the <category>/<package>/<ebuild> from the file path.
+    relative_ebuild_path = "/".join(ctx.file.ebuild.path.rsplit("/", 3)[1:4])
+    ebuild_inside_path = "%s/%s" % (ctx.attr.overlay[OverlayInfo].path, relative_ebuild_path)
+
     # --ebuild
-    ebuild_inside_path = ctx.file.ebuild.path.removeprefix(
-        ctx.file.ebuild.owner.workspace_root + "/",
-    ).removeprefix("internal/packages/")
     if for_test:
         args.add("--ebuild=%s=cros/%s" % (ebuild_inside_path, ctx.file.ebuild.short_path))
     else:

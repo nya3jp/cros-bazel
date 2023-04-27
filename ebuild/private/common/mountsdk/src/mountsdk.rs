@@ -220,8 +220,9 @@ fn ensure_passwordless_sudo() -> Result<()> {
 mod tests {
     use super::*;
     use crate::LoginMode::Never;
-    use crate::SOURCE_DIR;
     use runfiles::Runfiles;
+
+    const SOURCE_DIR: &str = "/mnt/host/source";
 
     #[test]
     fn run_in_sdk() -> Result<()> {

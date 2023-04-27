@@ -8,8 +8,6 @@ use clap::{arg, Args};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-pub const SOURCE_DIR: &str = "/mnt/host/source";
-
 #[derive(Args, Debug)]
 pub struct ConfigArgs {
     #[arg(long, required = true)]

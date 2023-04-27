@@ -9,7 +9,6 @@ edition = "2021"
 cliutil = { path = "../../common/cliutil" }
 makechroot = { path = "../../common/makechroot" }
 mountsdk = { path = "../../common/mountsdk" }
-version = { path = "../../common/portage/version" }
 
 anyhow.workspace = true
 clap.workspace = true

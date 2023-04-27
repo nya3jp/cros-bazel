@@ -203,7 +203,6 @@ dependencies = [
  "mountsdk",
  "nix",
  "runfiles",
- "version",
 ]
 
 [[package]]

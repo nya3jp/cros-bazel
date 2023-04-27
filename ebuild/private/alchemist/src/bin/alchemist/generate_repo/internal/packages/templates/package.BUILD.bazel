@@ -32,6 +32,7 @@ sdk_install_deps(
 ebuild(
     name = "{{ ebuild.version }}",
     ebuild = "{{ ebuild.ebuild_name }}",
+    overlay = "{{ ebuild.overlay }}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
@@ -74,6 +75,7 @@ ebuild(
 ebuild_debug(
     name = "{{ ebuild.version }}_debug",
     ebuild = "{{ ebuild.ebuild_name }}",
+    overlay = "{{ ebuild.overlay }}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
@@ -115,6 +117,7 @@ ebuild_debug(
 ebuild_test(
     name = "{{ ebuild.version }}_test",
     ebuild = "{{ ebuild.ebuild_name }}",
+    overlay = "{{ ebuild.overlay }}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@{{ dist.repository_name }}//file": "{{ dist.filename }}",

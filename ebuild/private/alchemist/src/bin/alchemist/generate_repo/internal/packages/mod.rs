@@ -15,6 +15,7 @@ use alchemist::{
     analyze::{restrict::analyze_restricts, source::PackageLocalSource},
     dependency::restrict::RestrictAtom,
     ebuild::PackageDetails,
+    fakechroot::PathTranslator,
 };
 use anyhow::Result;
 use itertools::Itertools;
@@ -23,9 +24,7 @@ use rayon::prelude::*;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::generate_repo::common::{
-    AnalysisError, DistFileEntry, Package, AUTOGENERATE_NOTICE, CHROOT_SRC_DIR,
-};
+use crate::generate_repo::common::{AnalysisError, DistFileEntry, Package, AUTOGENERATE_NOTICE};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -50,6 +49,7 @@ static PRIMORDIAL_PACKAGES: &[&str] = &[
 #[derive(Serialize)]
 pub struct EBuildEntry {
     ebuild_name: String,
+    overlay: String,
     version: String,
     sources: Vec<String>,
     git_trees: Vec<String>,
@@ -105,15 +105,9 @@ impl EBuildEntry {
             let targets = deps
                 .iter()
                 .map(|details| {
-                    let rel_path = details
-                        .ebuild_path
-                        .strip_prefix(CHROOT_SRC_DIR)?
-                        .parent()
-                        .unwrap();
                     Ok(format!(
-                        "//internal/packages/{}:{}",
-                        rel_path.to_string_lossy(),
-                        details.version
+                        "//internal/packages/{}/{}:{}",
+                        details.repo_name, details.package_name, details.version
                     ))
                 })
                 .collect::<Result<Vec<_>>>()?;
@@ -149,8 +143,11 @@ impl EBuildEntry {
         }
         .to_owned();
 
+        let overlay = format!("//internal/overlays/{}", package.details.repo_name);
+
         Ok(Self {
             ebuild_name,
+            overlay,
             version,
             sources,
             git_trees,
@@ -198,7 +195,6 @@ struct BuildTemplateContext {
 struct PackagesInDir<'a> {
     packages: Vec<&'a Package>,
     failed_packages: Vec<&'a AnalysisError>,
-    original_dir: PathBuf,
 }
 
 fn generate_package_build_file(packages_in_dir: &PackagesInDir, out: &Path) -> Result<()> {
@@ -225,7 +221,11 @@ fn generate_package_build_file(packages_in_dir: &PackagesInDir, out: &Path) -> R
     Ok(())
 }
 
-fn generate_package(packages_in_dir: &PackagesInDir, output_dir: &Path) -> Result<()> {
+fn generate_package(
+    translator: &PathTranslator,
+    packages_in_dir: &PackagesInDir,
+    output_dir: &Path,
+) -> Result<()> {
     create_dir_all(output_dir)?;
 
     let ebuilds = packages_in_dir
@@ -235,19 +235,18 @@ fn generate_package(packages_in_dir: &PackagesInDir, output_dir: &Path) -> Resul
         .chain(packages_in_dir.failed_packages.iter().map(|f| &f.ebuild));
 
     // Create `*.ebuild` symlinks.
-    for ebuild in ebuilds {
+    for (i, ebuild) in ebuilds.enumerate() {
         let file_name = ebuild.file_name().expect("ebuild must have a file name");
-        symlink(
-            packages_in_dir.original_dir.join(file_name),
-            output_dir.join(file_name),
-        )?;
-    }
+        symlink(translator.to_outer(ebuild)?, output_dir.join(file_name))?;
 
-    // Create a `files` symlink if necessary.
-    let input_files_dir = packages_in_dir.original_dir.join("files");
-    if input_files_dir.try_exists()? {
-        let output_files_dir = output_dir.join("files");
-        symlink(input_files_dir, output_files_dir)?;
+        if i == 0 {
+            // Create a `files` symlink if necessary.
+            let files_dir = ebuild.with_file_name("files");
+            if files_dir.try_exists()? {
+                let output_files_dir = output_dir.join("files");
+                symlink(translator.to_outer(files_dir)?, output_files_dir)?;
+            }
+        }
     }
 
     generate_package_build_file(packages_in_dir, &output_dir.join("BUILD.bazel"))?;
@@ -255,42 +254,30 @@ fn generate_package(packages_in_dir: &PackagesInDir, output_dir: &Path) -> Resul
     Ok(())
 }
 
+/// Groups ebuilds into `<repo_name>/<category>/<package>` groups.
 fn join_by_package_dir<'p>(
     all_packages: &'p [Package],
     failures: &'p [AnalysisError],
-    src_dir: &Path,
 ) -> HashMap<PathBuf, PackagesInDir<'p>> {
     let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
 
-    let get_relative_package_dir = |ebuild_path: &PathBuf| -> PathBuf {
-        match ebuild_path.strip_prefix(CHROOT_SRC_DIR) {
-            Ok(relative_ebuild_path) => relative_ebuild_path.parent().unwrap().to_owned(),
-            Err(_) => panic!("Ebuild {:?} is not under {}", ebuild_path, CHROOT_SRC_DIR),
-        }
-    };
-
-    let new_default = |relative_package_dir: &PathBuf| PackagesInDir {
+    let new_default = || PackagesInDir {
         packages: Vec::new(),
         failed_packages: Vec::new(),
-        original_dir: src_dir.join(relative_package_dir),
     };
 
     for package in all_packages.iter() {
-        let relative_package_dir = get_relative_package_dir(&package.details.ebuild_path);
-
         packages_by_dir
-            .entry(relative_package_dir)
-            .or_insert_with_key(new_default)
+            .entry(Path::new(&package.details.repo_name).join(&package.details.package_name))
+            .or_insert_with(new_default)
             .packages
             .push(package);
     }
 
     for failure in failures.iter() {
-        let relative_package_dir = get_relative_package_dir(&failure.ebuild);
-
         packages_by_dir
-            .entry(relative_package_dir)
-            .or_insert_with_key(new_default)
+            .entry(Path::new(&failure.repo_name).join(&failure.package_name))
+            .or_insert_with(new_default)
             .failed_packages
             .push(failure);
     }
@@ -299,7 +286,7 @@ fn join_by_package_dir<'p>(
 }
 
 pub fn generate_internal_packages(
-    src_dir: &Path,
+    translator: &PathTranslator,
     all_packages: &[Package],
     failures: &[AnalysisError],
     output_dir: &Path,
@@ -307,11 +294,11 @@ pub fn generate_internal_packages(
     let output_packages_dir = output_dir.join("internal/packages");
 
     // Generate packages in parallel.
-    let packages_by_dir = join_by_package_dir(all_packages, failures, src_dir);
+    let packages_by_dir = join_by_package_dir(all_packages, failures);
     packages_by_dir
         .into_par_iter()
         .try_for_each(|(relative_package_dir, packages_in_dir)| {
             let output_package_dir = output_packages_dir.join(relative_package_dir);
-            generate_package(&packages_in_dir, &output_package_dir)
+            generate_package(translator, &packages_in_dir, &output_package_dir)
         })
 }
