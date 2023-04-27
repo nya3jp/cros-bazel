@@ -34,7 +34,7 @@ pkg_tar(
 
 bool_flag(
     name = "new-sdk",
-    build_setting_default = False,
+    build_setting_default = True,
 )
 
 config_setting(
