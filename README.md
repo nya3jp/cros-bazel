@@ -8,14 +8,31 @@ For the prototyping phase, we're working on building a snapshot of ChromiumOS.
 Use `repo` to check out a snapshotted ChromiumOS tree + Bazel files.
 
 ```sh
-$ mkdir cros-bazel
-$ cd cros-bazel
-$ repo init -u sso://team/cros-build-tiger/cros-bazel-manifest -b main
+$ mkdir ~/chromiumos
+$ cd ~/chromiumos
+$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -b stabilize-15429.B
 $ repo sync -c -j 4
 $ cd src
 ```
 
+*** note
+We're still in the process of moving our development from the Google-internal
+experimental repository to the public ChromiumOS repository. Meanwhile you need
+the following hack to make the build pass.
+
+```sh
+$ ln -s platform/rules_cros rules_cros
+```
+***
+
+Unless otherwise specified, examples in this doc assume that your current
+directory is `~/chromiumos/src`.
+
 ## Installing host dependencies
+
+You need to use a certain version of Bazel to build ChromeOS. The easiest way
+is to install and use Bazelisk that automatically downloads an appropriate
+version of Bazel:
 
 ```sh
 GOBIN=$HOME/go/bin go install github.com/bazelbuild/bazelisk@latest
@@ -30,13 +47,6 @@ before any other bazels, and name the link `bazel`. Example:
 ln -s ~/go/bin/bazelisk ~/bin/bazel
 ```
 
-## Enabling commit hooks (optional)
-If you'd like to run the tests every time you commit, add the following (you can skip it with `git commit --no-verify`).
-```sh
-cd cros-bazel/src/bazel
-ln -s tools/run_tests.sh .git/hooks/pre-commit
-```
-
 ## Building packages
 
 To build sys-apps/attr:
@@ -47,7 +57,7 @@ $ BOARD=arm64-generic bazel build @portage//sys-apps/attr
 
 To build all target packages:
 
-```
+```sh
 $ BOARD=arm64-generic bazel build --keep_going //:all_target_packages
 ```
 
@@ -57,29 +67,29 @@ This is a short-cut to build `@portage//virtual/target-os:package_set`.
 
 We have the following targets to build images:
 
-- `//:chromiumos_minimal_image`: Minimal image that contains
+- `//images:chromiumos_minimal_image`: Minimal image that contains
   `sys-apps/baselayout` and `sys-kernel/chromeos-kernel` only.
-- `//:chromiumos_base_image`: Base image.
-- `//:chromiumos_dev_image`: Dev image.
-- `//:chromiumos_test_image`: Test image.
+- `//images:chromiumos_base_image`: Base image.
+- `//images:chromiumos_dev_image`: Dev image.
+- `//images:chromiumos_test_image`: Test image.
 
 *** note
-For historical reasons, the output file name of the dev image is chromiumos_image.bin, not chromiumos_dev_image.bin.
+For historical reasons, the output file name of the dev image is
+chromiumos_image.bin, not chromiumos_dev_image.bin.
 ***
 
-As of 2023-03-09, we support building images for amd64-generic only. We have
+As of 2023-04-25, we primarily test our builds for amd64-generic. We also have
 known build issues in some packages:
+
 - `chromeos-base/chromeos-chrome`: Takes too long time (multiple hours) to
   build. Also randomly fails to build ([b/273830995](http://b/273830995)).
-- `chromeos-base/chromeos-fonts`: Requires root to install binfmt_misc handlers
-  ([b/262458823](http://b/262458823)).
 
 You can inject prebuilt binary packages to bypass building those packages to
 build a base image. You can pass `--config=prebuilts/amd64-generic` to do this
-easily.
+easily for amd64-generic.
 
-```
-$ BOARD=amd64-generic bazel build --config=prebuilts/amd64-generic //:chromiumos_base_image
+```sh
+$ BOARD=amd64-generic bazel build --config=prebuilts/amd64-generic //images:chromiumos_base_image
 ```
 
 See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
@@ -89,50 +99,51 @@ After building an image, you can use `cros_vm` command available in CrOS SDK
 to run a VM locally. Make sure to copy an image out from `bazel-bin` as it's not
 writable by default.
 
-```
-~/cros-bazel$ cp src/bazel-bin/chromiumos_base_image.bin /tmp/
-~/cros-bazel$ chmod +w /tmp/chromiumos_base_image.bin
-~/cros-bazel$ chromite/bin/cros_vm --start --board=amd64-generic --image-path /tmp/chromiumos_base_image.bin
+```sh
+$ cp bazel-bin/images/chromiumos_base_image.bin /tmp/
+$ chmod +w /tmp/chromiumos_base_image.bin
+$ chromite/bin/cros_vm --start --board=amd64-generic --image-path /tmp/chromiumos_base_image.bin
 ```
 
 You can use VNC viewer to view the VM.
-```
-~/$ vncviewer localhost:5900
+```sh
+$ vncviewer localhost:5900
 ```
 
 You can also use `cros_vm` command to stop the VM.
-```
-~/cros-bazel$ chromite/bin/cros_vm --stop
+```sh
+$ chromite/bin/cros_vm --stop
 ```
 
 ## Directory structure
 
-See [manifest/_bazel.xml] for details on how this repository is organized.
+*** note
+**NOTE:** We will be reorganizing the directory structure soon. See
+[go/cros-build:alchemy-dirs](https://goto.google.com/cros-build:alchemy-dirs)
+for the discussion.
+***
 
-[manifest/_bazel.xml]: https://team.git.corp.google.com/cros-build-tiger/cros-bazel-manifest/+/refs/heads/main/_bazel.xml
-
-* `src/`
-    * `WORKSPACE.bazel` ... Bazel workspace definitions; symlink to `bazel/workspace_root/WORKSPACE.bazel`
-    * `BUILD.bazel` ... Bazel top-level target definitions; symlink to `bazel/workspace_root/BUILD.bazel`
-    * `bazel/` ... contains Bazel-related files
-        * `ebuild/`
-            * `cmd` ... commands for development
-                * `extract_deps/` ... **DEPRECATED** extracts dependency graph from ebuilds
-                * `generate_stats/` ... **DEPRECATED** generates package coverage stats
-                * `update_build/` ... **DEPRECATED** generates BUILD files for ebuilds
-            * `private/` ... contains programs used by Bazel rules
-                * `alchemist` ... generates a Bazel repository on `bazel build`
-                * `cmd/` commands internally used in the build
-                    * `run_in_container/` ... runs a program within an unprivileged Linux container; used by other programs such as `build_sdk` and `build_package`
-                    * `build_sdk/` ... builds SDK squashfs; used by `sdk` rule
-                    * `build_package/` ... builds a Portage binary package; used by `ebuild` rule
-                * `common/` ... common Rust/Go libraries
-        * `config/` ... contains build configs like which overlays to use
-        * `prebuilts/` ... defines prebuilt binaries
-        * `sdk/` ... **DEPRECATED** defines SDK to use
-        * `third_party/` ... contains build rules for third-party softwares needed
-        * `workspace_root/` ... contains various files to be symlinked to the workspace root, including `WORKSPACE.bazel` and `BUILD.bazel`
-* `manifest/` ... copy of cros-bazel-manifest repository
+* `ebuild/`
+    * `cmd` ... misc commands for development
+    * `private/` ... contains programs used by Bazel rules
+        * `alchemist` ... generates a Bazel repository on `bazel build`
+        * `cmd/` commands internally used in the build
+            * `action_wrapper/` ... the generic wrapper of Bazel actions, handling logs and signals
+            * `build_image/` ... builds ChromeOS images
+            * `build_package/` ... builds a Portage binary package; used by `ebuild` rule
+            * `build_sdk/` ... builds SDK squashfs; used by `sdk` rule
+            * `extract_interface/` ... builds an interface library
+            * `fakefs/` ... simulates chown(2) in unprivileged user namespaces
+            * `install_deps/` ... installs binary packages into an ephemeral SDK
+            * `run_in_container/` ... runs a program within an unprivileged Linux container; used by other programs such as `build_sdk` and `build_package`
+            * `sdk_from_archive/` ... creates a base ephemeral SDK from an archive
+            * `sdk_update/` ... updates an ephemeral SDK with patches and packages
+        * `common/` ... common Rust/Go libraries
+* `prebuilts/` ... defines prebuilt binaries
+* `images/` ... defines ChromeOS image targets
+* `sdk/` ... defines the base SDK
+* `tools/` ... misc small tools for development
+* `workspace_root/` ... contains various files to be symlinked to the workspace root, including `WORKSPACE.bazel` and `BUILD.bazel`
 
 ## Misc Memo
 
@@ -219,9 +230,12 @@ inspect it, you can use the `xpak split` CLI.
 bazel run //bazel/ebuild/cmd/xpak:xpak -- split --extract libffi-3.1-r8.tbz2 libusb-0-r2.tbz2
 ```
 
+### Running tests on every local commit
 
-## Building ToT
+If you'd like to run the tests every time you commit, add the following. You can
+skip it with `git commit --no-verify`.
 
-The cros-bazel-manifest was created from a snapshot from Aug 2022. We also
-pinned the SDK at that time as well. If you are working on ToT (as of Mar 2023)
-you can use the newer SDK by passing in the `--//bazel/sdk:new-sdk` flag.
+```sh
+cd ~/chromiumos/src/bazel
+ln -s tools/run_tests.sh .git/hooks/pre-commit
+```
