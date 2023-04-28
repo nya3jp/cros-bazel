@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use std::{
+    collections::HashSet,
     ffi::OsStr,
     fs::{create_dir, create_dir_all, File},
     io::Write,
@@ -86,19 +87,35 @@ struct OverlayBuildTemplateContext<'a> {
     mount_path: &'a Path,
 }
 
-fn generate_overlay_build_file(repo: &Repository, output_file: &Path) -> Result<()> {
+/// Helper struct to easily compute unique overlays to generate.
+#[derive(Eq, PartialEq, Hash)]
+struct SimpleRepository<'a> {
+    name: &'a str,
+    base_dir: &'a Path,
+}
+
+impl<'a> From<&'a Repository> for SimpleRepository<'a> {
+    fn from(repo: &'a Repository) -> Self {
+        SimpleRepository {
+            name: repo.name(),
+            base_dir: repo.base_dir(),
+        }
+    }
+}
+
+fn generate_overlay_build_file(repo: &SimpleRepository, output_file: &Path) -> Result<()> {
     let context = OverlayBuildTemplateContext {
-        name: repo.name(),
+        name: repo.name,
         mount_path: repo
-            .base_dir()
+            .base_dir
             .strip_prefix("/")
-            .unwrap_or_else(|_| repo.base_dir()),
+            .unwrap_or_else(|_| repo.base_dir),
     };
 
     // The chromiumos-overlay repo contains a pretty complex BUILD.bazel file.
     // Once the bashrc and patch files can be cleaned up hopefully we can
     // use the standard template.
-    let template = if repo.name() == "chromiumos" {
+    let template = if repo.name == "chromiumos" {
         "chromiumos-overlay.BUILD.bazel"
     } else {
         "overlay.BUILD.bazel"
@@ -112,18 +129,26 @@ fn generate_overlay_build_file(repo: &Repository, output_file: &Path) -> Result<
     Ok(())
 }
 
+fn merge_repo_sets<'a>(repo_sets: &'a [&'a RepositorySet]) -> HashSet<SimpleRepository> {
+    repo_sets
+        .iter()
+        .flat_map(|s| s.get_repos())
+        .map(|r| r.into())
+        .collect()
+}
+
 pub fn generate_internal_overlays(
     translator: &PathTranslator,
-    repos: &RepositorySet,
+    repo_sets: &[&RepositorySet],
     output_dir: &Path,
 ) -> Result<()> {
     let output_overlays_dir = output_dir.join("internal/overlays");
-    repos
-        .get_repos()
-        .into_iter()
+
+    merge_repo_sets(repo_sets)
+        .iter()
         .try_for_each(|repo| -> Result<()> {
-            let original_dir = translator.to_outer(repo.base_dir())?;
-            let output_dir = output_overlays_dir.join(repo.name());
+            let original_dir = translator.to_outer(repo.base_dir)?;
+            let output_dir = output_overlays_dir.join(repo.name);
 
             create_dir_all(&output_dir)
                 .with_context(|| format!("mkdir -p {}", output_dir.display()))?;
@@ -145,10 +170,10 @@ mod tests {
     fn generate_overlay_build_file_succeeds() -> Result<()> {
         // Templates in this module are loaded together,
         // so syntax errors in any of them will fail the test.
-        let repo = Repository::new_simple(
-            "chromiumos",
-            Path::new("/mnt/host/source/src/third_party/chromiumos-overlay"),
-        );
+        let repo = SimpleRepository {
+            name: "chromiumos",
+            base_dir: Path::new("/mnt/host/source/src/third_party/chromiumos-overlay"),
+        };
 
         let output_file = tempfile::NamedTempFile::new()?;
         generate_overlay_build_file(&repo, output_file.path())
