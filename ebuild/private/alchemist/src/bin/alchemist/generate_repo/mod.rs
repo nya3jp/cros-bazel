@@ -267,7 +267,13 @@ pub fn generate_repo_main(
     eprintln!("Generating @portage...");
 
     generate_internal_overlays(translator, &[&target.repos], output_dir)?;
-    generate_internal_packages(translator, &target_packages, &target_failures, output_dir)?;
+    generate_internal_packages(
+        "stage1/target/board",
+        translator,
+        &target_packages,
+        &target_failures,
+        output_dir,
+    )?;
     generate_internal_sources(all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&target_packages, &target.resolver, output_dir)?;
     generate_repositories_file(&target_packages, &output_dir.join("repositories.bzl"))?;

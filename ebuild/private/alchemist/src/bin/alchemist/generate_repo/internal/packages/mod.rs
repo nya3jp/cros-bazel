@@ -64,7 +64,7 @@ pub struct EBuildEntry {
 }
 
 impl EBuildEntry {
-    pub fn try_new(package: &Package) -> Result<Self> {
+    pub fn try_new(target_prefix: &str, package: &Package) -> Result<Self> {
         let ebuild_name = package
             .details
             .ebuild_path
@@ -107,23 +107,24 @@ impl EBuildEntry {
             .map(DistFileEntry::try_new)
             .collect::<Result<_>>()?;
 
-        let format_dependencies = |deps: &[Arc<PackageDetails>]| -> Result<Vec<String>> {
-            let targets = deps
-                .iter()
-                .map(|details| {
-                    Ok(format!(
-                        "//internal/packages/{}/{}:{}",
-                        details.repo_name, details.package_name, details.version
-                    ))
-                })
-                .collect::<Result<Vec<_>>>()?;
-            Ok(targets.into_iter().sorted().dedup().collect())
-        };
+        let format_dependencies =
+            |prefix: &str, deps: &[Arc<PackageDetails>]| -> Result<Vec<String>> {
+                let targets = deps
+                    .iter()
+                    .map(|details| {
+                        Ok(format!(
+                            "//internal/packages/{}/{}/{}:{}",
+                            prefix, details.repo_name, details.package_name, details.version
+                        ))
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+                Ok(targets.into_iter().sorted().dedup().collect())
+            };
 
-        let build_deps = format_dependencies(&package.dependencies.build_deps)?;
-        let runtime_deps = format_dependencies(&package.dependencies.runtime_deps)?;
+        let build_deps = format_dependencies(target_prefix, &package.dependencies.build_deps)?;
+        let runtime_deps = format_dependencies(target_prefix, &package.dependencies.runtime_deps)?;
 
-        let install_set = format_dependencies(&package.install_set)?;
+        let install_set = format_dependencies(target_prefix, &package.install_set)?;
 
         let restricts = analyze_restricts(&package.details)?;
         let allow_network_access = restricts.contains(&RestrictAtom::NetworkSandbox);
@@ -204,12 +205,16 @@ struct PackagesInDir<'a> {
     failed_packages: Vec<&'a AnalysisError>,
 }
 
-fn generate_package_build_file(packages_in_dir: &PackagesInDir, out: &Path) -> Result<()> {
+fn generate_package_build_file(
+    target_prefix: &str,
+    packages_in_dir: &PackagesInDir,
+    out: &Path,
+) -> Result<()> {
     let context = BuildTemplateContext {
         ebuilds: packages_in_dir
             .packages
             .iter()
-            .map(|package| EBuildEntry::try_new(package))
+            .map(|package| EBuildEntry::try_new(target_prefix, package))
             .collect::<Result<_>>()?,
         failures: packages_in_dir
             .failed_packages
@@ -229,6 +234,7 @@ fn generate_package_build_file(packages_in_dir: &PackagesInDir, out: &Path) -> R
 }
 
 fn generate_package(
+    target_prefix: &str,
     translator: &PathTranslator,
     packages_in_dir: &PackagesInDir,
     output_dir: &Path,
@@ -256,7 +262,11 @@ fn generate_package(
         }
     }
 
-    generate_package_build_file(packages_in_dir, &output_dir.join("BUILD.bazel"))?;
+    generate_package_build_file(
+        target_prefix,
+        packages_in_dir,
+        &output_dir.join("BUILD.bazel"),
+    )?;
 
     Ok(())
 }
@@ -293,12 +303,13 @@ fn join_by_package_dir<'p>(
 }
 
 pub fn generate_internal_packages(
+    target_prefix: &str,
     translator: &PathTranslator,
     all_packages: &[Package],
     failures: &[AnalysisError],
     output_dir: &Path,
 ) -> Result<()> {
-    let output_packages_dir = output_dir.join("internal/packages");
+    let output_packages_dir = output_dir.join("internal/packages").join(target_prefix);
 
     // Generate packages in parallel.
     let packages_by_dir = join_by_package_dir(all_packages, failures);
@@ -306,6 +317,11 @@ pub fn generate_internal_packages(
         .into_par_iter()
         .try_for_each(|(relative_package_dir, packages_in_dir)| {
             let output_package_dir = output_packages_dir.join(relative_package_dir);
-            generate_package(translator, &packages_in_dir, &output_package_dir)
+            generate_package(
+                target_prefix,
+                translator,
+                &packages_in_dir,
+                &output_package_dir,
+            )
         })
 }

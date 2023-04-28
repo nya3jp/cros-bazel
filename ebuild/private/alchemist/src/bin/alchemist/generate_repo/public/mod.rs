@@ -73,9 +73,10 @@ fn generate_public_package(
 
     for package in version_to_package.values() {
         let details = &package.details;
+        // TODO(b/278728702): Remove the stage1 hard coded value.
         let internal_package_location = format!(
-            "//internal/packages/{}/{}",
-            details.repo_name, details.package_name
+            "//internal/packages/{}/{}/{}",
+            "stage1/target/board", details.repo_name, details.package_name
         );
         for suffix in ["", "_debug", "_package_set"] {
             aliases.push(AliasEntry {
