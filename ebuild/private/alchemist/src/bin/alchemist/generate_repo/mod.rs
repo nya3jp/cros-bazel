@@ -260,10 +260,6 @@ pub fn generate_repo_main(
 
     let (target_packages, target_failures) = load_packages(&target, src_dir)?;
 
-    let all_local_sources = target_packages
-        .iter()
-        .flat_map(|package| &package.sources.local_sources);
-
     eprintln!("Generating @portage...");
 
     generate_internal_overlays(translator, &[&target.repos], output_dir)?;
@@ -274,7 +270,6 @@ pub fn generate_repo_main(
         &target_failures,
         output_dir,
     )?;
-    generate_internal_sources(all_local_sources, src_dir, output_dir)?;
     generate_public_packages(&target_packages, &target.resolver, output_dir)?;
     generate_repositories_file(&target_packages, &output_dir.join("repositories.bzl"))?;
     generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
@@ -290,6 +285,12 @@ pub fn generate_repo_main(
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;
     File::create(output_dir.join("WORKSPACE.bazel"))?.write_all(&[])?;
+
+    eprintln!("Generating sources...");
+    let all_local_sources = target_packages
+        .iter()
+        .flat_map(|package| &package.sources.local_sources);
+    generate_internal_sources(all_local_sources, src_dir, output_dir)?;
 
     eprintln!("Generated @portage.");
 
