@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use anyhow::{bail, Result};
+use itertools::Itertools;
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
@@ -15,7 +16,7 @@ use walkdir::WalkDir;
 
 use crate::{
     consts::MODE_MASK,
-    util::{get_user_xattrs_map, list_user_xattrs},
+    util::{get_user_xattrs_map, list_user_xattrs, SavedPermissions},
 };
 
 /// A helper trait to implement `Command::run_ok`.
@@ -105,47 +106,75 @@ pub fn simple_file(path: &'static str, mode: u32, hash: &'static str) -> FileDes
     }
 }
 
+fn describe_tree_impl(
+    root_dir: &Path,
+    relative_path: &Path,
+    files: &mut Vec<FileDescription>,
+) -> Result<()> {
+    let full_path = root_dir.join(relative_path);
+    let metadata = std::fs::symlink_metadata(&full_path)?;
+    let mode = metadata.mode() & MODE_MASK;
+    let file_type = metadata.file_type();
+
+    if file_type.is_file() {
+        let mut perms = SavedPermissions::try_new(&full_path)?;
+        perms.ensure_readable()?;
+
+        let mut file = File::open(&full_path)?;
+        let mut hasher = Sha256::new();
+        std::io::copy(&mut file, &mut hasher)?;
+        let hash = hex::encode(hasher.finalize());
+        let user_xattrs = get_user_xattrs_map(&full_path)?;
+        files.push(FileDescription::File {
+            path: relative_path.to_owned(),
+            mode,
+            hash,
+            user_xattrs,
+        });
+    } else if file_type.is_dir() {
+        let mut perms = SavedPermissions::try_new(&full_path)?;
+        perms.ensure_full_access()?;
+
+        let user_xattrs = get_user_xattrs_map(&full_path)?;
+        files.push(FileDescription::Dir {
+            path: relative_path.to_owned(),
+            mode,
+            user_xattrs,
+        });
+
+        let entries = std::fs::read_dir(full_path)?
+            .collect::<std::io::Result<Vec<_>>>()?
+            .into_iter()
+            // Sort entries to make the output deterministic.
+            .sorted_by(|a, b| a.file_name().cmp(&b.file_name()));
+        for entry in entries {
+            describe_tree_impl(root_dir, &relative_path.join(entry.file_name()), files)?;
+        }
+    } else if file_type.is_symlink() {
+        let target = read_link(&full_path)?;
+        files.push(FileDescription::Symlink {
+            path: relative_path.to_owned(),
+            mode,
+            target,
+        });
+    } else if file_type.is_char_device() {
+        let rdev = metadata.rdev();
+        files.push(FileDescription::Char {
+            path: relative_path.to_owned(),
+            mode,
+            rdev,
+        });
+    } else {
+        bail!("Unsupported file type: {:?}", file_type);
+    }
+
+    Ok(())
+}
+
 /// Loads all files under a directory, including contents and metadata.
 /// This function is useful to compare a directory tree.
 pub fn describe_tree(root_dir: &Path) -> Result<Vec<FileDescription>> {
     let mut files: Vec<FileDescription> = Vec::new();
-
-    for entry in WalkDir::new(root_dir).sort_by_file_name() {
-        let entry = entry?;
-        let path = entry.path().strip_prefix(root_dir)?.to_owned();
-        let metadata = entry.metadata()?;
-        let mode = metadata.mode() & MODE_MASK;
-        let file_type = metadata.file_type();
-
-        if file_type.is_file() {
-            let mut file = File::open(entry.path())?;
-            let mut hasher = Sha256::new();
-            std::io::copy(&mut file, &mut hasher)?;
-            let hash = hex::encode(hasher.finalize());
-            let user_xattrs = get_user_xattrs_map(entry.path())?;
-            files.push(FileDescription::File {
-                path,
-                mode,
-                hash,
-                user_xattrs,
-            });
-        } else if file_type.is_dir() {
-            let user_xattrs = get_user_xattrs_map(entry.path())?;
-            files.push(FileDescription::Dir {
-                path,
-                mode,
-                user_xattrs,
-            });
-        } else if file_type.is_symlink() {
-            let target = read_link(entry.path())?;
-            files.push(FileDescription::Symlink { path, mode, target });
-        } else if file_type.is_char_device() {
-            let rdev = metadata.rdev();
-            files.push(FileDescription::Char { path, mode, rdev });
-        } else {
-            bail!("Unsupported file type: {:?}", file_type);
-        }
-    }
-
+    describe_tree_impl(root_dir, Path::new(""), &mut files)?;
     Ok(files)
 }

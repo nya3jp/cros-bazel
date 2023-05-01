@@ -404,3 +404,48 @@ fn reproducible() -> Result<()> {
 
     Ok(())
 }
+
+// Tries converting and expanding a durable tree involving files/directories
+// whose permissions are set inaccessible.
+#[test]
+fn inaccessible_files() -> Result<()> {
+    let dir = TempDir::new()?;
+    let dir = dir.path();
+
+    // ./         - 0700
+    //   dir1/    - 0000
+    //     dir2/  - 0000
+    //       file - 0000
+    let dir1 = dir.join("dir1");
+    create_dir(&dir1)?;
+    let dir2 = dir1.join("dir2");
+    create_dir(&dir2)?;
+    File::create(dir2.join("file"))?.set_permissions(PermissionsExt::from_mode(0o0))?;
+    set_permissions(&dir2, PermissionsExt::from_mode(0o0))?;
+    set_permissions(&dir1, PermissionsExt::from_mode(0o0))?;
+    set_permissions(dir, PermissionsExt::from_mode(0o700))?;
+
+    DurableTree::convert(dir)?;
+    let tree = DurableTree::expand(dir)?;
+
+    let files: Vec<Vec<FileDescription>> = tree
+        .layers()
+        .into_iter()
+        .map(describe_tree)
+        .collect::<Result<_>>()?;
+
+    assert_eq!(
+        files,
+        vec![
+            vec![simple_dir("", 0o700)],
+            vec![
+                simple_dir("", 0o700),
+                simple_dir("dir1", 0),
+                simple_dir("dir1/dir2", 0),
+                simple_file("dir1/dir2/file", 0, EMPTY_HASH),
+            ],
+        ],
+    );
+
+    Ok(())
+}

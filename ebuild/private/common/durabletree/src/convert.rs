@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use anyhow::{anyhow, bail, Context, Result};
+use itertools::Itertools;
 use std::{
     collections::HashSet,
     fs::{read_link, rename, File, Metadata},
@@ -11,7 +12,6 @@ use std::{
 };
 use tar::{EntryType, Header, HeaderMode};
 use tempfile::tempdir_in;
-use walkdir::WalkDir;
 
 use crate::{
     consts::{
@@ -19,7 +19,7 @@ use crate::{
         RESTORED_XATTR,
     },
     manifest::{DurableTreeManifest, FileManifest},
-    util::{get_user_xattrs_map, DirLock},
+    util::{get_user_xattrs_map, DirLock, SavedPermissions},
 };
 
 struct ExtraTarballBuilder {
@@ -148,6 +148,51 @@ fn pivot_to_raw_subdir(root_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+fn build_manifest_and_extra_tarball_impl(
+    raw_dir: &Path,
+    relative_path: &Path,
+    manifest: &mut DurableTreeManifest,
+    extra_builder: &mut ExtraTarballBuilder,
+) -> Result<()> {
+    let full_path = raw_dir.join(relative_path);
+    let metadata = std::fs::symlink_metadata(&full_path)?;
+
+    if metadata.is_file() || metadata.is_dir() {
+        let mode = metadata.mode() & MODE_MASK;
+        let user_xattrs = get_user_xattrs_map(&full_path)?;
+        manifest.files.insert(
+            relative_path
+                .to_str()
+                .ok_or_else(|| anyhow!("Non-UTF8 filename: {:?}", relative_path))?
+                .to_owned(),
+            FileManifest { mode, user_xattrs },
+        );
+    } else {
+        extra_builder.move_into_tarball(relative_path, &metadata)?;
+    }
+
+    if metadata.is_dir() {
+        let mut perms = SavedPermissions::try_new(&full_path)?;
+        perms.ensure_full_access()?;
+
+        let entries = std::fs::read_dir(full_path)?
+            .collect::<std::io::Result<Vec<_>>>()?
+            .into_iter()
+            // Sort entries to make the output deterministic.
+            .sorted_by(|a, b| a.file_name().cmp(&b.file_name()));
+        for entry in entries {
+            build_manifest_and_extra_tarball_impl(
+                raw_dir,
+                &relative_path.join(entry.file_name()),
+                manifest,
+                extra_builder,
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Scans files under the raw directory and builds a manifest JSON and an extra
 /// tarball file.
 fn build_manifest_and_extra_tarball(root_dir: &Path) -> Result<()> {
@@ -156,27 +201,12 @@ fn build_manifest_and_extra_tarball(root_dir: &Path) -> Result<()> {
     let mut manifest: DurableTreeManifest = Default::default();
     let mut extra_builder = ExtraTarballBuilder::new(root_dir)?;
 
-    // Use sort_by_file_name to make the output deterministic.
-    for entry in WalkDir::new(&raw_dir).sort_by_file_name() {
-        let entry = entry?;
-        let file_type = entry.file_type();
-        let metadata = entry.metadata()?;
-        let relative_path = entry.path().strip_prefix(&raw_dir)?;
-
-        if file_type.is_file() || file_type.is_dir() {
-            let mode = metadata.mode() & MODE_MASK;
-            let user_xattrs = get_user_xattrs_map(entry.path())?;
-            manifest.files.insert(
-                relative_path
-                    .to_str()
-                    .ok_or_else(|| anyhow!("Non-UTF8 filename: {:?}", relative_path))?
-                    .to_owned(),
-                FileManifest { mode, user_xattrs },
-            );
-        } else {
-            extra_builder.move_into_tarball(relative_path, &metadata)?;
-        }
-    }
+    build_manifest_and_extra_tarball_impl(
+        &raw_dir,
+        Path::new(""),
+        &mut manifest,
+        &mut extra_builder,
+    )?;
 
     serde_json::to_writer(File::create(root_dir.join(MANIFEST_FILE_NAME))?, &manifest)?;
     extra_builder.finish()?;
@@ -186,6 +216,14 @@ fn build_manifest_and_extra_tarball(root_dir: &Path) -> Result<()> {
 
 /// Converts a plain directory into a durable tree in place.
 pub fn convert_impl(root_dir: &Path) -> Result<()> {
+    // Fail on non-fully-accessible root directories. It's more complicated than
+    // what one initially expects to support it, and such directory trees don't
+    // appear in real use cases.
+    let metadata = std::fs::metadata(root_dir)?;
+    if metadata.permissions().mode() & 0o700 != 0o700 {
+        bail!("{} is not fully accessible", root_dir.display());
+    }
+
     // Lock the root directory to give a better error message on concurrently
     // calling this function on the same directory.
     let _lock = DirLock::try_new(root_dir)?;
