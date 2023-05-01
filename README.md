@@ -10,7 +10,7 @@ Use `repo` to check out a snapshotted ChromiumOS tree + Bazel files.
 ```sh
 $ mkdir ~/chromiumos
 $ cd ~/chromiumos
-$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -b stabilize-15429.B
+$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -b stabilize-15429.B -g default,bazel
 $ repo sync -c -j 4
 $ cd src
 ```
