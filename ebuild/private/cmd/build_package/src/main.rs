@@ -9,6 +9,7 @@ use makechroot::BindMount;
 use mountsdk::{ConfigArgs, MountedSDK};
 use std::{
     collections::HashSet,
+    fs::File,
     path::{Path, PathBuf},
     process::ExitCode,
     str::FromStr,
@@ -183,7 +184,8 @@ fn do_main() -> Result<()> {
         cfg.allow_network_access = true;
     }
 
-    let target_packages_dir: PathBuf = ["/build", &cfg.board, "packages"].iter().collect();
+    let build_root_dir = Path::new("/build").join(&cfg.board);
+    let target_packages_dir = build_root_dir.join("packages");
 
     let mut sdk = MountedSDK::new(cfg)?;
     let out_dir = sdk
@@ -192,6 +194,25 @@ fn do_main() -> Result<()> {
         .join(target_packages_dir.strip_prefix("/")?);
     std::fs::create_dir_all(out_dir)?;
     std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
+
+    // HACK: CrOS disables pkg_pretend in emerge(1), but ebuild(1) still tries to
+    // run it.
+    // TODO(b/280233260): Remove this hack once we fix ebuild(1).
+    let pretend_stamp_path = sdk
+        .root_dir()
+        .outside
+        .join(build_root_dir.strip_prefix("/")?)
+        .join("tmp/portage")
+        .join(&args.ebuild.category)
+        .join(
+            args.ebuild
+                .file_name
+                .strip_suffix(EBUILD_EXT)
+                .with_context(|| anyhow!("Ebuild file must end with .ebuild"))?,
+        )
+        .join(".pretended");
+    std::fs::create_dir_all(pretend_stamp_path.parent().unwrap())?;
+    File::create(pretend_stamp_path)?;
 
     let sysroot = sdk.root_dir().join("build").join(&sdk.board).outside;
     for spec in args.sysroot_file {
@@ -203,7 +224,6 @@ fn do_main() -> Result<()> {
         "ebuild",
         "--skip-manifest",
         &ebuild_path_str,
-        "clean",
         "package",
     ];
     if args.test {
