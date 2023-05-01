@@ -17,7 +17,7 @@ use alchemist::{
     ebuild::PackageDetails,
     fakechroot::PathTranslator,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -49,6 +49,7 @@ static PRIMORDIAL_PACKAGES: &[&str] = &[
 #[derive(Serialize)]
 pub struct EBuildEntry {
     ebuild_name: String,
+    basename: String,
     overlay: String,
     version: String,
     sources: Vec<String>,
@@ -71,6 +72,11 @@ impl EBuildEntry {
             .unwrap()
             .to_string_lossy()
             .to_string();
+        let basename = ebuild_name
+            .rsplit_once('.')
+            .ok_or_else(|| anyhow!("No file extension"))?
+            .0
+            .to_owned();
         let version = package.details.version.to_string();
 
         let sources = package
@@ -147,6 +153,7 @@ impl EBuildEntry {
 
         Ok(Self {
             ebuild_name,
+            basename,
             overlay,
             version,
             sources,

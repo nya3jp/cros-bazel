@@ -6,8 +6,9 @@ load("common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load("install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
-    output_root = ctx.actions.declare_directory(ctx.attr.name)
-    output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
+    output_prefix = ctx.attr.out or ctx.attr.name
+    output_root = ctx.actions.declare_directory(output_prefix)
+    output_log = ctx.actions.declare_file(output_prefix + ".log")
 
     args = ctx.actions.args()
     args.add_all([
@@ -40,6 +41,9 @@ def _sdk_from_archive_impl(ctx):
 sdk_from_archive = rule(
     implementation = _sdk_from_archive_impl,
     attrs = {
+        "out": attr.string(
+            doc = "Output directory name. Defaults to the target name.",
+        ),
         "src": attr.label(
             mandatory = True,
             allow_single_file = True,
@@ -58,8 +62,9 @@ sdk_from_archive = rule(
 )
 
 def _sdk_update_impl(ctx):
-    output_root = ctx.actions.declare_directory(ctx.attr.name)
-    output_log = ctx.actions.declare_file(ctx.attr.name + ".log")
+    output_prefix = ctx.attr.out or ctx.attr.name
+    output_root = ctx.actions.declare_directory(output_prefix)
+    output_log = ctx.actions.declare_file(output_prefix + ".log")
 
     host_installs = depset(
         transitive = [
@@ -125,6 +130,9 @@ def _sdk_update_impl(ctx):
 sdk_update = rule(
     implementation = _sdk_update_impl,
     attrs = {
+        "out": attr.string(
+            doc = "Output directory name. Defaults to the target name.",
+        ),
         "base": attr.label(
             mandatory = True,
             providers = [SDKInfo],
@@ -179,7 +187,7 @@ def _sdk_install_deps_impl(ctx):
 
     outputs = install_deps(
         ctx = ctx,
-        output_prefix = ctx.attr.name,
+        output_prefix = ctx.attr.out or ctx.attr.name,
         board = ctx.attr.board,
         sdk = sdk,
         overlays = ctx.attr.overlays[OverlaySetInfo],
@@ -199,6 +207,9 @@ def _sdk_install_deps_impl(ctx):
 sdk_install_deps = rule(
     implementation = _sdk_install_deps_impl,
     attrs = {
+        "out": attr.string(
+            doc = "Output directory name. Defaults to the target name.",
+        ),
         "base": attr.label(
             doc = """
             Base SDK to derive a new SDK from.

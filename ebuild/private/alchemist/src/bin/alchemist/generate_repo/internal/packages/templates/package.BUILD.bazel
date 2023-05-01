@@ -17,6 +17,7 @@ string_flag(
 
 sdk_install_deps(
     name = "{{ ebuild.version }}_deps",
+    out = "{{ ebuild.basename }}_deps",
     base = "{{ ebuild.sdk }}",
     board = BOARD,
     overlays = "@portage//internal/sdk:overlays",
