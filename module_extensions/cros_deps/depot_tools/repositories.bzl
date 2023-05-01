@@ -4,9 +4,9 @@
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
-def depot_tools_repository():
+def depot_tools(name):
     new_git_repository(
-        name = "depot_tools",
+        name = name,
         remote = "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
         commit = "512fd3bd855fe001443ee3328d139da8c4b95d00",
         shallow_since = "1677704801 +0000",
@@ -28,5 +28,5 @@ EOF
             # downloaded.
             "./gclient.wrapper.sh help",
         ],
-        build_file = "@//bazel/depot_tools:BUILD.depot_tools-template",
+        build_file = "@//bazel/module_extensions/cros_deps/depot_tools:BUILD.depot_tools-template",
     )

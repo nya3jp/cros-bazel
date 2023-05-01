@@ -2,46 +2,52 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{fs::File, io::Write, path::Path};
+use std::{fs::File, path::Path};
 
 use alchemist::analyze::source::PackageLocalSource;
 use anyhow::Result;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use serde::Serialize;
-use tera::{Context, Tera};
 use tracing::instrument;
 
-use super::common::{DistFileEntry, Package, AUTOGENERATE_NOTICE};
+use super::common::{DistFileEntry, Package};
 
-lazy_static! {
-    static ref TEMPLATES: Tera = {
-        let mut tera: Tera = Default::default();
-        tera.add_raw_template(
-            "repositories.bzl",
-            include_str!("templates/repositories.bzl"),
-        )
-        .unwrap();
-        tera
-    };
+// Each entry here corresponds to a repository rule, and the fields in the
+// struct must correspond to the parameters to that repository rule.
+#[derive(Serialize, Debug)]
+enum Repository {
+    CipdFile {
+        name: String,
+        downloaded_file_path: String,
+        url: String,
+    },
+    HttpFile {
+        name: String,
+        downloaded_file_path: String,
+        integrity: String,
+        urls: Vec<String>,
+    },
+    RepoRepository {
+        name: String,
+        project: String,
+        tree: String,
+    },
+    CrosChromeRepository {
+        name: String,
+        tag: String,
+        gclient: String,
+    },
 }
 
-#[derive(Serialize)]
-struct RepoRepositoryTemplateContext {
-    name: String,
-    project: String,
-    tree_hash: String,
-}
-
-#[derive(Serialize)]
-struct RepositoriesTemplateContext<'a> {
-    dists: Vec<DistFileEntry>,
-    repos: Vec<RepoRepositoryTemplateContext>,
-    chrome: Vec<&'a String>,
+pub fn generate_deps_file(packages: &[Package], out: &Path) -> Result<()> {
+    let repos = generate_deps(packages)?;
+    let mut file = File::create(out)?;
+    serde_json::to_writer(&mut file, &repos)?;
+    Ok(())
 }
 
 #[instrument(skip_all)]
-pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()> {
+fn generate_deps(packages: &[Package]) -> Result<Vec<Repository>> {
     let joined_dists: Vec<DistFileEntry> = packages
         .iter()
         .flat_map(|package| {
@@ -57,19 +63,34 @@ pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()
         .into_iter()
         .sorted_by(|a, b| a.filename.cmp(&b.filename))
         .dedup_by(|a, b| a.filename == b.filename)
-        .collect();
+        .map(|dist| {
+            let url = &dist.urls[0];
+            if url.starts_with("cipd") {
+                Repository::CipdFile {
+                    name: dist.repository_name,
+                    downloaded_file_path: dist.filename,
+                    url: url.to_string(),
+                }
+            } else {
+                Repository::HttpFile {
+                    name: dist.repository_name,
+                    downloaded_file_path: dist.filename,
+                    integrity: dist.integrity,
+                    urls: dist.urls.clone(),
+                }
+            }
+        });
 
-    let repos: Vec<RepoRepositoryTemplateContext> = packages
+    let repos = packages
         .iter()
         .flat_map(|package| &package.sources.repo_sources)
         .unique_by(|source| &source.name)
-        .map(|repo| RepoRepositoryTemplateContext {
+        .sorted_by(|a, b| a.name.cmp(&b.name))
+        .map(|repo| Repository::RepoRepository {
             name: repo.name.clone(),
             project: repo.project.clone(),
-            tree_hash: repo.tree_hash.clone(),
-        })
-        .sorted_by(|a, b| a.name.cmp(&b.name))
-        .collect();
+            tree: repo.tree_hash.clone(),
+        });
 
     let chrome = packages
         .iter()
@@ -80,19 +101,13 @@ pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()
         })
         .unique()
         .sorted()
-        .collect();
+        .map(|version| Repository::CrosChromeRepository {
+            name: format!("chrome-{}", version),
+            tag: version.clone(),
+            gclient: "@depot_tools//:gclient_wrapper.sh".to_string(),
+        });
 
-    let context = RepositoriesTemplateContext {
-        dists: unique_dists,
-        repos,
-        chrome,
-    };
-
-    let mut file = File::create(out)?;
-    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    TEMPLATES.render_to("repositories.bzl", &Context::from_serialize(context)?, file)?;
-
-    Ok(())
+    Ok(unique_dists.chain(repos).chain(chrome).collect())
 }
 
 #[cfg(test)]
@@ -108,15 +123,14 @@ mod tests {
         data::Slot,
         ebuild::PackageDetails,
     };
+    use pretty_assertions::assert_eq;
     use url::Url;
     use version::Version;
 
     use super::*;
 
-    // TODO(b/273158038): Convert to a golden test. See example in
-    // ebuild/private/alchemist/src/bin/alchemist/generate_repo/internal/sources/mod.rs
     #[test]
-    fn generate_repositories_file_succeeds() -> Result<()> {
+    fn generate_deps_succeeds() -> Result<()> {
         let hashes = HashMap::from([("SHA256".to_string(), "012346".to_string())]);
 
         let cipd_sources = PackageSources {
@@ -188,13 +202,28 @@ mod tests {
             },
         ];
 
-        let output_file = tempfile::NamedTempFile::new()?;
-        generate_repositories_file(&packages, output_file.path())?;
-
-        let actual_output = std::fs::read_to_string(output_file.path())?;
-        // Final `(` makes sure that we don't match `load` calls.
-        assert!(actual_output.contains("cipd_file("));
-        assert!(actual_output.contains("http_file("));
+        let repos = generate_deps(&packages)?;
+        let actual = serde_json::to_string_pretty(&repos)?;
+        let expected = r#"[
+  {
+    "CipdFile": {
+      "name": "portage-dist_goldctl-2021.03.31-amd64.zip",
+      "downloaded_file_path": "goldctl-2021.03.31-amd64.zip",
+      "url": "cipd://skia/tools/goldctl/linux-amd64:0ov3TU"
+    }
+  },
+  {
+    "HttpFile": {
+      "name": "portage-dist_google-api-core-1.19.0.tar.gz",
+      "downloaded_file_path": "google-api-core-1.19.0.tar.gz",
+      "integrity": "sha256-ASNG",
+      "urls": [
+        "https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/google-api-core-1.19.0.tar.gz"
+      ]
+    }
+  }
+]"#;
+        assert_eq!(actual, expected);
 
         Ok(())
     }

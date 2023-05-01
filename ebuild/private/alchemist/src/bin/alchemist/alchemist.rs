@@ -64,6 +64,10 @@ pub enum Commands {
         /// Output directory path.
         #[arg(short = 'o', long, value_name = "PATH")]
         output_dir: PathBuf,
+
+        #[arg(long)]
+        /// An output path for a json-encoded Vec<deps::Repository>.
+        output_repos_json: PathBuf,
     },
     /// Generates a digest of the repository that can be used to indicate if
     /// any of the overlays, ebuilds, eclasses, etc have changed.
@@ -204,8 +208,17 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 .collect::<Result<Vec<_>>>()?;
             dump_package_main(&target.resolver, atoms)?;
         }
-        Commands::GenerateRepo { output_dir } => {
-            generate_repo_main(target, &translator, &src_dir, &output_dir)?;
+        Commands::GenerateRepo {
+            output_dir,
+            output_repos_json,
+        } => {
+            generate_repo_main(
+                target,
+                &translator,
+                &src_dir,
+                &output_dir,
+                &output_repos_json,
+            )?;
         }
         Commands::DigestRepo { args: local_args } => {
             digest_repo_main(&args.board, &source_dir, local_args)?;

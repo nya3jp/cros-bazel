@@ -98,7 +98,11 @@ bazel_dep(name = "rules_rust", version = "0.20.1")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(edition = "2021")
-use_repo(rust, "rust_toolchains")
+use_repo(
+    rust,
+    "rust_host_tools",
+    "rust_toolchains",
+)
 
 # Ordering matters here. Placing our our toolchains first gives them priority.
 # This means we only fall back to @rust_toolchains if our toolchains don't meet
@@ -125,3 +129,12 @@ use_repo(
 
 files = use_extension("//bazel/module_extensions:files/extension.bzl", "files")
 use_repo(files, "files")
+
+cros_deps = use_extension("//bazel/module_extensions:cros_deps/extension.bzl", "cros_deps")
+use_repo(cros_deps, "depot_tools")
+
+pre_portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "pre_portage")
+use_repo(pre_portage, "alchemist", "portage_digest", "portage_tarball")
+
+portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage")
+use_repo(portage, "portage")
