@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("//rules_cros/third_party:github_archive.bzl", "github_archive")
 
 VERSION = "1.46.5"
@@ -13,7 +17,7 @@ def e2fsprogs_repositories():
         github_user = "tytso",
         strip_prefix = "e2fsprogs-%s" % VERSION,
         patches = [
-            # I filed a PR, so this should hopefully be merged into master at
+            # I filed a PR, so this should hopefully be merged into upstream at
             # some point.
             # https://github.com/tytso/e2fsprogs/pull/124
             "//rules_cros/third_party/e2fsprogs:patches/support_offsets.patch",

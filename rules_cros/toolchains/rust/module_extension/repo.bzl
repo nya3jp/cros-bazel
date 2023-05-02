@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 """cros_rust_repository is a repository rule for importing the Rust toolchain from the CrOS SDK."""
 
 load("//rules_cros/toolchains:platforms.bzl", "all_toolchain_descs", "desc_to_triple")

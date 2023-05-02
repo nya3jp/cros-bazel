@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_foreign_cc//foreign_cc:providers.bzl", "ForeignCcDepsInfo")
 load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "runfiles_path", "wrap_binary_with_args")
 

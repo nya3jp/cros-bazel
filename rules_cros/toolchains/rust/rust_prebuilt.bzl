@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 load("@rules_rust//rust/private:providers.bzl", "CrateInfo", "DepInfo")
 load("@rules_rust//rust/private:rustc.bzl", "collect_deps")
 load("@rules_rust//rust/private:utils.bzl", "transform_deps")

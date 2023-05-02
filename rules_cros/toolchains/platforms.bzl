@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 # Definitions for high-level information about the toolchains we support.
 
 # The fields of each instance are ordered as they are to read more naturally for

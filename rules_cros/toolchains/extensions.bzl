@@ -1,3 +1,7 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 """cros_toolchains is a module extension for importing the toolchains from the CrOS SDK."""
 
 load("//rules_cros/toolchains/rust/module_extension:repo.bzl", "rust_repo", "RUST_ATTRS")
