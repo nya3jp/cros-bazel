@@ -1,10 +1,9 @@
 # Copyright 2022 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_file = "http_file")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
-
-def prebuilts_dependencies():
+def prebuilts_dependencies(http_file = _http_file):
     # TODO: Delete chromeos-fonts
     http_file(
         name = "arm64_generic_chromeos_fonts_0_0_1_r52",

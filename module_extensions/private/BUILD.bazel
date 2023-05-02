@@ -1,0 +1,11 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+py_test(
+    name = "symlink_test",
+    size = "small",
+    srcs = ["symlink_test.py"],
+    data = ["@files//:dumb_init"],
+    deps = ["@rules_python//python/runfiles"],
+)

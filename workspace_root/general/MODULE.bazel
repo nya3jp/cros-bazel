@@ -107,3 +107,6 @@ use_repo(
     # Rename it from <module_name>_crates to crates
     alchemy_crates = "cros_crates_alchemy",
 )
+
+files = use_extension("//bazel/module_extensions:files/extension.bzl", "files")
+use_repo(files, "files")

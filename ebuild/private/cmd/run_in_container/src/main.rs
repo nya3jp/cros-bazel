@@ -169,7 +169,7 @@ fn fix_runfiles_env() -> Result<()> {
 
 fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitCode> {
     let r = runfiles::Runfiles::create()?;
-    let dumb_init_path = r.rlocation("dumb_init/file/downloaded");
+    let dumb_init_path = r.rlocation("files/dumb_init");
 
     // Enter a new namespace.
     let mut unshare_flags =

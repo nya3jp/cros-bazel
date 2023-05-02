@@ -11,7 +11,7 @@ rust_binary(
     name = "run_in_container",
     srcs = glob(["src/*.rs"]),
     data = [
-        "@dumb_init//file",
+        "@files//:dumb_init",
     ],
     visibility = ["//bazel:internal"],
     deps = [
