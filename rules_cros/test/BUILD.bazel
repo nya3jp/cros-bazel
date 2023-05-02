@@ -1,0 +1,36 @@
+# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+load(":toolchain.bzl", "qemu_test", "toolchain_test")
+
+package(default_visibility = ["//visibility:private"])
+
+rust_binary(
+    name = "rust_toolchain_test",
+    srcs = glob(["src/**/*.rs"]),
+)
+
+cc_binary(
+    name = "cc_toolchain_test",
+    srcs = glob(["src/**/*.c"])
+)
+
+qemu_test(
+    name = "rules_cros_cc_test",
+    dep = ":cc_toolchain_test",
+)
+
+qemu_test(
+    name = "rules_cros_rust_test",
+    dep = ":rust_toolchain_test",
+)
+
+toolchain_test(
+    name = "rules_cros_toolchain_test",
+    deps = [
+        ":rules_cros_cc_test",
+        ":rules_cros_rust_test",
+    ]
+)

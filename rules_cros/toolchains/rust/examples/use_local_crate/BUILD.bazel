@@ -1,0 +1,13 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+rust_binary(
+    name = "use_local_crate",
+    srcs = ["src/main.rs"],
+    deps = ["//rules_cros/toolchains/rust/examples/local_crate"],
+)
+
+rust_test(
+    name = "use_local_crate_test",
+    size = "small",
+    crate = ":use_local_crate",
+)

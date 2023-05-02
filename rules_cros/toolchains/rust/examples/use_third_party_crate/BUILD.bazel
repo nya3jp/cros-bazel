@@ -1,0 +1,17 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+rust_binary(
+    name = "use_third_party_crate",
+    srcs = ["src/main.rs"],
+    deps = [
+        "@alchemy_crates//:env_logger",
+        "@alchemy_crates//:log",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+rust_test(
+    name = "use_third_party_crate_test",
+    size = "small",
+    crate = ":use_third_party_crate",
+)

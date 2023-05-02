@@ -1,0 +1,7 @@
+load("@gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix cros.local/bazel
+gazelle(
+    name = "gazelle",
+    extra_args = ["bazel/ebuild"],
+)

@@ -1,0 +1,19 @@
+load("//rules_cros/toolchains/bash:defs.bzl", "custom_args_test", "sh_runfiles_binary")
+
+sh_runfiles_binary(
+    name = "read_runfiles",
+    testonly = True,
+    src = "read_runfiles.sh",
+    data = ["//rules_cros/toolchains:testdata/example2.txt"],
+)
+
+custom_args_test(
+    name = "custom_args_test",
+    size = "small",
+    binary = ":read_runfiles",
+    binary_args = [
+        "cros/rules_cros/toolchains/testdata/example.txt",
+        "cros/rules_cros/toolchains/testdata/example2.txt",
+    ],
+    data = ["//rules_cros/toolchains:testdata/example.txt"],
+)

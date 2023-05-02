@@ -1,0 +1,18 @@
+# Copyright 2022 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Top-level workspace file for the Chrome OS checkout. All workspace-level rules
+# must live here!
+
+workspace(name = "cros")
+
+# Make rules_cros globally available via a separate @rules_cros repository mapping.
+local_repository(
+    name = "rules_cros",
+    path = "src/platform/rules_cros",
+)
+
+load("@rules_cros//cros:repositories.bzl", "rules_cros_dependencies")
+
+rules_cros_dependencies()

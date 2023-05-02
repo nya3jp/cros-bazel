@@ -1,0 +1,22 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+cmake(
+    name = "lz4",
+    cache_entries = {
+        # TODO: This needs to be replicated from the build flags once we have
+        # use flag support in bazel.
+        # -DBUILD_STATIC_LIBS=$(usex static-libs)
+    },
+    lib_source = "@lz4//:all_srcs",
+    out_binaries = [
+        "lz4",
+        "lz4c",
+    ],
+    out_shared_libs = [
+        "liblz4.so",
+        "liblz4.so.1",
+        "liblz4.so.1.9.3",
+    ],
+    visibility = ["//visibility:public"],
+    working_directory = "build/cmake",
+)

@@ -1,0 +1,4 @@
+exports_files([
+    "testdata/example.txt",
+    "testdata/example2.txt",
+])

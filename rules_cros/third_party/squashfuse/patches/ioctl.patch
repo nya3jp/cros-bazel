@@ -1,0 +1,29 @@
+commit e415386f1855d252d18e4876aa76b7eb826e07fa
+Author: Shuhei Takahashi <nya@chromium.org>
+Date:   Fri Aug 12 16:59:01 2022 +0900
+
+    WIP: Respond ioctl with ENOTTY
+
+diff --git a/hl.c b/hl.c
+index 091e73e..26c2b28 100644
+--- a/hl.c
++++ b/hl.c
+@@ -264,6 +264,10 @@ static sqfs_hl *sqfs_hl_open(const char *path, size_t offset) {
+ 	return NULL;
+ }
+ 
++static int sqfs_hl_op_ioctl(const char *path, unsigned int cmd, void *arg, struct fuse_file_info *fi, unsigned int flags, void *data) {
++	return -ENOTTY;
++}
++
+ int main(int argc, char *argv[]) {
+ 	struct fuse_args args;
+ 	sqfs_opts opts;
+@@ -290,6 +294,7 @@ int main(int argc, char *argv[]) {
+ 	sqfs_hl_ops.readlink	= sqfs_hl_op_readlink;
+ 	sqfs_hl_ops.listxattr	= sqfs_hl_op_listxattr;
+ 	sqfs_hl_ops.getxattr	= sqfs_hl_op_getxattr;
++	sqfs_hl_ops.ioctl	= sqfs_hl_op_ioctl;
+   
+ 	args.argc = argc;
+ 	args.argv = argv;

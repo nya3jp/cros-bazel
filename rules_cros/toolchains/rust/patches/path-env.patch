@@ -1,0 +1,32 @@
+From b5c99d0730ec38ae0ea1a3f6d14673d720a1ab18 Mon Sep 17 00:00:00 2001
+From: Matt Stark <msta@google.com>
+Date: Fri, 20 Jan 2023 13:12:17 +1100
+Subject: [PATCH 1/2] Prevent crates_vendor from restarting bazel.
+
+Previously, crates_vendor had the potential to restart bazel every time it runs, as the bazel startup options are dependent on PATH.
+---
+ crate_universe/private/crates_vendor.bzl | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/crate_universe/private/crates_vendor.bzl b/crate_universe/private/crates_vendor.bzl
+index 4d45c009..c71d2647 100644
+--- a/crate_universe/private/crates_vendor.bzl
++++ b/crate_universe/private/crates_vendor.bzl
+@@ -12,7 +12,13 @@ export RUNTIME_PWD="$(pwd)"
+ if [[ -z "${{BAZEL_REAL:-}}" ]]; then
+     BAZEL_REAL="$(which bazel || echo 'bazel')"
+ fi
+-eval exec env - BAZEL_REAL="${{BAZEL_REAL}}" BUILD_WORKSPACE_DIRECTORY="${{BUILD_WORKSPACE_DIRECTORY}}" {env} \\
++
++# The path needs to be preserved to prevent bazel from starting with different
++# startup options (requiring a restart of bazel).
++# If you provide an empty path, bazel starts itself with
++# --default_system_javabase set to the empty string, but if you provide a path,
++# it may set it to a value (eg. "/usr/local/buildtools/java/jdk11").
++eval exec env - BAZEL_REAL="${{BAZEL_REAL}}" BUILD_WORKSPACE_DIRECTORY="${{BUILD_WORKSPACE_DIRECTORY}}" PATH="${{PATH}}" {env} \\
+ "{bin}" {args} "$@"
+ """
+ 
+-- 
+2.39.0.246.g2a6d74b583-goog
+

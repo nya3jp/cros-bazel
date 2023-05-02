@@ -1,0 +1,30 @@
+# Copyright 2023 The ChromiumOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "lib",
+    srcs = [
+        "lib.go",
+    ],
+    importpath = "cros.local/rules_cros/toolchains/go/examples/lib",
+    visibility = ["//rules_cros/toolchains/go/examples/bin:__pkg__"],
+    deps = [
+    ],
+)
+
+go_test(
+    name = "lib_test",
+    size = "small",
+    srcs = [
+        "lib_test.go",
+    ],
+    data = ["//rules_cros/toolchains:testdata/example.txt"],
+    deps = [
+        ":lib",
+        "@com_github_google_go_cmp//cmp",
+        "@rules_go//go/runfiles",
+    ],
+)

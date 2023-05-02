@@ -1,0 +1,30 @@
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+load("@pip//:requirements.bzl", "requirement")
+
+compile_pip_requirements(
+    name = "requirements",
+    requirements_in = "requirements.txt",
+    requirements_txt = "requirements_lock.txt",
+)
+
+alias(
+    name = "update_packages",
+    actual = "requirements.update",
+)
+
+py_test(
+    name = "pip_test",
+    size = "small",
+    srcs = ["pip_test.py"],
+    python_version = "PY3",
+    deps = [requirement("pylint")],
+)
+
+py_test(
+    name = "python3_test",
+    size = "small",
+    srcs = ["python3_test.py"],
+    data = ["//rules_cros/toolchains:testdata/example.txt"],
+    python_version = "PY3",
+    deps = ["@rules_python//python/runfiles"],
+)
