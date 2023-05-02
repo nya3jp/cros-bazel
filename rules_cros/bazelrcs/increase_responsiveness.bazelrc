@@ -1,4 +1,0 @@
-# If your system is unresponsive while building, use this flag to
-# ensure that CPU cores are available for tasks other than building.
-
-build --local_cpu_resources=HOST_CPUS*0.9

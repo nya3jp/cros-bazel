@@ -79,7 +79,7 @@ test --test_verbose_timeout_warnings
 build --experimental_remote_build_event_upload=minimal
 
 # Import project-shared configs.
-import %workspace%/rules_cros/bazelrcs/prebuilts.bazelrc
+import %workspace%/bazel/bazelrcs/prebuilts.bazelrc
 
 # Allow user-specific overrides for this repository.
 # Should be at the end of this file so that users can override anything above.
