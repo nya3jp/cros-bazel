@@ -21,16 +21,16 @@ use crate::{
 
 /// Answers queries related to Portage packages.
 #[derive(Debug)]
-pub struct PackageResolver<'a> {
-    repos: &'a RepositorySet,
-    config: &'a ConfigBundle,
-    loader: &'a CachedPackageLoader,
+pub struct PackageResolver {
+    repos: Arc<RepositorySet>,
+    config: Arc<ConfigBundle>,
+    loader: Arc<CachedPackageLoader>,
     accept_stability: Stability,
     allow_9999_ebuilds: bool,
     version_9999: Version,
 }
 
-impl<'a> PackageResolver<'a> {
+impl PackageResolver {
     /// Constructs a new [`Resolver`].
     ///
     /// `accept_stability` specifies the minimum stability required for a
@@ -39,9 +39,9 @@ impl<'a> PackageResolver<'a> {
     /// `allow_9999_ebuilds` will consider 9999 cros-workon packages that don't
     /// specify CROS_WORKON_MANUAL_UPREV as stable.
     pub fn new(
-        repos: &'a RepositorySet,
-        config: &'a ConfigBundle,
-        loader: &'a CachedPackageLoader,
+        repos: Arc<RepositorySet>,
+        config: Arc<ConfigBundle>,
+        loader: Arc<CachedPackageLoader>,
         accept_stability: Stability,
         allow_9999_ebuilds: bool,
     ) -> Self {
@@ -163,8 +163,8 @@ impl<'a> PackageResolver<'a> {
     ///
     /// Portage allows pretending a missing package as "provided" by configuring
     /// `package.provided`. This method allows accessing the list.
-    pub fn find_provided_packages(
-        &self,
+    pub fn find_provided_packages<'a>(
+        &'a self,
         atom: &'a PackageDependencyAtom,
     ) -> impl Iterator<Item = &'a ProvidedPackage> {
         self.config

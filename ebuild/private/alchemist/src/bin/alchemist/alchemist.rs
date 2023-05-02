@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 use std::os::unix::fs;
+use std::path::Path;
+use std::sync::Arc;
 
 use std::{env::current_dir, path::PathBuf};
 
@@ -10,6 +12,7 @@ use crate::digest_repo::digest_repo_main;
 use crate::dump_package::dump_package_main;
 use crate::generate_repo::generate_repo_main;
 
+use alchemist::toolchain::ToolchainConfig;
 use alchemist::{
     config::{
         bundle::ConfigBundle, profile::Profile, site::SiteSettings, ConfigNode, ConfigNodeValue,
@@ -128,6 +131,67 @@ fn setup_tools() -> Result<TempDir> {
     Ok(tools_dir)
 }
 
+/// Container that contains all the data structures for a specific board.
+pub struct TargetData {
+    pub board: String,
+    pub profile: String,
+    pub repos: Arc<RepositorySet>,
+    pub config: Arc<ConfigBundle>,
+    pub loader: Arc<CachedPackageLoader>,
+    pub resolver: PackageResolver,
+    pub toolchains: ToolchainConfig,
+}
+
+fn load_board(
+    board: &str,
+    profile_name: &str,
+    root_dir: &Path,
+    tools_dir: &Path,
+) -> Result<TargetData> {
+    // Load repositories.
+    let repos = Arc::new(RepositorySet::load(root_dir)?);
+
+    // Load configurations.
+    let config = Arc::new({
+        let profile = Profile::load_default(root_dir, &repos)?;
+        let site_settings = SiteSettings::load(root_dir)?;
+        let override_source = build_override_config_source();
+
+        ConfigBundle::from_sources(vec![
+            // The order matters.
+            Box::new(profile) as Box<dyn ConfigSource>,
+            Box::new(site_settings) as Box<dyn ConfigSource>,
+            Box::new(override_source) as Box<dyn ConfigSource>,
+        ])
+    });
+
+    let loader = Arc::new(CachedPackageLoader::new(PackageLoader::new(
+        Arc::clone(&repos),
+        Arc::clone(&config),
+        tools_dir,
+    )));
+
+    let resolver = PackageResolver::new(
+        Arc::clone(&repos),
+        Arc::clone(&config),
+        Arc::clone(&loader),
+        alchemist::ebuild::Stability::Stable,
+        true,
+    );
+
+    let toolchains = load_toolchains(&repos)?;
+
+    Ok(TargetData {
+        board: board.to_string(),
+        profile: profile_name.to_string(),
+        repos,
+        config,
+        loader,
+        resolver,
+        toolchains,
+    })
+}
+
 pub fn alchemist_main(args: Args) -> Result<()> {
     let source_dir = match args.source_dir {
         Some(s) => PathBuf::from(s),
@@ -148,39 +212,14 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     let translator = enter_fake_chroot(&args.board, &args.profile, &source_dir)?;
 
-    let root_dir = PathBuf::from("/build").join(&args.board);
-
-    // Load repositories.
-    let repos = RepositorySet::load(&root_dir)?;
-
-    // Load configurations.
-    let profile = Profile::load_default(&root_dir, &repos)?;
-    let site_settings = SiteSettings::load(&root_dir)?;
-    let override_source = build_override_config_source();
-    let config = ConfigBundle::from_sources(vec![
-        // The order matters.
-        Box::new(profile) as Box<dyn ConfigSource>,
-        Box::new(site_settings) as Box<dyn ConfigSource>,
-        Box::new(override_source) as Box<dyn ConfigSource>,
-    ]);
-
-    // Set up the package loader
     let tools_dir = setup_tools()?;
 
-    // TODO: Avoid cloning ConfigBundle.
-    let loader = CachedPackageLoader::new(PackageLoader::new(
-        repos.clone(),
-        config.clone(),
+    let target = load_board(
+        &args.board,
+        &args.profile,
+        &Path::new("/build").join(&args.board),
         tools_dir.path(),
-    ));
-
-    let resolver = PackageResolver::new(
-        &repos,
-        &config,
-        &loader,
-        alchemist::ebuild::Stability::Stable,
-        true,
-    );
+    )?;
 
     match args.command {
         Commands::DumpPackage { packages } => {
@@ -188,23 +227,10 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 .iter()
                 .map(|raw| raw.parse::<PackageAtom>())
                 .collect::<Result<Vec<_>>>()?;
-            dump_package_main(&resolver, atoms)?;
+            dump_package_main(&target.resolver, atoms)?;
         }
         Commands::GenerateRepo { output_dir } => {
-            let toolchains = load_toolchains(&repos)?;
-
-            generate_repo_main(
-                &args.board,
-                &args.profile,
-                &repos,
-                &config,
-                &loader,
-                &resolver,
-                &translator,
-                &toolchains,
-                &src_dir,
-                &output_dir,
-            )?;
+            generate_repo_main(target, &translator, &src_dir, &output_dir)?;
         }
         Commands::DigestRepo { args: _ } => {
             panic!("BUG: Should be handled above");

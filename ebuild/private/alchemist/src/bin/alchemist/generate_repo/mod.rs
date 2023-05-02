@@ -29,11 +29,12 @@ use alchemist::{
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
-    toolchain::ToolchainConfig,
 };
 use anyhow::Result;
 use itertools::{Either, Itertools};
 use rayon::prelude::*;
+
+use crate::alchemist::TargetData;
 
 use self::{
     common::{AnalysisError, Package},
@@ -216,16 +217,35 @@ fn analyze_packages(
     (packages, failures)
 }
 
+fn load_packages(
+    target: &TargetData,
+    src_dir: &Path,
+) -> Result<(Vec<Package>, Vec<AnalysisError>)> {
+    eprintln!(
+        "Loading packages for {}:{}...",
+        target.board, target.profile
+    );
+
+    let mut all_details = evaluate_all_packages(&target.repos, &target.loader)?;
+
+    // We don't want to generate targets for packages that are marked broken
+    // for the arch. i.e., a x86 only package shouldn't be visible for an arm64
+    // build.
+    all_details.retain(|package| package.stability != Stability::Broken);
+
+    eprintln!("Analyzing packages...");
+
+    Ok(analyze_packages(
+        &target.config,
+        all_details,
+        src_dir,
+        &target.resolver,
+    ))
+}
 /// The entry point of "generate-repo" subcommand.
 pub fn generate_repo_main(
-    board: &str,
-    profile: &str,
-    repos: &RepositorySet,
-    config: &ConfigBundle,
-    loader: &CachedPackageLoader,
-    resolver: &PackageResolver,
+    target: TargetData,
     translator: &PathTranslator,
-    toolchain_config: &ToolchainConfig,
     src_dir: &Path,
     output_dir: &Path,
 ) -> Result<()> {
@@ -238,34 +258,25 @@ pub fn generate_repo_main(
     };
     create_dir_all(output_dir)?;
 
-    let mut all_details = evaluate_all_packages(repos, loader)?;
+    let (target_packages, target_failures) = load_packages(&target, src_dir)?;
 
-    // We don't want to generate targets for packages that are marked broken
-    // for the arch. i.e., a x86 only package shouldn't be visible for an arm64
-    // build. We can revisit this once we support building host packages.
-    all_details.retain(|package| package.stability != Stability::Broken);
-
-    eprintln!("Analyzing packages...");
-
-    let (all_packages, failures) = analyze_packages(config, all_details, src_dir, resolver);
-
-    let all_local_sources = all_packages
+    let all_local_sources = target_packages
         .iter()
         .flat_map(|package| &package.sources.local_sources);
 
     eprintln!("Generating @portage...");
 
-    generate_internal_overlays(translator, repos, output_dir)?;
-    generate_internal_packages(translator, &all_packages, &failures, output_dir)?;
+    generate_internal_overlays(translator, &target.repos, output_dir)?;
+    generate_internal_packages(translator, &target_packages, &target_failures, output_dir)?;
     generate_internal_sources(all_local_sources, src_dir, output_dir)?;
-    generate_public_packages(&all_packages, resolver, output_dir)?;
-    generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
-    generate_settings_bzl(board, &output_dir.join("settings.bzl"))?;
+    generate_public_packages(&target_packages, &target.resolver, output_dir)?;
+    generate_repositories_file(&target_packages, &output_dir.join("repositories.bzl"))?;
+    generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
     generate_sdk(
-        board,
-        profile,
-        repos,
-        toolchain_config,
+        &target.board,
+        &target.profile,
+        &target.repos,
+        &target.toolchains,
         translator,
         output_dir,
     )?;

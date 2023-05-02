@@ -125,13 +125,13 @@ impl PackageDetails {
 
 #[derive(Debug)]
 pub struct PackageLoader {
-    repos: RepositorySet,
-    config: ConfigBundle,
+    repos: Arc<RepositorySet>,
+    config: Arc<ConfigBundle>,
     evaluator: EBuildEvaluator,
 }
 
 impl PackageLoader {
-    pub fn new(repos: RepositorySet, config: ConfigBundle, tools_dir: &Path) -> Self {
+    pub fn new(repos: Arc<RepositorySet>, config: Arc<ConfigBundle>, tools_dir: &Path) -> Self {
         let evaluator = EBuildEvaluator::new(tools_dir);
         Self {
             repos,
