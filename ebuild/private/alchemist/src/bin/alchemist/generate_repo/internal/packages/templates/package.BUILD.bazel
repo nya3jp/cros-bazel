@@ -6,7 +6,6 @@ load("@//bazel/ebuild/private:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_ins
 load("@//bazel/ebuild/private:package_set.bzl", "package_set")
 load("@//bazel/ebuild/private:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("//:settings.bzl", "BOARD")
 
 {%- for ebuild in ebuilds %}
 string_flag(
@@ -19,8 +18,8 @@ sdk_install_deps(
     name = "{{ ebuild.version }}_deps",
     out = "{{ ebuild.basename }}_deps",
     base = "{{ ebuild.sdk }}",
-    board = BOARD,
-    overlays = "@portage//internal/sdk:overlays",
+    board = "{{ board }}",
+    overlays = "{{ overlay_set }}",
     target_deps = [
         {%- for dep in ebuild.build_deps %}
         "{{ dep }}",
@@ -63,9 +62,9 @@ ebuild(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
-    board = BOARD,
+    board = "{{ board }}",
     sdk = ":{{ ebuild.version }}_deps",
-    overlays = "@portage//internal/sdk:overlays",
+    overlays = "{{ overlay_set }}",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
@@ -107,9 +106,9 @@ ebuild_debug(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
-    board = BOARD,
+    board = "{{ board }}",
     sdk = ":{{ ebuild.version }}_deps",
-    overlays = "@portage//internal/sdk:overlays",
+    overlays = "{{ overlay_set }}",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
@@ -121,7 +120,7 @@ ebuild_install(
     name = "{{ ebuild.version }}_install",
     ebuild = "{{ ebuild.ebuild_name }}",
     category = "{{ebuild.category}}",
-    board = BOARD,
+    board = "{{ board }}",
     packages = [
         {%- for dep in ebuild.install_set %}
         "{{ dep }}",
@@ -163,9 +162,9 @@ ebuild_test(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
-    board = BOARD,
+    board = "{{ board }}",
     sdk = ":{{ ebuild.version }}_deps",
-    overlays = "@portage//internal/sdk:overlays",
+    overlays = "{{ overlay_set }}",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,

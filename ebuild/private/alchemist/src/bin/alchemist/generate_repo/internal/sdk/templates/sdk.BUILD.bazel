@@ -105,13 +105,10 @@ pkg_tar(
     extension = "tar.gz",
 )
 
-overlay_set(
+# Needed for the build_image targets
+alias(
     name = "overlays",
-    overlays = [
-        {%- for overlay in overlays %}
-        "{{ overlay }}",
-        {%- endfor %}
-    ],
+    actual = "{{ overlay_set }}",
     visibility = ["@//bazel:internal"],
 )
 
@@ -159,7 +156,7 @@ sdk_update(
             "@//bazel/prebuilts/amd64-host/x11-base:xcb-proto",
         ],
     }),
-    overlays = ":overlays",
+    overlays = "{{ overlay_set }}",
     visibility = ["@//bazel:internal"],
 )
 
@@ -167,7 +164,7 @@ sdk_install_deps(
     name = "sdk",
     base = ":base",
     board = "{{ board }}",
-    overlays = ":overlays",
+    overlays = "{{ overlay_set }}",
     target_deps = [
         "//sys-kernel/linux-headers",
         "//sys-libs/gcc-libs",

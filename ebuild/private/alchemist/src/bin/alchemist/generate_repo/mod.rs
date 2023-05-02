@@ -264,6 +264,8 @@ pub fn generate_repo_main(
 
     generate_internal_overlays(translator, &[&target.repos], output_dir)?;
     generate_internal_packages(
+        &target.board,
+        &target.repos,
         "stage1/target/board",
         translator,
         &target_packages,

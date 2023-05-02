@@ -27,6 +27,11 @@ lazy_static! {
     static ref TEMPLATES: Tera = {
         let mut tera: Tera = Default::default();
         tera.add_raw_template(
+            "overlays.BUILD.bazel",
+            include_str!("templates/overlays.BUILD.bazel"),
+        )
+        .unwrap();
+        tera.add_raw_template(
             "overlay.BUILD.bazel",
             include_str!("templates/overlay.BUILD.bazel"),
         )
@@ -82,6 +87,17 @@ fn generate_overlay_symlinks(original_dir: &Path, output_dir: &Path) -> Result<(
 }
 
 #[derive(Serialize)]
+struct OverlaysTemplateContext {
+    overlay_sets: Vec<OverlaySetTemplateContext>,
+}
+
+#[derive(Serialize)]
+struct OverlaySetTemplateContext {
+    name: String,
+    overlays: Vec<String>,
+}
+
+#[derive(Serialize)]
 struct OverlayBuildTemplateContext<'a> {
     name: &'a str,
     mount_path: &'a Path,
@@ -103,13 +119,39 @@ impl<'a> From<&'a Repository> for SimpleRepository<'a> {
     }
 }
 
+fn generate_overlays_file(repo_sets: &[&RepositorySet], output_dir: &Path) -> Result<()> {
+    let context = OverlaysTemplateContext {
+        overlay_sets: repo_sets
+            .iter()
+            .map(|r| OverlaySetTemplateContext {
+                name: r.primary().name().to_string(),
+                overlays: r
+                    .get_repos()
+                    .iter()
+                    .map(|r| format!("//internal/overlays/{}", r.name()))
+                    .collect(),
+            })
+            .collect(),
+    };
+
+    let output_file = output_dir.join("BUILD.bazel");
+
+    let mut file =
+        File::create(&output_file).with_context(|| format!("file {}", &output_file.display()))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    TEMPLATES.render_to(
+        "overlays.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
+
+    Ok(())
+}
+
 fn generate_overlay_build_file(repo: &SimpleRepository, output_file: &Path) -> Result<()> {
     let context = OverlayBuildTemplateContext {
         name: repo.name,
-        mount_path: repo
-            .base_dir
-            .strip_prefix("/")
-            .unwrap_or_else(|_| repo.base_dir),
+        mount_path: repo.base_dir.strip_prefix("/").unwrap_or(repo.base_dir),
     };
 
     // The chromiumos-overlay repo contains a pretty complex BUILD.bazel file.
@@ -159,6 +201,9 @@ pub fn generate_internal_overlays(
 
             Ok(())
         })?;
+
+    generate_overlays_file(repo_sets, &output_overlays_dir)?;
+
     Ok(())
 }
 

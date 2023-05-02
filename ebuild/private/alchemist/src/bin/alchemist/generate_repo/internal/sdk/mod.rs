@@ -120,7 +120,7 @@ fn generate_wrappers(board: &str, triple: &str, out: &Path) -> Result<()> {
 #[derive(Serialize, Debug)]
 struct SdkTemplateContext<'a> {
     board: &'a str,
-    overlays: Vec<String>,
+    overlay_set: &'a str,
     triples: Vec<&'a str>,
     profile_path: PathBuf,
     wrappers: Vec<&'a str>,
@@ -135,15 +135,11 @@ fn generate_sdk_build(
 ) -> Result<()> {
     let profile_path = repos.primary().base_dir().join("profiles").join(profile);
 
-    let mut overlays_targets: Vec<String> = Vec::new();
-    for repo in repos.get_repos() {
-        overlays_targets.push(format!("//internal/overlays/{}", repo.name()));
-    }
-
     let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();
 
     let context = SdkTemplateContext {
         board,
+        overlay_set: &format!("//internal/overlays:{}", repos.primary().name()),
         triples: toolchain_config
             .toolchains
             .iter()
@@ -157,7 +153,6 @@ fn generate_sdk_build(
             })
             .map(|t| t.name.as_ref())
             .collect(),
-        overlays: overlays_targets,
         profile_path,
         wrappers,
     };
