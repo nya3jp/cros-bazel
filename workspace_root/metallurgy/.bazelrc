@@ -1,0 +1,11 @@
+# DO NOT MODIFY THIS FILE IF YOU WANT CHANGES TO YOUR PERSONAL CONFIGURATION.
+# INSTEAD, MODIFY ONE OF THE FOLLOWING CONFIGURATION FILES DEPENDING ON WHICH
+# CHECKOUTS YOU WANT TO AFFECT:
+# If you're not sure what you want, you probably want option 2. See bazel/bazelrcs/example_chromiumos.bazelrc for an example
+# Option 1) All bazel projects: $HOME/.bazelrc
+# Option 2) All bazel chromiumos projects: $HOME/.chromiumos.bazelrc
+# Option 3) This specific chromiumos checkoput: src/workspace.bazelrc
+
+import %workspace%/bazel/bazelrcs/common.bazelrc
+
+# Metallurgy-only configuration goes here.

@@ -6,6 +6,6 @@
 # Option 2) All bazel chromiumos projects: $HOME/.chromiumos.bazelrc
 # Option 3) This specific chromiumos checkoput: src/workspace.bazelrc
 
-import %workspace%/rules_cros/workspace_root/.bazelrc
+import %workspace%/bazel/bazelrcs/common.bazelrc
 
 # Alchemy-only configuration goes here.
