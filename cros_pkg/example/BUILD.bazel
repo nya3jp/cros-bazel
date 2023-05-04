@@ -1,0 +1,72 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
+load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup", "pkg", "strip_prefix")
+
+pkg_files(
+    name = "pkg_file",
+    srcs = ["testdata/pkg/file"],
+    prefix = "pkg",
+    strip_prefix = strip_prefix.files_only(),
+)
+
+pkg_files(
+    name = "pkg_filegroup_file",
+    srcs = ["testdata/pkg/filegroup_file"],
+    strip_prefix = strip_prefix.from_pkg("testdata"),
+)
+
+pkg_filegroup(
+    name = "pkg_filegroup",
+    srcs = [":pkg_filegroup_file"],
+)
+
+pkg_mkdirs(
+    name = "pkg_dir",
+    dirs = ["pkg/empty_dir"],
+)
+
+pkg_mklink(
+    name = "pkg_symlink",
+    link_name = "pkg/link",
+    target = "path/to/dst",
+)
+
+cros_pkg_filegroup(
+    name = "example",
+    srcs = [
+        pkg.doc(
+            srcs = glob(["testdata/docs/*.md"]),
+            strip_prefix = strip_prefix.from_pkg("testdata/docs"),
+        ),
+        pkg.bin(
+            name = "renamed_bin",
+            srcs = [":testdata/bin"],
+        ),
+        pkg.file(
+            srcs = glob(["testdata/example/*"]),
+            gid = 0,
+            group = "group",
+            mode = "0640",
+            prefix = "path/to",
+            strip_prefix = strip_prefix.files_only(),
+            uid = 0,
+            user = "user",
+        ),
+    ],
+    default_strip_prefix = strip_prefix.from_pkg("testdata"),
+    pkg_dirs = [":pkg_dir"],
+    pkg_filegroups = [":pkg_filegroup"],
+    pkg_files = [":pkg_file"],
+    pkg_symlinks = [":pkg_symlink"],
+)
+
+py_test(
+    name = "example_test",
+    size = "small",
+    srcs = ["example_test.py"],
+    data = [":example_tar"],
+    deps = ["@rules_python//python/runfiles"],
+)
