@@ -19,6 +19,9 @@ BinaryPackageInfo = provider(
         "file": """
             File: A binary package file (.tbz2) of this package.
         """,
+        "category": """
+            str: The category of this package.
+        """,
         "all_files": """
             Depset[File]: All binary package files including this package's one
                 itself and all transitive runtime dependencies.

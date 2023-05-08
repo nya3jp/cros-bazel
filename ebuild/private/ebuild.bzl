@@ -29,6 +29,12 @@ _EBUILD_COMMON_ATTRS = dict(
         The overlay this package belongs to.
         """,
     ),
+    category = attr.string(
+        mandatory = True,
+        doc = """
+        The category of this package.
+        """,
+    ),
     distfiles = attr.label_keyed_string_dict(
         allow_files = True,
     ),
@@ -271,6 +277,7 @@ def _ebuild_impl(ctx):
     )
     package_info = BinaryPackageInfo(
         file = output_binary_package_file,
+        category = ctx.attr.category,
         all_files = all_files,
         direct_runtime_deps = direct_runtime_deps,
         transitive_runtime_deps = transitive_runtime_deps,
@@ -375,6 +382,91 @@ ebuild_debug = rule(
     attrs = dict(
         _bash_runfiles = BASH_RUNFILES_ATTR,
         **_EBUILD_COMMON_ATTRS
+    ),
+)
+
+_INSTALL_SCRIPT_HEADER = """#!/bin/bash
+set -ue
+
+if [[ ! -e /etc/cros_chroot_version ]]; then
+  echo "Cannot run outside the cros SDK chroot."
+  exit 1
+fi
+
+# Arguments passed in during build time are passed in relative to the execroot,
+# which means all files passed in are relative paths starting with bazel-out/
+# Thus, we cd to the directory in our working directory containing a bazel-out.
+
+wd="$(pwd)"
+cd "${wd%%/bazel-out/*}"
+"""
+
+def _ebuild_install_impl(ctx):
+    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
+
+    # Generate script.
+    script_contents = _INSTALL_SCRIPT_HEADER
+
+    # Add script to copy binary packages to the PKGDIR.
+    for package in ctx.attr.packages:
+        info = package[BinaryPackageInfo]
+        dest_dir = "/build/%s/packages/%s/" % (ctx.attr.board, info.category)
+        script_contents += """
+        sudo mkdir -p "%s"
+        sudo cp "%s" "%s"
+        """ % (dest_dir, info.file.path, dest_dir)
+
+    # Add script to install the binary package.
+    # TODO(b/281480831): Add --nodeps and use _calculate_install_groups() in
+    # install_deps.bzl to resolve dependencies.
+    script_contents += "emerge-%s --usepkgonly =%s/%s\n" % (
+        ctx.attr.board,
+        ctx.attr.category,
+        src_basename,
+    )
+
+    # Write script.
+    output_install_script = ctx.actions.declare_file(src_basename +
+                                                     "_install.sh")
+    ctx.actions.write(
+        output_install_script,
+        script_contents,
+        is_executable = True,
+    )
+
+    runfiles = ctx.runfiles(files = [
+        package[BinaryPackageInfo].file
+        for package in ctx.attr.packages
+    ])
+    return DefaultInfo(
+        executable = output_install_script,
+        runfiles = runfiles,
+    )
+
+ebuild_install = rule(
+    implementation = _ebuild_install_impl,
+    executable = True,
+    doc = "Installs the package to the environment.",
+    attrs = dict(
+        ebuild = attr.label(
+            mandatory = True,
+            allow_single_file = [".ebuild"],
+        ),
+        category = attr.string(
+            mandatory = True,
+            doc = """
+            The category name of the package.
+            """,
+        ),
+        board = attr.string(
+            mandatory = True,
+            doc = """
+            The target board name to build the package for.
+            """,
+        ),
+        packages = attr.label_list(
+            providers = [BinaryPackageInfo],
+        ),
     ),
 )
 

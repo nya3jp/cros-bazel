@@ -78,7 +78,7 @@ fn generate_public_package(
             "//internal/packages/{}/{}/{}",
             "stage1/target/board", details.repo_name, details.package_name
         );
-        for suffix in ["", "_debug", "_package_set"] {
+        for suffix in ["", "_debug", "_package_set", "_install"] {
             aliases.push(AliasEntry {
                 name: format!("{}{}", details.version, suffix),
                 actual: format!(
@@ -103,10 +103,12 @@ fn generate_public_package(
             name: short_package_name.to_owned(),
             actual: format!(":{}", &best_version),
         });
-        aliases.extend(["debug", "package_set"].map(|suffix| AliasEntry {
-            name: suffix.to_owned(),
-            actual: format!(":{}_{}", &best_version, suffix),
-        }));
+        aliases.extend(
+            ["debug", "package_set", "install"].map(|suffix| AliasEntry {
+                name: suffix.to_owned(),
+                actual: format!(":{}_{}", &best_version, suffix),
+            }),
+        );
         test_suites.push(TestSuiteEntry {
             name: "test".to_owned(),
             test_name: format!(":{}_test", &best_version),

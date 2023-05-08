@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@//bazel/ebuild/private:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_test", "ebuild_failure")
+load("@//bazel/ebuild/private:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_failure")
 load("@//bazel/ebuild/private:package_set.bzl", "package_set")
 load("@//bazel/ebuild/private:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
@@ -34,6 +34,7 @@ ebuild(
     name = "{{ ebuild.version }}",
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
+    category = "{{ebuild.category}}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
@@ -77,6 +78,7 @@ ebuild_debug(
     name = "{{ ebuild.version }}_debug",
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
+    category = "{{ebuild.category}}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
@@ -115,10 +117,24 @@ ebuild_debug(
     visibility = ["@//bazel:internal"],
 )
 
+ebuild_install(
+    name = "{{ ebuild.version }}_install",
+    ebuild = "{{ ebuild.ebuild_name }}",
+    category = "{{ebuild.category}}",
+    board = BOARD,
+    packages = [
+        {%- for dep in ebuild.install_set %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild_test(
     name = "{{ ebuild.version }}_test",
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
+    category = "{{ebuild.category}}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
