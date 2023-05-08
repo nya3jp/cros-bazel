@@ -2,65 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-def _map_install_group(group):
-    """
-    Computes an --install-target argument for an install group.
-
-    Args:
-        group: list[BinaryPackageInfo]: An install group.
-
-    Returns:
-        str: A value for the --install-target flag.
-    """
-    return ":".join([pkg.file.path for pkg in group])
-
-def _calculate_install_groups(install_list):
-    """
-    Splits a package set to install groups.
-
-    Args:
-        install_list: list[BinaryPackageInfo]: A list of packages to install.
-            This list must be closed over transitive runtime dependencies.
-
-    Returns:
-        list[list[BinaryPackageInfo]]: An ordered list containing a list of
-            packages that can be installed in parallel.
-    """
-    groups = []
-    remaining_packages = install_list[:]
-    seen = {}
-
-    for _ in range(100):
-        if len(remaining_packages) == 0:
-            break
-
-        satisfied_list = []
-        not_satisfied_list = []
-        for package in remaining_packages:
-            all_seen = True
-            for dep in package.direct_runtime_deps:
-                if dep.file.path not in seen:
-                    all_seen = False
-                    break
-
-            if all_seen:
-                satisfied_list.append(package)
-            else:
-                not_satisfied_list.append(package)
-
-        if len(satisfied_list) == 0:
-            fail("Dependency list is unsatisfiable")
-
-        for dep in satisfied_list:
-            seen[dep.file.path] = True
-
-        groups.append(satisfied_list)
-        remaining_packages = not_satisfied_list
-
-    if len(remaining_packages) > 0:
-        fail("Too many dependencies")
-
-    return groups
+load("install_groups.bzl", "calculate_install_groups", "map_install_group")
 
 def install_deps(
         ctx,
@@ -114,8 +56,8 @@ def install_deps(
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(layer_inputs)
 
-    install_groups = _calculate_install_groups(install_list)
-    args.add_all(install_groups, map_each = _map_install_group, format_each = "--install-target=%s")
+    install_groups = calculate_install_groups(install_list)
+    args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
 
     ctx.actions.run(
         inputs = depset(direct_inputs),

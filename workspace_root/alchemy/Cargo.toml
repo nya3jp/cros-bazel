@@ -7,6 +7,7 @@ members = [
     "bazel/ebuild/private/cmd/action_wrapper",
     "bazel/ebuild/private/cmd/build_image",
     "bazel/ebuild/private/cmd/build_package",
+    "bazel/ebuild/private/cmd/build_sdk",
     "bazel/ebuild/private/cmd/extract_interface",
     "bazel/ebuild/private/cmd/install_deps",
     "bazel/ebuild/private/cmd/run_in_container",

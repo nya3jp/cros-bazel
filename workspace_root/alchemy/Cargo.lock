@@ -210,6 +210,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "build_sdk"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "cliutil",
+ "fileutil",
+ "makechroot",
+ "mountsdk",
+ "runfiles",
+]
+
+[[package]]
 name = "bytecount"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
