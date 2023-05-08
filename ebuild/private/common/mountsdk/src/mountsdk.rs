@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use crate::control::ControlChannel;
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use itertools::Itertools;
 use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
