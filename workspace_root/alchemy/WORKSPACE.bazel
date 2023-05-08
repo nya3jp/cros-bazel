@@ -66,6 +66,10 @@ load("//bazel/depot_tools:repositories.bzl", "depot_tools_repository")
 
 depot_tools_repository()
 
+load("//bazel/zstd:repositories.bzl", "zstd_repository")
+
+zstd_repository()
+
 new_local_repository(
     name = "chromite",
     build_file = "//bazel:BUILD.project-chromite",

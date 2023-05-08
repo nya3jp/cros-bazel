@@ -1,0 +1,57 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# We enable optimization even in debug builds (-c dbg) because it will just
+# slow down zstd archive operations while it's super rare that we need to
+# debug zstd by ourselves.
+# https://github.com/bazelbuild/rules_cc/blob/7f0992b0bd47d5b24076c2d022ba1819cc8641e4/cc/private/toolchain/cc_toolchain_config.bzl#L580
+CFLAGS = [
+    "-O2",
+    "-DNDEBUG",
+    "-ffunction-sections",
+    "-fdata-sections",
+]
+
+cc_library(
+    name = "lib",
+    srcs = glob([
+        "lib/common/*.c",
+        "lib/common/*.h",
+        "lib/compress/*.c",
+        "lib/compress/*.h",
+        "lib/decompress/*.c",
+        "lib/decompress/*.S",
+        "lib/decompress/*.h",
+        "lib/deprecated/*.c",
+        "lib/deprecated/*.h",
+        "lib/dictBuilder/*.c",
+        "lib/dictBuilder/*.h",
+        "lib/legacy/*.c",
+        "lib/legacy/*.h",
+    ], exclude = [
+        "lib/legacy/zstd_v01.*",
+        "lib/legacy/zstd_v02.*",
+        "lib/legacy/zstd_v03.*",
+    ]),
+    copts = CFLAGS,
+    hdrs = glob(["lib/*.h"]),
+    linkopts = ["-lpthread"],
+    local_defines = [
+        "ZSTD_LEGACY_SUPPORT=4",
+        "ZSTD_MULTITHREAD",
+        "XXH_NAMESPACE=ZSTD_",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+cc_binary(
+    name = "zstd",
+    srcs = glob([
+        "programs/*.c",
+        "programs/*.h",
+    ]),
+    copts = CFLAGS,
+    visibility = ["//visibility:public"],
+    deps = [":lib"],
+)
