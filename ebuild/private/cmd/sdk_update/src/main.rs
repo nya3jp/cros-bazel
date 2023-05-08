@@ -34,9 +34,6 @@ struct Cli {
     install_host: Vec<PathBuf>,
 
     #[arg(long)]
-    install_target: Vec<PathBuf>,
-
-    #[arg(long)]
     install_tarball: Vec<PathBuf>,
 }
 
@@ -68,21 +65,12 @@ fn do_main() -> Result<()> {
 
     let tarballs_dir = Path::new("/stage/tarballs");
     let host_packages_dir = Path::new("/var/lib/portage/pkgs");
-    let target_packages_dir = PathBuf::from("/build").join(&args.board).join("packages");
 
     let host_install_atoms = bind_binary_packages(&mut cfg, host_packages_dir, args.install_host)
         .with_context(|| "Failed to bind host binary packages.")?;
     cfg.envs.insert(
         "INSTALL_ATOMS_HOST".to_owned(),
         host_install_atoms.join(" "),
-    );
-
-    let target_install_atoms =
-        bind_binary_packages(&mut cfg, &target_packages_dir, args.install_target)
-            .with_context(|| "Failed to bind target binary packages.")?;
-    cfg.envs.insert(
-        "INSTALL_ATOMS_TARGET".to_owned(),
-        target_install_atoms.join(" "),
     );
 
     cfg.bind_mounts

@@ -72,12 +72,6 @@ def _sdk_update_impl(ctx):
             for target in ctx.attr.host_deps
         ],
     )
-    target_installs = depset(
-        transitive = [
-            target[BinaryPackageSetInfo].files
-            for target in ctx.attr.target_deps
-        ],
-    )
 
     args = ctx.actions.args()
     args.add_all([
@@ -93,12 +87,11 @@ def _sdk_update_impl(ctx):
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
 
     args.add_all(host_installs, format_each = "--install-host=%s")
-    args.add_all(target_installs, format_each = "--install-target=%s")
     args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
 
     inputs = depset(
         [ctx.executable._sdk_update] + layer_inputs + ctx.files.extra_tarballs,
-        transitive = [host_installs, target_installs],
+        transitive = [host_installs],
     )
 
     outputs = [output_root, output_log]
@@ -144,9 +137,6 @@ sdk_update = rule(
             """,
         ),
         "host_deps": attr.label_list(
-            providers = [BinaryPackageSetInfo],
-        ),
-        "target_deps": attr.label_list(
             providers = [BinaryPackageSetInfo],
         ),
         "extra_tarballs": attr.label_list(

@@ -43,12 +43,6 @@ if (( ${#atoms[@]} )); then
   time emerge --oneshot --usepkgonly --nodeps --jobs=16 "${atoms[@]}"
 fi
 
-read -ra atoms <<<"${INSTALL_ATOMS_TARGET}"
-if (( ${#atoms[@]} )); then
-  # TODO: emerge is too slow! Find a way to speed up.
-  time ROOT="/build/${BOARD}/" SYSROOT="/build/${BOARD}/" PORTAGE_CONFIGROOT="/build/${BOARD}/" emerge --oneshot --usepkgonly --nodeps --jobs=16 "${atoms[@]}"
-fi
-
 # Install libc to sysroot.
 # Logic borrowed from chromite/lib/toolchain.py.
 # TODO: Can we install just the primary tool chain, or do we need them all?
