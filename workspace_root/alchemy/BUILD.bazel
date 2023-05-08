@@ -32,7 +32,7 @@ pkg_tar(
     srcs = [
         ":scripts_src_files",
     ],
-    compressor = "//bazel/ebuild/private:zstd",
+    compressor = "//bazel/zstd",
     compressor_args = "--threads=0",
     extension = "tar.zst",
     visibility = ["//bazel:internal"],

@@ -56,7 +56,7 @@ pkg_tar(
         ":__files__",
     ],
     extension = "tar.zst",
-    compressor = "@//bazel/ebuild/private:zstd",
+    compressor = "@//bazel/zstd",
     compressor_args = "--threads=0",
     visibility = ["@//bazel:internal"],
 )

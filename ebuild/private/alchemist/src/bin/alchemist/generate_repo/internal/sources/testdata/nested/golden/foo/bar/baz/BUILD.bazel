@@ -43,7 +43,7 @@ pkg_tar(
     srcs = [
         ":__files__",
     ],
-    compressor = "@//bazel/ebuild/private:zstd",
+    compressor = "@//bazel/zstd",
     compressor_args = "--threads=0",
     extension = "tar.zst",
     visibility = ["//visibility:private"],

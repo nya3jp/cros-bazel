@@ -47,7 +47,7 @@ pkg_files(
 pkg_tar(
     name = "layer",
     extension = "tar.zst",
-    compressor = "@//bazel/ebuild/private:zstd",
+    compressor = "@//bazel/zstd",
     compressor_args = "--threads=0",
     srcs = [":files"],
     visibility = ["//visibility:private"],

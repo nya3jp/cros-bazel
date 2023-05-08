@@ -16,14 +16,3 @@ string_flag(
     build_setting_default = "gsutil",
     visibility = ["//bazel:internal"],
 )
-
-# A tiny shell script that calls into the system-installed zstd.
-# TODO: Do not depend on system-installed zstd.
-sh_binary(
-    name = "zstd",
-    srcs = ["system_zstd.sh"],
-    visibility = [
-        "//bazel:internal",
-        "@chromite//:__pkg__",
-    ],
-)
