@@ -24,6 +24,10 @@ struct Cli {
     #[command(flatten)]
     mountsdk_config: ConfigArgs,
 
+    /// Name of board
+    #[arg(long, required = true)]
+    board: String,
+
     #[arg(long, required = true)]
     ebuild: EbuildMetadata,
 
@@ -184,10 +188,10 @@ fn do_main() -> Result<()> {
         cfg.allow_network_access = true;
     }
 
-    let build_root_dir = Path::new("/build").join(&cfg.board);
+    let build_root_dir = Path::new("/build").join(&args.board);
     let target_packages_dir = build_root_dir.join("packages");
 
-    let mut sdk = MountedSDK::new(cfg)?;
+    let mut sdk = MountedSDK::new(cfg, Some(&args.board))?;
     let out_dir = sdk
         .root_dir()
         .outside
@@ -214,7 +218,7 @@ fn do_main() -> Result<()> {
     std::fs::create_dir_all(pretend_stamp_path.parent().unwrap())?;
     File::create(pretend_stamp_path)?;
 
-    let sysroot = sdk.root_dir().join("build").join(&sdk.board).outside;
+    let sysroot = sdk.root_dir().join("build").join(&args.board).outside;
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
     }

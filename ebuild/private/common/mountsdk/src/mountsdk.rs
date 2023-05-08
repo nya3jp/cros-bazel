@@ -28,7 +28,6 @@ pub(crate) enum LoginMode {
 
 #[derive(Clone)]
 pub struct Config {
-    pub board: String,
     pub layer_paths: Vec<PathBuf>,
     pub bind_mounts: Vec<BindMount>,
     pub envs: HashMap<String, String>,
@@ -44,7 +43,6 @@ pub struct Config {
 }
 
 pub struct MountedSDK {
-    pub board: String,
     root_dir: fileutil::DualPath,
     diff_dir: PathBuf,
     privileged: bool,
@@ -58,7 +56,7 @@ pub struct MountedSDK {
 
 impl MountedSDK {
     // Prepares the SDK according to the specifications requested.
-    pub fn new(cfg: Config) -> Result<Self> {
+    pub fn new(cfg: Config, board: Option<&str>) -> Result<Self> {
         let r = runfiles::Runfiles::create()?;
         let run_in_container_path =
             r.rlocation("cros/bazel/ebuild/private/cmd/run_in_container/run_in_container");
@@ -82,12 +80,13 @@ impl MountedSDK {
 
         envs.extend([
             ("PATH".to_owned(), "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools".to_owned()),
-            // TODO: Do not set $BOARD here. Callers may not be interested in
-            // particular boards.
-            ("BOARD".to_owned(), cfg.board.clone()),
             // Always enable Rust backtrace.
             ("RUST_BACKTRACE".to_owned(), "1".to_owned()),
         ]);
+
+        if let Some(board) = &board {
+            envs.extend([("BOARD".to_owned(), board.to_string())])
+        }
 
         let control_channel = if cfg.login_mode != LoginMode::Never {
             // Named pipes created using `mkfifo` use the inode number as the address.
@@ -156,7 +155,6 @@ impl MountedSDK {
         cmd.arg("--cmd").arg(setup_script_path.inside);
 
         Ok(Self {
-            board: cfg.board,
             cmd: Some(cmd),
             root_dir,
             diff_dir,
@@ -234,8 +232,8 @@ mod tests {
         let src_dir = PathBuf::from(SOURCE_DIR);
         let portage_stable = src_dir.join("src/third_party/portage-stable");
         let ebuild_file = portage_stable.join("mypkg/mypkg.ebuild");
+        let board = Some("amd64-generic");
         let cfg = Config {
-            board: "amd64-generic".to_owned(),
             layer_paths: vec![r.rlocation("cros/bazel/sdk/sdk_from_archive")],
             bind_mounts: vec![
                 BindMount {
@@ -255,28 +253,30 @@ mod tests {
             login_mode: Never,
         };
 
-        MountedSDK::new(cfg.clone())?.run_cmd(&["true"])?;
+        MountedSDK::new(cfg.clone(), board)?.run_cmd(&["true"])?;
 
-        assert!(MountedSDK::new(cfg.clone())?.run_cmd(&["false"]).is_err());
+        assert!(MountedSDK::new(cfg.clone(), board)?
+            .run_cmd(&["false"])
+            .is_err());
 
         // Should be a read-only mount.
-        assert!(MountedSDK::new(cfg.clone())?
+        assert!(MountedSDK::new(cfg.clone(), board)?
             .run_cmd(&["/bin/bash", "-c", "echo world > /hello"])
             .is_err());
         // Verify that the chroot hasn't modified this file.
         assert_eq!(std::fs::read_to_string(hello)?, "hello");
 
         // Check we're in the SDK by using a binary unlikely to be on the host machine.
-        MountedSDK::new(cfg.clone())?.run_cmd(&["test", "-f", "/usr/bin/ebuild"])?;
+        MountedSDK::new(cfg.clone(), board)?.run_cmd(&["test", "-f", "/usr/bin/ebuild"])?;
 
-        MountedSDK::new(cfg.clone())?.run_cmd(&[
+        MountedSDK::new(cfg.clone(), board)?.run_cmd(&[
             "grep",
             "EBUILD_CONTENTS",
             &ebuild_file.to_string_lossy(),
         ])?;
 
         let tmp_dir: PathBuf = {
-            let mut sdk = MountedSDK::new(cfg)?;
+            let mut sdk = MountedSDK::new(cfg, board)?;
 
             let out_pkg = sdk.root_dir.join("build/arm64-generic/packages/mypkg");
             std::fs::create_dir_all(&out_pkg.outside)?;

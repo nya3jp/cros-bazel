@@ -22,6 +22,10 @@ struct Cli {
     #[command(flatten)]
     mountsdk_config: mountsdk::ConfigArgs,
 
+    /// Name of board
+    #[arg(long, required = true)]
+    board: String,
+
     /// A path to a directory where the output durable tree is written.
     #[arg(long, required = true)]
     output: PathBuf,
@@ -64,7 +68,7 @@ fn do_main() -> Result<()> {
 
     let tarballs_dir = Path::new("/stage/tarballs");
     let host_packages_dir = Path::new("/var/lib/portage/pkgs");
-    let target_packages_dir = PathBuf::from("/build").join(&cfg.board).join("packages");
+    let target_packages_dir = PathBuf::from("/build").join(&args.board).join("packages");
 
     let host_install_atoms = bind_binary_packages(&mut cfg, host_packages_dir, args.install_host)
         .with_context(|| "Failed to bind host binary packages.")?;
@@ -95,14 +99,14 @@ fn do_main() -> Result<()> {
         mount_path: PathBuf::from(MAIN_SCRIPT),
     });
 
-    let mut sdk = mountsdk::MountedSDK::new(cfg)?;
+    let mut sdk = mountsdk::MountedSDK::new(cfg, Some(&args.board))?;
     sdk.run_cmd(&[MAIN_SCRIPT])
         .with_context(|| "Failed to run the command.")?;
 
     fileutil::move_dir_contents(sdk.diff_dir(), &args.output)
         .with_context(|| "Failed to move the diff dir.")?;
 
-    makechroot::clean_layer(Some(&sdk.board), &args.output)
+    makechroot::clean_layer(Some(&args.board), &args.output)
         .with_context(|| "Failed to clean the output dir.")?;
 
     DurableTree::convert(&args.output)?;

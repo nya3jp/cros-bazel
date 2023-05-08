@@ -9,7 +9,11 @@ if [[ $# -gt 0 ]]; then
 fi
 
 export LANG=en_US.UTF-8
-export ROOT="/build/${BOARD}/"
+if [[ -v "BOARD" ]]; then
+  export ROOT="/build/${BOARD}/"
+else
+  export ROOT="/"
+fi
 export SYSROOT="${ROOT}"
 export PORTAGE_CONFIGROOT="${ROOT}"
 export PORTAGE_USERNAME=root

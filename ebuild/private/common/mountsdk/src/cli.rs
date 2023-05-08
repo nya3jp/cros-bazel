@@ -10,9 +10,6 @@ use std::path::PathBuf;
 
 #[derive(Args, Debug)]
 pub struct ConfigArgs {
-    #[arg(long, required = true)]
-    board: String,
-
     #[arg(
         long,
         help = "mounts a file or directory as a file system layer in the container.",
@@ -53,7 +50,6 @@ impl Config {
             args.layer
         };
         Ok(Config {
-            board: args.board,
             layer_paths,
             login_mode: args.login_mode,
             allow_network_access: false,

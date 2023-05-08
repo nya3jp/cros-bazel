@@ -21,6 +21,10 @@ pub struct Cli {
     #[command(flatten)]
     mountsdk_config: mountsdk::ConfigArgs,
 
+    /// Name of board
+    #[arg(long, required = true)]
+    board: String,
+
     /// Output file path.
     #[arg(long, required = true)]
     output: PathBuf,
@@ -57,7 +61,7 @@ fn do_main() -> Result<()> {
         source: r
             .rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos"),
         mount_path: Path::new("/build")
-            .join(&cfg.board)
+            .join(&args.board)
             .join("var/cache/edb/chromeos"),
     });
     cfg.bind_mounts.push(BindMount {
@@ -65,7 +69,7 @@ fn do_main() -> Result<()> {
             "cros/bazel/ebuild/private/cmd/build_image/container_files/package.accept_keywords",
         ),
         mount_path: Path::new("/build")
-            .join(&cfg.board)
+            .join(&args.board)
             .join("etc/portage/package.accept_keywords/accept_all"),
     });
     cfg.bind_mounts.push(BindMount {
@@ -73,7 +77,7 @@ fn do_main() -> Result<()> {
             "cros/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
         ),
         mount_path: Path::new("/build")
-            .join(&cfg.board)
+            .join(&args.board)
             .join("etc/portage/profile/package.provided"),
     });
     cfg.bind_mounts.push(BindMount {
@@ -85,7 +89,7 @@ fn do_main() -> Result<()> {
     for path in args.target_package {
         let package = BinaryPackage::open(&path)?;
         let mount_path = Path::new("/build")
-            .join(&cfg.board)
+            .join(&args.board)
             .join("packages")
             .join(format!("{}.tbz2", package.category_pf()));
         cfg.bind_mounts.push(BindMount {
@@ -104,22 +108,21 @@ fn do_main() -> Result<()> {
         });
     }
 
-    cfg.envs.insert("BOARD".to_owned(), cfg.board.clone());
     cfg.envs.insert(
         "BASE_PACKAGE".to_owned(),
         args.override_base_package.join(" "),
     );
 
-    let mut sdk = MountedSDK::new(cfg)?;
+    let mut sdk = MountedSDK::new(cfg, Some(&args.board))?;
     sdk.run_cmd(&[
         MAIN_SCRIPT,
-        &format!("--board={}", &sdk.board),
+        &format!("--board={}", &args.board),
         &args.image_to_build,
         // TODO: add unparsed command-line args.
     ])?;
 
     let path = Path::new("mnt/host/source/src/build/images")
-        .join(&sdk.board)
+        .join(&args.board)
         .join("latest")
         .join(args.image_file_name + ".bin");
     std::fs::copy(sdk.diff_dir().join(path), args.output)?;
