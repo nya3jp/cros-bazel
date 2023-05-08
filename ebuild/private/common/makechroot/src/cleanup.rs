@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use fileutil::with_permissions;
 use itertools::Itertools;
 use std::{path::Path, path::PathBuf};
 use walkdir::WalkDir;
@@ -34,21 +35,29 @@ fn sort_contents(pkg_dir: &Path) -> Result<()> {
             .filter(|line| !line.is_empty())
             .sorted()
             .join("\n");
-        std::fs::write(path, contents)?;
+        with_permissions(&path, 0o744, || {
+            std::fs::write(&path, contents)
+                .with_context(|| format!("Sorting CONTENTS for: {path:?}"))
+        })?;
     }
     Ok(())
 }
 
 fn zero_counter(pkg_dir: &Path) -> Result<()> {
     for path in find_files(pkg_dir, |file_name| file_name == "COUNTER")? {
-        std::fs::write(path, "0")?;
+        with_permissions(&path, 0o744, || {
+            std::fs::write(&path, "0").with_context(|| format!("Clearing COUNTER for: {path:?}"))
+        })?;
     }
     Ok(())
 }
 
 fn truncate_environment(pkg_dir: &Path) -> Result<()> {
     for path in find_files(pkg_dir, |file_name| file_name == "environment.bz2")? {
-        std::fs::write(path, "")?;
+        with_permissions(&path, 0o744, || {
+            std::fs::write(&path, "")
+                .with_context(|| format!("Zeroing environment.bz2 for: {path:?}"))
+        })?;
     }
     Ok(())
 }

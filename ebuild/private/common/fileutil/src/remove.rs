@@ -13,7 +13,7 @@ const S_IRWXU: u32 = 0o700;
 
 /// Runs |action| after adding |permissions| to |path|. After that, restores the original
 /// permissions.
-fn with_permissions(
+pub fn with_permissions(
     path: &Path,
     permissions: u32,
     action: impl FnOnce() -> Result<()>,
