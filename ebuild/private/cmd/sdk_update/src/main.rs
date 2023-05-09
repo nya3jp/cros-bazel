@@ -51,6 +51,7 @@ fn bind_binary_packages(
             cfg.bind_mounts.push(BindMount {
                 source: package_path,
                 mount_path,
+                rw: false,
             });
             Ok(format!("={category_pf}"))
         })
@@ -79,12 +80,14 @@ fn do_main() -> Result<()> {
             BindMount {
                 source: tarball,
                 mount_path,
+                rw: false,
             }
         }));
 
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation("cros/bazel/ebuild/private/cmd/sdk_update/setup.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
+        rw: false,
     });
 
     let mut sdk = mountsdk::MountedSDK::new(cfg, Some(&args.board))?;

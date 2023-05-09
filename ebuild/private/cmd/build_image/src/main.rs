@@ -63,6 +63,7 @@ fn do_main() -> Result<()> {
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("var/cache/edb/chromeos"),
+        rw: false,
     });
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation(
@@ -71,6 +72,7 @@ fn do_main() -> Result<()> {
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("etc/portage/package.accept_keywords/accept_all"),
+        rw: false,
     });
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation(
@@ -79,11 +81,13 @@ fn do_main() -> Result<()> {
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("etc/portage/profile/package.provided"),
+        rw: false,
     });
     cfg.bind_mounts.push(BindMount {
         source: r
             .rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
+        rw: false,
     });
 
     for path in args.target_package {
@@ -95,6 +99,7 @@ fn do_main() -> Result<()> {
         cfg.bind_mounts.push(BindMount {
             mount_path,
             source: path,
+            rw: false,
         });
     }
 
@@ -105,6 +110,7 @@ fn do_main() -> Result<()> {
         cfg.bind_mounts.push(BindMount {
             mount_path,
             source: path,
+            rw: false,
         });
     }
 

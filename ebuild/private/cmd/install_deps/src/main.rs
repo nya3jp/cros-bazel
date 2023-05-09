@@ -39,6 +39,7 @@ fn do_main() -> Result<()> {
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation("cros/bazel/ebuild/private/cmd/install_deps/install_deps.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
+        rw: false,
     });
 
     let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();

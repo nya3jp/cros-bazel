@@ -144,11 +144,13 @@ fn do_main() -> Result<()> {
     cfg.bind_mounts.push(BindMount {
         source: r.rlocation("cros/bazel/ebuild/private/cmd/build_package/build_package.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
+        rw: false,
     });
 
     cfg.bind_mounts.push(BindMount {
         source: fix_runfile_path(args.ebuild.source),
         mount_path: args.ebuild.mount_path.clone(),
+        rw: false,
     });
 
     let ebuild_mount_dir = args.ebuild.mount_path.parent().unwrap();
@@ -157,6 +159,7 @@ fn do_main() -> Result<()> {
         cfg.bind_mounts.push(BindMount {
             source: fix_runfile_path(mount.source),
             mount_path: ebuild_mount_dir.join(mount.mount_path),
+            rw: false,
         })
     }
 
@@ -164,6 +167,7 @@ fn do_main() -> Result<()> {
         cfg.bind_mounts.push(BindMount {
             source: fix_runfile_path(mount.source),
             mount_path: PathBuf::from("/var/cache/distfiles").join(mount.mount_path),
+            rw: false,
         })
     }
 
@@ -181,6 +185,7 @@ fn do_main() -> Result<()> {
             source: file.to_path_buf(),
             mount_path: PathBuf::from("/var/cache/trees")
                 .join(file.file_name().expect("path to contain file name")),
+            rw: false,
         })
     }
 

@@ -95,6 +95,7 @@ impl MountedSDK {
             bind_mounts.push(BindMount {
                 mount_path: control_channel_path.inside,
                 source: control_channel_path.outside.clone(),
+                rw: false,
             });
             envs.insert("_LOGIN_MODE".to_owned(), cfg.login_mode.to_string());
 
@@ -241,10 +242,12 @@ mod tests {
                         "cros/bazel/ebuild/private/common/mountsdk/testdata/mypkg.ebuild",
                     ),
                     mount_path: ebuild_file.clone(),
+                    rw: false,
                 },
                 BindMount {
                     source: hello.clone(),
                     mount_path: "/hello".into(),
+                    rw: false,
                 },
             ],
             envs: HashMap::new(),

@@ -16,13 +16,18 @@ fn from_str(spec: &str) -> Result<(PathBuf, PathBuf)> {
 pub struct BindMount {
     pub mount_path: PathBuf,
     pub source: PathBuf,
+    pub rw: bool,
 }
 
 impl FromStr for BindMount {
     type Err = anyhow::Error;
     fn from_str(spec: &str) -> Result<Self> {
         let (mount_path, source) = from_str(spec)?;
-        Ok(Self { mount_path, source })
+        Ok(Self {
+            mount_path,
+            source,
+            rw: false,
+        })
     }
 }
 

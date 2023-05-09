@@ -465,16 +465,18 @@ fn continue_namespace(
         // Thus, we mount a bind-mount, then remount it as readonly.
         mount(Some(&source), &target, NONE_STR, MsFlags::MS_BIND, NONE_STR)
             .with_context(|| format!("Failed bind-mounting {source:?} to {target:?}"))?;
-        mount(
-            NONE_STR,
-            &target,
-            NONE_STR,
-            MsFlags::MS_REMOUNT
-                .union(MsFlags::MS_BIND)
-                .union(MsFlags::MS_RDONLY),
-            NONE_STR,
-        )
-        .with_context(|| format!("Failed remounting {target:?} as read-only"))?;
+        if !spec.rw {
+            mount(
+                NONE_STR,
+                &target,
+                NONE_STR,
+                MsFlags::MS_REMOUNT
+                    .union(MsFlags::MS_BIND)
+                    .union(MsFlags::MS_RDONLY),
+                NONE_STR,
+            )
+            .with_context(|| format!("Failed remounting {target:?} as read-only"))?;
+        }
     }
 
     pivot_root(&root_dir, &root_dir.join("host")).with_context(|| "Failed to pivot root")?;

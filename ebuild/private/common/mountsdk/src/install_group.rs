@@ -34,6 +34,7 @@ impl InstallGroup {
             bind_mounts.push(BindMount {
                 source: package.into(),
                 mount_path: dir.join(format!("{category_pf}.tbz2")),
+                rw: false,
             });
             atoms.push(format!("={category_pf}"));
         }
