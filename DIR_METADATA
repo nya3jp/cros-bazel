@@ -18,15 +18,16 @@ team_email: "chromeos-build-discuss@google.com"
 
 chromeos {
   cq {
-    source_test_plans {
-# We'll eventually want to configure CQ testing when we change our Bazel code.
-# But for now, running CQ would do no good because it won't invoke Bazel, so we
-# defer this testing till we're ready to run Bazelified CQ testing.
-#      test_plan_starlark_files {
-#        host: "chrome-internal.googlesource.com"
-#        project: "chromeos/config-internal"
-#        path: "test/plans/v2/ctpv1_compatible/cq_minimal_each_arch.star"
-#      }
-    }
+    # We'll eventually want to configure CQ testing when we change our Bazel
+    # code. But for now, running CQ would do no good because it won't invoke
+    # Bazel, so we defer this testing till we're ready to run Bazelified CQ
+    # testing.
+    #    source_test_plans {
+    #      test_plan_starlark_files {
+    #        host: "chrome-internal.googlesource.com"
+    #        project: "chromeos/config-internal"
+    #        path: "test/plans/v2/ctpv1_compatible/cq_minimal_each_arch.star"
+    #      }
+    #    }
   }
 }
