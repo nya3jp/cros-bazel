@@ -15,6 +15,7 @@ import logging
 import os
 import re
 import shlex
+import shutil
 import sys
 from typing import Mapping, Sequence
 
@@ -106,7 +107,12 @@ def main():
     )
     logging.info("This is the fake sudo for the ephemeral CrOS SDK.")
     cmd = parse(sys.argv[1:], os.environ)
-    os.execvpe(cmd.args[0], cmd.args, cmd.env)
+    exe = shutil.which(cmd.args[0], path=cmd.env["PATH"])
+    if exe is None:
+        raise OSError(
+            "Command not found: %s (PATH=%s)" % (cmd.args[0], cmd.env["PATH"])
+        )
+    os.execvpe(exe, cmd.args, cmd.env)
 
 
 if __name__ == "__main__":
