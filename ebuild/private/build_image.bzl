@@ -44,11 +44,12 @@ def _build_image_impl(ctx):
         "--image-file-name=" + ctx.attr.image_file_name,
     ])
 
-    args.add_all(sdk.layers + deps_layers, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(sdk.layers + deps_layers)
-
-    args.add_all(overlays.layers + deps_layers, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(overlays.layers + deps_layers)
+    args.add_all(
+        sdk.layers + deps_layers + overlays.layers,
+        format_each = "--layer=%s",
+        expand_directories = False,
+    )
+    direct_inputs.extend(sdk.layers + deps_layers + overlays.layers)
 
     args.add_all(ctx.files.files, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(ctx.files.files)
