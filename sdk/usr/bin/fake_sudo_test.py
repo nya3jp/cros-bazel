@@ -4,7 +4,7 @@
 
 """Unit tests for the fake sudo."""
 
-from typing import Mapping, Sequence
+from typing import Mapping
 import unittest
 
 import fake_sudo
@@ -14,91 +14,88 @@ import fake_sudo
 # pylint: disable=protected-access
 unittest.util._MAX_LENGTH = 999999999
 
-_ENV = dict(USER="chronos", MYVAR="myval", PATH="old_path")
-_BASE_ENV = dict(USER="chronos", PATH=fake_sudo.SUDO_PATH)
+_ENV_PLAIN = {
+    "USER": "root",
+    "MYVAR": "myval",
+    "PATH": "old_path",
+}
 
 
-def layered_env(*args: Mapping[str, str], **kwargs: str):
-    result = {}
-    for arg in args:
-        result.update(arg)
-    result.update(kwargs)
-    return result
+def _merge_envs(*envs: Mapping[str, str]):
+    merged_env = {}
+    for env in envs:
+        merged_env.update(env)
+    return merged_env
 
 
 class FakeSudoTest(unittest.TestCase):
     """Unit tests for the fake sudo."""
 
-    def assert_cmd_matches(
-        self,
-        args: Sequence[str],
-        expected_args: Sequence[str],
-        expected_env: Mapping[str, str],
-    ):
-        self.assertEqual(
-            fake_sudo.parse(args, env=_ENV),
-            fake_sudo.Cmd(args=expected_args, env=expected_env),
-        )
-
     def test_simple(self):
         self.assertEqual(
-            fake_sudo.parse(["echo", "a"], env=_ENV),
-            fake_sudo.Cmd(args=["echo", "a"], env=_BASE_ENV),
+            fake_sudo.parse(["echo", "a"], env=_ENV_PLAIN),
+            fake_sudo.Cmd(args=["echo", "a"], env=fake_sudo.ENV_FORCED),
         )
 
     def test_dashed(self):
         self.assertEqual(
-            fake_sudo.parse(["--", "echo", "a"], env=_ENV),
-            fake_sudo.Cmd(args=["echo", "a"], env=_BASE_ENV),
+            fake_sudo.parse(["--", "echo", "a"], env=_ENV_PLAIN),
+            fake_sudo.Cmd(args=["echo", "a"], env=fake_sudo.ENV_FORCED),
         )
 
     def test_env(self):
         self.assertEqual(
-            fake_sudo.parse(["A=b", "echo", "a"], env=_ENV),
+            fake_sudo.parse(["A=b", "echo", "a"], env=_ENV_PLAIN),
             fake_sudo.Cmd(
-                args=["echo", "a"], env=layered_env(_BASE_ENV, A="b")
+                args=["echo", "a"],
+                env=_merge_envs(fake_sudo.ENV_FORCED, {"A": "b"}),
             ),
         )
 
     def test_user(self):
         self.assertEqual(
-            fake_sudo.parse(["-u", "root", "echo", "a"], env=_ENV),
-            fake_sudo.Cmd(args=["echo", "a"], env=_BASE_ENV),
+            fake_sudo.parse(["-u", "root", "echo", "a"], env=_ENV_PLAIN),
+            fake_sudo.Cmd(args=["echo", "a"], env=fake_sudo.ENV_FORCED),
         )
 
     def test_stops_early(self):
         self.assertEqual(
-            fake_sudo.parse(["ls", "-u", "."], env=_ENV),
-            fake_sudo.Cmd(args=["ls", "-u", "."], env=_BASE_ENV),
+            fake_sudo.parse(["ls", "-u", "."], env=_ENV_PLAIN),
+            fake_sudo.Cmd(args=["ls", "-u", "."], env=fake_sudo.ENV_FORCED),
         )
 
     def test_unknown_arg(self):
         with self.assertRaises(NotImplementedError):
-            fake_sudo.parse(["--unknown", "echo", "a"], env=_ENV)
+            fake_sudo.parse(["--unknown", "echo", "a"], env=_ENV_PLAIN)
 
     def test_no_args(self):
         with self.assertRaises(ValueError):
-            fake_sudo.parse(["-E", "--"], env=_ENV)
+            fake_sudo.parse(["-E", "--"], env=_ENV_PLAIN)
 
     def test_preserve_env(self):
         self.assertEqual(
-            fake_sudo.parse(["-E", "echo", "a"], env=_ENV),
-            fake_sudo.Cmd(args=["echo", "a"], env=layered_env(_ENV, _BASE_ENV)),
+            fake_sudo.parse(["-E", "echo", "a"], env=_ENV_PLAIN),
+            fake_sudo.Cmd(
+                args=["echo", "a"],
+                env=_merge_envs(_ENV_PLAIN, fake_sudo.ENV_FORCED),
+            ),
         )
         self.assertEqual(
-            fake_sudo.parse(["-E", "A=b", "echo", "a"], env=_ENV),
+            fake_sudo.parse(["-E", "A=b", "echo", "a"], env=_ENV_PLAIN),
             fake_sudo.Cmd(
-                args=["echo", "a"], env=layered_env(_ENV, _BASE_ENV, A="b")
+                args=["echo", "a"],
+                env=_merge_envs(_ENV_PLAIN, fake_sudo.ENV_FORCED, {"A": "b"}),
             ),
         )
 
     def test_complex(self):
         self.assertEqual(
             fake_sudo.parse(
-                ["--user=root", "-E", "A=b", "--", "echo", "a"], env=_ENV
+                ["--user=root", "-E", "A=b", "--", "echo", "a"], env=_ENV_PLAIN
             ),
             fake_sudo.Cmd(
-                args=["echo", "a"], env=layered_env(_ENV, _BASE_ENV, A="b")
+                args=["echo", "a"],
+                env=_merge_envs(_ENV_PLAIN, fake_sudo.ENV_FORCED, {"A": "b"}),
             ),
         )
 

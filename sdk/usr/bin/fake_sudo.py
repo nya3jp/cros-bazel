@@ -13,7 +13,6 @@ does not do anything about privilege.
 import dataclasses
 import logging
 import os
-import re
 import shlex
 import shutil
 import sys
@@ -32,10 +31,49 @@ class Cmd:
     env: Mapping[str, str]
 
 
-SUDO_PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools"
-# It probably expects a value, and a valid one. Since we're not actually
-# changing the user, we should preserve these values.
-_PRESERVED_KEYS = re.compile("^USER|HOME|SUDO_PRESERVED_.*$")
+# The list of environment variables to be forcibly set.
+ENV_FORCED = {
+    "HOME": "/root",
+    "LOGNAME": "root",
+    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools",
+    "SHELL": "/bin/bash",
+    "SUDO_GID": "0",
+    "SUDO_UID": "0",
+    "SUDO_USER": "root",
+    "USER": "root",
+}
+
+# The set of environment variables to be kept.
+# TODO: Keep in sync with chromite.
+ENV_KEPT = set(
+    (
+        "CHROMEOS_OFFICIAL",
+        "CHROMEOS_VERSION_AUSERVER",
+        "CHROMEOS_VERSION_DEVSERVER",
+        "CHROMEOS_VERSION_TRACK",
+        "GCE_METADATA_HOST",
+        "GIT_AUTHOR_EMAIL",
+        "GIT_AUTHOR_NAME",
+        "GIT_COMMITTER_EMAIL",
+        "GIT_COMMITTER_NAME",
+        "GIT_PROXY_COMMAND",
+        "GIT_SSH",
+        "RSYNC_PROXY",
+        "SSH_AGENT_PID",
+        "SSH_AUTH_SOCK",
+        "TMUX",
+        "USE",
+        "all_proxy",
+        "ftp_proxy",
+        "http_proxy",
+        "https_proxy",
+        "no_proxy",
+        "CROS_WORKON_SRCROOT",
+        "PORTAGE_USERNAME",
+        "TERM",
+        "LANG",
+    )
+)
 
 
 def parse(orig_args: Sequence[str], env: Mapping[str, str]) -> Cmd:
@@ -74,17 +112,11 @@ def parse(orig_args: Sequence[str], env: Mapping[str, str]) -> Cmd:
         raise ValueError(f"Command was empty: {orig_args}")
 
     if preserve_env:
-        cmd_env = dict(**env)
+        cmd_env = env.copy()
     else:
-        cmd_env = {}
-        for key, val in env.items():
-            if _PRESERVED_KEYS.search(key) is not None:
-                cmd_env[key] = val
+        cmd_env = {key: val for key, val in env.items() if key in ENV_KEPT}
 
-    # When you run sudo <command>, it looks at the /etc/sudoers config file.
-    # Some args are passed through, and some are set to explicit values.
-    # My /etc/sudoers appears to explicitly set path to this value.
-    cmd_env["PATH"] = SUDO_PATH
+    cmd_env.update(ENV_FORCED)
 
     cmd_env.update(explicit_env)
 
