@@ -14,6 +14,8 @@ package_group(
         # Define a package group in each external repository and include it
         # instead.
         "//bazel/...",
+        # The top-level package defining a few special targets.
+        "//",
     ],
     includes = [
         "@portage//:all_packages",

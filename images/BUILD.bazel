@@ -2,35 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/ebuild/private:build_image.bzl", "build_image")
 load("@portage//:settings.bzl", "BOARD")
-
-pkg_files(
-    name = "scripts_src_files",
-    srcs = glob(
-        ["scripts/**"],
-        exclude = ["scripts/.git/**"],
-    ),
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "/mnt/host/source/src",
-    strip_prefix = strip_prefix.from_root(),
-    visibility = ["//visibility:private"],
-)
-
-pkg_tar(
-    name = "scripts_src",
-    srcs = [
-        ":scripts_src_files",
-    ],
-    compressor = "//bazel/ebuild/private:zstd",
-    compressor_args = "--threads=0",
-    extension = "tar.zst",
-    visibility = ["//visibility:private"],
-)
 
 # Builds a very minimal image that contains Linux kernel and basic files only.
 # The generated image doesn't boot of course, but this target can be useful to
@@ -41,7 +14,7 @@ build_image(
     image_file_name = "chromiumos_base_image",
     output_image_file_name = "chromiumos_minimal_image",
     files = [
-        ":scripts_src",
+        "//:scripts_src",
         "@chromite//:src",
     ],
     target_packages = [
@@ -68,7 +41,7 @@ build_image(
     image_file_name = "chromiumos_base_image",
     output_image_file_name = "chromiumos_base_image",
     files = [
-        ":scripts_src",
+        "//:scripts_src",
         "@chromite//:src",
     ],
     target_packages = [
@@ -90,7 +63,7 @@ build_image(
     image_file_name = "chromiumos_image",
     output_image_file_name = "chromiumos_image",
     files = [
-        ":scripts_src",
+        "//:scripts_src",
         "@chromite//:src",
     ],
     target_packages = [
@@ -113,7 +86,7 @@ build_image(
     image_file_name = "chromiumos_test_image",
     output_image_file_name = "chromiumos_test_image",
     files = [
-        ":scripts_src",
+        "//:scripts_src",
         "@chromite//:src",
     ],
     target_packages = [

@@ -2,11 +2,41 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
 exports_files([
     "tools/bazel",
     "Cargo.toml",
     "Cargo.lock",
 ])
+
+# TODO: Move to src/scripts/BUILD.bazel.
+pkg_files(
+    name = "scripts_src_files",
+    srcs = glob(
+        ["scripts/**"],
+        exclude = ["scripts/.git/**"],
+    ),
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "/mnt/host/source/src",
+    strip_prefix = strip_prefix.from_root(),
+    visibility = ["//visibility:private"],
+)
+
+# TODO: Move to src/scripts/BUILD.bazel.
+pkg_tar(
+    name = "scripts_src",
+    srcs = [
+        ":scripts_src_files",
+    ],
+    compressor = "//bazel/ebuild/private:zstd",
+    compressor_args = "--threads=0",
+    extension = "tar.zst",
+    visibility = ["//bazel:internal"],
+)
 
 alias(
     name = "all_target_packages",
