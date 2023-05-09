@@ -3,6 +3,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+"""Implements a fake sudo command for the ephemeral CrOS SDK.
+
+Since the ephemeral CrOS SDK runs in an unprivileged user namespace, the real
+sudo command doesn't work. This script pretends like the real one, but actually
+does not do anything about privilege.
+"""
 
 import dataclasses
 import logging
@@ -15,6 +21,11 @@ from typing import Mapping, Sequence
 # Can't use the subprocess class since we're invoking exec directly.
 @dataclasses.dataclass
 class Cmd:
+    """Records the command to run.
+
+    We can't use the subprocess class since we're invoking exec directly.
+    """
+
     args: Sequence[str]
     env: Mapping[str, str]
 
@@ -49,7 +60,7 @@ def parse(orig_args: Sequence[str], env: Mapping[str, str]) -> Cmd:
             logging.info("Dropping user flag: %s", args[1])
             args = args[1:] if "=" in args[0] else args[2:]
         elif args[0].startswith("-"):
-            raise NotImplementedError("Unimplemented sudo arg: %s", args[0])
+            raise NotImplementedError("Unimplemented sudo arg: %s" % args[0])
         elif "=" in args[0]:
             k, v = args.pop(0).split("=", 1)
             explicit_env[k] = v

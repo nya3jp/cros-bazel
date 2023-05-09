@@ -2,13 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from typing import Mapping, Optional, Sequence
+"""Unit tests for the fake sudo."""
+
+from typing import Mapping, Sequence
 import unittest
 
-from cros.bazel.sdk.usr.bin import fake_sudo
+import fake_sudo
 
 
 # Stop unittest from truncating the error messages.
+# pylint: disable=protected-access
 unittest.util._MAX_LENGTH = 999999999
 
 _ENV = dict(USER="chronos", MYVAR="myval", PATH="old_path")
@@ -24,6 +27,8 @@ def layered_env(*args: Mapping[str, str], **kwargs: str):
 
 
 class FakeSudoTest(unittest.TestCase):
+    """Unit tests for the fake sudo."""
+
     def assert_cmd_matches(
         self,
         args: Sequence[str],
