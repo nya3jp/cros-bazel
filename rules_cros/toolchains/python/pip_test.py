@@ -4,9 +4,11 @@
 
 import unittest
 
+
 class PipTest(unittest.TestCase):
     def test_deps(self):
         import pylint
+
 
 if __name__ == "__main__":
     unittest.main()

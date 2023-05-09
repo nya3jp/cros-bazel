@@ -5,7 +5,6 @@
 load("@rules_rust//rust:toolchain.bzl", "rust_toolchain")
 load("//rules_cros/toolchains:platforms.bzl", "all_toolchain_descs", "bazel_cpu_arch", "desc_to_triple")
 
-
 def _generate_rust_toolchain(desc):
     triple = desc_to_triple(desc)
 
@@ -36,7 +35,7 @@ def _generate_rust_toolchain(desc):
             "-lc++",
         ],
         target_triple = custom_target_triple,
-        exec_triple = "x86_64-unknown-linux-gnu"
+        exec_triple = "x86_64-unknown-linux-gnu",
     )
 
     native.toolchain(
@@ -53,7 +52,6 @@ def _generate_rust_toolchain(desc):
         toolchain = ":" + toolchain_name,
         toolchain_type = "@rules_rust//rust:toolchain",
     )
-
 
 def generate_rust_toolchains():
     for desc in all_toolchain_descs:

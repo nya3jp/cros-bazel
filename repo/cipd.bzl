@@ -29,11 +29,11 @@ def _cipd_file_impl(repository_ctx):
         "-version",
         version,
         "-out",
-        "file/" + repository_ctx.attr.downloaded_file_path
+        "file/" + repository_ctx.attr.downloaded_file_path,
     ])
     repository_ctx.file(
         "file/BUILD",
-        _BUILD_TEMPLATE.format(file = repository_ctx.attr.downloaded_file_path)
+        _BUILD_TEMPLATE.format(file = repository_ctx.attr.downloaded_file_path),
     )
 
 cipd_file = repository_rule(
@@ -42,14 +42,14 @@ cipd_file = repository_rule(
     attrs = {
         "downloaded_file_path": attr.string(
             doc = """Path assigned to the downloaded file.""",
-            mandatory = True
+            mandatory = True,
         ),
         "url": attr.string(
             doc = """Url from where the file is downloaded.
 
 It must start with cipd://, contain file path and version,
 For example, cipd://some/tool/linux-amd64:abc1234""",
-            mandatory = True
+            mandatory = True,
         ),
         "_cipd": attr.label(
             executable = True,

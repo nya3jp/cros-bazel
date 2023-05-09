@@ -6,14 +6,12 @@
 
 solutions = [
     {
-        "name": 'src',
-        "url": 'https://chromium.googlesource.com/chromium/src.git@{tag}',
-        "deps_file": 'DEPS',
+        "name": "src",
+        "url": "https://chromium.googlesource.com/chromium/src.git@{tag}",
+        "deps_file": "DEPS",
         "managed": True,
         "custom_deps": {},
-        "custom_vars": {
-            'checkout_src_internal': {internal}
-        },
+        "custom_vars": {"checkout_src_internal": {internal}},
     },
 ]
 

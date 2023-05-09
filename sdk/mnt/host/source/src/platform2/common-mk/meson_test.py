@@ -5,6 +5,7 @@
 
 import sys
 
+
 # HACK: Make meson_test.py always succeed.
 # meson.eclass specifies /mnt/host/source/src/platform2/common-mk/meson_test.py
 # as exe_wrapper to set up some environment variables before running tests.

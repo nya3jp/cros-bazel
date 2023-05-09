@@ -7,7 +7,8 @@ load("common.bzl", "BinaryPackageInfo", "single_binary_package_set_info")
 def _binary_package_impl(ctx):
     src = ctx.file.src
     direct_runtime_deps = tuple([
-        target[BinaryPackageInfo] for target in ctx.attr.runtime_deps
+        target[BinaryPackageInfo]
+        for target in ctx.attr.runtime_deps
     ])
     transitive_runtime_deps = depset(
         direct_runtime_deps,

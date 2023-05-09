@@ -14,6 +14,7 @@ rust_library(
     proc_macro_deps = [
         "@alchemy_crates//:strum_macros",
     ],
+    visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot",
@@ -30,7 +31,6 @@ rust_library(
         "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",
     ],
-    visibility = ["//bazel:internal"],
 )
 
 # If adding test data, do not depend on anything built by build_package.

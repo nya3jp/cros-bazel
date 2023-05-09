@@ -9,25 +9,28 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_files(
     name = "__files_regular__",
-    srcs = glob(["**"], exclude=[
-        "**/.git",
-        "**/.git/**",
-        "BUILD.bazel",
-        "WORKSPACE.bazel",
-        "hello world.txt",
-        "BUILD.bazel",
-        "BUILD",
-        "WORKSPACE.bazel",
-        "WORKSPACE"
-    ]),
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "**/.git",
+            "**/.git/**",
+            "BUILD.bazel",
+            "WORKSPACE.bazel",
+            "hello world.txt",
+            "BUILD.bazel",
+            "BUILD",
+            "WORKSPACE.bazel",
+            "WORKSPACE",
+        ],
+    ),
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
     renames = {
         "__rename__0": "BUILD.bazel",
         "__rename__1": "WORKSPACE.bazel",
         "__rename__2": "hello world.txt",
     },
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
@@ -46,9 +49,9 @@ pkg_tar(
     srcs = [
         ":__files__",
     ],
-    extension = "tar.zst",
     compressor = "@//bazel/ebuild/private:zstd",
     compressor_args = "--threads=0",
+    extension = "tar.zst",
     visibility = ["//visibility:private"],
 )
 

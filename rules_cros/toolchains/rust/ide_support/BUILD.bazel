@@ -17,18 +17,18 @@ rust_library(
 rust_binary(
     name = "gen_rust_project",
     srcs = ["gen_rust_project.rs"],
+    data = [
+        "get_outputs.bzl",
+        ":on_save",
+        "@rules_rust//tools/rust_analyzer:gen_rust_project",
+    ],
     deps = [
         ":on_save",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
-        "@alchemy_crates//:log",
         "@alchemy_crates//:env_logger",
+        "@alchemy_crates//:log",
         "@alchemy_crates//:serde_json",
         "@rules_rust//tools/runfiles",
-    ],
-    data = [
-        "@rules_rust//tools/rust_analyzer:gen_rust_project",
-        ":on_save",
-        "get_outputs.bzl"
     ],
 )

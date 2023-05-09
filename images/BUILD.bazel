@@ -10,95 +10,95 @@ load("@portage//:settings.bzl", "BOARD")
 # test the functionality to build images.
 build_image(
     name = "chromiumos_minimal_image",
-    image_to_build = "base",
-    image_file_name = "chromiumos_base_image",
-    output_image_file_name = "chromiumos_minimal_image",
+    board = BOARD,
     files = [
         "//:scripts_src",
         "@chromite//:src",
     ],
-    target_packages = [
-        "@portage//sys-apps/baselayout",
-        "@portage//sys-kernel/chromeos-kernel-5_15",
-    ],
     host_packages = [
         "@portage//internal/sdk:cross-packages",
     ],
+    image_file_name = "chromiumos_base_image",
+    image_to_build = "base",
+    output_image_file_name = "chromiumos_minimal_image",
+    overlays = "@portage//internal/sdk:overlays",
     override_base_packages = [
         "sys-apps/baselayout",
         "sys-kernel/chromeos-kernel-5_15",
     ],
-    board = BOARD,
     sdk = "@portage//internal/sdk",
-    overlays = "@portage//internal/sdk:overlays",
+    target_packages = [
+        "@portage//sys-apps/baselayout",
+        "@portage//sys-kernel/chromeos-kernel-5_15",
+    ],
     visibility = ["//:__pkg__"],  # for alias
 )
 
 # Builds the base image.
 build_image(
     name = "chromiumos_base_image",
-    image_to_build = "base",
-    image_file_name = "chromiumos_base_image",
-    output_image_file_name = "chromiumos_base_image",
+    board = BOARD,
     files = [
         "//:scripts_src",
         "@chromite//:src",
     ],
-    target_packages = [
-        "@portage//virtual/target-os:package_set",
-    ],
     host_packages = [
         "@portage//internal/sdk:cross-packages",
     ],
-    board = BOARD,
-    sdk = "@portage//internal/sdk",
+    image_file_name = "chromiumos_base_image",
+    image_to_build = "base",
+    output_image_file_name = "chromiumos_base_image",
     overlays = "@portage//internal/sdk:overlays",
+    sdk = "@portage//internal/sdk",
+    target_packages = [
+        "@portage//virtual/target-os:package_set",
+    ],
     visibility = ["//:__pkg__"],  # for alias
 )
 
 # Builds the dev image.
 build_image(
     name = "chromiumos_dev_image",
-    image_to_build = "dev",
-    image_file_name = "chromiumos_image",
-    output_image_file_name = "chromiumos_image",
+    board = BOARD,
     files = [
         "//:scripts_src",
         "@chromite//:src",
     ],
+    host_packages = [
+        "@portage//internal/sdk:cross-packages",
+    ],
+    image_file_name = "chromiumos_image",
+    image_to_build = "dev",
+    output_image_file_name = "chromiumos_image",
+    overlays = "@portage//internal/sdk:overlays",
+    sdk = "@portage//internal/sdk",
     target_packages = [
         "@portage//virtual/target-os:package_set",
         "@portage//virtual/target-os-dev:package_set",
     ],
-    host_packages = [
-        "@portage//internal/sdk:cross-packages",
-    ],
-    board = BOARD,
-    sdk = "@portage//internal/sdk",
-    overlays = "@portage//internal/sdk:overlays",
     visibility = ["//:__pkg__"],  # for alias
 )
 
 # Builds the test image.
 build_image(
     name = "chromiumos_test_image",
-    image_to_build = "test",
-    image_file_name = "chromiumos_test_image",
-    output_image_file_name = "chromiumos_test_image",
+    board = BOARD,
     files = [
         "//:scripts_src",
         "@chromite//:src",
     ],
+    host_packages = [
+        "@portage//internal/sdk:cross-packages",
+    ],
+    image_file_name = "chromiumos_test_image",
+    image_to_build = "test",
+    output_image_file_name = "chromiumos_test_image",
+    overlays = "@portage//internal/sdk:overlays",
+    sdk = "@portage//internal/sdk",
     target_packages = [
         "@portage//virtual/target-os:package_set",
         "@portage//virtual/target-os-dev:package_set",
         "@portage//virtual/target-os-test:package_set",
     ],
-    host_packages = [
-        "@portage//internal/sdk:cross-packages",
-    ],
-    board = BOARD,
-    sdk = "@portage//internal/sdk",
-    overlays = "@portage//internal/sdk:overlays",
     visibility = ["//:__pkg__"],  # for alias
 )

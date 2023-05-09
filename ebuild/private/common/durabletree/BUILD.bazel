@@ -8,20 +8,20 @@ rust_library(
     name = "durabletree",
     srcs = glob(["src/**/*.rs"]),
     crate_name = "durabletree",
+    visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:nix",
-        "@alchemy_crates//:serde_json",
         "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
         "@alchemy_crates//:tar",
         "@alchemy_crates//:tempfile",
         "@alchemy_crates//:walkdir",
         "@alchemy_crates//:xattr",
         "@alchemy_crates//:zstd",
     ],
-    visibility = ["//bazel:internal"],
 )
 
 rust_test(

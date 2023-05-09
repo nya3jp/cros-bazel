@@ -12,8 +12,8 @@ ToolchainDesc = provider(
     fields = {
         "cpu_arch": "The name of the CPU architecture within Chrome OS.",
         "vendor": "The vendor of the target platform; this is 'pc' for host " +
-          "toolchains, and 'cros' for target toolchains.",
-        "abi": "The ABI this architecture uses. This is often `gnu`."
+                  "toolchains, and 'cros' for target toolchains.",
+        "abi": "The ABI this architecture uses. This is often `gnu`.",
     },
 )
 

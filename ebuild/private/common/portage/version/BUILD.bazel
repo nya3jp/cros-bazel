@@ -26,6 +26,7 @@ rust_library(
     proc_macro_deps = [
         "@alchemy_crates//:strum_macros",
     ],
+    visibility = ["//bazel:internal"],
     deps = [
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:nom",
@@ -33,7 +34,6 @@ rust_library(
         "@alchemy_crates//:regex",
         "@alchemy_crates//:strum",
     ],
-    visibility = ["//bazel:internal"],
 )
 
 rust_test(

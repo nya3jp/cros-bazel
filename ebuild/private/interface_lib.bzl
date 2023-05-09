@@ -138,7 +138,7 @@ def generate_interface_libraries(
     args.add_all([
         "--output=%s" % output_log.path,
         extract_interface_executable,
-        "--binpkg=%s" % input_binary_package_file.path
+        "--binpkg=%s" % input_binary_package_file.path,
     ])
 
     xpak_outputs = []

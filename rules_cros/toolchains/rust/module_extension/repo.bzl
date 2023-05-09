@@ -4,7 +4,11 @@
 
 """cros_rust_repository is a repository rule for importing the Rust toolchain from the CrOS SDK."""
 
-load("//rules_cros/toolchains:platforms.bzl", "all_toolchain_descs", "desc_to_triple")
+load(
+    "//rules_cros/toolchains:platforms.bzl",
+    "all_toolchain_descs",
+    "desc_to_triple",
+)
 
 def _execute_bash(repo_ctx, cmd):
     return repo_ctx.execute(["/bin/bash", "-c", cmd]).stdout.strip("\n")
@@ -76,6 +80,12 @@ def rust_repo(repo_ctx):
     repo_ctx.symlink(repo_ctx.attr._rust_toolchains_build, "rust/toolchains/BUILD.bazel")
 
 RUST_ATTRS = dict(
-    _rust_toolchains_build = attr.label(allow_single_file=True, default=Label("//rules_cros/toolchains/rust/module_extension:BUILD.toolchain.bazel")),
-    _rust_rustlib_build = attr.label(allow_single_file=True, default=Label("//rules_cros/toolchains/rust/module_extension:BUILD.rustlib.bazel")),
+    _rust_toolchains_build = attr.label(
+        allow_single_file = True,
+        default = Label("//rules_cros/toolchains/rust/module_extension:BUILD.toolchain.bazel"),
+    ),
+    _rust_rustlib_build = attr.label(
+        allow_single_file = True,
+        default = Label("//rules_cros/toolchains/rust/module_extension:BUILD.rustlib.bazel"),
+    ),
 )

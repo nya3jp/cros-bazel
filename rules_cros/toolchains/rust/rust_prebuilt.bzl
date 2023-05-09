@@ -51,7 +51,7 @@ rust_prebuilt = rule(
         deps = attr.label_list(),
         proc_macro_deps = attr.label_list(cfg = "exec", providers = [CrateInfo]),
         src = attr.label(allow_single_file = True),
-        edition = attr.string(default = "2021")
+        edition = attr.string(default = "2021"),
     ),
     provides = [CrateInfo, DepInfo],
 )

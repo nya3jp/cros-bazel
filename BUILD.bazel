@@ -9,6 +9,9 @@
 # unexpected dependencies.
 package_group(
     name = "internal",
+    includes = [
+        "@portage//:all_packages",
+    ],
     packages = [
         # Note: External repositories (@foo//...) are not accepted here.
         # Define a package group in each external repository and include it
@@ -16,8 +19,5 @@ package_group(
         "//bazel/...",
         # The top-level package defining a few special targets.
         "//",
-    ],
-    includes = [
-        "@portage//:all_packages",
     ],
 )

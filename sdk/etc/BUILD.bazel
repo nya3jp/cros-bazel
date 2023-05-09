@@ -30,11 +30,11 @@ pkg_mklink(
 
 pkg_filegroup(
     name = "etc",
-    prefix = "etc",
     srcs = [
         ":files",
         ":make_conf",
         ":portage_make_profile",
     ],
+    prefix = "etc",
     visibility = ["//bazel/sdk:__pkg__"],
 )

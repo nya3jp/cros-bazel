@@ -16,12 +16,12 @@ rust_library(
     name = "cliutil_rust",
     srcs = glob(["src/*.rs"]),
     crate_name = "cliutil",
+    visibility = ["//bazel:internal"],
     deps = [
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:shell-escape",
     ],
-    visibility = ["//bazel:internal"],
 )
 
 rust_test(

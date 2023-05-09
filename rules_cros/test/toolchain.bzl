@@ -7,10 +7,10 @@ def _transition_impl(settings, attr):
 
     return {
         "linux_x86_64": {
-            "//command_line_option:platforms": "//cros/platforms:linux_x86_64"
+            "//command_line_option:platforms": "//cros/platforms:linux_x86_64",
         },
         "cros_x86_64": {
-            "//command_line_option:platforms": "//cros/platforms:cros_x86_64"
+            "//command_line_option:platforms": "//cros/platforms:cros_x86_64",
         },
     }
 
@@ -45,7 +45,7 @@ qemu_test = rule(
         "_template": attr.label(
             default = Label(_QEMU_TEST_TEMPLATE),
             allow_single_file = True,
-        )
+        ),
     },
     toolchains = ["//cros/toolchain/emulation:toolchain_type"],
     test = True,
@@ -64,6 +64,7 @@ def _toolchain_test_impl(ctx):
     for platform in ctx.split_attr.deps:
         for d in ctx.split_attr.deps[platform]:
             executable = d.files_to_run.executable
+
             # Need to specify symlinks with platform appended for the runfiles,
             # otherwise they will overwrite eachother for each platform.
             test_path = "{}.{}".format(executable.short_path, platform)
@@ -77,7 +78,7 @@ def _toolchain_test_impl(ctx):
 
             script = "\n".join(
                 [script] +
-                [_run_tests(test_path, args)]
+                [_run_tests(test_path, args)],
             )
 
     script = "\n".join(

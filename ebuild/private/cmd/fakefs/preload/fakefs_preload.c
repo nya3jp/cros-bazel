@@ -35,10 +35,10 @@ static const int FAKEFS_BACKDOOR_KEY = 0x20221107;
 static pthread_once_t g_init_flag = PTHREAD_ONCE_INIT;
 
 static bool g_verbose;
-static int (*g_libc_fstatat)(int dirfd, const char* pathname,
-                             struct stat* statbuf, int flags);
-static int (*g_libc_statx)(int dirfd, const char* pathname, int flags,
-                           unsigned int mask, struct statx* statxbuf);
+static int (*g_libc_fstatat)(int dirfd, const char *pathname,
+                             struct stat *statbuf, int flags);
+static int (*g_libc_statx)(int dirfd, const char *pathname, int flags,
+                           unsigned int mask, struct statx *statxbuf);
 
 static void do_init(void) {
   g_verbose = getenv("FAKEFS_VERBOSE") != NULL;
@@ -53,7 +53,7 @@ static bool errno_has_no_override() {
          errno == ENOTDIR;
 }
 
-static bool path_has_no_override(const char* pathname, bool follow_symlink) {
+static bool path_has_no_override(const char *pathname, bool follow_symlink) {
   int saved_errno = errno;
   errno = 0;
   (follow_symlink ? getxattr : lgetxattr)(pathname, OVERRIDE_XATTR_NAME, NULL,
@@ -72,7 +72,7 @@ static bool fd_has_no_override(int fd) {
   return result;
 }
 
-static int backdoor_fstatat(int dirfd, const char* pathname, void* statbuf,
+static int backdoor_fstatat(int dirfd, const char *pathname, void *statbuf,
                             int flags) {
   if (g_verbose) {
     fprintf(stderr, "[fakefs %d] fast: fstatat(%d, \"%s\", 0x%x)\n", gettid(),
@@ -86,8 +86,8 @@ static int backdoor_fstatat(int dirfd, const char* pathname, void* statbuf,
   return ret;
 }
 
-static int backdoor_statx(int dirfd, const char* pathname, int flags,
-                          unsigned int mask, struct statx* statxbuf) {
+static int backdoor_statx(int dirfd, const char *pathname, int flags,
+                          unsigned int mask, struct statx *statxbuf) {
   if (g_verbose) {
     fprintf(stderr, "[fakefs %d] fast: statx(%d, \"%s\", 0x%x, 0x%x)\n",
             gettid(), dirfd, pathname, flags, mask);
@@ -100,7 +100,7 @@ static int backdoor_statx(int dirfd, const char* pathname, int flags,
   return ret;
 }
 
-static int wrap_fstatat(int dirfd, const char* pathname, void* statbuf,
+static int wrap_fstatat(int dirfd, const char *pathname, void *statbuf,
                         int flags) {
   if (pathname == NULL || statbuf == NULL) {
     errno = EFAULT;
@@ -122,8 +122,8 @@ static int wrap_fstatat(int dirfd, const char* pathname, void* statbuf,
   return g_libc_fstatat(dirfd, pathname, statbuf, flags);
 }
 
-static int wrap_statx(int dirfd, const char* pathname, int flags,
-                      unsigned int mask, void* statxbuf) {
+static int wrap_statx(int dirfd, const char *pathname, int flags,
+                      unsigned int mask, void *statxbuf) {
   if (pathname == NULL || statxbuf == NULL) {
     errno = EFAULT;
     return -1;
@@ -144,50 +144,50 @@ static int wrap_statx(int dirfd, const char* pathname, int flags,
   return g_libc_statx(dirfd, pathname, flags, mask, statxbuf);
 }
 
-int stat(const char* pathname, struct stat* statbuf) {
+int stat(const char *pathname, struct stat *statbuf) {
   ensure_init();
   return wrap_fstatat(AT_FDCWD, pathname, statbuf, 0);
 }
 
-int stat64(const char* pathname, struct stat64* statbuf) {
+int stat64(const char *pathname, struct stat64 *statbuf) {
   ensure_init();
-  return wrap_fstatat(AT_FDCWD, pathname, (struct stat*)statbuf, 0);
+  return wrap_fstatat(AT_FDCWD, pathname, (struct stat *)statbuf, 0);
 }
 
-int lstat(const char* pathname, struct stat* statbuf) {
+int lstat(const char *pathname, struct stat *statbuf) {
   ensure_init();
   return wrap_fstatat(AT_FDCWD, pathname, statbuf, AT_SYMLINK_NOFOLLOW);
 }
 
-int lstat64(const char* pathname, struct stat64* statbuf) {
+int lstat64(const char *pathname, struct stat64 *statbuf) {
   ensure_init();
-  return wrap_fstatat(AT_FDCWD, pathname, (struct stat*)statbuf,
+  return wrap_fstatat(AT_FDCWD, pathname, (struct stat *)statbuf,
                       AT_SYMLINK_NOFOLLOW);
 }
 
-int fstat(int fd, struct stat* statbuf) {
+int fstat(int fd, struct stat *statbuf) {
   ensure_init();
   return wrap_fstatat(fd, "", statbuf, AT_EMPTY_PATH);
 }
 
-int fstat64(int fd, struct stat64* statbuf) {
+int fstat64(int fd, struct stat64 *statbuf) {
   ensure_init();
-  return wrap_fstatat(fd, "", (struct stat*)statbuf, AT_EMPTY_PATH);
+  return wrap_fstatat(fd, "", (struct stat *)statbuf, AT_EMPTY_PATH);
 }
 
-int fstatat(int dirfd, const char* pathname, struct stat* statbuf, int flags) {
+int fstatat(int dirfd, const char *pathname, struct stat *statbuf, int flags) {
   ensure_init();
   return wrap_fstatat(dirfd, pathname, statbuf, flags);
 }
 
-int fstatat64(int dirfd, const char* pathname, struct stat64* statbuf,
+int fstatat64(int dirfd, const char *pathname, struct stat64 *statbuf,
               int flags) {
   ensure_init();
-  return wrap_fstatat(dirfd, pathname, (struct stat*)statbuf, flags);
+  return wrap_fstatat(dirfd, pathname, (struct stat *)statbuf, flags);
 }
 
-int statx(int dirfd, const char* pathname, int flags, unsigned int mask,
-          struct statx* statxbuf) {
+int statx(int dirfd, const char *pathname, int flags, unsigned int mask,
+          struct statx *statxbuf) {
   ensure_init();
   return wrap_statx(dirfd, pathname, flags, mask, statxbuf);
 }

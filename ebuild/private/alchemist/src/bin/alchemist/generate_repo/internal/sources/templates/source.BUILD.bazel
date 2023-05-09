@@ -7,24 +7,22 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_files(
     name = "__files_regular__",
-    srcs = glob(["**"], exclude=[
-        {%- if not include_git %}
-        "**/.git",
-        "**/.git/**",
-        {%- endif %}
-        {%- for path in excludes %}
-        "{{ path }}",
-        {%- endfor %}
-        "BUILD.bazel",
-        "BUILD",
-        "WORKSPACE.bazel",
-        "WORKSPACE"
-    ]),
-    renames = {
-        {%- for rename in renames %}
-        "{{ rename.output_path }}": "{{ rename.source_path }}",
-        {%- endfor %}
-    },
+    srcs = glob(
+        ["**"],
+        exclude = [
+            {%- if not include_git %}
+            "**/.git",
+            "**/.git/**",
+            {%- endif %}
+            {%- for path in excludes %}
+            "{{ path }}",
+            {%- endfor %}
+            "BUILD.bazel",
+            "BUILD",
+            "WORKSPACE.bazel",
+            "WORKSPACE",
+        ],
+    ),
     attributes = pkg_attributes(
         {#- Make all files executable since some packages execute scripts in  #}
         {#- the source checkout directly.                                     #}
@@ -34,6 +32,11 @@ pkg_files(
         {#- to regenerate the repository, but how can it be efficient?        #}
         mode = "0755",
     ),
+    renames = {
+        {%- for rename in renames %}
+        "{{ rename.output_path }}": "{{ rename.source_path }}",
+        {%- endfor %}
+    },
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
@@ -64,9 +67,9 @@ pkg_tar(
     srcs = [
         ":__files__",
     ],
-    extension = "tar.zst",
     compressor = "@//bazel/ebuild/private:zstd",
     compressor_args = "--threads=0",
+    extension = "tar.zst",
     visibility = ["//visibility:private"],
 )
 

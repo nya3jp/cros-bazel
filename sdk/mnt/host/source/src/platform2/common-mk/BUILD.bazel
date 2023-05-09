@@ -6,14 +6,14 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefi
 
 pkg_files(
     name = "common-mk",
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "mnt/host/source/src/platform2/common-mk",
     srcs = [
         "meson_test.py",
         "platform2_test.py",
     ],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "mnt/host/source/src/platform2/common-mk",
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//bazel/sdk:__pkg__"],
 )

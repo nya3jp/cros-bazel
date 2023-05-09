@@ -105,7 +105,7 @@ def _cros_chrome_repository_impl(ctx):
         # r: Apply transformation to regular archive members.
         # S: Do not apply transformation to symbolic link targets.
         # h: Apply transformation to hard link targets.
-        "--transform=flags=rSh;s,^,/home/root/chrome_root/,"
+        "--transform=flags=rSh;s,^,/home/root/chrome_root/,",
     ]
 
     # We use zstd since it's way faster than gzip and should be installed by

@@ -150,9 +150,9 @@ func newPackageMetadata(overlayName string, atom *dependency.Atom, needed []Need
 
 func (m packageMetadata) IsEmpty() bool {
 	return (len(m.Headers()) == 0 &&
-			len(m.PkgConfig()) == 0 &&
-			len(m.StaticLibs()) == 0 &&
-			len(m.SharedLibs()) == 0)
+		len(m.PkgConfig()) == 0 &&
+		len(m.StaticLibs()) == 0 &&
+		len(m.SharedLibs()) == 0)
 }
 
 func (m packageMetadata) EbuildPath() string {

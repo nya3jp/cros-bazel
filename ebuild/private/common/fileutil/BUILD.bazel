@@ -24,12 +24,12 @@ rust_library(
     name = "fileutil_rust",
     srcs = glob(["src/*.rs"]),
     crate_name = "fileutil",
+    visibility = ["//bazel:internal"],
     deps = [
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:libc",
         "@alchemy_crates//:walkdir",
     ],
-    visibility = ["//bazel:internal"],
 )
 
 rust_test(

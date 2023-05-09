@@ -6,11 +6,14 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefi
 
 pkg_files(
     name = "src",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["BUILD.bazel"],
+    ),
     attributes = pkg_attributes(
         mode = "0644",
     ),
     prefix = "usr/src",
-    srcs = glob(["**/*"], exclude=["BUILD.bazel"]),
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//bazel/sdk:__pkg__"],
 )
