@@ -25,7 +25,9 @@ use rayon::prelude::*;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::generate_repo::common::{AnalysisError, DistFileEntry, Package, AUTOGENERATE_NOTICE};
+use crate::generate_repo::common::{
+    AnalysisError, DistFileEntry, Package, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -38,14 +40,6 @@ lazy_static! {
         tera
     };
 }
-
-// Packages that are used to bootstrap the board's SDK
-static PRIMORDIAL_PACKAGES: &[&str] = &[
-    "sys-kernel/linux-headers",
-    "sys-libs/gcc-libs",
-    "sys-libs/libcxx",
-    "sys-libs/llvm-libunwind",
-];
 
 #[derive(Serialize)]
 pub struct EBuildEntry {
@@ -153,11 +147,10 @@ impl EBuildEntry {
             .iter()
             .any(|v| v == &package.details.package_name)
         {
-            "//internal/sdk:base"
+            format!("//internal/sdk/{}:base", target_prefix)
         } else {
-            "//internal/sdk"
-        }
-        .to_owned();
+            format!("//internal/sdk/{}", target_prefix)
+        };
 
         let overlay = format!("//internal/overlays/{}", package.details.repo_name);
 

@@ -2,21 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use alchemist::{dependency::package::PackageAtom, ebuild::PackageDetails};
 use std::{
     fs::{create_dir_all, File},
     io::Write,
     path::{Path, PathBuf},
 };
+use std::{str::FromStr, sync::Arc};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use alchemist::{
     config::makeconf::generate::generate_make_conf_for_board, fakechroot::PathTranslator,
-    repository::RepositorySet, toolchain::ToolchainConfig,
+    resolver::PackageResolver,
 };
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
+
+use crate::{alchemist::TargetData, generate_repo::common::PRIMORDIAL_PACKAGES};
 
 use super::super::common::AUTOGENERATE_NOTICE;
 
@@ -29,8 +33,11 @@ lazy_static! {
             .unwrap();
         tera.add_raw_template("portage-tool", include_str!("templates/portage-tool"))
             .unwrap();
-        tera.add_raw_template("sdk.BUILD.bazel", include_str!("templates/sdk.BUILD.bazel"))
-            .unwrap();
+        tera.add_raw_template(
+            "stage1.BUILD.bazel",
+            include_str!("templates/stage1.BUILD.bazel"),
+        )
+        .unwrap();
         tera
     };
 }
@@ -119,28 +126,48 @@ fn generate_wrappers(board: &str, triple: &str, out: &Path) -> Result<()> {
 
 #[derive(Serialize, Debug)]
 struct SdkTemplateContext<'a> {
+    name: &'a str,
     board: &'a str,
     overlay_set: &'a str,
     triples: Vec<&'a str>,
     profile_path: PathBuf,
     wrappers: Vec<&'a str>,
+    target_deps: Vec<String>,
 }
 
-fn generate_sdk_build(
-    board: &str,
-    profile: &str,
-    repos: &RepositorySet,
-    toolchain_config: &ToolchainConfig,
-    out: &Path,
-) -> Result<()> {
-    let profile_path = repos.primary().base_dir().join("profiles").join(profile);
+fn get_primordial_packages(resolver: &PackageResolver) -> Result<Vec<Arc<PackageDetails>>> {
+    let mut packages = Vec::with_capacity(PRIMORDIAL_PACKAGES.len());
+    for package_name in PRIMORDIAL_PACKAGES {
+        let atom = PackageAtom::from_str(package_name)?;
+        let matches = resolver.find_packages(&atom)?;
+        let best = resolver
+            .find_best_package_in(&matches)?
+            .with_context(|| format!("Failed to find {}", package_name))?;
+        packages.push(best);
+    }
+
+    Ok(packages)
+}
+
+fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<()> {
+    let profile_path = target
+        .repos
+        .primary()
+        .base_dir()
+        .join("profiles")
+        .join(&target.profile);
 
     let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();
 
     let context = SdkTemplateContext {
-        board,
-        overlay_set: &format!("//internal/overlays:{}", repos.primary().name()),
-        triples: toolchain_config
+        name: &Path::new(prefix)
+            .file_name()
+            .with_context(|| format!("Invalid prefix: {prefix}"))?
+            .to_string_lossy(),
+        board: &target.board,
+        overlay_set: &format!("//internal/overlays:{}", target.repos.primary().name()),
+        triples: target
+            .toolchains
             .toolchains
             .iter()
             // TODO: We only have the prebuilds for the following two
@@ -155,12 +182,21 @@ fn generate_sdk_build(
             .collect(),
         profile_path,
         wrappers,
+        target_deps: get_primordial_packages(&target.resolver)?
+            .iter()
+            .map(|p| {
+                format!(
+                    "//internal/packages/{}/{}/{}:{}",
+                    prefix, p.repo_name, p.package_name, p.version
+                )
+            })
+            .collect(),
     };
 
     let mut file = File::create(out.join("BUILD.bazel"))?;
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
     TEMPLATES.render_to(
-        "sdk.BUILD.bazel",
+        "stage1.BUILD.bazel",
         &tera::Context::from_serialize(context)?,
         file,
     )?;
@@ -168,23 +204,27 @@ fn generate_sdk_build(
     Ok(())
 }
 
-pub fn generate_sdk(
-    board: &str,
-    profile: &str,
-    repos: &RepositorySet,
-    toolchain_config: &ToolchainConfig,
+pub fn generate_stage1_sdk(
+    prefix: &str,
+    target: &TargetData,
     translator: &PathTranslator,
     out: &Path,
 ) -> Result<()> {
-    let out = out.join("internal/sdk");
+    let out = out.join("internal/sdk").join(prefix);
 
     create_dir_all(&out)?;
 
-    generate_sdk_build(board, profile, repos, toolchain_config, &out)?;
-    if let Some(toolchain) = toolchain_config.primary() {
-        generate_wrappers(board, &toolchain.name, &out)?;
+    generate_sdk_build(prefix, target, &out)?;
+    if let Some(toolchain) = target.toolchains.primary() {
+        generate_wrappers(&target.board, &toolchain.name, &out)?;
     }
-    generate_make_conf_for_board(board, repos, toolchain_config, translator, &out)?;
+    generate_make_conf_for_board(
+        &target.board,
+        &target.repos,
+        &target.toolchains,
+        translator,
+        &out,
+    )?;
 
     Ok(())
 }

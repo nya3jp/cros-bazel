@@ -40,7 +40,7 @@ use self::{
     common::{AnalysisError, Package},
     internal::overlays::generate_internal_overlays,
     internal::packages::generate_internal_packages,
-    internal::{sdk::generate_sdk, sources::generate_internal_sources},
+    internal::{sdk::generate_stage1_sdk, sources::generate_internal_sources},
     public::generate_public_packages,
     repositories::generate_repositories_file,
     settings::generate_settings_bzl,
@@ -275,14 +275,8 @@ pub fn generate_repo_main(
     generate_public_packages(&target_packages, &target.resolver, output_dir)?;
     generate_repositories_file(&target_packages, &output_dir.join("repositories.bzl"))?;
     generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
-    generate_sdk(
-        &target.board,
-        &target.profile,
-        &target.repos,
-        &target.toolchains,
-        translator,
-        output_dir,
-    )?;
+
+    generate_stage1_sdk("stage1/target/board", &target, translator, output_dir)?;
 
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;

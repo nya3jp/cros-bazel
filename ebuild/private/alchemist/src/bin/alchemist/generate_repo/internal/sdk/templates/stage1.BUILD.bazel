@@ -161,15 +161,14 @@ sdk_update(
 )
 
 sdk_install_deps(
-    name = "sdk",
+    name = "{{ name }}",
     base = ":base",
     board = "{{ board }}",
     overlays = "{{ overlay_set }}",
     target_deps = [
-        "//sys-kernel/linux-headers",
-        "//sys-libs/gcc-libs",
-        "//sys-libs/libcxx",
-        "//sys-libs/llvm-libunwind",
+        {%- for package in target_deps %}
+        "{{ package }}",
+        {%- endfor %}
     ],
     visibility = ["@//bazel:internal"],
 )
