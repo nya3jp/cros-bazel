@@ -14,6 +14,7 @@ import dataclasses
 import logging
 import os
 import re
+import shlex
 import sys
 from typing import Mapping, Sequence
 
@@ -37,7 +38,7 @@ _PRESERVED_KEYS = re.compile("^USER|HOME|SUDO_PRESERVED_.*$")
 
 
 def parse(orig_args: Sequence[str], env: Mapping[str, str]) -> Cmd:
-    logging.info("Rewrote from: %s", " ".join(orig_args))
+    logging.info("Arguments: %s", " ".join(shlex.quote(s) for s in orig_args))
     explicit_env = {}
     preserve_env = False
     args = orig_args[:]
@@ -66,7 +67,7 @@ def parse(orig_args: Sequence[str], env: Mapping[str, str]) -> Cmd:
             explicit_env[k] = v
         else:
             break
-    logging.info("Rewrote to:   %s", " ".join(args))
+    logging.info("Executing: %s", " ".join(shlex.quote(s) for s in args))
 
     if not args:
         raise ValueError(f"Command was empty: {orig_args}")
@@ -86,16 +87,24 @@ def parse(orig_args: Sequence[str], env: Mapping[str, str]) -> Cmd:
 
     cmd_env.update(explicit_env)
 
-    for k, v in os.environ.items():
-        if k not in cmd_env:
-            logging.info("Removed key %s=%s", k, os.environ[k])
-        elif v != cmd_env[k]:
-            logging.info("Changed key %s: %s -> %s", k, v, cmd_env[k])
+    logging.info(
+        "Environs: %s",
+        " ".join(
+            "%s=%s" % (shlex.quote(key), shlex.quote(value))
+            for key, value in sorted(cmd_env.items())
+        ),
+    )
+
     return Cmd(args=args, env=cmd_env)
 
 
 def main():
-    logging.basicConfig(filename="/tmp/fake_sudo.log", level=logging.INFO)
+    logging.basicConfig(
+        stream=sys.stderr,
+        level=logging.INFO,
+        format="fake_sudo: %(levelname)s: %(message)s",
+    )
+    logging.info("This is the fake sudo for the ephemeral CrOS SDK.")
     cmd = parse(sys.argv[1:], os.environ)
     os.execvpe(cmd.args[0], cmd.args, cmd.env)
 
