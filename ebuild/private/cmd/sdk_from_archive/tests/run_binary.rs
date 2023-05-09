@@ -3,12 +3,20 @@
 // found in the LICENSE file.
 
 use anyhow::Result;
+use runfiles::Runfiles;
+use std::path::Path;
 use std::process::{Command, Stdio};
 
+const BASE_DIR: &str = "cros/bazel/ebuild/private/cmd/sdk_from_archive";
+
 fn base_test(input: &str, expected_status: i32) -> Result<()> {
+    let r = Runfiles::create()?;
+
     let output_dir = tempfile::TempDir::new()?;
 
-    let mut command = Command::new(env!("CARGO_BIN_EXE_sdk_from_archive"));
+    let mut command = Command::new(r.rlocation(Path::new(BASE_DIR).join("sdk_from_archive")));
+
+    let input = r.rlocation(Path::new(BASE_DIR).join(input));
 
     command
         .arg("--input")
@@ -23,15 +31,32 @@ fn base_test(input: &str, expected_status: i32) -> Result<()> {
 
     assert_eq!(status.code(), Some(expected_status));
 
+    if status.code() == Some(0) {
+        let expected = output_dir.path().join("DURABLE_TREE");
+        assert!(
+            expected.try_exists()?,
+            "Failed to find {} in {:?}",
+            expected.display(),
+            std::fs::read_dir(output_dir.path())?
+                .map(|res| res.map(|e| e.path()))
+                .collect::<Result<Vec<_>, std::io::Error>>()?
+        );
+    }
+
     Ok(())
 }
 
 #[test]
-fn tar_succeeds() -> Result<()> {
-    base_test(concat!(env!("CARGO_MANIFEST_DIR"), "/archive.tar.xz"), 0)
+fn tar_xz_succeeds() -> Result<()> {
+    base_test("archive.tar.xz", 0)
+}
+
+#[test]
+fn tar_zst_succeeds() -> Result<()> {
+    base_test("archive.tar.zst", 0)
 }
 
 #[test]
 fn tar_fails() -> Result<()> {
-    base_test("/NO/SUCH/FILE.tar.xz", 2)
+    base_test("/NO/SUCH/FILE.tar.xz", 1)
 }

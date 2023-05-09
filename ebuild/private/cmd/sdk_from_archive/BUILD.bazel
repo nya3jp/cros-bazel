@@ -7,6 +7,9 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 rust_binary(
     name = "sdk_from_archive",
     srcs = glob(["src/*.rs"]),
+    data = [
+        "//bazel/zstd",
+    ],
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
@@ -14,14 +17,24 @@ rust_binary(
         "//bazel/ebuild/private/common/processes",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
 rust_test(
     name = "sdk_from_archive_test",
     size = "small",
-    crate = "sdk_from_archive",
+    srcs = [
+        "tests/run_binary.rs",
+    ],
+    data = [
+        ":archive.tar.xz",
+        ":archive.tar.zst",
+        ":sdk_from_archive",
+    ],
     deps = [
+        "@alchemy_crates//:anyhow",
         "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
     ],
 )

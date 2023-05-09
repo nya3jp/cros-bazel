@@ -12,6 +12,7 @@ processes = { path = "../../common/processes" }
 
 anyhow.workspace = true
 clap.workspace = true
+runfiles.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
