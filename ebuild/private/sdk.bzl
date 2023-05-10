@@ -30,7 +30,7 @@ def _sdk_from_archive_impl(ctx):
         tools = [ctx.executable._sdk_from_archive],
         arguments = [args],
         mnemonic = "SdkFromArchive",
-        progress_message = "Extracting SDK archive",
+        progress_message = ctx.attr.progress_message,
     )
 
     return [
@@ -49,6 +49,9 @@ sdk_from_archive = rule(
         "src": attr.label(
             mandatory = True,
             allow_single_file = True,
+        ),
+        "progress_message": attr.string(
+            default = "Extracting SDK archive",
         ),
         "_action_wrapper": attr.label(
             executable = True,
@@ -93,6 +96,14 @@ def _sdk_update_impl(ctx):
     args.add_all(host_installs, format_each = "--install-host=%s")
     args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
 
+    if "{dep_count}" in ctx.attr.progress_message:
+        progress_message = ctx.attr.progress_message.replace(
+            "{dep_count}",
+            str(len(host_installs.to_list())),
+        )
+    else:
+        progress_message = ctx.attr.progress_message
+
     inputs = depset(
         [ctx.executable._sdk_update] + layer_inputs + ctx.files.extra_tarballs,
         transitive = [host_installs],
@@ -114,7 +125,7 @@ def _sdk_update_impl(ctx):
             "no-sandbox": "",
         },
         mnemonic = "SdkUpdate",
-        progress_message = "Updating SDK",
+        progress_message = progress_message,
     )
 
     return [
@@ -149,6 +160,14 @@ sdk_update = rule(
         "overlays": attr.label(
             providers = [OverlaySetInfo],
             mandatory = True,
+        ),
+        "progress_message": attr.string(
+            doc = """
+            Progress message for this target.
+            If the message contains `{dep_count}' it will be replaced with the
+            total number of dependencies that need to be installed.
+            """,
+            default = "Updating SDK",
         ),
         "_action_wrapper": attr.label(
             executable = True,
