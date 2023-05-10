@@ -22,4 +22,9 @@ sed -i 's,"\${GCLIENT_ROOT}/chromite/scripts/pkg_size",true &,' "${base_image_ut
 readonly test_image_util_path="/mnt/host/source/src/scripts/build_library/test_image_util.sh"
 sed -i 's,build_dlc,true &,' "${test_image_util_path}"
 
-exec /mnt/host/source/chromite/bin/build_image "$@"
+# We need to use sudo (fake_sudo actually) here. build_image reexecutes itself
+# with sudo if the current user is not root, and then inspects environment
+# variables such as SUDO_UID. Since we are already root, running build_image
+# without sudo ends up with it not reexecuting itself and failing for missing
+# environment variables.
+exec sudo /mnt/host/source/chromite/bin/build_image "$@"
