@@ -5,5 +5,8 @@
 alias(
     name = "zstd",
     actual = "@zstd//:zstd",
-    visibility = ["//bazel:internal"],
+    visibility = [
+        "//bazel:internal",
+        "@chromite//:all_packages",
+    ],
 )
