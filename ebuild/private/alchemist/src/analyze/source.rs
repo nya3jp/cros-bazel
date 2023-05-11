@@ -9,6 +9,7 @@ use anyhow::{ensure, Context};
 use std::{
     collections::{HashMap, HashSet},
     fs::{metadata, read_to_string},
+    io::ErrorKind,
     iter::repeat,
     path::{Path, PathBuf},
     str::FromStr,
@@ -270,22 +271,37 @@ fn extract_cros_workon_sources(
             }
         }
     }
-    // Handle regular files.
-    let source_dirs = source_paths
+
+    // Handle regular/missing files.
+    let source_dirs: Vec<PathBuf> = source_paths
         .into_iter()
-        .map(|path| {
+        .flat_map(|path| {
             let full_path = src_dir.join(&path);
-            let meta = metadata(&full_path)
-                .with_context(|| format!("failed to get metadata for {}", full_path.display()))?;
+
+            let meta = match metadata(&full_path) {
+                Err(err) if err.kind() == ErrorKind::NotFound => {
+                    // CROS_WORKON_SUBTREE may contain missing files.
+                    // TODO(b/281793145): Remove this logic once cros-workon.eclass
+                    // starts to reject non-existent files.
+                    return None;
+                }
+                Err(err) => {
+                    return Some(
+                        Err(err).context(format!("failed to stat {}", full_path.display())),
+                    );
+                }
+                Ok(meta) => meta,
+            };
+
             if meta.is_dir() {
-                Ok(path)
+                Some(Ok(path))
             } else {
                 // If the file is a regular file, use its parent directory.
                 // TODO: Improve this to include the file only.
-                Ok(path.parent().unwrap().to_owned())
+                Some(Ok(path.parent().unwrap().to_owned()))
             }
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<_>>()?;
 
     let mut sources = source_dirs
         .into_iter()
