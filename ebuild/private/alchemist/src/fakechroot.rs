@@ -45,6 +45,11 @@ impl PathTranslator {
         }
     }
 
+    /// Creates a PathTranslator which does nothing.
+    pub fn noop() -> Self {
+        Self::new(Path::new(""), Path::new(""))
+    }
+
     pub fn to_outer(&self, path: impl AsRef<Path>) -> Result<PathBuf> {
         let path = path.as_ref();
         if path.starts_with(&self.outer) {

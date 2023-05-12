@@ -12,6 +12,7 @@ use crate::digest_repo::digest_repo_main;
 use crate::dump_package::dump_package_main;
 use crate::generate_repo::generate_repo_main;
 
+use alchemist::common::is_inside_chroot;
 use alchemist::toolchain::ToolchainConfig;
 use alchemist::{
     config::{
@@ -20,7 +21,7 @@ use alchemist::{
     },
     dependency::package::PackageAtom,
     ebuild::{CachedPackageLoader, PackageLoader},
-    fakechroot::enter_fake_chroot,
+    fakechroot::{enter_fake_chroot, PathTranslator},
     repository::RepositorySet,
     resolver::PackageResolver,
     toolchain::load_toolchains,
@@ -210,7 +211,12 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         }
     }
 
-    let translator = enter_fake_chroot(&args.board, &args.profile, &source_dir)?;
+    // Enter a fake chroot when running outside a cros chroot.
+    let translator = if is_inside_chroot()? {
+        PathTranslator::noop()
+    } else {
+        enter_fake_chroot(&args.board, &args.profile, &source_dir)?
+    };
 
     let tools_dir = setup_tools()?;
 

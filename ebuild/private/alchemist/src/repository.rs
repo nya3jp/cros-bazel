@@ -237,7 +237,6 @@ impl Repository {
 /// Holds a set of at least one [`Repository`].
 #[derive(Clone, Debug)]
 pub struct RepositorySet {
-    root_dir: PathBuf,
     repos: HashMap<String, Repository>,
     // Keeps the insertion order of `repos`.
     order: Vec<String>,
@@ -316,11 +315,7 @@ impl RepositorySet {
             .map(|repo| (repo.name().to_owned(), repo))
             .collect();
 
-        Ok(Self {
-            root_dir: root_dir.to_owned(),
-            repos,
-            order,
-        })
+        Ok(Self { repos, order })
     }
 
     /// Returns the repositories from most generic to most specific.
@@ -412,9 +407,27 @@ impl RepositorySet {
     }
 
     fn hash_symlink(path: PathBuf) -> Result<(PathBuf, Sha256Digest)> {
-        let link = read_link(&path)?;
-        let hash = Sha256::digest(link.as_os_str().as_bytes());
+        let mut hasher = Sha256::new();
+        let mut current = path.clone();
+        loop {
+            current = read_link(&current)?;
+            hasher.update(current.as_os_str().as_bytes());
 
+            if !current.try_exists()? {
+                break;
+            }
+            let attr = std::fs::symlink_metadata(&current)?;
+            if !attr.is_symlink() {
+                if attr.is_file() {
+                    let mut file =
+                        File::open(&current).with_context(|| "Failed to open {current:?}")?;
+                    io::copy(&mut file, &mut hasher)
+                        .with_context(|| "Failed to read {current:?}")?;
+                }
+                break;
+            }
+        }
+        let hash = hasher.finalize();
         Ok((path, hash))
     }
 
@@ -436,23 +449,41 @@ impl RepositorySet {
     }
 
     /// Generates a digest from all the portage files in the repository set.
-    pub fn digest(&self) -> Result<RepositoryDigest> {
+    pub fn digest(&self, additional_dirs: Vec<PathBuf>) -> Result<RepositoryDigest> {
         // create a Sha256 object
         let mut hasher = Sha256::new();
 
         let mut files = Vec::<PathBuf>::new();
         let mut symlinks = Vec::<PathBuf>::new();
-        for overlay in self.get_repos() {
-            for entry in WalkDir::new(overlay.base_dir())
+        for dir in self
+            .get_repos()
+            .into_iter()
+            .map(|overlay| overlay.base_dir().to_path_buf())
+            .chain(additional_dirs)
+        {
+            for entry in WalkDir::new(dir)
+                .follow_links(true)
                 .into_iter()
                 .filter_entry(|e| !Self::ignore_filter(e))
             {
+                if let Err(e) = &entry {
+                    if let Some(io_error) = e.io_error() {
+                        if io_error.kind() == std::io::ErrorKind::NotFound {
+                            // Handle dangling symlinks.
+                            let path = e.path().unwrap();
+                            if std::fs::symlink_metadata(&path)?.is_symlink() {
+                                symlinks.push(path.to_path_buf());
+                            }
+                            continue;
+                        }
+                    }
+                }
                 let entry = entry?;
                 let file_type = entry.file_type();
-                if file_type.is_dir() {
-                    continue;
-                } else if file_type.is_symlink() {
+                if entry.path_is_symlink() {
                     symlinks.push(entry.into_path());
+                } else if file_type.is_dir() {
+                    continue;
                 } else if file_type.is_file() {
                     files.push(entry.into_path());
                 } else {
@@ -465,12 +496,6 @@ impl RepositorySet {
         let symlinks = Self::hash_items(symlinks, Self::hash_symlink)?;
 
         files.extend(symlinks);
-
-        // Strip off the root_dir so that we generate the same hash between
-        // multiple users. i.e., strip off the users home directory.
-        for (name, _hash) in &mut files {
-            *name = name.strip_prefix(&self.root_dir)?.to_owned();
-        }
         files.sort_by(|a, b| a.0.cmp(&b.0));
 
         for (name, hash) in &files {
@@ -596,11 +621,7 @@ impl RepositoryLookup {
             .map(|repo| (repo.name().to_owned(), repo))
             .collect();
 
-        Ok(RepositorySet {
-            root_dir: self.root_dir.clone(),
-            repos,
-            order,
-        })
+        Ok(RepositorySet { repos, order })
     }
 }
 
@@ -782,14 +803,12 @@ use-manifests = strict
                 .collect::<Vec<&str>>()
         );
         assert_eq!(
-            RepositoryDigest {
-                file_hashes: vec![(
-                    PathBuf::from("third_party/eclass-overlay/metadata/layout.conf"),
-                    arr![u8; 68, 216, 205, 202, 131, 32, 140, 82, 54, 145, 136, 189, 135, 114, 241,74, 246, 22, 0, 63, 58, 189, 59, 9, 227, 180, 17, 66, 58, 162, 196, 22]
-                ),],
-                repo_hash: arr![u8; 151, 67, 227, 38, 227, 189, 212, 99, 5, 79, 205, 188, 87, 211, 146, 223, 10, 197, 156, 142, 104, 95, 135, 191, 156, 122, 126, 119, 51, 79, 253, 10],
-            },
-            eclass_repo_set.digest()?
+            vec![(
+                dir.join("third_party/eclass-overlay/metadata/layout.conf"),
+                arr![u8; 68, 216, 205, 202, 131, 32, 140, 82, 54, 145, 136, 189, 135, 114, 241, 74,
+                246, 22, 0, 63, 58, 189, 59, 9, 227, 180, 17, 66, 58, 162, 196, 22]
+            ),],
+            eclass_repo_set.digest(vec![])?.file_hashes
         );
 
         let chromiumos_repo_set = lookup.create_repository_set("chromiumos")?;
@@ -803,24 +822,24 @@ use-manifests = strict
                 .collect::<Vec<&str>>()
         );
         assert_eq!(
-            RepositoryDigest {
-                file_hashes: vec![
-                    (
-                        PathBuf::from("third_party/chromiumos-overlay/metadata/layout.conf"),
-                        arr![u8; 253, 133, 168, 20, 164, 109, 219, 246, 226, 53, 30, 40, 243, 109, 58, 95, 183, 86, 167, 19, 117, 219, 190, 161, 10, 34, 195, 79, 101, 145, 203, 65]
-                    ),
-                    (
-                        PathBuf::from("third_party/eclass-overlay/metadata/layout.conf"),
-                        arr![u8; 68, 216, 205, 202, 131, 32, 140, 82, 54, 145, 136, 189, 135, 114, 241, 74, 246, 22, 0, 63, 58, 189, 59, 9, 227, 180, 17, 66, 58, 162, 196, 22]
-                    ),
-                    (
-                        PathBuf::from("third_party/portage-stable/metadata/layout.conf"),
-                        arr![u8; 139, 35, 204, 59, 245, 84, 155, 104, 19, 72, 118, 150, 15, 25, 189, 127, 106, 167, 76, 209, 136, 196, 201, 21, 155, 50, 193, 61, 31, 243, 116, 255]
-                    ),
-                ],
-                repo_hash: arr![u8; 188, 5, 43, 86, 236, 121, 238, 103, 249, 78, 203, 154, 216, 12, 194, 32, 214, 238, 151, 188, 109, 199, 88, 13, 115, 98, 77, 30, 99, 220, 107, 0],
-            },
-            chromiumos_repo_set.digest()?
+            vec![
+                (
+                    dir.join("third_party/chromiumos-overlay/metadata/layout.conf"),
+                    arr![u8; 253, 133, 168, 20, 164, 109, 219, 246, 226, 53, 30, 40, 243, 109, 58,
+                    95, 183, 86, 167, 19, 117, 219, 190, 161, 10, 34, 195, 79, 101, 145, 203, 65]
+                ),
+                (
+                    dir.join("third_party/eclass-overlay/metadata/layout.conf"),
+                    arr![u8; 68, 216, 205, 202, 131, 32, 140, 82, 54, 145, 136, 189, 135, 114, 241,
+                    74, 246, 22, 0, 63, 58, 189, 59, 9, 227, 180, 17, 66, 58, 162, 196, 22]
+                ),
+                (
+                    dir.join("third_party/portage-stable/metadata/layout.conf"),
+                    arr![u8; 139, 35, 204, 59, 245, 84, 155, 104, 19, 72, 118, 150, 15, 25, 189,
+                    127, 106, 167, 76, 209, 136, 196, 201, 21, 155, 50, 193, 61, 31, 243, 116, 255]
+                ),
+            ],
+            chromiumos_repo_set.digest(vec![])?.file_hashes
         );
 
         let grunt_repo_set = lookup.create_repository_set("grunt")?;
