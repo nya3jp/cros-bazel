@@ -1,0 +1,11 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@cros//bazel/module_extensions/toolchains:sdk_files.bzl", "generate_sdk_files")
+
+package(default_visibility = ["//visibility:public"])
+
+# We could do it directly in this file, but loading it means we don't have to
+# rerun the expensive repo rule whenever we change this file.
+generate_sdk_files()
