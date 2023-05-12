@@ -1,0 +1,16 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+platform(
+    name = "host_with_hermetic_cc",
+    constraint_values = ["//bazel/platforms/constraints:hermetic_cc_toolchain_enabled"],
+    parents = ["//bazel/platforms:host"],
+)
+
+platform(
+    name = "host_with_hermetic_rust",
+    constraint_values = ["//bazel/platforms/constraints:hermetic_rust_toolchain_enabled"],
+    # Hermetic rust doesn't work with host gcc - it requires hermetic C++.
+    parents = [":host_with_hermetic_cc"],
+)

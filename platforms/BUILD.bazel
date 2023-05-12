@@ -1,0 +1,15 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load(":platforms.bzl", "ALL_PLATFORMS")
+
+package(default_visibility = ["//visibility:public"])
+
+[
+    platform(
+        name = platform_info.name,
+        constraint_values = platform_info.constraints,
+    )
+    for platform_info in ALL_PLATFORMS
+]

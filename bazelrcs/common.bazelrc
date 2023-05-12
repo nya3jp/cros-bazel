@@ -70,6 +70,11 @@ build --incompatible_allow_tags_propagation
 fetch --incompatible_allow_tags_propagation
 query --incompatible_allow_tags_propagation
 
+### Toolchain resolution.
+build --host_platform=//bazel/platforms:host
+# Use platforms instead of crostool_top to resolve C++ toolchains.
+build --incompatible_enable_cc_toolchain_resolution
+
 ###
 # Convenience
 ###
