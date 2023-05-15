@@ -1,0 +1,71 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
+
+rust_library(
+    name = "docs",
+    srcs = ["docs.rs"],
+)
+
+rust_doc(
+    name = "docs_rustdoc",
+    crate = ":docs",
+)
+
+rust_doc_test(
+    name = "docs_rustdoc_test",
+    crate = ":docs",
+)
+
+rust_binary(
+    name = "hello_world",
+    srcs = ["hello_world.rs"],
+)
+
+rust_test(
+    name = "hello_world_test",
+    size = "small",
+    crate = ":hello_world",
+)
+
+rust_library(
+    name = "local_crate",
+    srcs = ["local_crate.rs"],
+    visibility = ["//rules_cros/toolchains/rust/examples/use_local_crate:__pkg__"],
+)
+
+rust_test(
+    name = "local_crate_test",
+    size = "small",
+    crate = ":local_crate",
+)
+
+rust_binary(
+    name = "use_local_crate",
+    srcs = ["use_local_crate.rs"],
+    deps = [":local_crate"],
+)
+
+rust_test(
+    name = "use_local_crate_test",
+    size = "small",
+    crate = ":use_local_crate",
+)
+
+rust_binary(
+    name = "use_third_party_crate",
+    srcs = ["use_third_party_crate.rs"],
+    deps = [
+        "@alchemy_crates//:env_logger",
+        "@alchemy_crates//:log",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+rust_test(
+    name = "use_third_party_crate_test",
+    size = "small",
+    crate = ":use_third_party_crate",
+)

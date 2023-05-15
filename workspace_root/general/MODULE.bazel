@@ -29,6 +29,8 @@ use_repo(
 
 register_toolchains("//bazel/module_extensions/toolchains/cc:all")
 
+register_toolchains("//bazel/module_extensions/toolchains/rust:all")
+
 # Go support
 GO_VERSION = "1.18.3"
 
