@@ -2,13 +2,33 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@cros//bazel/module_extensions/toolchains:platforms.bzl", "all_toolchain_descs", "host_toolchain_desc")
+load("@cros//bazel/platforms:platforms.bzl", "ALL_PLATFORMS", "HOST_PLATFORM")
 load("@rules_rust//rust:toolchain.bzl", "rust_stdlib_filegroup")
 
 def generate_sdk_files():
     native.alias(
+        name = "ar",
+        actual = "bin/llvm-ar",
+    )
+
+    native.alias(
         name = "cargo",
         actual = "usr/bin/cargo",
+    )
+
+    native.alias(
+        name = "clang",
+        actual = "usr/bin/clang",
+    )
+
+    native.alias(
+        name = "clang_cpp",
+        actual = "usr/bin/clang++",
+    )
+
+    native.alias(
+        name = "lld",
+        actual = "bin/ld.lld",
     )
 
     native.alias(
@@ -26,8 +46,8 @@ def generate_sdk_files():
     )
 
     native.alias(
-        name = "lld",
-        actual = "bin/ld.lld",
+        name = "strip",
+        actual = "bin/llvm-strip",
     )
 
     # TODO: implement platform-specific sysroots.
@@ -46,11 +66,11 @@ def generate_sdk_files():
         srcs = ["."],
     )
 
-    for desc in all_toolchain_descs:
-        _generate_files(desc)
+    for platform_info in ALL_PLATFORMS:
+        _generate_files(platform_info)
 
-def _generate_files(desc):
-    triple = desc.triple
+def _generate_files(platform_info):
+    triple = platform_info.triple
 
     rust_stdlib_filegroup(
         name = "{triple}_rust_stdlibs".format(triple = triple),
@@ -72,26 +92,9 @@ def _generate_files(desc):
         ]),
     )
 
-    native.alias(
-        name = "{triple}_clang".format(triple = triple),
-        actual = "usr/bin/{triple}-clang".format(triple = triple),
-    )
-
-    native.alias(
-        name = "{triple}_clang++".format(triple = triple),
-        actual = "usr/bin/{triple}-clang++".format(triple = triple),
-    )
-
-    native.alias(
-        name = "{triple}_strip".format(triple = triple),
-        actual = "usr/bin/{triple}-strip".format(triple = triple),
-    )
-
     native.filegroup(
         name = "{triple}_compiler_files".format(triple = triple),
         srcs = [
-            ":{triple}_clang".format(triple = triple),
-            ":{triple}_clang++".format(triple = triple),
             ":sysroot_files".format(triple = triple),
         ],
     )

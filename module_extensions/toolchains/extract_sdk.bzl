@@ -2,6 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+_SYSROOT_CONTENTS = """
+# Avoid using this wherever possible, as it will be incompatible with RBE.
+ABSOLUTE_SYSROOT_PATH = "%s"
+"""
+
 _TAR_ARGS = [
     [
         ".",
@@ -21,6 +26,12 @@ _TAR_ARGS = [
 ]
 
 def _extract_sdk_impl(repo_ctx):
+    out = repo_ctx.path("")
+    repo_ctx.file(
+        out.get_child("sysroot.bzl"),
+        content = _SYSROOT_CONTENTS % str(out),
+    )
+
     # This leaves significant performance on the table and should be pretty easy
     # to optimize later on.
     # Just running tar --list <archive> seems to take ~1 minute, so creating an
@@ -29,7 +40,6 @@ def _extract_sdk_impl(repo_ctx):
     tar = repo_ctx.which("tar")
     if not tar:
         fail("tar was not found on the path")
-    out = repo_ctx.path("")
 
     base_args = [
         tar,
