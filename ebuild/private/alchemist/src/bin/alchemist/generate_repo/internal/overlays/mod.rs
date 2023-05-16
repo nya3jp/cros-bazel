@@ -16,6 +16,7 @@ use alchemist::{
     repository::{Repository, RepositorySet},
 };
 use anyhow::{Context, Result};
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
@@ -124,6 +125,8 @@ fn generate_overlays_file(repo_sets: &[&RepositorySet], output_dir: &Path) -> Re
     let context = OverlaysTemplateContext {
         overlay_sets: repo_sets
             .iter()
+            .unique_by(|r| r.primary().name())
+            .sorted_by_key(|r| r.primary().name())
             .map(|r| OverlaySetTemplateContext {
                 name: r.primary().name().to_string(),
                 overlays: r
