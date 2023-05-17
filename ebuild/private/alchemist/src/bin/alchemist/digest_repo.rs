@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use alchemist::common::is_inside_chroot;
 use alchemist::repository::RepositoryLookup;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -47,25 +46,21 @@ pub fn digest_repo_main(board: &str, root_dir: &Path, args: Args) -> Result<()> 
 
     // When running inside a cros chroot, files under /etc and /build/$BOARD/etc
     // can also affect the build.
-    let additional_dirs_to_digest = if is_inside_chroot()? {
-        vec![
-            PathBuf::from("/etc/make.conf"),
-            PathBuf::from("/etc/make.conf.board_setup"),
-            PathBuf::from("/etc/make.conf.host_setup"),
-            PathBuf::from("/etc/make.conf.user"),
-            PathBuf::from("/etc/portage"),
-            PathBuf::from("/build").join(board).join("etc/make.conf"),
-            PathBuf::from("/build")
-                .join(board)
-                .join("etc/make.conf.board_setup"),
-            PathBuf::from("/build")
-                .join(board)
-                .join("etc/make.conf.user"),
-            PathBuf::from("/build").join(board).join("etc/portage"),
-        ]
-    } else {
-        Vec::new()
-    };
+    let additional_dirs_to_digest = vec![
+        PathBuf::from("/etc/make.conf"),
+        PathBuf::from("/etc/make.conf.board_setup"),
+        PathBuf::from("/etc/make.conf.host_setup"),
+        PathBuf::from("/etc/make.conf.user"),
+        PathBuf::from("/etc/portage"),
+        PathBuf::from("/build").join(board).join("etc/make.conf"),
+        PathBuf::from("/build")
+            .join(board)
+            .join("etc/make.conf.board_setup"),
+        PathBuf::from("/build")
+            .join(board)
+            .join("etc/make.conf.user"),
+        PathBuf::from("/build").join(board).join("etc/portage"),
+    ];
 
     let digest = repo.digest(additional_dirs_to_digest)?;
 

@@ -200,17 +200,6 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     };
     let src_dir = source_dir.join("src");
 
-    // Commands that don't need the chroot
-    #[allow(clippy::single_match)]
-    match args.command {
-        Commands::DigestRepo { args: local_args } => {
-            return digest_repo_main(&args.board, &source_dir, local_args);
-        }
-        _ => {
-            // Handle the rest below
-        }
-    }
-
     // Enter a fake chroot when running outside a cros chroot.
     let translator = if is_inside_chroot()? {
         PathTranslator::noop()
@@ -238,8 +227,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         Commands::GenerateRepo { output_dir } => {
             generate_repo_main(target, &translator, &src_dir, &output_dir)?;
         }
-        Commands::DigestRepo { args: _ } => {
-            panic!("BUG: Should be handled above");
+        Commands::DigestRepo { args: local_args } => {
+            digest_repo_main(&args.board, &source_dir, local_args)?;
         }
     }
 
