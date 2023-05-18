@@ -14,21 +14,3 @@ custom_constraint(
         "pc",
     ],
 )
-
-custom_constraint(
-    name = "hermetic_cc_toolchain",
-    default = "disabled",
-    options = [
-        "disabled",
-        "enabled",
-    ],
-)
-
-custom_constraint(
-    name = "hermetic_rust_toolchain",
-    default = "disabled",
-    options = [
-        "disabled",
-        "enabled",
-    ],
-)

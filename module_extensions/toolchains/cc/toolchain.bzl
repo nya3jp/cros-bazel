@@ -10,8 +10,9 @@ load(
     "flag_set",
     "tool",
 )
-load("//bazel/platforms:platforms.bzl", "ALL_PLATFORMS")
+load("@rules_cc//cc:defs.bzl", "cc_toolchain")
 load("@toolchain_sdk//:sysroot.bzl", "ABSOLUTE_SYSROOT_PATH")
+load("//bazel/platforms:platforms.bzl", "ALL_PLATFORMS")
 
 _DEFAULT_LINKER_FLAGS = [
     flag_set(
@@ -151,7 +152,7 @@ def _generate_cc_toolchain(platform_info):
     )
 
     toolchain_name = triple
-    native.cc_toolchain(
+    cc_toolchain(
         name = triple,
         # TODO: can this be minified? Maybe sysroot works, which might symlink a single directory rather than thousands of files every time.
         all_files = label("sysroot_files"),
@@ -169,10 +170,10 @@ def _generate_cc_toolchain(platform_info):
         exec_compatible_with = [
             "@platforms//cpu:x86_64",
             "@platforms//os:linux",
-            "//bazel/platforms/constraints:hermetic_cc_toolchain_enabled",
         ],
         target_compatible_with = platform_info.constraints,
         toolchain = ":" + toolchain_name,
+        target_settings = [":hermetic_enabled"],
         toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
     )
 

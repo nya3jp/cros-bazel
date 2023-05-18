@@ -29,8 +29,6 @@ use_repo(
 
 register_toolchains("//bazel/module_extensions/toolchains/cc:all")
 
-register_toolchains("//bazel/module_extensions/toolchains/rust:all")
-
 # Go support
 GO_VERSION = "1.18.3"
 
@@ -100,10 +98,12 @@ bazel_dep(name = "rules_rust", version = "0.20.1")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(edition = "2021")
-use_repo(
-    rust,
-    "rust_toolchains",
-)
+use_repo(rust, "rust_toolchains")
+
+# Ordering matters here. Placing our our toolchains first gives them priority.
+# This means we only fall back to @rust_toolchains if our toolchains don't meet
+# their target_settings.
+register_toolchains("//bazel/module_extensions/toolchains/rust:all")
 
 register_toolchains("@rust_toolchains//:all")
 

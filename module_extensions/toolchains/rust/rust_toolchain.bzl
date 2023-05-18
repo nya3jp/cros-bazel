@@ -30,15 +30,14 @@ def _generate_rust_toolchain(platform_info):
     )
 
     native.toolchain(
-        name = "{}_native".format(toolchain_name),
-        target_compatible_with = platform_info.constraints + [
-            "//bazel/platforms/constraints:hermetic_rust_toolchain_enabled",
-        ],
+        name = "{}_toolchain".format(toolchain_name),
         exec_compatible_with = [
             "@platforms//cpu:x86_64",
             "@platforms//os:linux",
         ],
+        target_compatible_with = platform_info.constraints,
         toolchain = ":" + toolchain_name,
+        target_settings = [":hermetic_enabled"],
         toolchain_type = "@rules_rust//rust:toolchain",
     )
 

@@ -2,9 +2,22 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:toolchain.bzl", "rust_toolchain")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("//bazel/module_extensions/toolchains/rust:rust_toolchain.bzl", "generate_rust_toolchains")
 
 package(default_visibility = ["//visibility:public"])
+
+bool_flag(
+    name = "hermetic",
+    # TODO: Switch this to true once it's stable.
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "hermetic_enabled",
+    flag_values = {
+        ":hermetic": "True",
+    },
+)
 
 generate_rust_toolchains()
