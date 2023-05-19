@@ -16,7 +16,7 @@ use version::Version;
 
 use crate::{
     bash::vars::BashVars,
-    config::bundle::ConfigBundle,
+    config::bundle::{ConfigBundle, IsPackageAcceptedResult},
     data::{IUseMap, Slot, UseMap},
     dependency::package::{PackageRef, ThinPackageRef},
     repository::RepositorySet,
@@ -42,46 +42,6 @@ fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
         .collect())
 }
 
-#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub enum Stability {
-    Broken,
-    Unknown,
-    Unstable,
-    Stable,
-}
-
-impl Stability {
-    /// Computes the stability of a package according to variables defined by
-    /// profiles and ebuild/eclasses.
-    fn compute(vars: &BashVars, config: &ConfigBundle) -> Result<Self> {
-        let arch = config.env().get("ARCH").map(|s| &**s).unwrap_or_default();
-
-        let mut default_stability = Stability::Unknown;
-
-        for keyword in vars
-            .get_scalar_or_default("KEYWORDS")?
-            .split_ascii_whitespace()
-        {
-            let (stability, trimed_keyword) = {
-                if let Some(trimed_keyword) = keyword.strip_prefix('~') {
-                    (Stability::Unstable, trimed_keyword)
-                } else if let Some(trimed_keyword) = keyword.strip_prefix('-') {
-                    (Stability::Broken, trimed_keyword)
-                } else {
-                    (Stability::Stable, keyword)
-                }
-            };
-            if trimed_keyword == arch {
-                return Ok(stability);
-            }
-            if trimed_keyword == "*" {
-                default_stability = stability;
-            }
-        }
-        Ok(default_stability)
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct PackageDetails {
     pub repo_name: String,
@@ -90,7 +50,8 @@ pub struct PackageDetails {
     pub vars: BashVars,
     pub slot: Slot,
     pub use_map: UseMap,
-    pub stability: Stability,
+    pub accepted: bool,
+    pub stable: bool,
     pub masked: bool,
     pub ebuild_path: PathBuf,
     pub inherited: HashSet<String>,
@@ -128,15 +89,24 @@ pub struct PackageLoader {
     repos: Arc<RepositorySet>,
     config: Arc<ConfigBundle>,
     evaluator: EBuildEvaluator,
+    force_accept_9999_ebuilds: bool,
+    version_9999: Version,
 }
 
 impl PackageLoader {
-    pub fn new(repos: Arc<RepositorySet>, config: Arc<ConfigBundle>, tools_dir: &Path) -> Self {
+    pub fn new(
+        repos: Arc<RepositorySet>,
+        config: Arc<ConfigBundle>,
+        tools_dir: &Path,
+        force_accept_9999_ebuilds: bool,
+    ) -> Self {
         let evaluator = EBuildEvaluator::new(tools_dir);
         Self {
             repos,
             config,
             evaluator,
+            force_accept_9999_ebuilds,
+            version_9999: Version::try_new("9999").unwrap(),
         }
     }
 
@@ -156,10 +126,39 @@ impl PackageLoader {
             metadata.path_info.package_short_name,
         ]
         .join("/");
-        let stability = Stability::compute(&metadata.vars, &self.config)?;
-        let stable = stability == Stability::Stable;
-
         let slot = Slot::<String>::new(metadata.vars.get_scalar("SLOT")?);
+
+        let package = ThinPackageRef {
+            package_name: package_name.as_str(),
+            version: &metadata.path_info.version,
+            slot: Slot {
+                main: &slot.main,
+                sub: &slot.sub,
+            },
+        };
+
+        let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;
+        let inherited: HashSet<String> = raw_inherited
+            .split_ascii_whitespace()
+            .map(|s| s.to_owned())
+            .collect();
+
+        let (accepted, stable) = match self.config.is_package_accepted(&metadata.vars, &package)? {
+            IsPackageAcceptedResult::Unaccepted => {
+                if self.force_accept_9999_ebuilds {
+                    let accepted = inherited.contains("cros-workon")
+                        && metadata.path_info.version == self.version_9999
+                        && match metadata.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
+                            Ok(value) => value != "1",
+                            Err(_) => false,
+                        };
+                    (accepted, false)
+                } else {
+                    (false, false)
+                }
+            }
+            IsPackageAcceptedResult::Accepted(stable) => (true, stable),
+        };
 
         let iuse_map = parse_iuse_map(&metadata.vars)?;
         let use_map = self.config.compute_use_map(
@@ -170,20 +169,7 @@ impl PackageLoader {
             &iuse_map,
         );
 
-        let masked = self.config.is_package_masked(&ThinPackageRef {
-            package_name: package_name.as_str(),
-            version: &metadata.path_info.version,
-            slot: Slot {
-                main: &slot.main,
-                sub: &slot.sub,
-            },
-        });
-
-        let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;
-        let inherited: HashSet<String> = raw_inherited
-            .split_ascii_whitespace()
-            .map(|s| s.to_owned())
-            .collect();
+        let masked = !accepted || self.config.is_package_masked(&package);
 
         Ok(PackageDetails {
             repo_name: repo.name().to_string(),
@@ -192,7 +178,8 @@ impl PackageLoader {
             vars: metadata.vars,
             slot,
             use_map,
-            stability,
+            accepted,
+            stable,
             masked,
             inherited,
             ebuild_path: ebuild_path.to_owned(),

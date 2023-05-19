@@ -6,7 +6,6 @@ use anyhow::{bail, Result};
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::sync::Arc;
-use version::Version;
 
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
@@ -15,7 +14,7 @@ use crate::{
         package::{PackageAtom, PackageDependencyAtom},
         Predicate,
     },
-    ebuild::{CachedPackageLoader, PackageDetails, Stability},
+    ebuild::{CachedPackageLoader, PackageDetails},
     repository::RepositorySet,
 };
 
@@ -25,33 +24,19 @@ pub struct PackageResolver {
     repos: Arc<RepositorySet>,
     config: Arc<ConfigBundle>,
     loader: Arc<CachedPackageLoader>,
-    accept_stability: Stability,
-    allow_9999_ebuilds: bool,
-    version_9999: Version,
 }
 
 impl PackageResolver {
     /// Constructs a new [`Resolver`].
-    ///
-    /// `accept_stability` specifies the minimum stability required for a
-    /// package to be returned by `find_packages` and `find_best_package`.
-    ///
-    /// `allow_9999_ebuilds` will consider 9999 cros-workon packages that don't
-    /// specify CROS_WORKON_MANUAL_UPREV as stable.
     pub fn new(
         repos: Arc<RepositorySet>,
         config: Arc<ConfigBundle>,
         loader: Arc<CachedPackageLoader>,
-        accept_stability: Stability,
-        allow_9999_ebuilds: bool,
     ) -> Self {
         Self {
             repos,
             config,
             loader,
-            accept_stability,
-            allow_9999_ebuilds,
-            version_9999: Version::try_new("9999").unwrap(),
         }
     }
 
@@ -117,16 +102,6 @@ impl PackageResolver {
         self.find_best_package_in(&matches)
     }
 
-    fn is_allowed_9999_ebuild(&self, package: &PackageDetails) -> bool {
-        self.allow_9999_ebuilds
-            && package.inherited.contains("cros-workon")
-            && package.version == self.version_9999
-            && match package.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
-                Ok(value) => value != "1",
-                Err(_) => false,
-            }
-    }
-
     /// Finds the best package in the provided list.
     /// You must ensure all the packages have the same name.
     /// TODO(b/271000644): Define a PackageSelector.
@@ -138,14 +113,6 @@ impl PackageResolver {
         let packages = packages
             .iter()
             .filter(|details| !details.masked)
-            .collect_vec();
-
-        // Select by stability.
-        let packages = packages
-            .into_iter()
-            .filter(|details| {
-                details.stability >= self.accept_stability || self.is_allowed_9999_ebuild(details)
-            })
             .collect_vec();
 
         // Find the latest version.

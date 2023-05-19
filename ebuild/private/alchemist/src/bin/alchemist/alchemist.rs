@@ -166,19 +166,18 @@ fn load_board(
         ])
     });
 
+    // Force accept 9999 ebuilds when running outside a cros chroot.
+    let force_accept_9999_ebuilds = !is_inside_chroot()?;
+
     let loader = Arc::new(CachedPackageLoader::new(PackageLoader::new(
         Arc::clone(&repos),
         Arc::clone(&config),
         tools_dir,
+        force_accept_9999_ebuilds,
     )));
 
-    let resolver = PackageResolver::new(
-        Arc::clone(&repos),
-        Arc::clone(&config),
-        Arc::clone(&loader),
-        alchemist::ebuild::Stability::Stable,
-        true,
-    );
+    let resolver =
+        PackageResolver::new(Arc::clone(&repos), Arc::clone(&config), Arc::clone(&loader));
 
     let toolchains = load_toolchains(&repos)?;
 

@@ -37,7 +37,6 @@ mod tests {
     use crate::{
         bash::vars::{BashValue, BashVars},
         data::Slot,
-        ebuild::Stability,
     };
 
     use super::*;
@@ -54,7 +53,8 @@ mod tests {
             vars: BashVars::new(vars),
             slot: Slot::new("0"),
             use_map,
-            stability: Stability::Stable,
+            accepted: true,
+            stable: true,
             masked: false,
             ebuild_path: PathBuf::from("/path/to/some.ebuild"),
             inherited: HashSet::new(),

@@ -30,7 +30,8 @@ pub fn dump_package_main(resolver: &PackageResolver, atoms: Vec<PackageAtom>) ->
                 if is_default { " (Default)" } else { "" }
             );
             println!("Slot:\t\t{}", &details.slot);
-            println!("Stability:\t{:?}", details.stability);
+            println!("Accepted:\t{:?}", details.accepted);
+            println!("Stable:\t\t{:?}", details.stable);
             println!("Masked:\t\t{}", details.masked);
             println!(
                 "USE:\t\t{}",

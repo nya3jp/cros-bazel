@@ -25,7 +25,7 @@ use alchemist::{
         source::{analyze_sources, PackageSources},
     },
     config::bundle::ConfigBundle,
-    ebuild::{CachedPackageLoader, PackageDetails, Stability},
+    ebuild::{CachedPackageLoader, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -226,12 +226,7 @@ fn load_packages(
         target.board, target.profile
     );
 
-    let mut all_details = evaluate_all_packages(&target.repos, &target.loader)?;
-
-    // We don't want to generate targets for packages that are marked broken
-    // for the arch. i.e., a x86 only package shouldn't be visible for an arm64
-    // build.
-    all_details.retain(|package| package.stability != Stability::Broken);
+    let all_details = evaluate_all_packages(&target.repos, &target.loader)?;
 
     eprintln!("Analyzing packages...");
 

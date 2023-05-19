@@ -104,7 +104,7 @@ mod tests {
         },
         bash::vars::BashVars,
         data::Slot,
-        ebuild::{PackageDetails, Stability},
+        ebuild::PackageDetails,
     };
     use url::Url;
     use version::Version;
@@ -156,7 +156,8 @@ mod tests {
             vars: BashVars::new(HashMap::new()),
             slot: Slot::new("0"),
             use_map: HashMap::new(),
-            stability: Stability::Stable,
+            accepted: true,
+            stable: true,
             masked: false,
             ebuild_path: "/somewhere/sys-apps/prototype-1.0.ebuild".into(),
             inherited: HashSet::new(),

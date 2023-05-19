@@ -579,7 +579,6 @@ mod tests {
     use super::*;
     use crate::bash::vars::BashVars;
     use crate::data::{Slot, Vars};
-    use crate::ebuild::Stability;
     use crate::testutils::write_files;
     use std::collections::HashSet;
 
@@ -614,7 +613,8 @@ mod tests {
                 ])),
             slot: Slot::new("0"),
             use_map,
-            stability: Stability::Stable,
+            accepted: true,
+            stable: true,
             masked: false,
             ebuild_path: tmp.path().join("foo-0.1.0.ebuild"),
             inherited: HashSet::new(),
@@ -759,7 +759,8 @@ mod tests {
             ])),
             slot: Slot::new("0"),
             use_map: HashMap::new(),
-            stability: Stability::Stable,
+            accepted: true,
+            stable: true,
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
@@ -873,7 +874,8 @@ mod tests {
             ])),
             slot: Slot::new("0"),
             use_map: HashMap::new(),
-            stability: Stability::Stable,
+            accepted: true,
+            stable: true,
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
@@ -965,7 +967,8 @@ mod tests {
             ])),
             slot: Slot::new("0"),
             use_map,
-            stability: Stability::Stable,
+            accepted: true,
+            stable: true,
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
@@ -1104,7 +1107,8 @@ mod tests {
             ])),
             slot: Slot::new("0"),
             use_map: HashMap::new(),
-            stability: Stability::Stable,
+            accepted: true,
+            stable: true,
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
