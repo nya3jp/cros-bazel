@@ -4,10 +4,12 @@
 
 use std::{collections::HashMap, collections::HashSet, iter};
 
+use anyhow::Result;
 use itertools::Itertools;
 use version::Version;
 
 use crate::{
+    bash::vars::BashVars,
     data::{IUseMap, Slot, UseMap, Vars},
     dependency::{package::ThinPackageRef, Predicate},
 };
@@ -23,7 +25,9 @@ struct BuiltinIncrementalVariable {
 
 // A list of profile variables treated as incremental by default.
 // https://projects.gentoo.org/pms/8/pms.html#x1-560005.3.1
-const BUILTIN_INCREMENTAL_VARIABLES_EXCEPT_USE: &[BuiltinIncrementalVariable] = &[
+// USE and ACCEPT_KEYWORDS are not listed here because they can be affected by configs and handled
+// separately.
+const BUILTIN_INCREMENTAL_VARIABLES: &[BuiltinIncrementalVariable] = &[
     BuiltinIncrementalVariable {
         name: "USE_EXPAND",
         defaults: "",
@@ -82,6 +86,14 @@ fn merge_incremental_tokens<'s, I: IntoIterator<Item = &'s str>>(
     values.into_iter().sorted()
 }
 
+/// Represents a result of ConfigBundle::is_package_accepted().
+pub enum IsPackageAcceptedResult {
+    /// The package is not accepted.
+    Unaccepted,
+    /// The package is accepted. The boolean value is true if the package is considered stable.
+    Accepted(bool),
+}
+
 /// A collection of [`ConfigNode`]s, providing access to the configurations
 /// computed from them.
 #[derive(Clone, Debug)]
@@ -104,8 +116,7 @@ impl ConfigBundle {
     }
 
     pub fn new(mut env: Vars, nodes: Vec<ConfigNode>) -> Self {
-        // Compute incremental variables that are not specific to packages
-        // (i.e. all except USE).
+        // Compute incremental variables that are not specific to packages.
         let incremental_variables = Self::compute_general_incremental_variables(&nodes);
 
         env.extend(
@@ -158,12 +169,126 @@ impl ConfigBundle {
     /// Incremental variables are already resolved. Use [`compute_use_map`] to
     /// compute USE flags for a package, instead of reading `USE` variable with
     /// this method, since `USE` flags can vary by packages and thus it makes
-    /// little sense to compute "global USE flags".
+    /// little sense to compute "global USE flags". The same goes for
+    /// ACCEPT_KEYWORDS. Use [`compute_accept_keywords`] instead of this method.
     ///
     /// This is often called as "profile variables", even though they can be
     /// defined in non-profile sources such as make.conf.
     pub fn env(&self) -> &Vars {
         &self.env
+    }
+
+    /// Computes ACCEPT_KEYWORDS of a package.
+    fn compute_accept_keywords(
+        nodes: &Vec<ConfigNode>,
+        default_for_empty_config_line: &str,
+        package: &ThinPackageRef,
+    ) -> Vec<String> {
+        let config_values = nodes
+            .iter()
+            .flat_map(|node| match &node.value {
+                ConfigNodeValue::Vars(vars) => vars
+                    .get("ACCEPT_KEYWORDS")
+                    .map_or(Vec::new(), |value| vec![&**value]),
+                ConfigNodeValue::AcceptKeywords(updates) => updates
+                    .iter()
+                    .filter(|update| update.atom.matches(package))
+                    .map(|o| {
+                        if o.accept_keywords.is_empty() {
+                            default_for_empty_config_line
+                        } else {
+                            o.accept_keywords.as_str()
+                        }
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            })
+            .flat_map(|s| s.split_ascii_whitespace());
+
+        merge_incremental_tokens(config_values)
+            .map(|s| s.to_owned())
+            .collect()
+    }
+
+    fn is_keyword_accepted<T1: AsRef<str>, T2: AsRef<str>>(
+        keywords: &[T1],
+        accept_keywords: &[T2],
+    ) -> bool {
+        // Visit each accepted keyword.
+        for accept in accept_keywords.iter().map(|x| x.as_ref()) {
+            // "**" as an accepted keyword matches with anything including empty keywords.
+            if accept == "**" {
+                return true;
+            }
+            // Visit each keyword.
+            for keyword in keywords.iter().map(|x| x.as_ref()) {
+                if keyword.starts_with("-") {
+                    // Ignore broken keywords.
+                    continue;
+                }
+                if keyword == "*" {
+                    // "*" as a keyword matches with any accepted keyword.
+                    return true;
+                } else if keyword == "~*" {
+                    // "~*" as a keyword matches with any accepted keyword starting with "~".
+                    if accept.starts_with("~") {
+                        return true;
+                    }
+                } else if keyword == accept {
+                    // Exact match.
+                    return true;
+                } else if keyword.starts_with("~") {
+                    // A keyword starting with "~" matches with "~*" as an accepted keyword.
+                    if accept == "~*" {
+                        return true;
+                    }
+                } else {
+                    // A keyword not starting with "~" matches with "*" as an accepted keyword.
+                    if accept == "*" {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /// Returns if a package is accepted by checking KEYWORDS and ACCEPT_KEYWORDS.
+    pub fn is_package_accepted(
+        &self,
+        vars: &BashVars,
+        package: &ThinPackageRef,
+    ) -> Result<IsPackageAcceptedResult> {
+        // ~$ARCH is used as the default value for an empty config line.
+        let arch = self.env().get("ARCH").map(|s| &**s).unwrap_or_default();
+        let default_for_empty_config_line = format!("~{arch}");
+
+        let accept_keywords =
+            Self::compute_accept_keywords(&self.nodes, &default_for_empty_config_line, package);
+        let keywords = vars
+            .get_scalar_or_default("KEYWORDS")?
+            .split_ascii_whitespace()
+            .collect_vec();
+
+        if !Self::is_keyword_accepted(&keywords, &accept_keywords) {
+            return Ok(IsPackageAcceptedResult::Unaccepted);
+        }
+
+        // A package is considered stable if adding "~" to all stable keywords results in not
+        // accepting the package. See the explanation about "stable restrictions" in Package
+        // Manager Specification 5.2.11.
+        let modified_keywords = keywords
+            .into_iter()
+            .map(|keyword| {
+                if keyword.starts_with("~") {
+                    keyword.to_owned()
+                } else {
+                    format!("~{keyword}")
+                }
+            })
+            .collect_vec();
+        let stable = !Self::is_keyword_accepted(&modified_keywords, &accept_keywords);
+        Ok(IsPackageAcceptedResult::Accepted(stable))
     }
 
     /// Computes USE flags of a package.
@@ -399,14 +524,14 @@ impl ConfigBundle {
         )
     }
 
-    /// Compute the values of all incremental variables, except USE whose value
+    /// Compute the values of all incremental variables, except USE and ACCEPT_KEYWORDS whose value
     /// varies by package.
     ///
     /// This function is supposed to be called from the constructor and its
     /// result should be cached, thus this function does not take self.
     fn compute_general_incremental_variables(nodes: &[ConfigNode]) -> HashMap<String, Vec<String>> {
         // Compute built-in incremental variables.
-        let builtins: HashMap<String, Vec<String>> = BUILTIN_INCREMENTAL_VARIABLES_EXCEPT_USE
+        let builtins: HashMap<String, Vec<String>> = BUILTIN_INCREMENTAL_VARIABLES
             .iter()
             .map(|v| {
                 let values = Self::compute_general_incremental_variable(nodes, v.name, v.defaults)
@@ -442,7 +567,8 @@ impl ConfigBundle {
     ///
     /// This function must not be used to compute the value of USE as its value
     /// varies by package. It will panic if [name] is "USE", which should happen
-    /// only when USE is contained in USE_EXPAND or USE_EXPAND_UNPREFIXED.
+    /// only when USE is contained in USE_EXPAND or USE_EXPAND_UNPREFIXED. The
+    /// same goes for ACCEPT_KEYWORDS.
     ///
     /// This function is supposed to be called from the constructor and its
     /// result should be cached, thus this function does not take self.
@@ -451,8 +577,8 @@ impl ConfigBundle {
         name: &'a str,
         defaults: &'a str,
     ) -> impl Iterator<Item = &'a str> {
-        if name == "USE" {
-            panic!("USE_EXPAND/USE_EXPAND_UNPREFIXED must not contain USE");
+        if name == "USE" || name == "ACCEPT_KEYWORDS" {
+            panic!("USE_EXPAND/USE_EXPAND_UNPREFIXED must not contain {}", name);
         }
         merge_incremental_tokens(
             iter::once(defaults)
@@ -462,5 +588,234 @@ impl ConfigBundle {
                 }))
                 .flat_map(|s| s.split_ascii_whitespace()),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::path::PathBuf;
+    use std::str::FromStr;
+
+    use crate::{config::AcceptKeywordsUpdate, dependency::package::PackageAtom};
+
+    #[test]
+    fn test_compute_accept_keywords() -> Result<()> {
+        let package = ThinPackageRef {
+            package_name: "aaa/bbb",
+            version: &Version::try_new("9999")?,
+            slot: Slot {
+                main: "0",
+                sub: "0",
+            },
+        };
+        let default_for_empty_config_line = "~amd64";
+
+        // The default case. Just returns the current arch.
+        assert_eq!(
+            ConfigBundle::compute_accept_keywords(
+                &vec![ConfigNode {
+                    source: PathBuf::from("a"),
+                    value: ConfigNodeValue::Vars(HashMap::from([(
+                        "ACCEPT_KEYWORDS".to_owned(),
+                        "amd64".to_owned()
+                    )])),
+                }],
+                default_for_empty_config_line,
+                &package
+            ),
+            vec!["amd64"]
+        );
+
+        // After cros_workon start.
+        assert_eq!(
+            ConfigBundle::compute_accept_keywords(
+                &vec![
+                    ConfigNode {
+                        source: PathBuf::from("a"),
+                        value: ConfigNodeValue::Vars(HashMap::from([(
+                            "ACCEPT_KEYWORDS".to_owned(),
+                            "amd64".to_owned()
+                        )])),
+                    },
+                    ConfigNode {
+                        source: PathBuf::from("b"),
+                        value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
+                            atom: PackageAtom::from_str("=aaa/bbb-9999")?,
+                            accept_keywords: "".to_owned(),
+                        }]),
+                    }
+                ],
+                default_for_empty_config_line,
+                &package
+            ),
+            vec!["amd64", "~amd64"]
+        );
+
+        // After cros_workon start, but for a different package.
+        assert_eq!(
+            ConfigBundle::compute_accept_keywords(
+                &vec![
+                    ConfigNode {
+                        source: PathBuf::from("a"),
+                        value: ConfigNodeValue::Vars(HashMap::from([(
+                            "ACCEPT_KEYWORDS".to_owned(),
+                            "amd64".to_owned()
+                        )])),
+                    },
+                    ConfigNode {
+                        source: PathBuf::from("b"),
+                        value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
+                            atom: PackageAtom::from_str("=ccc/ddd-9999")?,
+                            accept_keywords: "".to_owned(),
+                        }]),
+                    }
+                ],
+                default_for_empty_config_line,
+                &package
+            ),
+            vec!["amd64"]
+        );
+
+        // Non-empty accept_keywords value.
+        assert_eq!(
+            ConfigBundle::compute_accept_keywords(
+                &vec![
+                    ConfigNode {
+                        source: PathBuf::from("a"),
+                        value: ConfigNodeValue::Vars(HashMap::from([(
+                            "ACCEPT_KEYWORDS".to_owned(),
+                            "amd64".to_owned()
+                        )])),
+                    },
+                    ConfigNode {
+                        source: PathBuf::from("b"),
+                        value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
+                            atom: PackageAtom::from_str("=aaa/bbb-9999")?,
+                            accept_keywords: "-* arm64 ~arm64".to_owned(),
+                        }]),
+                    }
+                ],
+                default_for_empty_config_line,
+                &package
+            ),
+            vec!["arm64", "~arm64"]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_is_keyword_accepted() -> Result<()> {
+        // "**" matches with anything including empty keywords.
+        assert!(ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &[],
+            &["**"]
+        ));
+        assert!(ConfigBundle::is_keyword_accepted(&["amd64"], &["**"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["~amd64"], &["**"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["-amd64"], &["**"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["*"], &["**"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["~*"], &["**"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["-*"], &["**"]));
+
+        // "*" as a keyword matches with any accepted keyword.
+        assert!(ConfigBundle::is_keyword_accepted(&["*"], &["amd64"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["*"], &["~amd64"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["*"], &["*"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["*"], &["~*"]));
+
+        // "~*" as a keyword matches with any accepted keyword starting with "~".
+        assert!(!ConfigBundle::is_keyword_accepted(&["~*"], &["amd64"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["~*"], &["~amd64"]));
+        assert!(!ConfigBundle::is_keyword_accepted(&["~*"], &["*"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["~*"], &["~*"]));
+
+        // A keyword starting with "~".
+        assert!(!ConfigBundle::is_keyword_accepted(&["~amd64"], &["amd64"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["~amd64"], &["~amd64"]));
+        assert!(!ConfigBundle::is_keyword_accepted(&["~amd64"], &["*"]));
+        assert!(ConfigBundle::is_keyword_accepted(&["~amd64"], &["~*"]));
+
+        // A keyword starting with "-" doesn't match with anything.
+        assert!(!ConfigBundle::is_keyword_accepted(&["-amd64"], &["amd64"]));
+        assert!(!ConfigBundle::is_keyword_accepted(&["-amd64"], &["~amd64"]));
+        assert!(!ConfigBundle::is_keyword_accepted(&["-amd64"], &["*"]));
+        assert!(!ConfigBundle::is_keyword_accepted(&["-amd64"], &["~*"]));
+
+        // Multiple keywords.
+        assert!(ConfigBundle::is_keyword_accepted(
+            &["amd64", "~arm64"],
+            &["amd64"]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted(
+            &["amd64", "~arm64"],
+            &["~amd64"]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted(
+            &["amd64", "~arm64"],
+            &["arm64"]
+        ));
+        assert!(ConfigBundle::is_keyword_accepted(
+            &["amd64", "~arm64"],
+            &["~arm64"]
+        ));
+
+        // Multiple accepted keywords.
+        assert!(ConfigBundle::is_keyword_accepted(
+            &["amd64"],
+            &["amd64", "~amd64"]
+        ));
+        assert!(ConfigBundle::is_keyword_accepted(
+            &["~amd64"],
+            &["amd64", "~amd64"]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted(
+            &["arm64"],
+            &["amd64", "~amd64"]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted(
+            &["~arm64"],
+            &["amd64", "~amd64"]
+        ));
+
+        // Empty keywords.
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &[],
+            &["amd64"]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &[],
+            &["~amd64"]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &[],
+            &["*"]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &[],
+            &["~*"]
+        ));
+
+        // No accepted keywords.
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &["amd64"],
+            &[]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &["~amd64"],
+            &[]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &["*"],
+            &[]
+        ));
+        assert!(!ConfigBundle::is_keyword_accepted::<&str, &str>(
+            &["~*"],
+            &[]
+        ));
+
+        Ok(())
     }
 }
