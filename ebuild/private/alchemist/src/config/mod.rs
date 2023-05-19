@@ -14,6 +14,15 @@ use version::Version;
 
 use crate::{data::Vars, dependency::package::PackageAtom};
 
+/// Represents an update of ACCEPT_KEYWORDS.
+///
+/// ACCEPT_KEYWORDS can be updated in `package.accept_keywords` for certain packages.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AcceptKeywordsUpdate {
+    pub atom: PackageAtom,
+    pub accept_keywords: String,
+}
+
 /// Represents a kind of a USE flag update entry.
 ///
 /// This is a field of [`UseUpdate`].
@@ -104,6 +113,8 @@ pub enum ConfigNodeValue {
     /// This contains variable values just as they're defined in a file, which
     /// means that incremental variables are not yet resolved.
     Vars(Vars),
+    /// Updates ACCEPT_KEYWORDS.
+    AcceptKeywords(Vec<AcceptKeywordsUpdate>),
     /// Updates USE flags.
     Uses(Vec<UseUpdate>),
     /// Updates package masks.

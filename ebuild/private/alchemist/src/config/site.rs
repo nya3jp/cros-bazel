@@ -11,8 +11,8 @@ use crate::data::Vars;
 use super::{
     makeconf::MakeConf,
     miscconf::{
-        mask::load_package_configs, provided::load_provided_packages_config,
-        useflags::load_use_configs,
+        accept_keywords::load_accept_keywords_configs, mask::load_package_configs,
+        provided::load_provided_packages_config, useflags::load_use_configs,
     },
     ConfigNode, ConfigSource,
 };
@@ -48,9 +48,11 @@ impl SiteSettings {
         let site_profile_dir = portage_dir.join("profile");
         let precomputed_nodes = [
             load_package_configs(&site_profile_dir)?,
+            load_accept_keywords_configs(&site_profile_dir)?,
             load_use_configs(&site_profile_dir)?,
             load_provided_packages_config(&site_profile_dir)?,
             load_package_configs(&portage_dir)?,
+            load_accept_keywords_configs(&portage_dir)?,
             load_use_configs(&portage_dir)?,
             load_provided_packages_config(&portage_dir)?,
         ]
