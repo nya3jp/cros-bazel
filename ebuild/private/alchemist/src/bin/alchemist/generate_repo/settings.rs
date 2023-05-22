@@ -8,6 +8,7 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::{Context, Tera};
+use tracing::instrument;
 
 use super::common::AUTOGENERATE_NOTICE;
 
@@ -25,6 +26,7 @@ struct SettingsTemplateContext {
     board: String,
 }
 
+#[instrument(skip_all)]
 pub fn generate_settings_bzl(board: &str, out: &Path) -> Result<()> {
     let context = SettingsTemplateContext {
         board: board.to_owned(),

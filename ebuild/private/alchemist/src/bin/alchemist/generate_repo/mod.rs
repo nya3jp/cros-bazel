@@ -33,6 +33,7 @@ use alchemist::{
 use anyhow::Result;
 use itertools::{Either, Itertools};
 use rayon::prelude::*;
+use tracing::instrument;
 
 use crate::alchemist::TargetData;
 
@@ -46,6 +47,7 @@ use self::{
     settings::generate_settings_bzl,
 };
 
+#[instrument(skip_all)]
 fn evaluate_all_packages(
     repos: &RepositorySet,
     loader: &CachedPackageLoader,
@@ -113,6 +115,7 @@ fn find_install_map<'a>(
     }
 }
 
+#[instrument(skip_all)]
 fn analyze_packages(
     config: &ConfigBundle,
     all_details: Vec<Arc<PackageDetails>>,
@@ -252,6 +255,8 @@ pub fn generate_repo_main(
         }
     };
     create_dir_all(output_dir)?;
+
+    let _guard = cliutil::setup_tracing(&output_dir.join("trace.json"));
 
     let (target_packages, target_failures) = load_packages(&target, src_dir)?;
 

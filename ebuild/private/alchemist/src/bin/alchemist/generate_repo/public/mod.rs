@@ -9,6 +9,7 @@ use std::{
     io::Write,
     path::Path,
 };
+use tracing::instrument;
 
 use alchemist::resolver::PackageResolver;
 use anyhow::{Context, Result};
@@ -148,6 +149,7 @@ fn join_by_package_name(all_packages: &[Package]) -> HashMap<String, Vec<&Packag
     packages_by_name
 }
 
+#[instrument(skip_all)]
 pub fn generate_public_packages(
     all_packages: &[Package],
     resolver: &PackageResolver,

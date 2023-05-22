@@ -19,6 +19,7 @@ use alchemist::{
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
+use tracing::instrument;
 
 use crate::{alchemist::TargetData, generate_repo::common::PRIMORDIAL_PACKAGES};
 
@@ -204,6 +205,7 @@ fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<(
     Ok(())
 }
 
+#[instrument(skip_all)]
 pub fn generate_stage1_sdk(
     prefix: &str,
     target: &TargetData,

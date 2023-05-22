@@ -24,6 +24,7 @@ use lazy_static::lazy_static;
 use rayon::prelude::*;
 use serde::Serialize;
 use tera::Tera;
+use tracing::instrument;
 
 use crate::generate_repo::common::{
     AnalysisError, DistFileEntry, Package, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
@@ -315,6 +316,7 @@ fn join_by_package_dir<'p>(
     packages_by_dir
 }
 
+#[instrument(skip_all)]
 pub fn generate_internal_packages(
     board: &str,
     repo_set: &RepositorySet,

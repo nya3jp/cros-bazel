@@ -10,6 +10,7 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::{Context, Tera};
+use tracing::instrument;
 
 use super::common::{DistFileEntry, Package, AUTOGENERATE_NOTICE};
 
@@ -39,6 +40,7 @@ struct RepositoriesTemplateContext<'a> {
     chrome: Vec<&'a String>,
 }
 
+#[instrument(skip_all)]
 pub fn generate_repositories_file(packages: &[Package], out: &Path) -> Result<()> {
     let joined_dists: Vec<DistFileEntry> = packages
         .iter()

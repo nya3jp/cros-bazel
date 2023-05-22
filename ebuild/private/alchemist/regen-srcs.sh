@@ -22,7 +22,10 @@ cd "$(dirname -- "$0")"
     find src \
       -name testdata -prune -or \
       -type f -printf '    Label("//bazel/ebuild/private/alchemist:%p"),\n'
-
+    find ../common/cliutil \
+      -type f \
+      ! \( -name '*.go' -or -name 'BUILD.bazel' \) \
+      -printf '    Label("//bazel/ebuild/private/common/cliutil:%P"),\n'
     find ../common/portage/version \
       -type f \
       ! \( -name '*.go' -or -name 'BUILD.bazel' \) \

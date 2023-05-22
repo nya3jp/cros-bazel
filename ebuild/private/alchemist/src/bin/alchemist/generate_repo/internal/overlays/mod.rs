@@ -19,6 +19,7 @@ use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
+use tracing::instrument;
 use walkdir::WalkDir;
 
 use crate::generate_repo::common::AUTOGENERATE_NOTICE;
@@ -179,6 +180,7 @@ fn merge_repo_sets<'a>(repo_sets: &'a [&'a RepositorySet]) -> HashSet<SimpleRepo
         .collect()
 }
 
+#[instrument(skip_all)]
 pub fn generate_internal_overlays(
     translator: &PathTranslator,
     repo_sets: &[&RepositorySet],

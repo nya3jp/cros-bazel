@@ -17,6 +17,7 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
+use tracing::instrument;
 use walkdir::WalkDir;
 
 lazy_static! {
@@ -197,6 +198,7 @@ struct SourcePackage {
 impl SourcePackage {
     /// Computes [`SourcePackage`] from [`SourcePackageLayout`] and the result of
     /// scanning the directory.
+    #[instrument(skip_all, fields(prefix = %layout.prefix.display()))]
     fn try_new(
         layout: SourcePackageLayout,
         src_dir: &Path,
@@ -497,6 +499,7 @@ fn generate_general_symlinks(package: &SourcePackage) -> Result<()> {
 }
 
 /// Generates a source package.
+#[instrument(fields(path = %package.source_dir.display()), skip(package))]
 fn generate_package(package: &SourcePackage) -> Result<()> {
     create_dir_all(&package.output_dir)?;
     generate_build_file(package)?;
@@ -506,6 +509,7 @@ fn generate_package(package: &SourcePackage) -> Result<()> {
 }
 
 /// Generates source packages under `@portage//internal/sources/`.
+#[instrument(skip_all)]
 pub fn generate_internal_sources<'a>(
     all_local_sources: impl IntoIterator<Item = &'a PackageLocalSource>,
     src_dir: &Path,
