@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 use anyhow::{Context, Result};
 use clap::Parser;
-use cliutil::cli_main;
+use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
 use durabletree::DurableTree;
 use itertools::Itertools;
 use makechroot::LayerType;
@@ -63,20 +63,20 @@ struct Cli {
 }
 
 pub fn main() -> ExitCode {
-    cli_main(do_main)
-}
-
-fn do_main() -> Result<ExitCode> {
     let args = Cli::parse();
 
     if !args.already_in_namespace {
-        enter_namespace(args.allow_network_access, args.privileged)
+        print_current_command_line();
+        let result = enter_namespace(args.allow_network_access, args.privileged);
+        handle_top_level_result(result)
     } else {
-        continue_namespace(
-            RunInContainerConfig::deserialize_from(&args.cfg)?,
-            args.cmd,
-            args.allow_network_access,
-        )
+        cli_main(|| {
+            continue_namespace(
+                RunInContainerConfig::deserialize_from(&args.cfg)?,
+                args.cmd,
+                args.allow_network_access,
+            )
+        })
     }
 }
 

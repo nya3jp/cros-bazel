@@ -7,11 +7,16 @@
 use std::{
     ffi::OsStr,
     fmt::Debug,
+    path::{Path, PathBuf},
     process::{ExitCode, Termination},
+    time::SystemTime,
 };
 
 use anyhow::{bail, Result};
 use itertools::Itertools;
+use tracing::info_span;
+use tracing_chrome::ChromeLayerBuilder;
+use tracing_subscriber::prelude::*;
 
 /// Wraps a CLI main function to provide the common startup/cleanup logic.
 ///
@@ -19,6 +24,8 @@ use itertools::Itertools;
 /// at the very beginning of main. Exceptions include:
 /// - Programs that want to avoid printing to stderr on start (e.g.
 ///   action_wrapper that queues stdout/stderr).
+/// - Programs that want to stay single-threaded (e.g. run_in_container that
+///   calls unshare(2)).
 pub fn cli_main<F, T, E>(main: F) -> ExitCode
 where
     F: FnOnce() -> Result<T, E>,
@@ -26,6 +33,7 @@ where
     E: Debug,
 {
     print_current_command_line();
+    let _guard = setup_tracing_by_env();
     let result = main();
     handle_top_level_result(result)
 }
@@ -55,6 +63,72 @@ pub fn handle_top_level_result<T: Termination, E: Debug>(result: Result<T, E>) -
     }
 }
 
+/// Name of the environment variable telling Alchemy CLIs to save profiles JSON
+/// under the specified directory.
+pub const PROFILES_DIR_ENV: &str = "ALCHEMY_PROFILES_DIR";
+
+/// A guard object returned by [`setup_tracing`] and [`setup_tracing_by_env`] to
+/// perform cleanups with RAII.
+pub struct TracingGuard {
+    _span_guard: tracing::span::EnteredSpan,
+    _flush_guard: tracing_chrome::FlushGuard,
+}
+
+/// Sets up the standard tracing subscriber to write to the specified path, and
+/// starts a span named "main".
+///
+/// You don't need this function if you call [`cli_main`] because they call this
+/// function automatically. In other cases, call this function soon after
+/// parsing command line arguments to start capturing traces.
+///
+/// It returns [`TracingGuard`] that performs cleanups on drop. You have to drop
+/// it just before the program ends.
+pub fn setup_tracing(output: &Path) -> TracingGuard {
+    let (chrome_layer, flush_guard) = ChromeLayerBuilder::new()
+        .file(output)
+        .include_args(true)
+        .build();
+    tracing_subscriber::registry().with(chrome_layer).init();
+
+    let args = std::env::args()
+        .map(|s| shell_escape::escape(s.into()))
+        .join(" ");
+    let env = std::env::vars()
+        .map(|(key, value)| format!("{}={}", key, value))
+        .join("\n");
+    let span_guard = info_span!("main", args = args, env = env).entered();
+
+    // Record timestamp offset.
+    let timestamp = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64();
+    drop(info_span!("@timestamp-sync@", timestamp = format!("{:.9}", timestamp)).entered());
+
+    TracingGuard {
+        _span_guard: span_guard,
+        _flush_guard: flush_guard,
+    }
+}
+
+/// Similar to [`setup_tracing`], but derives the output path from environment
+/// variables.
+///
+/// See [`setup_tracing`] for details.
+pub fn setup_tracing_by_env() -> Option<TracingGuard> {
+    if let Some(profiles_dir) = std::env::var_os(PROFILES_DIR_ENV) {
+        let timestamp = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let profiles_name = format!("{}.{}.json", get_current_process_name(), timestamp);
+        let profiles_path = PathBuf::from(profiles_dir).join(profiles_name);
+        Some(setup_tracing(&profiles_path))
+    } else {
+        None
+    }
+}
+
 /// Returns the current process name, or `__unknown__` if it failed to get one.
 fn get_current_process_name() -> String {
     let current_exe = std::env::current_exe().unwrap_or_default();
@@ -73,4 +147,27 @@ pub fn split_key_value(spec: &str) -> Result<(&str, &str)> {
         bail!("invalid spec: {:?}", spec);
     }
     Ok((v[0], v[1]))
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::NamedTempFile;
+
+    use super::*;
+
+    #[test]
+    fn setup_tracing_works() -> Result<()> {
+        const MESSAGE: &str = "hello world";
+
+        let file = NamedTempFile::new()?;
+        {
+            let _guard = setup_tracing(file.path());
+            tracing::info!(MESSAGE);
+        }
+
+        let content = std::fs::read_to_string(file.path())?;
+        assert!(content.contains(MESSAGE));
+
+        Ok(())
+    }
 }

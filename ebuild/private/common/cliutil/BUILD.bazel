@@ -23,6 +23,9 @@ rust_library(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:shell-escape",
+        "@alchemy_crates//:tracing",
+        "@alchemy_crates//:tracing-chrome",
+        "@alchemy_crates//:tracing-subscriber",
     ],
 )
 
@@ -31,4 +34,7 @@ rust_test(
     size = "small",
     crate = ":cliutil_rust",
     rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@alchemy_crates//:tempfile",
+    ],
 )
