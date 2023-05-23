@@ -1,7 +1,8 @@
 // Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-use anyhow::{Context, Result};
+
+use anyhow::{ensure, Context, Result};
 use clap::Parser;
 use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
 use durabletree::DurableTree;
@@ -127,6 +128,18 @@ fn resolve_layer_source_path(input_path: &Path) -> Result<PathBuf> {
     // In the case that the directory is empty, we still want the returned path to
     // be valid.
     Ok(PathBuf::from(input_path))
+}
+
+/// Extracts an archive to a specified directory. It supports .tar and .tar.zst.
+fn extract_archive(archive_path: &Path, extract_dir: &Path) -> Result<()> {
+    let f = File::open(archive_path)?;
+    let decompressed: Box<dyn Read> = if archive_path.extension() == Some(OsStr::new("zst")) {
+        Box::new(zstd::stream::read::Decoder::new(f)?)
+    } else {
+        Box::new(f)
+    };
+    Archive::new(decompressed).unpack(extract_dir)?;
+    Ok(())
 }
 
 fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitCode> {
@@ -269,7 +282,8 @@ fn continue_namespace(
     // Directories are ordered from most lower to least lower.
     let mut lower_dirs: Vec<PathBuf> = [base_dir].into();
     let mut durable_trees: Vec<DurableTree> = Vec::new();
-    let mut temp_dirs: Vec<TempDir> = Vec::new();
+    let mut tar_content_dirs: Vec<TempDir> = Vec::new();
+    let mut last_tar_content_dir: Option<PathBuf> = None;
 
     for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
         let layer_path = resolve_layer_source_path(layer_path)?;
@@ -285,37 +299,40 @@ fn continue_namespace(
                 mount(Some(&layer_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
                     .with_context(|| format!("Failed bind-mounting {layer_path:?}"))?;
 
+                last_tar_content_dir = None;
                 lower_dirs.push(lower_dir);
             }
             LayerType::Tar => {
+                // If the last layer was also a tarball, overwrite the content
+                // directory with a new tarball to minimize the number of
+                // layers.
+                if let Some(last_tar_content_dir) = &last_tar_content_dir {
+                    extract_archive(&layer_path, last_tar_content_dir)?;
+                    continue;
+                }
+
                 // We use a temporary directory for the extracted artifacts instead of
                 // putting them in the lower directory because the lower directory is a
                 // tmpfs mount and we don't want to use up all the RAM.
-                let temp_dir = TempDir::new()?;
+                let content_dir = TempDir::new()?;
 
-                let f = File::open(&layer_path)?;
-                let decompressed: Box<dyn Read> =
-                    if layer_path.extension() == Some(OsStr::new("zst")) {
-                        Box::new(zstd::stream::read::Decoder::new(f)?)
-                    } else {
-                        Box::new(f)
-                    };
-                Archive::new(decompressed).unpack(temp_dir.path())?;
+                extract_archive(&layer_path, content_dir.path())?;
 
                 let lower_dir = lowers_dir.join(format!("{}", layer_index));
                 dir_builder.create(&lower_dir)?;
 
                 mount(
-                    Some(temp_dir.path()),
+                    Some(content_dir.path()),
                     &lower_dir,
                     NONE_STR,
                     BIND_REC,
                     NONE_STR,
                 )
-                .with_context(|| format!("Failed bind-mounting {:?}", temp_dir.path()))?;
+                .with_context(|| format!("Failed bind-mounting {:?}", content_dir.path()))?;
 
+                last_tar_content_dir = Some(content_dir.path().to_owned());
                 lower_dirs.push(lower_dir);
-                temp_dirs.push(temp_dir);
+                tar_content_dirs.push(content_dir);
             }
             LayerType::DurableTree => {
                 let durable_tree = DurableTree::expand(&layer_path)
@@ -338,6 +355,7 @@ fn continue_namespace(
                     lower_dirs.push(lower_dir);
                 }
 
+                last_tar_content_dir = None;
                 durable_trees.push(durable_tree);
             }
         }
@@ -372,6 +390,14 @@ fn continue_namespace(
         })
         .collect::<Result<Vec<_>>>()?
         .join(":");
+
+    // overlayfs fails to mount if there are 500+ lower layers. Check the
+    // condition in advance for better diagnostics.
+    ensure!(
+        lower_dirs.len() <= 500,
+        "Too many overlayfs layers ({} > 500)",
+        lower_dirs.len()
+    );
 
     // Mount overlayfs.
     let overlay_options = format!(
