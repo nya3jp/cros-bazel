@@ -15,6 +15,7 @@ rust_binary(
         "//bazel/ebuild/private/common/processes",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:nix",
     ],
 )
 
@@ -25,5 +26,7 @@ rust_test(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:libc",
+        "@alchemy_crates//:regex",
+        "@alchemy_crates//:tempfile",
     ],
 )

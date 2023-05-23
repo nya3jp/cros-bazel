@@ -10,7 +10,9 @@ dependencies = [
  "clap",
  "cliutil",
  "libc",
+ "nix",
  "processes",
+ "regex",
  "tempfile",
 ]
 

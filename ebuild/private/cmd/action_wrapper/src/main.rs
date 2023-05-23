@@ -7,9 +7,13 @@ use clap::Parser;
 use cliutil::handle_top_level_result;
 use processes::status_to_exit_code;
 use std::fs::File;
+use std::io::Write;
 use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio};
+use std::time::Instant;
+
+const PROGRAM_NAME: &str = "action_wrapper";
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -29,21 +33,55 @@ fn do_main() -> Result<ExitCode> {
     // Always enable Rust backtraces.
     std::env::set_var("RUST_BACKTRACE", "1");
 
+    // Redirect output to a file if `--output` was specified.
+    let mut output = if let Some(log_name) = &args.output {
+        Some(File::create(log_name)?)
+    } else {
+        None
+    };
+
     let mut command = Command::new(&args.command_line[0]);
     command.args(&args.command_line[1..]);
 
-    // Redirect output to a file if `--output` was specified.
-    if let Some(log_name) = &args.output {
-        let log_out = File::create(log_name)?;
-        let log_err = log_out.try_clone()?;
+    if let Some(output) = &output {
         command
-            .stdout(Stdio::from(log_out))
-            .stderr(Stdio::from(log_err));
+            .stdout(Stdio::from(output.try_clone()?))
+            .stderr(Stdio::from(output.try_clone()?));
     }
 
+    let start_time = Instant::now();
     let status = processes::run(&mut command)?;
+    let elapsed = start_time.elapsed();
 
-    // If the command failed , then print saved output on the stderr.
+    let message = if let Some(signal_num) = status.signal() {
+        let signal_name = match nix::sys::signal::Signal::try_from(signal_num) {
+            Ok(signal) => signal.to_string(),
+            Err(_) => signal_num.to_string(),
+        };
+        format!(
+            "{}: Command killed with signal {} in {:.1}s",
+            PROGRAM_NAME,
+            signal_name,
+            elapsed.as_secs_f32()
+        )
+    } else if let Some(code) = status.code() {
+        format!(
+            "{}: Command exited with code {} in {:.1}s",
+            PROGRAM_NAME,
+            code,
+            elapsed.as_secs_f32()
+        )
+    } else {
+        unreachable!("Unexpected ExitStatus: {:?}", status);
+    };
+
+    if let Some(output) = &mut output {
+        writeln!(output, "{}", message)?;
+    } else {
+        eprintln!("{}", message);
+    }
+
+    // If the command failed, then print saved output on the stderr.
     if !status.success() {
         if let Some(log_name) = &args.output {
             let mut read_file = File::open(log_name)?;

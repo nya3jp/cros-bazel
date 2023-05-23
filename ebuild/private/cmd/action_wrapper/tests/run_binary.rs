@@ -3,8 +3,9 @@
 // found in the LICENSE file.
 
 use anyhow::Result;
+use regex::Regex;
 use std::fmt;
-use std::process::{Command, Stdio};
+use std::process::{Command, ExitStatus, Stdio};
 use tempfile::NamedTempFile;
 
 #[derive(PartialEq)]
@@ -22,7 +23,14 @@ impl fmt::Display for TerminationKind {
     }
 }
 
-fn base_test(termination_kind: TerminationKind, expected_code: i32) -> Result<()> {
+struct ActionWrapperOutputs {
+    pub status: ExitStatus,
+    pub stdout: String,
+    pub stderr: String,
+    pub log: String,
+}
+
+fn run_action_wrapper(termination_kind: TerminationKind) -> Result<ActionWrapperOutputs> {
     let out_file = NamedTempFile::new()?;
 
     let mut command = Command::new(env!("CARGO_BIN_EXE_action_wrapper"));
@@ -39,41 +47,71 @@ fn base_test(termination_kind: TerminationKind, expected_code: i32) -> Result<()
         .stderr(Stdio::piped())
         .output()?;
 
-    assert_eq!(output.status.code(), Some(expected_code));
+    Ok(ActionWrapperOutputs {
+        status: output.status,
+        stdout: String::from_utf8(output.stdout)?,
+        stderr: String::from_utf8(output.stderr)?,
+        log: std::fs::read_to_string(out_file.path())?,
+    })
+}
 
-    let actual_printed_stdout = String::from_utf8(output.stdout)?;
-    let actual_printed_stderr = String::from_utf8(output.stderr)?;
+const PROGRAM_NAME: &str = "action_wrapper";
+const TEST_SCRIPT_OUTPUT: &str = "stdout ONE\nstderr TWO\n";
 
-    if termination_kind == TerminationKind::ExitCode(0) {
-        assert_eq!(actual_printed_stdout, "");
-        assert_eq!(actual_printed_stderr, "");
-    } else {
-        assert_eq!(actual_printed_stdout, "");
-        assert_eq!(actual_printed_stderr, "stdout ONE\nstderr TWO\n");
-    }
+#[test]
+fn redirected_error() -> Result<()> {
+    let log_re = Regex::new(&format!(
+        r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command exited with code 40 in \d+\.\d+s\n"
+    ))
+    .unwrap();
 
-    let actual_saved_output = std::fs::read_to_string(out_file.path())?;
-    assert_eq!(actual_saved_output, "stdout ONE\nstderr TWO\n");
+    let outputs = run_action_wrapper(TerminationKind::ExitCode(40))?;
 
+    assert_eq!(outputs.status.code(), Some(40));
+    assert_eq!(outputs.stdout, "");
+    assert!(
+        log_re.is_match(&outputs.stderr),
+        "stderr: {}",
+        outputs.stderr
+    );
+    assert!(log_re.is_match(&outputs.log), "log: {}", outputs.log);
     Ok(())
 }
 
 #[test]
-fn redirected_error() -> Result<()> {
-    base_test(TerminationKind::ExitCode(40), 40)
-}
-
-#[test]
 fn redirected_success() -> Result<()> {
-    base_test(TerminationKind::ExitCode(0), 0)
+    let log_re = Regex::new(&format!(
+        r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command exited with code 0 in \d+\.\d+s\n"
+    ))
+    .unwrap();
+
+    let outputs = run_action_wrapper(TerminationKind::ExitCode(0))?;
+
+    assert_eq!(outputs.status.code(), Some(0));
+    assert_eq!(outputs.stdout, "");
+    assert_eq!(outputs.stderr, "");
+    assert!(log_re.is_match(&outputs.log), "log: {}", outputs.log);
+    Ok(())
 }
 
 #[test]
 fn redirected_signal() -> Result<()> {
-    base_test(
-        TerminationKind::Signal(String::from("USR1")),
-        128 + libc::SIGUSR1,
-    )
+    let log_re = Regex::new(&format!(
+        r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command killed with signal SIGUSR1 in \d+\.\d+s\n"
+    ))
+    .unwrap();
+
+    let outputs = run_action_wrapper(TerminationKind::Signal(String::from("USR1")))?;
+
+    assert_eq!(outputs.status.code(), Some(128 + libc::SIGUSR1));
+    assert_eq!(outputs.stdout, "");
+    assert!(
+        log_re.is_match(&outputs.stderr),
+        "stderr: {}",
+        outputs.stderr
+    );
+    assert!(log_re.is_match(&outputs.log), "log: {}", outputs.log);
+    Ok(())
 }
 
 #[test]
