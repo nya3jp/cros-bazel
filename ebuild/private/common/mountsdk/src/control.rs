@@ -4,6 +4,7 @@
 
 use anyhow::{bail, Context, Result};
 use nix::{
+    errno::Errno,
     sys::select::FdSet,
     sys::signal::{signal, SigHandler, Signal},
 };
@@ -43,7 +44,12 @@ impl ControlChannel {
             read_fds.insert(fifo_fd);
             read_fds.insert(rx);
 
-            nix::sys::select::select(None, &mut read_fds, None, None, None)?;
+            match nix::sys::select::select(None, &mut read_fds, None, None, None) {
+                Ok(_) => {}
+                Err(e) if e == Errno::EINTR => continue,
+                Err(e) => return Err(e.into()),
+            }
+
             if read_fds.contains(fifo_fd) {
                 let mut buf: [u8; 1] = [0];
                 fifo.read_exact(&mut buf)?;
