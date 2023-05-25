@@ -38,6 +38,9 @@ if BAZELISK="$(command -v bazelisk)"; then
         ARGS+=("--repo_env=_CACHE_BUST_DATE=${CACHE_BUST_DATE}")
     fi
 
+    # We don't want bazelisk to call us again.
+    export BAZELISK_SKIP_WRAPPER=true
+
     exec "${BAZELISK}" "${ARGS[@]}" "$@"
 fi
 
