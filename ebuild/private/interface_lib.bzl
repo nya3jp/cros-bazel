@@ -142,7 +142,7 @@ def generate_interface_libraries(
     ])
 
     xpak_outputs = []
-    for xpak_file in ["NEEDED", "REQUIRES", "PROVIDES"]:
+    for xpak_file in ["NEEDED", "REQUIRES", "PROVIDES", "USE"]:
         file = ctx.actions.declare_file(paths.join(output_base_dir, "xpak", xpak_file))
         xpak_outputs.append(file)
         args.add("--xpak=%s=?%s" % (xpak_file, file.path))
