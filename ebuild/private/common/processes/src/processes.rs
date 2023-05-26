@@ -8,7 +8,10 @@ use signal_hook::{
     consts::signal::{SIGCHLD, SIGINT, SIGTERM},
     iterator::Signals,
 };
-use std::process::{Command, ExitStatus};
+use std::{
+    os::unix::process::ExitStatusExt,
+    process::{Command, ExitCode, ExitStatus},
+};
 
 // run runs a child process, with some special signal handling:
 //   - Forwards SIGTERM to the child processes
@@ -48,6 +51,24 @@ pub fn run_and_check(cmd: &mut Command) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Converts [`ExitStatus`] to [`ExitCode`] following the POSIX shell
+/// convention.
+///
+/// It panics [`ExitStatus`] does not represent a status of an exiting process
+/// (e.g. process being stopped or continued). This won't happen as long as you
+/// get [`ExitStatus`] from [`std::process`] methods, such as
+/// [`Command::status`], [`Command::output`],
+/// [`Child::wait`](std::process::Child::wait).
+pub fn status_to_exit_code(status: &ExitStatus) -> ExitCode {
+    if let Some(code) = status.code() {
+        ExitCode::from(code as u8)
+    } else if let Some(signal) = status.signal() {
+        ExitCode::from(128 + signal as u8)
+    } else {
+        panic!("ExitStatus does not represent process exit: {:?}", status);
+    }
 }
 
 #[cfg(test)]

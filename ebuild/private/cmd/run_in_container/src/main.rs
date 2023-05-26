@@ -15,14 +15,14 @@ use nix::{
     unistd::{getgid, getuid, pivot_root},
 };
 use path_absolutize::Absolutize;
+use processes::status_to_exit_code;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
     ffi::CString,
     ffi::{OsStr, OsString},
     fs::File,
     io::Read,
-    os::unix::fs::OpenOptionsExt,
-    os::unix::{fs::DirBuilderExt, process::ExitStatusExt},
+    os::unix::fs::{DirBuilderExt, OpenOptionsExt},
     path::{Path, PathBuf},
     process::{Command, ExitCode},
 };
@@ -216,13 +216,7 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
     )?;
 
     // Propagate the exit status of the command.
-    match status.code() {
-        Some(code) => Ok(ExitCode::from(code as u8)),
-        None => {
-            let signal = status.signal().expect("signal number should be present");
-            Ok(ExitCode::from(128 + signal as u8))
-        }
-    }
+    Ok(status_to_exit_code(&status))
 }
 
 fn continue_namespace(

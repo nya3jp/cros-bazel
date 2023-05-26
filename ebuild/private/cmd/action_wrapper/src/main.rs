@@ -5,6 +5,7 @@
 use anyhow::Result;
 use clap::Parser;
 use cliutil::cli_main_quiet;
+use processes::status_to_exit_code;
 use std::fs::File;
 use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
@@ -50,15 +51,8 @@ fn do_main() -> Result<ExitCode> {
         }
     }
 
-    // Propagate the exit status of the command
-    // (128 + signal if it terminated after receiving a signal).
-    match status.code() {
-        Some(code) => Ok(ExitCode::from(code as u8)),
-        None => {
-            let signal = status.signal().expect("signal number should be present");
-            Ok(ExitCode::from(128 + signal as u8))
-        }
-    }
+    // Propagate the exit status of the command.
+    Ok(status_to_exit_code(&status))
 }
 
 fn main() -> ExitCode {
