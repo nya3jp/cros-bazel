@@ -419,6 +419,7 @@ dependencies = [
  "fileutil",
  "hex",
  "itertools",
+ "libc",
  "nix",
  "serde",
  "serde_json",

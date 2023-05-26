@@ -45,12 +45,13 @@ pub struct Config {
 pub struct MountedSDK {
     root_dir: fileutil::DualPath,
     diff_dir: PathBuf,
-    privileged: bool,
 
     // Required for RAII.
     cmd: Option<Command>,
     _control_channel: Option<ControlChannel>,
+
     // pub(crate) required for testing.
+    #[allow(dead_code)]
     pub(crate) tmp_dir: SafeTempDir,
 }
 
@@ -156,7 +157,6 @@ impl MountedSDK {
             cmd: Some(cmd),
             root_dir,
             diff_dir,
-            privileged: cfg.privileged,
             tmp_dir,
             _control_channel: control_channel,
         })
@@ -188,17 +188,6 @@ impl MountedSDK {
             .with_context(|| "Can only execute a command once per SDK.")?;
         cmd.args(args);
         processes::run_and_check(&mut cmd)
-    }
-}
-
-impl Drop for MountedSDK {
-    #[instrument(skip_all)]
-    fn drop(&mut self) {
-        if self.privileged {
-            fileutil::remove_dir_all_with_sudo(self.tmp_dir.path()).unwrap()
-        } else {
-            fileutil::remove_dir_all_with_chmod(self.tmp_dir.path()).unwrap()
-        }
     }
 }
 

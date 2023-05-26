@@ -6,12 +6,13 @@ use std::{
     fs::{create_dir, set_permissions, symlink_metadata, File},
     io::ErrorKind,
     os::unix::prelude::PermissionsExt,
-    path::Path,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 
 use anyhow::{bail, Context, Result};
 use fileutil::SafeTempDir;
+use nix::mount::{mount, umount2, MntFlags, MsFlags};
 use tracing::instrument;
 
 use crate::{
@@ -21,6 +22,22 @@ use crate::{
     manifest::DurableTreeManifest,
     util::DirLock,
 };
+
+pub struct ExtraDir {
+    dir: PathBuf,
+}
+
+impl ExtraDir {
+    pub fn path(&self) -> &Path {
+        &self.dir
+    }
+}
+
+impl Drop for ExtraDir {
+    fn drop(&mut self) {
+        umount2(self.path(), MntFlags::MNT_DETACH).expect("Failed to unmount tmpfs");
+    }
+}
 
 /// Restores the raw directory if not yet.
 #[instrument]
@@ -73,8 +90,21 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
 
 /// Extracts the extra tarball into a temporary directory and returns its path.
 #[instrument]
-fn extract_extra_files(root_dir: &Path) -> Result<SafeTempDir> {
-    let extra_dir = SafeTempDir::new()?;
+fn extract_extra_files(root_dir: &Path) -> Result<ExtraDir> {
+    let dir = SafeTempDir::new()?;
+
+    mount(
+        Some(""),
+        dir.path(),
+        Some("tmpfs"),
+        MsFlags::empty(),
+        Some("mode=0755"),
+    )
+    .context("Failed to mount tmpfs for extra dir")?;
+
+    let extra_dir = ExtraDir {
+        dir: dir.into_path(),
+    };
 
     // TODO: Avoid depending on the system-installed tar(1).
     // It's not too bad though as it is so popular in Linux systems.
@@ -95,7 +125,7 @@ fn extract_extra_files(root_dir: &Path) -> Result<SafeTempDir> {
     Ok(extra_dir)
 }
 
-pub fn expand_impl(root_dir: &Path) -> Result<SafeTempDir> {
+pub fn expand_impl(root_dir: &Path) -> Result<ExtraDir> {
     // Ensure that the directory is a durable tree.
     if !root_dir.join(MARKER_FILE_NAME).try_exists()? {
         bail!("{} is not a durable tree", root_dir.display());

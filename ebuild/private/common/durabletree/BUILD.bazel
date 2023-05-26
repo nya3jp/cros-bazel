@@ -33,6 +33,7 @@ rust_test(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:hex",
+        "@alchemy_crates//:libc",
         "@alchemy_crates//:sha2",
     ],
 )

@@ -13,7 +13,7 @@ mod util;
 use crate::{convert::convert_impl, expand::expand_impl};
 use anyhow::Result;
 use consts::{MARKER_FILE_NAME, RAW_DIR_NAME};
-use fileutil::SafeTempDir;
+use expand::ExtraDir;
 use std::path::{Path, PathBuf};
 use tracing::instrument;
 
@@ -91,7 +91,7 @@ use tracing::instrument;
 /// take precedence over the extra tarball.
 pub struct DurableTree {
     raw_dir: PathBuf,
-    extra_dir: SafeTempDir,
+    extra_dir: ExtraDir,
 }
 
 impl DurableTree {
@@ -114,6 +114,9 @@ impl DurableTree {
     }
 
     /// Expands a durable tree.
+    ///
+    /// This function mounts tmpfs on a generated extra directory, which
+    /// requires the calling process to have privilege to mount tmpfs.
     ///
     /// Once it succeeds, you can call [`DurableTree::layers`] to get a list of
     /// directories to mount with overlayfs.
