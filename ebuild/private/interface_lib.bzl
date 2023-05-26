@@ -136,7 +136,8 @@ def generate_interface_libraries(
 
     args = ctx.actions.args()
     args.add_all([
-        "--output=%s" % output_log.path,
+        "--log=%s" % output_log.path,
+        # TODO: Enable profiling.
         extract_interface_executable,
         "--binpkg=%s" % input_binary_package_file.path,
     ])

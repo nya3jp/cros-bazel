@@ -7,8 +7,15 @@ load("//bazel/ebuild/private:install_deps.bzl", "install_deps")
 
 def _build_image_impl(ctx):
     # Declare outputs.
-    output_image_file = ctx.actions.declare_file(ctx.attr.output_image_file_name + ".bin")
-    output_log_file = ctx.actions.declare_file(ctx.attr.output_image_file_name + ".log")
+    output_image_file = ctx.actions.declare_file(
+        ctx.attr.output_image_file_name + ".bin",
+    )
+    output_log_file = ctx.actions.declare_file(
+        ctx.attr.output_image_file_name + ".log",
+    )
+    output_profiles_dir = ctx.actions.declare_directory(
+        ctx.attr.output_image_file_name + ".profiles",
+    )
 
     sdk = ctx.attr.sdk[SDKInfo]
     overlays = ctx.attr.overlays[OverlaySetInfo]
@@ -80,10 +87,15 @@ def _build_image_impl(ctx):
     # Define the main action.
     ctx.actions.run(
         inputs = inputs,
-        outputs = [output_image_file, output_log_file],
+        outputs = [output_image_file, output_log_file, output_profiles_dir],
         executable = ctx.executable._action_wrapper,
         tools = [ctx.executable._build_image],
-        arguments = ["--output", output_log_file.path, ctx.executable._build_image.path, args],
+        arguments = [
+            "--log=" + output_log_file.path,
+            "--profiles=" + output_profiles_dir.path,
+            ctx.executable._build_image.path,
+            args,
+        ],
         execution_requirements = {
             # Send SIGTERM instead of SIGKILL on user interruption.
             "supports-graceful-termination": "",

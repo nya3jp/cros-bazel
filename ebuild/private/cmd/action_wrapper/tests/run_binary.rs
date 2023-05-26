@@ -35,7 +35,7 @@ fn run_action_wrapper(termination_kind: TerminationKind) -> Result<ActionWrapper
 
     let mut command = Command::new(env!("CARGO_BIN_EXE_action_wrapper"));
     command
-        .arg("--output")
+        .arg("--log")
         .arg(out_file.path())
         .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/test_script.sh"))
         .arg(format!("{termination_kind}"))

@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use cliutil::handle_top_level_result;
+use cliutil::{handle_top_level_result, PROFILES_DIR_ENV};
 use processes::status_to_exit_code;
 use std::fs::File;
 use std::io::Write;
@@ -21,7 +21,10 @@ const PROGRAM_NAME: &str = "action_wrapper";
     author, version, about, long_about=None, trailing_var_arg = true)]
 struct Cli {
     #[arg(help = "File to save stdout and stderr to", long)]
-    output: Option<PathBuf>,
+    log: Option<PathBuf>,
+
+    #[arg(help = "Directory to save profile JSON files to", long)]
+    profiles: Option<PathBuf>,
 
     #[arg(help = "Command to run", required = true)]
     command_line: Vec<String>,
@@ -33,8 +36,8 @@ fn do_main() -> Result<ExitCode> {
     // Always enable Rust backtraces.
     std::env::set_var("RUST_BACKTRACE", "1");
 
-    // Redirect output to a file if `--output` was specified.
-    let mut output = if let Some(log_name) = &args.output {
+    // Redirect output to a file if `--log` was specified.
+    let mut output = if let Some(log_name) = &args.log {
         Some(File::create(log_name)?)
     } else {
         None
@@ -47,6 +50,10 @@ fn do_main() -> Result<ExitCode> {
         command
             .stdout(Stdio::from(output.try_clone()?))
             .stderr(Stdio::from(output.try_clone()?));
+    }
+
+    if let Some(profiles_dir) = &args.profiles {
+        command.env(PROFILES_DIR_ENV, profiles_dir);
     }
 
     let start_time = Instant::now();
@@ -83,7 +90,7 @@ fn do_main() -> Result<ExitCode> {
 
     // If the command failed, then print saved output on the stderr.
     if !status.success() {
-        if let Some(log_name) = &args.output {
+        if let Some(log_name) = &args.log {
             let mut read_file = File::open(log_name)?;
             std::io::copy(&mut read_file, &mut std::io::stderr())?;
         }

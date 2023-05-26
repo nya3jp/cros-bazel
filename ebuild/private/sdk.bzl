@@ -9,17 +9,19 @@ def _sdk_from_archive_impl(ctx):
     output_prefix = ctx.attr.out or ctx.attr.name
     output_root = ctx.actions.declare_directory(output_prefix)
     output_log = ctx.actions.declare_file(output_prefix + ".log")
+    output_profiles = ctx.actions.declare_directory(output_prefix + ".profiles")
 
     args = ctx.actions.args()
     args.add_all([
-        "--output=" + output_log.path,
+        "--log=" + output_log.path,
+        "--profiles=" + output_profiles.path,
         ctx.executable._sdk_from_archive,
         "--input=" + ctx.file.src.path,
         "--output=" + output_root.path,
     ])
 
     inputs = [ctx.executable._sdk_from_archive, ctx.file.src]
-    outputs = [output_root, output_log]
+    outputs = [output_root, output_log, output_profiles]
 
     ctx.actions.run(
         inputs = inputs,
@@ -65,6 +67,7 @@ def _sdk_update_impl(ctx):
     output_prefix = ctx.attr.out or ctx.attr.name
     output_root = ctx.actions.declare_directory(output_prefix)
     output_log = ctx.actions.declare_file(output_prefix + ".log")
+    output_profiles = ctx.actions.declare_directory(output_prefix + ".profiles")
 
     host_installs = depset(
         transitive = [
@@ -75,7 +78,8 @@ def _sdk_update_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--output=" + output_log.path,
+        "--log=" + output_log.path,
+        "--profiles=" + output_profiles.path,
         ctx.executable._sdk_update,
         "--board=" + ctx.attr.board,
         "--output=" + output_root.path,
@@ -94,7 +98,7 @@ def _sdk_update_impl(ctx):
         transitive = [host_installs],
     )
 
-    outputs = [output_root, output_log]
+    outputs = [output_root, output_log, output_profiles]
 
     ctx.actions.run(
         inputs = inputs,

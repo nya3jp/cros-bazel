@@ -38,10 +38,14 @@ def install_deps(
     """
     output_root = ctx.actions.declare_directory(output_prefix)
     output_log_file = ctx.actions.declare_file(output_prefix + ".log")
+    output_profiles_dir = ctx.actions.declare_directory(
+        output_prefix + ".profiles",
+    )
 
     args = ctx.actions.args()
     args.add_all([
-        "--output=" + output_log_file.path,
+        "--log=" + output_log_file.path,
+        "--profiles=" + output_profiles_dir.path,
         executable_install_deps.path,
         "--output=" + output_root.path,
     ])
@@ -61,7 +65,7 @@ def install_deps(
 
     ctx.actions.run(
         inputs = depset(direct_inputs),
-        outputs = [output_root, output_log_file],
+        outputs = [output_root, output_log_file, output_profiles_dir],
         executable = executable_action_wrapper,
         tools = [executable_install_deps],
         arguments = [args],
