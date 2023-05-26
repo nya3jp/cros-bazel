@@ -11,14 +11,12 @@ use nix::{
     mount::MntFlags,
     mount::{mount, umount2, MsFlags},
     sched::{unshare, CloneFlags},
-    unistd::execvp,
     unistd::{getgid, getuid, pivot_root},
 };
 use path_absolutize::Absolutize;
 use processes::status_to_exit_code;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
-    ffi::CString,
     ffi::{OsStr, OsString},
     fs::File,
     io::Read,
@@ -493,10 +491,7 @@ fn continue_namespace(
     let escaped_command = cmd.iter().map(|s| shell_escape::escape(s.into())).join(" ");
     eprintln!("COMMAND(container): {}", escaped_command);
 
-    let cmd = cmd
-        .into_iter()
-        .map(CString::new)
-        .collect::<Result<Vec<CString>, _>>()?;
-    execvp(&cmd[0], &cmd)?;
-    unreachable!();
+    let status = Command::new(&cmd[0]).args(&cmd[1..]).status()?;
+
+    Ok(status_to_exit_code(&status))
 }
