@@ -17,7 +17,7 @@ use alchemist::toolchain::ToolchainConfig;
 use alchemist::{
     config::{
         bundle::ConfigBundle, profile::Profile, site::SiteSettings, ConfigNode, ConfigNodeValue,
-        ConfigSource, PackageMaskKind, PackageMaskUpdate, ProvidedPackage, SimpleConfigSource,
+        ConfigSource, PackageMaskKind, PackageMaskUpdate, SimpleConfigSource,
     },
     dependency::package::PackageAtom,
     ebuild::{CachedPackageLoader, PackageLoader},
@@ -97,25 +97,6 @@ fn build_override_config_source() -> SimpleConfigSource {
                 kind: PackageMaskKind::Mask,
                 atom: "=chromeos-base/chromeos-lacros-9999".parse().unwrap(),
             }]),
-        },
-        // HACK: Provide packages that are not interesting to install.
-        // TODO: Remove this hack.
-        ConfigNode {
-            source,
-            value: ConfigNodeValue::ProvidedPackages(vec![
-                // This package was used to force rust binary packages to rebuild.
-                // We no longer need this workaround with bazel.
-                ProvidedPackage {
-                    package_name: "virtual/rust-binaries".to_owned(),
-                    version: "0".parse().unwrap(),
-                },
-                // This is really a BDEPEND and there is no need to declare it as a
-                // RDEPEND.
-                ProvidedPackage {
-                    package_name: "virtual/rust".to_owned(),
-                    version: "0".parse().unwrap(),
-                },
-            ]),
         },
     ];
     SimpleConfigSource::new(nodes)
