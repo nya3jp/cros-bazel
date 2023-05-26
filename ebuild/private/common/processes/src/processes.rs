@@ -12,6 +12,7 @@ use std::{
     os::unix::process::ExitStatusExt,
     process::{Command, ExitCode, ExitStatus},
 };
+use tracing::instrument;
 
 // run runs a child process, with some special signal handling:
 //   - Forwards SIGTERM to the child processes
@@ -21,6 +22,7 @@ use std::{
 //     should receive the signal by default so we don't need to forward it. One
 //     exception is if the child puts itself into a different processes group, but
 //     we want to avoid that.
+#[instrument(skip_all, fields(command = %cmd.get_program().to_string_lossy()))]
 pub fn run(cmd: &mut Command) -> Result<ExitStatus> {
     // Register the signal handler before spawning the process to ensure we don't drop any signals.
     let mut signals = Signals::new([SIGCHLD, SIGINT, SIGTERM])?;
@@ -44,6 +46,7 @@ pub fn run(cmd: &mut Command) -> Result<ExitStatus> {
     unreachable!()
 }
 
+#[instrument(skip_all, fields(command = %cmd.get_program().to_string_lossy()))]
 pub fn run_and_check(cmd: &mut Command) -> Result<()> {
     let stauts = run(cmd)?;
     if !stauts.success() {

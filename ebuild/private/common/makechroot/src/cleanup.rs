@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use fileutil::with_permissions;
 use itertools::Itertools;
 use std::{path::Path, path::PathBuf};
+use tracing::instrument;
 use walkdir::WalkDir;
 
 fn find_files(root: &Path, predicate: fn(&str) -> bool) -> Result<Vec<PathBuf>> {
@@ -28,6 +29,7 @@ fn find_files(root: &Path, predicate: fn(&str) -> bool) -> Result<Vec<PathBuf>> 
     Ok(result)
 }
 
+#[instrument]
 fn sort_contents(pkg_dir: &Path) -> Result<()> {
     for path in find_files(pkg_dir, |file_name| file_name == "CONTENTS")? {
         let contents = std::fs::read_to_string(&path)?
@@ -43,6 +45,7 @@ fn sort_contents(pkg_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+#[instrument]
 fn zero_counter(pkg_dir: &Path) -> Result<()> {
     for path in find_files(pkg_dir, |file_name| file_name == "COUNTER")? {
         with_permissions(&path, 0o744, || {
@@ -52,6 +55,7 @@ fn zero_counter(pkg_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+#[instrument]
 fn truncate_environment(pkg_dir: &Path) -> Result<()> {
     for path in find_files(pkg_dir, |file_name| file_name == "environment.bz2")? {
         with_permissions(&path, 0o744, || {
@@ -62,6 +66,7 @@ fn truncate_environment(pkg_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+#[instrument]
 fn clean_portage_database(root: &Path) -> Result<()> {
     // The portage database contains some non-hermetic install artifacts:
     // COUNTER: Since we are installing packages in parallel the COUNTER variable
@@ -83,6 +88,7 @@ fn clean_portage_database(root: &Path) -> Result<()> {
     Ok(())
 }
 
+#[instrument]
 pub fn clean_layer(board: Option<&str>, output_dir: &Path) -> Result<()> {
     let mut dirs = vec![
         PathBuf::from("mnt/host"),

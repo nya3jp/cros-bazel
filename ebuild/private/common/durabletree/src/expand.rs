@@ -12,6 +12,7 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 use tempfile::TempDir;
+use tracing::instrument;
 
 use crate::{
     consts::{
@@ -22,6 +23,7 @@ use crate::{
 };
 
 /// Restores the raw directory if not yet.
+#[instrument]
 fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
     // Lock the root directory to avoid restoring the directory in parallel.
     let _lock = DirLock::try_new(root_dir)?;
@@ -70,6 +72,7 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
 }
 
 /// Extracts the extra tarball into a temporary directory and returns its path.
+#[instrument]
 fn extract_extra_files(root_dir: &Path) -> Result<TempDir> {
     let extra_dir = TempDir::new()?;
 

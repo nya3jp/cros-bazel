@@ -12,6 +12,7 @@ use std::{
 };
 use tar::{EntryType, Header, HeaderMode};
 use tempfile::tempdir_in;
+use tracing::instrument;
 
 use crate::{
     consts::{
@@ -129,6 +130,7 @@ impl ExtraTarballBuilder {
 /// and user xattrs are preserved.
 ///
 /// It returns an error if the given directory path is empty.
+#[instrument]
 fn pivot_to_raw_subdir(root_dir: &Path) -> Result<()> {
     let parent_root_dir = root_dir
         .parent()
@@ -195,6 +197,7 @@ fn build_manifest_and_extra_tarball_impl(
 
 /// Scans files under the raw directory and builds a manifest JSON and an extra
 /// tarball file.
+#[instrument]
 fn build_manifest_and_extra_tarball(root_dir: &Path) -> Result<()> {
     let raw_dir = root_dir.join(RAW_DIR_NAME);
 

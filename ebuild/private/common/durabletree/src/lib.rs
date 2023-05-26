@@ -15,6 +15,7 @@ use anyhow::Result;
 use consts::{MARKER_FILE_NAME, RAW_DIR_NAME};
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
+use tracing::instrument;
 
 /// Works with *a durable tree*, a special directory format designed to preserve
 /// file metadata in Bazel tree artifacts.
@@ -107,6 +108,7 @@ impl DurableTree {
     ///
     /// It is an error to attempt to convert a directory that is already a
     /// durable tree.
+    #[instrument]
     pub fn convert(root_dir: &Path) -> Result<()> {
         convert_impl(root_dir)
     }
@@ -120,6 +122,7 @@ impl DurableTree {
     /// directory to restore some data forgotten by Bazel on saving the tree
     /// artifact to the remote cache. But it is safe to expand the same durable
     /// tree from multiple threads and processes in parallel.
+    #[instrument]
     pub fn expand(root_dir: &Path) -> Result<Self> {
         let extra_dir = expand_impl(root_dir)?;
 

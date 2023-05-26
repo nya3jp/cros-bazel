@@ -19,6 +19,7 @@ rust_library(
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:path-absolutize",
         "@alchemy_crates//:serde",
+        "@alchemy_crates//:tracing",
         "@alchemy_crates//:walkdir",
     ],
 )

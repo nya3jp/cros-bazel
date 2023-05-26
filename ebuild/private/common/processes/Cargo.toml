@@ -12,3 +12,4 @@ path = "src/processes.rs"
 anyhow.workspace = true
 nix.workspace = true
 signal-hook.workspace = true
+tracing.workspace = true

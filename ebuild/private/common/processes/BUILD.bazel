@@ -17,6 +17,7 @@ rust_library(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:nix",
         "@alchemy_crates//:signal-hook",
+        "@alchemy_crates//:tracing",
     ],
 )
 

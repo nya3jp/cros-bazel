@@ -15,6 +15,7 @@ use nix::{
     fcntl::{flock, FlockArg, OFlag},
     sys::stat::Mode,
 };
+use tracing::instrument;
 
 use crate::consts::MODE_MASK;
 
@@ -27,6 +28,7 @@ pub struct DirLock {
 
 impl DirLock {
     /// Acquires a new exclusive lock on a directory.
+    #[instrument]
     pub fn try_new(dir: &Path) -> Result<DirLock> {
         let fd = Dir::open(dir, OFlag::O_DIRECTORY | OFlag::O_CLOEXEC, Mode::empty())?;
         flock(fd.as_raw_fd(), FlockArg::LockExclusive)?;

@@ -393,6 +393,7 @@ dependencies = [
  "sha2",
  "tar",
  "tempfile",
+ "tracing",
  "walkdir",
  "xattr 1.0.0",
  "zstd",
@@ -723,6 +724,7 @@ dependencies = [
  "runfiles",
  "serde",
  "tempfile",
+ "tracing",
  "walkdir",
 ]
 
@@ -784,6 +786,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "tempfile",
+ "tracing",
 ]
 
 [[package]]
@@ -1026,6 +1029,7 @@ dependencies = [
  "anyhow",
  "nix",
  "signal-hook",
+ "tracing",
 ]
 
 [[package]]

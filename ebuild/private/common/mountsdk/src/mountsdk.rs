@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use strum_macros::EnumString;
 use tempfile::{tempdir, TempDir};
+use tracing::instrument;
 
 const SUDO_PATH: &str = "/usr/bin/sudo";
 
@@ -55,6 +56,7 @@ pub struct MountedSDK {
 
 impl MountedSDK {
     // Prepares the SDK according to the specifications requested.
+    #[instrument(skip_all)]
     pub fn new(cfg: Config, board: Option<&str>) -> Result<Self> {
         let r = runfiles::Runfiles::create()?;
         let run_in_container_path =
@@ -178,6 +180,7 @@ impl MountedSDK {
         &self.diff_dir
     }
 
+    #[instrument(skip_all)]
     pub fn run_cmd(&mut self, args: &[&str]) -> Result<()> {
         let mut cmd = self
             .cmd
@@ -189,6 +192,7 @@ impl MountedSDK {
 }
 
 impl Drop for MountedSDK {
+    #[instrument(skip_all)]
     fn drop(&mut self) {
         if self.privileged {
             fileutil::remove_dir_all_with_sudo(self.tmp_dir.path()).unwrap()
