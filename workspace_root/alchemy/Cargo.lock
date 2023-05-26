@@ -1192,6 +1192,7 @@ dependencies = [
  "shell-escape",
  "tar",
  "tempfile",
+ "tracing",
  "walkdir",
  "zstd",
 ]

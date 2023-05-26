@@ -31,6 +31,7 @@ use std::{
 };
 use tar::Archive;
 use tempfile::TempDir;
+use tracing::info_span;
 use walkdir::WalkDir;
 
 const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
@@ -272,8 +273,11 @@ fn continue_namespace(
 
     for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
         let layer_path = resolve_layer_source_path(layer_path)?;
+        let layer_type = LayerType::detect(&layer_path)?;
 
-        match LayerType::detect(&layer_path)? {
+        let _span = info_span!("setup_layer", ?layer_type, ?layer_path).entered();
+
+        match layer_type {
             LayerType::Dir => {
                 let lower_dir = lowers_dir.join(format!("{}", layer_index));
                 dir_builder.create(&lower_dir)?;
@@ -465,14 +469,17 @@ fn continue_namespace(
     }
 
     let escaped_command = cmd.iter().map(|s| shell_escape::escape(s.into())).join(" ");
-    eprintln!("COMMAND(container): {}", escaped_command);
+    eprintln!("COMMAND(container): {}", &escaped_command);
 
-    let status = Command::new(&cmd[0])
-        .args(&cmd[1..])
-        .env_clear()
-        .envs(cfg.envs)
-        .current_dir(cfg.chdir)
-        .status()?;
+    let status = {
+        let _span = info_span!("run", command = escaped_command).entered();
+        Command::new(&cmd[0])
+            .args(&cmd[1..])
+            .env_clear()
+            .envs(cfg.envs)
+            .current_dir(cfg.chdir)
+            .status()?
+    };
 
     Ok(status_to_exit_code(&status))
 }
