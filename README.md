@@ -210,7 +210,7 @@ For example, to inject a prebuilt binary packages for `chromeos-chrome`, you can
 set this option:
 
 ```
---@portage//internal/packages/third_party/chromiumos-overlay/chromeos-base/chromeos-chrome:107.0.5257.0_rc-r1_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R107-15066.0.0-38990-8804973494937369745/packages/chromeos-base/chromeos-chrome-107.0.5257.0_rc-r1.tbz2
+--@portage//internal/packages/stage1/target/board/chromiumos/chromeos-base/chromeos-chrome:114.0.5715.0_rc-r2_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R114-15427.0.0-49533-8783437624917045025/packages/chromeos-base/chromeos-chrome-114.0.5715.0_rc-r2.tbz2
 ```
 
 We have several named config groupings in [prebuilts.bazelrc] that define
