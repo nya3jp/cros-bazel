@@ -8,7 +8,9 @@ _BUILD_TEMPLATE = """
 filegroup(
     name = "src",
     srcs = ["{file}"],
-    visibility = ["@//bazel:internal"],
+    # Use public visibility since bzlmod repo namespacing prevents unwanted
+    # visibility.
+    visibility = ["//visibility:public"],
 )
 """
 
