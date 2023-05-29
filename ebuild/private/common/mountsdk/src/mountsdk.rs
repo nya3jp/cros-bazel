@@ -4,7 +4,6 @@
 
 use crate::control::ControlChannel;
 use anyhow::{anyhow, ensure, Context, Result};
-use itertools::Itertools;
 use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
 use std::collections::HashMap;
@@ -118,23 +117,19 @@ impl MountedSDK {
             // We have no idea why, but run_in_container fails on pivot_root(2)
             // for EINVAL if we don't enter a mount namespace in advance.
             // TODO: Investigate the cause.
-            cmd.args(["unshare", "--mount", "--", "/usr/bin/env", "-i"]);
-            cmd.args(envs.into_iter().sorted().map(|(k, v)| format!("{k}={v}")));
+            cmd.args(["unshare", "--mount", "--"]);
             cmd.arg(run_in_container_path);
             cmd.arg("--privileged");
-            cmd.env_clear();
             cmd
         } else {
-            let mut cmd = Command::new(run_in_container_path);
-            cmd.env_clear();
-            cmd.envs(envs);
-            cmd
+            Command::new(run_in_container_path)
         };
 
         let mut layer_paths: Vec<PathBuf> = cfg.layer_paths;
         layer_paths.push(root_dir.outside.clone());
         let serialized_config = RunInContainerConfig {
             staging_dir: scratch_dir,
+            envs: envs.into_iter().collect(),
             chdir: PathBuf::from("/"),
             layer_paths,
             bind_mounts,

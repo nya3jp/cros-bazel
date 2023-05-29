@@ -14,6 +14,9 @@ pub struct RunInContainerConfig {
     /// Output artifacts can be found in the 'diff' directory.
     pub staging_dir: PathBuf,
 
+    /// Environment variables for the process in the container.
+    pub envs: Vec<(String, String)>,
+
     /// Directory to use as the working directory while inside the namespace.
     pub chdir: PathBuf,
 

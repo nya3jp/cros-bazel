@@ -19,7 +19,7 @@ use path_absolutize::Absolutize;
 use processes::status_to_exit_code;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
-    ffi::{OsStr, OsString},
+    ffi::OsStr,
     fs::File,
     io::Read,
     os::{
@@ -35,38 +35,6 @@ use walkdir::WalkDir;
 
 const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
 const NONE_STR: Option<&str> = None::<&str>;
-
-struct StashVar {
-    key: OsString,
-    original_value: Option<OsString>,
-}
-
-impl StashVar {
-    /// Sets an environment variable value. The original value is restored when
-    /// the returned [`StashVar`] is dropped.
-    pub fn set(key: impl AsRef<OsStr>, value: impl AsRef<OsStr>) -> StashVar {
-        let key = key.as_ref();
-        let original_value = std::env::var_os(key);
-        std::env::set_var(key, value);
-        StashVar {
-            key: key.to_owned(),
-            original_value,
-        }
-    }
-}
-
-impl Drop for StashVar {
-    fn drop(&mut self) {
-        match &self.original_value {
-            Some(original_value) => {
-                std::env::set_var(&self.key, original_value);
-            }
-            None => {
-                std::env::remove_var(&self.key);
-            }
-        }
-    }
-}
 
 #[derive(Parser, Debug)]
 #[clap(trailing_var_arg = true)]
@@ -279,13 +247,6 @@ fn continue_namespace(
     ] {
         dir_builder.create(dir)?;
     }
-
-    // Set $TMPDIR to a directory under the given staging dir so that we create
-    // temporary files under the directory for the rest of run_in_container.
-    // We don't use the given $TMPDIR as it's a directory intended to be used by
-    // the programs within the container. Also note that temporary files created
-    // by run_in_container will NOT be cleaned up as we will call execve(2).
-    let stashed_tmp_dir = StashVar::set("TMPDIR", tmp_dir.as_os_str());
 
     for dir in [&root_dir, &base_dir, &lowers_dir] {
         // Mount a tmpfs so that files are purged automatically on exit.
@@ -503,19 +464,15 @@ fn continue_namespace(
         umount2("/host", MntFlags::MNT_DETACH).with_context(|| "unmounting host")?;
     }
 
-    // Restore $TMPDIR to the given one.
-    drop(stashed_tmp_dir);
-
-    // These are absolute paths that are no longer valid after we pivot.
-    std::env::remove_var("RUNFILES_DIR");
-    std::env::remove_var("RUNFILES_MANIFEST_FILE");
-
-    std::env::set_current_dir(&cfg.chdir).with_context(|| format!("chdir to {:?}", cfg.chdir))?;
-
     let escaped_command = cmd.iter().map(|s| shell_escape::escape(s.into())).join(" ");
     eprintln!("COMMAND(container): {}", escaped_command);
 
-    let status = Command::new(&cmd[0]).args(&cmd[1..]).status()?;
+    let status = Command::new(&cmd[0])
+        .args(&cmd[1..])
+        .env_clear()
+        .envs(cfg.envs)
+        .current_dir(cfg.chdir)
+        .status()?;
 
     Ok(status_to_exit_code(&status))
 }
