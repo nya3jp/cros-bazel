@@ -411,10 +411,12 @@ def _ebuild_install_impl(ctx):
     for package in ctx.attr.packages:
         info = package[BinaryPackageInfo]
         dest_dir = "/build/%s/packages/%s/" % (ctx.attr.board, info.category)
+        dest_path = "%s/%s" % (dest_dir, info.file.basename)
         script_contents += """
         sudo mkdir -p "%s"
         sudo cp "%s" "%s"
-        """ % (dest_dir, info.file.path, dest_dir)
+        sudo chmod 644 "%s"
+        """ % (dest_dir, info.file.path, dest_path, dest_path)
 
     # Add script to install the binary package.
     # TODO(b/281480831): Add --nodeps and use _calculate_install_groups() in
