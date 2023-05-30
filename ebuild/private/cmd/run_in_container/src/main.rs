@@ -1,16 +1,18 @@
 // Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use clap::Parser;
 use cliutil::cli_main;
 use durabletree::DurableTree;
 use itertools::Itertools;
 use makechroot::LayerType;
 use nix::{
+    errno::Errno,
     mount::MntFlags,
     mount::{mount, umount2, MsFlags},
     sched::{unshare, CloneFlags},
+    sys::socket::{socket, AddressFamily, SockFlag, SockProtocol, SockType},
     unistd::{getgid, getuid, pivot_root},
 };
 use path_absolutize::Absolutize;
@@ -20,7 +22,10 @@ use std::{
     ffi::{OsStr, OsString},
     fs::File,
     io::Read,
-    os::unix::fs::{DirBuilderExt, OpenOptionsExt},
+    os::{
+        fd::{AsRawFd, FromRawFd, OwnedFd},
+        unix::fs::{DirBuilderExt, OpenOptionsExt},
+    },
     path::{Path, PathBuf},
     process::{Command, ExitCode},
 };
@@ -207,6 +212,42 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
     Ok(status_to_exit_code(&status))
 }
 
+/// Enables the loopback networking.
+fn enable_loopback_networking() -> Result<()> {
+    let socket = unsafe {
+        OwnedFd::from_raw_fd(
+            socket(
+                AddressFamily::Inet,
+                SockType::Datagram,
+                SockFlag::SOCK_CLOEXEC,
+                SockProtocol::Udp,
+            )
+            .context("socket(AF_INET, SOCK_DGRAM) failed")?,
+        )
+    };
+
+    let mut ifreq = libc::ifreq {
+        ifr_name: [
+            // The loopback device "lo".
+            'l' as i8, 'o' as i8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ],
+        ifr_ifru: libc::__c_anonymous_ifr_ifru { ifru_flags: 0 },
+    };
+
+    // Query the current flags.
+    let res = unsafe { libc::ioctl(socket.as_raw_fd(), libc::SIOCGIFFLAGS, &ifreq) };
+    Errno::result(res).context("ioctl(SIOCGIFFLAGS) failed")?;
+
+    // Update the flags.
+    unsafe {
+        ifreq.ifr_ifru.ifru_flags |= (libc::IFF_UP | libc::IFF_RUNNING) as libc::c_short;
+    }
+    let res = unsafe { libc::ioctl(socket.as_raw_fd(), libc::SIOCSIFFLAGS, &ifreq) };
+    Errno::result(res).context("ioctl(SIOCSIFFLAGS) failed")?;
+
+    Ok(())
+}
+
 fn continue_namespace(
     cfg: RunInContainerConfig,
     cmd: Vec<String>,
@@ -215,14 +256,7 @@ fn continue_namespace(
     let stage_dir = cfg.staging_dir.absolutize()?;
 
     if !allow_network_access {
-        // Enable the loopback networking.
-        if !Command::new("ifconfig")
-            .args(["lo", "up"])
-            .status()?
-            .success()
-        {
-            bail!("Failed to run ifconfig in container");
-        }
+        enable_loopback_networking()?;
     }
 
     // We keep all the directories in the stage dir to keep relative file paths short.

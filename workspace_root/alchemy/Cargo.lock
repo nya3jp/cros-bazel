@@ -1145,6 +1145,7 @@ dependencies = [
  "cliutil",
  "durabletree",
  "itertools",
+ "libc",
  "makechroot",
  "nix",
  "path-absolutize",
