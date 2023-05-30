@@ -6,12 +6,7 @@
 # slow down zstd archive operations while it's super rare that we need to
 # debug zstd by ourselves.
 # https://github.com/bazelbuild/rules_cc/blob/7f0992b0bd47d5b24076c2d022ba1819cc8641e4/cc/private/toolchain/cc_toolchain_config.bzl#L580
-CFLAGS = [
-    "-O2",
-    "-DNDEBUG",
-    "-ffunction-sections",
-    "-fdata-sections",
-]
+FEATURES = ["opt", "c_compiler"]
 
 cc_library(
     name = "lib",
@@ -34,7 +29,7 @@ cc_library(
         "lib/legacy/zstd_v02.*",
         "lib/legacy/zstd_v03.*",
     ]),
-    copts = CFLAGS,
+    features = FEATURES,
     hdrs = glob(["lib/*.h"]),
     linkopts = ["-lpthread"],
     local_defines = [
@@ -51,7 +46,7 @@ cc_binary(
         "programs/*.c",
         "programs/*.h",
     ]),
-    copts = CFLAGS,
+    features = FEATURES,
     visibility = ["//visibility:public"],
     deps = [":lib"],
 )
