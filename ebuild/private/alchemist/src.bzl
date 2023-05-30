@@ -1,7 +1,3 @@
-# Copyright 2023 The ChromiumOS Authors
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
-
 # AUTO GENERATED DO NOT EDIT!
 # Regenerate this file using ./regen-srcs.sh
 # It should be regenerated each time a file is added or removed.
@@ -51,6 +47,7 @@ ALCHEMIST_SRCS = [
     Label("//bazel/ebuild/private/alchemist:src/config/makeconf/generate/templates/make.conf"),
     Label("//bazel/ebuild/private/alchemist:src/config/makeconf/mod.rs"),
     Label("//bazel/ebuild/private/alchemist:src/config/makeconf/parser.rs"),
+    Label("//bazel/ebuild/private/alchemist:src/config/miscconf/accept_keywords.rs"),
     Label("//bazel/ebuild/private/alchemist:src/config/miscconf/mask.rs"),
     Label("//bazel/ebuild/private/alchemist:src/config/miscconf/mod.rs"),
     Label("//bazel/ebuild/private/alchemist:src/config/miscconf/provided.rs"),
