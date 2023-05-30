@@ -14,48 +14,55 @@ use anyhow::{bail, Result};
 use itertools::Itertools;
 
 /// Wraps a CLI main function to provide the common startup/cleanup logic.
+///
+/// Most programs implementing Alchemy actions likely want to call this function
+/// at the very beginning of main. Exceptions include:
+/// - Programs that want to avoid printing to stderr on start (e.g.
+///   action_wrapper that queues stdout/stderr).
 pub fn cli_main<F, T, E>(main: F) -> ExitCode
 where
     F: FnOnce() -> Result<T, E>,
     T: Termination,
     E: Debug,
 {
-    // Print the original command line.
+    print_current_command_line();
+    let result = main();
+    handle_top_level_result(result)
+}
+
+/// Prints the command line of the current process.
+///
+/// You don't need this function if you use [`cli_main`] because it calls this
+/// function for you.
+pub fn print_current_command_line() {
     let escaped_command = std::env::args()
         .map(|s| shell_escape::escape(s.into()))
         .join(" ");
     eprintln!("COMMAND: {}", escaped_command);
-
-    cli_main_quiet(main)
 }
 
-/// Similar to [`cli_main`] but it doesn't write the preamble message to stderr.
+/// Handles the top-level [`Result`] and returns [`ExitCode`] to be returned.
 ///
-/// The only valid caller of this function is action_wrapper that should not
-/// write to stderr. Other programs should be wrapped with action_wrapper and
-/// call [`cli_main`] instead.
-pub fn cli_main_quiet<F, T, E>(main: F) -> ExitCode
-where
-    F: FnOnce() -> Result<T, E>,
-    T: Termination,
-    E: Debug,
-{
-    let result = main();
-
-    // Print the error and exit.
+/// You don't need this function if you use [`cli_main`] because it calls this
+/// function for you.
+pub fn handle_top_level_result<T: Termination, E: Debug>(result: Result<T, E>) -> ExitCode {
     match result {
         Err(error) => {
-            let current_exe = std::env::current_exe().unwrap_or_default();
-            let current_exe_name = current_exe
-                .file_name()
-                .unwrap_or(OsStr::new("<unknown>"))
-                .to_string_lossy();
-
-            eprintln!("FATAL: {}: {:?}", current_exe_name, error);
+            eprintln!("FATAL: {}: {:?}", get_current_process_name(), error);
             ExitCode::FAILURE
         }
         Ok(value) => value.report(),
     }
+}
+
+/// Returns the current process name, or `__unknown__` if it failed to get one.
+fn get_current_process_name() -> String {
+    let current_exe = std::env::current_exe().unwrap_or_default();
+    current_exe
+        .file_name()
+        .unwrap_or(OsStr::new("__unknown__"))
+        .to_string_lossy()
+        .into_owned()
 }
 
 // DEPRECATED: This function was put here just because several executables had

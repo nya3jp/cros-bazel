@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use cliutil::cli_main_quiet;
+use cliutil::handle_top_level_result;
 use processes::status_to_exit_code;
 use std::fs::File;
 use std::os::unix::process::ExitStatusExt;
@@ -56,12 +56,13 @@ fn do_main() -> Result<ExitCode> {
 }
 
 fn main() -> ExitCode {
-    // We use `cli_main_quiet` instead of `cli_main` to suppress the preamble
-    // logs because action_wrapper must queue stdout/stderr until it sees the
-    // wrapped program to exit abnormally. This means we don't log the arguments
-    // passed to action_wrapper itself, but the wrapped program should soon
-    // print one with `cli_main`.
-    cli_main_quiet(do_main)
+    // We don't use `cli_main` to avoid emitting the preamble logs because
+    // action_wrapper must queue stdout/stderr until it sees the wrapped program
+    // to exit abnormally. This means we don't log the arguments passed to
+    // action_wrapper itself, but the wrapped program should soon print one with
+    // `cli_main`.
+    let result = do_main();
+    handle_top_level_result(result)
 }
 
 #[cfg(test)]
