@@ -125,6 +125,9 @@ EbuildLibraryInfo = provider(
     },
 )
 
+# rustc flags to enable debug symbols.
+RUSTC_DEBUG_FLAGS = ["--codegen=debuginfo=2"]
+
 def _workspace_root(label):
     return paths.join("..", label.workspace_name) if label.workspace_name else ""
 

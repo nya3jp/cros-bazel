@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/ebuild/private:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
@@ -14,6 +15,7 @@ rust_library(
     proc_macro_deps = [
         "@alchemy_crates//:strum_macros",
     ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
@@ -45,5 +47,6 @@ rust_test(
         "testdata/mypkg.ebuild",
         "//bazel/sdk:sdk_from_archive",
     ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = ["//bazel/ebuild/private/common/processes"],
 )

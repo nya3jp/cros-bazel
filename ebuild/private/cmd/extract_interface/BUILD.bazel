@@ -2,11 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/ebuild/private:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
 rust_binary(
     name = "extract_interface",
     srcs = glob(["src/*.rs"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
@@ -23,6 +25,7 @@ rust_test(
     size = "small",
     crate = ":extract_interface",
     data = glob(["testdata/*"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",

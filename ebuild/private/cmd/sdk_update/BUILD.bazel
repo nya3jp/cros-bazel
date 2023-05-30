@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/ebuild/private:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 rust_binary(
@@ -11,6 +12,7 @@ rust_binary(
         ":setup.sh",
         "//bazel/ebuild/private/cmd/run_in_container",
     ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",

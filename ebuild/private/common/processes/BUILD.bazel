@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/ebuild/private:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//bazel/ebuild/private:__subpackages__"])
@@ -10,6 +11,7 @@ rust_library(
     name = "processes",
     srcs = glob(["src/**/*.rs"]),
     crate_name = "processes",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
         "@alchemy_crates//:anyhow",
@@ -22,4 +24,5 @@ rust_test(
     name = "processes_test",
     size = "small",
     crate = ":processes",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
 )
