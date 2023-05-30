@@ -4,51 +4,15 @@
 
 load("@cros//bazel/platforms:platforms.bzl", "ALL_PLATFORMS", "HOST_PLATFORM")
 load("@rules_rust//rust:toolchain.bzl", "rust_stdlib_filegroup")
+load("//bazel/module_extensions/toolchains/cc:toolchain.bzl", "generate_cc_toolchains")
+load(":files.bzl", "PLATFORM_DEPENDENT_FILES", "PLATFORM_INDEPENDENT_FILES")
 
 def generate_sdk_files():
-    native.alias(
-        name = "ar",
-        actual = "bin/llvm-ar",
-    )
-
-    native.alias(
-        name = "cargo",
-        actual = "usr/bin/cargo",
-    )
-
-    native.alias(
-        name = "clang",
-        actual = "usr/bin/clang",
-    )
-
-    native.alias(
-        name = "clang_cpp",
-        actual = "usr/bin/clang++",
-    )
-
-    native.alias(
-        name = "lld",
-        actual = "bin/ld.lld",
-    )
-
-    native.alias(
-        name = "rustc",
-        actual = "usr/bin/rustc",
-    )
-    native.alias(
-        name = "rustdoc",
-        actual = "usr/bin/rustdoc",
-    )
-
-    native.alias(
-        name = "rustfmt",
-        actual = "usr/bin/rustfmt",
-    )
-
-    native.alias(
-        name = "strip",
-        actual = "bin/llvm-strip",
-    )
+    for name, files in PLATFORM_INDEPENDENT_FILES.items():
+        native.filegroup(
+            name = name,
+            srcs = files,
+        )
 
     # TODO: implement platform-specific sysroots.
     native.filegroup(
@@ -59,21 +23,26 @@ def generate_sdk_files():
         ]),
     )
 
-    # Using directories as srcs in bazel is bad practice, but we get around the
-    # problems by sepererately declaring a sysroot_files target.
-    native.filegroup(
-        name = "sysroot",
-        srcs = ["."],
-    )
-
     for platform_info in ALL_PLATFORMS:
         _generate_files(platform_info)
+
+    # Bazel's C++ toolchains require that relative paths are relative to the
+    # directory the toolchain is defined in, not the execroot. This has the
+    # annoying consesquence that the toolchains need to be defined here.
+    generate_cc_toolchains()
 
 def _generate_files(platform_info):
     triple = platform_info.triple
 
+    # We don't have an SDK for a host toolchain, so we use the closest thing
+    # available.
+    if platform_info == HOST_PLATFORM:
+        triple_no_host = "x86_64-cros-linux-gnu"
+    else:
+        triple_no_host = triple
+
     rust_stdlib_filegroup(
-        name = "{triple}_rust_stdlibs".format(triple = triple),
+        name = "rust_stdlibs_{triple}".format(triple = triple),
         srcs = native.glob([
             "usr/lib64/rustlib/{triple}/lib/*.rlib*".format(triple = triple),
             "usr/lib64/rustlib/{triple}/lib/*.a*".format(triple = triple),
@@ -82,7 +51,7 @@ def _generate_files(platform_info):
     )
 
     native.filegroup(
-        name = "{triple}_rustc_libs".format(triple = triple),
+        name = "rustc_libs_{triple}".format(triple = triple),
         srcs = native.glob([
             # May need to consider other platforms.
             "usr/lib64/rustlib/{triple}/lib/*.so*".format(triple = triple),
@@ -92,9 +61,10 @@ def _generate_files(platform_info):
         ]),
     )
 
-    native.filegroup(
-        name = "{triple}_compiler_files".format(triple = triple),
-        srcs = [
-            ":sysroot_files".format(triple = triple),
-        ],
-    )
+    for name, files in PLATFORM_DEPENDENT_FILES.items():
+        files = [f.format(triple = triple, triple_no_host = triple_no_host) for f in files]
+
+        native.filegroup(
+            name = "{name}_{triple}".format(name = name, triple = triple),
+            srcs = files,
+        )

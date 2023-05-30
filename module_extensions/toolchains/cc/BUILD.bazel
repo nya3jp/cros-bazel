@@ -4,8 +4,6 @@
 
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("@rules_cc//cc:defs.bzl", "cc_toolchain_suite")
-load(":toolchain.bzl", "generate_cc_toolchains")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -32,13 +30,9 @@ selects.config_setting_group(
     ],
 )
 
-generate_cc_toolchains()
-
-# Workaround for https://github.com/bazelbuild/bazel/issues/12712
-cc_toolchain_suite(
-    name = "cros-cc-toolchain-suite",
-    toolchains = {
-        "k8": ":x86_64-pc-linux-gnu",
-        "x86_64": ":x86_64-pc-linux-gnu",
-    },
+# Used by extract_sdk.
+# TODO(b/285459967): See if we can get rid of this file and use clang++ instead.
+exports_files(
+    ["clang_selector.cc"],
+    visibility = ["//visibility:public"],
 )

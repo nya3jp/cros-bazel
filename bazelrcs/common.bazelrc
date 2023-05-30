@@ -121,3 +121,7 @@ build --@rules_rust//:output_diagnostics=true --output_groups=+rust_lib_rustc_ou
 build:hermetic_toolchains --config=hermetic_cc --config=hermetic_rust
 build:hermetic_cc --//bazel/module_extensions/toolchains/cc:hermetic
 build:hermetic_rust --//bazel/module_extensions/toolchains/rust:hermetic
+
+build:nohermetic_toolchains --config=nohermetic_cc --config=nohermetic_rust
+build:nohermetic_cc --no//bazel/module_extensions/toolchains/cc:hermetic
+build:nohermetic_rust --no//bazel/module_extensions/toolchains/rust:hermetic

@@ -27,7 +27,7 @@ use_repo(
     "toolchain_sdk_tarball",
 )
 
-register_toolchains("//bazel/module_extensions/toolchains/cc:all")
+register_toolchains("@toolchain_sdk//:all")
 
 # Go support
 GO_VERSION = "1.18.3"
