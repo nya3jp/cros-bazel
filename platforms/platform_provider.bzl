@@ -7,7 +7,7 @@ def _platforminfo_init(*, name, cpu_arch, vendor, abi):
     triple = "{}-{}-linux-{}".format(cpu_arch, vendor, abi)
     arch_name = "armv7" if cpu_arch == "armv7a" else cpu_arch
     cpu_arch = Label("@platforms//cpu:" + arch_name)
-    vendor = Label("//rules_cros/platforms/vendor:" + vendor)
+    vendor = Label("//bazel/platforms/constraints:vendor_" + vendor)
     os = Label("@platforms//os:linux")
     return dict(
         name = name,

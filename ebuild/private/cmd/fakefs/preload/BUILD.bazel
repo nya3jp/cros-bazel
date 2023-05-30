@@ -8,6 +8,7 @@ cc_binary(
     features = [
         # Avoid linking libc++.
         "-default_link_libs",
+        "c_compiler",
     ],
     linkopts = [
         # Force linking to shared objects even if there are static archives.
