@@ -79,24 +79,33 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
                         }
                     }
                     CompositeDependency::AnyOf { children } => {
-                        let children = children
-                            .into_iter()
-                            // Drop the constant false.
-                            .filter(|d| !matches!(d.check_constant(), Some((false, _))))
-                            .collect_vec();
-                        let first_constant_true = children
-                            .iter()
-                            .flat_map(|child| match child.check_constant() {
-                                Some((true, reason)) => Some(reason),
-                                _ => None,
-                            })
-                            .next();
-                        if let Some(reason) = first_constant_true {
-                            Dependency::new_constant(true, reason)
-                        } else if children.len() == 1 {
-                            children.into_iter().next().unwrap()
+                        let mut false_constants = vec![];
+                        let mut others = vec![];
+
+                        for child in children {
+                            match child.check_constant() {
+                                Some((true, _)) => return child,
+                                Some((false, _)) => false_constants.push(child),
+                                None => others.push(child),
+                            }
+                        }
+
+                        if others.len() == 1 {
+                            others.into_iter().next().unwrap()
+                        } else if others.len() > 1 {
+                            Dependency::Composite(Box::new(CompositeDependency::AnyOf {
+                                children: others,
+                            }))
+                        } else if false_constants.len() == 1 {
+                            false_constants.into_iter().next().unwrap()
+                        } else if false_constants.len() > 1 {
+                            Dependency::Composite(Box::new(CompositeDependency::AnyOf {
+                                children: false_constants,
+                            }))
                         } else {
-                            Dependency::Composite(Box::new(CompositeDependency::AnyOf { children }))
+                            Dependency::Composite(Box::new(CompositeDependency::AnyOf {
+                                children: vec![],
+                            }))
                         }
                     }
                     other => Dependency::Composite(Box::new(other)),
