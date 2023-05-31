@@ -382,6 +382,11 @@ def _ebuild_debug_impl(ctx):
 
     # Compute arguments and inputs to build_package.
     args, inputs = _compute_build_package_args(ctx, output_path = None)
+
+    # An interactive run will make --login default to after.
+    # The user can still explicitly set --login=before if they wish.
+    args.add("--interactive")
+
     return wrap_binary_with_args(
         ctx,
         out = output_debug_script,

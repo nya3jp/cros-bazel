@@ -24,9 +24,18 @@ pub struct ConfigArgs {
     runfiles_mode: bool,
 
     #[arg(
+        long = "interactive",
+        help = "internal flag used to differentiate between a normal invocation
+            and a user invocation. i.e., _debug targets",
+        hide = true, // We only want the _debug targets setting this flag.
+    )]
+    interactive: bool,
+
+    #[arg(
         long = "login",
         help = "logs in to the SDK before installing deps, before building, after \
             building, or after failing to build respectively.",
+        default_value_if("interactive", "true", Some("after")),
         default_value_t = LoginMode::Never,
     )]
     login_mode: LoginMode,
