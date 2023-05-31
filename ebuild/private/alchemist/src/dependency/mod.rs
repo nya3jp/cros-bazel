@@ -104,10 +104,10 @@ impl<L> Dependency<L> {
         match self {
             Self::Composite(composite) => match &**composite {
                 CompositeDependency::AllOf { children } if children.is_empty() => {
-                    Some((true, "Unknown"))
+                    Some((true, "all-of () dependency is empty"))
                 }
                 CompositeDependency::AnyOf { children } if children.is_empty() => {
-                    Some((false, "Unknown"))
+                    Some((false, "any-of || dependency is empty"))
                 }
                 CompositeDependency::Constant { value, reason } => Some((*value, reason.as_str())),
                 _ => None,
