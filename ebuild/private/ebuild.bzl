@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/ebuild/private:install_groups.bzl", "calculate_install_groups")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
@@ -419,14 +420,19 @@ def _ebuild_install_impl(ctx):
         sudo chmod 644 "%s"
         """ % (dest_dir, info.file.path, dest_path, dest_path)
 
-    # Add script to install the binary package.
-    # TODO(b/281480831): Add --nodeps and use _calculate_install_groups() in
-    # install_deps.bzl to resolve dependencies.
-    script_contents += "emerge-%s --usepkgonly =%s/%s\n" % (
-        ctx.attr.board,
-        ctx.attr.category,
-        src_basename,
+    # Add script to install binary packages.
+    install_groups = calculate_install_groups(
+        [package[BinaryPackageInfo] for package in ctx.attr.packages],
     )
+    for install_group in install_groups:
+        atoms = [
+            "=%s/%s" % (info.category, info.file.basename.rsplit(".", 1)[0])
+            for info in install_group
+        ]
+        script_contents += "emerge-%s --usepkgonly --nodeps --jobs %s\n" % (
+            ctx.attr.board,
+            " ".join(atoms),
+        )
 
     # Write script.
     output_install_script = ctx.actions.declare_file(src_basename +
