@@ -34,10 +34,6 @@ load("//rules_cros/toolchains:toolchain_repositories.bzl", "toolchain_repositori
 
 toolchain_repositories()
 
-load("//rules_cros/third_party:third_party_repositories.bzl", "third_party_repositories")
-
-third_party_repositories()
-
 load("//rules_cros/toolchains:register_toolchains.bzl", "load_toolchains")
 
 load_toolchains()
