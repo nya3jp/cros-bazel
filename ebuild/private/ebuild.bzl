@@ -208,8 +208,8 @@ def _ebuild_impl(ctx):
         src_basename + ".tbz2",
     )
     output_log_file = ctx.actions.declare_file(src_basename + ".log")
-    output_profiles_dir = ctx.actions.declare_directory(
-        src_basename + ".profiles",
+    output_profile_file = ctx.actions.declare_file(
+        src_basename + ".profile.json",
     )
 
     # Compute arguments and inputs to build_package.
@@ -221,7 +221,7 @@ def _ebuild_impl(ctx):
         gsutil_path = ctx.attr._gsutil_path[BuildSettingInfo].value
         ctx.actions.run(
             inputs = [],
-            outputs = [output_binary_package_file, output_profiles_dir],
+            outputs = [output_binary_package_file],
             executable = ctx.executable._download_prebuilt,
             arguments = [gsutil_path, prebuilt, output_binary_package_file.path],
             execution_requirements = {
@@ -232,19 +232,20 @@ def _ebuild_impl(ctx):
             progress_message = "Downloading %s" % prebuilt,
         )
         ctx.actions.write(output_log_file, "Downloaded from %s\n" % prebuilt)
+        ctx.actions.write(output_profile_file, "[]")
     else:
         ctx.actions.run(
             inputs = inputs,
             outputs = [
                 output_binary_package_file,
                 output_log_file,
-                output_profiles_dir,
+                output_profile_file,
             ],
             executable = ctx.executable._action_wrapper,
             tools = [ctx.executable._build_package],
             arguments = [
                 "--log=" + output_log_file.path,
-                "--profiles=" + output_profiles_dir.path,
+                "--profile=" + output_profile_file.path,
                 ctx.executable._build_package.path,
                 args,
             ],

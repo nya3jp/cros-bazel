@@ -11,11 +11,15 @@ rust_binary(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
+        "//bazel/ebuild/private/common/chrome-trace",
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
+        "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/processes",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:nix",
+        "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:tempfile",
     ],
 )
 

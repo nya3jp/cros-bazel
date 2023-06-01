@@ -13,8 +13,8 @@ def _build_image_impl(ctx):
     output_log_file = ctx.actions.declare_file(
         ctx.attr.output_image_file_name + ".log",
     )
-    output_profiles_dir = ctx.actions.declare_directory(
-        ctx.attr.output_image_file_name + ".profiles",
+    output_profile_file = ctx.actions.declare_file(
+        ctx.attr.output_image_file_name + ".profile.json",
     )
 
     sdk = ctx.attr.sdk[SDKInfo]
@@ -87,12 +87,12 @@ def _build_image_impl(ctx):
     # Define the main action.
     ctx.actions.run(
         inputs = inputs,
-        outputs = [output_image_file, output_log_file, output_profiles_dir],
+        outputs = [output_image_file, output_log_file, output_profile_file],
         executable = ctx.executable._action_wrapper,
         tools = [ctx.executable._build_image],
         arguments = [
             "--log=" + output_log_file.path,
-            "--profiles=" + output_profiles_dir.path,
+            "--profile=" + output_profile_file.path,
             ctx.executable._build_image.path,
             args,
         ],

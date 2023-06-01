@@ -7,12 +7,15 @@ name = "action_wrapper"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrome-trace",
  "clap",
  "cliutil",
+ "fileutil",
  "libc",
  "nix",
  "processes",
  "regex",
+ "serde_json",
  "tempfile",
 ]
 
