@@ -8,15 +8,15 @@ set -eu -o pipefail
 # Add users go path before trying
 if GO="$(command -v go)"; then
     # Add /bin to every entry in gopath.
-    PATH="${PATH}:$("$GO" env GOPATH | sed 's/:/\/bin:/g')/bin"
+    PATH="${PATH}:$("${GO}" env GOPATH | sed 's/:/\/bin:/g')/bin"
 fi
 
 # Allow users to create a bazelrc file shared between all chromiumos checkouts.
 # ~/.bazelrc is also shared between all chromiumos checkouts, but it also has
 # non-chromiumos stuff.
 ARGS=()
-if [ -e "$HOME/.chromiumos.bazelrc" ]; then
-  ARGS+=("--bazelrc=$HOME/.chromiumos.bazelrc")
+if [ -e "${HOME}/.chromiumos.bazelrc" ]; then
+  ARGS+=("--bazelrc=${HOME}/.chromiumos.bazelrc")
 fi
 
 if BAZELISK="$(command -v bazelisk)"; then
