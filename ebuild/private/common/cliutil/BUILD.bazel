@@ -20,11 +20,11 @@ rust_library(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
+        "//bazel/ebuild/private/common/tracing-chrome-trace",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:shell-escape",
         "@alchemy_crates//:tracing",
-        "@alchemy_crates//:tracing-chrome",
         "@alchemy_crates//:tracing-subscriber",
     ],
 )

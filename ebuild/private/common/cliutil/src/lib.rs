@@ -15,7 +15,7 @@ use std::{
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use tracing::info_span;
-use tracing_chrome::ChromeLayerBuilder;
+use tracing_chrome_trace::ChromeTraceLayer;
 use tracing_subscriber::prelude::*;
 
 /// Wraps a CLI main function to provide the common startup/cleanup logic.
@@ -70,8 +70,8 @@ pub const PROFILES_DIR_ENV: &str = "ALCHEMY_PROFILES_DIR";
 /// A guard object returned by [`setup_tracing`] and [`setup_tracing_by_env`] to
 /// perform cleanups with RAII.
 pub struct TracingGuard {
-    _span_guard: tracing::span::EnteredSpan,
-    _flush_guard: tracing_chrome::FlushGuard,
+    _span_guard: Option<tracing::span::EnteredSpan>,
+    _flush_guard: Option<tracing_chrome_trace::FlushGuard>,
 }
 
 /// Sets up the standard tracing subscriber to write to the specified path, and
@@ -84,10 +84,17 @@ pub struct TracingGuard {
 /// It returns [`TracingGuard`] that performs cleanups on drop. You have to drop
 /// it just before the program ends.
 pub fn setup_tracing(output: &Path) -> TracingGuard {
-    let (chrome_layer, flush_guard) = ChromeLayerBuilder::new()
-        .file(output)
-        .include_args(true)
-        .build();
+    let (chrome_layer, flush_guard) = match ChromeTraceLayer::new(output) {
+        Ok((chrome_layer, flush_guard)) => (chrome_layer, flush_guard),
+        Err(err) => {
+            eprintln!("WARNING: Failed to set up tracing: {:?}", err);
+            return TracingGuard {
+                _span_guard: None,
+                _flush_guard: None,
+            };
+        }
+    };
+
     tracing_subscriber::registry().with(chrome_layer).init();
 
     let args = std::env::args()
@@ -98,16 +105,9 @@ pub fn setup_tracing(output: &Path) -> TracingGuard {
         .join("\n");
     let span_guard = info_span!("main", args = args, env = env).entered();
 
-    // Record timestamp offset.
-    let timestamp = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs_f64();
-    drop(info_span!("@timestamp-sync@", timestamp = format!("{:.9}", timestamp)).entered());
-
     TracingGuard {
-        _span_guard: span_guard,
-        _flush_guard: flush_guard,
+        _span_guard: Some(span_guard),
+        _flush_guard: Some(flush_guard),
     }
 }
 

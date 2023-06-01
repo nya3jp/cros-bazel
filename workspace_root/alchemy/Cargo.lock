@@ -317,7 +317,7 @@ dependencies = [
  "shell-escape",
  "tempfile",
  "tracing",
- "tracing-chrome",
+ "tracing-chrome-trace",
  "tracing-subscriber",
 ]
 
