@@ -184,6 +184,12 @@ package_set(
 
 {% endfor %}
 {%- for failure in failures %}
+string_flag(
+    name = "{{ failure.version }}_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild_failure(
     name = "{{ failure.version }}",
     ebuild = "{{ failure.ebuild_name }}",
