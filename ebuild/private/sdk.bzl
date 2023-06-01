@@ -243,3 +243,37 @@ sdk_install_deps = rule(
         ),
     },
 )
+
+def _sdk_extend_impl(ctx):
+    sdk = ctx.attr.base[SDKInfo]
+
+    sdk = SDKInfo(
+        layers = sdk.layers + ctx.files.extra_tarballs,
+    )
+
+    return [
+        DefaultInfo(files = depset(sdk.layers)),
+        sdk,
+    ]
+
+sdk_extend = rule(
+    doc = "Adds extra tarballs to the SDK",
+    implementation = _sdk_extend_impl,
+    provides = [SDKInfo],
+    attrs = {
+        "base": attr.label(
+            doc = """
+            Base SDK to derive a new SDK from.
+            """,
+            mandatory = True,
+            providers = [SDKInfo],
+        ),
+        "extra_tarballs": attr.label_list(
+            allow_files = True,
+            mandatory = True,
+            doc = """
+            Extra files to layer onto the base SDK.
+            """,
+        ),
+    },
+)
