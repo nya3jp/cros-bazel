@@ -13,6 +13,7 @@ members = [
     "bazel/ebuild/private/cmd/run_in_container",
     "bazel/ebuild/private/cmd/sdk_from_archive",
     "bazel/ebuild/private/cmd/sdk_update",
+    "bazel/ebuild/private/common/chrome-trace",
     "bazel/ebuild/private/common/cliutil",
     "bazel/ebuild/private/common/durabletree",
     "bazel/ebuild/private/common/fileutil",
