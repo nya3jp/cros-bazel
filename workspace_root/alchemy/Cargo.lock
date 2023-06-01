@@ -1632,6 +1632,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-chrome-trace"
+version = "0.1.0"
+dependencies = [
+ "chrome-trace",
+ "nix",
+ "serde_json",
+ "tempfile",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "tracing-core"
 version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
