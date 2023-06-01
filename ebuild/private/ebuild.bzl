@@ -70,9 +70,9 @@ _EBUILD_COMMON_ATTRS = dict(
         """,
     ),
     board = attr.string(
-        mandatory = True,
         doc = """
-        The target board name to build the package for.
+        The target board name to build the package for. If unset, then the host
+        will be targeted.
         """,
     ),
     sdk = attr.label(
@@ -125,7 +125,8 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     transitive_inputs = []
 
     # Basic arguments
-    args.add("--board=" + ctx.attr.board)
+    if ctx.attr.board:
+        args.add("--board=" + ctx.attr.board)
     if output_path:
         args.add("--output=" + output_path)
     if for_test:

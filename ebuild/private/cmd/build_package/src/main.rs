@@ -25,8 +25,8 @@ struct Cli {
     mountsdk_config: ConfigArgs,
 
     /// Name of board
-    #[arg(long, required = true)]
-    board: String,
+    #[arg(long)]
+    board: Option<String>,
 
     #[arg(long, required = true)]
     ebuild: EbuildMetadata,
@@ -193,16 +193,23 @@ fn do_main() -> Result<()> {
         cfg.allow_network_access = true;
     }
 
-    let build_root_dir = Path::new("/build").join(&args.board);
-    let target_packages_dir = build_root_dir.join("packages");
+    let (portage_tmp_dir, portage_pkg_dir) = match &args.board {
+        Some(board) => {
+            let root_dir = Path::new("/build").join(board);
+            (root_dir.join("tmp/portage"), root_dir.join("packages"))
+        }
+        None => (
+            PathBuf::from("/var/tmp/portage"),
+            PathBuf::from("/var/lib/portage/pkgs"),
+        ),
+    };
 
-    let mut sdk = MountedSDK::new(cfg, Some(&args.board))?;
+    let mut sdk = MountedSDK::new(cfg, args.board.as_deref())?;
     let out_dir = sdk
         .root_dir()
         .outside
-        .join(target_packages_dir.strip_prefix("/")?);
+        .join(portage_pkg_dir.strip_prefix("/")?);
     std::fs::create_dir_all(out_dir)?;
-    std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
 
     // HACK: CrOS disables pkg_pretend in emerge(1), but ebuild(1) still tries to
     // run it.
@@ -210,8 +217,7 @@ fn do_main() -> Result<()> {
     let pretend_stamp_path = sdk
         .root_dir()
         .outside
-        .join(build_root_dir.strip_prefix("/")?)
-        .join("tmp/portage")
+        .join(portage_tmp_dir.strip_prefix("/")?)
         .join(&args.ebuild.category)
         .join(
             args.ebuild
@@ -223,7 +229,10 @@ fn do_main() -> Result<()> {
     std::fs::create_dir_all(pretend_stamp_path.parent().unwrap())?;
     File::create(pretend_stamp_path)?;
 
-    let sysroot = sdk.root_dir().join("build").join(&args.board).outside;
+    let sysroot = match &args.board {
+        Some(board) => sdk.root_dir().join("build").join(board).outside,
+        None => sdk.root_dir().outside.clone(),
+    };
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
     }
@@ -240,7 +249,7 @@ fn do_main() -> Result<()> {
     }
     sdk.run_cmd(&cmd_args)?;
 
-    let binary_out_path = target_packages_dir.join(args.ebuild.category).join(format!(
+    let binary_out_path = portage_pkg_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",
         args.ebuild
             .file_name
