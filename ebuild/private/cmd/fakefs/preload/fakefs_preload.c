@@ -144,50 +144,76 @@ static int wrap_statx(int dirfd, const char *pathname, int flags,
   return g_libc_statx(dirfd, pathname, flags, mask, statxbuf);
 }
 
-int stat(const char *pathname, struct stat *statbuf) {
+int __fakefs_stat(const char *pathname, struct stat *statbuf) {
   ensure_init();
   return wrap_fstatat(AT_FDCWD, pathname, statbuf, 0);
 }
 
-int stat64(const char *pathname, struct stat64 *statbuf) {
+int __fakefs_stat64(const char *pathname, struct stat64 *statbuf) {
   ensure_init();
   return wrap_fstatat(AT_FDCWD, pathname, (struct stat *)statbuf, 0);
 }
 
-int lstat(const char *pathname, struct stat *statbuf) {
+int __fakefs_lstat(const char *pathname, struct stat *statbuf) {
   ensure_init();
   return wrap_fstatat(AT_FDCWD, pathname, statbuf, AT_SYMLINK_NOFOLLOW);
 }
 
-int lstat64(const char *pathname, struct stat64 *statbuf) {
+int __fakefs_lstat64(const char *pathname, struct stat64 *statbuf) {
   ensure_init();
   return wrap_fstatat(AT_FDCWD, pathname, (struct stat *)statbuf,
                       AT_SYMLINK_NOFOLLOW);
 }
 
-int fstat(int fd, struct stat *statbuf) {
+int __fakefs_fstat(int fd, struct stat *statbuf) {
   ensure_init();
   return wrap_fstatat(fd, "", statbuf, AT_EMPTY_PATH);
 }
 
-int fstat64(int fd, struct stat64 *statbuf) {
+int __fakefs_fstat64(int fd, struct stat64 *statbuf) {
   ensure_init();
   return wrap_fstatat(fd, "", (struct stat *)statbuf, AT_EMPTY_PATH);
 }
 
-int fstatat(int dirfd, const char *pathname, struct stat *statbuf, int flags) {
+int __fakefs_fstatat(int dirfd, const char *pathname, struct stat *statbuf,
+                     int flags) {
   ensure_init();
   return wrap_fstatat(dirfd, pathname, statbuf, flags);
 }
 
-int fstatat64(int dirfd, const char *pathname, struct stat64 *statbuf,
-              int flags) {
+int __fakefs_fstatat64(int dirfd, const char *pathname, struct stat64 *statbuf,
+                       int flags) {
   ensure_init();
   return wrap_fstatat(dirfd, pathname, (struct stat *)statbuf, flags);
 }
 
-int statx(int dirfd, const char *pathname, int flags, unsigned int mask,
-          struct statx *statxbuf) {
+int __fakefs_statx(int dirfd, const char *pathname, int flags,
+                   unsigned int mask, struct statx *statxbuf) {
   ensure_init();
   return wrap_statx(dirfd, pathname, flags, mask, statxbuf);
 }
+
+// Define libc intercepting symbols as aliases.
+// Implementing them directly can lead to incorrect compiler optimizations
+// because prototype declarations of these functions in the standard library
+// headers may be annotated with extra information (e.g. nonnull) that can cause
+// our functions to be optimized in unexpected ways.
+// See b/285262832 for the background.
+int stat(const char *pathname, struct stat *statbuf)
+    __attribute__((alias("__fakefs_stat")));
+int stat64(const char *pathname, struct stat64 *statbuf)
+    __attribute__((alias("__fakefs_stat64")));
+int lstat(const char *pathname, struct stat *statbuf)
+    __attribute__((alias("__fakefs_lstat")));
+int lstat64(const char *pathname, struct stat64 *statbuf)
+    __attribute__((alias("__fakefs_lstat64")));
+int fstat(int fd, struct stat *statbuf)
+    __attribute__((alias("__fakefs_fstat")));
+int fstat64(int fd, struct stat64 *statbuf)
+    __attribute__((alias("__fakefs_fstat64")));
+int fstatat(int dirfd, const char *pathname, struct stat *statbuf, int flags)
+    __attribute__((alias("__fakefs_fstatat")));
+int fstatat64(int dirfd, const char *pathname, struct stat64 *statbuf,
+              int flags) __attribute__((alias("__fakefs_fstatat64")));
+int statx(int dirfd, const char *pathname, int flags, unsigned int mask,
+          struct statx *statxbuf) __attribute__((alias("__fakefs_statx")));
