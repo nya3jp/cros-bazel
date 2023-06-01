@@ -29,7 +29,7 @@ use std::{
         unix::fs::{DirBuilderExt, OpenOptionsExt},
     },
     path::{Path, PathBuf},
-    process::{Command, ExitCode},
+    process::{Command, ExitCode, Stdio},
 };
 use tar::Archive;
 use tracing::info_span;
@@ -146,18 +146,12 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
     let r = runfiles::Runfiles::create()?;
     let dumb_init_path = r.rlocation("files/dumb_init");
 
-    // Enter a new namespace.
-    let mut unshare_flags = CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWIPC;
-    if !allow_network_access {
-        unshare_flags |= CloneFlags::CLONE_NEWNET;
-    }
-    if privileged {
-        unshare(unshare_flags).with_context(|| "Failed to create a privileged container")?;
-    } else {
+    // Enter a new user namespace if unprivileged.
+    if !privileged {
         let uid = getuid();
         let gid = getgid();
-        unshare(CloneFlags::CLONE_NEWUSER | unshare_flags)
-            .with_context(|| "Failed to create an unprivileged container")?;
+        unshare(CloneFlags::CLONE_NEWUSER)
+            .with_context(|| "Failed to create an unprivileged user namespace")?;
         std::fs::write("/proc/self/setgroups", "deny")
             .with_context(|| "Writing /proc/self/setgroups")?;
         std::fs::write("/proc/self/uid_map", format!("0 {uid} 1\n"))
@@ -165,6 +159,42 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
         std::fs::write("/proc/self/gid_map", format!("0 {gid} 1\n"))
             .with_context(|| "Writing /proc/self/gid_map")?;
     }
+
+    // Enter various namespaces except mount/PID namespace.
+    let mut unshare_flags = CloneFlags::CLONE_NEWIPC;
+    if !allow_network_access {
+        unshare_flags |= CloneFlags::CLONE_NEWNET;
+    }
+    unshare(unshare_flags)
+        .with_context(|| format!("Failed to enter namespaces (flags={:?})", unshare_flags))?;
+
+    // HACK: Start a "sentinel" subprocess that belongs to the new namespaces
+    // (except PID namespace) and exits *after* the current process.
+    //
+    // Some namespaces (e.g. network) are expensive to destroy, so it takes some
+    // time for the last process in the namespaces to exit. If we do it simply,
+    // the current process would be the last process, so its parent process
+    // needs to wait for namespace cleanup.
+    //
+    // We work around this problem by starting a subprocess that remains in the
+    // namespaces. Specifically, we start a cat process whose stdin is piped,
+    // and leak the process intentionally. When the current process exits, the
+    // kernel closes the writer end of the pipe, which causes the cat process
+    // to exit.
+    //
+    // Note that we can't run the subprocess in the new PID namespace because,
+    // once the current process calls unshare(CLONE_NEWPID), it is limited to
+    // call fork at most once. But fortunately it seems like destroying a PID
+    // namespace is cheap.
+    let sentinel = Command::new("/bin/cat")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()?;
+    std::mem::forget(sentinel);
+
+    // Enter a PID namespace.
+    unshare(CloneFlags::CLONE_NEWPID).context("Failed to enter PID namespace")?;
 
     // Create a temporary directory to be used by the child run_in_container.
     // Since it enters a new mount namespace and calls pivot_root, it cannot
