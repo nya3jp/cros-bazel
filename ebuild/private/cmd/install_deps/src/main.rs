@@ -8,7 +8,10 @@ use cliutil::cli_main;
 use durabletree::DurableTree;
 use makechroot::BindMount;
 use mountsdk::{InstallGroup, MountedSDK};
-use std::{path::PathBuf, process::ExitCode};
+use std::{
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
 
 const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/install_deps.sh";
 
@@ -19,8 +22,8 @@ struct Cli {
     mountsdk_config: mountsdk::ConfigArgs,
 
     /// Name of board
-    #[arg(long, required = true)]
-    board: String,
+    #[arg(long)]
+    board: Option<String>,
 
     #[arg(long)]
     install_target: Vec<InstallGroup>,
@@ -42,26 +45,22 @@ fn do_main() -> Result<()> {
         rw: false,
     });
 
-    let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();
+    let portage_pkg_dir = match &args.board {
+        Some(board) => Path::new("/build").join(board).join("packages"),
+        None => PathBuf::from("/var/lib/portage/pkgs"),
+    };
 
     let (mut mounts, env) =
-        InstallGroup::get_mounts_and_env(&args.install_target, &target_packages_dir)?;
+        InstallGroup::get_mounts_and_env(&args.install_target, portage_pkg_dir)?;
     cfg.bind_mounts.append(&mut mounts);
     cfg.envs = env;
 
-    let mut sdk = MountedSDK::new(cfg, Some(&args.board))?;
-    // TODO: Simplify this after tg/1717983 is submitted.
-    let out_dir = sdk
-        .root_dir()
-        .outside
-        .join(target_packages_dir.strip_prefix("/")?);
-    std::fs::create_dir_all(out_dir)?;
-    std::fs::create_dir_all(sdk.root_dir().outside.join("var/lib/portage/pkgs"))?;
+    let mut sdk = MountedSDK::new(cfg, args.board.as_deref())?;
 
     sdk.run_cmd(&[MAIN_SCRIPT])?;
 
     fileutil::move_dir_contents(sdk.diff_dir().as_path(), &args.output)?;
-    makechroot::clean_layer(Some(&args.board), &args.output)?;
+    makechroot::clean_layer(args.board.as_deref(), &args.output)?;
     DurableTree::convert(&args.output)?;
 
     Ok(())

@@ -79,7 +79,8 @@ def install_deps(
         ctx: ctx: A context object passed to the rule implementation.
         output_prefix: str: A file name prefix to prepend to output files
             defined in this function.
-        board: str: The target board name to install dependencies for.
+        board: Option[str]: The target board name to install dependencies for. If None
+            then the packages are installed into the host sysroot.
         sdk: SDKInfo: The provider describing the base file system layers.
         overlays: OverlaySetInfo: Overlays providing packages.
         install_set: Depset[BinaryPackageInfo]: Binary package targets to
@@ -100,9 +101,10 @@ def install_deps(
     args.add_all([
         "--output=" + output_log_file.path,
         executable_install_deps.path,
-        "--board=" + board,
         "--output=" + output_root.path,
     ])
+    if board:
+        args.add("--board=" + board)
 
     # TODO: Can we avoid the costly to_list() operation?
     install_list = install_set.to_list()

@@ -208,9 +208,9 @@ sdk_install_deps = rule(
             providers = [SDKInfo],
         ),
         "board": attr.string(
-            mandatory = True,
             doc = """
-            The target board name to build the package for.
+            If set, the packages are installed into the board's sysroot,
+            otherwise they are installed into the host's sysroot.
             """,
         ),
         "overlays": attr.label(
