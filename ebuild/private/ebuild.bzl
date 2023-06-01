@@ -241,7 +241,7 @@ def _ebuild_impl(ctx):
                 "no-remote": "",
             },
             mnemonic = "Ebuild",
-            progress_message = "Building " + ctx.file.ebuild.basename,
+            progress_message = "Building %{label}",
         )
 
     # Generate interface libraries.
