@@ -147,8 +147,7 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
     let dumb_init_path = r.rlocation("files/dumb_init");
 
     // Enter a new namespace.
-    let mut unshare_flags =
-        CloneFlags::CLONE_NEWNS | CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWIPC;
+    let mut unshare_flags = CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWIPC;
     if !allow_network_access {
         unshare_flags |= CloneFlags::CLONE_NEWNET;
     }
@@ -166,6 +165,12 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
         std::fs::write("/proc/self/gid_map", format!("0 {gid} 1\n"))
             .with_context(|| "Writing /proc/self/gid_map")?;
     }
+
+    // Create a temporary directory to be used by the child run_in_container.
+    // Since it enters a new mount namespace and calls pivot_root, it cannot
+    // delete temporary directories they create, so this process takes care of
+    // them.
+    let temp_dir = SafeTempDir::new()?;
 
     // --single-child tells dumb-init to not create a new SID. A new SID doesn't
     // have a controlling terminal, so running `bash` won't work correctly.
@@ -187,7 +192,8 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
             .arg("--single-child")
             .arg(&args[0])
             .arg("--already-in-namespace")
-            .args(&args[1..]),
+            .args(&args[1..])
+            .env("TMPDIR", temp_dir.path()),
     )?;
 
     // Propagate the exit status of the command.
@@ -235,6 +241,8 @@ fn continue_namespace(
     cmd: Vec<String>,
     allow_network_access: bool,
 ) -> Result<ExitCode> {
+    unshare(CloneFlags::CLONE_NEWNS).context("Failed to enter mount namespace")?;
+
     let stage_dir = cfg.staging_dir.absolutize()?;
 
     if !allow_network_access {
@@ -487,6 +495,12 @@ fn continue_namespace(
     }
 
     pivot_root(&root_dir, &root_dir.join("host")).with_context(|| "Failed to pivot root")?;
+
+    // Now that we've pivoted the root, we can no longer remove temporary
+    // directories created above. It is the parent process's responsibility to
+    // remove $TMPDIR.
+    std::mem::forget(durable_trees);
+    std::mem::forget(tar_content_dirs);
 
     if !cfg.keep_host_mount {
         // Do a lazy unmount with DETACH. Since the binary is dynamically linked, we still have some
