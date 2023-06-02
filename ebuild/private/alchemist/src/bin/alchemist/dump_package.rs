@@ -2,10 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use alchemist::analyze::dependency::analyze_dependencies;
+use alchemist::ebuild::PackageDetails;
 use alchemist::{dependency::package::PackageAtom, resolver::PackageResolver};
 use anyhow::Result;
 use colored::Colorize;
 use itertools::Itertools;
+use std::sync::Arc;
+
+fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
+    println!("{dep_type}:");
+    for dep in deps {
+        println!("  {}-{}", dep.package_name, dep.version);
+    }
+}
 
 pub fn dump_package_main(resolver: &PackageResolver, atoms: Vec<PackageAtom>) -> Result<()> {
     for atom in atoms {
@@ -17,7 +27,11 @@ pub fn dump_package_main(resolver: &PackageResolver, atoms: Vec<PackageAtom>) ->
 
         println!("=======\t{}", atom);
 
-        for details in packages {
+        for (i, details) in packages.into_iter().enumerate() {
+            if i > 0 {
+                println!();
+            }
+
             let is_default = match &default {
                 Some(default) => default.ebuild_path == details.ebuild_path,
                 None => false,
@@ -45,7 +59,11 @@ pub fn dump_package_main(resolver: &PackageResolver, atoms: Vec<PackageAtom>) ->
                     })
                     .join(" ")
             );
-            println!();
+
+            let deps = analyze_dependencies(&details, resolver)?;
+            dump_deps("DEPEND", &deps.build_deps);
+            dump_deps("RDEPEND", &deps.runtime_deps);
+            dump_deps("PDEPEND", &deps.post_deps);
         }
     }
     Ok(())
