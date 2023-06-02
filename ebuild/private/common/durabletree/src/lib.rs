@@ -145,4 +145,22 @@ impl DurableTree {
         // takes precedence.
         vec![self.extra_dir.path(), &self.raw_dir]
     }
+
+    /// Similar to [`DurableTree::layers`], but consumes [`DurableTree`].
+    ///
+    /// After calling this function, it is your responsibility to clean layers
+    /// up. Since layers might involve mounting file systems, properly cleaning
+    /// them up by yourself is difficult. Use this function only as a last
+    /// resort when you make changes to the file system mounts that prevents the
+    /// default clean-up from working properly, e.g. calling pivot_root(2).
+    ///
+    /// If you really have to clean things up by yourself, this is a way that
+    /// will work:
+    /// - Enter a new mount namespace before calling [`DurableTree::expand`].
+    /// - After you're done with durable trees, remove the whole $TMPDIR from
+    ///   a process outside of the mount namespace.
+    #[must_use]
+    pub fn into_layers(self) -> Vec<PathBuf> {
+        vec![self.extra_dir.into_path(), self.raw_dir]
+    }
 }

@@ -24,18 +24,24 @@ use crate::{
 };
 
 pub struct ExtraDir {
-    dir: PathBuf,
+    dir: Option<PathBuf>,
 }
 
 impl ExtraDir {
     pub fn path(&self) -> &Path {
-        &self.dir
+        self.dir.as_ref().unwrap()
+    }
+
+    pub fn into_path(mut self) -> PathBuf {
+        self.dir.take().unwrap()
     }
 }
 
 impl Drop for ExtraDir {
     fn drop(&mut self) {
-        umount2(self.path(), MntFlags::MNT_DETACH).expect("Failed to unmount tmpfs");
+        if let Some(dir) = &self.dir {
+            umount2(dir, MntFlags::MNT_DETACH).expect("Failed to unmount tmpfs");
+        }
     }
 }
 
@@ -103,7 +109,7 @@ fn extract_extra_files(root_dir: &Path) -> Result<ExtraDir> {
     .context("Failed to mount tmpfs for extra dir")?;
 
     let extra_dir = ExtraDir {
-        dir: dir.into_path(),
+        dir: Some(dir.into_path()),
     };
 
     // TODO: Avoid depending on the system-installed tar(1).

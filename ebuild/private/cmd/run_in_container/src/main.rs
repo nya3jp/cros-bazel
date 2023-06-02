@@ -319,8 +319,6 @@ fn continue_namespace(
     // Set up lower directories.
     // Directories are ordered from most lower to least lower.
     let mut lower_dirs: Vec<PathBuf> = [base_dir].into();
-    let mut durable_trees: Vec<DurableTree> = Vec::new();
-    let mut tar_content_dirs: Vec<SafeTempDir> = Vec::new();
     let mut last_tar_content_dir: Option<PathBuf> = None;
 
     for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
@@ -352,37 +350,38 @@ fn continue_namespace(
                 // We use a temporary directory for the extracted artifacts instead of
                 // putting them in the lower directory because the lower directory is a
                 // tmpfs mount and we don't want to use up all the RAM.
-                let content_dir = SafeTempDir::new()?;
+                // We don't need to remove temporary directories since the parent
+                // process is responsible for it. Rather, it is impossible for the
+                // current process to clean things up after pivot_root.
+                let content_dir = SafeTempDir::new()?.into_path();
 
-                extract_archive(&layer_path, content_dir.path())?;
+                extract_archive(&layer_path, &content_dir)?;
 
                 let lower_dir = lowers_dir.join(format!("{}", layer_index));
                 dir_builder.create(&lower_dir)?;
 
-                mount(
-                    Some(content_dir.path()),
-                    &lower_dir,
-                    NONE_STR,
-                    BIND_REC,
-                    NONE_STR,
-                )
-                .with_context(|| format!("Failed bind-mounting {:?}", content_dir.path()))?;
+                mount(Some(&content_dir), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
+                    .with_context(|| format!("Failed bind-mounting {:?}", &content_dir))?;
 
-                last_tar_content_dir = Some(content_dir.path().to_owned());
+                last_tar_content_dir = Some(content_dir);
                 lower_dirs.push(lower_dir);
-                tar_content_dirs.push(content_dir);
             }
             LayerType::DurableTree => {
                 let durable_tree = DurableTree::expand(&layer_path)
                     .with_context(|| format!("Expanding a durable tree at {layer_path:?}"))?;
 
-                for (sublayer_index, sublayer_path) in durable_tree.layers().into_iter().enumerate()
-                {
+                // We intentionally omit DurableTree's cleanup because the
+                // parent process is responsible for it. Rather, it is
+                // impossible for the current process to clean things up after
+                // pivot_root.
+                let layers = durable_tree.into_layers();
+
+                for (sublayer_index, sublayer_path) in layers.into_iter().enumerate() {
                     let lower_dir = lowers_dir.join(format!("{}.{}", layer_index, sublayer_index));
                     dir_builder.create(&lower_dir)?;
 
                     mount(
-                        Some(sublayer_path),
+                        Some(&sublayer_path),
                         &lower_dir,
                         NONE_STR,
                         BIND_REC,
@@ -394,7 +393,6 @@ fn continue_namespace(
                 }
 
                 last_tar_content_dir = None;
-                durable_trees.push(durable_tree);
             }
         }
     }
@@ -525,12 +523,6 @@ fn continue_namespace(
     }
 
     pivot_root(&root_dir, &root_dir.join("host")).with_context(|| "Failed to pivot root")?;
-
-    // Now that we've pivoted the root, we can no longer remove temporary
-    // directories created above. It is the parent process's responsibility to
-    // remove $TMPDIR.
-    std::mem::forget(durable_trees);
-    std::mem::forget(tar_content_dirs);
 
     if !cfg.keep_host_mount {
         // Do a lazy unmount with DETACH. Since the binary is dynamically linked, we still have some
