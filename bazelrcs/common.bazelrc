@@ -70,6 +70,10 @@ build --incompatible_allow_tags_propagation
 fetch --incompatible_allow_tags_propagation
 query --incompatible_allow_tags_propagation
 
+# These are symlinked elsewhere.
+common --deleted_packages=bazel/workspace_root/...
+common --deleted_packages=bazel/rules_cros/...
+
 ### Toolchain resolution.
 build --host_platform=//bazel/platforms:host
 # Use platforms instead of crostool_top to resolve C++ toolchains.
