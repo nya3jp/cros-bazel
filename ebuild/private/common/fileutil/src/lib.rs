@@ -5,7 +5,9 @@
 mod dualpath;
 mod r#move;
 mod remove;
+mod tempdir;
 
 pub use dualpath::DualPath;
 pub use r#move::*;
 pub use remove::*;
+pub use tempdir::*;

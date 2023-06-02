@@ -29,7 +29,9 @@ rust_library(
     visibility = ["//bazel:internal"],
     deps = [
         "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:lazy_static",
         "@alchemy_crates//:libc",
+        "@alchemy_crates//:tempfile",
         "@alchemy_crates//:walkdir",
     ],
 )
