@@ -5,13 +5,13 @@
 mod testutil;
 
 use anyhow::Result;
+use fileutil::SafeTempDir;
 use std::{
     fs::{create_dir, set_permissions, File},
     os::unix::{fs::symlink, prelude::*},
     path::PathBuf,
     process::Command,
 };
-use tempfile::TempDir;
 
 use crate::{
     consts::{MODE_MASK, RAW_DIR_NAME, RESTORED_XATTR},
@@ -25,7 +25,7 @@ use crate::{
 // Tests `DurableTree::try_exists`.
 #[test]
 fn exists() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     assert!(!DurableTree::try_exists(dir)?);
@@ -40,7 +40,7 @@ fn exists() -> Result<()> {
 // Tries converting and expanding a durable tree from an empty directory.
 #[test]
 fn empty() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     set_permissions(dir, PermissionsExt::from_mode(0o750))?;
@@ -67,7 +67,7 @@ fn empty() -> Result<()> {
 // Tries converting and expanding a durable tree from a simple directory.
 #[test]
 fn simple() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     // ./         - 0755
@@ -119,7 +119,7 @@ fn simple() -> Result<()> {
 // Checks the case with special files.
 #[test]
 fn preserve_special_files() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     set_permissions(dir, PermissionsExt::from_mode(0o755))?;
@@ -165,7 +165,7 @@ fn preserve_special_files() -> Result<()> {
 // Checks the case with special mode bits (sticky/setuid/setgid).
 #[test]
 fn preserve_special_modes() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     // ./         -  0700
@@ -207,7 +207,7 @@ fn preserve_special_modes() -> Result<()> {
 // Checks that user xattrs are preserved.
 #[test]
 fn preserve_user_xattrs() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     set_permissions(dir, PermissionsExt::from_mode(0o700))?;
@@ -267,7 +267,7 @@ fn preserve_user_xattrs() -> Result<()> {
 // Checks that empty directories are restored.
 #[test]
 fn restore_empty_dirs() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     set_permissions(dir, PermissionsExt::from_mode(0o750))?;
@@ -308,7 +308,7 @@ fn restore_empty_dirs() -> Result<()> {
 // Ensure that restoration happens only once.
 #[test]
 fn restore_once() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
     let raw_dir = dir.join(RAW_DIR_NAME);
 
@@ -340,7 +340,7 @@ fn restore_once() -> Result<()> {
 // Checks that the same input directory produces a bit-identical durable tree.
 #[test]
 fn reproducible() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     set_permissions(dir, PermissionsExt::from_mode(0o755))?;
@@ -409,7 +409,7 @@ fn reproducible() -> Result<()> {
 // whose permissions are set inaccessible.
 #[test]
 fn inaccessible_files() -> Result<()> {
-    let dir = TempDir::new()?;
+    let dir = SafeTempDir::new()?;
     let dir = dir.path();
 
     // ./         - 0700

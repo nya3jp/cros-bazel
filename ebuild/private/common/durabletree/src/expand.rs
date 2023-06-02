@@ -11,7 +11,7 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
-use tempfile::TempDir;
+use fileutil::SafeTempDir;
 use tracing::instrument;
 
 use crate::{
@@ -73,8 +73,8 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
 
 /// Extracts the extra tarball into a temporary directory and returns its path.
 #[instrument]
-fn extract_extra_files(root_dir: &Path) -> Result<TempDir> {
-    let extra_dir = TempDir::new()?;
+fn extract_extra_files(root_dir: &Path) -> Result<SafeTempDir> {
+    let extra_dir = SafeTempDir::new()?;
 
     // TODO: Avoid depending on the system-installed tar(1).
     // It's not too bad though as it is so popular in Linux systems.
@@ -95,7 +95,7 @@ fn extract_extra_files(root_dir: &Path) -> Result<TempDir> {
     Ok(extra_dir)
 }
 
-pub fn expand_impl(root_dir: &Path) -> Result<TempDir> {
+pub fn expand_impl(root_dir: &Path) -> Result<SafeTempDir> {
     // Ensure that the directory is a durable tree.
     if !root_dir.join(MARKER_FILE_NAME).try_exists()? {
         bail!("{} is not a durable tree", root_dir.display());

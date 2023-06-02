@@ -90,13 +90,15 @@ impl Drop for ControlChannel {
 
 #[cfg(test)]
 mod test {
+    use fileutil::SafeTempDir;
+
     use super::*;
 
     use std::time::Duration;
 
     #[test]
     pub fn creates_control_channel() -> Result<()> {
-        let tmp_dir = tempfile::tempdir()?;
+        let tmp_dir = SafeTempDir::new()?;
         let path = tmp_dir.path().join("control");
         let _control = ControlChannel::new(path.clone())?;
         assert!(path.try_exists()?);

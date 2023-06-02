@@ -61,8 +61,8 @@ impl LayerType {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fileutil::SafeTempDir;
     use runfiles::Runfiles;
-    use tempfile::TempDir;
 
     #[test]
     fn detect_layer_type_works() -> Result<()> {
@@ -78,7 +78,7 @@ mod tests {
             LayerType::Tar
         );
 
-        let temp_dir = TempDir::new()?;
+        let temp_dir = SafeTempDir::new()?;
         let temp_dir = temp_dir.path();
 
         assert_eq!(LayerType::detect(temp_dir)?, LayerType::Dir);

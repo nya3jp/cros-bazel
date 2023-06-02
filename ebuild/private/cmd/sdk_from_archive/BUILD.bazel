@@ -36,8 +36,8 @@ rust_test(
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
+        "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "@alchemy_crates//:anyhow",
-        "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",
     ],
 )

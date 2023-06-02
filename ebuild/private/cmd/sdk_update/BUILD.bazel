@@ -23,7 +23,6 @@ rust_binary(
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
-        "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",
     ],
 )

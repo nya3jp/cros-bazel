@@ -392,7 +392,6 @@ dependencies = [
  "serde_json",
  "sha2",
  "tar",
- "tempfile",
  "tracing",
  "walkdir",
  "xattr 1.0.0",
@@ -434,9 +433,9 @@ dependencies = [
  "binarypackage",
  "clap",
  "cliutil",
+ "fileutil",
  "runfiles",
  "tar",
- "tempfile",
  "zstd",
 ]
 
@@ -725,7 +724,6 @@ dependencies = [
  "path-absolutize",
  "runfiles",
  "serde",
- "tempfile",
  "tracing",
  "walkdir",
 ]
@@ -787,7 +785,6 @@ dependencies = [
  "scopeguard",
  "strum",
  "strum_macros",
- "tempfile",
  "tracing",
 ]
 
@@ -1180,6 +1177,7 @@ dependencies = [
  "clap",
  "cliutil",
  "durabletree",
+ "fileutil",
  "itertools",
  "libc",
  "makechroot",
@@ -1193,7 +1191,6 @@ dependencies = [
  "serde_json",
  "shell-escape",
  "tar",
- "tempfile",
  "tracing",
  "walkdir",
  "zstd",
@@ -1282,9 +1279,9 @@ dependencies = [
  "clap",
  "cliutil",
  "durabletree",
+ "fileutil",
  "processes",
  "runfiles",
- "tempfile",
 ]
 
 [[package]]
@@ -1300,7 +1297,6 @@ dependencies = [
  "makechroot",
  "mountsdk",
  "runfiles",
- "tempfile",
 ]
 
 [[package]]

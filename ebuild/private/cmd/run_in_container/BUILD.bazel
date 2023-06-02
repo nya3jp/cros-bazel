@@ -19,6 +19,7 @@ rust_binary(
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/durabletree",
+        "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/processes",
         "//bazel/ebuild/private/common/run_in_container_lib",
@@ -33,7 +34,6 @@ rust_binary(
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:shell-escape",
         "@alchemy_crates//:tar",
-        "@alchemy_crates//:tempfile",
         "@alchemy_crates//:tracing",
         "@alchemy_crates//:walkdir",
         "@alchemy_crates//:zstd",

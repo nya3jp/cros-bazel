@@ -30,7 +30,6 @@ rust_library(
         "@alchemy_crates//:nix",
         "@alchemy_crates//:scopeguard",
         "@alchemy_crates//:strum",
-        "@alchemy_crates//:tempfile",
         "@alchemy_crates//:tracing",
         "@rules_rust//tools/runfiles",
     ],

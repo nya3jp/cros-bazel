@@ -13,8 +13,8 @@ mod util;
 use crate::{convert::convert_impl, expand::expand_impl};
 use anyhow::Result;
 use consts::{MARKER_FILE_NAME, RAW_DIR_NAME};
+use fileutil::SafeTempDir;
 use std::path::{Path, PathBuf};
-use tempfile::TempDir;
 use tracing::instrument;
 
 /// Works with *a durable tree*, a special directory format designed to preserve
@@ -91,7 +91,7 @@ use tracing::instrument;
 /// take precedence over the extra tarball.
 pub struct DurableTree {
     raw_dir: PathBuf,
-    extra_dir: TempDir,
+    extra_dir: SafeTempDir,
 }
 
 impl DurableTree {

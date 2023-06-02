@@ -6,6 +6,7 @@ use anyhow::{ensure, Context, Result};
 use clap::Parser;
 use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
 use durabletree::DurableTree;
+use fileutil::SafeTempDir;
 use itertools::Itertools;
 use makechroot::LayerType;
 use nix::{
@@ -31,7 +32,6 @@ use std::{
     process::{Command, ExitCode},
 };
 use tar::Archive;
-use tempfile::TempDir;
 use tracing::info_span;
 use walkdir::WalkDir;
 
@@ -282,7 +282,7 @@ fn continue_namespace(
     // Directories are ordered from most lower to least lower.
     let mut lower_dirs: Vec<PathBuf> = [base_dir].into();
     let mut durable_trees: Vec<DurableTree> = Vec::new();
-    let mut tar_content_dirs: Vec<TempDir> = Vec::new();
+    let mut tar_content_dirs: Vec<SafeTempDir> = Vec::new();
     let mut last_tar_content_dir: Option<PathBuf> = None;
 
     for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
@@ -314,7 +314,7 @@ fn continue_namespace(
                 // We use a temporary directory for the extracted artifacts instead of
                 // putting them in the lower directory because the lower directory is a
                 // tmpfs mount and we don't want to use up all the RAM.
-                let content_dir = TempDir::new()?;
+                let content_dir = SafeTempDir::new()?;
 
                 extract_archive(&layer_path, content_dir.path())?;
 

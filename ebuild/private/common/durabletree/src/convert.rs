@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use anyhow::{anyhow, bail, Context, Result};
+use fileutil::SafeTempDirBuilder;
 use itertools::Itertools;
 use std::{
     collections::HashSet,
@@ -11,7 +12,6 @@ use std::{
     path::{Path, PathBuf},
 };
 use tar::{EntryType, Header, HeaderMode};
-use tempfile::tempdir_in;
 use tracing::instrument;
 
 use crate::{
@@ -136,15 +136,18 @@ fn pivot_to_raw_subdir(root_dir: &Path) -> Result<()> {
         .parent()
         .ok_or_else(|| anyhow!("Directory path must not be empty"))?;
 
-    let temp_dir = tempdir_in(parent_root_dir).with_context(|| {
-        format!(
-            "Failed to create a temporary directory under {}",
-            parent_root_dir.display()
-        )
-    })?;
+    let temp_dir = SafeTempDirBuilder::new()
+        .base_dir(parent_root_dir)
+        .build()
+        .with_context(|| {
+            format!(
+                "Failed to create a temporary directory under {}",
+                parent_root_dir.display()
+            )
+        })?;
 
     rename(root_dir, temp_dir.path().join(RAW_DIR_NAME))?;
-    // TempDir::into_path() makes the directory permanent.
+    // SafeTempDir::into_path() makes the directory permanent.
     rename(temp_dir.into_path(), root_dir)?;
 
     Ok(())

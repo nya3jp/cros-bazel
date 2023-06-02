@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
 durabletree = { path = "../../common/durabletree" }
+fileutil = { path = "../../common/fileutil" }
 makechroot = { path = "../../common/makechroot" }
 processes = { path = "../../common/processes" }
 run_in_container_lib = { path = "../../common/run_in_container_lib" }
@@ -24,7 +25,6 @@ serde.workspace = true
 serde_json.workspace = true
 shell-escape.workspace = true
 tar.workspace = true
-tempfile.workspace = true
 tracing.workspace = true
 walkdir.workspace = true
 zstd.workspace = true

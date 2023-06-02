@@ -31,7 +31,6 @@ rust_test(
     data = glob(["testdata/*"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
-        "@alchemy_crates//:tempfile",
         "@rules_rust//tools/runfiles",
     ],
 )

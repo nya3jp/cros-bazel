@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use anyhow::Result;
+use fileutil::SafeTempDir;
 use runfiles::Runfiles;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -12,7 +13,7 @@ const BASE_DIR: &str = "cros/bazel/ebuild/private/cmd/sdk_from_archive";
 fn base_test(input: &str, expected_status: i32) -> Result<()> {
     let r = Runfiles::create()?;
 
-    let output_dir = tempfile::TempDir::new()?;
+    let output_dir = SafeTempDir::new()?;
 
     let mut command = Command::new(r.rlocation(Path::new(BASE_DIR).join("sdk_from_archive")));
 

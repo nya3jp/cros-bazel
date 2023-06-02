@@ -147,6 +147,8 @@ fn main() -> ExitCode {
 mod tests {
     use std::os::unix::prelude::MetadataExt;
 
+    use fileutil::SafeTempDir;
+
     use super::*;
 
     const NANORC_SIZE: u64 = 11225;
@@ -164,7 +166,7 @@ mod tests {
     fn extracts_xpak_files() -> Result<()> {
         let mut bp = binary_package()?;
 
-        let tmp_dir = tempfile::tempdir()?;
+        let tmp_dir = SafeTempDir::new()?;
 
         let category = XpakSpec {
             xpak_header: "CATEGORY".to_string(),
@@ -200,7 +202,7 @@ mod tests {
     #[test]
     fn extracts_out_files() -> Result<()> {
         let mut bp = binary_package()?;
-        let tmp_dir = tempfile::tempdir()?;
+        let tmp_dir = SafeTempDir::new()?;
 
         let nano = OutputFileSpec {
             inside_path: "/bin/nano".to_string(),

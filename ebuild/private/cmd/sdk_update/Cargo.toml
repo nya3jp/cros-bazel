@@ -16,4 +16,3 @@ binarypackage = { path = "../../common/portage/binarypackage" }
 anyhow.workspace = true
 clap.workspace = true
 runfiles.workspace = true
-tempfile.workspace = true

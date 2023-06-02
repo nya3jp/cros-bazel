@@ -15,4 +15,4 @@ clap.workspace = true
 runfiles.workspace = true
 
 [dev-dependencies]
-tempfile.workspace = true
+fileutil = { path = "../../common/fileutil" }

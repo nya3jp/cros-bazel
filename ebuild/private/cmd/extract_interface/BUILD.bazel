@@ -27,7 +27,7 @@ rust_test(
     data = glob(["testdata/*"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
-        "@alchemy_crates//:tempfile",
+        "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "@rules_rust//tools/runfiles",
     ],
 )

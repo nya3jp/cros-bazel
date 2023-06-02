@@ -4,6 +4,7 @@
 
 use crate::control::ControlChannel;
 use anyhow::{anyhow, ensure, Context, Result};
+use fileutil::SafeTempDir;
 use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
 use std::collections::HashMap;
@@ -11,7 +12,6 @@ use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use strum_macros::EnumString;
-use tempfile::{tempdir, TempDir};
 use tracing::instrument;
 
 const SUDO_PATH: &str = "/usr/bin/sudo";
@@ -51,7 +51,7 @@ pub struct MountedSDK {
     cmd: Option<Command>,
     _control_channel: Option<ControlChannel>,
     // pub(crate) required for testing.
-    pub(crate) tmp_dir: TempDir,
+    pub(crate) tmp_dir: SafeTempDir,
 }
 
 impl MountedSDK {
@@ -62,7 +62,7 @@ impl MountedSDK {
         let run_in_container_path =
             r.rlocation("cros/bazel/ebuild/private/cmd/run_in_container/run_in_container");
 
-        let tmp_dir = tempdir()?;
+        let tmp_dir = SafeTempDir::new()?;
 
         let scratch_dir = tmp_dir.path().join("scratch");
         let diff_dir = scratch_dir.join("diff");
@@ -225,7 +225,7 @@ mod tests {
     #[test]
     fn run_in_sdk() -> Result<()> {
         let r = Runfiles::create()?;
-        let tmp_dir = tempfile::tempdir()?;
+        let tmp_dir = SafeTempDir::new()?;
         let hello = tmp_dir.path().join("hello");
         std::fs::write(&hello, "hello")?;
 
