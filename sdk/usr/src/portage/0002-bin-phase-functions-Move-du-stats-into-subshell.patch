@@ -23,10 +23,10 @@ Change-Id: I3970e01d6955f17835f2db205e44258d661a4902
  bin/phase-functions.sh | 5 ++---
  1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/usr/lib64/portage/python3.6/phase-functions.sh b/usr/lib64/portage/python3.6/phase-functions.sh
+diff --git a/usr/lib/portage/PYTHON_VERSION/phase-functions.sh b/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
 index 0a0c3037a..5f3b4893b 100644
---- a/usr/lib64/portage/python3.6/phase-functions.sh
-+++ b/usr/lib64/portage/python3.6/phase-functions.sh
+--- a/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
++++ b/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
 @@ -619,12 +619,11 @@ __dyn_install() {
  
  	# record build & installed size in build log
