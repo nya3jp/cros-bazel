@@ -23,11 +23,11 @@ use alchemist::{
     dependency::package::PackageAtom,
     ebuild::{metadata::CachedEBuildEvaluator, CachedPackageLoader, PackageLoader},
     fakechroot::{enter_fake_chroot, PathTranslator},
-    repository::RepositorySet,
+    repository::{RepositorySet, UnorderedRepositorySet},
     resolver::PackageResolver,
     toolchain::load_toolchains,
 };
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use tempfile::TempDir;
 
@@ -36,13 +36,22 @@ use tempfile::TempDir;
 #[command(author = "ChromiumOS Authors")]
 #[command(about = "Analyzes Portage trees", long_about = None)]
 pub struct Args {
-    /// Board name to build packages for.
+    /// Board name to build packages for. If unset only host packages will be
+    /// generated.
     #[arg(short = 'b', long, value_name = "NAME")]
-    board: String,
+    board: Option<String>,
 
     /// Profile of the board.
     #[arg(short = 'p', long, value_name = "PROFILE", default_value = "base")]
     profile: String,
+
+    /// Name of the host repository.
+    #[arg(long, value_name = "NAME", default_value = "amd64-host")]
+    host_board: String,
+
+    /// Profile name of the host target.
+    #[arg(long, value_name = "PROFILE", default_value = "base")]
+    host_profile: String,
 
     /// Path to the ChromiumOS source directory root.
     /// If unset, it is inferred from the current directory.
@@ -184,35 +193,115 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     };
     let src_dir = source_dir.join("src");
 
+    let host_target = fakechroot::BoardTarget {
+        board: &args.host_board,
+        profile: &args.host_profile,
+    };
+
+    let board_target = if let Some(board) = args.board.as_ref() {
+        let profile = &args.profile;
+
+        // We don't support a board ROOT with two different profiles.
+        if board == host_target.board && profile != host_target.profile {
+            bail!(
+                "--profile ({}) must match --host-profile ({})",
+                profile,
+                host_target.profile
+            );
+        }
+
+        Some(fakechroot::BoardTarget { board, profile })
+    } else {
+        None
+    };
+
     // Enter a fake chroot when running outside a cros chroot.
     let translator = if is_inside_chroot()? {
+        // TODO: What do we do here?
         PathTranslator::noop()
     } else {
-        let targets = [&fakechroot::BoardTarget {
-            board: &args.board,
-            profile: &args.profile,
-        }];
+        let targets = if let Some(board_target) = board_target.as_ref() {
+            if board_target.board == host_target.board {
+                vec![&host_target]
+            } else {
+                vec![board_target, &host_target]
+            }
+        } else {
+            vec![&host_target]
+        };
         enter_fake_chroot(&targets, &source_dir)?
     };
 
     let tools_dir = setup_tools()?;
 
-    let target_root_dir = Path::new("/build").join(&args.board);
-    let target_repos = RepositorySet::load(&target_root_dir)?;
-    // TODO: Add host_repos
+    let target_data = if let Some(board_target) = board_target {
+        let root_dir = Path::new("/build").join(board_target.board);
+        let repos = RepositorySet::load(&root_dir)?;
 
-    let evaluator = Arc::new(CachedEBuildEvaluator::new(
-        target_repos.get_repos().into_iter().cloned().collect(),
-        tools_dir.path(),
-    ));
+        Some((root_dir, repos, board_target))
+    } else {
+        None
+    };
 
-    let target = load_board(
-        target_repos,
-        &evaluator,
-        &args.board,
-        &args.profile,
-        &target_root_dir,
-    )?;
+    let host_data = {
+        let root_dir = Path::new("/build").join(host_target.board);
+        match RepositorySet::load(&root_dir) {
+            Ok(repos) => Some((root_dir, repos, host_target)),
+            Err(e) => {
+                // TODO: We need to eventually make this fatal.
+                eprintln!(
+                    "Failed to load {} repos, skipping host tools: {}",
+                    host_target.board, e
+                );
+                None
+            }
+        }
+    };
+
+    let all_repos: UnorderedRepositorySet = [&target_data, &host_data]
+        .into_iter()
+        .filter_map(|x| x.as_ref())
+        .flat_map(|x| x.1.get_repos())
+        .cloned()
+        .collect();
+
+    // We share an evaluator between both config ROOTS so we only have to parse
+    // the ebuilds once.
+    let evaluator = Arc::new(CachedEBuildEvaluator::new(all_repos, tools_dir.path()));
+
+    let target = if let Some((root_dir, repos, board_target)) = target_data {
+        Some(load_board(
+            repos,
+            &evaluator,
+            board_target.board,
+            board_target.profile,
+            &root_dir,
+        )?)
+    } else {
+        None
+    };
+
+    let host = host_data.and_then(|(root_dir, repos, host_target)| {
+        match load_board(
+            repos,
+            &evaluator,
+            host_target.board,
+            host_target.profile,
+            &root_dir,
+        ) {
+            Ok(data) => Some(data),
+            Err(e) => {
+                // TODO: We need to eventually make this fatal.
+                eprintln!("Failed to load {} config: {}", host_target.board, e);
+                None
+            }
+        }
+    });
+
+    // TODO: Update all the sub commands to explicitly handle host and target.
+    let default_target = target
+        .or(host)
+        .context("--board was not specified or the host profile failed to load.")?;
 
     match args.command {
         Commands::DumpPackage { packages } => {
@@ -220,14 +309,14 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 .iter()
                 .map(|raw| raw.parse::<PackageAtom>())
                 .collect::<Result<Vec<_>>>()?;
-            dump_package_main(&target.resolver, atoms)?;
+            dump_package_main(&default_target.resolver, atoms)?;
         }
         Commands::GenerateRepo {
             output_dir,
             output_repos_json,
         } => {
             generate_repo_main(
-                target,
+                default_target,
                 &translator,
                 &src_dir,
                 &output_dir,
@@ -235,7 +324,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             )?;
         }
         Commands::DigestRepo { args: local_args } => {
-            digest_repo_main(&args.board, &source_dir, local_args)?;
+            digest_repo_main(&default_target.board, &source_dir, local_args)?;
         }
     }
 
