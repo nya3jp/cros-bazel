@@ -434,6 +434,37 @@ def _ebuild_install_impl(ctx):
             " ".join(atoms),
         )
 
+    # HACK: Add script to install fake license files.
+    # TODO(b/285980578): Properly generate license files to remove this hack.
+    license_files = []
+    for package in ctx.attr.packages:
+        info = package[BinaryPackageInfo]
+        pf = info.file.basename.rsplit(".", 1)[0]
+
+        license_file = ctx.actions.declare_file("%s#%s-license.yaml" % (
+            info.category,
+            pf,
+        ))
+        license_file_contents = "- !!python/tuple [category, %s]\n" % (
+            info.category
+        )
+        license_file_contents += "- !!python/tuple [fullnamerev, %s/%s]\n" % (
+            info.category,
+            pf,
+        )
+        license_file_contents += """- !!python/tuple
+  - license_text_scanned
+  - ['fake license text']"""
+        ctx.actions.write(license_file, license_file_contents)
+        license_files.append(license_file)
+
+        license_path = "/build/%s/var/db/pkg/%s/%s/license.yaml" % (
+            ctx.attr.board,
+            info.category,
+            pf,
+        )
+        script_contents += "sudo cp %s %s\n" % (license_file.path, license_path)
+
     # Write script.
     output_install_script = ctx.actions.declare_file(src_basename +
                                                      "_install.sh")
@@ -446,7 +477,7 @@ def _ebuild_install_impl(ctx):
     runfiles = ctx.runfiles(files = [
         package[BinaryPackageInfo].file
         for package in ctx.attr.packages
-    ])
+    ] + license_files)
     return DefaultInfo(
         executable = output_install_script,
         runfiles = runfiles,
