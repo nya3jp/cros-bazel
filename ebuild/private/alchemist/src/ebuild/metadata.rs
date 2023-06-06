@@ -2,8 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::repository::Repository;
+use crate::repository::UnorderedRepositorySet;
+
 use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
+use once_cell::sync::OnceCell;
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::{
     ffi::OsStr,
     io::{Read, Seek, SeekFrom, Write},
@@ -17,10 +24,10 @@ use crate::{
     data::Vars,
 };
 
-fn run_ebuild(
+fn run_ebuild<'a>(
     ebuild_path: &Path,
     env: &Vars,
-    eclass_dirs: Vec<&Path>,
+    eclass_dirs: impl IntoIterator<Item = &'a Path>,
     tools_dir: &Path,
 ) -> Result<BashVars> {
     let mut script_file = tempfile::tempfile()?;
@@ -39,7 +46,7 @@ fn run_ebuild(
         .env(
             "__xbuild_in_eclass_dirs",
             eclass_dirs
-                .iter()
+                .into_iter()
                 .map(|path| format!("{}\n", path.to_string_lossy()))
                 .join(""),
         )
@@ -89,7 +96,7 @@ impl EBuildEvaluator {
     pub(super) fn evaluate_metadata(
         &self,
         ebuild_path: &Path,
-        eclass_dirs: Vec<&Path>,
+        repo: &Repository,
     ) -> Result<EBuildMetadata> {
         // We don't need to provide profile variables to the ebuild environment
         // because PMS requires ebuild metadata to be defined independently of
@@ -97,17 +104,24 @@ impl EBuildEvaluator {
         // https://projects.gentoo.org/pms/8/pms.html#x1-600007.1
         let path_info = EBuildPathInfo::try_from(ebuild_path)?;
         let env = path_info.to_vars();
-        let vars = run_ebuild(ebuild_path, &env, eclass_dirs, &self.tools_dir)?;
-        Ok(EBuildMetadata { path_info, vars })
+        let vars = run_ebuild(ebuild_path, &env, repo.eclass_dirs(), &self.tools_dir)?;
+        Ok(EBuildMetadata {
+            repo_name: repo.name().to_string(),
+            path_info,
+            vars,
+        })
     }
 }
 
-pub(super) struct EBuildMetadata {
+#[derive(Debug)]
+pub struct EBuildMetadata {
+    pub repo_name: String,
     pub path_info: EBuildPathInfo,
     pub vars: BashVars,
 }
 
-pub(super) struct EBuildPathInfo {
+#[derive(Debug)]
+pub struct EBuildPathInfo {
     pub package_short_name: String,
     pub category_name: String,
     pub version: Version,
@@ -177,5 +191,45 @@ impl TryFrom<&Path> for EBuildPathInfo {
             category_name: category_name.as_os_str().to_string_lossy().to_string(),
             version,
         })
+    }
+}
+
+/// Wraps EBuildEvaluator to cache results.
+#[derive(Debug)]
+pub struct CachedEBuildEvaluator {
+    repos: UnorderedRepositorySet,
+    evaluator: EBuildEvaluator,
+    cache: Mutex<HashMap<PathBuf, Arc<OnceCell<Arc<EBuildMetadata>>>>>,
+}
+
+impl CachedEBuildEvaluator {
+    pub fn new(repos: UnorderedRepositorySet, tools_dir: &Path) -> Self {
+        let evaluator = EBuildEvaluator::new(tools_dir);
+
+        Self {
+            repos,
+            evaluator,
+            cache: Default::default(),
+        }
+    }
+
+    fn do_eval(&self, ebuild_path: &Path) -> Result<Arc<EBuildMetadata>> {
+        let repo = self.repos.get_repo_by_path(ebuild_path)?;
+
+        self.evaluator
+            .evaluate_metadata(ebuild_path, repo)
+            .map(Arc::new)
+    }
+
+    pub fn evaluate_metadata(&self, ebuild_path: &Path) -> Result<Arc<EBuildMetadata>> {
+        let once_cell = {
+            let mut cache_guard = self.cache.lock().unwrap();
+            cache_guard
+                .entry(ebuild_path.to_owned())
+                .or_default()
+                .clone()
+        };
+        let details = once_cell.get_or_try_init(|| self.do_eval(ebuild_path))?;
+        Ok(Arc::clone(details))
     }
 }

@@ -343,24 +343,6 @@ impl RepositorySet {
             .ok_or_else(|| anyhow!("repository not found: {}", name))
     }
 
-    /// Looks up a repository that contains the specified file path.
-    /// It can be used, for example, to look up a repository that contains an
-    /// ebuild file.
-    pub fn get_repo_by_path<'a, 'b>(&'a self, dir: &'b Path) -> Result<(&'a Repository, &'b Path)> {
-        if !dir.is_absolute() {
-            bail!(
-                "BUG: absolute path required to lookup repositories: {}",
-                dir.to_string_lossy()
-            );
-        }
-        for repo in self.repos.values() {
-            if let Ok(rel_path) = dir.strip_prefix(repo.base_dir()) {
-                return Ok((repo, rel_path));
-            }
-        }
-        bail!("repository not found under {}", dir.to_string_lossy());
-    }
-
     /// Scans the repositories and returns ebuild file paths for the specified
     /// package.
     ///

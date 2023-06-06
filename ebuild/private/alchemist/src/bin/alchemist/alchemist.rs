@@ -20,7 +20,7 @@ use alchemist::{
         ConfigSource, PackageMaskKind, PackageMaskUpdate, SimpleConfigSource,
     },
     dependency::package::PackageAtom,
-    ebuild::{CachedPackageLoader, PackageLoader},
+    ebuild::{metadata::CachedEBuildEvaluator, CachedPackageLoader, PackageLoader},
     fakechroot::{enter_fake_chroot, PathTranslator},
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -129,13 +129,13 @@ pub struct TargetData {
 }
 
 fn load_board(
+    repos: RepositorySet,
+    evaluator: &Arc<CachedEBuildEvaluator>,
     board: &str,
     profile_name: &str,
     root_dir: &Path,
-    tools_dir: &Path,
 ) -> Result<TargetData> {
-    // Load repositories.
-    let repos = Arc::new(RepositorySet::load(root_dir)?);
+    let repos = Arc::new(repos);
 
     // Load configurations.
     let config = Arc::new({
@@ -155,9 +155,8 @@ fn load_board(
     let force_accept_9999_ebuilds = !is_inside_chroot()?;
 
     let loader = Arc::new(CachedPackageLoader::new(PackageLoader::new(
-        Arc::clone(&repos),
+        Arc::clone(evaluator),
         Arc::clone(&config),
-        tools_dir,
         force_accept_9999_ebuilds,
     )));
 
@@ -193,11 +192,21 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     let tools_dir = setup_tools()?;
 
+    let target_root_dir = Path::new("/build").join(&args.board);
+    let target_repos = RepositorySet::load(&target_root_dir)?;
+    // TODO: Add host_repos
+
+    let evaluator = Arc::new(CachedEBuildEvaluator::new(
+        target_repos.get_repos().into_iter().cloned().collect(),
+        tools_dir.path(),
+    ));
+
     let target = load_board(
+        target_repos,
+        &evaluator,
         &args.board,
         &args.profile,
-        &Path::new("/build").join(&args.board),
-        tools_dir.path(),
+        &target_root_dir,
     )?;
 
     match args.command {

@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-mod metadata;
+pub mod metadata;
 
 use anyhow::Result;
-use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -19,10 +18,9 @@ use crate::{
     config::bundle::{ConfigBundle, IsPackageAcceptedResult},
     data::{IUseMap, Slot, UseMap},
     dependency::package::{PackageRef, ThinPackageRef},
-    repository::RepositorySet,
 };
 
-use self::metadata::EBuildEvaluator;
+use self::metadata::CachedEBuildEvaluator;
 
 /// Parses IUSE defined by ebuild/eclasses and returns as an [IUseMap].
 fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
@@ -86,46 +84,35 @@ impl PackageDetails {
 
 #[derive(Debug)]
 pub struct PackageLoader {
-    repos: Arc<RepositorySet>,
+    evaluator: Arc<CachedEBuildEvaluator>,
     config: Arc<ConfigBundle>,
-    evaluator: EBuildEvaluator,
     force_accept_9999_ebuilds: bool,
     version_9999: Version,
 }
 
 impl PackageLoader {
     pub fn new(
-        repos: Arc<RepositorySet>,
+        evaluator: Arc<CachedEBuildEvaluator>,
         config: Arc<ConfigBundle>,
-        tools_dir: &Path,
         force_accept_9999_ebuilds: bool,
     ) -> Self {
-        let evaluator = EBuildEvaluator::new(tools_dir);
         Self {
-            repos,
-            config,
             evaluator,
+            config,
             force_accept_9999_ebuilds,
             version_9999: Version::try_new("9999").unwrap(),
         }
     }
 
     pub fn load_package(&self, ebuild_path: &Path) -> Result<PackageDetails> {
-        // Locate the repository this ebuild belongs to, which identifies
-        // eclass directories to be available to the ebuild.
-        let (repo, _) = self.repos.get_repo_by_path(ebuild_path)?;
-
         // Drive the ebuild to read its metadata.
-        let metadata = self
-            .evaluator
-            .evaluate_metadata(ebuild_path, repo.eclass_dirs().collect_vec())?;
+        let metadata = self.evaluator.evaluate_metadata(ebuild_path)?;
 
         // Compute additional information needed to fill in PackageDetails.
-        let package_name = [
-            metadata.path_info.category_name,
-            metadata.path_info.package_short_name,
-        ]
-        .join("/");
+        let package_name = format!(
+            "{}/{}",
+            metadata.path_info.category_name, metadata.path_info.package_short_name,
+        );
         let slot = Slot::<String>::new(metadata.vars.get_scalar("SLOT")?);
 
         let package = ThinPackageRef {
@@ -172,10 +159,10 @@ impl PackageLoader {
         let masked = !accepted || self.config.is_package_masked(&package);
 
         Ok(PackageDetails {
-            repo_name: repo.name().to_string(),
+            repo_name: metadata.repo_name.clone(),
             package_name,
-            version: metadata.path_info.version,
-            vars: metadata.vars,
+            version: metadata.path_info.version.clone(),
+            vars: metadata.vars.clone(),
             slot,
             use_map,
             accepted,
