@@ -47,7 +47,8 @@ pkg_files(
     ], exclude=[
         # Contains utf-8 characters
         "third_party/swarming.client/example/**",
-        "**/__pycache__/**"
+        "**/__pycache__/**",
+        ".git/**",
     ]),
     attributes = pkg_attributes(
         mode = "0755",

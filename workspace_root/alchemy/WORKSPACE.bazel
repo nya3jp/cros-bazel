@@ -58,7 +58,7 @@ load("//bazel/sdk:repositories.bzl", "cros_sdk_repositories")
 
 cros_sdk_repositories()
 
-load("//bazel/depot_tools:repositories.bzl", "depot_tools_repository")
+load("//bazel/module_extensions/cros_deps:depot_tools/repositories.bzl", "depot_tools_repository")
 
 depot_tools_repository()
 
@@ -68,6 +68,6 @@ zstd_repository()
 
 new_local_repository(
     name = "chromite",
-    build_file = "//bazel:BUILD.project-chromite",
+    build_file = "//bazel/module_extensions/cros_deps/chromite:BUILD.project-chromite",
     path = "../chromite",
 )

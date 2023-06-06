@@ -28,5 +28,5 @@ EOF
             # downloaded.
             "./gclient.wrapper.sh help",
         ],
-        build_file = "@//bazel/depot_tools:BUILD.depot_tools-template",
+        build_file = "@//bazel/module_extensions/cros_deps:depot_tools/BUILD.depot_tools-template",
     )
