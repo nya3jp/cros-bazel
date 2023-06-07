@@ -19,9 +19,19 @@ pub struct BindMountConfig {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RunInContainerConfig {
-    /// Directory that will be used by the overlayfs mount.
-    /// Output artifacts can be found in the 'diff' directory.
-    pub staging_dir: PathBuf,
+    /// The upper directory to be used by overlayfs.
+    /// After run_in_container finishes, this directory contains files
+    /// representing the difference to the lower directories.
+    /// It is caller's responsibility to remove the directory after
+    /// run_in_container finishes.
+    pub upper_dir: PathBuf,
+
+    /// The directory where run_in_container creates random files/directories.
+    /// This directory must be on the same file system as that of the upper
+    /// directory.
+    /// It is caller's responsibility to remove the directory after
+    /// run_in_container finishes.
+    pub scratch_dir: PathBuf,
 
     /// Environment variables for the process in the container.
     #[serde(with = "serde_os_string_map")]

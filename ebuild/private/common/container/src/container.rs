@@ -2,14 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::{path::PathBuf, str::FromStr};
 
-use anyhow::{bail, ensure, Result};
-use durabletree::DurableTree;
-use path_absolutize::Absolutize;
+use anyhow::{ensure, Result};
 use run_in_container_lib::BindMountConfig;
 use strum_macros::EnumString;
 

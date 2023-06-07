@@ -55,7 +55,12 @@ impl MountedSDK {
         let tmp_dir = SafeTempDir::new()?;
 
         let scratch_dir = tmp_dir.path().join("scratch");
-        let diff_dir = scratch_dir.join("diff");
+        let diff_dir = tmp_dir.path().join("diff");
+
+        for dir in [&scratch_dir, &diff_dir] {
+            std::fs::create_dir_all(dir)?;
+        }
+
         let root_dir = fileutil::DualPath {
             outside: tmp_dir.path().join("root"),
             inside: PathBuf::from("/"),
@@ -119,7 +124,8 @@ impl MountedSDK {
         let mut layer_paths: Vec<PathBuf> = cfg.layer_paths;
         layer_paths.push(root_dir.outside.clone());
         let serialized_config = RunInContainerConfig {
-            staging_dir: scratch_dir,
+            upper_dir: diff_dir.clone(),
+            scratch_dir,
             envs: envs.into_iter().collect(),
             chdir: PathBuf::from("/"),
             layer_paths,

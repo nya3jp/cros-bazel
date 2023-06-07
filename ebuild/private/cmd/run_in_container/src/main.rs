@@ -299,30 +299,23 @@ fn continue_namespace(
 ) -> Result<ExitCode> {
     unshare(CloneFlags::CLONE_NEWNS).context("Failed to enter mount namespace")?;
 
-    let stage_dir = cfg.staging_dir.absolutize()?;
+    let upper_dir = cfg.upper_dir.absolutize()?.into_owned();
+    let scratch_dir = cfg.scratch_dir.absolutize()?.into_owned();
 
     if !allow_network_access {
         enable_loopback_networking()?;
     }
 
     // We keep all the directories in the stage dir to keep relative file paths short.
-    let root_dir = stage_dir.join("root"); // Merged directory
-    let base_dir = stage_dir.join("base"); // Directory containing mount targets
-    let lowers_dir = stage_dir.join("lowers");
-    let diff_dir = stage_dir.join("diff");
-    let work_dir = stage_dir.join("work");
-    let tmp_dir = stage_dir.join("tmp");
+    let root_dir = scratch_dir.join("root"); // Merged directory
+    let base_dir = scratch_dir.join("base"); // Directory containing mount targets
+    let lowers_dir = scratch_dir.join("lowers");
+    let work_dir = scratch_dir.join("work");
+    let tmp_dir = scratch_dir.join("tmp");
 
     let mut binding = std::fs::DirBuilder::new();
     let dir_builder = binding.recursive(true).mode(0o755);
-    for dir in [
-        &root_dir,
-        &base_dir,
-        &lowers_dir,
-        &diff_dir,
-        &work_dir,
-        &tmp_dir,
-    ] {
+    for dir in [&root_dir, &base_dir, &lowers_dir, &work_dir, &tmp_dir] {
         dir_builder.create(dir)?;
     }
 
@@ -432,7 +425,7 @@ fn continue_namespace(
             .with_context(|| format!("Unable to make {p:?} relative to {lowers_dir:?}"))
     };
 
-    let short_diff_dir = relative_dir(&diff_dir)?;
+    let short_upper_dir = relative_dir(&upper_dir)?;
     let short_work_dir = relative_dir(&work_dir)?;
     let short_lower_dirs = lower_dirs
         .iter()
@@ -464,7 +457,7 @@ fn continue_namespace(
     // Mount overlayfs.
     let overlay_options = format!(
         "upperdir={},workdir={},lowerdir={}",
-        short_diff_dir.display(),
+        short_upper_dir.display(),
         short_work_dir.display(),
         short_lower_dirs
     );

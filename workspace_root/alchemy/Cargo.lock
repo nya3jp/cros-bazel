@@ -339,7 +339,6 @@ dependencies = [
  "anyhow",
  "binarypackage",
  "clap",
- "durabletree",
  "fileutil",
  "itertools",
  "libc",

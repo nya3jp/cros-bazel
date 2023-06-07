@@ -18,7 +18,6 @@ rust_library(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
-        "//bazel/ebuild/private/common/durabletree",
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "//bazel/ebuild/private/common/processes",
