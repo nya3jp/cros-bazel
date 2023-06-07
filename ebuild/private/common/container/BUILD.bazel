@@ -36,18 +36,9 @@ rust_library(
     ],
 )
 
-# If adding test data, do not depend on anything built by build_package.
-# eg. //third_party/portage-stable/category/pkg:0
-# If you do so, if there's a problem with the container library, the test will
-# be unable to build (and therefore you can't even run the test).
 rust_test(
     name = "container_test",
     size = "small",
     crate = ":container",
-    data = [
-        "testdata/mypkg.ebuild",
-        "//bazel/sdk:sdk_from_archive",
-    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    deps = ["//bazel/ebuild/private/common/processes"],
 )
