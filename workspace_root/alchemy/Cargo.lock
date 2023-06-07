@@ -339,6 +339,7 @@ dependencies = [
  "anyhow",
  "binarypackage",
  "clap",
+ "durabletree",
  "fileutil",
  "itertools",
  "libc",
@@ -350,8 +351,11 @@ dependencies = [
  "scopeguard",
  "strum",
  "strum_macros",
+ "tar",
+ "testutil",
  "tracing",
  "walkdir",
+ "zstd",
 ]
 
 [[package]]

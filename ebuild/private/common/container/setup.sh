@@ -9,6 +9,8 @@ if [[ $# -gt 0 ]]; then
 fi
 
 export LANG=en_US.UTF-8
+
+# TODO: Move these Portage-specific variables to somewhere else.
 if [[ -v "BOARD" ]]; then
   export ROOT="/build/${BOARD}/"
 else
