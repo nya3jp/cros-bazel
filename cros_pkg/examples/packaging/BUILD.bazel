@@ -35,7 +35,7 @@ pkg_mklink(
 )
 
 cros_pkg_filegroup(
-    name = "example",
+    name = "filegroup",
     srcs = [
         pkg.doc(
             srcs = glob(["testdata/docs/*.md"]),
@@ -64,9 +64,9 @@ cros_pkg_filegroup(
 )
 
 py_test(
-    name = "example_test",
+    name = "packaging_test",
     size = "small",
-    srcs = ["example_test.py"],
-    data = [":example_tar"],
+    srcs = ["packaging_test.py"],
+    data = [":filegroup_tar"],
     deps = ["@rules_python//python/runfiles"],
 )
