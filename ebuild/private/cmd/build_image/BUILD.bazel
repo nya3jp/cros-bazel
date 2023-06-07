@@ -14,8 +14,8 @@ rust_binary(
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
+        "//bazel/ebuild/private/common/container",
         "//bazel/ebuild/private/common/makechroot",
-        "//bazel/ebuild/private/common/mountsdk",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",

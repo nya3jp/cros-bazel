@@ -5,8 +5,8 @@
 use anyhow::{anyhow, bail, Context, Result};
 use clap::{command, Parser};
 use cliutil::cli_main;
+use container::{ConfigArgs, MountedSDK};
 use makechroot::BindMount;
-use mountsdk::{ConfigArgs, MountedSDK};
 use std::{
     collections::HashSet,
     fs::File,
@@ -129,7 +129,7 @@ impl FromStr for EbuildMetadata {
 fn do_main() -> Result<()> {
     let args = Cli::parse();
     let runfiles_mode = args.mountsdk_config.runfiles_mode();
-    let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
+    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
 
     let r = runfiles::Runfiles::create()?;
 

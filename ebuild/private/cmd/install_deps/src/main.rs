@@ -5,9 +5,9 @@
 use anyhow::Result;
 use clap::Parser;
 use cliutil::cli_main;
+use container::{InstallGroup, MountedSDK};
 use durabletree::DurableTree;
 use makechroot::BindMount;
-use mountsdk::{InstallGroup, MountedSDK};
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,
@@ -19,7 +19,7 @@ const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/install_deps.sh";
 #[clap()]
 struct Cli {
     #[command(flatten)]
-    mountsdk_config: mountsdk::ConfigArgs,
+    mountsdk_config: container::ConfigArgs,
 
     /// Name of board
     #[arg(long)]
@@ -35,7 +35,7 @@ struct Cli {
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-    let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
+    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
 
     let r = runfiles::Runfiles::create()?;
 

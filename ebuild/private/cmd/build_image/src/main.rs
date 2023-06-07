@@ -6,8 +6,8 @@ use anyhow::Result;
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use cliutil::cli_main;
+use container::MountedSDK;
 use makechroot::BindMount;
-use mountsdk::MountedSDK;
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,
@@ -19,7 +19,7 @@ const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_image.sh";
 #[clap()]
 pub struct Cli {
     #[command(flatten)]
-    mountsdk_config: mountsdk::ConfigArgs,
+    mountsdk_config: container::ConfigArgs,
 
     /// Name of board
     #[arg(long, required = true)]
@@ -54,7 +54,7 @@ fn do_main() -> Result<()> {
     let args = Cli::parse();
     let r = runfiles::Runfiles::create()?;
 
-    let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
+    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
     cfg.privileged = true;
 
     cfg.bind_mounts.push(BindMount {

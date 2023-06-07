@@ -196,8 +196,8 @@ dependencies = [
  "binarypackage",
  "clap",
  "cliutil",
+ "container",
  "makechroot",
- "mountsdk",
  "runfiles",
  "users",
 ]
@@ -209,8 +209,8 @@ dependencies = [
  "anyhow",
  "clap",
  "cliutil",
+ "container",
  "makechroot",
- "mountsdk",
  "nix",
  "runfiles",
 ]
@@ -222,9 +222,9 @@ dependencies = [
  "anyhow",
  "clap",
  "cliutil",
+ "container",
  "fileutil",
  "makechroot",
- "mountsdk",
  "runfiles",
 ]
 
@@ -333,6 +333,27 @@ dependencies = [
  "atty",
  "lazy_static",
  "winapi",
+]
+
+[[package]]
+name = "container"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "binarypackage",
+ "clap",
+ "fileutil",
+ "itertools",
+ "libc",
+ "makechroot",
+ "nix",
+ "processes",
+ "run_in_container_lib",
+ "runfiles",
+ "scopeguard",
+ "strum",
+ "strum_macros",
+ "tracing",
 ]
 
 [[package]]
@@ -652,10 +673,10 @@ dependencies = [
  "anyhow",
  "clap",
  "cliutil",
+ "container",
  "durabletree",
  "fileutil",
  "makechroot",
- "mountsdk",
  "runfiles",
 ]
 
@@ -810,27 +831,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b275950c28b37e794e8c55d88aeb5e139d0ce23fdbbeda68f8d7174abdf9e8fa"
 dependencies = [
  "adler",
-]
-
-[[package]]
-name = "mountsdk"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "binarypackage",
- "clap",
- "fileutil",
- "itertools",
- "libc",
- "makechroot",
- "nix",
- "processes",
- "run_in_container_lib",
- "runfiles",
- "scopeguard",
- "strum",
- "strum_macros",
- "tracing",
 ]
 
 [[package]]
@@ -1358,10 +1358,10 @@ dependencies = [
  "binarypackage",
  "clap",
  "cliutil",
+ "container",
  "durabletree",
  "fileutil",
  "makechroot",
- "mountsdk",
  "runfiles",
 ]
 

@@ -27,7 +27,7 @@ pub(crate) enum LoginMode {
 }
 
 #[derive(Clone)]
-pub struct Config {
+pub struct MountSdkConfig {
     pub layer_paths: Vec<PathBuf>,
     pub bind_mounts: Vec<BindMount>,
     pub envs: HashMap<String, String>,
@@ -58,7 +58,7 @@ pub struct MountedSDK {
 impl MountedSDK {
     // Prepares the SDK according to the specifications requested.
     #[instrument(skip_all)]
-    pub fn new(cfg: Config, board: Option<&str>) -> Result<Self> {
+    pub fn new(cfg: MountSdkConfig, board: Option<&str>) -> Result<Self> {
         let r = runfiles::Runfiles::create()?;
         let run_in_container_path =
             r.rlocation("cros/bazel/ebuild/private/cmd/run_in_container/run_in_container");
@@ -148,7 +148,7 @@ impl MountedSDK {
 
         let setup_script_path = bazel_build_dir.join("setup.sh");
         std::fs::copy(
-            r.rlocation("cros/bazel/ebuild/private/common/mountsdk/setup.sh"),
+            r.rlocation("cros/bazel/ebuild/private/common/container/setup.sh"),
             setup_script_path.outside,
         )?;
         cmd.arg("--cmd").arg(setup_script_path.inside);
@@ -222,12 +222,12 @@ mod tests {
         let portage_stable = src_dir.join("src/third_party/portage-stable");
         let ebuild_file = portage_stable.join("mypkg/mypkg.ebuild");
         let board = Some("amd64-generic");
-        let cfg = Config {
+        let cfg = MountSdkConfig {
             layer_paths: vec![r.rlocation("cros/bazel/sdk/sdk_from_archive")],
             bind_mounts: vec![
                 BindMount {
                     source: r.rlocation(
-                        "cros/bazel/ebuild/private/common/mountsdk/testdata/mypkg.ebuild",
+                        "cros/bazel/ebuild/private/common/container/testdata/mypkg.ebuild",
                     ),
                     mount_path: ebuild_file.clone(),
                     rw: false,

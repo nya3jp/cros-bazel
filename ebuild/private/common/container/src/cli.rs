@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::mountsdk::{Config, LoginMode};
+use crate::mountsdk::{LoginMode, MountSdkConfig};
 use anyhow::Result;
 use clap::{arg, Args};
 use std::collections::HashMap;
@@ -47,8 +47,8 @@ impl ConfigArgs {
     }
 }
 
-impl Config {
-    pub fn try_from(args: ConfigArgs) -> Result<Config> {
+impl MountSdkConfig {
+    pub fn try_from(args: ConfigArgs) -> Result<MountSdkConfig> {
         let layer_paths = if args.runfiles_mode {
             let r = runfiles::Runfiles::create()?;
             args.layer
@@ -58,7 +58,7 @@ impl Config {
         } else {
             args.layer
         };
-        Ok(Config {
+        Ok(MountSdkConfig {
             layer_paths,
             login_mode: args.login_mode,
             allow_network_access: false,

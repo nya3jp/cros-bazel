@@ -20,7 +20,7 @@ const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/setup.sh";
 #[clap()]
 struct Cli {
     #[command(flatten)]
-    mountsdk_config: mountsdk::ConfigArgs,
+    mountsdk_config: container::ConfigArgs,
 
     /// Name of board
     #[arg(long, required = true)]
@@ -38,7 +38,7 @@ struct Cli {
 }
 
 fn bind_binary_packages(
-    cfg: &mut mountsdk::Config,
+    cfg: &mut container::MountSdkConfig,
     packages_dir: &Path,
     package_paths: Vec<PathBuf>,
 ) -> Result<Vec<String>> {
@@ -60,7 +60,7 @@ fn bind_binary_packages(
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-    let mut cfg = mountsdk::Config::try_from(args.mountsdk_config)?;
+    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
 
     let r = runfiles::Runfiles::create()?;
 
@@ -90,7 +90,7 @@ fn do_main() -> Result<()> {
         rw: false,
     });
 
-    let mut sdk = mountsdk::MountedSDK::new(cfg, Some(&args.board))?;
+    let mut sdk = container::MountedSDK::new(cfg, Some(&args.board))?;
     sdk.run_cmd(&[MAIN_SCRIPT])
         .with_context(|| "Failed to run the command.")?;
 

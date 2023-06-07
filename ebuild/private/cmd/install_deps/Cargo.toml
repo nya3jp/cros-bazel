@@ -7,10 +7,10 @@ edition = "2021"
 
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
+container = { path = "../../common/container" }
 durabletree = { path = "../../common/durabletree" }
 fileutil = { path = "../../common/fileutil" }
 makechroot = { path = "../../common/makechroot" }
-mountsdk = { path = "../../common/mountsdk" }
 
 anyhow.workspace = true
 clap.workspace = true

@@ -6,7 +6,7 @@ load("//bazel/ebuild/private:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
-    name = "mountsdk",
+    name = "container",
     srcs = glob(["src/*.rs"]),
     data = [
         "setup.sh",
@@ -37,12 +37,12 @@ rust_library(
 
 # If adding test data, do not depend on anything built by build_package.
 # eg. //third_party/portage-stable/category/pkg:0
-# If you do so, if there's a problem with the mountsdk library, the test will
+# If you do so, if there's a problem with the container library, the test will
 # be unable to build (and therefore you can't even run the test).
 rust_test(
-    name = "mountsdk_test",
+    name = "container_test",
     size = "small",
-    crate = ":mountsdk",
+    crate = ":container",
     data = [
         "testdata/mypkg.ebuild",
         "//bazel/sdk:sdk_from_archive",
