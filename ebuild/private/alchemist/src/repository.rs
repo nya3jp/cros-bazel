@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::{
+    config::{bundle::ConfigBundle, site::SiteSettings, ConfigSource},
+    data::Vars,
+};
 use anyhow::Context;
 use anyhow::{anyhow, bail, Error, Result};
 use itertools::Itertools;
@@ -9,29 +13,22 @@ use once_cell::sync::Lazy;
 use rayon::prelude::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 use sha2::digest::generic_array::GenericArray;
+use sha2::{Digest, Sha256};
+use std::cell::{Ref, RefCell};
+use std::collections::HashSet;
 use std::fs::{read_link, File};
 use std::io;
 use std::os::unix::prelude::OsStrExt;
 use std::{
     borrow::Borrow,
-    collections::{HashMap, VecDeque},
+    collections::HashMap,
     ffi::OsStr,
     fs::read_to_string,
     io::ErrorKind,
     iter,
     path::{Path, PathBuf},
 };
-
 use walkdir::{DirEntry, WalkDir};
-
-use sha2::{Digest, Sha256};
-
-use topological_sort::TopologicalSort;
-
-use crate::{
-    config::{bundle::ConfigBundle, site::SiteSettings, ConfigSource},
-    data::Vars,
-};
 
 pub type Sha256Digest = GenericArray<u8, sha2::digest::consts::U32>;
 
@@ -510,10 +507,19 @@ impl RepositorySet {
     }
 }
 
-#[derive(Clone, Debug)]
+/// Helper struct to make recursion easier
+#[derive(Debug)]
+struct RepositoryLookupContext {
+    seen: HashSet<String>,
+    order: Vec<String>,
+    try_private: bool,
+}
+
+#[derive(Debug)]
 pub struct RepositoryLookup {
     root_dir: PathBuf,
     repository_roots: Vec<String>,
+    layout_map_cache: RefCell<HashMap<String, RepositoryLayout>>,
 }
 
 impl RepositoryLookup {
@@ -532,11 +538,13 @@ impl RepositoryLookup {
                 .into_iter()
                 .map(|s| s.to_owned())
                 .collect_vec(),
+            layout_map_cache: RefCell::new(HashMap::new()),
         })
     }
 
     /// Find the path for the repository
-    pub fn path(&self, repository_name: &str) -> Result<PathBuf> {
+    /// Returns None if the repository was not found.
+    fn path(&self, repository_name: &str) -> Result<Option<PathBuf>> {
         // So we cheat a little bit here. Instead of parsing all of the
         // layout.conf files and generating a hashmap, we rely on the naming
         // convention of the directories. This keeps the initialization cost
@@ -559,69 +567,160 @@ impl RepositoryLookup {
                     .try_exists()
                     .with_context(|| format!("checking path {layout:?}"))?
                 {
-                    return Ok(repository_base);
+                    return Ok(Some(repository_base));
                 }
             }
         }
 
-        bail!(
-            "Could not find path for repository named '{}'",
-            repository_name
-        )
+        Ok(None)
     }
 
-    pub fn create_repository_set(&self, repository_name: &str) -> Result<RepositorySet> {
-        let mut layout_map = HashMap::<String, RepositoryLayout>::new();
+    /// Populates an entry in self.layout_map_cache if the repository exists.
+    fn load_from_cache(&self, repository_name: &str) -> Result<Option<Ref<RepositoryLayout>>> {
+        if let Ok(value) =
+            Ref::filter_map(self.layout_map_cache.borrow(), |m| m.get(repository_name))
+        {
+            return Ok(Some(value));
+        };
 
-        let mut remaining = VecDeque::from([repository_name.to_owned()]);
-        while let Some(repository_name) = remaining.pop_front() {
-            let path = self.path(&repository_name)?;
-            let layout = RepositoryLayout::load(&path)?;
-            if layout.name != repository_name {
-                bail!(
-                    "Repository {} has the unexpected name {}, expected {}",
-                    path.display(),
-                    layout.name,
-                    repository_name
-                );
+        let path = match self.path(repository_name)? {
+            Some(path) => path,
+            None => return Ok(None),
+        };
+
+        let layout = RepositoryLayout::load(&path)?;
+
+        if layout.name != repository_name {
+            bail!(
+                "Repository {} has the unexpected name {}, expected {}",
+                path.display(),
+                layout.name,
+                repository_name
+            );
+        }
+
+        self.layout_map_cache
+            .borrow_mut()
+            .insert(repository_name.to_string(), layout);
+
+        // avoids duplicating the borrow code above
+        self.load_from_cache(repository_name)
+    }
+
+    fn _add_repo(
+        &self,
+        context: &mut RepositoryLookupContext,
+        repo_name: &str,
+        required: bool,
+    ) -> Result<()> {
+        if context.seen.contains(repo_name) {
+            return Ok(());
+        }
+        context.seen.insert(repo_name.to_string());
+
+        let layout = match self.load_from_cache(repo_name)? {
+            Some(layout) => layout,
+            None => {
+                if required {
+                    bail!("Failed to find repository {repo_name}");
+                } else {
+                    return Ok(());
+                }
             }
+        };
 
-            if let Some(old) = layout_map.insert(repository_name.to_owned(), layout) {
-                panic!("BUG: Duplicates item {old:?} found in {layout_map:?}");
-            }
+        let mut repos = Vec::new();
 
-            // In order to avoid duplicating the parents vector let's just look
-            // up the layout object we just put in the map.
-            let layout = layout_map.get(&repository_name).expect("layout to exist");
+        for repo_name in &layout.parents {
+            // The extra `context.seen` checks are added as an optimization
+            // to reduce the number of allocations required.
+            if context.try_private {
+                if !context.seen.contains(repo_name) {
+                    repos.push((repo_name.to_string(), true));
+                }
 
-            for parent in &layout.parents {
-                if !layout_map.contains_key(parent) && !remaining.contains(parent) {
-                    remaining.push_back(parent.to_owned());
+                if !repo_name.ends_with("-private") {
+                    let private_name = format!("{repo_name}-private");
+
+                    // While we have already allocated private_name, we
+                    // still check `seen` for consistency and to possibly
+                    // avoid allocating space in `repos`.
+                    if !context.seen.contains(&private_name) {
+                        repos.push((private_name, false));
+                    }
+                }
+            } else {
+                if repo_name.ends_with("-private") {
+                    bail!("Found private repo in public repos's parent list");
+                }
+                if !context.seen.contains(repo_name) {
+                    repos.push((repo_name.to_string(), true));
                 }
             }
         }
 
-        let mut ts = TopologicalSort::<String>::new();
-        for (name, layout) in layout_map.iter() {
-            ts.insert(name);
-            for parent in &layout.parents {
-                ts.add_dependency(parent, name);
-            }
+        // We need to make sure we drop layout before calling _add_repo since
+        // it might modify the cache.
+        drop(layout);
+
+        for (repo_name, required) in repos {
+            self._add_repo(context, &repo_name, required)?;
         }
 
-        let order = ts.into_iter().collect();
+        context.order.push(repo_name.to_string());
+        Ok(())
+    }
+
+    /// Creates a repository set using the provided repository name.
+    ///
+    /// This is a very ChromeOS specific function. If the repository name
+    /// ends in -private, the non suffixed repository will be traversed first.
+    /// This ensures that the private repositories have a higher priority
+    /// than the public repositories. If the repository name doesn't contain
+    /// the -private suffix, it will traverse the `masters` attribute as
+    /// left to right.
+    ///
+    /// This function is not aware of the [PORTDIR](https://wiki.gentoo.org/wiki/PORTDIR)
+    /// variable so the order of the main repository (portage-stable) is purely
+    /// determined by the order of the `masters` attribute in the layout.conf.
+    /// That means the repository set returned here is only suitable for
+    /// generating the PORTDIR_OVERLAY variable.
+    ///
+    /// See https://chromium.googlesource.com/chromiumos/docs/+/HEAD/portage/overlay_faq.md#eclass_overlay
+    /// for more information.
+    pub fn create_repository_set(&self, repository_name: &str) -> Result<RepositorySet> {
+        let mut context = RepositoryLookupContext {
+            seen: HashSet::new(),
+            order: Vec::new(),
+            try_private: repository_name.ends_with("-private"),
+        };
+
+        // Try to load the public repo first so it has lower priority
+        // than the private repo. It is not guaranteed to exist, so it is marked
+        // as optional.
+        if let Some(public_name) = repository_name.strip_suffix("-private") {
+            self._add_repo(&mut context, public_name, false)?;
+        }
+
+        // This is required because we always want to ensure that the
+        // `repository_name` that was passed in exists.
+        self._add_repo(&mut context, repository_name, true)?;
 
         // Finally, build a map from repository names to Repository objects,
         // resolving references.
-        let repos: HashMap<String, Repository> = layout_map
-            .keys()
-            .map(|name| Repository::new(name, &layout_map))
+        let repos: HashMap<String, Repository> = context
+            .order
+            .iter()
+            .map(|name| Repository::new(name, &self.layout_map_cache.borrow()))
             .collect::<Result<Vec<_>>>()?
             .into_iter()
             .map(|repo| (repo.name().to_owned(), repo))
             .collect();
 
-        Ok(RepositorySet { repos, order })
+        Ok(RepositorySet {
+            repos,
+            order: context.order,
+        })
     }
 }
 
@@ -633,6 +732,7 @@ mod tests {
     use crate::testutils::write_files;
 
     const GRUNT_LAYOUT_CONF: &str = r#"
+cache-format = md5-dict
 masters = portage-stable chromiumos eclass-overlay baseboard-grunt
 profile-formats = portage-2 profile-default-eapi
 profile_eapi_when_unspecified = 5-progress
@@ -641,12 +741,52 @@ thin-manifests = true
 use-manifests = strict
 "#;
 
+    const GRUNT_PRIVATE_LAYOUT_CONF: &str = r#"
+cache-format = md5-dict
+masters = portage-stable chromiumos eclass-overlay grunt baseboard-grunt-private cheets-private
+profile-formats = portage-2 profile-default-eapi
+profile_eapi_when_unspecified = 5-progress
+repo-name = grunt-private
+thin-manifests = true
+use-manifests = strict
+"#;
+
     const BASEBOARD_GRUNT_LAYOUT_CONF: &str = r#"
+cache-format = md5-dict
+masters = portage-stable chromiumos eclass-overlay chipset-stnyridge
+profile-formats = portage-2 profile-default-eapi
+profile_eapi_when_unspecified = 5-progress
+repo-name = baseboard-grunt
+thin-manifests = true
+use-manifests = strict
+"#;
+
+    const BASEBOARD_GRUNT_PRIVATE_LAYOUT_CONF: &str = r#"
+cache-format = md5-dict
+masters = portage-stable chromiumos eclass-overlay baseboard-grunt chipset-stnyridge-private
+profile-formats = portage-2 profile-default-eapi
+profile_eapi_when_unspecified = 5-progress
+repo-name = baseboard-grunt-private
+thin-manifests = true
+use-manifests = strict
+"#;
+
+    const CHIPSET_STNYRIDGE_LAYOUT_CONF: &str = r#"
 cache-format = md5-dict
 masters = portage-stable chromiumos eclass-overlay
 profile-formats = portage-2 profile-default-eapi
 profile_eapi_when_unspecified = 5-progress
-repo-name = baseboard-grunt
+repo-name = chipset-stnyridge
+thin-manifests = true
+use-manifests = strict
+"#;
+
+    const CHIPSET_STNYRIDGE_PRIVATE_LAYOUT_CONF: &str = r#"
+cache-format = md5-dict
+masters = portage-stable chromiumos eclass-overlay chipset-stnyridge
+profile-formats = portage-2 profile-default-eapi
+profile_eapi_when_unspecified = 5-progress
+repo-name = chipset-stnyridge-private
 thin-manifests = true
 use-manifests = strict
 "#;
@@ -687,7 +827,7 @@ thin-manifests = true
 use-manifests = true
 "#;
 
-    const CHEETS_LAYOUT_CONF: &str = r#"
+    const CHEETS_PRIVATE_LAYOUT_CONF: &str = r#"
 cache-format = md5-dict
 masters = portage-stable chromiumos eclass-overlay
 profile-formats = portage-2 profile-default-eapi
@@ -695,11 +835,10 @@ profile_eapi_when_unspecified = 5-progress
 repo-name = cheets-private
 thin-manifests = true
 use-manifests = strict
-
 "#;
 
     #[test]
-    fn lookp_repository_path() -> Result<()> {
+    fn lookup_repository_path() -> Result<()> {
         let dir = tempfile::tempdir()?;
         let dir = dir.as_ref();
 
@@ -720,7 +859,7 @@ use-manifests = strict
                 ),
                 (
                     "private-overlays/project-cheets-private/metadata/layout.conf",
-                    CHEETS_LAYOUT_CONF,
+                    CHEETS_PRIVATE_LAYOUT_CONF,
                 ),
             ],
         )?;
@@ -728,26 +867,29 @@ use-manifests = strict
         let lookup =
             RepositoryLookup::new(dir, vec!["private-overlays", "overlays", "third_party"])?;
 
-        assert_eq!(dir.join("overlays/overlay-grunt"), lookup.path("grunt")?);
         assert_eq!(
-            dir.join("overlays/overlay-grunt"),
+            Some(dir.join("overlays/overlay-grunt")),
+            lookup.path("grunt")?
+        );
+        assert_eq!(
+            Some(dir.join("overlays/overlay-grunt")),
             lookup.path("overlay-grunt")?
         );
 
-        assert!(lookup.path("overlay-grunt-private").is_err());
+        assert_eq!(None, lookup.path("overlay-grunt-private")?);
 
         assert_eq!(
-            dir.join("overlays/baseboard-grunt"),
+            Some(dir.join("overlays/baseboard-grunt")),
             lookup.path("baseboard-grunt")?
         );
 
         assert_eq!(
-            dir.join("third_party/chromiumos-overlay"),
+            Some(dir.join("third_party/chromiumos-overlay")),
             lookup.path("chromiumos")?
         );
 
         assert_eq!(
-            dir.join("private-overlays/project-cheets-private"),
+            Some(dir.join("private-overlays/project-cheets-private")),
             lookup.path("cheets-private")?
         );
 
@@ -767,8 +909,28 @@ use-manifests = strict
                     GRUNT_LAYOUT_CONF,
                 ),
                 (
+                    "private-overlays/overlay-grunt-private/metadata/layout.conf",
+                    GRUNT_PRIVATE_LAYOUT_CONF,
+                ),
+                (
                     "overlays/baseboard-grunt/metadata/layout.conf",
                     BASEBOARD_GRUNT_LAYOUT_CONF,
+                ),
+                (
+                    "private-overlays/baseboard-grunt-private/metadata/layout.conf",
+                    BASEBOARD_GRUNT_PRIVATE_LAYOUT_CONF,
+                ),
+                (
+                    "overlays/chipset-stnyridge/metadata/layout.conf",
+                    CHIPSET_STNYRIDGE_LAYOUT_CONF,
+                ),
+                (
+                    "private-overlays/chipset-stnyridge-private/metadata/layout.conf",
+                    CHIPSET_STNYRIDGE_PRIVATE_LAYOUT_CONF,
+                ),
+                (
+                    "private-overlays/project-cheets-private/metadata/layout.conf",
+                    CHEETS_PRIVATE_LAYOUT_CONF,
                 ),
                 (
                     "overlays/overlay-zork/metadata/layout.conf",
@@ -849,10 +1011,40 @@ use-manifests = strict
                 "eclass-overlay",
                 "portage-stable",
                 "chromiumos",
+                "chipset-stnyridge",
                 "baseboard-grunt",
                 "grunt"
             ],
             grunt_repo_set
+                .get_repos()
+                .into_iter()
+                .map(|r| r.name())
+                .collect::<Vec<&str>>()
+        );
+
+        let grunt_private_repo_set = lookup.create_repository_set("grunt-private")?;
+        assert_eq!("grunt-private", grunt_private_repo_set.primary().name());
+        // This list differs from `emerge-grunt --info --verbose` because the
+        // board's make.conf explicitly overrides the PORTDIR_OVERLAY order:
+        // PORTDIR_OVERLAY="
+        //   /mnt/host/source/src/third_party/chromiumos-overlay
+        //   /mnt/host/source/src/third_party/eclass-overlay
+        //   ${BOARD_OVERLAY}
+        // "
+        assert_eq!(
+            vec![
+                "eclass-overlay",
+                "portage-stable",
+                "chromiumos",
+                "chipset-stnyridge",
+                "chipset-stnyridge-private",
+                "baseboard-grunt",
+                "baseboard-grunt-private",
+                "grunt",
+                "cheets-private",
+                "grunt-private",
+            ],
+            grunt_private_repo_set
                 .get_repos()
                 .into_iter()
                 .map(|r| r.name())
