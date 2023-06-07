@@ -7,7 +7,8 @@ use crate::{BindMount, LoginMode};
 use anyhow::{anyhow, ensure, Context, Result};
 use fileutil::SafeTempDir;
 use run_in_container_lib::RunInContainerConfig;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tracing::instrument;
@@ -18,7 +19,7 @@ const SUDO_PATH: &str = "/usr/bin/sudo";
 pub struct MountSdkConfig {
     pub layer_paths: Vec<PathBuf>,
     pub bind_mounts: Vec<BindMount>,
-    pub envs: HashMap<String, String>,
+    pub envs: BTreeMap<OsString, OsString>,
 
     /// If set to true, allows network access. This flag should be used only
     /// when it's absolutely needed since it reduces hermeticity.
@@ -65,17 +66,17 @@ impl MountedSDK {
         std::fs::create_dir_all(&bazel_build_dir.outside)?;
 
         // Start with a clean environment.
-        let mut envs: HashMap<String, String> = HashMap::new();
+        let mut envs: BTreeMap<OsString, OsString> = BTreeMap::new();
         let mut bind_mounts: Vec<BindMount> = cfg.bind_mounts;
 
         envs.extend([
-            ("PATH".to_owned(), "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools".to_owned()),
+            ("PATH".into(), "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools".into()),
             // Always enable Rust backtrace.
-            ("RUST_BACKTRACE".to_owned(), "1".to_owned()),
+            ("RUST_BACKTRACE".into(), "1".into()),
         ]);
 
         if let Some(board) = &board {
-            envs.extend([("BOARD".to_owned(), board.to_string())])
+            envs.extend([("BOARD".into(), board.into())])
         }
 
         let control_channel = if cfg.login_mode != LoginMode::Never {
@@ -87,12 +88,11 @@ impl MountedSDK {
                 source: control_channel_path.outside.clone(),
                 rw: false,
             });
-            envs.insert("_LOGIN_MODE".to_owned(), cfg.login_mode.to_string());
+            envs.insert("_LOGIN_MODE".into(), cfg.login_mode.to_string().into());
 
             // Ensure we forward the TERM variable so bash behaves correctly.
             if let Some(term) = std::env::var_os("TERM") {
-                // TODO: Switch envs over to store OsStrings
-                envs.insert("_TERM".to_owned(), term.to_string_lossy().to_string());
+                envs.insert("_TERM".into(), term.into());
             }
 
             Some(ControlChannel::new(control_channel_path.outside)?)
@@ -225,7 +225,7 @@ mod tests {
                     rw: false,
                 },
             ],
-            envs: HashMap::new(),
+            envs: BTreeMap::new(),
             allow_network_access: false,
             privileged: false,
             login_mode: LoginMode::Never,

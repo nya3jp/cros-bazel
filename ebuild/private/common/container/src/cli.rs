@@ -6,7 +6,7 @@ use crate::mountsdk::MountSdkConfig;
 use crate::LoginMode;
 use anyhow::Result;
 use clap::{arg, Args};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 #[derive(Args, Debug)]
@@ -65,7 +65,7 @@ impl MountSdkConfig {
             allow_network_access: false,
             privileged: false,
             bind_mounts: Vec::new(),
-            envs: HashMap::new(),
+            envs: BTreeMap::new(),
         })
     }
 }

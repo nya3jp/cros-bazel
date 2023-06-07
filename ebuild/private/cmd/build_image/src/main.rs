@@ -114,8 +114,8 @@ fn do_main() -> Result<()> {
     }
 
     cfg.envs.insert(
-        "BASE_PACKAGE".to_owned(),
-        args.override_base_package.join(" "),
+        "BASE_PACKAGE".into(),
+        args.override_base_package.join(" ").into(),
     );
 
     let mut sdk = MountedSDK::new(cfg, Some(&args.board))?;

@@ -70,8 +70,8 @@ fn do_main() -> Result<()> {
     let host_install_atoms = bind_binary_packages(&mut cfg, host_packages_dir, args.install_host)
         .with_context(|| "Failed to bind host binary packages.")?;
     cfg.envs.insert(
-        "INSTALL_ATOMS_HOST".to_owned(),
-        host_install_atoms.join(" "),
+        "INSTALL_ATOMS_HOST".into(),
+        host_install_atoms.join(" ").into(),
     );
 
     cfg.bind_mounts

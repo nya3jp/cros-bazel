@@ -4,7 +4,8 @@
 
 use anyhow::{Error, Result};
 use binarypackage::BinaryPackage;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -45,13 +46,16 @@ impl InstallGroup {
     pub fn get_mounts_and_env<P: AsRef<Path>>(
         install_groups: &[InstallGroup],
         dir: P,
-    ) -> Result<(Vec<BindMount>, HashMap<String, String>)> {
+    ) -> Result<(Vec<BindMount>, BTreeMap<OsString, OsString>)> {
         let mut bind_mounts: Vec<BindMount> = Vec::new();
-        let mut env: HashMap<String, String> = HashMap::new();
+        let mut env: BTreeMap<OsString, OsString> = BTreeMap::new();
         for (i, install_group) in install_groups.iter().enumerate() {
             let (mut group_mounts, atoms) = install_group.get_config(dir.as_ref())?;
             bind_mounts.append(&mut group_mounts);
-            env.insert(format!("INSTALL_ATOMS_TARGET_{i}"), atoms.join(" "));
+            env.insert(
+                format!("INSTALL_ATOMS_TARGET_{i}").into(),
+                atoms.join(" ").into(),
+            );
         }
         Ok((bind_mounts, env))
     }
