@@ -3,28 +3,17 @@
 // found in the LICENSE file.
 
 use crate::control::ControlChannel;
+use crate::LoginMode;
 use anyhow::{anyhow, ensure, Context, Result};
 use fileutil::SafeTempDir;
 use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
 use std::collections::HashMap;
-use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use strum_macros::EnumString;
 use tracing::instrument;
 
 const SUDO_PATH: &str = "/usr/bin/sudo";
-
-#[derive(Debug, Clone, Copy, PartialEq, EnumString, strum_macros::Display)]
-#[strum(serialize_all = "kebab-case")]
-pub(crate) enum LoginMode {
-    #[strum(serialize = "")]
-    Never,
-    Before,
-    After,
-    AfterFail,
-}
 
 #[derive(Clone)]
 pub struct MountSdkConfig {
@@ -206,7 +195,6 @@ fn ensure_passwordless_sudo() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::LoginMode::Never;
     use runfiles::Runfiles;
 
     const SOURCE_DIR: &str = "/mnt/host/source";
@@ -241,7 +229,7 @@ mod tests {
             envs: HashMap::new(),
             allow_network_access: false,
             privileged: false,
-            login_mode: Never,
+            login_mode: LoginMode::Never,
         };
 
         MountedSDK::new(cfg.clone(), board)?.run_cmd(&["true"])?;

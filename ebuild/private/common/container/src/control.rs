@@ -89,7 +89,7 @@ impl Drop for ControlChannel {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use fileutil::SafeTempDir;
 
     use super::*;

@@ -3,10 +3,12 @@
 // found in the LICENSE file.
 
 mod cli;
+mod container;
 mod control;
 mod install_group;
 mod mountsdk;
 
 pub use cli::*;
+pub use container::*;
 pub use install_group::*;
 pub use mountsdk::*;

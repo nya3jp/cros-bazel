@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::mountsdk::{LoginMode, MountSdkConfig};
+use crate::mountsdk::MountSdkConfig;
+use crate::LoginMode;
 use anyhow::Result;
 use clap::{arg, Args};
 use std::collections::HashMap;
