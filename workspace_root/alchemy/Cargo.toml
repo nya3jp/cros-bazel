@@ -22,6 +22,7 @@ members = [
     "bazel/ebuild/private/common/portage/version",
     "bazel/ebuild/private/common/processes",
     "bazel/ebuild/private/common/run_in_container_lib",
+    "bazel/ebuild/private/common/testutil",
     "bazel/ebuild/private/common/tracing-chrome-trace",
 ]
 exclude = [

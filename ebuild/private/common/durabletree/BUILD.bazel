@@ -13,6 +13,7 @@ rust_library(
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
+        "//bazel/ebuild/private/common/testutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:nix",
