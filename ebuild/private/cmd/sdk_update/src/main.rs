@@ -6,8 +6,8 @@ use anyhow::{Context, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use cliutil::cli_main;
+use container::BindMount;
 use durabletree::DurableTree;
-use makechroot::BindMount;
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,
@@ -97,7 +97,7 @@ fn do_main() -> Result<()> {
     fileutil::move_dir_contents(sdk.diff_dir(), &args.output)
         .with_context(|| "Failed to move the diff dir.")?;
 
-    makechroot::clean_layer(Some(&args.board), &args.output)
+    container::clean_layer(Some(&args.board), &args.output)
         .with_context(|| "Failed to clean the output dir.")?;
 
     DurableTree::convert(&args.output)?;

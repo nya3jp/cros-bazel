@@ -2,13 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use clap::Parser;
 use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
 use durabletree::DurableTree;
 use fileutil::SafeTempDir;
 use itertools::Itertools;
-use makechroot::LayerType;
 use nix::{
     errno::Errno,
     mount::MntFlags,
@@ -264,6 +263,33 @@ fn enable_loopback_networking() -> Result<()> {
     Errno::result(res).context("ioctl(SIOCSIFFLAGS) failed")?;
 
     Ok(())
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum LayerType {
+    Dir,
+    Tar,
+    DurableTree,
+}
+
+impl LayerType {
+    pub fn detect(layer_path: impl AsRef<Path>) -> Result<Self> {
+        let layer_path = layer_path.as_ref().absolutize()?;
+
+        let file_name = layer_path
+            .file_name()
+            .and_then(|x| x.to_str())
+            .unwrap_or_default();
+        if DurableTree::try_exists(&layer_path)? {
+            Ok(LayerType::DurableTree)
+        } else if std::fs::metadata(&layer_path)?.is_dir() {
+            Ok(LayerType::Dir)
+        } else if file_name.ends_with(".tar.zst") || file_name.ends_with(".tar") {
+            Ok(LayerType::Tar)
+        } else {
+            bail!("unsupported file type: {:?}", layer_path)
+        }
+    }
 }
 
 fn continue_namespace(
@@ -544,4 +570,41 @@ fn continue_namespace(
     };
 
     Ok(status_to_exit_code(&status))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::{Path, PathBuf};
+
+    use super::*;
+    use durabletree::DurableTree;
+    use fileutil::SafeTempDir;
+    use runfiles::Runfiles;
+
+    #[test]
+    fn detect_layer_type_works() -> Result<()> {
+        let runfiles = Runfiles::create()?;
+        let testdata = PathBuf::from("cros/bazel/ebuild/private/common/makechroot/testdata/");
+
+        assert_eq!(
+            LayerType::detect(runfiles.rlocation(testdata.join("example.tar.zst")))?,
+            LayerType::Tar
+        );
+        assert_eq!(
+            LayerType::detect(runfiles.rlocation(testdata.join("example.tar")))?,
+            LayerType::Tar
+        );
+
+        let temp_dir = SafeTempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        assert_eq!(LayerType::detect(temp_dir)?, LayerType::Dir);
+
+        DurableTree::convert(temp_dir)?;
+        assert_eq!(LayerType::detect(temp_dir)?, LayerType::DurableTree);
+
+        assert!(LayerType::detect(Path::new("/dev/null")).is_err());
+
+        Ok(())
+    }
 }

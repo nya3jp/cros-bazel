@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+durabletree = { path = "../durabletree" }
 fileutil = { path = "../fileutil" }
-makechroot = { path = "../makechroot" }
 binarypackage = { path = "../portage/binarypackage" }
 processes = { path = "../processes" }
 run_in_container_lib = { path = "../run_in_container_lib" }
@@ -17,8 +17,10 @@ clap.workspace = true
 itertools.workspace = true
 libc.workspace = true
 nix.workspace = true
+path-absolutize.workspace = true
 runfiles.workspace = true
 scopeguard.workspace = true
 strum.workspace = true
 strum_macros.workspace = true
 tracing.workspace = true
+walkdir.workspace = true

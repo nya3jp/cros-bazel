@@ -2,13 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 use anyhow::Result;
-use makechroot::BindMount;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct BindMountConfig {
+    pub mount_path: PathBuf,
+    pub source: PathBuf,
+    pub rw: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RunInContainerConfig {
     /// Directory that will be used by the overlayfs mount.
     /// Output artifacts can be found in the 'diff' directory.
@@ -27,7 +33,7 @@ pub struct RunInContainerConfig {
 
     /// Bind-mounts to apply. Applies on top of file system layers, and can
     /// mount individual files as well as directories.
-    pub bind_mounts: Vec<BindMount>,
+    pub bind_mounts: Vec<BindMountConfig>,
 
     /// If true, the contents of the host machine are mounted at /host.
     pub keep_host_mount: bool,

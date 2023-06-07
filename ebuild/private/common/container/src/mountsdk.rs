@@ -3,10 +3,9 @@
 // found in the LICENSE file.
 
 use crate::control::ControlChannel;
-use crate::LoginMode;
+use crate::{BindMount, LoginMode};
 use anyhow::{anyhow, ensure, Context, Result};
 use fileutil::SafeTempDir;
-use makechroot::BindMount;
 use run_in_container_lib::RunInContainerConfig;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -124,7 +123,7 @@ impl MountedSDK {
             envs: envs.into_iter().collect(),
             chdir: PathBuf::from("/"),
             layer_paths,
-            bind_mounts,
+            bind_mounts: bind_mounts.into_iter().map(|bm| bm.into_config()).collect(),
             keep_host_mount: false,
         };
         let serialized_path = tmp_dir.path().join("run_in_container_args.json");

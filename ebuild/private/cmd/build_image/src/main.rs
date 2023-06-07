@@ -6,8 +6,7 @@ use anyhow::Result;
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use cliutil::cli_main;
-use container::MountedSDK;
-use makechroot::BindMount;
+use container::{BindMount, MountedSDK};
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,

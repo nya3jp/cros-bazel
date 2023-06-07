@@ -197,7 +197,6 @@ dependencies = [
  "clap",
  "cliutil",
  "container",
- "makechroot",
  "runfiles",
  "users",
 ]
@@ -210,7 +209,6 @@ dependencies = [
  "clap",
  "cliutil",
  "container",
- "makechroot",
  "nix",
  "runfiles",
 ]
@@ -224,7 +222,6 @@ dependencies = [
  "cliutil",
  "container",
  "fileutil",
- "makechroot",
  "runfiles",
 ]
 
@@ -342,11 +339,12 @@ dependencies = [
  "anyhow",
  "binarypackage",
  "clap",
+ "durabletree",
  "fileutil",
  "itertools",
  "libc",
- "makechroot",
  "nix",
+ "path-absolutize",
  "processes",
  "run_in_container_lib",
  "runfiles",
@@ -354,6 +352,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "tracing",
+ "walkdir",
 ]
 
 [[package]]
@@ -676,7 +675,6 @@ dependencies = [
  "container",
  "durabletree",
  "fileutil",
- "makechroot",
  "runfiles",
 ]
 
@@ -776,22 +774,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "makechroot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cliutil",
- "durabletree",
- "fileutil",
- "itertools",
- "path-absolutize",
- "runfiles",
- "serde",
- "tracing",
- "walkdir",
 ]
 
 [[package]]
@@ -1246,7 +1228,6 @@ dependencies = [
  "fileutil",
  "itertools",
  "libc",
- "makechroot",
  "nix",
  "path-absolutize",
  "pathdiff",
@@ -1267,7 +1248,6 @@ name = "run_in_container_lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "makechroot",
  "serde",
  "serde_json",
 ]
@@ -1361,7 +1341,6 @@ dependencies = [
  "container",
  "durabletree",
  "fileutil",
- "makechroot",
  "runfiles",
 ]
 

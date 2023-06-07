@@ -20,7 +20,6 @@ rust_binary(
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/durabletree",
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
-        "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/processes",
         "//bazel/ebuild/private/common/run_in_container_lib",
         "@alchemy_crates//:anyhow",

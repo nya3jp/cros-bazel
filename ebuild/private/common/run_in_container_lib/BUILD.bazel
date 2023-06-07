@@ -11,7 +11,6 @@ rust_library(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
-        "//bazel/ebuild/private/common/makechroot",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",

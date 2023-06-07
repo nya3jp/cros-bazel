@@ -4,10 +4,11 @@
 
 use anyhow::{Error, Result};
 use binarypackage::BinaryPackage;
-use makechroot::BindMount;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+
+use crate::BindMount;
 
 #[derive(Debug, Clone)]
 pub struct InstallGroup {

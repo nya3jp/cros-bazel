@@ -18,8 +18,8 @@ rust_library(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
+        "//bazel/ebuild/private/common/durabletree",
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
-        "//bazel/ebuild/private/common/makechroot",
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "//bazel/ebuild/private/common/processes",
         "//bazel/ebuild/private/common/run_in_container_lib",
@@ -28,9 +28,11 @@ rust_library(
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:libc",
         "@alchemy_crates//:nix",
+        "@alchemy_crates//:path-absolutize",
         "@alchemy_crates//:scopeguard",
         "@alchemy_crates//:strum",
         "@alchemy_crates//:tracing",
+        "@alchemy_crates//:walkdir",
         "@rules_rust//tools/runfiles",
     ],
 )

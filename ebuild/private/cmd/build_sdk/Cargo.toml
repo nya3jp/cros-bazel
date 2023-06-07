@@ -9,7 +9,6 @@ edition = "2021"
 cliutil = { path = "../../common/cliutil" }
 container = { path = "../../common/container" }
 fileutil = { path = "../../common/fileutil" }
-makechroot = { path = "../../common/makechroot" }
 
 anyhow.workspace = true
 clap.workspace = true

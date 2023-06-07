@@ -5,8 +5,7 @@
 use anyhow::Result;
 use clap::Parser;
 use cliutil::cli_main;
-use container::{InstallGroup, MountedSDK};
-use makechroot::BindMount;
+use container::{BindMount, InstallGroup, MountedSDK};
 use std::fs::File;
 use std::{path::PathBuf, process::ExitCode};
 

@@ -9,7 +9,6 @@ edition = "2021"
 cliutil = { path = "../../common/cliutil" }
 durabletree = { path = "../../common/durabletree" }
 fileutil = { path = "../../common/fileutil" }
-makechroot = { path = "../../common/makechroot" }
 processes = { path = "../../common/processes" }
 run_in_container_lib = { path = "../../common/run_in_container_lib" }
 

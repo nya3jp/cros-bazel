@@ -5,9 +5,8 @@
 use anyhow::Result;
 use clap::Parser;
 use cliutil::cli_main;
-use container::{InstallGroup, MountedSDK};
+use container::{BindMount, InstallGroup, MountedSDK};
 use durabletree::DurableTree;
-use makechroot::BindMount;
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,
@@ -60,7 +59,7 @@ fn do_main() -> Result<()> {
     sdk.run_cmd(&[MAIN_SCRIPT])?;
 
     fileutil::move_dir_contents(sdk.diff_dir().as_path(), &args.output)?;
-    makechroot::clean_layer(args.board.as_deref(), &args.output)?;
+    container::clean_layer(args.board.as_deref(), &args.output)?;
     DurableTree::convert(&args.output)?;
 
     Ok(())

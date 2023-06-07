@@ -5,8 +5,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use clap::{command, Parser};
 use cliutil::cli_main;
-use container::{ConfigArgs, MountedSDK};
-use makechroot::BindMount;
+use container::{BindMount, ConfigArgs, MountedSDK};
 use std::{
     collections::HashSet,
     fs::File,

@@ -15,7 +15,6 @@ rust_binary(
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
         "//bazel/ebuild/private/common/container",
-        "//bazel/ebuild/private/common/makechroot",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:nix",

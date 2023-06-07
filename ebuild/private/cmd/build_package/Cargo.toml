@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
 container = { path = "../../common/container" }
-makechroot = { path = "../../common/makechroot" }
 
 anyhow.workspace = true
 clap.workspace = true
