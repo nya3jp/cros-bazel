@@ -724,6 +724,49 @@ impl RepositoryLookup {
     }
 }
 
+#[derive(Debug)]
+pub struct UnorderedRepositorySet {
+    repos: Vec<Repository>,
+}
+
+impl UnorderedRepositorySet {
+    pub fn repos(&self) -> &Vec<Repository> {
+        &self.repos
+    }
+
+    /// Looks up a repository that contains the specified file path.
+    /// It can be used, for example, to look up a repository that contains an
+    /// ebuild file.
+    pub fn get_repo_by_path(&self, ebuild_path: &Path) -> Result<&Repository> {
+        if !ebuild_path.is_absolute() {
+            bail!(
+                "BUG: absolute path required to lookup repositories: {}",
+                ebuild_path.display()
+            );
+        }
+        for repo in &self.repos {
+            if ebuild_path.starts_with(repo.base_dir()) {
+                return Ok(repo);
+            }
+        }
+        bail!("repository not found under {}", ebuild_path.display());
+    }
+}
+
+impl FromIterator<Repository> for UnorderedRepositorySet {
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = Repository>,
+    {
+        UnorderedRepositorySet {
+            repos: iter
+                .into_iter()
+                .unique_by(|repo| repo.name().to_string())
+                .collect(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use sha2::digest::generic_array::arr;
@@ -1053,6 +1096,37 @@ use-manifests = strict
 
         // Should fail because baseboard-zork isn't defined
         assert!(lookup.create_repository_set("zork").is_err());
+
+        let repos: UnorderedRepositorySet = [&grunt_repo_set, &grunt_private_repo_set]
+            .into_iter()
+            .flat_map(|set| set.get_repos())
+            .cloned()
+            .collect();
+
+        assert_eq!(
+            HashSet::from([
+                "eclass-overlay",
+                "portage-stable",
+                "chromiumos",
+                "chipset-stnyridge",
+                "chipset-stnyridge-private",
+                "baseboard-grunt",
+                "baseboard-grunt-private",
+                "grunt",
+                "cheets-private",
+                "grunt-private",
+            ]),
+            repos.repos().iter().map(|repo| repo.name()).collect(),
+        );
+
+        assert_eq!(
+            "baseboard-grunt-private",
+            repos
+                .get_repo_by_path(&dir.join(
+                    "private-overlays/baseboard-grunt-private/sys-libs/glibc/glibc-1.0.ebuild"
+                ))?
+                .name()
+        );
 
         Ok(())
     }
