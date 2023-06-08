@@ -46,6 +46,10 @@ class TarballTest(unittest.TestCase):
             file1 = members["path/to/file1"]
             self.assertEqual(file1.mode, 0o640)
 
+            self.assertIn("demo/files_only", files)
+            self.assertIn("demo/testdata/strip_prefix/from_current_pkg", files)
+            self.assertIn("demo/strip_prefix/from_pkg", files)
+
 
 if __name__ == "__main__":
     unittest.main()

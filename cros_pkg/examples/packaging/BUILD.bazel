@@ -34,6 +34,7 @@ pkg_mklink(
     target = "path/to/dst",
 )
 
+# See cros_pkg/defs.bzl for an explanation of how it decides to install
 cros_pkg_filegroup(
     name = "filegroup",
     srcs = [
@@ -55,8 +56,24 @@ cros_pkg_filegroup(
             uid = 0,
             user = "user",
         ),
+        pkg.file(
+            # Installed to /demo/files_only
+            srcs = [":testdata/strip_prefix/files_only"],
+            prefix = "/demo",
+        ),
+        pkg.file(
+            # Installed to /demo/testdata/strip_prefix/from_current_pkg
+            srcs = [":testdata/strip_prefix/from_current_pkg"],
+            prefix = "/demo",
+            strip_prefix = strip_prefix.from_pkg(),
+        ),
+        pkg.file(
+            # Installed to /demo/strip_prefix/from_pkg
+            srcs = [":testdata/strip_prefix/from_pkg"],
+            prefix = "/demo",
+            strip_prefix = strip_prefix.from_pkg("testdata"),
+        ),
     ],
-    default_strip_prefix = strip_prefix.from_pkg("testdata"),
     pkg_dirs = [":pkg_dir"],
     pkg_filegroups = [":pkg_filegroup"],
     pkg_files = [":pkg_file"],

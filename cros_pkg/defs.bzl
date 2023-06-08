@@ -13,6 +13,7 @@ strip_prefix = _strip_prefix
 # * srcs: (List[Label|File]) The files to install.
 # * name: (str) What to rename the file to.
 # * prefix: (str) The directory to install into.
+# * dst: (str) Equivalent to specifying both dst and name.
 # * strip_prefix: (strip_prefix) How to strip the prefix. Options are:
 #    - `strip_prefix.files_only()`: strip all directory components from all
 #      paths
@@ -26,6 +27,21 @@ strip_prefix = _strip_prefix
 # * group: (str) The name of the group owning the files.
 # * uid: (str) The numeric user owner of the files.
 # * gid: (str) The numeric group owner of the files.
+
+# The way we calculate the file's destination is:
+# * If dst is specified, use that path.
+# * Otherwise, use prefix + name
+#   * The prefix is calculated by:
+#     * If it was explicitly specified, use that
+#     * Try the default value for the file type (eg. /usr/bin for pkg.bin).
+#     * The build will fail if neither of these are met.
+#   * The name is calculated by:
+#     * If it was explicitly specified, use that
+#     * Otherwise, for each file, it looks at the path and strip_prefix:
+#       * (default) strip_prefix.files_only(): $(basename path)
+#       * strip_prefix.from_pkg(): path relative_to the current package
+#       * strip_prefix.from_pkg("foo"): path relative_to the specified package
+#       * strip_prefix.from_root(): path relative to the root
 
 pkg = struct(
     bin = custom_file_type(
