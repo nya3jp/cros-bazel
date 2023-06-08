@@ -242,7 +242,7 @@ PORTDIR_OVERLAY="/mnt/host/source/src/overlays/overlay-amd64-host"
         FileOps::plainfile("/etc/make.conf.user", ""),
         FileOps::symlink(
             "/etc/portage/make.profile",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/base",
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk",
         ),
     ];
 
