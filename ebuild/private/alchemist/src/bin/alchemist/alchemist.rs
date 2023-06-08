@@ -13,6 +13,7 @@ use crate::dump_package::dump_package_main;
 use crate::generate_repo::generate_repo_main;
 
 use alchemist::common::is_inside_chroot;
+use alchemist::fakechroot;
 use alchemist::toolchain::ToolchainConfig;
 use alchemist::{
     config::{
@@ -187,7 +188,11 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     let translator = if is_inside_chroot()? {
         PathTranslator::noop()
     } else {
-        enter_fake_chroot(&args.board, &args.profile, &source_dir)?
+        let targets = [&fakechroot::BoardTarget {
+            board: &args.board,
+            profile: &args.profile,
+        }];
+        enter_fake_chroot(&targets, &source_dir)?
     };
 
     let tools_dir = setup_tools()?;

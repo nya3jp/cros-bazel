@@ -322,28 +322,47 @@ fn generate_sdk_board_configs(
     Ok(())
 }
 
-fn generate_configs(board: &str, profile: &str, translator: &PathTranslator) -> Result<()> {
-    generate_host_configs()?;
-
-    // We throw away the repos and toolchain after we generate the files so we can
-    // create new instances that have the "internal" paths instead.
-    // TODO: Re-evaluate if this is really necessary.
+// Generates a /build/$BOARD directory for each target that contains the portage
+// config required to build packages.
+fn generate_target_configs(targets: &[&BoardTarget], translator: &PathTranslator) -> Result<()> {
+    // We throw away the repos and toolchain after we generate the files
+    // because we need to evaluate the PORTDIR and PORTDIR_OVERLAY variables
+    // as they are defined in the make.conf files.
     let lookup = RepositoryLookup::new(
         Path::new("/mnt/host/source"),
         vec!["src/private-overlays", "src/overlays", "src/third_party"],
     )?;
 
-    let repos = lookup.create_repository_set(board)?;
+    for target in targets {
+        let repos = lookup.create_repository_set(target.board)?;
 
-    let toolchains = load_toolchains(&repos)?;
+        let toolchains = load_toolchains(&repos)?;
 
-    if board == "amd64-host" {
-        generate_sdk_board_configs(board, profile, &repos, &toolchains, translator)?;
-    } else {
-        generate_board_configs(board, profile, &repos, &toolchains, translator)?;
+        if target.board == "amd64-host" {
+            generate_sdk_board_configs(
+                target.board,
+                target.profile,
+                &repos,
+                &toolchains,
+                translator,
+            )?;
+        } else {
+            generate_board_configs(
+                target.board,
+                target.profile,
+                &repos,
+                &toolchains,
+                translator,
+            )?;
+        }
     }
 
     Ok(())
+}
+
+pub struct BoardTarget<'a> {
+    pub board: &'a str,
+    pub profile: &'a str,
 }
 
 /// Enters a fake CrOS chroot.
@@ -361,14 +380,14 @@ fn generate_configs(board: &str, profile: &str, translator: &PathTranslator) -> 
 ///
 /// # Arguments
 ///
-/// * `board` - The board name to generate configs for.
-/// * `profile` - The board's profile.
+/// * `targets` - The board and profile pairs to generate /build/$BOARD
+///               ROOTs for.
 /// * `source_dir` - The `repo` root directory. i.e., directory that contains
 ///   the `.repo` directory. This will be mounted at /mnt/host/source.
 ///
 /// It returns [`PathTranslator`] that can be used to translate file paths in
 /// the fake chroot to the original paths.
-pub fn enter_fake_chroot(board: &str, profile: &str, source_dir: &Path) -> Result<PathTranslator> {
+pub fn enter_fake_chroot(targets: &[&BoardTarget], source_dir: &Path) -> Result<PathTranslator> {
     // Canonicalize `source_dir` so it can be used in symlink targets.
     // Do this before entering the namespace to avoid including "/.old-root" in
     // the resolved path.
@@ -393,7 +412,9 @@ pub fn enter_fake_chroot(board: &str, profile: &str, source_dir: &Path) -> Resul
     let translator = PathTranslator::new(CHROOT_SOURCE_DIR, &source_dir);
 
     // Generate configs.
-    generate_configs(board, profile, &translator)?;
+    generate_host_configs()?;
+
+    generate_target_configs(targets, &translator)?;
 
     Ok(translator)
 }
