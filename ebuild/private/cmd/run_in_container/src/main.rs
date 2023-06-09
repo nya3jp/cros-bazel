@@ -38,29 +38,14 @@ const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
 const NONE_STR: Option<&str> = None::<&str>;
 
 #[derive(Parser, Debug)]
-#[clap(trailing_var_arg = true)]
 struct Cli {
     /// A path to a serialized RunInContainerConfig.
     #[arg(long, required = true)]
-    cfg: PathBuf,
-
-    /// Allows network access. This flag should be used only when it's
-    /// absolutely needed since it reduces hermeticity.
-    #[arg(long)]
-    allow_network_access: bool,
-
-    /// Enters a privileged container. In order for this flag to work, the
-    /// calling process must have privileges (e.g. root).
-    #[arg(long)]
-    privileged: bool,
+    config: PathBuf,
 
     /// Whether we are already in the namespace. Never set this, as it's as internal flag.
     #[arg(long)]
     already_in_namespace: bool,
-
-    /// The command to run on the command-line.
-    #[arg(long, required=true, num_args=1.., allow_hyphen_values=true)]
-    cmd: Vec<String>,
 }
 
 pub fn main() -> ExitCode {
@@ -68,16 +53,12 @@ pub fn main() -> ExitCode {
 
     if !args.already_in_namespace {
         print_current_command_line();
-        let result = enter_namespace(args.allow_network_access, args.privileged);
+        let result = || -> Result<_> {
+            enter_namespace(RunInContainerConfig::deserialize_from(&args.config)?)
+        }();
         handle_top_level_result(result)
     } else {
-        cli_main(|| {
-            continue_namespace(
-                RunInContainerConfig::deserialize_from(&args.cfg)?,
-                args.cmd,
-                args.allow_network_access,
-            )
-        })
+        cli_main(|| continue_namespace(RunInContainerConfig::deserialize_from(&args.config)?))
     }
 }
 
@@ -141,12 +122,12 @@ fn extract_archive(archive_path: &Path, extract_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitCode> {
+fn enter_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     let r = runfiles::Runfiles::create()?;
     let dumb_init_path = r.rlocation("files/dumb_init");
 
     // Enter a new user namespace if unprivileged.
-    if !privileged {
+    if !cfg.privileged {
         let uid = getuid();
         let gid = getgid();
         unshare(CloneFlags::CLONE_NEWUSER)
@@ -161,7 +142,7 @@ fn enter_namespace(allow_network_access: bool, privileged: bool) -> Result<ExitC
 
     // Enter various namespaces except mount/PID namespace.
     let mut unshare_flags = CloneFlags::CLONE_NEWIPC;
-    if !allow_network_access {
+    if !cfg.allow_network_access {
         unshare_flags |= CloneFlags::CLONE_NEWNET;
     }
     unshare(unshare_flags)
@@ -292,17 +273,13 @@ impl LayerType {
     }
 }
 
-fn continue_namespace(
-    cfg: RunInContainerConfig,
-    cmd: Vec<String>,
-    allow_network_access: bool,
-) -> Result<ExitCode> {
+fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     unshare(CloneFlags::CLONE_NEWNS).context("Failed to enter mount namespace")?;
 
     let upper_dir = cfg.upper_dir.absolutize()?.into_owned();
     let scratch_dir = cfg.scratch_dir.absolutize()?.into_owned();
 
-    if !allow_network_access {
+    if !cfg.allow_network_access {
         enable_loopback_networking()?;
     }
 
@@ -549,13 +526,17 @@ fn continue_namespace(
         umount2("/host", MntFlags::MNT_DETACH).with_context(|| "unmounting host")?;
     }
 
-    let escaped_command = cmd.iter().map(|s| shell_escape::escape(s.into())).join(" ");
+    let escaped_command = cfg
+        .args
+        .iter()
+        .map(|s| shell_escape::escape(s.to_string_lossy()))
+        .join(" ");
     eprintln!("COMMAND(container): {}", &escaped_command);
 
     let status = {
         let _span = info_span!("run", command = escaped_command).entered();
-        Command::new(&cmd[0])
-            .args(&cmd[1..])
+        Command::new(&cfg.args[0])
+            .args(&cfg.args[1..])
             .env_clear()
             .envs(cfg.envs)
             .current_dir(cfg.chdir)

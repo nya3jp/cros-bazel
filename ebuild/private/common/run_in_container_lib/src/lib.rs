@@ -33,6 +33,9 @@ pub struct RunInContainerConfig {
     /// run_in_container finishes.
     pub scratch_dir: PathBuf,
 
+    /// The command to run in the container.
+    pub args: Vec<OsString>,
+
     /// Environment variables for the process in the container.
     #[serde(with = "serde_os_string_map")]
     pub envs: BTreeMap<OsString, OsString>,
@@ -48,6 +51,14 @@ pub struct RunInContainerConfig {
     /// Bind-mounts to apply. Applies on top of file system layers, and can
     /// mount individual files as well as directories.
     pub bind_mounts: Vec<BindMountConfig>,
+
+    /// Allows network access. This option should be used only when it's
+    /// absolutely needed since it reduces hermeticity.
+    pub allow_network_access: bool,
+
+    /// Starts a privileged container. In order for this option to work, the
+    /// run_in_container process must be run with privilege (e.g. as root).
+    pub privileged: bool,
 
     /// If true, the contents of the host machine are mounted at /host.
     pub keep_host_mount: bool,

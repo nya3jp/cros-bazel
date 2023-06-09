@@ -34,6 +34,7 @@ pub struct MountSdkConfig {
 pub struct MountedSDK {
     root_dir: fileutil::DualPath,
     diff_dir: PathBuf,
+    config: RunInContainerConfig,
 
     // Required for RAII.
     cmd: Option<Command>,
@@ -107,7 +108,7 @@ impl MountedSDK {
 
         envs.extend(cfg.envs);
 
-        let mut cmd = if cfg.privileged {
+        let cmd = if cfg.privileged {
             ensure_passwordless_sudo()?;
             let mut cmd = Command::new(SUDO_PATH);
             // We have no idea why, but run_in_container fails on pivot_root(2)
@@ -115,7 +116,6 @@ impl MountedSDK {
             // TODO: Investigate the cause.
             cmd.args(["unshare", "--mount", "--"]);
             cmd.arg(run_in_container_path);
-            cmd.arg("--privileged");
             cmd
         } else {
             Command::new(run_in_container_path)
@@ -123,34 +123,31 @@ impl MountedSDK {
 
         let mut layer_paths: Vec<PathBuf> = cfg.layer_paths;
         layer_paths.push(root_dir.outside.clone());
-        let serialized_config = RunInContainerConfig {
-            upper_dir: diff_dir.clone(),
-            scratch_dir,
-            envs: envs.into_iter().collect(),
-            chdir: PathBuf::from("/"),
-            layer_paths,
-            bind_mounts: bind_mounts.into_iter().map(|bm| bm.into_config()).collect(),
-            keep_host_mount: false,
-        };
-        let serialized_path = tmp_dir.path().join("run_in_container_args.json");
-        serialized_config.serialize_to(&serialized_path)?;
-        cmd.arg("--cfg").arg(&serialized_path);
-
-        if cfg.allow_network_access {
-            cmd.arg("--allow-network-access");
-        }
 
         let setup_script_path = bazel_build_dir.join("setup.sh");
         std::fs::copy(
             r.rlocation("cros/bazel/ebuild/private/common/container/setup.sh"),
             setup_script_path.outside,
         )?;
-        cmd.arg("--cmd").arg(setup_script_path.inside);
+
+        let config = RunInContainerConfig {
+            upper_dir: diff_dir.clone(),
+            scratch_dir,
+            args: vec![setup_script_path.inside.as_os_str().to_owned()], // appended later
+            envs: envs.into_iter().collect(),
+            chdir: PathBuf::from("/"),
+            layer_paths,
+            bind_mounts: bind_mounts.into_iter().map(|bm| bm.into_config()).collect(),
+            allow_network_access: cfg.allow_network_access,
+            privileged: cfg.privileged,
+            keep_host_mount: false,
+        };
 
         Ok(Self {
             cmd: Some(cmd),
             root_dir,
             diff_dir,
+            config,
             tmp_dir,
             _control_channel: control_channel,
         })
@@ -180,7 +177,16 @@ impl MountedSDK {
             .cmd
             .take()
             .with_context(|| "Can only execute a command once per SDK.")?;
-        cmd.args(args);
+
+        self.config
+            .args
+            .extend(args.into_iter().map(OsString::from));
+
+        let config_path = self.tmp_dir.path().join("run_in_container_args.json");
+        self.config.serialize_to(&config_path)?;
+
+        cmd.arg("--config").arg(&config_path);
+
         processes::run_and_check(&mut cmd)
     }
 }

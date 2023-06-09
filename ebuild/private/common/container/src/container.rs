@@ -391,6 +391,9 @@ impl<'container> ContainerCommand<'container> {
         let bazel_build_dir = SafeTempDir::new()?;
         let bazel_build_dir = bazel_build_dir.path();
 
+        let mut real_args = vec!["/mnt/host/bazel-build/setup.sh".into()];
+        real_args.extend(self.args.clone());
+
         // Automatically bind-mount /mnt/host/bazel-build.
         let bind_mounts: Vec<BindMountConfig> = [BindMount {
             mount_path: PathBuf::from("/mnt/host/bazel-build"),
@@ -406,10 +409,13 @@ impl<'container> ContainerCommand<'container> {
         let config = RunInContainerConfig {
             upper_dir: self.container.upper_dir.path().to_owned(),
             scratch_dir: self.container.scratch_dir.path().to_owned(),
+            args: real_args,
             envs: self.envs.clone(),
             chdir: self.current_dir.clone(),
             layer_paths: self.container.settings.lower_dirs.clone(),
             bind_mounts,
+            allow_network_access: false, // TODO: support
+            privileged: false,           // TODO: support
             keep_host_mount: self.container.settings.keep_host_mount,
         };
 
@@ -439,10 +445,8 @@ impl<'container> ContainerCommand<'container> {
             runfiles.rlocation("cros/bazel/ebuild/private/cmd/run_in_container/run_in_container");
         let status = processes::run(
             Command::new(run_in_container_path)
-                .arg("--cfg")
-                .arg(&config_path)
-                .args(["--cmd", "/mnt/host/bazel-build/setup.sh"])
-                .args(&self.args),
+                .arg("--config")
+                .arg(&config_path),
         )?;
 
         Ok(status)
