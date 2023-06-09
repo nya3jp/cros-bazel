@@ -2,23 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use clap::Parser;
 use cliutil::cli_main;
-use container::{BindMount, InstallGroup, MountedSDK};
+use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings, InstallGroup};
 use durabletree::DurableTree;
+use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
 
-const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/install_deps.sh";
+const MAIN_SCRIPT: &str = "/mnt/host/.install_deps/install_deps.sh";
 
 #[derive(Parser, Debug)]
 #[clap()]
 struct Cli {
     #[command(flatten)]
-    mountsdk_config: container::ConfigArgs,
+    common: CommonArgs,
 
     /// Name of board
     #[arg(long)]
@@ -34,12 +35,19 @@ struct Cli {
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
 
-    let r = runfiles::Runfiles::create()?;
+    let mutable_base_dir = SafeTempDirBuilder::new().base_dir(&args.output).build()?;
 
-    cfg.bind_mounts.push(BindMount {
-        source: r.rlocation("cros/bazel/ebuild/private/cmd/install_deps/install_deps.sh"),
+    let mut settings = ContainerSettings::new();
+    settings.set_mutable_base_dir(mutable_base_dir.path());
+    settings.apply_common_args(&args.common)?;
+
+    let runfiles = runfiles::Runfiles::create()?;
+
+    settings.push_bind_mount(BindMount {
+        source: resolve_symlink_forest(
+            &runfiles.rlocation("cros/bazel/ebuild/private/cmd/install_deps/install_deps.sh"),
+        )?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });
@@ -49,16 +57,28 @@ fn do_main() -> Result<()> {
         None => PathBuf::from("/var/lib/portage/pkgs"),
     };
 
-    let (mut mounts, env) =
-        InstallGroup::get_mounts_and_env(&args.install_target, portage_pkg_dir)?;
-    cfg.bind_mounts.append(&mut mounts);
-    cfg.envs = env;
+    let (mounts, envs) = InstallGroup::get_mounts_and_env(&args.install_target, portage_pkg_dir)?;
+    for mount in mounts {
+        settings.push_bind_mount(mount);
+    }
 
-    let mut sdk = MountedSDK::new(cfg, args.board.as_deref())?;
+    let mut container = settings.prepare()?;
 
-    sdk.run_cmd(&[MAIN_SCRIPT])?;
+    let mut command = container.command(MAIN_SCRIPT);
+    command.envs(envs);
+    if let Some(board) = &args.board {
+        command.env("BOARD", board);
+    }
 
-    fileutil::move_dir_contents(sdk.diff_dir().as_path(), &args.output)?;
+    let status = command.status()?;
+    ensure!(status.success(), "Command failed: {:?}", status);
+
+    // Move the upper directory contents to the output directory.
+    fileutil::move_dir_contents(&container.into_upper_dir(), &args.output)?;
+
+    // Delete the mutable base directory that contains the upper directory.
+    drop(mutable_base_dir);
+
     container::clean_layer(args.board.as_deref(), &args.output)?;
     DurableTree::convert(&args.output)?;
 
@@ -66,5 +86,6 @@ fn do_main() -> Result<()> {
 }
 
 fn main() -> ExitCode {
+    enter_mount_namespace().expect("Failed to enter a mount namespace");
     cli_main(do_main)
 }
