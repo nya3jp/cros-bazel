@@ -5,9 +5,11 @@
 mod dualpath;
 mod r#move;
 mod remove;
+mod symlink_forest;
 mod tempdir;
 
 pub use dualpath::DualPath;
 pub use r#move::*;
 pub use remove::*;
+pub use symlink_forest::*;
 pub use tempdir::*;

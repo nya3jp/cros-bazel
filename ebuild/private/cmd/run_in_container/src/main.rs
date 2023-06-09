@@ -6,7 +6,7 @@ use anyhow::{bail, ensure, Context, Result};
 use clap::Parser;
 use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
 use durabletree::DurableTree;
-use fileutil::SafeTempDir;
+use fileutil::{resolve_symlink_forest, SafeTempDir};
 use itertools::Itertools;
 use nix::{
     errno::Errno,
@@ -32,7 +32,6 @@ use std::{
 };
 use tar::Archive;
 use tracing::info_span;
-use walkdir::WalkDir;
 
 const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
 const NONE_STR: Option<&str> = None::<&str>;
@@ -60,54 +59,6 @@ pub fn main() -> ExitCode {
     } else {
         cli_main(|| continue_namespace(RunInContainerConfig::deserialize_from(&args.config)?))
     }
-}
-
-/// Translates a file system layer source path by possibly following symlinks.
-///
-/// The --layer inputs can be three types:
-///  1. A path to a real file/directory.
-///  2. A symlink to a file/directory.
-///  3. A directory tree with symlinks pointing to real files.
-///
-/// This function undoes the case 3. Bazel should be giving us a symlink to
-/// the directory, instead of creating a symlink tree. We don't want to use the
-/// symlink tree because that would require bind mounting the whole execroot
-/// inside the container. Otherwise we couldn't resolve the symlinks.
-///
-/// This method will find the first symlink in the symlink forest which will be
-/// pointing to the real execroot. It then calculates the folder that should have
-/// been passed in by bazel.
-fn resolve_layer_source_path(input_path: &Path) -> Result<PathBuf> {
-    // Resolve the symlink so we always return an absolute path.
-    let info = std::fs::symlink_metadata(input_path)
-        .with_context(|| format!("failed to get the metadata of a layer {input_path:?}"))?;
-    if info.is_symlink() {
-        return Ok(std::fs::read_link(input_path)?);
-    } else if !info.is_dir() {
-        return Ok(PathBuf::from(input_path));
-    }
-
-    for res_entry in WalkDir::new(input_path).follow_links(false) {
-        let entry = res_entry?;
-        let info = entry.metadata()?;
-
-        if info.is_symlink() {
-            let target = std::fs::read_link(entry.path())?;
-            let relative_symlink = entry.path().strip_prefix(input_path)?; // blah
-            let mut resolved: &Path = &target;
-            for _ in 0..relative_symlink.iter().count() {
-                resolved = resolved
-                    .parent()
-                    .with_context(|| "Symlink target should have parent")?;
-            }
-            return Ok(PathBuf::from(resolved));
-        } else if info.is_file() {
-            return Ok(PathBuf::from(input_path));
-        }
-    }
-    // In the case that the directory is empty, we still want the returned path to
-    // be valid.
-    Ok(PathBuf::from(input_path))
 }
 
 /// Extracts an archive to a specified directory. It supports .tar and .tar.zst.
@@ -318,7 +269,7 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     let mut last_tar_content_dir: Option<PathBuf> = None;
 
     for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
-        let layer_path = resolve_layer_source_path(layer_path)?;
+        let layer_path = resolve_symlink_forest(layer_path)?;
         let layer_type = LayerType::detect(&layer_path)?;
 
         let _span = info_span!("setup_layer", ?layer_type, ?layer_path).entered();

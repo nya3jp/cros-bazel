@@ -34,7 +34,6 @@ rust_binary(
         "@alchemy_crates//:shell-escape",
         "@alchemy_crates//:tar",
         "@alchemy_crates//:tracing",
-        "@alchemy_crates//:walkdir",
         "@alchemy_crates//:zstd",
         "@rules_rust//tools/runfiles",
     ],

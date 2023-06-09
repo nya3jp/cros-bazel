@@ -1243,7 +1243,6 @@ dependencies = [
  "shell-escape",
  "tar",
  "tracing",
- "walkdir",
  "zstd",
 ]
 
