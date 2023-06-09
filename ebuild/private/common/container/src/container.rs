@@ -509,12 +509,11 @@ impl<'container> ContainerCommand<'container> {
             args: real_args,
             envs: self.envs.clone(),
             chdir: self.current_dir.clone(),
-            layer_paths: self.container.settings.lower_dirs.clone(),
+            lower_dirs: self.container.settings.lower_dirs.clone(),
             bind_mounts,
             allow_network_access: self.container.settings.allow_network_access,
             privileged: self.container.settings.privileged,
             keep_host_mount: self.container.settings.keep_host_mount,
-            resolve_symlink_forests: false,
         };
 
         // Save run_in_container.json.

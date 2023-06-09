@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
-durabletree = { path = "../../common/durabletree" }
 fileutil = { path = "../../common/fileutil" }
 processes = { path = "../../common/processes" }
 run_in_container_lib = { path = "../../common/run_in_container_lib" }
@@ -18,11 +17,8 @@ itertools.workspace = true
 libc.workspace = true
 nix.workspace = true
 path-absolutize.workspace = true
-pathdiff.workspace = true
 runfiles.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 shell-escape.workspace = true
-tar.workspace = true
 tracing.workspace = true
-zstd.workspace = true

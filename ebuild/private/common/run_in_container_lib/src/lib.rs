@@ -43,10 +43,8 @@ pub struct RunInContainerConfig {
     /// Directory to use as the working directory while inside the namespace.
     pub chdir: PathBuf,
 
-    /// File system layers to be mounted in the namespace. The earlier layers
-    /// are mounted as the lower layer, and the later layers are mounted as
-    /// the upper layer.
-    pub layer_paths: Vec<PathBuf>,
+    /// Lower directories of the overlayfs.
+    pub lower_dirs: Vec<PathBuf>,
 
     /// Bind-mounts to apply. Applies on top of file system layers, and can
     /// mount individual files as well as directories.
@@ -62,11 +60,6 @@ pub struct RunInContainerConfig {
 
     /// If true, the contents of the host machine are mounted at /host.
     pub keep_host_mount: bool,
-
-    /// If true, file system layer paths are resolved using
-    /// `fileutil::resolve_symlink_forest`.
-    /// TODO: Remove this field once we remove mountsdk.rs.
-    pub resolve_symlink_forests: bool,
 }
 
 impl RunInContainerConfig {

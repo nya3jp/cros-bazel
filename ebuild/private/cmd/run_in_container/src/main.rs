@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use clap::Parser;
 use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
-use durabletree::DurableTree;
-use fileutil::{resolve_symlink_forest, SafeTempDir};
+use fileutil::SafeTempDir;
 use itertools::Itertools;
 use nix::{
     errno::Errno,
@@ -20,17 +19,13 @@ use path_absolutize::Absolutize;
 use processes::status_to_exit_code;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
-    ffi::OsStr,
-    fs::File,
-    io::Read,
     os::{
         fd::{AsRawFd, FromRawFd, OwnedFd},
         unix::fs::{DirBuilderExt, OpenOptionsExt},
     },
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::{Command, ExitCode, Stdio},
 };
-use tar::Archive;
 use tracing::info_span;
 
 const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
@@ -59,18 +54,6 @@ pub fn main() -> ExitCode {
     } else {
         cli_main(|| continue_namespace(RunInContainerConfig::deserialize_from(&args.config)?))
     }
-}
-
-/// Extracts an archive to a specified directory. It supports .tar and .tar.zst.
-fn extract_archive(archive_path: &Path, extract_dir: &Path) -> Result<()> {
-    let f = File::open(archive_path)?;
-    let decompressed: Box<dyn Read> = if archive_path.extension() == Some(OsStr::new("zst")) {
-        Box::new(zstd::stream::read::Decoder::new(f)?)
-    } else {
-        Box::new(f)
-    };
-    Archive::new(decompressed).unpack(extract_dir)?;
-    Ok(())
 }
 
 fn enter_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
@@ -197,33 +180,6 @@ fn enable_loopback_networking() -> Result<()> {
     Ok(())
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum LayerType {
-    Dir,
-    Tar,
-    DurableTree,
-}
-
-impl LayerType {
-    pub fn detect(layer_path: impl AsRef<Path>) -> Result<Self> {
-        let layer_path = layer_path.as_ref().absolutize()?;
-
-        let file_name = layer_path
-            .file_name()
-            .and_then(|x| x.to_str())
-            .unwrap_or_default();
-        if DurableTree::try_exists(&layer_path)? {
-            Ok(LayerType::DurableTree)
-        } else if std::fs::metadata(&layer_path)?.is_dir() {
-            Ok(LayerType::Dir)
-        } else if file_name.ends_with(".tar.zst") || file_name.ends_with(".tar") {
-            Ok(LayerType::Tar)
-        } else {
-            bail!("unsupported file type: {:?}", layer_path)
-        }
-    }
-}
-
 fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     unshare(CloneFlags::CLONE_NEWNS).context("Failed to enter mount namespace")?;
 
@@ -239,15 +195,14 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     let base_dir = scratch_dir.join("base"); // Directory containing mount targets
     let lowers_dir = scratch_dir.join("lowers");
     let work_dir = scratch_dir.join("work");
-    let tmp_dir = scratch_dir.join("tmp");
 
     let mut binding = std::fs::DirBuilder::new();
     let dir_builder = binding.recursive(true).mode(0o755);
-    for dir in [&root_dir, &base_dir, &lowers_dir, &work_dir, &tmp_dir] {
+    for dir in [&root_dir, &base_dir, &lowers_dir, &work_dir] {
         dir_builder.create(dir)?;
     }
 
-    for dir in [&root_dir, &base_dir, &lowers_dir] {
+    for dir in [&base_dir, &lowers_dir] {
         // Mount a tmpfs so that files are purged automatically on exit.
         mount(
             Some("tmpfs"),
@@ -263,135 +218,54 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
         dir_builder.create(base_dir.join(d))?;
     }
 
-    // Set up lower directories.
-    // Directories are ordered from most lower to least lower.
-    let mut lower_dirs: Vec<PathBuf> = [base_dir].into();
-    let mut last_tar_content_dir: Option<PathBuf> = None;
+    // Bind-mount lower directories so we can refer to them in overlayfs options
+    // in very short file paths because the maximum length of option strings for
+    // mount(2) is constrained.
+    let mut short_lower_dirs: Vec<String> = Vec::new();
 
-    for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
-        let layer_path = if cfg.resolve_symlink_forests {
-            resolve_symlink_forest(layer_path)?
-        } else {
-            layer_path.clone()
-        };
-        let layer_type = LayerType::detect(&layer_path)?;
+    dir_builder.create(lowers_dir.join("base"))?;
+    mount(
+        Some(&base_dir),
+        &lowers_dir.join("base"),
+        NONE_STR,
+        BIND_REC,
+        NONE_STR,
+    )
+    .with_context(|| format!("Bind-mounting {} failed", base_dir.display()))?;
+    short_lower_dirs.push("base".to_owned());
 
-        let _span = info_span!("setup_layer", ?layer_type, ?layer_path).entered();
-
-        match layer_type {
-            LayerType::Dir => {
-                let lower_dir = lowers_dir.join(format!("{}", layer_index));
-                dir_builder.create(&lower_dir)?;
-
-                mount(Some(&layer_path), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
-                    .with_context(|| format!("Failed bind-mounting {layer_path:?}"))?;
-
-                last_tar_content_dir = None;
-                lower_dirs.push(lower_dir);
-            }
-            LayerType::Tar => {
-                // If the last layer was also a tarball, overwrite the content
-                // directory with a new tarball to minimize the number of
-                // layers.
-                if let Some(last_tar_content_dir) = &last_tar_content_dir {
-                    extract_archive(&layer_path, last_tar_content_dir)?;
-                    continue;
-                }
-
-                // We use a temporary directory for the extracted artifacts instead of
-                // putting them in the lower directory because the lower directory is a
-                // tmpfs mount and we don't want to use up all the RAM.
-                // We don't need to remove temporary directories since the parent
-                // process is responsible for it. Rather, it is impossible for the
-                // current process to clean things up after pivot_root.
-                let content_dir = SafeTempDir::new()?.into_path();
-
-                extract_archive(&layer_path, &content_dir)?;
-
-                let lower_dir = lowers_dir.join(format!("{}", layer_index));
-                dir_builder.create(&lower_dir)?;
-
-                mount(Some(&content_dir), &lower_dir, NONE_STR, BIND_REC, NONE_STR)
-                    .with_context(|| format!("Failed bind-mounting {:?}", &content_dir))?;
-
-                last_tar_content_dir = Some(content_dir);
-                lower_dirs.push(lower_dir);
-            }
-            LayerType::DurableTree => {
-                let durable_tree = DurableTree::expand(&layer_path)
-                    .with_context(|| format!("Expanding a durable tree at {layer_path:?}"))?;
-
-                // We intentionally omit DurableTree's cleanup because the
-                // parent process is responsible for it. Rather, it is
-                // impossible for the current process to clean things up after
-                // pivot_root.
-                let layers = durable_tree.into_layers();
-
-                for (sublayer_index, sublayer_path) in layers.into_iter().enumerate() {
-                    let lower_dir = lowers_dir.join(format!("{}.{}", layer_index, sublayer_index));
-                    dir_builder.create(&lower_dir)?;
-
-                    mount(
-                        Some(&sublayer_path),
-                        &lower_dir,
-                        NONE_STR,
-                        BIND_REC,
-                        NONE_STR,
-                    )
-                    .with_context(|| format!("Failed bind-mounting {sublayer_path:?}"))?;
-
-                    lower_dirs.push(lower_dir);
-                }
-
-                last_tar_content_dir = None;
-            }
-        }
+    for (i, lower_dir) in cfg.lower_dirs.iter().enumerate() {
+        let name = i.to_string();
+        let path = lowers_dir.join(&name);
+        dir_builder.create(&path)?;
+        mount(Some(lower_dir), &path, NONE_STR, BIND_REC, NONE_STR)
+            .with_context(|| format!("Bind-mounting {} failed", lower_dir.display()))?;
+        short_lower_dirs.push(name);
     }
 
-    // Change the current directory to minimize the option string passed to
-    // mount(2) as its length is constrained.
+    // Change the current directory temporarily to use relative paths to refer
+    // to lower directories.
     let orig_wd = std::env::current_dir()?;
     std::env::set_current_dir(&lowers_dir)?;
-    let relative_dir = |p| {
-        pathdiff::diff_paths(p, &lowers_dir)
-            .with_context(|| format!("Unable to make {p:?} relative to {lowers_dir:?}"))
-    };
-
-    let short_upper_dir = relative_dir(&upper_dir)?;
-    let short_work_dir = relative_dir(&work_dir)?;
-    let short_lower_dirs = lower_dirs
-        .iter()
-        // Overlayfs option treats the first lower directory as the least lower
-        // directory, while we order filesystem layers in the opposite order.
-        .rev()
-        .map(|abs_lower_dir| {
-            let rel_lower_dir: PathBuf = relative_dir(abs_lower_dir)?;
-            let abs_lower_dir = abs_lower_dir.to_string_lossy();
-            let rel_lower_dir = rel_lower_dir.to_string_lossy();
-            let short_lower_dir = if rel_lower_dir.len() < abs_lower_dir.len() {
-                rel_lower_dir
-            } else {
-                abs_lower_dir
-            };
-            Ok(short_lower_dir.to_string())
-        })
-        .collect::<Result<Vec<_>>>()?
-        .join(":");
 
     // overlayfs fails to mount if there are 500+ lower layers. Check the
     // condition in advance for better diagnostics.
     ensure!(
-        lower_dirs.len() <= 500,
-        "Too many overlayfs layers ({} > 500)",
-        lower_dirs.len()
+        cfg.lower_dirs.len() <= 500,
+        "Too many overlayfs lower dirs ({} > 500)",
+        cfg.lower_dirs.len()
     );
+
+    // Overlayfs option treats the first lower directory as the least lower
+    // directory, while we order filesystem layers in the opposite order.
+    let short_lower_dirs_str = short_lower_dirs.into_iter().rev().join(":");
 
     // Mount overlayfs.
     let overlay_options = format!(
         "upperdir={},workdir={},lowerdir={}",
-        short_upper_dir.display(),
-        short_work_dir.display(),
-        short_lower_dirs
+        upper_dir.display(),
+        work_dir.display(),
+        short_lower_dirs_str
     );
     mount(
         Some("none"),
@@ -499,41 +373,4 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     };
 
     Ok(status_to_exit_code(&status))
-}
-
-#[cfg(test)]
-mod tests {
-    use std::path::{Path, PathBuf};
-
-    use super::*;
-    use durabletree::DurableTree;
-    use fileutil::SafeTempDir;
-    use runfiles::Runfiles;
-
-    #[test]
-    fn detect_layer_type_works() -> Result<()> {
-        let runfiles = Runfiles::create()?;
-        let testdata = PathBuf::from("cros/bazel/ebuild/private/common/makechroot/testdata/");
-
-        assert_eq!(
-            LayerType::detect(runfiles.rlocation(testdata.join("example.tar.zst")))?,
-            LayerType::Tar
-        );
-        assert_eq!(
-            LayerType::detect(runfiles.rlocation(testdata.join("example.tar")))?,
-            LayerType::Tar
-        );
-
-        let temp_dir = SafeTempDir::new()?;
-        let temp_dir = temp_dir.path();
-
-        assert_eq!(LayerType::detect(temp_dir)?, LayerType::Dir);
-
-        DurableTree::convert(temp_dir)?;
-        assert_eq!(LayerType::detect(temp_dir)?, LayerType::DurableTree);
-
-        assert!(LayerType::detect(Path::new("/dev/null")).is_err());
-
-        Ok(())
-    }
 }

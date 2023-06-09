@@ -18,7 +18,6 @@ rust_binary(
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/ebuild/private/common/cliutil:cliutil_rust",
-        "//bazel/ebuild/private/common/durabletree",
         "//bazel/ebuild/private/common/fileutil:fileutil_rust",
         "//bazel/ebuild/private/common/processes",
         "//bazel/ebuild/private/common/run_in_container_lib",
@@ -28,13 +27,10 @@ rust_binary(
         "@alchemy_crates//:libc",
         "@alchemy_crates//:nix",
         "@alchemy_crates//:path-absolutize",
-        "@alchemy_crates//:pathdiff",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:shell-escape",
-        "@alchemy_crates//:tar",
         "@alchemy_crates//:tracing",
-        "@alchemy_crates//:zstd",
         "@rules_rust//tools/runfiles",
     ],
 )
