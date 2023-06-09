@@ -141,6 +141,7 @@ impl MountedSDK {
             allow_network_access: cfg.allow_network_access,
             privileged: cfg.privileged,
             keep_host_mount: false,
+            resolve_symlink_forests: true,
         };
 
         Ok(Self {

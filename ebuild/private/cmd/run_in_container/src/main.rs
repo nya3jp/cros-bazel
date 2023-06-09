@@ -269,7 +269,11 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     let mut last_tar_content_dir: Option<PathBuf> = None;
 
     for (layer_index, layer_path) in cfg.layer_paths.iter().enumerate() {
-        let layer_path = resolve_symlink_forest(layer_path)?;
+        let layer_path = if cfg.resolve_symlink_forests {
+            resolve_symlink_forest(layer_path)?
+        } else {
+            layer_path.clone()
+        };
         let layer_type = LayerType::detect(&layer_path)?;
 
         let _span = info_span!("setup_layer", ?layer_type, ?layer_path).entered();

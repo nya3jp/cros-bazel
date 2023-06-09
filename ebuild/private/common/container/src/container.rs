@@ -15,7 +15,7 @@ use std::{
 
 use anyhow::{bail, ensure, Result};
 use durabletree::DurableTree;
-use fileutil::{SafeTempDir, SafeTempDirBuilder};
+use fileutil::{resolve_symlink_forest, SafeTempDir, SafeTempDirBuilder};
 use run_in_container_lib::{BindMountConfig, RunInContainerConfig};
 use strum_macros::EnumString;
 use tracing::info_span;
@@ -272,11 +272,12 @@ impl ContainerSettings {
         let runfiles = runfiles::Runfiles::create()?;
 
         for path in args.layer.iter() {
-            if args.runfiles_mode {
-                self.push_layer(&runfiles.rlocation(path))?;
+            let real_path = if args.runfiles_mode {
+                resolve_symlink_forest(&runfiles.rlocation(path))?
             } else {
-                self.push_layer(path)?;
+                resolve_symlink_forest(path)?
             };
+            self.push_layer(&real_path)?;
         }
         Ok(())
     }
@@ -508,6 +509,7 @@ impl<'container> ContainerCommand<'container> {
             allow_network_access: self.container.settings.allow_network_access,
             privileged: self.container.settings.privileged,
             keep_host_mount: self.container.settings.keep_host_mount,
+            resolve_symlink_forests: false,
         };
 
         // Save run_in_container.json.
@@ -546,6 +548,8 @@ impl<'container> ContainerCommand<'container> {
 
 #[cfg(test)]
 mod tests {
+    use std::os::unix::fs::symlink;
+
     use super::*;
 
     #[used]
@@ -761,9 +765,9 @@ mod tests {
         let runfiles = runfiles::Runfiles::create()?;
 
         // Push the directory layer.
-        settings.push_layer(
+        settings.push_layer(&resolve_symlink_forest(
             &runfiles.rlocation("cros/bazel/ebuild/private/common/container/testdata/layer-dir"),
-        )?;
+        )?)?;
         assert_content(
             &mut settings.prepare()?,
             hello_path,
@@ -833,9 +837,9 @@ mod tests {
         settings.push_layer(&runfiles.rlocation(
             "cros/bazel/ebuild/private/common/container/testdata/layer-archive.tar.zst",
         ))?;
-        settings.push_layer(
+        settings.push_layer(&resolve_symlink_forest(
             &runfiles.rlocation("cros/bazel/ebuild/private/common/container/testdata/layer-dir"),
-        )?;
+        )?)?;
         settings.push_layer(&runfiles.rlocation(
             "cros/bazel/ebuild/private/common/container/testdata/layer-archive.tar.zst",
         ))?;
@@ -869,6 +873,32 @@ mod tests {
             Path::new("/hello.txt"),
             "This file is from the directory layer.",
         )?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_resolve_symlink_forests() -> Result<()> {
+        let mut settings = ContainerSettings::new();
+        bind_mount_bash(&mut settings)?;
+
+        // Simulate a symlink forest.
+        let actual_dir = SafeTempDir::new()?;
+        let actual_dir = actual_dir.path();
+        std::fs::write(actual_dir.join("hello.txt"), "world")?;
+        let forest_dir = SafeTempDir::new()?;
+        let forest_dir = forest_dir.path();
+        symlink(actual_dir.join("hello.txt"), forest_dir.join("hello.txt"))?;
+
+        settings.apply_common_args(&CommonArgs {
+            layer: vec![forest_dir.to_owned()],
+            runfiles_mode: false,
+            interactive: false,
+            login: LoginMode::Never,
+            keep_host_mount: false,
+        })?;
+
+        assert_content(&mut settings.prepare()?, Path::new("/hello.txt"), "world")?;
 
         Ok(())
     }

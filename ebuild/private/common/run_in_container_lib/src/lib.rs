@@ -62,6 +62,11 @@ pub struct RunInContainerConfig {
 
     /// If true, the contents of the host machine are mounted at /host.
     pub keep_host_mount: bool,
+
+    /// If true, file system layer paths are resolved using
+    /// `fileutil::resolve_symlink_forest`.
+    /// TODO: Remove this field once we remove mountsdk.rs.
+    pub resolve_symlink_forests: bool,
 }
 
 impl RunInContainerConfig {
