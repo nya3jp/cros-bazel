@@ -376,6 +376,11 @@ impl<'settings> PreparedContainer<'settings> {
         })
     }
 
+    /// Returns the upper directory path.
+    pub fn upper_dir(&self) -> &Path {
+        self.upper_dir.path()
+    }
+
     /// Creates a [`ContainerCommand`] that can be used to run a command within
     /// the container.
     ///
