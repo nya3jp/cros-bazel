@@ -66,10 +66,10 @@ impl MountedSDK {
             outside: tmp_dir.path().join("root"),
             inside: PathBuf::from("/"),
         };
-        let bazel_build_dir = root_dir.join("mnt/host/bazel-build");
-        let control_channel_path = bazel_build_dir.join("control");
+        let stage_dir = root_dir.join("mnt/host/.container");
+        let control_channel_path = stage_dir.join("control");
 
-        std::fs::create_dir_all(&bazel_build_dir.outside)?;
+        std::fs::create_dir_all(&stage_dir.outside)?;
 
         // Start with a clean environment.
         let mut envs: BTreeMap<OsString, OsString> = BTreeMap::new();
@@ -124,7 +124,7 @@ impl MountedSDK {
         let mut layer_paths: Vec<PathBuf> = cfg.layer_paths;
         layer_paths.push(root_dir.outside.clone());
 
-        let setup_script_path = bazel_build_dir.join("setup.sh");
+        let setup_script_path = stage_dir.join("setup.sh");
         std::fs::copy(
             r.rlocation("cros/bazel/ebuild/private/common/container/setup.sh"),
             setup_script_path.outside,

@@ -480,16 +480,16 @@ impl<'container> ContainerCommand<'container> {
     pub fn status(&mut self) -> Result<ExitStatus> {
         let _span = info_span!("status").entered();
 
-        let bazel_build_dir = SafeTempDir::new()?;
-        let bazel_build_dir = bazel_build_dir.path();
+        let stage_dir = SafeTempDir::new()?;
+        let stage_dir = stage_dir.path();
 
-        let mut real_args = vec!["/mnt/host/bazel-build/setup.sh".into()];
+        let mut real_args = vec!["/mnt/host/.container/setup.sh".into()];
         real_args.extend(self.args.clone());
 
-        // Automatically bind-mount /mnt/host/bazel-build.
+        // Automatically bind-mount /mnt/host/.container.
         let bind_mounts: Vec<BindMountConfig> = [BindMount {
-            mount_path: PathBuf::from("/mnt/host/bazel-build"),
-            source: bazel_build_dir.to_owned(),
+            mount_path: PathBuf::from("/mnt/host/.container"),
+            source: stage_dir.to_owned(),
             rw: false,
         }]
         .into_iter()
@@ -519,7 +519,7 @@ impl<'container> ContainerCommand<'container> {
 
         // Copy setup.sh.
         let runfiles = runfiles::Runfiles::create()?;
-        let setup_sh_path = bazel_build_dir.join("setup.sh");
+        let setup_sh_path = stage_dir.join("setup.sh");
         std::fs::copy(
             runfiles.rlocation("cros/bazel/ebuild/private/common/container/setup.sh"),
             &setup_sh_path,
@@ -530,7 +530,7 @@ impl<'container> ContainerCommand<'container> {
         let _control = if self.container.settings.login_mode == LoginMode::Never {
             None
         } else {
-            Some(ControlChannel::new(bazel_build_dir.join("control"))?)
+            Some(ControlChannel::new(stage_dir.join("control"))?)
         };
 
         // Now it's time to start a container!

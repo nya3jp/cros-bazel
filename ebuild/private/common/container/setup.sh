@@ -56,7 +56,7 @@ invoke-bash() {
   fi
 
   # Notify the ancestor that is outside the container to reset the TPGID
-  printf 't' >/mnt/host/bazel-build/control
+  printf 't' >/mnt/host/.container/control
 }
 
 if [[ "${LOGIN_MODE}" == "before" ]]; then
