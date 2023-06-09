@@ -100,6 +100,8 @@ impl LayerType {
 /// [`PreparedContainer`] objects.
 pub struct ContainerSettings {
     mutable_base_dir: PathBuf,
+    allow_network_access: bool,
+    privileged: bool,
     login_mode: LoginMode,
     keep_host_mount: bool,
     lower_dirs: Vec<PathBuf>,
@@ -114,6 +116,8 @@ impl ContainerSettings {
     pub fn new() -> Self {
         Self {
             mutable_base_dir: std::env::temp_dir(),
+            allow_network_access: false,
+            privileged: false,
             login_mode: LoginMode::Never,
             keep_host_mount: false,
             lower_dirs: Vec::new(),
@@ -132,6 +136,19 @@ impl ContainerSettings {
     /// location without copying them across file system boundaries.
     pub fn set_mutable_base_dir(&mut self, mutable_base_dir: &Path) {
         self.mutable_base_dir = mutable_base_dir.to_owned();
+    }
+
+    /// Sets whether to allow network access to processes in the container.
+    /// This option should be enabled only when it's absolutely needed since it
+    /// reduces hermeticity of the container.
+    pub fn set_allow_network_access(&mut self, allow_network_access: bool) {
+        self.allow_network_access = allow_network_access;
+    }
+
+    /// Sets whether to give privilege to the container. In order for this
+    /// option to work, the current process must have privilege.
+    pub fn set_privileged(&mut self, privileged: bool) {
+        self.privileged = privileged;
     }
 
     /// Sets the login mode for containers.
@@ -414,8 +431,8 @@ impl<'container> ContainerCommand<'container> {
             chdir: self.current_dir.clone(),
             layer_paths: self.container.settings.lower_dirs.clone(),
             bind_mounts,
-            allow_network_access: false, // TODO: support
-            privileged: false,           // TODO: support
+            allow_network_access: self.container.settings.allow_network_access,
+            privileged: self.container.settings.privileged,
             keep_host_mount: self.container.settings.keep_host_mount,
         };
 
