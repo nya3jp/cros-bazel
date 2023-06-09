@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use clap::{command, Parser};
 use cliutil::cli_main;
-use container::{BindMount, ConfigArgs, MountedSDK};
+use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use std::{
     collections::HashSet,
     fs::File,
@@ -15,13 +15,13 @@ use std::{
 };
 
 const EBUILD_EXT: &str = ".ebuild";
-const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_package.sh";
+const MAIN_SCRIPT: &str = "/mnt/host/.build_package/build_package.sh";
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
 struct Cli {
     #[command(flatten)]
-    mountsdk_config: ConfigArgs,
+    common: CommonArgs,
 
     /// Name of board
     #[arg(long)]
@@ -127,26 +127,27 @@ impl FromStr for EbuildMetadata {
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-    let runfiles_mode = args.mountsdk_config.runfiles_mode();
-    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
 
-    let r = runfiles::Runfiles::create()?;
+    let mut settings = ContainerSettings::new();
+    settings.apply_common_args(&args.common)?;
+
+    let runfiles = runfiles::Runfiles::create()?;
 
     let fix_runfile_path = |path| {
-        if runfiles_mode {
-            r.rlocation(path)
+        if args.common.runfiles_mode {
+            runfiles.rlocation(path)
         } else {
             path
         }
     };
 
-    cfg.bind_mounts.push(BindMount {
-        source: r.rlocation("cros/bazel/ebuild/private/cmd/build_package/build_package.sh"),
+    settings.push_bind_mount(BindMount {
+        source: runfiles.rlocation("cros/bazel/ebuild/private/cmd/build_package/build_package.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });
 
-    cfg.bind_mounts.push(BindMount {
+    settings.push_bind_mount(BindMount {
         source: fix_runfile_path(args.ebuild.source),
         mount_path: args.ebuild.mount_path.clone(),
         rw: false,
@@ -155,7 +156,7 @@ fn do_main() -> Result<()> {
     let ebuild_mount_dir = args.ebuild.mount_path.parent().unwrap();
 
     for mount in args.file {
-        cfg.bind_mounts.push(BindMount {
+        settings.push_bind_mount(BindMount {
             source: fix_runfile_path(mount.source),
             mount_path: ebuild_mount_dir.join(mount.mount_path),
             rw: false,
@@ -163,7 +164,7 @@ fn do_main() -> Result<()> {
     }
 
     for mount in args.distfile {
-        cfg.bind_mounts.push(BindMount {
+        settings.push_bind_mount(BindMount {
             source: fix_runfile_path(mount.source),
             mount_path: PathBuf::from("/var/cache/distfiles").join(mount.mount_path),
             rw: false,
@@ -180,7 +181,7 @@ fn do_main() -> Result<()> {
             bail!("Duplicate git tree {:?} specified.", tree_file);
         }
 
-        cfg.bind_mounts.push(BindMount {
+        settings.push_bind_mount(BindMount {
             source: file.to_path_buf(),
             mount_path: PathBuf::from("/var/cache/trees")
                 .join(file.file_name().expect("path to contain file name")),
@@ -188,9 +189,7 @@ fn do_main() -> Result<()> {
         })
     }
 
-    if args.allow_network_access {
-        cfg.allow_network_access = true;
-    }
+    settings.set_allow_network_access(args.allow_network_access);
 
     let (portage_tmp_dir, portage_pkg_dir) = match &args.board {
         Some(board) => {
@@ -203,19 +202,17 @@ fn do_main() -> Result<()> {
         ),
     };
 
-    let mut sdk = MountedSDK::new(cfg, args.board.as_deref())?;
-    let out_dir = sdk
-        .root_dir()
-        .outside
-        .join(portage_pkg_dir.strip_prefix("/")?);
+    let mut container = settings.prepare()?;
+
+    let upper_dir = container.upper_dir().to_owned();
+
+    let out_dir = upper_dir.join(portage_pkg_dir.strip_prefix("/")?);
     std::fs::create_dir_all(out_dir)?;
 
     // HACK: CrOS disables pkg_pretend in emerge(1), but ebuild(1) still tries to
     // run it.
     // TODO(b/280233260): Remove this hack once we fix ebuild(1).
-    let pretend_stamp_path = sdk
-        .root_dir()
-        .outside
+    let pretend_stamp_path = upper_dir
         .join(portage_tmp_dir.strip_prefix("/")?)
         .join(&args.ebuild.category)
         .join(
@@ -229,24 +226,28 @@ fn do_main() -> Result<()> {
     File::create(pretend_stamp_path)?;
 
     let sysroot = match &args.board {
-        Some(board) => sdk.root_dir().join("build").join(board).outside,
-        None => sdk.root_dir().outside.clone(),
+        Some(board) => upper_dir.join("build").join(board),
+        None => upper_dir.to_owned(),
     };
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
     }
-    let ebuild_path_str = args.ebuild.mount_path.to_string_lossy();
-    let mut cmd_args = vec![
-        MAIN_SCRIPT,
-        "ebuild",
-        "--skip-manifest",
-        &ebuild_path_str,
-        "package",
-    ];
+
+    let mut command = container.command(MAIN_SCRIPT);
+    command
+        .arg("ebuild")
+        .arg("--skip-manifest")
+        .arg(args.ebuild.mount_path)
+        .arg("package");
     if args.test {
-        cmd_args.push("test");
+        command.arg("test");
     }
-    sdk.run_cmd(&cmd_args)?;
+    if let Some(board) = args.board {
+        command.env("BOARD", board);
+    }
+
+    let status = command.status()?;
+    ensure!(status.success());
 
     let binary_out_path = portage_pkg_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",
@@ -257,16 +258,14 @@ fn do_main() -> Result<()> {
     ));
 
     if let Some(output) = args.output {
-        std::fs::copy(
-            sdk.diff_dir().join(binary_out_path.strip_prefix("/")?),
-            output,
-        )
-        .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
+        std::fs::copy(upper_dir.join(binary_out_path.strip_prefix("/")?), output)
+            .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
     }
 
     Ok(())
 }
 
 fn main() -> ExitCode {
+    enter_mount_namespace().expect("Failed to enter a mount namespace");
     cli_main(do_main)
 }
