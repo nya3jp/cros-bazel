@@ -5,6 +5,7 @@
 use anyhow::{ensure, Context, Result};
 use nix::{
     errno::Errno,
+    mount::{mount, MsFlags},
     sched::{unshare, CloneFlags},
     unistd::{getgid, getuid},
 };
@@ -50,6 +51,18 @@ pub fn enter_mount_namespace() -> Result<()> {
         other => other,
     }
     .context("Failed to enter a mount namespace")?;
+
+    // Remount all file systems as private so that we never interact with the
+    // original namespace. This is needed when the current process is privileged
+    // and did not enter an unprivileged user namespace.
+    mount(
+        Some(""),
+        "/",
+        Some(""),
+        MsFlags::MS_PRIVATE | MsFlags::MS_REC,
+        Some(""),
+    )
+    .context("Failed to remount file systems as private")?;
 
     Ok(())
 }
