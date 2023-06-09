@@ -2,20 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use clap::Parser;
 use cliutil::cli_main;
-use container::{BindMount, InstallGroup, MountedSDK};
+use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings, InstallGroup};
+use fileutil::resolve_symlink_forest;
 use std::fs::File;
 use std::{path::PathBuf, process::ExitCode};
 
-const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_sdk.sh";
+const MAIN_SCRIPT: &str = "/mnt/host/.build_sdk/build_sdk.sh";
 
 #[derive(Parser, Debug)]
 #[clap()]
 struct Cli {
     #[command(flatten)]
-    mountsdk_config: container::ConfigArgs,
+    common: CommonArgs,
 
     /// Name of board
     #[arg(long, required = true)]
@@ -32,12 +33,16 @@ struct Cli {
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
 
-    let r = runfiles::Runfiles::create()?;
+    let mut settings = ContainerSettings::new();
+    settings.apply_common_args(&args.common)?;
 
-    cfg.bind_mounts.push(BindMount {
-        source: r.rlocation("cros/bazel/ebuild/private/cmd/build_sdk/build_sdk.sh"),
+    let runfiles = runfiles::Runfiles::create()?;
+
+    settings.push_bind_mount(BindMount {
+        source: resolve_symlink_forest(
+            &runfiles.rlocation("cros/bazel/ebuild/private/cmd/build_sdk/build_sdk.sh"),
+        )?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });
@@ -48,26 +53,33 @@ fn do_main() -> Result<()> {
 
     // We want the container to directly write to the output file to avoid
     // copying the tarball from /tmp to the output root.
-    cfg.bind_mounts.push(BindMount {
+    settings.push_bind_mount(BindMount {
         source: args.output,
-        mount_path: PathBuf::from("/mnt/host/bazel-build/output.tar.zst"),
+        mount_path: PathBuf::from("/mnt/host/.build_sdk/output.tar.zst"),
         rw: true,
     });
 
     let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();
 
-    let (mut mounts, env) =
+    let (mounts, envs) =
         InstallGroup::get_mounts_and_env(&args.install_target, target_packages_dir)?;
-    cfg.bind_mounts.append(&mut mounts);
-    cfg.envs = env;
+    for mount in mounts {
+        settings.push_bind_mount(mount);
+    }
 
-    let mut sdk = MountedSDK::new(cfg, Some(&args.board))?;
+    let mut container = settings.prepare()?;
 
-    sdk.run_cmd(&[MAIN_SCRIPT])?;
+    let mut command = container.command(MAIN_SCRIPT);
+    command.env("BOARD", &args.board);
+    command.envs(envs);
+
+    let status = command.status()?;
+    ensure!(status.success());
 
     Ok(())
 }
 
 fn main() -> ExitCode {
+    enter_mount_namespace().expect("Failed to enter a mount namespace");
     cli_main(do_main)
 }

@@ -82,4 +82,4 @@ time fakeroot tar \
   --exclude "./usr/share/doc/*" \
   --exclude "./usr/share/man/*" \
   . | \
-  zstd -3 --long -T0 --force -o "/mnt/host/bazel-build/output.tar.zst"
+  zstd -3 --long -T0 --force -o "/mnt/host/.build_sdk/output.tar.zst"
