@@ -66,6 +66,63 @@ impl BindMount {
     }
 }
 
+/// Implements the parser of command line options common to CLIs that make use
+/// of containers.
+///
+/// Include this struct in your struct that derives [`clap::Parser`], and
+/// annotate the field with `#[command(flatten)]` to inherit the options
+/// declared in this struct.
+///
+/// # Example
+///
+/// ```
+/// #[derive(clap::Parser)]
+/// struct Cli {
+///     #[command(flatten)]
+///     common: CommonArgs,
+///
+///     another_arg: bool,
+/// }
+/// ```
+#[derive(Clone, Debug, clap::Args)]
+pub struct CommonArgs {
+    #[arg(
+        long,
+        help = "Adds a file system layer to be mounted in the container."
+    )]
+    pub layer: Vec<PathBuf>,
+
+    #[arg(
+        long,
+        help = "Enables the runfiles mode in which file system layer paths \
+            given by --layer are handled as runfile paths."
+    )]
+    pub runfiles_mode: bool,
+
+    #[arg(
+        long,
+        help = "Internal flag used to differentiate between a normal \
+            invocation and a user invocation. i.e., _debug targets",
+        hide = true, // We only want the _debug targets setting this flag.
+    )]
+    pub interactive: bool,
+
+    #[arg(
+        long,
+        help = "Logs in to the SDK before installing deps, before building, \
+            after building, or after failing to build respectively.",
+        default_value_if("interactive", "true", Some("after")),
+        default_value_t = LoginMode::Never,
+    )]
+    pub login: LoginMode,
+
+    #[arg(
+        long,
+        help = "Keeps the host file system at /host. Use for debuggin only."
+    )]
+    pub keep_host_mount: bool,
+}
+
 #[derive(Clone, Debug)]
 enum LayerType {
     Archive,
@@ -205,6 +262,23 @@ impl ContainerSettings {
     /// Pushes a new bind mount to the container settings.
     pub fn push_bind_mount(&mut self, bind_mount: BindMount) {
         self.bind_mounts.push(bind_mount);
+    }
+
+    /// Applies container settings represented in [`CommonArgs`].
+    pub fn apply_common_args(&mut self, args: &CommonArgs) -> Result<()> {
+        self.set_keep_host_mount(args.keep_host_mount);
+        self.set_login_mode(args.login);
+
+        let runfiles = runfiles::Runfiles::create()?;
+
+        for path in args.layer.iter() {
+            if args.runfiles_mode {
+                self.push_layer(&runfiles.rlocation(path))?;
+            } else {
+                self.push_layer(path)?;
+            };
+        }
+        Ok(())
     }
 
     /// Prepares to start a container by creating necessary directories such as
@@ -770,6 +844,30 @@ mod tests {
             &mut settings.prepare()?,
             Path::new("/hello.txt"),
             "This file is from the archive layer.",
+        )?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_common_args() -> Result<()> {
+        let mut settings = ContainerSettings::new();
+        bind_mount_bash(&mut settings)?;
+
+        settings.apply_common_args(&CommonArgs {
+            layer: vec![PathBuf::from(
+                "cros/bazel/ebuild/private/common/container/testdata/layer-dir",
+            )],
+            runfiles_mode: true,
+            interactive: false,
+            login: LoginMode::Never,
+            keep_host_mount: false,
+        })?;
+
+        assert_content(
+            &mut settings.prepare()?,
+            Path::new("/hello.txt"),
+            "This file is from the directory layer.",
         )?;
 
         Ok(())
