@@ -4,6 +4,7 @@
 
 use anyhow::{Error, Result};
 use binarypackage::BinaryPackage;
+use fileutil::resolve_symlink_forest;
 use std::collections::BTreeMap;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -31,10 +32,11 @@ impl InstallGroup {
         let mut bind_mounts: Vec<BindMount> = Vec::new();
         let mut atoms: Vec<String> = Vec::new();
         for package in &self.packages {
-            let bp = BinaryPackage::open(package)?;
+            let package = resolve_symlink_forest(package)?;
+            let bp = BinaryPackage::open(&package)?;
             let category_pf = bp.category_pf();
             bind_mounts.push(BindMount {
-                source: package.into(),
+                source: package,
                 mount_path: dir.join(format!("{category_pf}.tbz2")),
                 rw: false,
             });
