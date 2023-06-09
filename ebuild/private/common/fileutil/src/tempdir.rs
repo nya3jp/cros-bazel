@@ -72,7 +72,7 @@ pub struct SafeTempDirBuilder<'prefix, 'suffix> {
     base_dir: PathBuf,
 }
 
-impl SafeTempDirBuilder<'_, '_> {
+impl<'prefix, 'suffix> SafeTempDirBuilder<'prefix, 'suffix> {
     /// Creates a new builder for [`SafeTempDir`].
     pub fn new() -> Self {
         let mut builder = tempfile::Builder::new();
@@ -87,6 +87,18 @@ impl SafeTempDirBuilder<'_, '_> {
             base_dir: dir.to_owned(),
             ..self
         }
+    }
+
+    /// Sets a custom file name prefix.
+    pub fn prefix<S: AsRef<OsStr> + ?Sized>(mut self, prefix: &'prefix S) -> Self {
+        self.builder.prefix(prefix);
+        self
+    }
+
+    /// Sets a custom file name suffix.
+    pub fn suffix<S: AsRef<OsStr> + ?Sized>(mut self, suffix: &'suffix S) -> Self {
+        self.builder.suffix(suffix);
+        self
     }
 
     /// Builds [`SafeTempDir`].
@@ -147,6 +159,21 @@ mod tests {
             .base_dir(temp_dir1.path())
             .build()?;
         assert!(temp_dir2.path().starts_with(temp_dir1.path()));
+        Ok(())
+    }
+
+    #[test]
+    fn test_safe_temp_dir_with_custom_prefix_suffix() -> Result<()> {
+        let temp_dir = SafeTempDirBuilder::new()
+            .prefix("foo.")
+            .suffix(".bar")
+            .build()?;
+        let temp_dir_name = temp_dir.path().file_name().unwrap().to_string_lossy();
+        assert!(
+            temp_dir_name.starts_with("foo.") && temp_dir_name.ends_with(".bar"),
+            "Directory name: {}",
+            temp_dir_name
+        );
         Ok(())
     }
 }
