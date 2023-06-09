@@ -75,8 +75,8 @@ fi
 
 if [[ "${LOGIN_MODE}" == "after" ]]; then
   invoke-bash
-elif [[ "${LOGIN_MODE}" == "after-fail" && "$RC" -ne 0 ]]; then
+elif [[ "${LOGIN_MODE}" == "after-fail" && "${RC}" -ne 0 ]]; then
   invoke-bash
 fi
 
-exit $RC
+exit "${RC}"
