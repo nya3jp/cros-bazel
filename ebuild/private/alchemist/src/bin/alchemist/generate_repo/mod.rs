@@ -126,7 +126,7 @@ fn analyze_packages(
     let (all_partials, failures): (Vec<PackagePartial>, Vec<AnalysisError>) =
         all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
-                let dependencies = analyze_dependencies(details, resolver)?;
+                let dependencies = analyze_dependencies(details, None, resolver)?;
                 let sources = analyze_sources(config, details, src_dir)?;
                 Ok(PackagePartial {
                     details: details.clone(),

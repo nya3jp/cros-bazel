@@ -30,6 +30,8 @@ pub struct PackageDependencies {
     pub build_deps: Vec<Arc<PackageDetails>>,
     pub runtime_deps: Vec<Arc<PackageDetails>>,
     pub post_deps: Vec<Arc<PackageDetails>>,
+    pub build_host_deps: Vec<Arc<PackageDetails>>,
+    pub install_host_deps: Vec<Arc<PackageDetails>>,
 }
 
 /// Represents a package dependency type.
@@ -41,6 +43,10 @@ enum DependencyKind {
     Run,
     /// Post-time dependencies, aka "PDEPEND" in Portage.
     Post,
+    /// Build-time host tool dependencies, aka "BDEPEND" in Portage.
+    BuildHost,
+    /// Install-time host tool dependencies, aka "IDEPEND" in Portage.
+    InstallHost,
 }
 
 /// Parses a dependency represented as [`PackageDependency`] that can contain
@@ -148,6 +154,8 @@ fn extract_dependencies(
         DependencyKind::Build => "DEPEND",
         DependencyKind::Run => "RDEPEND",
         DependencyKind::Post => "PDEPEND",
+        DependencyKind::BuildHost => "BDEPEND",
+        DependencyKind::InstallHost => "IDEPEND",
     };
 
     let raw_deps = details.vars.get_scalar_or_default(var_name)?;
@@ -175,23 +183,50 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
 /// its dependencies as a list of [`PackageDetails`].
 pub fn analyze_dependencies(
     details: &PackageDetails,
-    resolver: &PackageResolver,
+    host_resolver: Option<&PackageResolver>,
+    target_resolver: &PackageResolver,
 ) -> Result<PackageDependencies> {
-    let build_deps =
-        extract_dependencies(details, DependencyKind::Build, resolver).with_context(|| {
+    let build_deps = extract_dependencies(details, DependencyKind::Build, target_resolver)
+        .with_context(|| {
             format!(
                 "Resolving build-time dependencies for {}-{}",
                 &details.package_name, &details.version
             )
         })?;
 
-    let runtime_deps =
-        extract_dependencies(details, DependencyKind::Run, resolver).with_context(|| {
+    let runtime_deps = extract_dependencies(details, DependencyKind::Run, target_resolver)
+        .with_context(|| {
             format!(
                 "Resolving runtime dependencies for {}-{}",
                 &details.package_name, &details.version
             )
         })?;
+
+    let build_host_deps = if let Some(host_resolver) = host_resolver {
+        extract_dependencies(details, DependencyKind::BuildHost, host_resolver).with_context(
+            || {
+                format!(
+                    "Resolving build-time host dependencies for {}-{}",
+                    &details.package_name, &details.version
+                )
+            },
+        )?
+    } else {
+        vec![]
+    };
+
+    let install_host_deps = if let Some(host_resolver) = host_resolver {
+        extract_dependencies(details, DependencyKind::InstallHost, host_resolver).with_context(
+            || {
+                format!(
+                    "Resolving install-time host dependencies for {}-{}",
+                    &details.package_name, &details.version
+                )
+            },
+        )?
+    } else {
+        vec![]
+    };
 
     // Some Rust source packages have their dependencies only listed as DEPEND.
     // They also need to be listed as RDPEND so they get pulled in as transitive
@@ -212,8 +247,8 @@ pub fn analyze_dependencies(
         runtime_deps
     };
 
-    let post_deps =
-        extract_dependencies(details, DependencyKind::Post, resolver).with_context(|| {
+    let post_deps = extract_dependencies(details, DependencyKind::Post, target_resolver)
+        .with_context(|| {
             format!(
                 "Resolving post-time dependencies for {}-{}",
                 &details.package_name, &details.version
@@ -224,5 +259,7 @@ pub fn analyze_dependencies(
         build_deps,
         runtime_deps,
         post_deps,
+        build_host_deps,
+        install_host_deps,
     })
 }

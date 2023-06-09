@@ -60,7 +60,9 @@ pub fn dump_package_main(resolver: &PackageResolver, atoms: Vec<PackageAtom>) ->
                     .join(" ")
             );
 
-            let deps = analyze_dependencies(&details, resolver)?;
+            let deps = analyze_dependencies(&details, None, resolver)?;
+            dump_deps("BDEPEND", &deps.build_host_deps);
+            dump_deps("IDEPEND", &deps.install_host_deps);
             dump_deps("DEPEND", &deps.build_deps);
             dump_deps("RDEPEND", &deps.runtime_deps);
             dump_deps("PDEPEND", &deps.post_deps);
