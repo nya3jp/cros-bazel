@@ -21,7 +21,7 @@ experimental repository to the public ChromiumOS repository. Meanwhile you need
 the following hack to make the build pass.
 
 ```sh
-$ bazel/workspace_root/link_files.sh
+$ bazel/link_files.py
 ```
 ***
 
