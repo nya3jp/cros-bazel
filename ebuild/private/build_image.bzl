@@ -93,6 +93,8 @@ def _build_image_impl(ctx):
         arguments = [
             "--log=" + output_log_file.path,
             "--profile=" + output_profile_file.path,
+            "--privileged",
+            "--privileged-output=" + output_image_file.path,
             ctx.executable._build_image.path,
             args,
         ],

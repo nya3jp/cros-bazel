@@ -196,6 +196,7 @@ dependencies = [
  "clap",
  "cliutil",
  "container",
+ "fileutil",
  "runfiles",
  "users",
 ]

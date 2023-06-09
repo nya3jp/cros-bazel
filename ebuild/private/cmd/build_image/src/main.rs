@@ -2,23 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use cliutil::cli_main;
-use container::{BindMount, MountedSDK};
+use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
+use fileutil::resolve_symlink_forest;
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
 
-const MAIN_SCRIPT: &str = "/mnt/host/bazel-build/build_image.sh";
+const MAIN_SCRIPT: &str = "/mnt/host/.build_image/build_image.sh";
 
 #[derive(Parser, Debug)]
 #[clap()]
 pub struct Cli {
     #[command(flatten)]
-    mountsdk_config: container::ConfigArgs,
+    common: CommonArgs,
 
     /// Name of board
     #[arg(long, required = true)]
@@ -51,51 +52,58 @@ pub struct Cli {
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-    let r = runfiles::Runfiles::create()?;
 
-    let mut cfg = container::MountSdkConfig::try_from(args.mountsdk_config)?;
-    cfg.privileged = true;
+    let mut settings = ContainerSettings::new();
+    settings.apply_common_args(&args.common)?;
+    settings.set_privileged(true);
 
-    cfg.bind_mounts.push(BindMount {
-        source: r
-            .rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos"),
+    let runfiles = runfiles::Runfiles::create()?;
+
+    settings.push_bind_mount(BindMount {
+        source: resolve_symlink_forest(
+            &runfiles.rlocation(
+                "cros/bazel/ebuild/private/cmd/build_image/container_files/edb_chromeos",
+            ),
+        )?,
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("var/cache/edb/chromeos"),
         rw: false,
     });
-    cfg.bind_mounts.push(BindMount {
-        source: r.rlocation(
+    settings.push_bind_mount(BindMount {
+        source: resolve_symlink_forest(&runfiles.rlocation(
             "cros/bazel/ebuild/private/cmd/build_image/container_files/package.accept_keywords",
-        ),
+        ))?,
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("etc/portage/package.accept_keywords/accept_all"),
         rw: false,
     });
-    cfg.bind_mounts.push(BindMount {
-        source: r.rlocation(
+    settings.push_bind_mount(BindMount {
+        source: resolve_symlink_forest(&runfiles.rlocation(
             "cros/bazel/ebuild/private/cmd/build_image/container_files/package.provided",
-        ),
+        ))?,
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("etc/portage/profile/package.provided"),
         rw: false,
     });
-    cfg.bind_mounts.push(BindMount {
-        source: r
-            .rlocation("cros/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh"),
+    settings.push_bind_mount(BindMount {
+        source: resolve_symlink_forest(&runfiles.rlocation(
+            "cros/bazel/ebuild/private/cmd/build_image/container_files/build_image.sh",
+        ))?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });
 
     for path in args.target_package {
+        let path = resolve_symlink_forest(&path)?;
         let package = BinaryPackage::open(&path)?;
         let mount_path = Path::new("/build")
             .join(&args.board)
             .join("packages")
             .join(format!("{}.tbz2", package.category_pf()));
-        cfg.bind_mounts.push(BindMount {
+        settings.push_bind_mount(BindMount {
             mount_path,
             source: path,
             rw: false,
@@ -103,38 +111,39 @@ fn do_main() -> Result<()> {
     }
 
     for path in args.host_package {
+        let path = resolve_symlink_forest(&path)?;
         let package = BinaryPackage::open(&path)?;
         let mount_path =
             Path::new("/var/lib/portage/pkgs").join(format!("{}.tbz2", package.category_pf()));
-        cfg.bind_mounts.push(BindMount {
+        settings.push_bind_mount(BindMount {
             mount_path,
             source: path,
             rw: false,
         });
     }
 
-    cfg.envs.insert(
-        "BASE_PACKAGE".into(),
-        args.override_base_package.join(" ").into(),
-    );
+    let mut container = settings.prepare()?;
 
-    let mut sdk = MountedSDK::new(cfg, Some(&args.board))?;
-    sdk.run_cmd(&[
-        MAIN_SCRIPT,
-        &format!("--board={}", &args.board),
-        &args.image_to_build,
-        // TODO: add unparsed command-line args.
-    ])?;
+    let status = container
+        .command(MAIN_SCRIPT)
+        .arg("--board")
+        .arg(&args.board)
+        .arg(&args.image_to_build)
+        .env("BASE_PACKAGE", args.override_base_package.join(" "))
+        .status()?;
+
+    ensure!(status.success());
 
     let path = Path::new("mnt/host/source/src/build/images")
         .join(&args.board)
         .join("latest")
         .join(args.image_file_name + ".bin");
-    std::fs::copy(sdk.diff_dir().join(path), args.output)?;
+    std::fs::copy(container.upper_dir().join(path), args.output)?;
 
     Ok(())
 }
 
 fn main() -> ExitCode {
+    enter_mount_namespace().expect("Failed to enter a mount namespace");
     cli_main(do_main)
 }
