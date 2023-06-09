@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::Result;
+use anyhow::{ensure, Context, Result};
 use chrome_trace::{Event, Phase, Trace};
 use clap::Parser;
 use cliutil::{handle_top_level_result, PROFILES_DIR_ENV};
 use fileutil::SafeTempDir;
+use nix::unistd::{getgid, getuid};
 use processes::status_to_exit_code;
 use serde_json::json;
 use std::collections::HashMap;
@@ -19,6 +20,8 @@ use std::time::Instant;
 
 const PROGRAM_NAME: &str = "action_wrapper";
 
+const SUDO_PATH: &str = "/usr/bin/sudo";
+
 #[derive(Parser, Debug)]
 #[clap(
     about = "Redirect command output to a file and also print it on error.",
@@ -30,8 +33,29 @@ struct Cli {
     #[arg(help = "File to save profile JSON file to", long)]
     profile: Option<PathBuf>,
 
+    #[arg(help = "Runs a privileged process with sudo", long)]
+    privileged: bool,
+
+    #[arg(
+        help = "After running a privileged process, chown these output files",
+        long
+    )]
+    privileged_output: Vec<PathBuf>,
+
     #[arg(help = "Command to run", required = true)]
     command_line: Vec<String>,
+}
+
+fn ensure_passwordless_sudo() -> Result<()> {
+    let status = Command::new(SUDO_PATH)
+        .args(["-n", "true"])
+        .status()
+        .context("Failed to run sudo")?;
+    ensure!(
+        status.success(),
+        "Failed to run sudo without password; run \"sudo true\" and try again"
+    );
+    Ok(())
 }
 
 fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Result<()> {
@@ -135,8 +159,16 @@ fn do_main() -> Result<ExitCode> {
         None
     };
 
-    let mut command = Command::new(&args.command_line[0]);
-    command.args(&args.command_line[1..]);
+    let mut command = if args.privileged {
+        ensure_passwordless_sudo()?;
+        let mut command = Command::new(SUDO_PATH);
+        command.arg("--preserve-env").args(&args.command_line);
+        command
+    } else {
+        let mut command = Command::new(&args.command_line[0]);
+        command.args(&args.command_line[1..]);
+        command
+    };
 
     if let Some(output) = &output {
         command
@@ -177,6 +209,22 @@ fn do_main() -> Result<ExitCode> {
         writeln!(output, "{}", message)?;
     } else {
         eprintln!("{}", message);
+    }
+
+    // Run chown on output files by a privileged process.
+    if args.privileged && !args.privileged_output.is_empty() {
+        let mut command = Command::new(SUDO_PATH);
+        command
+            .arg("chown")
+            .arg(format!("{}:{}", getuid(), getgid()))
+            .arg("--")
+            .args(args.privileged_output);
+        if let Some(output) = &output {
+            command
+                .stdout(Stdio::from(output.try_clone()?))
+                .stderr(Stdio::from(output.try_clone()?));
+        }
+        processes::run(&mut command)?;
     }
 
     // If the command failed, then print saved output on the stderr.
