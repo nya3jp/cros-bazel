@@ -138,7 +138,6 @@ sdk_update(
     base = "@//bazel/sdk:sdk_from_archive",
     # TODO: Maybe split installing the host deps from installing the board
     # specific items.
-    board = "{{ board }}",
     extra_tarballs = [
         "@//bazel/sdk:extra_tarball",
         ":board_extra_tarball",

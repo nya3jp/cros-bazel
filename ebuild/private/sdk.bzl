@@ -84,7 +84,6 @@ def _sdk_update_impl(ctx):
         "--log=" + output_log.path,
         "--profile=" + output_profile.path,
         ctx.executable._sdk_update,
-        "--board=" + ctx.attr.board,
         "--output=" + output_root.path,
     ])
 
@@ -144,12 +143,6 @@ sdk_update = rule(
         "base": attr.label(
             mandatory = True,
             providers = [SDKInfo],
-        ),
-        "board": attr.string(
-            mandatory = True,
-            doc = """
-            The target board name to build the package for.
-            """,
         ),
         "host_deps": attr.label_list(
             providers = [BinaryPackageSetInfo],

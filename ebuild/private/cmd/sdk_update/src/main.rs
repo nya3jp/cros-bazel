@@ -23,10 +23,6 @@ struct Cli {
     #[command(flatten)]
     common: CommonArgs,
 
-    /// Name of board
-    #[arg(long, required = true)]
-    board: String,
-
     /// A path to a directory where the output durable tree is written.
     #[arg(long, required = true)]
     output: PathBuf,
@@ -111,7 +107,7 @@ fn do_main() -> Result<()> {
     // Delete the mutable base directory that contains the upper directory.
     drop(mutable_base_dir);
 
-    container::clean_layer(Some(&args.board), &args.output)
+    container::clean_layer(None, &args.output)
         .with_context(|| "Failed to clean the output dir.")?;
 
     DurableTree::convert(&args.output)?;
