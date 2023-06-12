@@ -6,6 +6,7 @@ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:install_groups.bzl", "calculate_install_groups")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
+load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
@@ -309,6 +310,16 @@ def _ebuild_impl(ctx):
             progress_message = "Building %{label}",
         )
 
+    # Generate contents directories.
+    contents = generate_contents(
+        ctx = ctx,
+        binary_package = output_binary_package_file,
+        output_prefix = src_basename,
+        board = ctx.attr.board,
+        executable_action_wrapper = ctx.executable._action_wrapper,
+        executable_extract_package = ctx.executable._extract_package,
+    )
+
     # Generate interface libraries.
     interface_library_outputs, interface_library_providers = generate_interface_libraries(
         ctx = ctx,
@@ -375,6 +386,7 @@ def _ebuild_impl(ctx):
 
     package_info = BinaryPackageInfo(
         file = output_binary_package_file,
+        contents = contents,
         category = ctx.attr.category,
         package_name = ctx.attr.package_name,
         version = ctx.attr.version,
@@ -436,6 +448,11 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             If true, the package uses the preinst and postinst hooks to modify
             ROOT or /.
             """,
+        ),
+        _extract_package = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/extract_package"),
         ),
         _extract_interface = attr.label(
             executable = True,

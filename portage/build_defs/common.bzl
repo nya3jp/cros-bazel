@@ -25,6 +25,23 @@ BinaryPackageInfo = provider(
             hooks. This layer can be used directly instead of having to install
             the package manually.
         """,
+        "contents": """
+            struct[ContentsLayersInfo]: Locates installed/staged contents layers
+            that are used to implement fast package installation.
+
+            Since packages can be installed to several different sysroot
+            locations, this struct contains multiple entries corresponding
+            to possible installation locations.
+
+            An attribute name of the struct is a board name that you can
+            derive a sysroot directory from, e.g. "amd64-generic" or "eve",
+            or the special name "__host__" for the host installation. A value
+            of the struct is ContentsLayersInfo that locates an installed/staged
+            contents layer.
+
+            See the provider description for why this field is a struct,
+            not a dictionary.
+        """,
         "category": """
             str: The category of this package.
         """,
@@ -58,6 +75,24 @@ BinaryPackageInfo = provider(
             returns packages in a valid installation order, i.e. a package's
             runtime dependencies are fully satisfied by packages that appear
             before it.
+        """,
+    },
+)
+
+ContentsLayersInfo = provider(
+    """
+    Locates an installed/staged contents layer for a package.
+
+    This is an essentially a named struct. It always appears in an attribute of
+    BinaryPackageInfo.
+    """,
+    fields = {
+        "installed": """
+            File: A durable tree directory containing an installed contents
+            layer.
+        """,
+        "staged": """
+            File: A durable tree directory containing a staged contents layer.
         """,
     },
 )

@@ -3,9 +3,22 @@
 # found in the LICENSE file.
 
 load("common.bzl", "BinaryPackageInfo", "single_binary_package_set_info")
+load("package_contents.bzl", "generate_contents")
 
 def _binary_package_impl(ctx):
     src = ctx.file.src
+    src_basename = src.basename.rsplit(".", 1)[0]
+
+    contents = generate_contents(
+        ctx = ctx,
+        binary_package = src,
+        output_prefix = src_basename,
+        # Currently all usage of the binary_package rule is for host packages.
+        board = None,
+        executable_action_wrapper = ctx.executable._action_wrapper,
+        executable_extract_package = ctx.executable._extract_package,
+    )
+
     direct_runtime_deps = tuple([
         target[BinaryPackageInfo]
         for target in ctx.attr.runtime_deps
@@ -28,6 +41,7 @@ def _binary_package_impl(ctx):
     )
     package_info = BinaryPackageInfo(
         file = src,
+        contents = contents,
         all_files = all_files,
         package_name = ctx.attr.package_name or ctx.label.name,
         category = ctx.attr.category,
@@ -56,5 +70,15 @@ binary_package = rule(
             allow_single_file = [".tbz2"],
         ),
         "version": attr.string(mandatory = True),
+        "_action_wrapper": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/action_wrapper"),
+        ),
+        "_extract_package": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/extract_package"),
+        ),
     },
 )
