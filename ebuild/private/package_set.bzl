@@ -10,12 +10,14 @@ def _package_set_impl(ctx):
             target[BinaryPackageSetInfo].packages
             for target in ctx.attr.deps
         ],
+        order = "postorder",
     )
     files = depset(
         transitive = [
             target[BinaryPackageSetInfo].files
             for target in ctx.attr.deps
         ],
+        order = "postorder",
     )
 
     return [

@@ -28,7 +28,10 @@ def install_deps(
         install_set: Depset[BinaryPackageInfo]: Binary package targets to
             install. This depset must be closed over transitive runtime
             dependencies; that is, if the depset contains a package X, it must
-            also contain all transitive dependencies of the package X.
+            also contain all transitive dependencies of the package X. Also,
+            This depset's to_list() must return packages in a valid installation
+            order, i.e. a package's runtime dependencies are fully satisfied by
+            packages that appear before it.
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_install_deps: File: An executable file of install_deps.
         progress_message: str: Progress message for the installation action.
@@ -52,7 +55,6 @@ def install_deps(
     if board:
         args.add("--board=" + board)
 
-    # TODO: Can we avoid the costly to_list() operation?
     install_list = install_set.to_list()
     direct_inputs = [pkg.file for pkg in install_list]
 

@@ -26,6 +26,7 @@ def _build_image_impl(ctx):
             packages[BinaryPackageSetInfo].packages
             for packages in ctx.attr.target_packages
         ],
+        order = "postorder",
     )
     deps_layers = install_deps(
         ctx = ctx,

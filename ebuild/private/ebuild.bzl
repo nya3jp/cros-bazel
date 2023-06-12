@@ -280,10 +280,13 @@ def _ebuild_impl(ctx):
         for target in ctx.attr.runtime_deps
     ])
     transitive_runtime_deps = depset(
-        direct_runtime_deps,
         transitive = [
-            pkg.transitive_runtime_deps
-            for pkg in direct_runtime_deps
+            depset(
+                [dep],
+                transitive = [dep.transitive_runtime_deps],
+                order = "postorder",
+            )
+            for dep in direct_runtime_deps
         ],
         order = "postorder",
     )

@@ -24,7 +24,12 @@ BinaryPackageInfo = provider(
         """,
         "all_files": """
             Depset[File]: All binary package files including this package's one
-                itself and all transitive runtime dependencies.
+            itself and all transitive runtime dependencies.
+
+            The Depset must be constructed in a way so that its to_list()
+            returns packages in a valid installation order, i.e. a package's
+            runtime dependencies are fully satisfied by packages that appear
+            before it.
         """,
         "direct_runtime_deps": """
             tuple[BinaryPackageInfo]: Direct runtime dependencies of the
@@ -33,9 +38,14 @@ BinaryPackageInfo = provider(
         """,
         "transitive_runtime_deps": """
             Depset[BinaryPackageInfo]: Transitive runtime dependencies of the
-                package. Note that this depset does *NOT* contain this package
-                itself, just because it is impossible to construct a
-                self-referencing provider.
+            package. Note that this depset does *NOT* contain this package
+            itself, just because it is impossible to construct a
+            self-referencing provider.
+
+            The Depset must be constructed in a way so that its to_list()
+            returns packages in a valid installation order, i.e. a package's
+            runtime dependencies are fully satisfied by packages that appear
+            before it.
         """,
     },
 )
@@ -54,10 +64,20 @@ BinaryPackageSetInfo = provider(
     fields = {
         "packages": """
             Depset[BinaryPackageInfo]: All Portage binary packages included in
-                this set.
+            this set.
+
+            The Depset must be constructed in a way so that its to_list()
+            returns packages in a valid installation order, i.e. a package's
+            runtime dependencies are fully satisfied by packages that appear
+            before it.
         """,
         "files": """
             Depset[File]: All Portage binary package files included in this set.
+
+            The Depset must be constructed in a way so that its to_list()
+            returns packages in a valid installation order, i.e. a package's
+            runtime dependencies are fully satisfied by packages that appear
+            before it.
         """,
     },
 )
@@ -155,9 +175,14 @@ def single_binary_package_set_info(package_info):
         packages = depset(
             [package_info],
             transitive = [
-                depset([dep], transitive = [dep.transitive_runtime_deps])
+                depset(
+                    [dep],
+                    transitive = [dep.transitive_runtime_deps],
+                    order = "postorder",
+                )
                 for dep in package_info.direct_runtime_deps
             ],
+            order = "postorder",
         ),
         files = package_info.all_files,
     )
