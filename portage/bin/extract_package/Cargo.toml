@@ -1,0 +1,22 @@
+[package]
+name = "extract_package"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cliutil = { path = "../../common/cliutil" }
+container = { path = "../../common/container" }
+durabletree = { path = "../../common/durabletree" }
+binarypackage = { path = "../../common/portage/binarypackage" }
+vdb = { path = "../../common/portage/vdb" }
+
+anyhow.workspace = true
+clap.workspace = true
+
+[dev-dependencies]
+fileutil = { path = "../../common/fileutil" }
+testutil = { path = "../../common/testutil" }
+runfiles.workspace = true
+walkdir.workspace = true
