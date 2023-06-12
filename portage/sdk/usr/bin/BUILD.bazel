@@ -7,6 +7,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 pkg_files(
     name = "bin",
     srcs = [
+        "//bazel/portage/bin/drive_binary_package:drive_binary_package.sh",
         "//bazel/portage/bin/fakefs",
         # Intentionally depend on the .py file instead of the library to avoid
         # including stuff like the python runtime.
