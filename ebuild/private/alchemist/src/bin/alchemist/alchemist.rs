@@ -296,7 +296,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     // TODO: Update all the sub commands to explicitly handle host and target.
     let default_target = target
-        .or(host)
+        .as_ref()
+        .or(host.as_ref())
         .context("--board was not specified or the host profile failed to load.")?;
 
     match args.command {
@@ -308,7 +309,13 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             dump_package_main(&default_target.resolver, atoms)?;
         }
         Commands::GenerateRepo { output_dir } => {
-            generate_repo_main(default_target, &translator, &src_dir, &output_dir)?;
+            generate_repo_main(
+                host.as_ref(),
+                target.as_ref(),
+                &translator,
+                &src_dir,
+                &output_dir,
+            )?;
         }
         Commands::DigestRepo { args: local_args } => {
             digest_repo_main(&default_target.board, &source_dir, local_args)?;

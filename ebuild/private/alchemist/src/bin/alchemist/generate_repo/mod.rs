@@ -13,6 +13,7 @@ use std::{
     fs::{create_dir_all, remove_dir_all, File},
     io::{ErrorKind, Write},
     path::{Path, PathBuf},
+    str::FromStr,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -24,7 +25,8 @@ use alchemist::{
         dependency::{analyze_dependencies, PackageDependencies},
         source::{analyze_sources, PackageSources},
     },
-    config::bundle::ConfigBundle,
+    config::{bundle::ConfigBundle, ProvidedPackage},
+    dependency::{package::PackageAtom, Predicate},
     ebuild::{CachedPackageLoader, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
@@ -40,7 +42,9 @@ use crate::alchemist::TargetData;
 use self::{
     common::{AnalysisError, Package},
     internal::overlays::generate_internal_overlays,
-    internal::packages::{generate_internal_packages, PackageTargetConfig, PackageType},
+    internal::packages::{
+        generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
+    },
     internal::{sdk::generate_stage1_sdk, sources::generate_internal_sources},
     public::generate_public_packages,
     repositories::generate_repositories_file,
@@ -120,13 +124,14 @@ fn analyze_packages(
     config: &ConfigBundle,
     all_details: Vec<Arc<PackageDetails>>,
     src_dir: &Path,
-    resolver: &PackageResolver,
+    host_resolver: Option<&PackageResolver>,
+    target_resolver: &PackageResolver,
 ) -> (Vec<Package>, Vec<AnalysisError>) {
     // Analyze packages in parallel.
     let (all_partials, failures): (Vec<PackagePartial>, Vec<AnalysisError>) =
         all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
-                let dependencies = analyze_dependencies(details, None, resolver)?;
+                let dependencies = analyze_dependencies(details, host_resolver, target_resolver)?;
                 let sources = analyze_sources(config, details, src_dir)?;
                 Ok(PackagePartial {
                     details: details.clone(),
@@ -221,6 +226,7 @@ fn analyze_packages(
 }
 
 fn load_packages(
+    host: Option<&TargetData>,
     target: &TargetData,
     src_dir: &Path,
 ) -> Result<(Vec<Package>, Vec<AnalysisError>)> {
@@ -237,12 +243,241 @@ fn load_packages(
         &target.config,
         all_details,
         src_dir,
+        host.map(|x| &x.resolver),
         &target.resolver,
     ))
 }
+
+// Searches the `Package`s for the `atom` with the best version.
+fn find_best_package_in<'a>(
+    atom: &PackageAtom,
+    packages: &'a [Package],
+    resolver: &'a PackageResolver,
+) -> Result<Option<&'a Package>> {
+    let sdk_packages = packages
+        .iter()
+        .filter(|package| atom.matches(&package.details.as_thin_package_ref()))
+        .collect_vec();
+
+    let best_sdk_package_details = resolver.find_best_package_in(
+        sdk_packages
+            .iter()
+            .map(|package| package.details.clone())
+            .collect_vec()
+            .as_slice(),
+    )?;
+
+    let best_sdk_package_details = match best_sdk_package_details {
+        Some(best_sdk_package_details) => best_sdk_package_details,
+        None => return Ok(None),
+    };
+
+    Ok(sdk_packages
+        .into_iter()
+        .find(|p| p.details.version == best_sdk_package_details.version))
+}
+
+fn get_bootstrap_sdk_package<'a>(
+    host_packages: &'a [Package],
+    host_resolver: &'a PackageResolver,
+) -> Result<Option<&'a Package>> {
+    // TODO: Add a parameter to pass this along
+    let sdk_atom = PackageAtom::from_str("virtual/target-chromium-os-sdk-bootstrap")?;
+
+    find_best_package_in(&sdk_atom, host_packages, host_resolver)
+}
+
+/// Generates the stage1, stage2, etc packages and SDKs.
+pub fn generate_stages(
+    host: Option<&TargetData>,
+    target: Option<&TargetData>,
+    translator: &PathTranslator,
+    src_dir: &Path,
+    output_dir: &Path,
+) -> Result<Vec<Package>> {
+    let mut all_packages = vec![];
+
+    if let Some(host) = host {
+        let (host_packages, host_failures) = load_packages(Some(host), host, src_dir)?;
+
+        // When we install a set of packages into an SDK layer, any ebuilds that
+        // use that SDK layer now have those packages provided for them, and they
+        // no longer need to install them. Unfortunately we can't filter out these
+        // "SDK layer packages" from the ebuild's dependency graph during bazel's
+        // analysis phase because bazel doesn't like it when there are cycles in the
+        // dependency graph. This means we need to filter out the dependencies
+        // when we generate the BUILD files.
+        let sdk_packages = get_bootstrap_sdk_package(&host_packages, &host.resolver)?
+            .map(|package| {
+                package
+                    .install_set
+                    .iter()
+                    .map(|p| ProvidedPackage {
+                        package_name: p.package_name.clone(),
+                        version: p.version.clone(),
+                    })
+                    .collect_vec()
+            })
+            // TODO: Make this fail once all patches land
+            .unwrap_or_else(Vec::new);
+
+        // Generate the SDK used by the stage1/target/host packages.
+        generate_stage1_sdk("stage1/target/host", host, translator, output_dir)?;
+
+        // Generate the packages that will be built using the Stage 1 SDK.
+        // These packages will be used to generate the Stage 2 SDK.
+        //
+        // i.e., An unknown version of LLVM will be used to cross-root build
+        // the latest version of LLVM.
+        //
+        // We assume that the Stage 1 SDK contains all the BDEPENDs required
+        // to build all the packages required to build the Stage 2 SDK.
+        generate_internal_packages(
+            // We don't know which packages are installed in the Stage 1 SDK
+            // (downloaded SDK tarball), so we can't specify a host. In order
+            // to build an SDK with known versions, we need to cross-root
+            // compile a new SDK with the latest config and packages. This
+            // guarantees that we can correctly track all the dependencies so
+            // we can ensure proper package rebuilds.
+            &PackageType::CrossRoot {
+                host: None,
+                target: PackageTargetConfig {
+                    board: &host.board,
+                    prefix: "stage1/target/host",
+                    repo_set: &host.repos,
+                },
+            },
+            translator,
+            // TODO: Do we want to pass in sdk_packages? This would mean we
+            // can't manually build other host packages using the Stage 1 SDK,
+            // but it saves us on generating symlinks for packages we probably
+            // won't use.
+            &host_packages,
+            &host_failures,
+            output_dir,
+        )?;
+
+        // Generate the Stage 2 host SDK
+        //
+        // This SDK contains the implicit system set as defined by the
+        // virtual/target-chromium-os-sdk-bootstrap package.
+        // TODO: Add call to generate stage2 sdk
+
+        // Generate the host packages that will be built using the Stage 2 SDK.
+        let stage2_host = PackageHostConfig {
+            repo_set: &host.repos,
+            prefix: "stage2/host",
+            sdk_provided_packages: &sdk_packages,
+        };
+        generate_internal_packages(
+            // We no longer need to cross-root build since we know exactly what
+            // is contained in the Stage 2 SDK. This means we can properly
+            // support BDEPENDs. All the packages listed in `sdk_packages` are
+            // considered implicit system dependencies for any of these
+            // packages.
+            &PackageType::Host(stage2_host),
+            translator,
+            &host_packages,
+            &host_failures,
+            output_dir,
+        )?;
+
+        // Generate the Stage 3 host SDK
+        //
+        // The stage 2 SDK is composed of packages built using the Stage 1 SDK.
+        // The stage 3 SDK will be composed of packages built using the Stage 2
+        // SDK. This means we can verify that the latest toolchain can bootstrap
+        // itself.
+        // i.e., Latest LLVM can build Latest LLVM.
+        // TODO: Add call to generate stage3 sdk
+        // TODO: Also support building a "bootstrap" SDK target that is composed
+        // of ALL BDEPEND + RDEPEND + DEPEND of the
+        // virtual/target-chromium-os-sdk-bootstrap package.
+
+        // TODO: Add stage3/host package if we decide we want to build targets
+        // against the stage 3 SDK.
+
+        all_packages.extend(host_packages);
+
+        if let Some(target) = target {
+            let (target_packages, target_failures) = load_packages(Some(host), target, src_dir)?;
+
+            // Generate the target packages that will be cross-root /
+            // cross-compiled using the Stage 2 SDK.
+            generate_internal_packages(
+                &PackageType::CrossRoot {
+                    // We want to use the stage2/host packages to satisfy
+                    // our BDEPEND/IDEPEND dependencies.
+                    host: Some(stage2_host),
+                    target: PackageTargetConfig {
+                        board: &target.board,
+                        prefix: "stage2/target/board",
+                        repo_set: &target.repos,
+                    },
+                },
+                translator,
+                &target_packages,
+                &target_failures,
+                output_dir,
+            )?;
+
+            // TODO: Generate the Stage 3 target packages if we decide to build
+            // targets against the stage 3 SDK.
+
+            all_packages.extend(target_packages);
+        }
+    }
+
+    Ok(all_packages)
+}
+
+pub fn generate_legacy_targets(
+    target: Option<&TargetData>,
+    translator: &PathTranslator,
+    src_dir: &Path,
+    output_dir: &Path,
+) -> Result<Vec<Package>> {
+    if let Some(target) = target {
+        let (target_packages, target_failures) = load_packages(None, target, src_dir)?;
+
+        generate_stage1_sdk("stage1/target/board", target, translator, output_dir)?;
+
+        generate_internal_packages(
+            // The same comment applies here as the stage1/target/host packages.
+            // We don't know what packages are installed in the Stage 1 SDK,
+            // so we can't support BDEPENDs.
+            &PackageType::CrossRoot {
+                host: None,
+                target: PackageTargetConfig {
+                    board: &target.board,
+                    prefix: "stage1/target/board",
+                    repo_set: &target.repos,
+                },
+            },
+            translator,
+            &target_packages,
+            &target_failures,
+            output_dir,
+        )?;
+
+        // TODO:
+        // * Make this generate host packages when the target is not specified.
+        // * Make this point to the Stage 2 packages.
+        generate_public_packages(&target_packages, &target.resolver, output_dir)?;
+
+        // TODO: Generate the build_image targets so we can delete this.
+        generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
+
+        return Ok(target_packages);
+    }
+
+    Ok(vec![])
+}
+
 /// The entry point of "generate-repo" subcommand.
 pub fn generate_repo_main(
-    target: TargetData,
+    host: Option<&TargetData>,
+    target: Option<&TargetData>,
     translator: &PathTranslator,
     src_dir: &Path,
     output_dir: &Path,
@@ -258,42 +493,46 @@ pub fn generate_repo_main(
 
     let _guard = cliutil::setup_tracing(&output_dir.join("trace.json"));
 
-    let (target_packages, target_failures) = load_packages(&target, src_dir)?;
-
     eprintln!("Generating @portage...");
 
-    generate_internal_overlays(translator, &[&target.repos], output_dir)?;
-    generate_internal_packages(
-        &PackageType::CrossRoot {
-            // We don't know what packages are installed in the Stage 1 SDK,
-            // so we can't support BDEPENDs.
-            host: None,
-            target: PackageTargetConfig {
-                board: &target.board,
-                prefix: "stage1/target/board",
-                repo_set: &target.repos,
-            },
-        },
+    // This will be used to collect all the packages that we loaded so we can
+    // generate the deps and srcs.
+    let mut all_packages = vec![];
+
+    generate_internal_overlays(
         translator,
-        &target_packages,
-        &target_failures,
+        [host, target]
+            .iter()
+            .filter_map(|x| x.map(|data| data.repos.as_ref()))
+            .collect_vec()
+            .as_slice(),
         output_dir,
     )?;
-    generate_public_packages(&target_packages, &target.resolver, output_dir)?;
-    generate_repositories_file(&target_packages, &output_dir.join("repositories.bzl"))?;
-    generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
 
-    generate_stage1_sdk("stage1/target/board", &target, translator, output_dir)?;
+    all_packages.extend(generate_stages(
+        host, target, translator, src_dir, output_dir,
+    )?);
+
+    // This is the legacy board, it will be deleted once we can successfully
+    // build host tools.
+    all_packages.extend(generate_legacy_targets(
+        target, translator, src_dir, output_dir,
+    )?);
+
+    generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
 
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;
     File::create(output_dir.join("WORKSPACE.bazel"))?.write_all(&[])?;
 
     eprintln!("Generating sources...");
-    let all_local_sources = target_packages
-        .iter()
-        .flat_map(|package| &package.sources.local_sources);
-    generate_internal_sources(all_local_sources, src_dir, output_dir)?;
+    generate_internal_sources(
+        all_packages
+            .iter()
+            .flat_map(|package| &package.sources.local_sources),
+        src_dir,
+        output_dir,
+    )?;
 
     eprintln!("Generated @portage.");
 
