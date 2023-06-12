@@ -112,6 +112,7 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 
+{%- if board != "amd64-host" %}
 package_set(
     name = "cross-packages",
     deps = [
@@ -132,6 +133,7 @@ package_set(
     ],
     visibility = ["@//bazel:internal"],
 )
+{%- endif %}
 
 sdk_update(
     name = "base",
@@ -142,6 +144,7 @@ sdk_update(
         "@//bazel/sdk:extra_tarball",
         ":board_extra_tarball",
     ],
+    {%- if board != "amd64-host" %}
     host_deps = [
         ":cross-packages",
         "@//bazel/prebuilts/amd64-host/dev-embedded:coreboot-sdk",
@@ -155,6 +158,7 @@ sdk_update(
             "@//bazel/prebuilts/amd64-host/x11-base:xcb-proto",
         ],
     }),
+    {%- endif %}
     overlays = "{{ overlay_set }}",
     progress_message = "Installing {dep_count} stage 1 host tools for {{ board }} SDK",
     visibility = ["@//bazel:internal"],
