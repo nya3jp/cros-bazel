@@ -1,0 +1,26 @@
+[package]
+name = "fast_install_packages"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cliutil = { path = "../../common/cliutil" }
+container = { path = "../../common/container" }
+durabletree = { path = "../../common/durabletree" }
+fileutil = { path = "../../common/fileutil" }
+binarypackage = { path = "../../common/portage/binarypackage" }
+vdb = { path = "../../common/portage/vdb" }
+anyhow.workspace = true
+clap.workspace = true
+itertools.workspace = true
+libc.workspace = true
+runfiles.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+testutil = { path = "../../common/testutil" }
+bytes.workspace = true
+bzip2.workspace = true
+tempfile.workspace = true

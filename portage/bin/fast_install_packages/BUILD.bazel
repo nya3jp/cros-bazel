@@ -1,0 +1,87 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+rust_binary(
+    name = "fast_install_packages",
+    srcs = glob(["src/**/*.rs"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel:internal"],
+    deps = [
+        "//bazel/portage/common/cliutil",
+        "//bazel/portage/common/container",
+        "//bazel/portage/common/durabletree",
+        "//bazel/portage/common/fileutil",
+        "//bazel/portage/common/portage/binarypackage",
+        "//bazel/portage/common/portage/vdb",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:itertools",
+        "@alchemy_crates//:libc",
+        "@alchemy_crates//:tracing",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+rust_test(
+    name = "fast_install_packages_test",
+    size = "small",
+    srcs = glob(["tests/**/*.rs"]),
+    data = [
+        ":fake_sdk_extras",
+        ":fast_install_packages",
+        "//bazel/portage/bin/extract_package",
+        "@alpine-minirootfs//file",
+        "@zstd",
+    ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "//bazel/portage/common/container",
+        "//bazel/portage/common/durabletree",
+        "//bazel/portage/common/fileutil",
+        "//bazel/portage/common/portage/vdb",
+        "//bazel/portage/common/testutil",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:bytes",
+        "@alchemy_crates//:bzip2",
+        "@alchemy_crates//:itertools",
+        "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+# Works around the issue that @files//bash-static is resolved to multiple files.
+# TODO(b/299563985): Fix it.
+genrule(
+    name = "bash_static_gen",
+    srcs = ["@files//:bash-static"],
+    outs = ["bash_static"],
+    cmd = "v=($(SRCS)); cp $${v[0]} $@",
+)
+
+pkg_files(
+    name = "fake_sdk_extras_files",
+    srcs = [
+        ":bash_static",
+        "//bazel/portage/bin/drive_binary_package:drive_binary_package.sh",
+        "//bazel/portage/bin/fakefs",
+    ],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    renames = {
+        ":bash_static": "bin/bash",
+        "//bazel/portage/bin/drive_binary_package:drive_binary_package.sh": "usr/bin/drive_binary_package.sh",
+        "//bazel/portage/bin/fakefs": "usr/bin/fakeroot",
+    },
+)
+
+pkg_tar(
+    name = "fake_sdk_extras",
+    srcs = [":fake_sdk_extras_files"],
+)

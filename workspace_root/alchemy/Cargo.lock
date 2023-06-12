@@ -450,6 +450,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "fast_install_packages"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "binarypackage",
+ "bytes",
+ "bzip2",
+ "clap",
+ "cliutil",
+ "container",
+ "durabletree",
+ "fileutil",
+ "itertools",
+ "libc",
+ "runfiles",
+ "tempfile",
+ "testutil",
+ "tracing",
+ "vdb",
+]
+
+[[package]]
 name = "fastrand"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
