@@ -4,6 +4,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("//bazel:repo/cipd.bzl", "cipd_file")
+load("//bazel:repo/gs.bzl", "gs_file")
 load("//bazel:repo/repo_repository.bzl", "repo_repository")
 load("//bazel/chrome:cros_chrome_repository.bzl", "cros_chrome_repository")
 load("//bazel/module_extensions/portage:alchemist.bzl", "alchemist")
@@ -65,6 +66,9 @@ def _portage_impl(module_ctx):
             name = kwargs["name"]
             if rule == "HttpFile":
                 http_file(**kwargs)
+                symlinks[name] = "@%s//file" % name
+            elif rule == "GsFile":
+                gs_file(**kwargs)
                 symlinks[name] = "@%s//file" % name
             elif rule == "RepoRepository":
                 repo_repository(**kwargs)

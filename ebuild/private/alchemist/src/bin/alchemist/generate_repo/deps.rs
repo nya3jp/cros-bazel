@@ -21,6 +21,11 @@ enum Repository {
         downloaded_file_path: String,
         url: String,
     },
+    GsFile {
+        name: String,
+        downloaded_file_path: String,
+        url: String,
+    },
     HttpFile {
         name: String,
         downloaded_file_path: String,
@@ -65,8 +70,14 @@ fn generate_deps(packages: &[Package]) -> Result<Vec<Repository>> {
         .dedup_by(|a, b| a.filename == b.filename)
         .map(|dist| {
             let url = &dist.urls[0];
-            if url.starts_with("cipd") {
+            if url.starts_with("cipd://") {
                 Repository::CipdFile {
+                    name: dist.repository_name,
+                    downloaded_file_path: dist.filename,
+                    url: url.to_string(),
+                }
+            } else if url.starts_with("gs://") {
+                Repository::GsFile {
                     name: dist.repository_name,
                     downloaded_file_path: dist.filename,
                     url: url.to_string(),
@@ -144,6 +155,17 @@ mod tests {
             }],
         };
 
+        let gs_sources = PackageSources {
+            local_sources: vec![],
+            repo_sources: vec![],
+            dist_sources: vec![PackageDistSource {
+                urls: vec![Url::parse("gs://secret-bucket/secret-file.tar.gz").unwrap()],
+                filename: "secret-file.tar.gz".to_owned(),
+                size: 100,
+                hashes: hashes.clone(),
+            }],
+        };
+
         let https_sources = PackageSources {
             local_sources: vec![],
             repo_sources: vec![],
@@ -181,23 +203,33 @@ mod tests {
             inherited: HashSet::new(),
         };
 
-        let mut details_one = details_prototype.clone();
-        details_one.package_name = "sys-apps/one".to_owned();
-        details_one.ebuild_path = "/somewhere/sys-apps/one-1.0.ebuild".into();
+        let mut details1 = details_prototype.clone();
+        details1.package_name = "sys-apps/p1".to_owned();
+        details1.ebuild_path = "/somewhere/sys-apps/p1-1.0.ebuild".into();
 
-        let mut details_two = details_prototype.clone();
-        details_two.package_name = "sys-apps/two".to_owned();
-        details_two.ebuild_path = "/somewhere/sys-apps/two-1.0.ebuild".into();
+        let mut details2 = details_prototype.clone();
+        details2.package_name = "sys-apps/p2".to_owned();
+        details2.ebuild_path = "/somewhere/sys-apps/p2-1.0.ebuild".into();
+
+        let mut details3 = details_prototype.clone();
+        details3.package_name = "sys-apps/p3".to_owned();
+        details3.ebuild_path = "/somewhere/sys-apps/p3-1.0.ebuild".into();
 
         let packages = vec![
             Package {
-                details: details_one.into(),
+                details: details1.into(),
                 dependencies: dependencies.clone(),
                 sources: cipd_sources,
                 install_set: vec![],
             },
             Package {
-                details: details_two.into(),
+                details: details2.into(),
+                dependencies: dependencies.clone(),
+                sources: gs_sources,
+                install_set: vec![],
+            },
+            Package {
+                details: details3.into(),
                 dependencies: dependencies.clone(),
                 sources: https_sources,
                 install_set: vec![],
@@ -222,6 +254,13 @@ mod tests {
       "urls": [
         "https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/google-api-core-1.19.0.tar.gz"
       ]
+    }
+  },
+  {
+    "GsFile": {
+      "name": "portage-dist_secret-file.tar.gz",
+      "downloaded_file_path": "secret-file.tar.gz",
+      "url": "gs://secret-bucket/secret-file.tar.gz"
     }
   }
 ]"#;
