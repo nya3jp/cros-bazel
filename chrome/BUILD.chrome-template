@@ -2,16 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Use public visibility since bzlmod repo namespacing prevents unwanted
-# visibility.
-package(default_visibility = ["//visibility:public"])
-
 alias(
     name = "src",
     actual = "src.tar.zst",
+    visibility = ["@//bazel:internal"],
 )
 
 alias(
     name = "src-internal",
     actual = "src-internal.tar.zst",
+    visibility = ["@//bazel:internal"],
 )

@@ -137,4 +137,4 @@ pre_portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "
 use_repo(pre_portage, "alchemist", "portage_digest", "portage_tarball")
 
 portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage")
-use_repo(portage, "portage", "portage_deps")
+use_repo(portage, "portage")
