@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 def github_archive(name, github_user, github_repo, tag, checksum = "", strip_prefix = None, patch_args = None, patch_strip = 1, **kwargs):
     """A rule to download a release from github.
@@ -30,7 +31,8 @@ def github_archive(name, github_user, github_repo, tag, checksum = "", strip_pre
     patch_args = patch_args or []
     patch_args.append("-p%d" % patch_strip)
 
-    http_archive(
+    maybe(
+        http_archive,
         name = name,
         sha256 = checksum,
         strip_prefix = strip_prefix,

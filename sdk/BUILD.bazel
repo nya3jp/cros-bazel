@@ -47,8 +47,8 @@ config_setting(
 sdk_from_archive(
     name = "sdk_from_archive",
     src = select({
-        ":new-sdk-enabled": "@files//:cros-sdk-2023.04.05.144808",
-        "//conditions:default": "@files//:cros-sdk-2022.08.25.153812",
+        ":new-sdk-enabled": "@cros-sdk-2023.04.05.144808//file",
+        "//conditions:default": "@cros-sdk-2022.08.25.153812//file",
     }),
     progress_message = "Extracting bootstrap SDK tarball",
     # This rule just extracts an archive, do not bother dispatching to remotes.
