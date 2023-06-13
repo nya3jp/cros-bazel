@@ -7,21 +7,15 @@ def _extract_tarball_impl(repo_ctx):
     if not tar:
         fail("tar was not found on the path")
     out = repo_ctx.path("")
-    tarball = repo_ctx.path(repo_ctx.attr.tarball)
 
     args = [
         tar,
         "-xf",
-        tarball,
+        repo_ctx.path(repo_ctx.attr.tarball),
         "-C",
         out,
         ".",
     ]
-
-    # Use parallel decompression if available.
-    if tarball.basename.endswith(".gz") and repo_ctx.which("pigz"):
-        args.extend(["-I", "pigz"])
-
     st = repo_ctx.execute(args)
     if st.return_code:
         cmdline = " ".join([str(arg) for arg in args])

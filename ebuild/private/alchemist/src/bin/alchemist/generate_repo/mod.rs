@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 pub(self) mod common;
-pub(self) mod deps;
 pub mod internal;
 pub(self) mod public;
+pub(self) mod repositories;
 pub(self) mod settings;
 
 use std::{
@@ -39,11 +39,11 @@ use crate::alchemist::TargetData;
 
 use self::{
     common::{AnalysisError, Package},
-    deps::generate_deps_file,
     internal::overlays::generate_internal_overlays,
     internal::packages::generate_internal_packages,
     internal::{sdk::generate_stage1_sdk, sources::generate_internal_sources},
     public::generate_public_packages,
+    repositories::generate_repositories_file,
     settings::generate_settings_bzl,
 };
 
@@ -246,7 +246,6 @@ pub fn generate_repo_main(
     translator: &PathTranslator,
     src_dir: &Path,
     output_dir: &Path,
-    deps_file: &Path,
 ) -> Result<()> {
     match remove_dir_all(output_dir) {
         Ok(_) => {}
@@ -274,7 +273,7 @@ pub fn generate_repo_main(
         output_dir,
     )?;
     generate_public_packages(&target_packages, &target.resolver, output_dir)?;
-    generate_deps_file(&target_packages, &deps_file)?;
+    generate_repositories_file(&target_packages, &output_dir.join("repositories.bzl"))?;
     generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
 
     generate_stage1_sdk("stage1/target/board", &target, translator, output_dir)?;
