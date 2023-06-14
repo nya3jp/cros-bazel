@@ -11,6 +11,10 @@ pkg_files(
         # Intentionally depend on the .py file instead of the library to avoid
         # including stuff like the python runtime.
         "fake_sudo.py",
+
+        # Use GN binary which is built without rpmalloc to avoid crash bug.
+        # TODO(b/273830995): Remove this.
+        "@files//:gn_without_rpmalloc",
     ],
     attributes = pkg_attributes(
         mode = "0755",
@@ -19,6 +23,7 @@ pkg_files(
     renames = {
         "//bazel/portage/bin/fakefs": "fakeroot",
         "fake_sudo.py": "sudo",
+        "@files//:gn_without_rpmalloc": "gn",
     },
     visibility = ["//bazel/portage/sdk:__pkg__"],
 )

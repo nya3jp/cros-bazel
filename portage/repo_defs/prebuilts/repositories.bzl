@@ -427,3 +427,12 @@ def prebuilts_dependencies(http_file = _http_file):
         sha256 = "a2593b64bd0a4451661c44a3cd8409224857900fac2c77fd71d94e94ac411f62",
         urls = ["https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.04.05.144808/packages/dev-lang/rust-host-1.68.0.tbz2"],
     )
+
+    # Use GN binary built without rpmalloc to avoid crash bug.
+    # TODO(b/273830995): Remove this.
+    http_file(
+        name = "gn_without_rpmalloc",
+        downloaded_file_path = "gn_without_rpmalloc",
+        sha256 = "46ae28050ac648738a908284807184eb3dddd176b7a8054db63c14e8757d5b81",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-throw-away-bucket/cros-bazel/gn_without_rpmalloc"],
+    )
