@@ -45,7 +45,10 @@ use self::{
     internal::packages::{
         generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
     },
-    internal::{sdk::generate_stage1_sdk, sources::generate_internal_sources},
+    internal::{
+        sdk::{generate_base_sdk, generate_stage1_sdk, SdkBaseConfig},
+        sources::generate_internal_sources,
+    },
     public::generate_public_packages,
     repositories::generate_repositories_file,
     settings::generate_settings_bzl,
@@ -307,7 +310,8 @@ pub fn generate_stages(
         // analysis phase because bazel doesn't like it when there are cycles in the
         // dependency graph. This means we need to filter out the dependencies
         // when we generate the BUILD files.
-        let sdk_packages = get_bootstrap_sdk_package(&host_packages, &host.resolver)?
+        let bootstrap_package = get_bootstrap_sdk_package(&host_packages, &host.resolver)?;
+        let sdk_packages = bootstrap_package
             .map(|package| {
                 package
                     .install_set
@@ -357,11 +361,25 @@ pub fn generate_stages(
             output_dir,
         )?;
 
-        // Generate the Stage 2 host SDK
+        // Generate the stage 2 SDK
         //
-        // This SDK contains the implicit system set as defined by the
-        // virtual/target-chromium-os-sdk-bootstrap package.
-        // TODO: Add call to generate stage2 sdk
+        // This SDK will be used as the base for the host and target SDKs.
+        // TODO: Make missing bootstrap_package fatal.
+        if let Some(bootstrap_package) = bootstrap_package {
+            generate_base_sdk(
+                &SdkBaseConfig {
+                    name: "stage2",
+                    source_package_prefix: "stage1/target/host",
+                    // We use the `host:base` target because the stage1 SDK
+                    // `host` target lists all the primordial packages for the
+                    // target, and we don't want those pre-installed.
+                    source_sdk: "stage1/target/host:base",
+                    source_repo_set: &host.repos,
+                    bootstrap_package,
+                },
+                output_dir,
+            )?;
+        }
 
         // Generate the host packages that will be built using the Stage 2 SDK.
         let stage2_host = PackageHostConfig {

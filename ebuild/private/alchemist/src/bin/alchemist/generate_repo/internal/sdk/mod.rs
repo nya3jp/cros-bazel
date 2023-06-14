@@ -42,6 +42,11 @@ lazy_static! {
             include_str!("templates/stage1.BUILD.bazel"),
         )
         .unwrap();
+        tera.add_raw_template(
+            "base.BUILD.bazel",
+            include_str!("templates/base.BUILD.bazel"),
+        )
+        .unwrap();
         tera
     };
 }
@@ -229,6 +234,63 @@ pub fn generate_stage1_sdk(
         &target.toolchains,
         translator,
         &out,
+    )?;
+
+    Ok(())
+}
+
+pub struct SdkBaseConfig<'a> {
+    /// The name of the SDK to generate.
+    ///
+    /// i.e., stage2, stage3, etc
+    ///
+    /// This is used to generate the path of the SDK.
+    /// i.e., //internal/sdk/<name>
+    pub name: &'a str,
+
+    /// The prefix of the packages that will be bundled into the SDK.
+    pub source_package_prefix: &'a str,
+
+    /// The SDK that was used to generate the source packages.
+    pub source_sdk: &'a str,
+
+    /// Repository set for the host.
+    pub source_repo_set: &'a RepositorySet,
+
+    /// The `virtual` package that lists all the runtime dependencies that
+    /// will be installed into the SDK.
+    pub bootstrap_package: &'a Package,
+}
+
+#[derive(Serialize)]
+struct SdkBaseContext<'a> {
+    name: &'a str,
+    overlay_set: &'a str,
+    target: &'a str,
+    sdk: &'a str,
+}
+
+pub fn generate_base_sdk(config: &SdkBaseConfig, out: &Path) -> Result<()> {
+    let out = out.join("internal/sdk").join(config.name);
+
+    create_dir_all(&out)?;
+
+    let context = SdkBaseContext {
+        name: config.name,
+        overlay_set: &repository_set_to_bazel_path(config.source_repo_set),
+        target: &package_details_to_package_set_target_path(
+            &config.bootstrap_package.details,
+            config.source_package_prefix,
+        ),
+        sdk: &format!("//internal/sdk/{}", config.source_sdk),
+    };
+
+    let mut file = File::create(out.join("BUILD.bazel"))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    TEMPLATES.render_to(
+        "base.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
     )?;
 
     Ok(())
