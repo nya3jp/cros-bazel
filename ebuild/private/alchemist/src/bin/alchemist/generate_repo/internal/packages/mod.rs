@@ -13,6 +13,7 @@ use std::{
 
 use alchemist::{
     analyze::{restrict::analyze_restricts, source::PackageLocalSource},
+    config::ProvidedPackage,
     dependency::restrict::RestrictAtom,
     ebuild::PackageDetails,
     fakechroot::PathTranslator,
@@ -52,7 +53,11 @@ pub struct EBuildEntry {
     sources: Vec<String>,
     git_trees: Vec<String>,
     dists: Vec<DistFileEntry>,
-    build_deps: Vec<String>,
+    provided_host_build_deps: Vec<String>,
+    host_build_deps: Vec<String>,
+    host_install_deps: Vec<String>,
+    target_build_deps: Vec<String>,
+    provided_runtime_deps: Vec<String>,
     runtime_deps: Vec<String>,
     install_set: Vec<String>,
     allow_network_access: bool,
@@ -60,8 +65,111 @@ pub struct EBuildEntry {
     sdk: String,
 }
 
+/// Specifies the config used to generate host packages.
+#[derive(Debug, Copy, Clone)]
+pub struct PackageHostConfig<'a> {
+    /// The host repository set that contains all the portage config.
+    pub repo_set: &'a RepositorySet,
+
+    /// Prefix to append to the package paths. It also defines the path to the
+    /// SDK to use to build these packages.
+    ///
+    /// i.e., Passing "stage2/host" will result in a package BUILD file getting
+    /// generated at //internal/packages/stage2/host/sys-libs/glibc/BUILD.bazel.
+    ///
+    /// The ebuild targets will use the `//internal/sdk/stage2/host` SDK.
+    pub prefix: &'a str,
+
+    /// The packages provided by the SDK. This allows us to skip re-installing
+    /// these packages into the package's "deps" layer and also avoids circular
+    /// dependencies.
+    pub sdk_provided_packages: &'a [ProvidedPackage],
+}
+
+/// Specifies the config used to generate packages for the target board.
+#[derive(Debug, Copy, Clone)]
+pub struct PackageTargetConfig<'a> {
+    /// The target repository set that contains all the portage config.
+    pub repo_set: &'a RepositorySet,
+
+    /// The board name used to derive the ROOT parameter.
+    /// i.e., /build/${BOARD}
+    pub board: &'a str,
+
+    /// Prefix to append to the package paths. It also defines the path to
+    // the SDK to use to build these packages.
+    ///
+    /// i.e., Passing "stage2/target/board" will result in a package BUILD
+    /// file getting generated at
+    /// `//internal/packages/stage2/target/board/sys-libs/glibc/BUILD.bazel`.
+    ///
+    /// The ebuild targets will use the `//internal/sdk/stage2/target/board`
+    /// SDK.
+    pub prefix: &'a str,
+}
+
+/// Specifies the type of packages to generate.
+pub enum PackageType<'a> {
+    /// Packages will be generated to compile against the host's SYSROOT.
+    ///
+    /// i.e., ROOT=/
+    Host(PackageHostConfig<'a>),
+
+    /// Packages will be generated to compile in their own SYSROOT.
+    ///
+    /// i.e., ROOT=/build/$BOARD
+    ///
+    /// This is called a cross-root build because we are using the host tools
+    /// defined in / to build the packages in a different SYSROOT. A
+    /// cross-compile build is specialization of a cross-root build. It's
+    /// defined as a build where CBUILD != CHOST. Since we don't specify the
+    /// CBUILD or CHOST in this structure we don't know if its a cross-compile.
+    CrossRoot {
+        /// The host packages to use to satisfy BDEPEND / IDEPEND dependencies
+        /// for the target packages.
+        host: Option<PackageHostConfig<'a>>,
+        /// The target to generate packages for.
+        target: PackageTargetConfig<'a>,
+    },
+}
+
+/// Splits the provided `packages` into two lists:
+/// 1) `PackageDetails` that don't match the specified `provided` list.
+/// 2) `PackageDetails` that do match the `provided` list.
+fn partition_provided<'a>(
+    packages: impl IntoIterator<Item = &'a Arc<PackageDetails>>,
+    provided: &'a [ProvidedPackage],
+) -> (Vec<&Arc<PackageDetails>>, Vec<&Arc<PackageDetails>>) {
+    let (build_host_deps, provided_host_deps): (Vec<_>, Vec<_>) =
+        packages.into_iter().partition(|package| {
+            !provided.iter().any(|provided| {
+                provided.package_name == package.package_name && provided.version == package.version
+            })
+        });
+
+    (build_host_deps, provided_host_deps)
+}
+
+/// Converts the `PackageDetails` items into bazel paths using the provided
+/// prefix.
+fn format_dependencies<'a>(
+    prefix: &str,
+    deps: impl IntoIterator<Item = &'a Arc<PackageDetails>>,
+) -> Result<Vec<String>> {
+    let targets = deps
+        .into_iter()
+        .map(|details| {
+            Ok(format!(
+                "//internal/packages/{}/{}/{}:{}",
+                prefix, details.repo_name, details.package_name, details.version
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(targets.into_iter().sorted().dedup().collect())
+}
+
 impl EBuildEntry {
-    pub fn try_new(target_prefix: &str, package: &Package) -> Result<Self> {
+    pub fn try_new(target: &PackageType, package: &Package) -> Result<Self> {
         let ebuild_name = package
             .details
             .ebuild_path
@@ -111,24 +219,90 @@ impl EBuildEntry {
             .map(DistFileEntry::try_new)
             .collect::<Result<_>>()?;
 
-        let format_dependencies =
-            |prefix: &str, deps: &[Arc<PackageDetails>]| -> Result<Vec<String>> {
-                let targets = deps
+        let (host_build_deps, provided_host_build_deps) = match &target {
+            // When building host packages we need to ensure DEPEND packages
+            // are present on the host.
+            PackageType::Host(host) => {
+                let (host_build_deps, provided_host_build_deps) = partition_provided(
+                    package
+                        .dependencies
+                        .build_host_deps
+                        .iter()
+                        .chain(package.dependencies.build_deps.iter()),
+                    host.sdk_provided_packages,
+                );
+
+                let host_build_deps =
+                    format_dependencies(host.prefix, host_build_deps.into_iter())?;
+
+                (host_build_deps, provided_host_build_deps)
+            }
+            PackageType::CrossRoot { host, .. } => {
+                // Stage 1 packages don't have a host since we don't know
+                // what's contained in the stage1 SDK.
+                if let Some(host) = host {
+                    let (host_build_deps, provided_host_build_deps) = partition_provided(
+                        package.dependencies.build_host_deps.iter(),
+                        host.sdk_provided_packages,
+                    );
+
+                    let host_build_deps =
+                        format_dependencies(host.prefix, host_build_deps.into_iter())?;
+
+                    (host_build_deps, provided_host_build_deps)
+                } else {
+                    (Vec::new(), Vec::new())
+                }
+            }
+        };
+
+        // Convert into a purely human readable form. We just use this list to aid in
+        // documentation in case someone is debugging a dependency problem.
+        let provided_host_build_deps = provided_host_build_deps
+            .into_iter()
+            .map(|details| format!("{}-{}", details.package_name, details.version))
+            .collect();
+
+        let target_build_deps = match &target {
+            // Host DEPENDs are handled above with the host_build_deps
+            PackageType::Host { .. } => Vec::new(),
+            PackageType::CrossRoot { target, .. } => {
+                // TODO: Add support for stripping the Board SDK's packages.
+                format_dependencies(target.prefix, package.dependencies.build_deps.iter())?
+            }
+        };
+
+        let (runtime_deps, provided_runtime_deps) = match &target {
+            PackageType::Host(host) => {
+                let (runtime_deps, provided_runtime_deps) = partition_provided(
+                    package.dependencies.runtime_deps.iter(),
+                    host.sdk_provided_packages,
+                );
+
+                let runtime_deps = format_dependencies(host.prefix, runtime_deps.into_iter())?;
+
+                let provided_runtime_deps = provided_runtime_deps
                     .iter()
-                    .map(|details| {
-                        Ok(format!(
-                            "//internal/packages/{}/{}/{}:{}",
-                            prefix, details.repo_name, details.package_name, details.version
-                        ))
-                    })
-                    .collect::<Result<Vec<_>>>()?;
-                Ok(targets.into_iter().sorted().dedup().collect())
-            };
+                    .map(|details| format!("{}-{}", details.package_name, details.version))
+                    .collect();
 
-        let build_deps = format_dependencies(target_prefix, &package.dependencies.build_deps)?;
-        let runtime_deps = format_dependencies(target_prefix, &package.dependencies.runtime_deps)?;
+                (runtime_deps, provided_runtime_deps)
+            }
+            PackageType::CrossRoot { target, .. } => (
+                format_dependencies(target.prefix, package.dependencies.runtime_deps.iter())?,
+                Vec::new(),
+            ),
+        };
 
-        let install_set = format_dependencies(target_prefix, &package.install_set)?;
+        let target_prefix = match &target {
+            PackageType::Host(host) => host.prefix,
+            PackageType::CrossRoot { target, .. } => target.prefix,
+        };
+
+        let install_set = format_dependencies(target_prefix, package.install_set.iter())?;
+
+        // TODO: Add this.
+        let host_install_deps = Vec::new();
 
         let restricts = analyze_restricts(&package.details)?;
         let allow_network_access = restricts.contains(&RestrictAtom::NetworkSandbox);
@@ -144,9 +318,12 @@ impl EBuildEntry {
             .map(|(name, value)| format!("{}{}", if *value { "" } else { "-" }, name))
             .join(" ");
 
+        // The PRIMORDIAL_PACKAGES are only applicable to the board's SDK. The
+        // Host SDK has all the packages already built in.
         let sdk = if PRIMORDIAL_PACKAGES
             .iter()
-            .any(|v| v == &package.details.package_name)
+            .any(|package_name| package_name == &package.details.package_name)
+            && matches!(target, PackageType::CrossRoot { .. })
         {
             format!("//internal/sdk/{}:base", target_prefix)
         } else {
@@ -164,8 +341,12 @@ impl EBuildEntry {
             sources,
             git_trees,
             dists,
-            build_deps,
+            host_build_deps,
+            provided_host_build_deps,
+            host_install_deps,
+            target_build_deps,
             runtime_deps,
+            provided_runtime_deps,
             install_set,
             allow_network_access,
             uses,
@@ -200,8 +381,9 @@ impl EBuildFailure {
 
 #[derive(Serialize)]
 struct BuildTemplateContext<'a> {
-    board: &'a str,
-    overlay_set: &'a str,
+    target_board: Option<&'a str>,
+    host_overlay_set: Option<String>,
+    target_overlay_set: String,
     ebuilds: Vec<EBuildEntry>,
     failures: Vec<EBuildFailure>,
 }
@@ -212,19 +394,37 @@ struct PackagesInDir<'a> {
 }
 
 fn generate_package_build_file(
-    board: &str,
-    overlay_set: &str,
-    target_prefix: &str,
+    target: &PackageType,
     packages_in_dir: &PackagesInDir,
     out: &Path,
 ) -> Result<()> {
+    let target_board = match target {
+        PackageType::Host { .. } => None,
+        PackageType::CrossRoot { target, .. } => Some(target.board),
+    };
+
+    let host_overlay_set = match target {
+        PackageType::Host(host) => Some(host.repo_set.primary().name()),
+        PackageType::CrossRoot { host, .. } => host.as_ref().map(|h| h.repo_set.primary().name()),
+    }
+    .map(|name| format!("//internal/overlays:{name}"));
+
+    let target_overlay_set = format!(
+        "//internal/overlays:{}",
+        match &target {
+            PackageType::Host(host) => host.repo_set.primary().name(),
+            PackageType::CrossRoot { target, .. } => target.repo_set.primary().name(),
+        }
+    );
+
     let context = BuildTemplateContext {
-        board,
-        overlay_set,
+        target_board,
+        host_overlay_set,
+        target_overlay_set,
         ebuilds: packages_in_dir
             .packages
             .iter()
-            .map(|package| EBuildEntry::try_new(target_prefix, package))
+            .map(|package| EBuildEntry::try_new(target, package))
             .collect::<Result<_>>()?,
         failures: packages_in_dir
             .failed_packages
@@ -244,9 +444,7 @@ fn generate_package_build_file(
 }
 
 fn generate_package(
-    board: &str,
-    overlay_set: &str,
-    target_prefix: &str,
+    target: &PackageType,
     translator: &PathTranslator,
     packages_in_dir: &PackagesInDir,
     output_dir: &Path,
@@ -274,13 +472,7 @@ fn generate_package(
         }
     }
 
-    generate_package_build_file(
-        board,
-        overlay_set,
-        target_prefix,
-        packages_in_dir,
-        &output_dir.join("BUILD.bazel"),
-    )?;
+    generate_package_build_file(target, packages_in_dir, &output_dir.join("BUILD.bazel"))?;
 
     Ok(())
 }
@@ -318,17 +510,16 @@ fn join_by_package_dir<'p>(
 
 #[instrument(skip_all)]
 pub fn generate_internal_packages(
-    board: &str,
-    repo_set: &RepositorySet,
-    target_prefix: &str,
+    target: &PackageType,
     translator: &PathTranslator,
     all_packages: &[Package],
     failures: &[AnalysisError],
     output_dir: &Path,
 ) -> Result<()> {
-    let output_packages_dir = output_dir.join("internal/packages").join(target_prefix);
-
-    let overlay_set = format!("//internal/overlays:{}", repo_set.primary().name());
+    let output_packages_dir = output_dir.join("internal/packages").join(match &target {
+        PackageType::Host(host) => host.prefix,
+        PackageType::CrossRoot { target, .. } => target.prefix,
+    });
 
     // Generate packages in parallel.
     let packages_by_dir = join_by_package_dir(all_packages, failures);
@@ -336,13 +527,6 @@ pub fn generate_internal_packages(
         .into_par_iter()
         .try_for_each(|(relative_package_dir, packages_in_dir)| {
             let output_package_dir = output_packages_dir.join(relative_package_dir);
-            generate_package(
-                board,
-                &overlay_set,
-                target_prefix,
-                translator,
-                &packages_in_dir,
-                &output_package_dir,
-            )
+            generate_package(target, translator, &packages_in_dir, &output_package_dir)
         })
 }

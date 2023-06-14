@@ -14,20 +14,58 @@ string_flag(
     visibility = ["@//bazel:internal"],
 )
 
+{% if ebuild.host_build_deps -%}
 sdk_install_deps(
-    name = "{{ ebuild.version }}_deps",
-    out = "{{ ebuild.basename }}_deps",
+    name = "{{ ebuild.version }}_host_deps",
+    out = "{{ ebuild.basename }}_host_deps",
     base = "{{ ebuild.sdk }}",
-    board = "{{ board }}",
-    overlays = "{{ overlay_set }}",
+    overlays = "{{ host_overlay_set }}",
     target_deps = [
-        {%- for dep in ebuild.build_deps %}
+        {%- if ebuild.provided_host_build_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_host_build_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.host_build_deps %}
         "{{ dep }}",
         {%- endfor %}
     ],
-    progress_message = "Installing {dep_count} dependencies for {{ ebuild.ebuild_name }}",
+    progress_message = "Installing {dep_count} host dependencies for {{ ebuild.ebuild_name }}",
     visibility = ["//visibility:private"],
 )
+{%- else -%}
+alias(
+    name = "{{ ebuild.version }}_host_deps",
+    actual = "{{ ebuild.sdk }}",
+    visibility = ["//visibility:private"],
+)
+{%- endif %}
+
+{% if ebuild.target_build_deps -%}
+sdk_install_deps(
+    name = "{{ ebuild.version }}_deps",
+    out = "{{ ebuild.basename }}_deps",
+    base = "{{ ebuild.version }}_host_deps",
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
+    overlays = "{{ target_overlay_set }}",
+    target_deps = [
+        {%- for dep in ebuild.target_build_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    progress_message = "Installing {dep_count} build dependencies for {{ ebuild.ebuild_name }}",
+    visibility = ["//visibility:private"],
+)
+{%- else -%}
+alias(
+    name = "{{ ebuild.version }}_deps",
+    actual = "{{ ebuild.version }}_host_deps",
+    visibility = ["//visibility:private"],
+)
+{%- endif %}
 
 ebuild(
     name = "{{ ebuild.version }}",
@@ -53,18 +91,33 @@ ebuild(
         {%- endfor %}
     ],
     {%- endif %}
-    {%- if ebuild.runtime_deps %}
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
     runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
         {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.host_install_deps %}
+    install_deps = [
+        {%- for dep in ebuild.host_install_deps %}
         "{{ dep }}",
         {%- endfor %}
     ],
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
-    board = "{{ board }}",
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
     sdk = ":{{ ebuild.version }}_deps",
-    overlays = "{{ overlay_set }}",
+    overlays = "{{ target_overlay_set }}",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
@@ -97,8 +150,14 @@ ebuild_debug(
         {%- endfor %}
     ],
     {%- endif %}
-    {%- if ebuild.runtime_deps %}
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
     runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
         {%- for dep in ebuild.runtime_deps %}
         "{{ dep }}",
         {%- endfor %}
@@ -106,9 +165,11 @@ ebuild_debug(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
-    board = "{{ board }}",
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
     sdk = ":{{ ebuild.version }}_deps",
-    overlays = "{{ overlay_set }}",
+    overlays = "{{ target_overlay_set }}",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
@@ -116,11 +177,12 @@ ebuild_debug(
     visibility = ["@//bazel:internal"],
 )
 
+{% if target_board -%}
 ebuild_install(
     name = "{{ ebuild.version }}_install",
     ebuild = "{{ ebuild.ebuild_name }}",
     category = "{{ebuild.category}}",
-    board = "{{ board }}",
+    board = "{{ target_board }}",
     packages = [
         {%- for dep in ebuild.install_set %}
         "{{ dep }}",
@@ -128,6 +190,7 @@ ebuild_install(
     ],
     visibility = ["@//bazel:internal"],
 )
+{% endif -%}
 
 ebuild_test(
     name = "{{ ebuild.version }}_test",
@@ -153,8 +216,14 @@ ebuild_test(
         {%- endfor %}
     ],
     {%- endif %}
-    {%- if ebuild.runtime_deps %}
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
     runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
         {%- for dep in ebuild.runtime_deps %}
         "{{ dep }}",
         {%- endfor %}
@@ -162,9 +231,11 @@ ebuild_test(
     {%- endif %}
     # use = "{{ ebuild.uses }}",
     files = glob(["files/**", "*.bashrc"]),
-    board = "{{ board }}",
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
     sdk = ":{{ ebuild.version }}_deps",
-    overlays = "{{ overlay_set }}",
+    overlays = "{{ target_overlay_set }}",
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,

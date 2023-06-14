@@ -40,7 +40,7 @@ use crate::alchemist::TargetData;
 use self::{
     common::{AnalysisError, Package},
     internal::overlays::generate_internal_overlays,
-    internal::packages::generate_internal_packages,
+    internal::packages::{generate_internal_packages, PackageTargetConfig, PackageType},
     internal::{sdk::generate_stage1_sdk, sources::generate_internal_sources},
     public::generate_public_packages,
     repositories::generate_repositories_file,
@@ -264,9 +264,16 @@ pub fn generate_repo_main(
 
     generate_internal_overlays(translator, &[&target.repos], output_dir)?;
     generate_internal_packages(
-        &target.board,
-        &target.repos,
-        "stage1/target/board",
+        &PackageType::CrossRoot {
+            // We don't know what packages are installed in the Stage 1 SDK,
+            // so we can't support BDEPENDs.
+            host: None,
+            target: PackageTargetConfig {
+                board: &target.board,
+                prefix: "stage1/target/board",
+                repo_set: &target.repos,
+            },
+        },
         translator,
         &target_packages,
         &target_failures,
