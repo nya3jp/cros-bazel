@@ -21,7 +21,10 @@ use serde::Serialize;
 use tera::Tera;
 use tracing::instrument;
 
-use crate::{alchemist::TargetData, generate_repo::common::PRIMORDIAL_PACKAGES};
+use crate::{
+    alchemist::TargetData,
+    generate_repo::common::{repository_set_to_target_path, PRIMORDIAL_PACKAGES},
+};
 
 use super::super::common::AUTOGENERATE_NOTICE;
 
@@ -166,7 +169,7 @@ fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<(
             .with_context(|| format!("Invalid prefix: {prefix}"))?
             .to_string_lossy(),
         board: &target.board,
-        overlay_set: &format!("//internal/overlays:{}", target.repos.primary().name()),
+        overlay_set: &repository_set_to_target_path(&target.repos),
         triples: target
             .toolchains
             .toolchains

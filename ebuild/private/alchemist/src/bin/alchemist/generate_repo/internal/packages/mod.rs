@@ -28,7 +28,8 @@ use tera::Tera;
 use tracing::instrument;
 
 use crate::generate_repo::common::{
-    AnalysisError, DistFileEntry, Package, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    package_details_to_target_path, repository_set_to_target_path, AnalysisError, DistFileEntry,
+    Package, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {
@@ -158,13 +159,8 @@ fn format_dependencies<'a>(
 ) -> Result<Vec<String>> {
     let targets = deps
         .into_iter()
-        .map(|details| {
-            Ok(format!(
-                "//internal/packages/{}/{}/{}:{}",
-                prefix, details.repo_name, details.package_name, details.version
-            ))
-        })
-        .collect::<Result<Vec<_>>>()?;
+        .map(|details| package_details_to_target_path(details, prefix))
+        .collect::<Vec<_>>();
     Ok(targets.into_iter().sorted().dedup().collect())
 }
 
@@ -404,18 +400,15 @@ fn generate_package_build_file(
     };
 
     let host_overlay_set = match target {
-        PackageType::Host(host) => Some(host.repo_set.primary().name()),
-        PackageType::CrossRoot { host, .. } => host.as_ref().map(|h| h.repo_set.primary().name()),
+        PackageType::Host(host) => Some(host.repo_set),
+        PackageType::CrossRoot { host, .. } => host.as_ref().map(|h| h.repo_set),
     }
-    .map(|name| format!("//internal/overlays:{name}"));
+    .map(repository_set_to_target_path);
 
-    let target_overlay_set = format!(
-        "//internal/overlays:{}",
-        match &target {
-            PackageType::Host(host) => host.repo_set.primary().name(),
-            PackageType::CrossRoot { target, .. } => target.repo_set.primary().name(),
-        }
-    );
+    let target_overlay_set = repository_set_to_target_path(match &target {
+        PackageType::Host(host) => host.repo_set,
+        PackageType::CrossRoot { target, .. } => target.repo_set,
+    });
 
     let context = BuildTemplateContext {
         target_board,

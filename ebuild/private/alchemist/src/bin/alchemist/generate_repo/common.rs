@@ -10,6 +10,7 @@ use alchemist::{
         source::{PackageDistSource, PackageSources},
     },
     ebuild::PackageDetails,
+    repository::RepositorySet,
 };
 use anyhow::Result;
 use itertools::Itertools;
@@ -40,6 +41,17 @@ fn file_name_to_repository_name(file_name: &str) -> String {
         })
         .join("");
     format!("portage-dist_{}", escaped_file_name)
+}
+
+pub fn repository_set_to_target_path(repo_set: &RepositorySet) -> String {
+    format!("//internal/overlays:{}", repo_set.primary().name())
+}
+
+pub fn package_details_to_target_path(details: &PackageDetails, prefix: &str) -> String {
+    format!(
+        "//internal/packages/{}/{}/{}:{}",
+        prefix, details.repo_name, details.package_name, details.version
+    )
 }
 
 /// Holds rich information about a package.
