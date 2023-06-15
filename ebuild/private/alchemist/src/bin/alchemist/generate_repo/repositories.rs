@@ -149,6 +149,8 @@ mod tests {
             build_deps: vec![],
             runtime_deps: vec![],
             post_deps: vec![],
+            build_host_deps: vec![],
+            install_host_deps: vec![],
         };
 
         let details_prototype = PackageDetails {
