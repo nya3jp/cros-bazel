@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use alchemist::repository::RepositorySet;
 use alchemist::{dependency::package::PackageAtom, ebuild::PackageDetails};
 use std::{
     fs::{create_dir_all, File},
@@ -23,7 +24,11 @@ use tracing::instrument;
 
 use crate::{
     alchemist::TargetData,
-    generate_repo::common::{repository_set_to_target_path, PRIMORDIAL_PACKAGES},
+    generate_repo::common::{
+        package_details_to_package_set_target_path, repository_set_to_target_path,
+        PRIMORDIAL_PACKAGES,
+    },
+    generate_repo::Package,
 };
 
 use super::super::common::AUTOGENERATE_NOTICE;
@@ -277,7 +282,7 @@ pub fn generate_base_sdk(config: &SdkBaseConfig, out: &Path) -> Result<()> {
 
     let context = SdkBaseContext {
         name: config.name,
-        overlay_set: &repository_set_to_bazel_path(config.source_repo_set),
+        overlay_set: &repository_set_to_target_path(config.source_repo_set),
         target: &package_details_to_package_set_target_path(
             &config.bootstrap_package.details,
             config.source_package_prefix,
