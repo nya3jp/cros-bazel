@@ -27,7 +27,7 @@ def _build_sdk_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--output=" + output_log_file.path,
+        "--log=" + output_log_file.path,
         ctx.executable._build_sdk.path,
         "--board=" + ctx.attr.board,
         "--output=" + output_sdk.path,
