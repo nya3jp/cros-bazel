@@ -4,6 +4,7 @@
 
 use alchemist::repository::RepositorySet;
 use alchemist::{dependency::package::PackageAtom, ebuild::PackageDetails};
+use std::ffi::OsStr;
 use std::{
     fs::{create_dir_all, File},
     io::Write,
@@ -50,6 +51,11 @@ lazy_static! {
         tera.add_raw_template(
             "base.BUILD.bazel",
             include_str!("templates/base.BUILD.bazel"),
+        )
+        .unwrap();
+        tera.add_raw_template(
+            "host.BUILD.bazel",
+            include_str!("templates/host.BUILD.bazel"),
         )
         .unwrap();
         tera
@@ -163,14 +169,11 @@ fn get_primordial_packages(resolver: &PackageResolver) -> Result<Vec<Arc<Package
     Ok(packages)
 }
 
-fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<()> {
-    let profile_path = target
-        .repos
-        .primary()
-        .base_dir()
-        .join("profiles")
-        .join(&target.profile);
+fn profile_path(repos: &RepositorySet, profile: &str) -> PathBuf {
+    repos.primary().base_dir().join("profiles").join(profile)
+}
 
+fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<()> {
     let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();
 
     let context = SdkTemplateContext {
@@ -194,7 +197,7 @@ fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<(
             })
             .map(|t| t.name.as_ref())
             .collect(),
-        profile_path,
+        profile_path: profile_path(&target.repos, &target.profile),
         wrappers,
         target_deps: get_primordial_packages(&target.resolver)?
             .iter()
@@ -294,6 +297,58 @@ pub fn generate_base_sdk(config: &SdkBaseConfig, out: &Path) -> Result<()> {
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
     TEMPLATES.render_to(
         "base.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
+
+    Ok(())
+}
+
+pub struct SdkHostConfig<'a> {
+    /// The base SDK to derive this SDK from.
+    pub base: &'a str,
+
+    /// The name of the SDK to generate.
+    ///
+    /// i.e., stage2/host, stage3/host, etc
+    ///
+    /// This is used to generate the path of the SDK.
+    /// i.e., //internal/sdk/<name>
+    pub name: &'a str,
+
+    /// Repository set for the host.
+    pub repo_set: &'a RepositorySet,
+
+    // The profile used to build packages.
+    pub profile: &'a str,
+}
+
+#[derive(Serialize)]
+struct SdkHostContext<'a> {
+    name: &'a OsStr,
+    base: &'a str,
+    overlay_set: &'a str,
+    profile_path: &'a Path,
+}
+
+pub fn generate_host_sdk(config: &SdkHostConfig, out: &Path) -> Result<()> {
+    let out = out.join("internal/sdk").join(config.name);
+
+    create_dir_all(&out)?;
+
+    let context = SdkHostContext {
+        name: Path::new(config.name)
+            .file_name()
+            .context("Cannot compute name")?,
+        base: &format!("//internal/sdk/{}", config.base),
+        overlay_set: &repository_set_to_target_path(config.repo_set),
+        profile_path: &profile_path(&config.repo_set, &config.profile),
+    };
+
+    let mut file = File::create(out.join("BUILD.bazel"))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    TEMPLATES.render_to(
+        "host.BUILD.bazel",
         &tera::Context::from_serialize(context)?,
         file,
     )?;

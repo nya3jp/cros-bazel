@@ -46,7 +46,9 @@ use self::{
         generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
     },
     internal::{
-        sdk::{generate_base_sdk, generate_stage1_sdk, SdkBaseConfig},
+        sdk::{
+            generate_base_sdk, generate_host_sdk, generate_stage1_sdk, SdkBaseConfig, SdkHostConfig,
+        },
         sources::generate_internal_sources,
     },
     public::generate_public_packages,
@@ -380,6 +382,18 @@ pub fn generate_stages(
                 output_dir,
             )?;
         }
+
+        // Generate the stage 2 host SDK. This will be used to build all the
+        // host packages.
+        generate_host_sdk(
+            &SdkHostConfig {
+                base: "stage2",
+                name: "stage2/host",
+                repo_set: &host.repos,
+                profile: &host.profile,
+            },
+            output_dir,
+        )?;
 
         // Generate the host packages that will be built using the Stage 2 SDK.
         let stage2_host = PackageHostConfig {
