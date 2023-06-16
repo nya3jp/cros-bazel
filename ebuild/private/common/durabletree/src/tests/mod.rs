@@ -24,7 +24,7 @@ use crate::{
 
 // Run unit tests in a mount namespace.
 #[used]
-#[link_section = ".ctors"]
+#[link_section = ".init_array"]
 static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
 
 // Tests `DurableTree::try_exists`.

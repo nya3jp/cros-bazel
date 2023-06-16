@@ -5,7 +5,7 @@
 /// Enters a new unprivileged mount/user namespace where the process has
 /// privilege to mount file systems.
 ///
-/// Register this function to the .ctors section if you want your tests to be
+/// Register this function to the .init_array section if you want your tests to be
 /// run in a mount namespace.
 ///
 /// We need this ugly hack because unshare(CLONE_NEWUSER) fails if the current
@@ -18,7 +18,7 @@
 /// use testutil::ctor_enter_mount_namespace;
 ///
 /// #[used]
-/// #[link_section = ".ctors"]
+/// #[link_section = ".init_array"]
 /// static _CTOR: extern "C" fn() = ctor_enter_mount_namespace;
 /// ```
 pub extern "C" fn ctor_enter_mount_namespace() {
@@ -61,7 +61,7 @@ mod tests {
     use super::*;
 
     #[used]
-    #[link_section = ".ctors"]
+    #[link_section = ".init_array"]
     static _CTOR: extern "C" fn() = ctor_enter_mount_namespace;
 
     #[test]
