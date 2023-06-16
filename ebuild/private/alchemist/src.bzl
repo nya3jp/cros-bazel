@@ -31,6 +31,7 @@ ALCHEMIST_SRCS = [
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sdk/templates/pkg-config"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sdk/templates/portage-tool"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sdk/templates/stage1.BUILD.bazel"),
+    Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sdk/templates/target.BUILD.bazel"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sources/mod.rs"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/internal/sources/templates/source.BUILD.bazel"),
     Label("//bazel/ebuild/private/alchemist:src/bin/alchemist/generate_repo/mod.rs"),

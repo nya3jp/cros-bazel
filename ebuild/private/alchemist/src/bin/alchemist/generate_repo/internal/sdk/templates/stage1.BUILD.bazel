@@ -103,6 +103,7 @@ pkg_tar(
         ":wrappers_usr_local_bin",
     ],
     extension = "tar",
+    visibility = ["@//bazel:internal"],
 )
 
 # Needed for the build_image targets

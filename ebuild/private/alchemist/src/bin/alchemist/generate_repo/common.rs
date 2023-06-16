@@ -19,14 +19,68 @@ use version::Version;
 
 pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n";
 
-// Packages that are used to bootstrap the board's SDK
+/// Packages that are used to bootstrap the target's SYSROOT.
+///
+/// These packages are considered implicit built-time dependencies for all
+/// packages built for the target.
+///
+/// TODO: Create a virtual package containing this list instead of hard coding
+/// it into alchemist.
 pub static PRIMORDIAL_PACKAGES: &[&str] = &[
     "sys-kernel/linux-headers",
     "sys-libs/gcc-libs",
+    // We currently have glibc in package.provided for !amd64-host boards.
+    // When cross-compiling we use the toolchain's glibc package and manually
+    // install it into the SYSROOT.
     "sys-libs/glibc",
     "sys-libs/libcxx",
     "sys-libs/llvm-libunwind",
     "virtual/os-headers",
+];
+
+/// The packages we install to create a cross-compiler toolchain layer.
+///
+/// When cross-compiling a sysroot we need to ensure the cross-compiler
+/// toolchain is implicitly provided. Portage will use the target's CHOST
+/// variable to derive the compiler paths.
+///
+/// e.g.,
+///     CHOST=aarch64-cros-linux-gnu
+///     CC="${CHOST}-clang"
+///
+/// This unfortunately means that it's not possible for individual packages to
+/// declare an explicit dependency on the specific cross-compiler tools they
+/// depend on.
+///
+/// i.e., The following is not possible because the CHOST variable is profile
+/// dependent.
+///     BDEPEND="cross-${CHOST}/go"
+///
+/// This means we need to include `go` and `gcc` as implicit dependencies for
+/// ALL target packages even though only a subset of packages actually require
+/// these host tools.
+///
+/// Questions:
+/// * Why is LLVM not listed here? The sys-devel/llvm ebuild generates compilers
+///   for all the different architectures we support.
+/// * Why is the compiler-rt library not listed as a PRIMORDIAL_PACKAGES list
+///   instead? The compiler-rt is a host package that provides helper objects
+///   for the `llvm` cross-compilers. We don't want it installed into the
+///   target's sysroot.
+///
+/// Packages that don't have a category specified will default to
+/// `cross-$CHOST`.
+pub static TOOLCHAIN_PACKAGE_NAMES: &[&str] = &[
+    "binutils",
+    // Only used by the packages that call `cros_use_gcc`.
+    "gcc",
+    "go",
+    // compiler-rt is only required for non-x86 toolchains. It's handled
+    // as a special case in the generator code.
+    "compiler-rt",
+    // The crossdev package provides /usr/share/config.site which includes
+    // a bunch of autoconf overrides that are used when cross compiling.
+    "sys-devel/crossdev",
 ];
 
 fn file_name_to_repository_name(file_name: &str) -> String {

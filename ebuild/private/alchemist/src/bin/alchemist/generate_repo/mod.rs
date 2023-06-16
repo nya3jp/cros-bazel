@@ -32,7 +32,7 @@ use alchemist::{
     repository::RepositorySet,
     resolver::PackageResolver,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use itertools::{Either, Itertools};
 use rayon::prelude::*;
 use tracing::instrument;
@@ -48,7 +48,8 @@ use self::{
     },
     internal::{
         sdk::{
-            generate_base_sdk, generate_host_sdk, generate_stage1_sdk, SdkBaseConfig, SdkHostConfig,
+            generate_base_sdk, generate_host_sdk, generate_stage1_sdk, generate_target_sdk,
+            SdkBaseConfig, SdkHostConfig, SdkTargetConfig,
         },
         sources::generate_internal_sources,
     },
@@ -444,6 +445,27 @@ pub fn generate_stages(
 
         if let Some(target) = target {
             let (target_packages, target_failures) = load_packages(Some(host), target, src_dir)?;
+
+            // Generate the stage 2 target board SDK. This will be used to build
+            // all the target's packages.
+            generate_target_sdk(
+                &SdkTargetConfig {
+                    base: "stage2",
+                    host_prefix: "stage2/host",
+                    host_resolver: &host.resolver,
+                    name: "stage2/target/board",
+                    board: &target.board,
+                    target_repo_set: &target.repos,
+                    target_resolver: &target.resolver,
+                    target_primary_toolchain: Some(
+                        target
+                            .toolchains
+                            .primary()
+                            .context("Target is missing primary toolchain")?,
+                    ),
+                },
+                output_dir,
+            )?;
 
             // Generate the target packages that will be cross-root /
             // cross-compiled using the Stage 2 SDK.

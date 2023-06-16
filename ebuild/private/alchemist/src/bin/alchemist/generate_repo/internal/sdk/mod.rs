@@ -2,10 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use alchemist::repository::RepositorySet;
-use alchemist::{dependency::package::PackageAtom, ebuild::PackageDetails};
-use std::ffi::OsStr;
+use alchemist::{
+    dependency::package::PackageAtom, ebuild::PackageDetails, repository::RepositorySet,
+    toolchain::Toolchain,
+};
+use itertools::Itertools;
 use std::{
+    ffi::OsStr,
     fs::{create_dir_all, File},
     io::Write,
     path::{Path, PathBuf},
@@ -26,10 +29,9 @@ use tracing::instrument;
 use crate::{
     alchemist::TargetData,
     generate_repo::common::{
-        package_details_to_package_set_target_path, repository_set_to_target_path,
-        PRIMORDIAL_PACKAGES,
+        package_details_to_package_set_target_path, package_details_to_target_path,
+        repository_set_to_target_path, Package, PRIMORDIAL_PACKAGES, TOOLCHAIN_PACKAGE_NAMES,
     },
-    generate_repo::Package,
 };
 
 use super::super::common::AUTOGENERATE_NOTICE;
@@ -58,6 +60,12 @@ lazy_static! {
             include_str!("templates/host.BUILD.bazel"),
         )
         .unwrap();
+        tera.add_raw_template(
+            "target.BUILD.bazel",
+            include_str!("templates/target.BUILD.bazel"),
+        )
+        .unwrap();
+
         tera
     };
 }
@@ -170,6 +178,53 @@ fn get_primordial_packages(resolver: &PackageResolver) -> Result<Vec<Arc<Package
     }
 
     Ok(packages)
+}
+
+fn get_cross_glibc(
+    toolchain: &Toolchain,
+    resolver: &PackageResolver,
+) -> Result<Arc<PackageDetails>> {
+    let package_name = format!("cross-{}/glibc", toolchain.name);
+
+    let atom = PackageAtom::from_str(&package_name)?;
+
+    resolver
+        .find_best_package(&atom)?
+        .with_context(|| format!("Failed to find {}", package_name))
+}
+
+fn get_toolchain_packages(
+    primary_toolchain: &Toolchain,
+    resolver: &PackageResolver,
+) -> Result<Vec<Arc<PackageDetails>>> {
+    TOOLCHAIN_PACKAGE_NAMES
+        .iter()
+        .filter(|package_name| {
+            if **package_name != "compiler-rt" {
+                return true;
+            }
+
+            // We only want to emit the compiler-rt package for non-x86
+            // platforms since sys-devel/llvm provides the compiler-rt for
+            // x86 platforms.
+            !primary_toolchain.name.starts_with("x86_64-")
+                && !primary_toolchain.name.starts_with("i686-")
+        })
+        .map(|package_name| {
+            let atom = if package_name.contains('/') {
+                PackageAtom::from_str(package_name)?
+            } else {
+                PackageAtom::from_str(&format!(
+                    "cross-{}/{}",
+                    primary_toolchain.name, package_name
+                ))?
+            };
+
+            resolver
+                .find_best_package(&atom)?
+                .with_context(|| format!("Failed to find {}", package_name))
+        })
+        .collect::<Result<_>>()
 }
 
 fn profile_path(repos: &RepositorySet, profile: &str) -> PathBuf {
@@ -353,6 +408,106 @@ pub fn generate_host_sdk(config: &SdkHostConfig, out: &Path) -> Result<()> {
     file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
     TEMPLATES.render_to(
         "host.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
+
+    Ok(())
+}
+
+pub struct SdkTargetConfig<'a> {
+    /// The base SDK to derive this SDK from.
+    pub base: &'a str,
+
+    /// The name of the SDK to generate.
+    ///
+    /// i.e., stage2/target/board, stage3/target/board, etc
+    ///
+    /// This is used to generate the path of the SDK.
+    /// i.e., //internal/sdk/<name>
+    pub name: &'a str,
+
+    /// The package prefix for host packages.
+    ///
+    /// i.e., stage2/host
+    pub host_prefix: &'a str,
+
+    /// The host resolver used to lookup toolchain packages.
+    pub host_resolver: &'a PackageResolver,
+
+    /// The name of the target board.
+    pub board: &'a str,
+
+    /// Repository set for the target.
+    pub target_repo_set: &'a RepositorySet,
+
+    /// Target resolver for looking up primordial packages.
+    pub target_resolver: &'a PackageResolver,
+
+    /// Target toolchain that will be used to generate the cross-compiler
+    /// layer. If None, then no cross-compiler tools will be included.
+    pub target_primary_toolchain: Option<&'a Toolchain>,
+}
+
+#[derive(Serialize, Debug)]
+struct SdkTargetContext<'a> {
+    name: &'a str,
+    base: &'a str,
+    board: &'a str,
+    target_overlay_set: &'a str,
+    primordial_deps: Vec<String>,
+    cross_compiler: Option<SdkTargetCrossCompileContext<'a>>,
+}
+
+#[derive(Serialize, Debug)]
+struct SdkTargetCrossCompileContext<'a> {
+    primary_triple: &'a str,
+    glibc_target: String,
+    toolchain_deps: Vec<String>,
+}
+
+pub fn generate_target_sdk(config: &SdkTargetConfig, out: &Path) -> Result<()> {
+    let out = out.join("internal/sdk").join(config.name);
+
+    create_dir_all(&out)?;
+
+    let context = SdkTargetContext {
+        name: &Path::new(config.name)
+            .file_name()
+            .context("Cannot compute name")?
+            .to_string_lossy(),
+        base: &format!("//internal/sdk/{}", config.base),
+        board: config.board,
+        target_overlay_set: &repository_set_to_target_path(config.target_repo_set),
+        primordial_deps: get_primordial_packages(config.target_resolver)?
+            .iter()
+            .map(|p| package_details_to_target_path(p, config.name))
+            .sorted()
+            .collect(),
+        cross_compiler: match config.target_primary_toolchain {
+            Some(target_primary_toolchain) => Some(SdkTargetCrossCompileContext {
+                primary_triple: &target_primary_toolchain.name,
+                glibc_target: package_details_to_target_path(
+                    &*get_cross_glibc(target_primary_toolchain, config.host_resolver)?,
+                    config.host_prefix,
+                ),
+                toolchain_deps: get_toolchain_packages(
+                    target_primary_toolchain,
+                    config.host_resolver,
+                )?
+                .iter()
+                .map(|p| package_details_to_target_path(p, config.host_prefix))
+                .sorted()
+                .collect(),
+            }),
+            None => None,
+        },
+    };
+
+    let mut file = File::create(out.join("BUILD.bazel"))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    TEMPLATES.render_to(
+        "target.BUILD.bazel",
         &tera::Context::from_serialize(context)?,
         file,
     )?;
