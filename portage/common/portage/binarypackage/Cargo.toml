@@ -10,6 +10,7 @@ cliutil = { path = "../../cliutil" }
 
 anyhow.workspace = true
 bytes.workspace = true
+runfiles.workspace = true
 
 [dev-dependencies]
-runfiles.workspace = true
+fileutil = { path = "../../fileutil" }

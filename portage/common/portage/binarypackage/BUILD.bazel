@@ -9,12 +9,16 @@ rust_library(
     name = "binarypackage",
     srcs = glob(["src/*.rs"]),
     crate_name = "binarypackage",
+    data = [
+        "//bazel/portage/repo_defs/zstd",
+    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/portage/common/cliutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bytes",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
@@ -25,6 +29,6 @@ rust_test(
     data = glob(["testdata/*"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
-        "@rules_rust//tools/runfiles",
+        "//bazel/portage/common/fileutil",
     ],
 )

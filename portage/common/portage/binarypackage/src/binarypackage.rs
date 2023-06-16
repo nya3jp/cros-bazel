@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use bytes::ByteOrder;
+use runfiles::Runfiles;
 use std::{
     collections::HashMap,
     fs::File,
@@ -11,6 +12,7 @@ use std::{
     io::{Read, Seek},
     os::unix::fs::MetadataExt,
     path::Path,
+    process::{Command, Stdio},
 };
 
 /// Works with Portage binary package files (.tbz2).
@@ -81,6 +83,32 @@ impl BinaryPackage {
         self.file.rewind()?;
         Ok((&mut self.file).take(self.xpak_start))
     }
+
+    /// Extracts the contents of the archive to the specified directory.
+    pub fn extract_image(&mut self, output_dir: &Path) -> Result<()> {
+        let runfiles = Runfiles::create()?;
+        let zstd_path = runfiles.rlocation("zstd/zstd");
+
+        let mut tarball = self.new_tarball_reader()?;
+
+        let mut child = Command::new("/usr/bin/tar")
+            .arg("-x")
+            .arg("-I")
+            .arg(&zstd_path)
+            .arg("-C")
+            .arg(output_dir)
+            .stdin(Stdio::piped())
+            .spawn()?;
+
+        let mut stdin = child.stdin.take().expect("stdin must be piped");
+        std::io::copy(&mut tarball, &mut stdin)?;
+        drop(stdin);
+
+        let status = child.wait()?;
+        ensure!(status.success(), "tar failed: {:?}", status);
+
+        Ok(())
+    }
 }
 
 fn read_u32(f: &mut File, offset: u64) -> Result<u32> {
@@ -143,6 +171,8 @@ fn parse_xpak(file: &mut File, xpak_start: u64, size: u64) -> Result<HashMap<Str
 
 #[cfg(test)]
 mod tests {
+    use fileutil::SafeTempDir;
+
     use super::*;
 
     const BINARY_PKG_RUNFILE: &str =
@@ -155,8 +185,8 @@ mod tests {
         "cros/bazel/portage/common/portage/binarypackage/testdata/nano.tar.bz2";
 
     fn binary_package() -> Result<BinaryPackage> {
-        let r = runfiles::Runfiles::create()?;
-        BinaryPackage::open(&r.rlocation(BINARY_PKG_RUNFILE))
+        let runfiles = Runfiles::create()?;
+        BinaryPackage::open(&runfiles.rlocation(BINARY_PKG_RUNFILE))
     }
 
     #[test]
@@ -189,18 +219,34 @@ mod tests {
 
     #[test]
     fn valid_tarball() -> Result<()> {
-        let r = runfiles::Runfiles::create()?;
+        let runfiles = Runfiles::create()?;
         let mut bp = binary_package()?;
 
         let mut got: Vec<u8> = Vec::new();
         bp.new_tarball_reader()?.read_to_end(&mut got)?;
 
         let mut want: Vec<u8> = Vec::new();
-        File::open(r.rlocation(TARBALL_RUNFILE))?.read_to_end(&mut want)?;
+        File::open(runfiles.rlocation(TARBALL_RUNFILE))?.read_to_end(&mut want)?;
 
         assert_eq!(got.len(), want.len());
         // Don't use assert_eq, since the files are massive and it'd print out bytes to stderr.
         assert!(got == want);
+
+        Ok(())
+    }
+
+    #[test]
+    fn extract_image() -> Result<()> {
+        let mut bp = binary_package()?;
+
+        let temp_dir = SafeTempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        bp.extract_image(temp_dir)?;
+
+        // Spot-check a file.
+        let nano = temp_dir.join("bin/nano");
+        assert!(nano.try_exists()?);
 
         Ok(())
     }
