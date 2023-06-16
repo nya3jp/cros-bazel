@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
-load("//bazel/cros_pkg:defs.bzl", "cros_pkg", "cros_pkg_filegroup", "pkg", "strip_prefix")
+load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup", "pkg", "strip_prefix")
 
 pkg_files(
     name = "pkg_file",
@@ -35,7 +35,7 @@ pkg_mklink(
 )
 
 cros_pkg_filegroup(
-    name = "filegroup",
+    name = "example",
     srcs = [
         pkg.doc(
             srcs = glob(["testdata/docs/*.md"]),
@@ -63,15 +63,10 @@ cros_pkg_filegroup(
     pkg_symlinks = [":pkg_symlink"],
 )
 
-cros_pkg(
-    name = "packaging",
-    srcs = [":filegroup"],
-)
-
 py_test(
-    name = "packaging_test",
+    name = "example_test",
     size = "small",
-    srcs = ["packaging_test.py"],
+    srcs = ["example_test.py"],
     data = [":example_tar"],
     deps = ["@rules_python//python/runfiles"],
 )
