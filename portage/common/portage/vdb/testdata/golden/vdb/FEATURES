@@ -1,0 +1,1 @@
+allow-missing-manifests assume-digests binpkg-docompress binpkg-dostrip binpkg-logs buildpkg clean-logs config-protect-if-modified distlocks fixlafiles force-mirror ipc-sandbox multilib-strict network-sandbox parallel-fetch parallel-install preserve-libs protect-owned sandbox sfperms unmerge-logs unmerge-orphans userfetch userpriv usersandbox usersync xattr

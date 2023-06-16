@@ -796,6 +796,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "md-5"
+version = "0.10.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6365506850d44bff6e2fbcb5176cf63650e48bd45ef2fe2665ae1570e0f4b9ca"
+dependencies = [
+ "digest",
+]
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1808,6 +1817,20 @@ name = "valuable"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
+
+[[package]]
+name = "vdb"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "binarypackage",
+ "hex",
+ "md-5",
+ "runfiles",
+ "tempfile",
+ "testutil",
+ "walkdir",
+]
 
 [[package]]
 name = "version"

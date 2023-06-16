@@ -1,0 +1,4 @@
+dir usr
+dir usr/bin
+sym usr/bin/helloworld.symlink -> helloworld 0
+obj usr/bin/helloworld d9ee44d59390c7097f20a0ec1c449048 0
