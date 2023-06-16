@@ -41,5 +41,6 @@ url.workspace = true
 walkdir.workspace = true
 
 [dev-dependencies]
+testutil = { path = "../common/testutil" }
 proptest.workspace = true
 pretty_assertions.workspace = true

@@ -542,10 +542,8 @@ pub fn generate_internal_sources<'a>(
 
 #[cfg(test)]
 mod tests {
-    use std::process::Command;
-
-    use anyhow::bail;
     use tempfile::tempdir;
+    use testutil::compare_with_golden_data;
 
     use super::*;
 
@@ -584,15 +582,6 @@ mod tests {
         )));
     }
 
-    /// Runs a command and returns an error if it doesn't exit with code 0.
-    fn run_ok(command: &mut Command) -> Result<()> {
-        let status = command.status()?;
-        if status.code() != Some(0) {
-            bail!("{}", status.to_string());
-        }
-        Ok(())
-    }
-
     const TESTDATA_DIR: &str = concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/src/bin/alchemist/generate_repo/internal/sources/testdata"
@@ -610,10 +599,9 @@ mod tests {
     ///
     /// You can regenerate golden directories by running the following command:
     ///
-    /// `ALCHEMIST_REGENERATE_GOLDEN=1 cargo test`
+    /// `ALCHEMY_REGENERATE_GOLDEN=1 cargo test`
     #[test]
     fn test_generate_internal_sources_with_golden_data() -> Result<()> {
-        let regenerate = std::env::var("ALCHEMIST_REGENERATE_GOLDEN").unwrap_or_default() == "1";
         let testdata_dir = Path::new(TESTDATA_DIR);
 
         for entry in testdata_dir.read_dir()? {
@@ -639,21 +627,7 @@ mod tests {
             generate_internal_sources(&local_sources, &case_source_dir, output_dir)?;
 
             let inner_output_dir = output_dir.join("internal/sources");
-            if regenerate {
-                run_ok(
-                    Command::new("rsync")
-                        .args(["--recursive", "--copy-links", "--delete", "--"])
-                        .arg(inner_output_dir.join("")) // need a trailing slash
-                        .arg(&case_golden_dir),
-                )?;
-            } else {
-                run_ok(
-                    Command::new("diff")
-                        .args(["-Naru", "--"])
-                        .arg(&inner_output_dir)
-                        .arg(&case_golden_dir),
-                )?;
-            }
+            compare_with_golden_data(&inner_output_dir, &case_golden_dir)?;
         }
         Ok(())
     }

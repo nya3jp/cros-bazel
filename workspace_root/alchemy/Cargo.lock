@@ -72,6 +72,7 @@ dependencies = [
  "strum_macros",
  "tempfile",
  "tera",
+ "testutil",
  "thiserror",
  "tracing",
  "tracing-chrome",
@@ -1541,6 +1542,9 @@ dependencies = [
  "anyhow",
  "libc",
  "nix",
+ "once_cell",
+ "runfiles",
+ "tempfile",
 ]
 
 [[package]]
