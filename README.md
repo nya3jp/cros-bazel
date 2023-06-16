@@ -1,11 +1,12 @@
 # ChromeOS Bazelification
 
-This is an experiment to build ChromeOS with Bazel.
+This repository provides the implementation to build ChromeOS with Bazel.
 
 ## Checking out
 
-For the prototyping phase, we're working on building a snapshot of ChromiumOS.
-Use `repo` to check out a snapshotted ChromiumOS tree + Bazel files.
+Building ChromeOS with Bazel is currently possible only on a special branch for
+Bazel development. Use the following `repo` command to check out the branch with
+a few additional repositories.
 
 ```sh
 $ mkdir ~/chromiumos
@@ -15,83 +16,78 @@ $ repo sync -c -j 4
 $ cd src
 ```
 
-*** note
-We're still in the process of moving our development from the Google-internal
-experimental repository to the public ChromiumOS repository. Meanwhile you need
-the following hack to make the build pass.
+After checking out, you have to run the following command to create a few
+necessary symlinks. This is needed only on the first time.
 
 ```sh
 $ bazel/link_files.py
 ```
-***
 
 Unless otherwise specified, examples in this doc assume that your current
 directory is `~/chromiumos/src`.
 
-## Installing host dependencies
+## Installing Bazel/Bazelisk
 
-You need to use a certain version of Bazel to build ChromeOS. The easiest way
-is to install and use Bazelisk that automatically downloads an appropriate
-version of Bazel:
+You need to use a certain version of Bazel for the build to succeed. The
+current supported Bazel version is denoted in `~/chromiumos/src/.bazelversion`.
+The easiest way to use Bazel of the correct version is to use Bazelisk, which
+automatically downloads a Bazel binary according to `.bazelversion`.
+
+To install Bazelisk, make sure you have Go toolchain installed, and run the
+following command:
 
 ```sh
-GOBIN=$HOME/go/bin go install github.com/bazelbuild/bazelisk@latest
+$ GOBIN=$HOME/go/bin go install github.com/bazelbuild/bazelisk@latest
 ```
 
-You'll also need to get Bazelisk onto your PATH, to be executed before any Bazel
-that's already on your PATH, and we'd like to invoke Bazelisk whenever we run
-`bazel`. Create a symlink to bazelisk in a directory that'll be on your PATH
-before any other bazels, and name the link `bazel`. Example:
+This command installs bazelisk at `~/go/bin/bazelisk`. You'll also need to get
+Bazelisk onto your `PATH`, to be executed before any Bazel that's already on
+your `PATH`, and we'd like to invoke Bazelisk whenever we run `bazel`. Create a
+symlink to bazelisk in a directory that'll be on your `PATH` before any other
+bazels, and name the link `bazel`. Example:
 
 ```sh
-ln -s ~/go/bin/bazelisk ~/bin/bazel
+$ ln -s ~/go/bin/bazelisk ~/bin/bazel
 ```
 
 ## Building packages
 
-To build sys-apps/attr:
+Now you're ready to start building. To build a single Portage package, e.g.
+sys-apps/attr:
 
 ```sh
-$ BOARD=arm64-generic bazel build @portage//sys-apps/attr
+$ BOARD=amd64-generic bazel build @portage//sys-apps/attr
 ```
 
-To build all target packages:
+To build all packages included in the ChromeOS base image:
 
 ```sh
-$ BOARD=arm64-generic bazel build --keep_going //:all_target_packages
+$ BOARD=amd64-generic bazel build @portage//virtual/target-os:package_set
 ```
-
-This is a short-cut to build `@portage//virtual/target-os:package_set`.
 
 ## Building images
 
 We have the following targets to build images:
 
-- `//images:chromiumos_minimal_image`: Minimal image that contains
+- `//bazel/images:chromiumos_minimal_image`: Minimal image that contains
   `sys-apps/baselayout` and `sys-kernel/chromeos-kernel` only.
-- `//images:chromiumos_base_image`: Base image.
-- `//images:chromiumos_dev_image`: Dev image.
-- `//images:chromiumos_test_image`: Test image.
+- `//bazel/images:chromiumos_base_image`: Base image.
+- `//bazel/images:chromiumos_dev_image`: Dev image.
+- `//bazel/images:chromiumos_test_image`: Test image.
 
 *** note
 For historical reasons, the output file name of the dev image is
 chromiumos_image.bin, not chromiumos_dev_image.bin.
 ***
 
-As of 2023-04-25, we primarily test our builds for amd64-generic. We also have
-known build issues in some packages:
+As of June 2023, we primarily test our builds for amd64-generic and
+arm64-generic. Please file bugs if images don't build for these two boards.
+Other boards may or may not work (yet).
 
-- `chromeos-base/chromeos-chrome`: Takes too long time (multiple hours) to
-  build. Also randomly fails to build ([b/273830995](http://b/273830995)).
-
-You can inject prebuilt binary packages to bypass building those packages to
-build a base image. You can pass `--config=prebuilts/amd64-generic` to do this
-easily for amd64-generic.
-
-```sh
-$ BOARD=amd64-generic bazel build --config=prebuilts/amd64-generic //images:chromiumos_base_image
-```
-
+Building a ChromeOS image takes several hours. Most packages build in a few
+minutes, but there are several known heavy packages, such as
+`chromeos-base/chromeos-chrome` that takes 2-3 hours. You can inject prebuilt
+binary packages to bypass building those packages.
 See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
 for more details.
 
@@ -100,7 +96,7 @@ to run a VM locally. Make sure to copy an image out from `bazel-bin` as it's not
 writable by default.
 
 ```sh
-$ cp bazel-bin/images/chromiumos_base_image.bin /tmp/
+$ cp bazel-bin/bazel/images/chromiumos_base_image.bin /tmp/
 $ chmod +w /tmp/chromiumos_base_image.bin
 $ chromite/bin/cros_vm --start --board=amd64-generic --image-path /tmp/chromiumos_base_image.bin
 ```
