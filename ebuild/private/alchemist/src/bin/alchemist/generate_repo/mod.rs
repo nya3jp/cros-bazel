@@ -6,7 +6,6 @@ pub(self) mod common;
 pub(self) mod deps;
 pub mod internal;
 pub(self) mod public;
-pub(self) mod repositories;
 pub(self) mod settings;
 
 use std::{
@@ -54,7 +53,6 @@ use self::{
         sources::generate_internal_sources,
     },
     public::generate_public_packages,
-    repositories::generate_repositories_file,
     settings::generate_settings_bzl,
 };
 
@@ -554,7 +552,6 @@ pub fn generate_repo_main(
         target, translator, src_dir, output_dir,
     )?);
 
-    generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
     generate_deps_file(&all_packages, &deps_file)?;
 
     File::create(output_dir.join("BUILD.bazel"))?
