@@ -26,7 +26,20 @@ pkg_tar(
 pkg_tar(
     name = "meson_test_disable_hack",
     srcs = [
-        "//bazel/sdk/mnt/host/source/src/platform2/common-mk",
+        "//bazel/sdk/mnt/host/source/src/platform2/common-mk:fake_meson_test",
+    ],
+    extension = "tar",
+    visibility = ["//bazel:internal"],
+)
+
+# TODO(b/272275535): Delete all this once platform2_test.py is working
+# This is not included in the extra_tarball because the `sdk` rule will
+# clear out /mnt/host before generating the layer, so we lose this.
+# Instead we inject this as a src file to the ebuild targets.
+pkg_tar(
+    name = "platform2_test_hack",
+    srcs = [
+        "//bazel/sdk/mnt/host/source/src/platform2/common-mk:modified_platform2_test",
     ],
     extension = "tar",
     visibility = ["//bazel:internal"],

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2013 The Chromium OS Authors. All rights reserved.
+# Copyright 2013 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -15,9 +15,11 @@ import ctypes
 import ctypes.util
 import errno
 import os
+from pathlib import Path
 import pwd
 import re
 import signal
+import stat
 import sys
 import tempfile
 
@@ -97,7 +99,8 @@ ENV_PASSTHRU_REGEX_LIST = list(
         r"QEMU_",
         # Used to select profiling output location for gcov.
         r"GCOV_",
-        # Used to select profiling output location for llvm instrumented binaries.
+        # Used to select profiling output location for llvm instrumented
+        # binaries.
         r"^LLVM_PROFILE_FILE$",
         # Used by unit tests to access test binaries.
         r"^OUT$",
@@ -114,14 +117,15 @@ ENV_PASSTHRU_REGEX_LIST = list(
 class Platform2Test(object):
     """Framework for running platform2 tests"""
 
-    _BIND_MOUNT_PATHS = (
-        # HACK: Do not bind-mount /dev and /sys because it doesn't work in the ephemeral chroot.
-        # "dev",
-        # "dev/pts",
-        # "dev/shm",
-        "proc",
-        "mnt/host/source",
+    _BIND_RW_MOUNT_PATHS = (
+        "dev/pts",
+        "dev/shm",
+    )
+    _BIND_RO_MOUNT_PATHS = (
+        # HACK: Do not mount /sys.
+        # TODO(b/277167550): Remove this hack.
         # "sys",
+        "mnt/host/source",
     )
 
     def __init__(
@@ -134,6 +138,7 @@ class Platform2Test(object):
         gtest_filter,
         user_gtest_filter,
         sysroot,
+        bind_mount_dev,
         env_vars,
         test_bin_args,
     ):
@@ -147,6 +152,7 @@ class Platform2Test(object):
         self.board = board
         self.host = host
         self.user = user
+        self.bind_mount_dev = bind_mount_dev
         (self.gtest_filter, self.user_gtest_filter) = self.generateGtestFilter(
             gtest_filter, user_gtest_filter
         )
@@ -177,10 +183,10 @@ class Platform2Test(object):
         """Split a gtest_filter down into positive and negative filters.
 
         Args:
-          gtest_filter: A filter string as normally passed to --gtest_filter.
+            gtest_filter: A filter string as normally passed to --gtest_filter.
 
         Returns:
-          A tuple of format (positive_filters, negative_filters).
+            A tuple of format (positive_filters, negative_filters).
         """
 
         filters = gtest_filter.split("-", 1)
@@ -197,7 +203,7 @@ class Platform2Test(object):
         """Merge internal gtest filters and user-supplied gtest filters.
 
         Returns:
-          A string that can be passed to --gtest_filter.
+            A string that can be passed to --gtest_filter.
         """
 
         gtest_filter = cls.generateGtestSubfilter(filters)
@@ -222,10 +228,10 @@ class Platform2Test(object):
         """Return details about the non-root account we want to use.
 
         Args:
-          user: User to lookup.  If None, try the active user, then 'nobody'.
+            user: User to lookup.  If None, try the active user, then 'nobody'.
 
         Returns:
-          A tuple of (username, uid, gid, home).
+            A tuple of (username, uid, gid, home).
         """
         if user is not None:
             # Assume the account is a UID first.
@@ -328,8 +334,8 @@ class Platform2Test(object):
                     # check that elsewhere ...
                     return True
 
-        # Fast path: see if the user exists already w/out grabbing a global lock.
-        # This should be the most common flow.
+        # Fast path: see if the user exists already w/out grabbing a global
+        # lock. This should be the most common flow.
         if _user_exists():
             return
 
@@ -376,7 +382,148 @@ class Platform2Test(object):
             self.qemu.RegisterBinfmt()
 
     def post_test(self):
-        """Runs post-test teardown, removes mounts/files copied during pre-test."""
+        """Runs post-test teardown.
+
+        Removes mounts/files copied during pre-test.
+        """
+
+    def _remount_ro(self, path: str) -> None:
+        """Helper to remount a path as read-only.
+
+        The kernel doesn't allow specifying ro when creating the bind mount, so
+        add a helper to remount it with the ro flag.
+        """
+        osutils.Mount(
+            None,
+            path,
+            None,
+            osutils.MS_REMOUNT | osutils.MS_BIND | osutils.MS_RDONLY,
+        )
+
+    def SetupDev(self):
+        """Initialize a pseudo /dev directory.
+
+        Unittests shouldn't need access to the real host /dev, especially since it
+        won't be the same as exists on builders.
+        """
+        NODES = {
+            # HACK: Do not create any device nodes.
+            # TODO(b/277167550): Remove this hack.
+            # "full": (1, 7, 0o666),
+            # "null": (1, 3, 0o666),
+            # "tty": (5, 0, 0o666),
+            # "urandom": (1, 9, 0o444),
+            # "zero": (1, 5, 0o666),
+        }
+
+        SYMLINKS = {
+            "ptmx": "pts/ptmx",
+            "fd": "/proc/self/fd",
+            "stdin": "fd/0",
+            "stdout": "fd/1",
+            "stderr": "fd/2",
+        }
+
+        # Create an empty scratch space for /dev.
+        path = os.path.join(self.sysroot, "dev")
+        osutils.SafeMakedirs(path)
+        osutils.Mount(
+            "/dev",
+            path,
+            "tmpfs",
+            osutils.MS_NOSUID | osutils.MS_NOEXEC,
+            "size=10M,mode=0755",
+        )
+
+        # Disable umask while we create paths.
+        with osutils.UmaskContext(0):
+            # Populate the few nodes we care about.
+            for node, (major, minor, perm) in NODES.items():
+                perm |= stat.S_IFCHR
+                os.mknod(
+                    os.path.join(path, node), perm, os.makedev(major, minor)
+                )
+
+            # Setup some symlinks for common paths.
+            for source, target in SYMLINKS.items():
+                os.symlink(target, os.path.join(path, source))
+
+            # Mount subpaths.
+            os.mkdir(os.path.join(path, "shm"), 0o1777)
+
+    def SetupProc(self, tempdir: Path) -> None:
+        """Initialize a reduced /proc directory.
+
+        We want to expose process info, but not host config settings.
+        """
+        # Mount the new proc to a tempdir before we move it to the final place.
+        # This allows us to bind mount paths from the real /proc when we're
+        # using --sysroot=/.
+        osutils.Mount(
+            "/proc",
+            tempdir,
+            None,
+            osutils.MS_BIND,
+        )
+        DISABLE_SUBDIRS = (
+            "acpi",
+            "asound",
+            "bus",
+            "driver",
+            "dynamic_debug",
+            "fs",
+        )
+        empty_dir = os.path.join(self.sysroot, "mnt", "empty")
+        for d in DISABLE_SUBDIRS:
+            d = tempdir / d
+            if d.is_dir():
+                osutils.Mount(
+                    empty_dir, d, None, osutils.MS_BIND | osutils.MS_RDONLY
+                )
+
+        # Setup some sysctl paths.  Have to be careful to only expose stable
+        # entries that are long term stable ABI, and only read-only.
+        sysctl = tempdir / "sys"
+        osutils.Mount(
+            "sysctl",
+            sysctl,
+            "tmpfs",
+            osutils.MS_NOSUID | osutils.MS_NODEV | osutils.MS_NOEXEC,
+            "mode=0755,size=1M",
+        )
+        d = sysctl / "kernel" / "random"
+        osutils.SafeMakedirs(d)
+        osutils.Mount("/proc/sys/kernel/random", d, None, osutils.MS_BIND)
+        self._remount_ro(d)
+        self._remount_ro(sysctl)
+
+        d = os.path.join(self.sysroot, "proc")
+        osutils.SafeMakedirs(d)
+        osutils.Mount(
+            tempdir,
+            d,
+            None,
+            osutils.MS_MOVE,
+        )
+
+    def SetupSys(self) -> None:
+        """Initialize a reduced /sys directory.
+
+        We want to expose generic config, but not host config settings.
+        """
+        DISABLE_SUBDIRS = (
+            "firmware",
+            "hypervisor",
+            "module",
+            "power",
+        )
+        empty_dir = os.path.join(self.sysroot, "mnt/empty")
+        for d in DISABLE_SUBDIRS:
+            d = os.path.join(self.sysroot, "sys", d)
+            if os.path.isdir(d):
+                osutils.Mount(
+                    empty_dir, d, "none", osutils.MS_BIND | osutils.MS_RDONLY
+                )
 
     def run(self):
         """Runs the test in a proper environment (e.g. qemu)."""
@@ -386,10 +533,39 @@ class Platform2Test(object):
         # user if they test by hand.
         self.pre_test()
 
-        for mount in self._BIND_MOUNT_PATHS:
+        # Set up /dev first.
+        bind_mount_paths = []
+        if self.bind_mount_dev:
+            bind_mount_paths += ["dev"]
+        else:
+            self.SetupDev()
+        bind_mount_paths += (
+            self._BIND_RW_MOUNT_PATHS + self._BIND_RO_MOUNT_PATHS
+        )
+
+        # Make sure /mnt/empty is always empty, and remains empty.
+        mnt_empty = os.path.join(self.sysroot, "mnt/empty")
+        osutils.SafeMakedirs(mnt_empty)
+        osutils.Mount(
+            "empty-dir",
+            mnt_empty,
+            "tmpfs",
+            osutils.MS_RDONLY,
+            "mode=0755,size=1K",
+        )
+
+        for mount in bind_mount_paths:
             path = os.path.join(self.sysroot, mount)
             osutils.SafeMakedirs(path)
             osutils.Mount("/" + mount, path, "none", osutils.MS_BIND)
+            if mount in self._BIND_RO_MOUNT_PATHS:
+                self._remount_ro(path)
+
+        with tempfile.TemporaryDirectory() as tempdir_obj:
+            tempdir = Path(tempdir_obj)
+            self.SetupProc(tempdir)
+
+        self.SetupSys()
 
         # Make sure /run/lock is usable.  But not the real lock path since tests
         # shouldn't be touching real state.
@@ -454,7 +630,7 @@ class Platform2Test(object):
             os.setpgid(0, 0)
 
             # Remove sysroot from path environment variables.
-            for var in ("OUT", "SRC", "T"):
+            for var in ("OUT", "SRC", "T", "LLVM_PROFILE_FILE"):
                 if var in os.environ:
                     os.environ[var] = self.removeSysrootPrefix(os.environ[var])
 
@@ -478,8 +654,8 @@ class Platform2Test(object):
             # Some progs want this like bash else they get super confused.
             os.environ["PWD"] = cwd
             os.environ["GTEST_COLOR"] = "yes"
-
             # HACK: Do not call setgid() and setuid() because they don't work in the ephemeral chroot.
+            # TODO(b/277167550): Remove this hack.
             # if self.user != "root":
             #    user, uid, gid, home = self.GetNonRootAccount(self.user)
             #    os.setgid(gid)
@@ -643,6 +819,12 @@ def GetParser():
         default=False,
         help="specify that we're testing for the host",
     )
+    parser.add_argument(
+        "--bind-mount-dev",
+        action="store_true",
+        default=False,
+        help="bind mount /dev instead of creating a pseudo one",
+    )
     parser.add_argument("-u", "--user", help="user to run as (default: $USER)")
     parser.add_argument(
         "--run_as_root",
@@ -709,6 +891,7 @@ def main(argv):
         options.gtest_filter,
         options.user_gtest_filter,
         options.sysroot,
+        options.bind_mount_dev,
         env_vars,
         options.cmdline,
     )

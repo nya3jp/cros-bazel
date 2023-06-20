@@ -323,6 +323,7 @@ fn extract_cros_workon_sources(
 }
 
 fn apply_local_sources_workarounds(
+    config: &ConfigBundle,
     details: &PackageDetails,
     local_sources: &mut Vec<PackageLocalSource>,
 ) -> Result<()> {
@@ -341,23 +342,34 @@ fn apply_local_sources_workarounds(
         local_sources.push(PackageLocalSource::Chrome(version));
     }
 
-    // The platform eclass calls `platform2.py` which requires chromite.
-    // The dlc eclass calls `build_dlc` which lives in chromite.
-    // dev-libs/gobject-introspection calls `platform2_test.py` which lives in
-    // chromite.
-    // TODO: Remove this hack.
-    if details.inherited.contains("platform")
-        || details.inherited.contains("dlc")
-        || details.package_name == "dev-libs/gobject-introspection"
-    {
-        local_sources.push(PackageLocalSource::Chromite)
+    // The meson eclass calls `meson_test.py` in platform2/common-mk.
+    if details.inherited.contains("meson") {
+        // On ARM, we replace meson_test.py with a fake which does nothing because it doesn't work
+        // yet.
+        // TODO(b/272275535): Delete this hack once platform2_test.py works on ARM.
+        let arch = config.env().get("ARCH").unwrap();
+        if arch == "arm64" {
+            local_sources.push(PackageLocalSource::BazelTarget(
+                "@//bazel/sdk:meson_test_disable_hack".to_string(),
+            ));
+        } else {
+            local_sources.push(PackageLocalSource::Src("platform2/common-mk".into()));
+        }
     }
 
+    // The platform eclass calls `platform2.py` which requires chromite.
+    // The dlc eclass calls `build_dlc` which lives in chromite.
+    // The meson eclass calls `meson_test.py` which  calls `platform2_test.py` which requires
+    // chromite.
     // TODO(b/272275535): Delete this once platform2_test.py works
-    if details.inherited.contains("meson") {
+    if details.inherited.contains("platform")
+        || details.inherited.contains("dlc")
+        || details.inherited.contains("meson")
+    {
+        local_sources.push(PackageLocalSource::Chromite);
         local_sources.push(PackageLocalSource::BazelTarget(
-            "@//bazel/sdk:meson_test_disable_hack".to_string(),
-        ))
+            "@//bazel/sdk:platform2_test_hack".to_string(),
+        ));
     }
 
     Ok(())
@@ -565,7 +577,7 @@ pub fn analyze_sources(
     local_sources.sort();
     local_sources.dedup();
 
-    apply_local_sources_workarounds(details, &mut local_sources)?;
+    apply_local_sources_workarounds(config, details, &mut local_sources)?;
 
     Ok(PackageSources {
         local_sources,
