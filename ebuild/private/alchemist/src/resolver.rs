@@ -6,6 +6,7 @@ use anyhow::{bail, Result};
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::sync::Arc;
+use version::Version;
 
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
@@ -138,5 +139,13 @@ impl PackageResolver {
             .provided_packages()
             .iter()
             .filter(|provided| atom.matches(provided))
+    }
+
+    /// Checks if the package is provided.
+    pub fn is_provided(&self, package_name: &str, version: &Version) -> bool {
+        self.config
+            .provided_packages()
+            .iter()
+            .any(|provided| provided.package_name == package_name && &provided.version == version)
     }
 }

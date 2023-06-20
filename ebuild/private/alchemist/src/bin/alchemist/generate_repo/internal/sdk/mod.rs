@@ -163,7 +163,10 @@ fn get_primordial_packages(resolver: &PackageResolver) -> Result<Vec<Arc<Package
         let best = resolver
             .find_best_package_in(&matches)?
             .with_context(|| format!("Failed to find {}", package_name))?;
-        packages.push(best);
+
+        if !resolver.is_provided(&best.package_name, &best.version) {
+            packages.push(best);
+        }
     }
 
     Ok(packages)
