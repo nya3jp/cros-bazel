@@ -1,0 +1,16 @@
+[package]
+name = "sdk_install_glibc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cliutil = { path = "../../common/cliutil" }
+container = { path = "../../common/container" }
+durabletree = { path = "../../common/durabletree" }
+fileutil = { path = "../../common/fileutil" }
+
+anyhow.workspace = true
+clap.workspace = true
+runfiles.workspace = true

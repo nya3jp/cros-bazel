@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
+load("common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load("install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
@@ -290,6 +290,91 @@ sdk_extend = rule(
             doc = """
             Extra files to layer onto the base SDK.
             """,
+        ),
+    },
+)
+
+
+def _sdk_install_glibc_impl(ctx):
+    output_prefix = ctx.attr.out or ctx.attr.name
+    output_root = ctx.actions.declare_directory(output_prefix)
+    output_log = ctx.actions.declare_file(output_prefix + ".log")
+    output_profile = ctx.actions.declare_file(output_prefix + ".profile.json")
+
+    args = ctx.actions.args()
+    args.add_all([
+        "--log=" + output_log.path,
+        "--profile=" + output_profile.path,
+        ctx.executable._sdk_install_glibc,
+        "--output=" + output_root.path,
+        "--board=" + ctx.attr.board,
+    ])
+
+    base_sdk = ctx.attr.base[SDKInfo]
+    layer_inputs = base_sdk.layers
+    args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
+
+    glibc = ctx.attr.glibc[BinaryPackageInfo].file
+    args.add("--glibc", glibc)
+
+    inputs = depset(
+        [ctx.executable._sdk_install_glibc] + layer_inputs + [glibc],
+    )
+
+    outputs = [output_root, output_log, output_profile]
+
+    ctx.actions.run(
+        inputs = inputs,
+        outputs = outputs,
+        executable = ctx.executable._action_wrapper,
+        tools = [ctx.executable._sdk_install_glibc],
+        arguments = [args],
+        execution_requirements = {
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+            # Disable sandbox to avoid creating a symlink forest.
+            # This does not affect hermeticity since sdk_install_glibc runs in a container.
+            "no-sandbox": "",
+        },
+        mnemonic = "SdkInstallGlibc",
+        progress_message = "Installing cross glibc into %{label}",
+    )
+
+    return [
+        DefaultInfo(files = depset(outputs)),
+        SDKInfo(
+            layers = base_sdk.layers + [output_root],
+        ),
+    ]
+
+sdk_install_glibc = rule(
+    implementation = _sdk_install_glibc_impl,
+    attrs = {
+        "out": attr.string(
+            doc = "Output directory name. Defaults to the target name.",
+        ),
+        "base": attr.label(
+            mandatory = True,
+            providers = [SDKInfo],
+        ),
+        "board": attr.string(
+            doc = "The cross-* package is installed into the board's sysroot.",
+            mandatory = True,
+        ),
+        "glibc": attr.label(
+            doc = "The cross-*-cros-linux-gnu/glibc package to install",
+            mandatory = True,
+            providers = [BinaryPackageInfo],
+        ),
+        "_action_wrapper": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
+        ),
+        "_sdk_install_glibc": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/ebuild/private/cmd/sdk_install_glibc"),
         ),
     },
 )

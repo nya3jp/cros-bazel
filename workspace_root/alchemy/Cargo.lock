@@ -1324,6 +1324,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sdk_install_glibc"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "cliutil",
+ "container",
+ "durabletree",
+ "fileutil",
+ "runfiles",
+]
+
+[[package]]
 name = "sdk_update"
 version = "0.1.0"
 dependencies = [
