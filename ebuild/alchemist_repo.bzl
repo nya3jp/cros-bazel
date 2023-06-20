@@ -40,6 +40,8 @@ def _alchemist_repo_repository_impl(ctx):
             "generate-repo",
             "--output-dir",
             out,
+            "--output-repos-json",
+            ctx.path("deps.json"),
         ]
 
         st = ctx.execute(args, quiet = False)

@@ -42,3 +42,4 @@ walkdir.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
+pretty_assertions.workspace = true

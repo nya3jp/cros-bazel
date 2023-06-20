@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 pub(self) mod common;
+pub(self) mod deps;
 pub mod internal;
 pub(self) mod public;
 pub(self) mod repositories;
@@ -41,6 +42,7 @@ use crate::alchemist::TargetData;
 
 use self::{
     common::{AnalysisError, Package},
+    deps::generate_deps_file,
     internal::overlays::generate_internal_overlays,
     internal::packages::{
         generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
@@ -513,6 +515,7 @@ pub fn generate_repo_main(
     translator: &PathTranslator,
     src_dir: &Path,
     output_dir: &Path,
+    deps_file: &Path,
 ) -> Result<()> {
     match remove_dir_all(output_dir) {
         Ok(_) => {}
@@ -552,6 +555,7 @@ pub fn generate_repo_main(
     )?);
 
     generate_repositories_file(&all_packages, &output_dir.join("repositories.bzl"))?;
+    generate_deps_file(&all_packages, &deps_file)?;
 
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;
