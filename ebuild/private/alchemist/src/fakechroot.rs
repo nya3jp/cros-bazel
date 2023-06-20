@@ -275,6 +275,7 @@ fn generate_board_configs(
         // TODO(b/266979761): Remove the need for this list
         FileOps::plainfile("/etc/portage/profile/package.provided", r#"
 sys-devel/gcc-10.2.0-r30
+sys-libs/glibc-2.35-r20
 dev-lang/go-1.20.2-r2
 "#),
     ];

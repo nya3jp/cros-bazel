@@ -155,9 +155,20 @@ sdk_install_deps(
     visibility = ["@//bazel:internal"],
 )
 
+# The legacy setup_bord flow relied on manually copying glibc into the board's
+# SYSROOT instead of compiling glibc for the host. In order to not deviate
+# we need to do the same thing.
+# TODO(b/266979761): Make legacy flow compile glibc as a normal package.
+sdk_install_glibc(
+    name = "glibc",
+    base = ":additional-host-tools",
+    board = "{{ board }}",
+    glibc = "@//bazel/prebuilts/amd64-host/cross-{{ primary_triple }}:glibc",
+)
+
 sdk_extend(
     name = "base",
-    base = ":additional-host-tools",
+    base = ":glibc",
     extra_tarballs = [
         ":board_extra_tarball",
     ],

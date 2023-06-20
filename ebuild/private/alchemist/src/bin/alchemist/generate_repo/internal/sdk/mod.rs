@@ -149,6 +149,7 @@ struct SdkTemplateContext<'a> {
     name: &'a str,
     board: &'a str,
     overlay_set: &'a str,
+    primary_triple: Option<&'a str>,
     triples: Vec<&'a str>,
     profile_path: PathBuf,
     wrappers: Vec<&'a str>,
@@ -186,6 +187,7 @@ fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<(
             .to_string_lossy(),
         board: &target.board,
         overlay_set: &repository_set_to_target_path(&target.repos),
+        primary_triple: target.toolchains.primary().map(|t| t.name.as_str()),
         triples: target
             .toolchains
             .toolchains
