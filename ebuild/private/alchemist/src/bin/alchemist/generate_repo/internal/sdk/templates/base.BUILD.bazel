@@ -30,7 +30,6 @@ sdk_update(
     extra_tarballs = [
         "@//bazel/sdk:extra_tarball",
     ],
-    overlays = "{{ overlay_set }}",
     progress_message = "Patching %{label}",
     visibility = ["@//bazel:internal"],
 )

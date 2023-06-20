@@ -10,7 +10,6 @@ cliutil = { path = "../../common/cliutil" }
 container = { path = "../../common/container" }
 durabletree = { path = "../../common/durabletree" }
 fileutil = { path = "../../common/fileutil" }
-binarypackage = { path = "../../common/portage/binarypackage" }
 
 anyhow.workspace = true
 clap.workspace = true

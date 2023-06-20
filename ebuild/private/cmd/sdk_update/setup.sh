@@ -7,17 +7,12 @@
 exec >&2
 
 export LANG=en_US.UTF-8
-export PORTAGE_USERNAME=root
-export PORTAGE_GRPNAME=root
-export RESTRICT="fetch"
-export FEATURES="digest -sandbox -usersandbox"  # TODO: turn on sandbox
 
 for i in /stage/tarballs/*; do
   tar -xv -f "${i}" -C /
 done
 
 locale-gen --jobs 1
-
 
 for PYTHON_VERSION in python3.6 python3.8
 do
@@ -57,9 +52,3 @@ do
 done
 
 rm -f /usr/src/portage/*
-
-read -ra atoms <<<"${INSTALL_ATOMS_HOST?}"
-if (( ${#atoms[@]} )); then
-  # TODO: emerge is too slow! Find a way to speed up.
-  time emerge --oneshot --usepkgonly --nodeps --jobs=16 "${atoms[@]}"
-fi

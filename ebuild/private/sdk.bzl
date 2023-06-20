@@ -72,13 +72,6 @@ def _sdk_update_impl(ctx):
     output_log = ctx.actions.declare_file(output_prefix + ".log")
     output_profile = ctx.actions.declare_file(output_prefix + ".profile.json")
 
-    host_installs = depset(
-        transitive = [
-            target[BinaryPackageSetInfo].files
-            for target in ctx.attr.host_deps
-        ],
-    )
-
     args = ctx.actions.args()
     args.add_all([
         "--log=" + output_log.path,
@@ -88,24 +81,13 @@ def _sdk_update_impl(ctx):
     ])
 
     base_sdk = ctx.attr.base[SDKInfo]
-    overlays = ctx.attr.overlays[OverlaySetInfo]
-    layer_inputs = base_sdk.layers + overlays.layers
+    layer_inputs = base_sdk.layers
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
 
-    args.add_all(host_installs, format_each = "--install-host=%s")
     args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
-
-    if "{dep_count}" in ctx.attr.progress_message:
-        progress_message = ctx.attr.progress_message.replace(
-            "{dep_count}",
-            str(len(host_installs.to_list())),
-        )
-    else:
-        progress_message = ctx.attr.progress_message
 
     inputs = depset(
         [ctx.executable._sdk_update] + layer_inputs + ctx.files.extra_tarballs,
-        transitive = [host_installs],
     )
 
     outputs = [output_root, output_log, output_profile]
@@ -124,7 +106,7 @@ def _sdk_update_impl(ctx):
             "no-sandbox": "",
         },
         mnemonic = "SdkUpdate",
-        progress_message = progress_message,
+        progress_message = "Building %{label}",
     )
 
     return [
@@ -144,15 +126,8 @@ sdk_update = rule(
             mandatory = True,
             providers = [SDKInfo],
         ),
-        "host_deps": attr.label_list(
-            providers = [BinaryPackageSetInfo],
-        ),
         "extra_tarballs": attr.label_list(
             allow_files = True,
-        ),
-        "overlays": attr.label(
-            providers = [OverlaySetInfo],
-            mandatory = True,
         ),
         "progress_message": attr.string(
             doc = """
