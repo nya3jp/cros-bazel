@@ -38,18 +38,6 @@ load("//rules_cros/toolchains:register_toolchains.bzl", "load_toolchains")
 
 load_toolchains()
 
-load("//bazel/ebuild:alchemist.bzl", "alchemist_repositories")
-
-alchemist_repositories()
-
-load("//bazel/ebuild:portage.bzl", "portage_repositories")
-
-portage_repositories()
-
-load("@portage//:repositories.bzl", "portage_dependencies")
-
-portage_dependencies()
-
 load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
 
 prebuilts_dependencies()
