@@ -79,7 +79,7 @@ fn parse_dependencies(
                 }
 
                 // Remove non-existent packages.
-                match resolver.find_best_package(use_map, &atom) {
+                match resolver.find_best_package_dependency(use_map, &atom) {
                     Ok(result) => {
                         if result.is_none() {
                             return Ok(Dependency::new_constant(
@@ -124,7 +124,7 @@ fn parse_dependencies(
         .map(|atom| {
             Ok(
                 resolver
-                    .find_best_package(use_map, &atom)?
+                    .find_best_package_dependency(use_map, &atom)?
                     .expect("package to exist"), // missing packages were filtered above
             )
         })

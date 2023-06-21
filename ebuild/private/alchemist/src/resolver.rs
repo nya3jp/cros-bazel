@@ -69,7 +69,7 @@ impl PackageResolver {
     /// If Ok(None) is returned that means that no suitable packages were found.
     /// If Err(_) is returned, that means there was an unexpected error looking
     /// for the package.
-    pub fn find_best_package(
+    pub fn find_best_package_dependency(
         &self,
         use_map: &UseMap,
         atom: &PackageDependencyAtom,
