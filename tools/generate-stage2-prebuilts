@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+#
+# Copies the existing binpkgs out of the bazel root and generates a
+# prebuilts.bazelrc that points to those packages. This allows us to avoid
+# having to rebuild all packages when something primordial changes.
+
+set -eu -o pipefail
+
+: "${BOARD?}"
+: "${BINPKG_CACHE:=${HOME}/.cache/binpkgs}"
+
+mkdir -p "${BINPKG_CACHE}"
+
+WORKSPACE_ROOT="$(bazel info workspace)"
+BAZEL_BIN="$(bazel info bazel-bin)"
+PORTAGE_BIN="${BAZEL_BIN}/external/portage"
+
+PREBUILTS="${WORKSPACE_ROOT}/prebuilts.bazelrc"
+
+declare -A DEPS_MAP=(
+    ["prebuilts/stage1"]="@portage//internal/sdk/stage2"
+    ["prebuilts/stage2"]="@portage//internal/packages/stage2/host/chromiumos/virtual/target-chromium-os-sdk-bootstrap:9999_package_set"
+)
+
+echo "# Generated using BOARD='${BOARD}' $*" > "${PREBUILTS}"
+
+for KEY in "${!DEPS_MAP[@]}"
+do
+    DEPS="${DEPS_MAP["${KEY}"]}"
+
+    readarray -t EBUILD_TARGETS < <(
+        bazel query "kind(ebuild, deps(${DEPS}))" || kill "$$"
+    )
+
+    (
+        echo "# ${DEPS}"
+        echo "common:${KEY} \\"
+        for TARGET in "${EBUILD_TARGETS[@]}"; do
+            TARGET="${TARGET#@portage//}"
+            TARGET_DIR="${TARGET%:*}"
+            TARGET_NAME="$(basename "${TARGET_DIR}")"
+            TARGET_VERSION="${TARGET#*:}"
+
+            BINPKG_NAME="${TARGET_NAME}-${TARGET_VERSION}.tbz2"
+            BINPKG_SRC="${PORTAGE_BIN}/${TARGET_DIR}/${BINPKG_NAME}"
+
+            if [[ ! -f "${BINPKG_SRC}" ]]; then
+                continue
+            fi
+
+            BINPKG_DEST_DIR="${BINPKG_CACHE}/${TARGET_DIR}"
+            mkdir -p "${BINPKG_DEST_DIR}"
+            BINPKG_DEST="${BINPKG_DEST_DIR}/${BINPKG_NAME}"
+
+            rsync --progress "${BINPKG_SRC}" "${BINPKG_DEST}" >&2
+
+            echo "--@portage//${TARGET}_prebuilt=${BINPKG_DEST} \\"
+        done
+
+        # Needed so we don't gobble up the next line
+        echo ""
+    ) >> "${PREBUILTS}"
+done
+
+echo "${PREBUILTS} was generated" >&2
+
+if ! grep -q prebuilts.bazelrc "${WORKSPACE_ROOT}/workspace.bazelrc"; then
+    echo "Adding prebuilts.bazelrc to workspace.bazelrc" >&2
+    echo "try-import %workspace%/prebuilts.bazelrc" >>"${WORKSPACE_ROOT}/workspace.bazelrc"
+fi
+
+echo "You can now add any of the following to your bazel command line:" >&2
+for KEY in "${!DEPS_MAP[@]}"
+do
+    echo "  --config=${KEY}" >&2
+done
