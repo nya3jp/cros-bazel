@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::sync::Arc;
@@ -57,6 +57,14 @@ impl PackageResolver {
             })
             .collect::<Result<Vec<_>>>()?;
         Ok(packages)
+    }
+
+    /// Finds the best package matching the specified [`PackageAtom`].
+    pub fn find_best_package(&self, atom: &PackageAtom) -> Result<Option<Arc<PackageDetails>>> {
+        let matches = self
+            .find_packages(atom)
+            .with_context(|| format!("Error looking up {atom}"))?;
+        self.find_best_package_in(&matches)
     }
 
     /// Finds a package best matching the specified [`PackageAtomDependency`].
