@@ -51,6 +51,14 @@ impl PackageResolver {
         let packages = ebuild_paths
             .into_par_iter()
             .map(|ebuild_path| self.loader.load_package(&ebuild_path))
+            .filter_map(|result| match result {
+                Ok(eval) => match eval {
+                    Ok(details) => Some(Ok(details)),
+                    // We ignore packages that had metadata evaluation errors.
+                    Err(_) => None,
+                },
+                Err(e) => Some(Err(e)),
+            })
             .filter(|details| match details {
                 Ok(details) => atom.matches(&details.as_thin_package_ref()),
                 Err(_) => true,
@@ -88,9 +96,13 @@ impl PackageResolver {
             .into_par_iter()
             .map(|ebuild_path| self.loader.load_package(&ebuild_path))
             .collect::<Result<Vec<_>>>()?;
-
         let mut matches = Vec::with_capacity(packages.len());
-        for details in packages {
+        for eval in packages {
+            let details = match eval {
+                Ok(details) => details,
+                // We ignore packages that had metadata evaluation errors.
+                Err(_) => continue,
+            };
             match atom.package_matches(use_map, &details.as_package_ref()) {
                 Ok(result) => {
                     if result {

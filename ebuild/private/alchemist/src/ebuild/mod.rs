@@ -39,6 +39,9 @@ fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
         .map(|(name, value)| (name.to_owned(), value))
         .collect())
 }
+
+type PackageResult = Result<PackageDetails, PackageError>;
+
 /// Holds the error that occurred when processing the ebuild.
 #[derive(Clone, Debug)]
 pub struct PackageError {
@@ -113,7 +116,7 @@ impl PackageLoader {
         }
     }
 
-    pub fn load_package(&self, ebuild_path: &Path) -> Result<PackageDetails> {
+    pub fn load_package(&self, ebuild_path: &Path) -> Result<PackageResult> {
         // Drive the ebuild to read its metadata.
         let metadata = self.evaluator.evaluate_metadata(ebuild_path)?;
 
@@ -122,7 +125,21 @@ impl PackageLoader {
             "{}/{}",
             metadata.path_info.category_name, metadata.path_info.package_short_name,
         );
-        let slot = Slot::<String>::new(metadata.vars.get_scalar("SLOT")?);
+
+        let vars = match &metadata.vars {
+            Ok(vars) => vars,
+            Err(e) => {
+                return Ok(PackageResult::Err(PackageError {
+                    repo_name: metadata.repo_name.clone(),
+                    package_name,
+                    ebuild: ebuild_path.to_owned(),
+                    version: metadata.path_info.version.clone(),
+                    error: e.to_string(),
+                }))
+            }
+        };
+
+        let slot = Slot::<String>::new(vars.get_scalar("SLOT")?);
 
         let package = ThinPackageRef {
             package_name: package_name.as_str(),
@@ -133,18 +150,18 @@ impl PackageLoader {
             },
         };
 
-        let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;
+        let raw_inherited = vars.get_scalar_or_default("INHERITED")?;
         let inherited: HashSet<String> = raw_inherited
             .split_ascii_whitespace()
             .map(|s| s.to_owned())
             .collect();
 
-        let (accepted, stable) = match self.config.is_package_accepted(&metadata.vars, &package)? {
+        let (accepted, stable) = match self.config.is_package_accepted(&vars, &package)? {
             IsPackageAcceptedResult::Unaccepted => {
                 if self.force_accept_9999_ebuilds {
                     let accepted = inherited.contains("cros-workon")
                         && metadata.path_info.version == self.version_9999
-                        && match metadata.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
+                        && match vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
                             Ok(value) => value != "1",
                             Err(_) => false,
                         };
@@ -156,7 +173,7 @@ impl PackageLoader {
             IsPackageAcceptedResult::Accepted(stable) => (true, stable),
         };
 
-        let iuse_map = parse_iuse_map(&metadata.vars)?;
+        let iuse_map = parse_iuse_map(&vars)?;
         let use_map = self.config.compute_use_map(
             &package_name,
             &metadata.path_info.version,
@@ -167,11 +184,11 @@ impl PackageLoader {
 
         let masked = !accepted || self.config.is_package_masked(&package);
 
-        Ok(PackageDetails {
+        Ok(PackageResult::Ok(PackageDetails {
             repo_name: metadata.repo_name.clone(),
             package_name,
             version: metadata.path_info.version.clone(),
-            vars: metadata.vars.clone(),
+            vars: vars.clone(),
             slot,
             use_map,
             accepted,
@@ -179,15 +196,17 @@ impl PackageLoader {
             masked,
             inherited,
             ebuild_path: ebuild_path.to_owned(),
-        })
+        }))
     }
 }
+
+type CachedPackageResult = std::result::Result<Arc<PackageDetails>, Arc<PackageError>>;
 
 /// Wraps PackageLoader to cache results.
 #[derive(Debug)]
 pub struct CachedPackageLoader {
     loader: PackageLoader,
-    cache: Mutex<HashMap<PathBuf, Arc<OnceCell<Arc<PackageDetails>>>>>,
+    cache: Mutex<HashMap<PathBuf, Arc<OnceCell<CachedPackageResult>>>>,
 }
 
 impl CachedPackageLoader {
@@ -198,7 +217,7 @@ impl CachedPackageLoader {
         }
     }
 
-    pub fn load_package(&self, ebuild_path: &Path) -> Result<Arc<PackageDetails>> {
+    pub fn load_package(&self, ebuild_path: &Path) -> Result<CachedPackageResult> {
         let once_cell = {
             let mut cache_guard = self.cache.lock().unwrap();
             cache_guard
@@ -206,8 +225,14 @@ impl CachedPackageLoader {
                 .or_default()
                 .clone()
         };
-        let details =
-            once_cell.get_or_try_init(|| self.loader.load_package(ebuild_path).map(Arc::new))?;
+        let details = once_cell.get_or_try_init(|| -> Result<CachedPackageResult> {
+            match self.loader.load_package(ebuild_path)? {
+                PackageResult::Ok(details) => {
+                    Result::Ok(CachedPackageResult::Ok(Arc::new(details)))
+                }
+                PackageResult::Err(err) => Result::Ok(CachedPackageResult::Err(Arc::new(err))),
+            }
+        })?;
         Ok(details.clone())
     }
 }

@@ -104,7 +104,7 @@ impl EBuildEvaluator {
         // https://projects.gentoo.org/pms/8/pms.html#x1-600007.1
         let path_info = EBuildPathInfo::try_from(ebuild_path)?;
         let env = path_info.to_vars();
-        let vars = run_ebuild(ebuild_path, &env, repo.eclass_dirs(), &self.tools_dir)?;
+        let vars = run_ebuild(ebuild_path, &env, repo.eclass_dirs(), &self.tools_dir);
         Ok(EBuildMetadata {
             repo_name: repo.name().to_string(),
             path_info,
@@ -117,7 +117,7 @@ impl EBuildEvaluator {
 pub struct EBuildMetadata {
     pub repo_name: String,
     pub path_info: EBuildPathInfo,
-    pub vars: BashVars,
+    pub vars: Result<BashVars>,
 }
 
 #[derive(Debug)]

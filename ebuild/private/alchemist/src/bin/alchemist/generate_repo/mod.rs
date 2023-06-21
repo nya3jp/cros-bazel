@@ -60,14 +60,14 @@ use self::{
 fn evaluate_all_packages(
     repos: &RepositorySet,
     loader: &CachedPackageLoader,
-) -> Result<Vec<Arc<PackageDetails>>> {
+) -> Result<(Vec<Arc<PackageDetails>>, Vec<Arc<PackageError>>)> {
     let ebuild_paths = repos.find_all_ebuilds()?;
     let ebuild_count = ebuild_paths.len();
 
     let counter = Arc::new(AtomicUsize::new(0));
 
     // Evaluate packages in parallel.
-    let packages = ebuild_paths
+    let results = ebuild_paths
         .into_par_iter()
         .map(|ebuild_path| {
             let result = loader.load_package(&ebuild_path);
@@ -78,7 +78,10 @@ fn evaluate_all_packages(
         .collect::<Result<Vec<_>>>()?;
     eprintln!();
 
-    Ok(packages)
+    Ok(results.into_iter().partition_map(|eval| match eval {
+        Ok(details) => Either::Left(details),
+        Err(err) => Either::Right(err),
+    }))
 }
 
 /// Similar to [`Package`], but an install set is not resolved yet.
@@ -240,17 +243,25 @@ fn load_packages(
         target.board, target.profile
     );
 
-    let all_details = evaluate_all_packages(&target.repos, &target.loader)?;
+    let (details, metadata_errors) = evaluate_all_packages(&target.repos, &target.loader)?;
 
     eprintln!("Analyzing packages...");
 
-    Ok(analyze_packages(
+    let (packages, analysis_errors) = analyze_packages(
         &target.config,
-        all_details,
+        details,
         src_dir,
         host.map(|x| &x.resolver),
         &target.resolver,
-    ))
+    );
+
+    let errors = metadata_errors
+        .into_iter()
+        .map(|e| (*e).clone())
+        .chain(analysis_errors.into_iter())
+        .collect();
+
+    Ok((packages, errors))
 }
 
 // Searches the `Package`s for the `atom` with the best version.
