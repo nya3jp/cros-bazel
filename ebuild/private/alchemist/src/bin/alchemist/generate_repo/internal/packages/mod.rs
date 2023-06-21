@@ -28,8 +28,8 @@ use tera::Tera;
 use tracing::instrument;
 
 use crate::generate_repo::common::{
-    package_details_to_target_path, repository_set_to_target_path, AnalysisError, DistFileEntry,
-    Package, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    package_details_to_target_path, repository_set_to_target_path, DistFileEntry, Package,
+    PackageError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {
@@ -359,7 +359,7 @@ pub struct EBuildFailure {
 }
 
 impl EBuildFailure {
-    pub fn new(failure: &AnalysisError) -> Self {
+    pub fn new(failure: &PackageError) -> Self {
         let ebuild_name = failure
             .ebuild
             .file_name()
@@ -386,7 +386,7 @@ struct BuildTemplateContext<'a> {
 
 struct PackagesInDir<'a> {
     packages: Vec<&'a Package>,
-    failed_packages: Vec<&'a AnalysisError>,
+    failed_packages: Vec<&'a PackageError>,
 }
 
 fn generate_package_build_file(
@@ -473,7 +473,7 @@ fn generate_package(
 /// Groups ebuilds into `<repo_name>/<category>/<package>` groups.
 fn join_by_package_dir<'p>(
     all_packages: &'p [Package],
-    failures: &'p [AnalysisError],
+    failures: &'p [PackageError],
 ) -> HashMap<PathBuf, PackagesInDir<'p>> {
     let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
 
@@ -506,7 +506,7 @@ pub fn generate_internal_packages(
     target: &PackageType,
     translator: &PathTranslator,
     all_packages: &[Package],
-    failures: &[AnalysisError],
+    failures: &[PackageError],
     output_dir: &Path,
 ) -> Result<()> {
     let output_packages_dir = output_dir.join("internal/packages").join(match &target {

@@ -40,7 +40,7 @@ use tracing::instrument;
 use crate::alchemist::TargetData;
 
 use self::{
-    common::{AnalysisError, Package},
+    common::{Package, PackageError},
     deps::generate_deps_file,
     internal::overlays::generate_internal_overlays,
     internal::packages::{
@@ -131,9 +131,9 @@ fn analyze_packages(
     src_dir: &Path,
     host_resolver: Option<&PackageResolver>,
     target_resolver: &PackageResolver,
-) -> (Vec<Package>, Vec<AnalysisError>) {
+) -> (Vec<Package>, Vec<PackageError>) {
     // Analyze packages in parallel.
-    let (all_partials, failures): (Vec<PackagePartial>, Vec<AnalysisError>) =
+    let (all_partials, failures): (Vec<PackagePartial>, Vec<PackageError>) =
         all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
                 let dependencies = analyze_dependencies(details, host_resolver, target_resolver)?;
@@ -146,7 +146,7 @@ fn analyze_packages(
             })();
             match result {
                 Ok(package) => Either::Left(package),
-                Err(err) => Either::Right(AnalysisError {
+                Err(err) => Either::Right(PackageError {
                     repo_name: details.repo_name.clone(),
                     package_name: details.package_name.clone(),
                     ebuild: details.ebuild_path.clone(),
@@ -234,7 +234,7 @@ fn load_packages(
     host: Option<&TargetData>,
     target: &TargetData,
     src_dir: &Path,
-) -> Result<(Vec<Package>, Vec<AnalysisError>)> {
+) -> Result<(Vec<Package>, Vec<PackageError>)> {
     eprintln!(
         "Loading packages for {}:{}...",
         target.board, target.profile
