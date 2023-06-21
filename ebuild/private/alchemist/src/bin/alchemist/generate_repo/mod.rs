@@ -27,7 +27,7 @@ use alchemist::{
     },
     config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtom, Predicate},
-    ebuild::{CachedPackageLoader, PackageDetails},
+    ebuild::{CachedPackageLoader, PackageDetails, PackageError},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -40,7 +40,7 @@ use tracing::instrument;
 use crate::alchemist::TargetData;
 
 use self::{
-    common::{Package, PackageError},
+    common::Package,
     deps::generate_deps_file,
     internal::overlays::generate_internal_overlays,
     internal::packages::{

@@ -15,7 +15,7 @@ use alchemist::{
     analyze::{restrict::analyze_restricts, source::PackageLocalSource},
     config::ProvidedPackage,
     dependency::restrict::RestrictAtom,
-    ebuild::PackageDetails,
+    ebuild::{PackageDetails, PackageError},
     fakechroot::PathTranslator,
     repository::RepositorySet,
 };
@@ -29,7 +29,7 @@ use tracing::instrument;
 
 use crate::generate_repo::common::{
     package_details_to_target_path, repository_set_to_target_path, DistFileEntry, Package,
-    PackageError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {

@@ -82,15 +82,6 @@ pub struct Package {
     pub install_set: Vec<Arc<PackageDetails>>,
 }
 
-/// Holds the error that occurred when processing the ebuild.
-pub struct PackageError {
-    pub repo_name: String,
-    pub package_name: String,
-    pub ebuild: PathBuf,
-    pub version: Version,
-    pub error: String,
-}
-
 #[derive(Serialize)]
 pub struct DistFileEntry {
     pub repository_name: String,

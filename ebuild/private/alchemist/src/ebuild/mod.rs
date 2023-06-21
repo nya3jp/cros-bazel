@@ -39,6 +39,15 @@ fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
         .map(|(name, value)| (name.to_owned(), value))
         .collect())
 }
+/// Holds the error that occurred when processing the ebuild.
+#[derive(Clone, Debug)]
+pub struct PackageError {
+    pub repo_name: String,
+    pub package_name: String,
+    pub ebuild: PathBuf,
+    pub version: Version,
+    pub error: String,
+}
 
 #[derive(Clone, Debug)]
 pub struct PackageDetails {
