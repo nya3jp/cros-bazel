@@ -559,11 +559,13 @@ ebuild_test = rule(
 )
 
 def _ebuild_failure_impl(ctx):
-    fail("\n--\nError analyzing ebuild!\ntarget: {}\nebuild: {}\n\n{}\n--".format(
+    message = "\n--\nError analyzing ebuild!\ntarget: {}\nebuild: {}\n\n{}\n--".format(
         ctx.label,
         ctx.file.ebuild.path,
         ctx.attr.error,
-    ))
+    )
+
+    fail(message)
 
 ebuild_failure = rule(
     implementation = _ebuild_failure_impl,
