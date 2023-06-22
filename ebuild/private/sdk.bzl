@@ -220,7 +220,7 @@ sdk_install_deps = rule(
             If the message contains `{dep_count}' it will be replaced with the
             total number of dependencies that need to be installed.
             """,
-            default = "Updating SDK",
+            default = "Installing {dep_count} packages into %{label}",
         ),
         "_action_wrapper": attr.label(
             executable = True,
@@ -268,7 +268,6 @@ sdk_extend = rule(
         ),
     },
 )
-
 
 def _sdk_install_glibc_impl(ctx):
     output_prefix = ctx.attr.out or ctx.attr.name

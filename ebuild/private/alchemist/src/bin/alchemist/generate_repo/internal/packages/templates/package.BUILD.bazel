@@ -31,7 +31,6 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    progress_message = "Installing {dep_count} host dependencies for {{ ebuild.ebuild_name }}",
     visibility = ["//visibility:private"],
 )
 {%- else -%}
@@ -56,7 +55,6 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    progress_message = "Installing {dep_count} build dependencies for {{ ebuild.ebuild_name }}",
     visibility = ["//visibility:private"],
 )
 {%- else -%}
