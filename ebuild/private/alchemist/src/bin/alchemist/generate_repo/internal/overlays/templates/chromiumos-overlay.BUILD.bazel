@@ -15,6 +15,7 @@ pkg_files(
     ] + glob([
         "chromeos/**",
         "eclass/*.eclass",
+        "licenses/**",
         "profiles/**",
         # HACK: Include CrOS-specific bashrc files that override profile vars
         # and several other files referenced by them.

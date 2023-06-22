@@ -38,6 +38,12 @@ pkg_mklink(
 )
 
 pkg_mklink(
+    name = "portage_hooks",
+    link_name = "portage/hooks",
+    target = "/mnt/host/source/src/scripts/hooks",
+)
+
+pkg_mklink(
     name = "portage_make_profile",
     link_name = "portage/make.profile",
     target = "{{ profile_path }}",
@@ -50,6 +56,7 @@ pkg_filegroup(
         ":make_conf",
         ":make_conf_board",
         ":make_conf_user",
+        ":portage_hooks",
         ":portage_make_profile",
     ],
 )

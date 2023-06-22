@@ -33,6 +33,7 @@ pkg_files(
         "__init__.py",
         "lib/**",
         "licensing/**",
+        "lint/**",
         # "pytest.ini",
         # "run_tests",
         "scripts/**",

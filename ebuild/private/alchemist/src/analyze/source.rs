@@ -357,16 +357,14 @@ fn apply_local_sources_workarounds(
         }
     }
 
-    // The platform eclass calls `platform2.py` which requires chromite.
-    // The dlc eclass calls `build_dlc` which lives in chromite.
-    // The meson eclass calls `meson_test.py` which  calls `platform2_test.py` which requires
-    // chromite.
+    // Running install hooks requires src/scripts/hooks and chromite.
+    local_sources.push(PackageLocalSource::Src("scripts/hooks".into()));
+    local_sources.push(PackageLocalSource::Chromite);
+
+    // The platform eclass calls `platform2_test.py`.
+    // The meson eclass calls `meson_test.py` which calls `platform2_test.py`.
     // TODO(b/272275535): Delete this once platform2_test.py works
-    if details.inherited.contains("platform")
-        || details.inherited.contains("dlc")
-        || details.inherited.contains("meson")
-    {
-        local_sources.push(PackageLocalSource::Chromite);
+    if details.inherited.contains("platform") || details.inherited.contains("meson") {
         local_sources.push(PackageLocalSource::BazelTarget(
             "@//bazel/sdk:platform2_test_hack".to_string(),
         ));
