@@ -12,10 +12,10 @@ use processes::status_to_exit_code;
 use serde_json::json;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::Write;
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitCode, Stdio};
+use std::process::{Command, ExitCode};
 use std::time::Instant;
 
 const PROGRAM_NAME: &str = "action_wrapper";
@@ -75,6 +75,24 @@ fn ensure_passwordless_sudo() -> Result<()> {
         "Failed to run sudo without password; run \"sudo true\" and try again"
     );
     Ok(())
+}
+
+/// Redirects stdout and stderr to the specified file, and returns the saved
+/// stdout/stderr file descriptors.
+fn redirect_stdout_stderr(output: &File) -> Result<(OwnedFd, OwnedFd)> {
+    let stdout_fd = std::io::stdout().as_raw_fd();
+    let saved_stdout_fd = nix::fcntl::fcntl(stdout_fd, nix::fcntl::F_DUPFD_CLOEXEC(3))?;
+    let saved_stdout = unsafe { OwnedFd::from_raw_fd(saved_stdout_fd) };
+
+    let stderr_fd = std::io::stderr().as_raw_fd();
+    let saved_stderr_fd = nix::fcntl::fcntl(stderr_fd, nix::fcntl::F_DUPFD_CLOEXEC(3))?;
+    let saved_stderr = unsafe { OwnedFd::from_raw_fd(saved_stderr_fd) };
+
+    let output_fd = output.as_raw_fd();
+    nix::unistd::dup2(output_fd, stdout_fd)?;
+    nix::unistd::dup2(output_fd, stderr_fd)?;
+
+    Ok((saved_stdout, saved_stderr))
 }
 
 fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Result<()> {
@@ -171,9 +189,11 @@ fn do_main() -> Result<ExitCode> {
     // Always enable Rust backtraces.
     std::env::set_var("RUST_BACKTRACE", "1");
 
-    // Redirect output to a file if `--log` was specified.
-    let mut output = if let Some(log_name) = &args.log {
-        Some(File::create(log_name)?)
+    // Redirect stdout/stderr to a file if `--log` was specified.
+    let mut saved_output: Option<(File, OwnedFd)> = if let Some(log_name) = &args.log {
+        let file = File::create(log_name)?;
+        let (_saved_stdout, saved_stderr) = redirect_stdout_stderr(&file)?;
+        Some((file, saved_stderr))
     } else {
         None
     };
@@ -189,12 +209,6 @@ fn do_main() -> Result<ExitCode> {
         command
     };
 
-    if let Some(output) = &output {
-        command
-            .stdout(Stdio::from(output.try_clone()?))
-            .stderr(Stdio::from(output.try_clone()?));
-    }
-
     let profiles_dir = SafeTempDir::new()?;
     command.env(PROFILES_DIR_ENV, profiles_dir.path());
 
@@ -202,33 +216,27 @@ fn do_main() -> Result<ExitCode> {
     let status = processes::run(&mut command)?;
     let elapsed = start_time.elapsed();
 
-    let message = if let Some(signal_num) = status.signal() {
+    if let Some(signal_num) = status.signal() {
         let signal_name = match nix::sys::signal::Signal::try_from(signal_num) {
             Ok(signal) => signal.to_string(),
             Err(_) => signal_num.to_string(),
         };
-        format!(
+        eprintln!(
             "{}: Command killed with signal {} in {:.1}s",
             PROGRAM_NAME,
             signal_name,
             elapsed.as_secs_f32()
-        )
+        );
     } else if let Some(code) = status.code() {
-        format!(
+        eprintln!(
             "{}: Command exited with code {} in {:.1}s",
             PROGRAM_NAME,
             code,
             elapsed.as_secs_f32()
-        )
+        );
     } else {
         unreachable!("Unexpected ExitStatus: {:?}", status);
     };
-
-    if let Some(output) = &mut output {
-        writeln!(output, "{}", message)?;
-    } else {
-        eprintln!("{}", message);
-    }
 
     // Run chown on output files by a privileged process.
     if args.privileged && !args.privileged_output.is_empty() {
@@ -238,19 +246,15 @@ fn do_main() -> Result<ExitCode> {
             .arg(format!("{}:{}", getuid(), getgid()))
             .arg("--")
             .args(args.privileged_output);
-        if let Some(output) = &output {
-            command
-                .stdout(Stdio::from(output.try_clone()?))
-                .stderr(Stdio::from(output.try_clone()?));
-        }
         processes::run(&mut command)?;
     }
 
     // If the command failed, then print saved output on the stderr.
     if !status.success() {
-        if let Some(log_name) = &args.log {
-            let mut read_file = File::open(log_name)?;
-            std::io::copy(&mut read_file, &mut std::io::stderr())?;
+        if let Some((write_file, saved_stderr)) = saved_output.take() {
+            // Reopen the file to get an independent seek position.
+            let mut read_file = File::open(format!("/proc/self/fd/{}", write_file.as_raw_fd()))?;
+            std::io::copy(&mut read_file, &mut File::from(saved_stderr))?;
         }
     }
 
