@@ -94,13 +94,6 @@ pub struct CommonArgs {
 
     #[arg(
         long,
-        help = "Enables the runfiles mode in which file system layer paths \
-            given by --layer are handled as runfile paths."
-    )]
-    pub runfiles_mode: bool,
-
-    #[arg(
-        long,
         help = "Internal flag used to differentiate between a normal \
             invocation and a user invocation. i.e., _debug targets",
         hide = true, // We only want the _debug targets setting this flag.
@@ -269,15 +262,8 @@ impl ContainerSettings {
         self.set_keep_host_mount(args.keep_host_mount);
         self.set_login_mode(args.login);
 
-        let runfiles = runfiles::Runfiles::create()?;
-
         for path in args.layer.iter() {
-            let real_path = if args.runfiles_mode {
-                resolve_symlink_forest(&runfiles.rlocation(path))?
-            } else {
-                resolve_symlink_forest(path)?
-            };
-            self.push_layer(&real_path)?;
+            self.push_layer(&resolve_symlink_forest(path)?)?;
         }
         Ok(())
     }
@@ -866,7 +852,6 @@ mod tests {
             layer: vec![PathBuf::from(
                 "cros/bazel/ebuild/private/common/container/testdata/layer-dir",
             )],
-            runfiles_mode: true,
             interactive: false,
             login: LoginMode::Never,
             keep_host_mount: false,
@@ -896,7 +881,6 @@ mod tests {
 
         settings.apply_common_args(&CommonArgs {
             layer: vec![forest_dir.to_owned()],
-            runfiles_mode: false,
             interactive: false,
             login: LoginMode::Never,
             keep_host_mount: false,

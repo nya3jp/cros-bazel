@@ -133,14 +133,6 @@ fn do_main() -> Result<()> {
 
     let runfiles = runfiles::Runfiles::create()?;
 
-    let fix_runfile_path = |path| {
-        if args.common.runfiles_mode {
-            runfiles.rlocation(path)
-        } else {
-            path
-        }
-    };
-
     settings.push_bind_mount(BindMount {
         source: runfiles.rlocation("cros/bazel/ebuild/private/cmd/build_package/build_package.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
@@ -148,7 +140,7 @@ fn do_main() -> Result<()> {
     });
 
     settings.push_bind_mount(BindMount {
-        source: fix_runfile_path(args.ebuild.source),
+        source: args.ebuild.source,
         mount_path: args.ebuild.mount_path.clone(),
         rw: false,
     });
@@ -157,7 +149,7 @@ fn do_main() -> Result<()> {
 
     for mount in args.file {
         settings.push_bind_mount(BindMount {
-            source: fix_runfile_path(mount.source),
+            source: mount.source,
             mount_path: ebuild_mount_dir.join(mount.mount_path),
             rw: false,
         })
@@ -165,7 +157,7 @@ fn do_main() -> Result<()> {
 
     for mount in args.distfile {
         settings.push_bind_mount(BindMount {
-            source: fix_runfile_path(mount.source),
+            source: mount.source,
             mount_path: PathBuf::from("/var/cache/distfiles").join(mount.mount_path),
             rw: false,
         })
