@@ -24,25 +24,44 @@ const SUDO_PATH: &str = "/usr/bin/sudo";
 
 #[derive(Parser, Debug)]
 #[clap(
-    about = "Redirect command output to a file and also print it on error.",
+    about = "General-purpose wrapper of programs implementing Bazel actions.",
     author, version, about, long_about=None, trailing_var_arg = true)]
 struct Cli {
-    #[arg(help = "File to save stdout and stderr to", long)]
+    #[arg(
+        help = "If set, redirects stdout/stderr of the wrapped process to \
+            the specified file, and print it to stderr only when it exits \
+            abnormally.",
+        long
+    )]
     log: Option<PathBuf>,
 
-    #[arg(help = "File to save profile JSON file to", long)]
+    #[arg(
+        help = "If set, sets up environment variables of the wrapped process \
+            so that it and its subprocesses records tracing data, and collects \
+            them into a single Chrome tracing JSON file at the specified path.",
+        long
+    )]
     profile: Option<PathBuf>,
 
-    #[arg(help = "Runs a privileged process with sudo", long)]
+    #[arg(
+        help = "Runs the wrapped process with privilege using sudo. This \
+            assumes that we can run sudo without password, so typically this \
+            option works only within legacy CrOS chroot. Use this option only \
+            for temporary workaround during Alchemy development.",
+        long
+    )]
     privileged: bool,
 
     #[arg(
-        help = "After running a privileged process, chown these output files",
+        help = "Specifies output files of the wrapped process. It can be \
+            repeated multiple times. These files will be processed with \
+            `sudo chown` after the wrapped process finishes so that Bazel \
+            can access those files.",
         long
     )]
     privileged_output: Vec<PathBuf>,
 
-    #[arg(help = "Command to run", required = true)]
+    #[arg(help = "Command line of the wrapped process.", required = true)]
     command_line: Vec<String>,
 }
 
