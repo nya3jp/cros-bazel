@@ -95,7 +95,11 @@ _EBUILD_COMMON_ATTRS = dict(
 # TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
 def _compute_build_package_args(ctx, output_path, use_runfiles):
     """
-    Computes the arguments to pass to build_package.
+    Computes the arguments to run build_package.
+
+    These arguments should be passed to action_wrapper, not build_package. They
+    contain the path to the build_package executable itself, and also may start
+    with options to action_wrapper (e.g. --privileged).
 
     This function can be called only from `ebuild`, `ebuild_debug`, and
     `ebuild_test`. Particularly, the current rule must include
@@ -111,8 +115,8 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
 
     Returns:
         (args, inputs) where:
-            args: Args: Arguments to pass to build_package.
-            inputs: Depset[File]: Inputs to build_package.
+            args: Args: Arguments to pass to action_wrapper.
+            inputs: Depset[File]: Inputs to action_wrapper.
     """
     args = ctx.actions.args()
     direct_inputs = []
@@ -128,6 +132,9 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
 
     def format_git_tree_arg(file):
         return "--git-tree=%s" % compute_input_file_path(file, use_runfiles)
+
+    # Path to build_package
+    args.add(compute_input_file_path(ctx.executable._build_package, use_runfiles))
 
     # Basic arguments
     if ctx.attr.board:
@@ -185,6 +192,10 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     )
     transitive_inputs.append(interface_library_inputs)
 
+    # Include runfiles in the inputs.
+    transitive_inputs.append(ctx.attr._action_wrapper[DefaultInfo].default_runfiles.files)
+    transitive_inputs.append(ctx.attr._build_package[DefaultInfo].default_runfiles.files)
+
     inputs = depset(direct_inputs, transitive = transitive_inputs)
     return args, inputs
 
@@ -200,7 +211,7 @@ def _ebuild_impl(ctx):
         src_basename + ".profile.json",
     )
 
-    # Compute arguments and inputs to build_package.
+    # Compute arguments and inputs to run build_package.
     args, inputs = _compute_build_package_args(ctx, output_path = output_binary_package_file.path, use_runfiles = False)
 
     # Define the main action.
@@ -234,7 +245,6 @@ def _ebuild_impl(ctx):
             arguments = [
                 "--log=" + output_log_file.path,
                 "--profile=" + output_profile_file.path,
-                ctx.executable._build_package.path,
                 args,
             ],
             execution_requirements = {
@@ -372,7 +382,7 @@ def _ebuild_debug_impl(ctx):
     # Declare outputs.
     output_debug_script = ctx.actions.declare_file(src_basename + "_debug.sh")
 
-    # Compute arguments and inputs to build_package.
+    # Compute arguments and inputs to run build_package.
     # While we include all relevant input files in the wrapper script's
     # runfiles, we embed execroot paths in the script, not runfiles paths, so
     # that the debug invocation is closer to the real build execution.
@@ -385,7 +395,7 @@ def _ebuild_debug_impl(ctx):
     return wrap_binary_with_args(
         ctx,
         out = output_debug_script,
-        binary = ctx.attr._build_package,
+        binary = ctx.executable._action_wrapper,
         args = args,
         content_prefix = _DEBUG_SCRIPT,
         runfiles = ctx.runfiles(transitive_files = inputs),
@@ -499,14 +509,14 @@ def _ebuild_test_impl(ctx):
     # Declare outputs.
     output_runner_script = ctx.actions.declare_file(src_basename + "_test.sh")
 
-    # Compute arguments and inputs to build_package.
+    # Compute arguments and inputs to run build_package.
     args, inputs = _compute_build_package_args(ctx, output_path = None, use_runfiles = True)
     args.add("--test")
 
     return wrap_binary_with_args(
         ctx,
         out = output_runner_script,
-        binary = ctx.attr._build_package,
+        binary = ctx.executable._action_wrapper,
         args = args,
         runfiles = ctx.runfiles(transitive_files = inputs),
     )
