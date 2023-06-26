@@ -13,13 +13,13 @@ avoid package rebuilds when a library package is updated without changing its
 external interfaces.
 """
 
-load("//bazel/ebuild/private:common.bzl", "EbuildLibraryInfo")
+load("//bazel/ebuild/private:common.bzl", "EbuildLibraryInfo", "compute_input_file_path")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
-def _format_input_file_arg(strip_prefix, file):
-    return "--sysroot-file=%s=%s" % (file.path.removeprefix(strip_prefix), file.path)
+def _format_input_file_arg(strip_prefix, file, use_runfiles):
+    return "--sysroot-file=%s=%s" % (file.path.removeprefix(strip_prefix), compute_input_file_path(file, use_runfiles))
 
-def add_interface_library_args(input_targets, args):
+def add_interface_library_args(input_targets, args, use_runfiles):
     """
     Computes the arguments to pass to build_package to link interface libraries.
 
@@ -31,6 +31,9 @@ def add_interface_library_args(input_targets, args):
             libraries. Typically it is from the shared_lib_deps attribute.
         args: Args: An Args object where necessary arguments are added in order
             to depend on the interface libraries.
+        use_runfiles: bool: Whether to refer to input file paths in relative to
+            execroot or runfiles directory. See compute_input_file_path for
+            details.
 
     Returns:
         Depset[File]: A depset representing interface library inputs.
@@ -44,8 +47,9 @@ def add_interface_library_args(input_targets, args):
         args.add_all(
             deps,
             allow_closure = True,
-            map_each = lambda file: _format_input_file_arg(lib_info.strip_prefix, file),
+            map_each = lambda file: _format_input_file_arg(lib_info.strip_prefix, file, use_runfiles),
         )
+        depsets.append(deps)
 
     return depset(transitive = depsets)
 

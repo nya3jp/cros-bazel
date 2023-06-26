@@ -2,20 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/ebuild/private:install_groups.bzl", "calculate_install_groups")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-
-def _format_file_arg(file):
-    return "--file=%s=%s" % (relative_path_in_package(file), file.path)
-
-def _format_file_arg_for_test(file):
-    return "--file=%s=cros/%s" % (relative_path_in_package(file), file.short_path)
-
-def _format_layer_arg_for_test(layer):
-    return "--layer=cros/%s" % layer.short_path
 
 # Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
 _EBUILD_COMMON_ATTRS = dict(
@@ -102,7 +93,7 @@ _EBUILD_COMMON_ATTRS = dict(
 )
 
 # TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
-def _compute_build_package_args(ctx, output_path, for_test = False):
+def _compute_build_package_args(ctx, output_path, use_runfiles):
     """
     Computes the arguments to pass to build_package.
 
@@ -114,7 +105,9 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
         ctx: ctx: A context objected passed to the rule implementation.
         output_path: Optional[str]: A file path where an output binary package
             file is saved. If None, a binary package file is not saved.
-        for_test: True when called by _ebuild_test_impl.
+        use_runfiles: bool: Whether to refer to input file paths in relative to
+            execroot or runfiles directory. See compute_input_file_path for
+            details.
 
     Returns:
         (args, inputs) where:
@@ -125,31 +118,34 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     direct_inputs = []
     transitive_inputs = []
 
+    # Define formatting functions for Args.add_all. Avoid defining them in a
+    # loop to avoid memory bloat.
+    def format_file_arg(file):
+        return "--file=%s=%s" % (relative_path_in_package(file), compute_input_file_path(file, use_runfiles))
+
+    def format_layer_arg(file):
+        return "--layer=%s" % compute_input_file_path(file, use_runfiles)
+
+    def format_git_tree_arg(file):
+        return "--git-tree=%s" % compute_input_file_path(file, use_runfiles)
+
     # Basic arguments
     if ctx.attr.board:
         args.add("--board=" + ctx.attr.board)
     if output_path:
         args.add("--output=" + output_path)
-    if for_test:
-        args.add("--runfiles-mode")
 
     # We extract the <category>/<package>/<ebuild> from the file path.
     relative_ebuild_path = "/".join(ctx.file.ebuild.path.rsplit("/", 3)[1:4])
     ebuild_inside_path = "%s/%s" % (ctx.attr.overlay[OverlayInfo].path, relative_ebuild_path)
 
     # --ebuild
-    if for_test:
-        args.add("--ebuild=%s=cros/%s" % (ebuild_inside_path, ctx.file.ebuild.short_path))
-    else:
-        args.add("--ebuild=%s=%s" % (ebuild_inside_path, ctx.file.ebuild.path))
+    args.add("--ebuild=%s=%s" % (ebuild_inside_path, compute_input_file_path(ctx.file.ebuild, use_runfiles)))
     direct_inputs.append(ctx.file.ebuild)
 
     # --file
     for file in ctx.attr.files:
-        if for_test:
-            args.add_all(file.files, map_each = _format_file_arg_for_test)
-        else:
-            args.add_all(file.files, map_each = _format_file_arg)
+        args.add_all(file.files, map_each = format_file_arg, allow_closure = True)
         transitive_inputs.append(file.files)
 
     # --distfile
@@ -158,32 +154,23 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
         if len(files) != 1:
             fail("cannot refer to multi-file rule in distfiles")
         file = files[0]
-        if for_test:
-            args.add("--distfile=%s=cros/%s" % (distfile_name, file.short_path))
-        else:
-            args.add("--distfile=%s=%s" % (distfile_name, file.path))
+        args.add("--distfile=%s=%s" % (distfile_name, compute_input_file_path(file, use_runfiles)))
         direct_inputs.append(file)
 
     # --layer for SDK and overlays
     sdk = ctx.attr.sdk[SDKInfo]
     overlays = ctx.attr.overlays[OverlaySetInfo]
     layer_inputs = sdk.layers + overlays.layers
-    if for_test:
-        args.add_all(layer_inputs, map_each = _format_layer_arg_for_test, expand_directories = False)
-    else:
-        args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
+    args.add_all(layer_inputs, map_each = format_layer_arg, expand_directories = False, allow_closure = True)
     direct_inputs.extend(layer_inputs)
 
     # --layer for source code
     for file in ctx.files.srcs:
-        if for_test:
-            args.add("--layer=cros/%s" % file.short_path)
-        else:
-            args.add("--layer=%s" % file.path)
+        args.add("--layer=%s" % compute_input_file_path(file, use_runfiles))
         direct_inputs.append(file)
 
     # --git-tree
-    args.add_all(ctx.files.git_trees, format_each = "--git-tree=%s")
+    args.add_all(ctx.files.git_trees, map_each = format_git_tree_arg, allow_closure = True)
     direct_inputs.extend(ctx.files.git_trees)
 
     # --allow-network-access
@@ -194,6 +181,7 @@ def _compute_build_package_args(ctx, output_path, for_test = False):
     interface_library_inputs = add_interface_library_args(
         input_targets = ctx.attr.shared_lib_deps,
         args = args,
+        use_runfiles = use_runfiles,
     )
     transitive_inputs.append(interface_library_inputs)
 
@@ -213,7 +201,7 @@ def _ebuild_impl(ctx):
     )
 
     # Compute arguments and inputs to build_package.
-    args, inputs = _compute_build_package_args(ctx, output_path = output_binary_package_file.path)
+    args, inputs = _compute_build_package_args(ctx, output_path = output_binary_package_file.path, use_runfiles = False)
 
     # Define the main action.
     prebuilt = ctx.attr.prebuilt[BuildSettingInfo].value
@@ -385,7 +373,10 @@ def _ebuild_debug_impl(ctx):
     output_debug_script = ctx.actions.declare_file(src_basename + "_debug.sh")
 
     # Compute arguments and inputs to build_package.
-    args, inputs = _compute_build_package_args(ctx, output_path = None)
+    # While we include all relevant input files in the wrapper script's
+    # runfiles, we embed execroot paths in the script, not runfiles paths, so
+    # that the debug invocation is closer to the real build execution.
+    args, inputs = _compute_build_package_args(ctx, output_path = None, use_runfiles = False)
 
     # An interactive run will make --login default to after.
     # The user can still explicitly set --login=before if they wish.
@@ -509,7 +500,7 @@ def _ebuild_test_impl(ctx):
     output_runner_script = ctx.actions.declare_file(src_basename + "_test.sh")
 
     # Compute arguments and inputs to build_package.
-    args, inputs = _compute_build_package_args(ctx, output_path = None, for_test = True)
+    args, inputs = _compute_build_package_args(ctx, output_path = None, use_runfiles = True)
     args.add("--test")
 
     return wrap_binary_with_args(

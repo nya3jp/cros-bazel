@@ -160,6 +160,37 @@ def relative_path_in_package(file):
         fail("File does not have an associated owner label")
     return relative_path_in_label(file, owner)
 
+def compute_input_file_path(file, use_runfiles):
+    """
+    Computes a file path referring to the given input file.
+
+    This function helps you to refer to input file path correctly in the two
+    major different working directory configurations: execroot and runfiles.
+
+    When you are going to use a file in a build action run by "bazel build",
+    pass use_runfiles=False. The function will just return `file.path` that is
+    valid in an action execroot.
+
+    When you are going to use a file in a binary file invoked for "bazel run"
+    or "bazel test", pass use_runfiles=True and make sure to include the file
+    in the runfiles of the binary. Then this function will return a file path
+    you can refer to the file in the runfile tree of the binary.
+
+    Args:
+        file: File: An input file.
+        use_runfiles: bool: Whether to refer to the input file in a path
+            relative to execroot or runfiles directory.
+
+    Returns:
+        A file path referring to the given file.
+    """
+    if file.owner == None:
+        fail("Unable to compute a path for a file not associated with a label")
+    if use_runfiles:
+        return paths.join(_workspace_root(file.owner), file.short_path)
+    else:
+        return file.path
+
 def single_binary_package_set_info(package_info):
     """
     Creates BinaryPackageSetInfo for a single binary package.
