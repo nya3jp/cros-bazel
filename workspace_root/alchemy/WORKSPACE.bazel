@@ -1,17 +1,6 @@
 # Copyright 2022 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-workspace(name = "cros")
 
 # Since we use bzlmod, we don't use WORKSPACE.bazel. Don't add new entries here.
 # Instead, modify src/MODULE.bazel and src/bazel/module_extensions/...
-
-load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
-
-prebuilts_dependencies()
-
-new_local_repository(
-    name = "chromite",
-    build_file = "//bazel/module_extensions/cros_deps/chromite:BUILD.project-chromite",
-    path = "../chromite",
-)
