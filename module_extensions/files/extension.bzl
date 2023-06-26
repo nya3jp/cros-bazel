@@ -3,9 +3,9 @@
 # found in the LICENSE file.
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_file_symlink = "http_file")
+load("//bazel/module_extensions/private:hub_repo.bzl", "hub_repo")
 load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
 load("//bazel/sdk:repositories.bzl", "cros_sdk_repositories")
-load("//bazel/module_extensions/private:hub_repo.bzl", "hub_repo")
 
 def _files_impl(module_ctx):
     aliases = {}
@@ -28,7 +28,17 @@ def _files_impl(module_ctx):
         urls = ["https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64"],
     )
 
-    prebuilts_dependencies(http_file = http_file_symlink)
+    # Statically-linked bash.
+    # It is used by alchemist to evaluate ebuilds, and in some unit tests.
+    http_file_symlink(
+        name = "bash-static",
+        downloaded_file_path = "bash",
+        executable = True,
+        sha256 = "64469a9512a00199c85622ec56f870f97d50457a4e06e0cfa39bae7adf0cc8f2",
+        urls = ["https://github.com/robxu9/bash-static/releases/download/5.2.015-1.2.3-2/bash-linux-x86_64"],
+    )
+
+    prebuilts_dependencies(http_file = http_file_alias)
     cros_sdk_repositories(http_file = http_file_alias)
 
     hub_repo(name = "files", aliases = aliases, symlinks = symlinks)

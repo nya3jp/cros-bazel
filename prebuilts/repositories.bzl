@@ -4,16 +4,6 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_file = "http_file")
 
 def prebuilts_dependencies(http_file = _http_file):
-    # Statically-linked bash.
-    # It is used by alchemist to evaluate ebuilds, and in some unit tests.
-    http_file(
-        name = "bash-static",
-        downloaded_file_path = "bash",
-        executable = True,
-        sha256 = "64469a9512a00199c85622ec56f870f97d50457a4e06e0cfa39bae7adf0cc8f2",
-        urls = ["https://github.com/robxu9/bash-static/releases/download/5.2.015-1.2.3-2/bash-linux-x86_64"],
-    )
-
     # TODO: Delete chromeos-fonts
     http_file(
         name = "arm64_generic_chromeos_fonts_0_0_1_r52",

@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/ebuild/private:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_library(
     name = "container",
@@ -43,7 +43,7 @@ rust_test(
     name = "container_test",
     size = "small",
     crate = ":container",
-    data = ["@bash-static//file"] + glob(["testdata/**"]),
+    data = ["@files//:bash-static"] + glob(["testdata/**"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/ebuild/private/common/testutil",

@@ -566,7 +566,7 @@ mod tests {
         let runfiles = runfiles::Runfiles::create()?;
         settings.push_bind_mount(BindMount {
             mount_path: PathBuf::from("/bin/bash"),
-            source: runfiles.rlocation("bash-static/file/bash"),
+            source: runfiles.rlocation("files/bash-static"),
             rw: false,
         });
         Ok(())
