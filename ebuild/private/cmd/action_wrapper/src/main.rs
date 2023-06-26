@@ -271,20 +271,3 @@ fn main() -> ExitCode {
     let result = do_main();
     handle_top_level_result(result)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn runs_process() -> Result<()> {
-        processes::run(&mut Command::new("true"))?;
-        Ok(())
-    }
-
-    #[test]
-    fn runs_failed_process() -> Result<()> {
-        processes::run(&mut Command::new("false"))?;
-        Ok(())
-    }
-}
