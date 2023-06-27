@@ -17,7 +17,7 @@ mkdir -p "${BINPKG_CACHE}"
 
 WORKSPACE_ROOT="$(bazel info workspace)"
 BAZEL_BIN="$(bazel info bazel-bin)"
-PORTAGE_BIN="${BAZEL_BIN}/external/portage"
+PORTAGE_BIN="${BAZEL_BIN}/external/_main~portage~portage"
 
 PREBUILTS="${WORKSPACE_ROOT}/prebuilts.bazelrc"
 
