@@ -15,7 +15,7 @@ use std::fs::File;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitCode};
+use std::process::{Command, ExitCode, ExitStatus};
 use std::time::Instant;
 
 const PROGRAM_NAME: &str = "action_wrapper";
@@ -183,21 +183,7 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
     Ok(())
 }
 
-fn do_main() -> Result<ExitCode> {
-    let args = Cli::parse();
-
-    // Always enable Rust backtraces.
-    std::env::set_var("RUST_BACKTRACE", "1");
-
-    // Redirect stdout/stderr to a file if `--log` was specified.
-    let mut saved_output: Option<(File, OwnedFd)> = if let Some(log_name) = &args.log {
-        let file = File::create(log_name)?;
-        let (_saved_stdout, saved_stderr) = redirect_stdout_stderr(&file)?;
-        Some((file, saved_stderr))
-    } else {
-        None
-    };
-
+fn do_main(args: Cli) -> Result<ExitStatus> {
     let mut command = if args.privileged {
         ensure_passwordless_sudo()?;
         let mut command = Command::new(SUDO_PATH);
@@ -249,36 +235,58 @@ fn do_main() -> Result<ExitCode> {
         processes::run(&mut command)?;
     }
 
-    // If the command failed, then print saved output on the stderr.
-    if !status.success() {
-        if let Some((write_file, saved_stderr)) = saved_output.take() {
-            // Reopen the file to get an independent seek position.
-            let mut read_file = File::open(format!("/proc/self/fd/{}", write_file.as_raw_fd()))?;
-            std::io::copy(&mut read_file, &mut File::from(saved_stderr))?;
-        }
-    }
-
     if let Some(profile_file) = args.profile {
         merge_profiles(profiles_dir.path(), &profile_file)?;
     }
 
     // Propagate the exit status of the command.
-    Ok(status_to_exit_code(&status))
+    Ok(status)
 }
 
 fn main() -> ExitCode {
+    let args = Cli::parse();
+
+    // Always enable Rust backtraces.
+    std::env::set_var("RUST_BACKTRACE", "1");
+
+    // Redirect stdout/stderr to a file if `--log` was specified.
+    let mut saved_output: Option<(File, OwnedFd)> = if let Some(log_name) = &args.log {
+        let file = File::create(log_name).expect("Failed to create the log file");
+        let (_saved_stdout, saved_stderr) =
+            redirect_stdout_stderr(&file).expect("Failed to redirect stdout/stderr");
+        Some((file, saved_stderr))
+    } else {
+        None
+    };
+
     // We don't use `cli_main` to avoid emitting the preamble logs because
     // action_wrapper must queue stdout/stderr until it sees the wrapped program
     // to exit abnormally. This means we don't log the arguments passed to
     // action_wrapper itself, but the wrapped program should soon print one with
     // `cli_main`.
-    let result = do_main();
-    handle_top_level_result(result)
+    let status = do_main(args);
+    let exit_code = handle_top_level_result(status.as_ref().map(status_to_exit_code));
+    match status {
+        Ok(status) if status.code() == Some(0) => {}
+        _ => {
+            if let Some((write_file, saved_stderr)) = saved_output.take() {
+                // Reopen the file to get an independent seek position.
+                let mut read_file = File::open(format!("/proc/self/fd/{}", write_file.as_raw_fd()))
+                    .expect("Failed to reopen the log file");
+                std::io::copy(&mut read_file, &mut File::from(saved_stderr)).ok();
+            }
+        }
+    }
+
+    exit_code
 }
 
 #[cfg(test)]
 mod tests {
-    use std::process::{ExitStatus, Stdio};
+    use std::{
+        os::unix::prelude::MetadataExt,
+        process::{ExitStatus, Stdio},
+    };
 
     use regex::Regex;
     use tempfile::NamedTempFile;
@@ -390,6 +398,23 @@ mod tests {
             outputs.stderr
         );
         assert!(log_re.is_match(&outputs.log), "log: {}", outputs.log);
+        Ok(())
+    }
+
+    #[test]
+    fn no_such_command() -> Result<()> {
+        let out_file = NamedTempFile::new()?;
+
+        let output = Command::new(ACTION_WRAPPER_PATH)
+            .arg("--log")
+            .arg(out_file.path())
+            .arg("/no/such/command")
+            .output()?;
+
+        // The error is recorded in the log and printed to stderr.
+        assert!(!output.stderr.is_empty());
+        assert!(out_file.as_file().metadata()?.size() > 0);
+
         Ok(())
     }
 
