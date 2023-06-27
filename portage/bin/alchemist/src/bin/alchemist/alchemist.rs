@@ -52,7 +52,7 @@ pub struct Args {
     host_board: String,
 
     /// Profile name of the host target.
-    #[arg(long, value_name = "PROFILE", default_value = "base")]
+    #[arg(long, value_name = "PROFILE", default_value = "sdk/bootstrap")]
     host_profile: String,
 
     /// Path to the ChromiumOS source directory root.
