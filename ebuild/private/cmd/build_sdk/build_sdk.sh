@@ -8,6 +8,16 @@ set -eu -o pipefail
 # Ensure ROOT is set
 : "${ROOT:?}"
 
+# TODO(b/278728702): Figure out how this symlink gets created.
+# glibc uses the SYMLINK_LIB environment variable to determine if it should
+# create the /lib -> lib64 symlink. It doesn't handle the /usr/lib symlink
+# though. There must be another package that is creating this, but I have
+# yet to find it. I have searched baselayout as well, but it doesn't handle it.
+if [[ "$(portageq envvar SYMLINK_LIB)" == "yes" ]]; then
+  mkdir "${ROOT}/usr/lib64"
+  ln -s lib64 "${ROOT}/usr/lib"
+fi
+
 # TODO: Find a way to share bash utils
 install_deps() {
   local -i idx=0
