@@ -211,9 +211,34 @@ for the current version of chromeos-chrome.
 % BOARD=amd64-generic portage/tools/generate_chrome_prebuilt_config.py
 ```
 
+*** note
+When performing changes to `eclasses`, `build_packages`, `chromite` or other
+things that cache bust large parts of the graph, it might be beneficial to pin
+the binary packages for already built packages so you don't need to rebuild
+them when iterating on your changes. You can use the [generate-stage2-prebuilts]
+script to do this:
+
+```sh
+$ BOARD=amd64-generic ./bazel/portage/tools/generate-stage2-prebuilts
+```
+
+This will scan your `bazel-bin` directory for any existing binpkgs and copy them
+to `~/.cache/binpkgs`. It will then generate a `prebuilts.bazelrc` that contains
+various `--config` options. The `prebuilts.bazelrc` is invalid after you
+`repo sync` since it contains package version numbers. Just re-run the script
+after a `repo sync` to regenerate the `prebuilts.bazelrc` and it will pin the
+packages with versions that still exist in your `bazel-bin`.
+
+Running a build with pinned packages:
+
+```sh
+$ BOARD=amd64-generic bazel build --config=prebuilts/stage2-board-sdk @portage//sys-apps/attr
+```
+
 ***
 
 [generate_chrome_prebuilt_config.py]: ./portage/tools/generate_chrome_prebuilt_config.py
+[generate-stage2-prebuilts]: ./portage/tools/generate-stage2-prebuilts
 
 ### Extracting binary packages
 

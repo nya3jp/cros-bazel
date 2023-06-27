@@ -15,57 +15,78 @@ set -eu -o pipefail
 
 mkdir -p "${BINPKG_CACHE}"
 
-WORKSPACE_ROOT="$(bazel info workspace)"
-BAZEL_BIN="$(bazel info bazel-bin)"
+WORKSPACE_ROOT="$(bazel info workspace 2>/dev/null)"
+BAZEL_BIN="$(bazel info bazel-bin  2>/dev/null)"
 PORTAGE_BIN="${BAZEL_BIN}/external/_main~portage~portage"
 
 PREBUILTS="${WORKSPACE_ROOT}/prebuilts.bazelrc"
 
-declare -A DEPS_MAP=(
-    ["prebuilts/stage1"]="@portage//internal/sdk/stage2"
-    ["prebuilts/stage2"]="@portage//internal/packages/stage2/host/chromiumos/virtual/target-chromium-os-sdk-bootstrap:9999_package_set"
+exec 3> "${PREBUILTS}.tmp"
+
+declare -A QUERY_MAP=(
+    ["prebuilts/stage2-sdk"]="deps(@portage//internal/sdk/stage2)"
+    ["prebuilts/stage2-board-sdk"]="deps(@portage//internal/sdk/stage2/target/board)"
+    ["prebuilts/stage2-${BOARD}"]="deps(
+        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-dev:1_package_set +
+        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-factory-shim:1_package_set +
+        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-factory:1_package_set +
+        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-test:1_package_set +
+        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os:1_package_set
+    )"
 )
 
-echo "# Generated using BOARD='${BOARD}' $*" > "${PREBUILTS}"
+echo "# Generated using BOARD='${BOARD}' $*" >&3
 
-for KEY in "${!DEPS_MAP[@]}"
+declare -A SRC_DEST_MAP
+
+for KEY in "${!QUERY_MAP[@]}"
 do
-    DEPS="${DEPS_MAP["${KEY}"]}"
+    QUERY="${QUERY_MAP["${KEY}"]}"
 
     readarray -t EBUILD_TARGETS < <(
-        bazel query "kind(ebuild, deps(${DEPS}))" || kill "$$"
+        set -x
+        bazel query --repo_env=_CACHE_BUST_DATE=none "kind(ebuild, ${QUERY})" || kill "$$"
     )
 
-    (
-        echo "# ${DEPS}"
-        echo "common:${KEY} \\"
-        for TARGET in "${EBUILD_TARGETS[@]}"; do
-            TARGET="${TARGET#@portage//}"
-            TARGET_DIR="${TARGET%:*}"
-            TARGET_NAME="$(basename "${TARGET_DIR}")"
-            TARGET_VERSION="${TARGET#*:}"
+    echo "common:${KEY} \\" >&3
+    for TARGET in "${EBUILD_TARGETS[@]}"; do
+        TARGET="${TARGET#@portage//}"
+        TARGET_DIR="${TARGET%:*}"
+        TARGET_NAME="$(basename "${TARGET_DIR}")"
+        TARGET_VERSION="${TARGET#*:}"
 
-            BINPKG_NAME="${TARGET_NAME}-${TARGET_VERSION}.tbz2"
-            BINPKG_SRC="${PORTAGE_BIN}/${TARGET_DIR}/${BINPKG_NAME}"
+        BINPKG_NAME="${TARGET_NAME}-${TARGET_VERSION}.tbz2"
+        BINPKG_SRC="${PORTAGE_BIN}/${TARGET_DIR}/${BINPKG_NAME}"
 
-            if [[ ! -f "${BINPKG_SRC}" ]]; then
-                continue
-            fi
+        if [[ ! -f "${BINPKG_SRC}" ]]; then
+            continue
+        fi
 
-            BINPKG_DEST_DIR="${BINPKG_CACHE}/${TARGET_DIR}"
-            mkdir -p "${BINPKG_DEST_DIR}"
-            BINPKG_DEST="${BINPKG_DEST_DIR}/${BINPKG_NAME}"
+        BINPKG_DEST_DIR="${BINPKG_CACHE}/${TARGET_DIR}"
+        # Keep the target packages separated
+        BINPKG_DEST_DIR="${BINPKG_DEST_DIR/target\/board/"target/${BOARD}"}"
+        mkdir -p "${BINPKG_DEST_DIR}"
+        BINPKG_DEST="${BINPKG_DEST_DIR}/${BINPKG_NAME}"
 
-            rsync --progress "${BINPKG_SRC}" "${BINPKG_DEST}" >&2
+        SRC_DEST_MAP["${BINPKG_SRC}"]="${BINPKG_DEST}"
 
-            echo "--@portage//${TARGET}_prebuilt=${BINPKG_DEST} \\"
-        done
+        echo "--@portage//${TARGET}_prebuilt=${BINPKG_DEST} \\" >&3
+    done
 
-        # Needed so we don't gobble up the next line
-        echo ""
-    ) >> "${PREBUILTS}"
+    # Needed so we don't gobble up the next line
+    echo "" >&3
 done
 
+echo "Copying packages to ${BINPKG_CACHE}" >&2
+for SRC in "${!SRC_DEST_MAP[@]}"; do
+    DEST="${SRC_DEST_MAP["${SRC}"]}"
+    rsync --progress "${SRC}" "${DEST}" >&2
+done
+
+exec 3>&- #close fd 3.
+mv "${PREBUILTS}.tmp" "${PREBUILTS}"
+
+echo
 echo "${PREBUILTS} was generated" >&2
 
 if ! grep -q prebuilts.bazelrc "${WORKSPACE_ROOT}/workspace.bazelrc"; then
@@ -73,8 +94,8 @@ if ! grep -q prebuilts.bazelrc "${WORKSPACE_ROOT}/workspace.bazelrc"; then
     echo "try-import %workspace%/prebuilts.bazelrc" >>"${WORKSPACE_ROOT}/workspace.bazelrc"
 fi
 
-echo "You can now add any of the following to your bazel command line:" >&2
-for KEY in "${!DEPS_MAP[@]}"
+echo "You can now add any of the following to your \`bazel build\` command line:" >&2
+for KEY in "${!QUERY_MAP[@]}"
 do
     echo "  --config=${KEY}" >&2
 done
