@@ -38,6 +38,7 @@ def direct_ebuild(
     _direct_ebuild_providers(
         name = name,
         tarball = tar_name,
+        package_deploy = package + "_deploy_local",
         category = category,
         runtime_deps = runtime_deps,
         visibility = visibility,
@@ -81,6 +82,9 @@ _direct_ebuild_providers = rule(
         category = attr.string(mandatory = True),
         tarball = attr.label(mandatory = True, allow_single_file = True),
         runtime_deps = attr.label_list(providers = [BinaryPackageInfo]),
+        # Never used, but without this we couldn't distinguish between cros_pkg
+        # and cros_pkg_filegroup.
+        package_deploy = attr.label(mandatory = True),
     ),
     provides = [BinaryPackageInfo, BinaryPackageSetInfo],
 )

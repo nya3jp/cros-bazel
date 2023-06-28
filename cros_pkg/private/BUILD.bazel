@@ -7,6 +7,29 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/rules_cros/toolchains/bash:defs.bzl", "sh_runfiles_test")
 load(":direct_ebuild.bzl", "direct_ebuild")
 
+rust_binary(
+    name = "deploy_local",
+    srcs = ["deploy_local.rs"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":manifest",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:env_logger",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+sh_runfiles_test(
+    name = "deploy_local_test",
+    size = "small",
+    src = "deploy_local_test.sh",
+    data = [
+        ":_direct_example_tbz2",
+        "//bazel/cros_pkg/examples/packaging:packaging_deploy_local",
+    ],
+)
+
 # Calls to direct_ebuild will only ever be made by @portage. We do it here
 # purely for the sake of testing.
 direct_ebuild(
@@ -49,4 +72,24 @@ rust_test(
         "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
         "@alchemy_crates//:tempfile",
     ],
+)
+
+rust_library(
+    name = "manifest",
+    srcs = ["manifest.rs"],
+    crate_features = ["unix_chown"],
+    deps = [
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:log",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+rust_test(
+    name = "manifest_test",
+    size = "small",
+    crate = ":manifest",
 )

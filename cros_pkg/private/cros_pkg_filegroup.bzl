@@ -5,6 +5,7 @@
 load("@rules_pkg//pkg:mappings.bzl", _strip_prefix = "strip_prefix")
 load("@rules_pkg//pkg:providers.bzl", "PackageDirsInfo", "PackageFilegroupInfo", "PackageFilesInfo", "PackageSymlinkInfo")
 load(":pkg_files.bzl", "pkg_attributes", "pkg_files_impl")
+load(":deploy.bzl", "deploy_local")
 
 def _gen_fake_ctx(ctx, src, metadata):
     """Generates a fake ctx-like object suitable for use with pkg_files_impl."""
@@ -110,6 +111,12 @@ def cros_pkg_filegroup(name, srcs = [], visibility = None, **kwargs):
         srcs = label_keyed_srcs,
         visibility = visibility,
         **kwargs
+    )
+
+    deploy_local(
+        name = name + "_deploy_local",
+        filegroup = name,
+        visibility = visibility,
     )
 
 def custom_file_type(**defaults):
