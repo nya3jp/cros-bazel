@@ -353,7 +353,10 @@ fn apply_local_sources_workarounds(
                 "@//bazel/sdk:meson_test_disable_hack".to_string(),
             ));
         } else {
-            local_sources.push(PackageLocalSource::Src("platform2/common-mk".into()));
+            let common_mk = PackageLocalSource::Src("platform2/common-mk".into());
+            if !local_sources.contains(&common_mk) {
+                local_sources.push(common_mk)
+            }
         }
     }
 
