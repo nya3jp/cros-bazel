@@ -36,10 +36,13 @@ use tempfile::TempDir;
 #[command(author = "ChromiumOS Authors")]
 #[command(about = "Analyzes Portage trees", long_about = None)]
 pub struct Args {
-    /// Board name to build packages for. If unset only host packages will be
-    /// generated.
+    /// Board name to build packages for.
     #[arg(short = 'b', long, value_name = "NAME")]
     board: Option<String>,
+
+    /// Build packages for the host.
+    #[arg(long)]
+    host: bool,
 
     /// Profile of the board.
     #[arg(short = 'p', long, value_name = "PROFILE", default_value = "base")]
@@ -187,6 +190,13 @@ fn load_board(
 }
 
 pub fn alchemist_main(args: Args) -> Result<()> {
+    if args.board.is_none() && !args.host {
+        bail!("Either --board or --host should be specified.")
+    }
+    if args.board.is_some() && args.host {
+        bail!("--board and --host shouldn't be specified together.");
+    }
+
     let source_dir = match args.source_dir {
         Some(s) => PathBuf::from(s),
         None => default_source_dir()?,
