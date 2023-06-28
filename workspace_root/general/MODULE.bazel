@@ -80,7 +80,7 @@ PY_INTERPRETER_REPO = "python%s_x86_64-unknown-linux-gnu" % PY_VERSION
 use_repo(
     python,
     "python%s_toolchains" % PY_VERSION,
-    PY_INTERPRETER_REPO,
+    python_interpreter = PY_INTERPRETER_REPO,
 )
 
 register_toolchains("@python%s_toolchains//:all" % PY_VERSION)
@@ -88,7 +88,7 @@ register_toolchains("@python%s_toolchains//:all" % PY_VERSION)
 pip = use_extension("@rules_python//python:extensions.bzl", "pip")
 pip.parse(
     name = "pip",
-    python_interpreter_target = "@%s//:python" % PY_INTERPRETER_REPO,
+    python_interpreter_target = "@python_interpreter//:python",
     requirements_lock = "//rules_cros/toolchains/python:requirements_lock.txt",
 )
 use_repo(pip, "pip")
