@@ -631,6 +631,7 @@ mod tests {
             masked: false,
             ebuild_path: tmp.path().join("foo-0.1.0.ebuild"),
             inherited: HashSet::new(),
+            direct_build_target: None,
         };
 
         Ok((package, tmp))
@@ -777,6 +778,7 @@ mod tests {
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
+            direct_build_target: None,
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, Path::new("/src"))?;
@@ -892,6 +894,7 @@ mod tests {
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
+            direct_build_target: None,
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, Path::new("/src"))?;
@@ -985,6 +988,7 @@ mod tests {
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
+            direct_build_target: None,
         }
     }
 
@@ -1125,6 +1129,7 @@ mod tests {
             masked: false,
             ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
+            direct_build_target: None,
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, Path::new("/src"))?;

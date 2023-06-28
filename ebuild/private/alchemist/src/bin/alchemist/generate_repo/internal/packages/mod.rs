@@ -64,6 +64,7 @@ pub struct EBuildEntry {
     allow_network_access: bool,
     uses: String,
     sdk: String,
+    direct_build_target: Option<String>,
 }
 
 /// Specifies the config used to generate host packages.
@@ -347,6 +348,7 @@ impl EBuildEntry {
             allow_network_access,
             uses,
             sdk,
+            direct_build_target: package.details.direct_build_target.clone(),
         })
     }
 }

@@ -65,6 +65,7 @@ pub struct PackageDetails {
     pub masked: bool,
     pub ebuild_path: PathBuf,
     pub inherited: HashSet<String>,
+    pub direct_build_target: Option<String>,
 }
 
 impl PackageDetails {
@@ -184,6 +185,15 @@ impl PackageLoader {
 
         let masked = !accepted || self.config.is_package_masked(&package);
 
+        let direct_build_target = vars.maybe_get_scalar("METALLURGY_TARGET")?.map(|s| {
+            if s.starts_with("@") {
+                s.to_string()
+            } else {
+                // eg. //bazel:foo -> @@//bazel:foo
+                format!("@@{s}")
+            }
+        });
+
         Ok(PackageResult::Ok(PackageDetails {
             repo_name: metadata.repo_name.clone(),
             package_name,
@@ -196,6 +206,7 @@ impl PackageLoader {
             masked,
             inherited,
             ebuild_path: ebuild_path.to_owned(),
+            direct_build_target,
         }))
     }
 }

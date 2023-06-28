@@ -201,6 +201,7 @@ mod tests {
             masked: false,
             ebuild_path: "/somewhere/sys-apps/prototype-1.0.ebuild".into(),
             inherited: HashSet::new(),
+            direct_build_target: None,
         };
 
         let mut details1 = details_prototype.clone();

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use std::collections::HashMap;
 
 /// Represents a shell variable value in bash.
@@ -31,11 +31,11 @@ impl BashVars {
         &self.values
     }
 
-    /// Gets a value with the specified name. If the value is missing, or it is
-    /// not a scalar value, it returns an error.
-    pub fn get_scalar(&self, name: &str) -> Result<&str> {
+    /// Gets a value with the specified name. If the value is not a scalar
+    /// value, it returns an error.
+    pub fn maybe_get_scalar(&self, name: &str) -> Result<Option<&str>> {
         match self.values.get(name) {
-            Some(BashValue::Scalar(value)) => Ok(value),
+            Some(BashValue::Scalar(value)) => Ok(Some(value)),
             Some(BashValue::IndexedArray(_)) => Err(anyhow!(
                 "{} is expected to be a scalar value, but an indexed array",
                 name
@@ -44,26 +44,22 @@ impl BashVars {
                 "{} is expected to be a scalar value, but an associative array",
                 name
             )),
-            None => Err(anyhow!("{} is not defined", name)),
+            None => Ok(None),
         }
+    }
+
+    /// Gets a value with the specified name. If the value is missing, or it is
+    /// not a scalar value, it returns an error.
+    pub fn get_scalar(&self, name: &str) -> Result<&str> {
+        self.maybe_get_scalar(name)?
+            .with_context(|| format!("{} is not defined", name))
     }
 
     /// Gets a value with the specified name. If the value is missing, it
     /// returns an empty string. If the value is not a scalar value, it returns
     /// an error.
     pub fn get_scalar_or_default(&self, name: &str) -> Result<&str> {
-        match self.values.get(name) {
-            Some(BashValue::Scalar(value)) => Ok(value),
-            Some(BashValue::IndexedArray(_)) => Err(anyhow!(
-                "{} is expected to be a scalar value, but an indexed array",
-                name
-            )),
-            Some(BashValue::AssociativeArray(_)) => Err(anyhow!(
-                "{} is expected to be a scalar value, but an associative array",
-                name
-            )),
-            None => Ok(""),
-        }
+        Ok(self.maybe_get_scalar(&name)?.unwrap_or_default())
     }
 
     /// Gets a value with the specified name. If the value is missing, or it is
