@@ -10,21 +10,28 @@ def direct_ebuild(
         package,
         category,
         package_name,
-        version = "1.0.0",
-        revision = "r1",
-        slot = 0,
+        version,
+        slot,
         runtime_deps = [],
         visibility = None):
     # Make package an absolute label.
     if ":" not in package:
         package += ":" + package.rsplit("/", 1)[-1]
+    if not package.startswith("@"):
+        package = "@@" + package
 
     tar_name = "_%s_tbz2" % name
     pkg_tar(
         name = tar_name,
         out = name + ".tbz2",
-        extension = "tar.bz2",
         srcs = [package],
+        compressor = "@@//bazel/cros_pkg/private:gen_tbz2",
+        compressor_args = " ".join([
+            "--category=" + category,
+            "--package-name=" + package_name,
+            "--version=" + version,
+            "--slot=" + slot,
+        ]),
         visibility = ["//visibility:private"],
     )
 

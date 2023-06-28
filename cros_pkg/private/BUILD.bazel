@@ -3,6 +3,8 @@
 # found in the LICENSE file.
 
 load("@rules_python//python:defs.bzl", "py_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("//bazel/rules_cros/toolchains/bash:defs.bzl", "sh_runfiles_test")
 load(":direct_ebuild.bzl", "direct_ebuild")
 
 # Calls to direct_ebuild will only ever be made by @portage. We do it here
@@ -12,7 +14,23 @@ direct_ebuild(
     package_name = "packaging_demo",
     category = "chromeos-base",
     package = "//bazel/cros_pkg/examples/packaging",
+    slot = "0",
+    version = "1.0.0-r1",
     runtime_deps = [],
+)
+
+rust_binary(
+    name = "gen_tbz2",
+    srcs = ["gen_tbz2.rs"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/ebuild/private/common/portage/version:version_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:bytes",
+        "@alchemy_crates//:bzip2",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:shell-escape",
+    ],
 )
 
 py_test(
@@ -21,4 +39,14 @@ py_test(
     srcs = ["gen_tbz2_contents_test.py"],
     data = [":_direct_example_tbz2"],
     deps = ["@rules_python//python/runfiles"],
+)
+
+rust_test(
+    name = "gen_tbz2_test",
+    size = "small",
+    crate = ":gen_tbz2",
+    deps = [
+        "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+        "@alchemy_crates//:tempfile",
+    ],
 )
