@@ -18,6 +18,11 @@ if [[ "$(portageq envvar SYMLINK_LIB)" == "yes" ]]; then
   ln -s lib64 "${ROOT}/usr/lib"
 fi
 
+# Needed to tell chromite's cros_build_lib that we are running inside the
+# SDK. We don't use a real version number since there is no such thing in the
+# bazel world.
+echo bazel > "${ROOT}/etc/cros_chroot_version"
+
 # TODO: Find a way to share bash utils
 install_deps() {
   local -i idx=0
