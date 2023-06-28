@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 
 use alchemist::{
     analyze::{
@@ -15,7 +15,6 @@ use alchemist::{
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
-use version::Version;
 
 pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n";
 
