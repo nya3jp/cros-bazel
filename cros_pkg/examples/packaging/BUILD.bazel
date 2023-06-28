@@ -36,7 +36,7 @@ pkg_mklink(
 
 # See cros_pkg/defs.bzl for an explanation of how it decides to install
 cros_pkg_filegroup(
-    name = "filegroup",
+    name = "packaging",
     srcs = [
         pkg.doc(
             srcs = glob(["testdata/docs/*.md"]),
@@ -46,15 +46,17 @@ cros_pkg_filegroup(
             name = "renamed_bin",
             srcs = [":testdata/bin"],
         ),
+        # You can provide UID, user, or both, but if providing both, then the
+        # UID and user must match. Same goes for GID / group.
         pkg.file(
             srcs = glob(["testdata/example/*"]),
             gid = 0,
-            group = "group",
+            group = "root",
             mode = "0640",
             prefix = "path/to",
             strip_prefix = strip_prefix.files_only(),
             uid = 0,
-            user = "user",
+            user = "root",
         ),
         pkg.file(
             # Installed to /demo/files_only
@@ -78,12 +80,5 @@ cros_pkg_filegroup(
     pkg_filegroups = [":pkg_filegroup"],
     pkg_files = [":pkg_file"],
     pkg_symlinks = [":pkg_symlink"],
-)
-
-py_test(
-    name = "packaging_test",
-    size = "small",
-    srcs = ["packaging_test.py"],
-    data = [":filegroup_tar"],
-    deps = ["@rules_python//python/runfiles"],
+    visibility = ["//bazel/cros_pkg/private:__pkg__"],
 )

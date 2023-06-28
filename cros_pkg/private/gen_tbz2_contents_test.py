@@ -13,7 +13,7 @@ class TarballTest(unittest.TestCase):
     def test_tarball(self):
         r = runfiles.Create()
         path = pathlib.Path(
-            r.Rlocation("cros/bazel/cros_pkg/examples/packaging/filegroup.tar")
+            r.Rlocation("cros/bazel/cros_pkg/private/direct_example.tbz2")
         )
         with tarfile.open(path) as tar:
             members = {member.name: member for member in tar.getmembers()}

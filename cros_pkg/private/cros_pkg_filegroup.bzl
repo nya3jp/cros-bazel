@@ -4,7 +4,6 @@
 
 load("@rules_pkg//pkg:mappings.bzl", _strip_prefix = "strip_prefix")
 load("@rules_pkg//pkg:providers.bzl", "PackageDirsInfo", "PackageFilegroupInfo", "PackageFilesInfo", "PackageSymlinkInfo")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load(":pkg_files.bzl", "pkg_attributes", "pkg_files_impl")
 
 def _gen_fake_ctx(ctx, src, metadata):
@@ -89,7 +88,7 @@ _cros_pkg_filegroup = rule(
     ),
 )
 
-def cros_pkg_filegroup(name, srcs = [], dst = None, **kwargs):
+def cros_pkg_filegroup(name, srcs = [], dst = None, visibility = None, **kwargs):
     # Bazel doesn't support arbitrary types like Dict[string, List[Label]].
     # So we're stuck with converting this to a "label_keyed_string_dict".
     label_keyed_srcs = {}
@@ -114,10 +113,9 @@ def cros_pkg_filegroup(name, srcs = [], dst = None, **kwargs):
     _cros_pkg_filegroup(
         name = name,
         srcs = label_keyed_srcs,
+        visibility = visibility,
         **kwargs
     )
-
-    pkg_tar(name = name + "_tar", srcs = [name], out = name + ".tar")
 
 def custom_file_type(**defaults):
     def fn(srcs, **kwargs):

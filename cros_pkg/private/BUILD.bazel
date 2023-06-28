@@ -1,0 +1,24 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_python//python:defs.bzl", "py_test")
+load(":direct_ebuild.bzl", "direct_ebuild")
+
+# Calls to direct_ebuild will only ever be made by @portage. We do it here
+# purely for the sake of testing.
+direct_ebuild(
+    name = "direct_example",
+    package_name = "packaging_demo",
+    category = "chromeos-base",
+    package = "//bazel/cros_pkg/examples/packaging",
+    runtime_deps = [],
+)
+
+py_test(
+    name = "gen_tbz2_contents_test",
+    size = "small",
+    srcs = ["gen_tbz2_contents_test.py"],
+    data = [":_direct_example_tbz2"],
+    deps = ["@rules_python//python/runfiles"],
+)
