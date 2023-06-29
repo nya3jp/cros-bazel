@@ -50,6 +50,8 @@ class TarballTest(unittest.TestCase):
             self.assertIn("demo/testdata/strip_prefix/from_current_pkg", files)
             self.assertIn("demo/strip_prefix/from_pkg", files)
 
+            self.assertIn("tmp/dest", files)
+
 
 if __name__ == "__main__":
     unittest.main()

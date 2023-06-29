@@ -75,6 +75,10 @@ cros_pkg_filegroup(
             prefix = "/demo",
             strip_prefix = strip_prefix.from_pkg("testdata"),
         ),
+        pkg.file(
+            srcs = [":testdata/dest"],
+            dst = "/tmp/dest",
+        ),
     ],
     pkg_dirs = [":pkg_dir"],
     pkg_filegroups = [":pkg_filegroup"],

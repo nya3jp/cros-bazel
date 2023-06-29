@@ -88,15 +88,10 @@ _cros_pkg_filegroup = rule(
     ),
 )
 
-def cros_pkg_filegroup(name, srcs = [], dst = None, visibility = None, **kwargs):
+def cros_pkg_filegroup(name, srcs = [], visibility = None, **kwargs):
     # Bazel doesn't support arbitrary types like Dict[string, List[Label]].
     # So we're stuck with converting this to a "label_keyed_string_dict".
     label_keyed_srcs = {}
-    if dst:
-        if "name" in kwargs or "prefix" in kwargs or "strip_prefix" in kwargs:
-            fail("Name, prefix, and strip_prefix are incompatible with dst")
-        kwargs["prefix"], kwargs["name"] = dst.rsplit("/", 1)
-        kwargs["strip_prefix"] = _strip_prefix.files_only()
 
     for src in srcs:
         if not hasattr(src, "srcs") or not hasattr(src, "kwargs"):
@@ -119,6 +114,12 @@ def cros_pkg_filegroup(name, srcs = [], dst = None, visibility = None, **kwargs)
 
 def custom_file_type(**defaults):
     def fn(srcs, **kwargs):
+        if "dst" in kwargs:
+            if "name" in kwargs or "prefix" in kwargs or "strip_prefix" in kwargs:
+                fail("Name, prefix, and strip_prefix are incompatible with dst")
+            kwargs["prefix"], kwargs["name"] = kwargs["dst"].rsplit("/", 1)
+            kwargs["strip_prefix"] = _strip_prefix.files_only()
+
         return struct(
             srcs = srcs,
             kwargs = json.encode(defaults | kwargs),
