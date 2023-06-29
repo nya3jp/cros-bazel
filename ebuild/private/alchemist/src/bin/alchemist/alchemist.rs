@@ -277,7 +277,10 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     // We share an evaluator between both config ROOTS so we only have to parse
     // the ebuilds once.
-    let evaluator = Arc::new(CachedEBuildEvaluator::new(all_repos, tools_dir.path()));
+    let evaluator = Arc::new(CachedEBuildEvaluator::new(
+        all_repos.clone(),
+        tools_dir.path(),
+    ));
 
     let target = if let Some((root_dir, repos, board_target)) = target_data {
         Some(load_board(
@@ -330,7 +333,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             )?;
         }
         Commands::DigestRepo { args: local_args } => {
-            digest_repo_main(&default_target.board, &source_dir, local_args)?;
+            digest_repo_main(&all_repos, &default_target.board, local_args)?;
         }
     }
 

@@ -239,12 +239,6 @@ pub struct RepositorySet {
     order: Vec<String>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
-pub struct RepositoryDigest {
-    pub file_hashes: Vec<(PathBuf, Sha256Digest)>,
-    pub repo_hash: Sha256Digest,
-}
-
 impl RepositorySet {
     /// Loads repositories configured for a configuration root directory.
     ///
@@ -369,7 +363,15 @@ impl RepositorySet {
         }
         Ok(paths)
     }
+}
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct RepositoryDigest {
+    pub file_hashes: Vec<(PathBuf, Sha256Digest)>,
+    pub repo_hash: Sha256Digest,
+}
+
+impl RepositoryDigest {
     /// Filters .git, files directories, etc
     fn ignore_filter(entry: &DirEntry) -> bool {
         entry.file_name() == ".git"
@@ -428,15 +430,18 @@ impl RepositorySet {
     }
 
     /// Generates a digest from all the portage files in the repository set.
-    pub fn digest(&self, additional_dirs: Vec<PathBuf>) -> Result<RepositoryDigest> {
+    pub fn new(
+        repos: &UnorderedRepositorySet,
+        additional_dirs: Vec<PathBuf>,
+    ) -> Result<RepositoryDigest> {
         // create a Sha256 object
         let mut hasher = Sha256::new();
 
         let mut files = Vec::<PathBuf>::new();
         let mut symlinks = Vec::<PathBuf>::new();
-        for dir in self
-            .get_repos()
-            .into_iter()
+        for dir in repos
+            .repos
+            .iter()
             .map(|overlay| overlay.base_dir().to_path_buf())
             .chain(additional_dirs)
         {
@@ -706,7 +711,7 @@ impl RepositoryLookup {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct UnorderedRepositorySet {
     repos: Vec<Repository>,
 }
@@ -995,7 +1000,11 @@ use-manifests = strict
                 arr![u8; 68, 216, 205, 202, 131, 32, 140, 82, 54, 145, 136, 189, 135, 114, 241, 74,
                 246, 22, 0, 63, 58, 189, 59, 9, 227, 180, 17, 66, 58, 162, 196, 22]
             ),],
-            eclass_repo_set.digest(vec![])?.file_hashes
+            RepositoryDigest::new(
+                &(eclass_repo_set.get_repos().into_iter().cloned().collect()),
+                vec![]
+            )?
+            .file_hashes
         );
 
         let chromiumos_repo_set = lookup.create_repository_set("chromiumos")?;
@@ -1026,7 +1035,15 @@ use-manifests = strict
                     127, 106, 167, 76, 209, 136, 196, 201, 21, 155, 50, 193, 61, 31, 243, 116, 255]
                 ),
             ],
-            chromiumos_repo_set.digest(vec![])?.file_hashes
+            RepositoryDigest::new(
+                &(chromiumos_repo_set
+                    .get_repos()
+                    .into_iter()
+                    .cloned()
+                    .collect()),
+                vec![]
+            )?
+            .file_hashes
         );
 
         let grunt_repo_set = lookup.create_repository_set("grunt")?;
