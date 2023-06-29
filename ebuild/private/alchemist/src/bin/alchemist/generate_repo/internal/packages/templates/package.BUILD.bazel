@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/ebuild/private:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_failure")
 load("@//bazel/ebuild/private:package_set.bzl", "package_set")
 load("@//bazel/ebuild/private:sdk.bzl", "sdk_install_deps")
@@ -9,9 +10,27 @@ load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
 {%- for ebuild in ebuilds %}
 {% if ebuild.direct_build_target -%}
-alias(
+direct_ebuild(
     name = "{{ ebuild.version }}",
-    actual = "{{ ebuild.direct_build_target }}",
+    package = "{{ ebuild.direct_build_target }}",
+    category = "{{ ebuild.category }}",
+    package_name = "{{ ebuild.package_name }}",
+    version = "{{ ebuild.version }}",
+    slot = "{{ ebuild.slot }}",
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
+    runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    visibility = ["@//bazel:internal"],
 )
 {% else -%}
 string_flag(

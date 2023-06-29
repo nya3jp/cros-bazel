@@ -50,7 +50,9 @@ pub struct EBuildEntry {
     basename: String,
     overlay: String,
     category: String,
+    package_name: String,
     version: String,
+    slot: String,
     sources: Vec<String>,
     git_trees: Vec<String>,
     dists: Vec<DistFileEntry>,
@@ -179,13 +181,12 @@ impl EBuildEntry {
             .ok_or_else(|| anyhow!("No file extension"))?
             .0
             .to_owned();
-        let category = package
+        let (category, package_name) = package
             .details
             .package_name
-            .split('/')
-            .next()
-            .expect("Package name must contain a /")
-            .to_string();
+            .split_once('/')
+            .expect("Package name must contain a /");
+
         let version = package.details.version.to_string();
 
         let sources = package
@@ -333,8 +334,10 @@ impl EBuildEntry {
             ebuild_name,
             basename,
             overlay,
-            category,
+            category: category.to_string(),
+            package_name: package_name.to_string(),
             version,
+            slot: package.details.slot.to_string(),
             sources,
             git_trees,
             dists,
