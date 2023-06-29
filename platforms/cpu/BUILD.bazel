@@ -1,0 +1,18 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+alias(
+    name = "amd64",
+    actual = "@platforms//cpu:x86_64",
+)
+
+alias(
+    name = "arm64",
+    actual = "@platforms//cpu:aarch64",
+)
+
+alias(
+    name = "arm32",
+    actual = "@platforms//cpu:armv7",
+)

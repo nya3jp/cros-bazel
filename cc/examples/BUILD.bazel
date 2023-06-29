@@ -5,4 +5,5 @@
 cc_binary(
     name = "hello_world",
     srcs = ["hello_world.cc"],
+    visibility = ["//bazel/cros_pkg/examples:__subpackages__"],
 )

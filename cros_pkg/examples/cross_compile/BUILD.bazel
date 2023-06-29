@@ -1,0 +1,72 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup", "pkg")
+
+# This isn't required when you have toolchains building something, but if you're
+# downloading prebuilts, then this will be required.
+alias(
+    name = "raw_file",
+    actual = select({
+        "//bazel/platforms/cpu:amd64": ":amd64.txt",
+        "//bazel/platforms/cpu:arm64": ":arm64.txt",
+        "//bazel/platforms/cpu:arm32": ":arm32.txt",
+        "//conditions:default": "@platforms//:incompatible",
+    }),
+)
+
+cros_pkg_filegroup(
+    name = "cross_compile",
+    srcs = [
+        pkg.file(
+            srcs = [":raw_file"],
+            dst = "/usr/src/arch.txt",
+        ),
+        # If you specify --platforms=//bazel/platforms:arm64-generic, then this
+        # binary will be built for arm64 automatically.
+        pkg.bin(
+            name = "hello_world",
+            srcs = ["//bazel/cc/examples:hello_world"],
+        ),
+    ],
+    visibility = ["//bazel:internal"],
+)
+
+# Unfortunately, selects are limited in capabilities, so it's not possible to
+# use one to change the destination of your file on disk. To do so, you'll need
+# something like this.
+SUPPORTED_CPU_ARCH = [
+    "amd64",
+    "arm64",
+    "arm32",
+]
+
+[
+    cros_pkg_filegroup(
+        name = "filegroup_%s" % cpu_arch,
+        srcs = [
+            pkg.file(
+                srcs = ["%s.txt" % cpu_arch],
+                dst = "/usr/src/%s.txt" % cpu_arch,
+            ),
+        ],
+    )
+    for cpu_arch in SUPPORTED_CPU_ARCH
+]
+
+alias(
+    name = "filegroup_per_arch",
+    actual = select({
+        "//bazel/platforms/cpu:%s" % cpu_arch: ":filegroup_%s" % cpu_arch
+        for cpu_arch in SUPPORTED_CPU_ARCH
+    } | {
+        "//conditions:default": "@platforms//:incompatible",
+    }),
+)
+
+cros_pkg_filegroup(
+    name = "different_location",
+    pkg_filegroups = [":filegroup_per_arch"],
+    visibility = ["//bazel:internal"],
+)
