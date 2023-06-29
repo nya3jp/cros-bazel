@@ -131,6 +131,7 @@ fn find_install_map<'a>(
 #[instrument(skip_all)]
 fn analyze_packages(
     config: &ConfigBundle,
+    cross_compile: bool,
     all_details: Vec<Arc<PackageDetails>>,
     src_dir: &Path,
     host_resolver: Option<&PackageResolver>,
@@ -140,7 +141,8 @@ fn analyze_packages(
     let (all_partials, failures): (Vec<PackagePartial>, Vec<PackageError>) =
         all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
-                let dependencies = analyze_dependencies(details, host_resolver, target_resolver)?;
+                let dependencies =
+                    analyze_dependencies(details, cross_compile, host_resolver, target_resolver)?;
                 let sources = analyze_sources(config, details, src_dir)?;
                 Ok(PackagePartial {
                     details: details.clone(),
@@ -248,8 +250,25 @@ fn load_packages(
 
     eprintln!("Analyzing packages...");
 
+    let cross_compile = if let Some(host) = host {
+        let cbuild = host
+            .config
+            .env()
+            .get("CHOST")
+            .context("host is missing CHOST")?;
+        let chost = target
+            .config
+            .env()
+            .get("CHOST")
+            .context("target is missing CHOST")?;
+        cbuild != chost
+    } else {
+        true
+    };
+
     let (packages, analysis_errors) = analyze_packages(
         &target.config,
+        cross_compile,
         details,
         src_dir,
         host.map(|x| &x.resolver),

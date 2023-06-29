@@ -44,7 +44,8 @@ enum DependencyKind {
     /// Post-time dependencies, aka "PDEPEND" in Portage.
     Post,
     /// Build-time host tool dependencies, aka "BDEPEND" in Portage.
-    BuildHost,
+    /// `cross_compile` will be true when CBUILD != CHOST.
+    BuildHost { cross_compile: bool },
     /// Install-time host tool dependencies, aka "IDEPEND" in Portage.
     InstallHost,
 }
@@ -141,6 +142,17 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         ("dev-python/m2crypto", DependencyKind::Build) => "dev-lang/python:3.6",
         // xau.pc contains "Requires: xproto", so it should be listed as RDEPEND.
         ("x11-libs/libXau", DependencyKind::Run) => "x11-base/xorg-proto",
+        // When cross compiling `dev-libs/nss`, it requires `dev-libs/nss` to be
+        // installed on the build host. We can't add `dev-libs/nss` as a BDEPEND
+        // to the ebuild because that would cause a circular dependency when
+        // building for the host.
+        // See: https://bugs.gentoo.org/759127
+        (
+            "dev-libs/nss",
+            DependencyKind::BuildHost {
+                cross_compile: true,
+            },
+        ) => "dev-libs/nss",
         _ => "",
     }
 }
@@ -154,7 +166,7 @@ fn extract_dependencies(
         DependencyKind::Build => "DEPEND",
         DependencyKind::Run => "RDEPEND",
         DependencyKind::Post => "PDEPEND",
-        DependencyKind::BuildHost => "BDEPEND",
+        DependencyKind::BuildHost { .. } => "BDEPEND",
         DependencyKind::InstallHost => "IDEPEND",
     };
 
@@ -183,6 +195,7 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
 /// its dependencies as a list of [`PackageDetails`].
 pub fn analyze_dependencies(
     details: &PackageDetails,
+    cross_compile: bool,
     host_resolver: Option<&PackageResolver>,
     target_resolver: &PackageResolver,
 ) -> Result<PackageDependencies> {
@@ -203,14 +216,17 @@ pub fn analyze_dependencies(
         })?;
 
     let build_host_deps = if let Some(host_resolver) = host_resolver {
-        extract_dependencies(details, DependencyKind::BuildHost, host_resolver).with_context(
-            || {
-                format!(
-                    "Resolving build-time host dependencies for {}-{}",
-                    &details.package_name, &details.version
-                )
-            },
-        )?
+        extract_dependencies(
+            details,
+            DependencyKind::BuildHost { cross_compile },
+            host_resolver,
+        )
+        .with_context(|| {
+            format!(
+                "Resolving build-time host dependencies for {}-{}",
+                &details.package_name, &details.version
+            )
+        })?
     } else {
         vec![]
     };
