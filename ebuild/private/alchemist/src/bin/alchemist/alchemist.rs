@@ -308,19 +308,13 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         }
     });
 
-    // TODO: Update all the sub commands to explicitly handle host and target.
-    let default_target = target
-        .as_ref()
-        .or(host.as_ref())
-        .context("--board was not specified or the host profile failed to load.")?;
-
     match args.command {
         Commands::DumpPackage { packages } => {
             let atoms = packages
                 .iter()
                 .map(|raw| raw.parse::<PackageAtom>())
                 .collect::<Result<Vec<_>>>()?;
-            dump_package_main(&default_target.resolver, atoms)?;
+            dump_package_main(host.as_ref(), target.as_ref(), atoms)?;
         }
         Commands::GenerateRepo {
             output_dir,

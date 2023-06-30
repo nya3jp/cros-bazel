@@ -3,12 +3,14 @@
 // found in the LICENSE file.
 
 use alchemist::analyze::dependency::analyze_dependencies;
+use alchemist::dependency::package::PackageAtom;
 use alchemist::ebuild::PackageDetails;
-use alchemist::{dependency::package::PackageAtom, resolver::PackageResolver};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use colored::Colorize;
 use itertools::Itertools;
 use std::sync::Arc;
+
+use crate::alchemist::TargetData;
 
 fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
     println!("{dep_type}:");
@@ -17,7 +19,36 @@ fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
     }
 }
 
-pub fn dump_package_main(resolver: &PackageResolver, atoms: Vec<PackageAtom>) -> Result<()> {
+pub fn dump_package_main(
+    host: Option<&TargetData>,
+    target: Option<&TargetData>,
+    atoms: Vec<PackageAtom>,
+) -> Result<()> {
+    let resolver = target
+        .or(host)
+        .map(|data| &data.resolver)
+        .context("Expected a target or host resolver")?;
+
+    let cross_compile = if let Some(host) = host {
+        if let Some(target) = target {
+            let cbuild = host
+                .config
+                .env()
+                .get("CHOST")
+                .context("host is missing CHOST")?;
+            let chost = target
+                .config
+                .env()
+                .get("CHOST")
+                .context("target is missing CHOST")?;
+            cbuild != chost
+        } else {
+            false
+        }
+    } else {
+        true
+    };
+
     for atom in atoms {
         let mut packages = resolver.find_packages(&atom)?;
         let default = resolver.find_best_package_in(&packages)?;
@@ -60,7 +91,12 @@ pub fn dump_package_main(resolver: &PackageResolver, atoms: Vec<PackageAtom>) ->
                     .join(" ")
             );
 
-            let deps = analyze_dependencies(&details, true, None, resolver)?;
+            let deps = analyze_dependencies(
+                &details,
+                cross_compile,
+                host.map(|data| &data.resolver),
+                resolver,
+            )?;
             dump_deps("BDEPEND", &deps.build_host_deps);
             dump_deps("IDEPEND", &deps.install_host_deps);
             dump_deps("DEPEND", &deps.build_deps);
