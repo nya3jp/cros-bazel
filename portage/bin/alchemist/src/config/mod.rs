@@ -8,7 +8,7 @@ pub mod miscconf;
 pub mod profile;
 pub mod site;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use version::Version;
 
@@ -131,19 +131,10 @@ pub enum ConfigNodeValue {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ConfigNode {
     /// Path to the file that provided this configuration node.
-    pub source: PathBuf,
+    pub sources: Vec<PathBuf>,
 
     /// Actual configurations provided in the node.
     pub value: ConfigNodeValue,
-}
-
-impl ConfigNode {
-    pub fn new(source: &Path, value: ConfigNodeValue) -> Self {
-        Self {
-            source: source.to_owned(),
-            value,
-        }
-    }
 }
 
 /// Source of [`ConfigNode`]s.

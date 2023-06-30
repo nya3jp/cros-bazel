@@ -104,12 +104,11 @@ fn default_source_dir() -> Result<PathBuf> {
 }
 
 fn build_override_config_source() -> SimpleConfigSource {
-    let source = PathBuf::from("<override>");
     let nodes = vec![
         // HACK: Mask chromeos-base/chromeos-lacros-9999 as it's not functional.
         // TODO: Fix the ebuild and remove this hack.
         ConfigNode {
-            source: source.clone(),
+            sources: vec![PathBuf::from("<override>")],
             value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                 kind: PackageMaskKind::Mask,
                 atom: "=chromeos-base/chromeos-lacros-9999".parse().unwrap(),

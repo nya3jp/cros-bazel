@@ -119,28 +119,28 @@ mod tests {
         assert_eq!(
             vec![
                 ConfigNode {
-                    source: dir.join("etc/make.conf"),
+                    sources: vec![dir.join("etc/make.conf")],
                     value: ConfigNodeValue::Vars(Vars::from_iter([(
                         "USE".to_owned(),
                         "a".to_owned()
                     )])),
                 },
                 ConfigNode {
-                    source: dir.join("etc/portage/make.conf"),
+                    sources: vec![dir.join("etc/portage/make.conf")],
                     value: ConfigNodeValue::Vars(Vars::from_iter([(
                         "USE".to_owned(),
                         "b".to_owned()
                     )])),
                 },
                 ConfigNode {
-                    source: dir.join("etc/portage/profile/package.mask"),
+                    sources: vec![dir.join("etc/portage/profile/package.mask")],
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
                         atom: PackageAtom::from_str("pkg/x").unwrap(),
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("etc/portage/profile/package.use"),
+                    sources: vec![dir.join("etc/portage/profile/package.use")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Set,
                         filter: UseUpdateFilter {
@@ -151,21 +151,21 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("etc/portage/profile/package.provided"),
+                    sources: vec![dir.join("etc/portage/profile/package.provided")],
                     value: ConfigNodeValue::ProvidedPackages(vec![ProvidedPackage {
                         package_name: "pkg/x".to_owned(),
                         version: Version::try_new("1.0.0").unwrap(),
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("etc/portage/package.mask"),
+                    sources: vec![dir.join("etc/portage/package.mask")],
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
                         atom: PackageAtom::from_str("pkg/x").unwrap(),
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("etc/portage/package.use"),
+                    sources: vec![dir.join("etc/portage/package.use")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Set,
                         filter: UseUpdateFilter {
@@ -176,7 +176,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("etc/portage/package.provided"),
+                    sources: vec![dir.join("etc/portage/package.provided")],
                     value: ConfigNodeValue::ProvidedPackages(vec![ProvidedPackage {
                         package_name: "pkg/x".to_owned(),
                         version: Version::try_new("1.0.0").unwrap(),

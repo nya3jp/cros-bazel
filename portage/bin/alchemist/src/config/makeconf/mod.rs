@@ -98,15 +98,11 @@ impl FromIterator<Value> for RVal {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MakeConf {
-    source: PathBuf,
+    sources: Vec<PathBuf>,
     values: HashMap<String, RVal>,
 }
 
 impl MakeConf {
-    pub fn source(&self) -> &Path {
-        &self.source
-    }
-
     pub fn load(
         path: &Path,
         base_dir: &Path,
@@ -114,7 +110,7 @@ impl MakeConf {
         allow_missing: bool,
     ) -> Result<Self> {
         let mut conf = Self {
-            source: base_dir.join(path),
+            sources: Vec::new(),
             values: HashMap::new(),
         };
         conf.load_file(path, base_dir, allow_source, allow_missing)?;
@@ -200,6 +196,8 @@ impl MakeConf {
             }
         }
 
+        self.sources.push(source);
+
         Ok(())
     }
 }
@@ -215,7 +213,10 @@ impl ConfigSource for MakeConf {
         // Update `env` with computed variables.
         env.extend(vars.clone().into_iter());
 
-        vec![ConfigNode::new(&self.source, ConfigNodeValue::Vars(vars))]
+        vec![ConfigNode {
+            sources: self.sources.clone(),
+            value: ConfigNodeValue::Vars(vars),
+        }]
     }
 }
 
@@ -394,6 +395,15 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
                 ])
             )]),
             conf.values
+        );
+
+        assert_eq!(
+            vec![
+                dir.join("make.conf.user"),
+                dir.join("make.conf.user"),
+                dir.join("make.conf")
+            ],
+            conf.sources
         );
         Ok(())
     }

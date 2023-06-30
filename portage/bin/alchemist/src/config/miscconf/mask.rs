@@ -54,7 +54,7 @@ fn load_package_config(source: &Path, kind: PackageMaskKind) -> Result<Vec<Confi
     }
 
     Ok(vec![ConfigNode {
-        source: source.to_owned(),
+        sources: vec![source.to_owned()],
         value: ConfigNodeValue::PackageMasks(updates),
     }])
 }
@@ -90,7 +90,7 @@ mod tests {
         assert_eq!(
             vec![
                 ConfigNode {
-                    source: dir.join("package.mask"),
+                    sources: vec![dir.join("package.mask")],
                     value: ConfigNodeValue::PackageMasks(vec![
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Mask,
@@ -107,7 +107,7 @@ mod tests {
                     ]),
                 },
                 ConfigNode {
-                    source: dir.join("package.unmask"),
+                    sources: vec![dir.join("package.unmask")],
                     value: ConfigNodeValue::PackageMasks(vec![
                         PackageMaskUpdate {
                             kind: PackageMaskKind::Unmask,
@@ -144,28 +144,28 @@ mod tests {
         assert_eq!(
             vec![
                 ConfigNode {
-                    source: dir.join("package.mask/a.conf"),
+                    sources: vec![dir.join("package.mask/a.conf")],
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
                         atom: PackageAtom::from_str("pkg/a").unwrap(),
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.mask/b.conf"),
+                    sources: vec![dir.join("package.mask/b.conf")],
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Mask,
                         atom: PackageAtom::from_str("pkg/b").unwrap(),
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.unmask/c.conf"),
+                    sources: vec![dir.join("package.unmask/c.conf")],
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Unmask,
                         atom: PackageAtom::from_str("pkg/c").unwrap(),
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.unmask/d.conf"),
+                    sources: vec![dir.join("package.unmask/d.conf")],
                     value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                         kind: PackageMaskKind::Unmask,
                         atom: PackageAtom::from_str("pkg/d").unwrap(),

@@ -62,7 +62,7 @@ fn load_accept_keywords_configs_internal(source: PathBuf) -> Result<Vec<ConfigNo
         .collect::<Result<Vec<_>>>()?;
 
     Ok(vec![ConfigNode {
-        source,
+        sources: vec![source],
         value: ConfigNodeValue::AcceptKeywords(updates),
     }])
 }
@@ -101,7 +101,7 @@ mod tests {
         let nodes = load_accept_keywords_configs(dir)?;
         assert_eq!(
             vec![ConfigNode {
-                source: dir.join("package.accept_keywords"),
+                sources: vec![dir.join("package.accept_keywords")],
                 value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
                     atom: PackageAtom::from_str("pkg/a").unwrap(),
                     accept_keywords: "amd64 ~x86".to_owned(),
@@ -129,14 +129,14 @@ mod tests {
         assert_eq!(
             vec![
                 ConfigNode {
-                    source: dir.join("package.accept_keywords/aaa/bbb"),
+                    sources: vec![dir.join("package.accept_keywords/aaa/bbb")],
                     value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
                         atom: PackageAtom::from_str("pkg/b").unwrap(),
                         accept_keywords: "amd64 ~x86".to_owned(),
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.accept_keywords/ccc"),
+                    sources: vec![dir.join("package.accept_keywords/ccc")],
                     value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
                         atom: PackageAtom::from_str("pkg/c").unwrap(),
                         accept_keywords: "".to_owned(),

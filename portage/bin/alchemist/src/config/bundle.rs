@@ -616,7 +616,7 @@ mod tests {
         assert_eq!(
             ConfigBundle::compute_accept_keywords(
                 &vec![ConfigNode {
-                    source: PathBuf::from("a"),
+                    sources: vec![PathBuf::from("a")],
                     value: ConfigNodeValue::Vars(HashMap::from([(
                         "ACCEPT_KEYWORDS".to_owned(),
                         "amd64".to_owned()
@@ -633,14 +633,14 @@ mod tests {
             ConfigBundle::compute_accept_keywords(
                 &vec![
                     ConfigNode {
-                        source: PathBuf::from("a"),
+                        sources: vec![PathBuf::from("a")],
                         value: ConfigNodeValue::Vars(HashMap::from([(
                             "ACCEPT_KEYWORDS".to_owned(),
                             "amd64".to_owned()
                         )])),
                     },
                     ConfigNode {
-                        source: PathBuf::from("b"),
+                        sources: vec![PathBuf::from("b")],
                         value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
                             atom: PackageAtom::from_str("=aaa/bbb-9999")?,
                             accept_keywords: "".to_owned(),
@@ -658,14 +658,14 @@ mod tests {
             ConfigBundle::compute_accept_keywords(
                 &vec![
                     ConfigNode {
-                        source: PathBuf::from("a"),
+                        sources: vec![PathBuf::from("a")],
                         value: ConfigNodeValue::Vars(HashMap::from([(
                             "ACCEPT_KEYWORDS".to_owned(),
                             "amd64".to_owned()
                         )])),
                     },
                     ConfigNode {
-                        source: PathBuf::from("b"),
+                        sources: vec![PathBuf::from("b")],
                         value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
                             atom: PackageAtom::from_str("=ccc/ddd-9999")?,
                             accept_keywords: "".to_owned(),
@@ -683,14 +683,14 @@ mod tests {
             ConfigBundle::compute_accept_keywords(
                 &vec![
                     ConfigNode {
-                        source: PathBuf::from("a"),
+                        sources: vec![PathBuf::from("a")],
                         value: ConfigNodeValue::Vars(HashMap::from([(
                             "ACCEPT_KEYWORDS".to_owned(),
                             "amd64".to_owned()
                         )])),
                     },
                     ConfigNode {
-                        source: PathBuf::from("b"),
+                        sources: vec![PathBuf::from("b")],
                         value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
                             atom: PackageAtom::from_str("=aaa/bbb-9999")?,
                             accept_keywords: "-* arm64 ~arm64".to_owned(),

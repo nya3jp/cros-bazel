@@ -39,7 +39,7 @@ pub fn load_provided_packages_config(dir: &Path) -> Result<Vec<ConfigNode>> {
     }
 
     Ok(vec![ConfigNode {
-        source,
+        sources: vec![source],
         value: ConfigNodeValue::ProvidedPackages(packages),
     }])
 }
@@ -70,7 +70,7 @@ mod tests {
         let nodes = load_provided_packages_config(dir)?;
         assert_eq!(
             vec![ConfigNode {
-                source: dir.join("package.provided"),
+                sources: vec![dir.join("package.provided")],
                 value: ConfigNodeValue::ProvidedPackages(vec![
                     ProvidedPackage {
                         package_name: "pkg/a".to_owned(),

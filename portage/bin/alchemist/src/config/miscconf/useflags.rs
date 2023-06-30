@@ -57,7 +57,7 @@ fn load_wildcard_use_config(
     }
 
     Ok(vec![ConfigNode {
-        source: source.to_owned(),
+        sources: vec![source.to_owned()],
         value: ConfigNodeValue::Uses(updates),
     }])
 }
@@ -117,7 +117,7 @@ fn load_package_use_config(
     }
 
     Ok(vec![ConfigNode {
-        source: source.to_owned(),
+        sources: vec![source.to_owned()],
         value: ConfigNodeValue::Uses(updates),
     }])
 }
@@ -180,7 +180,7 @@ mod tests {
         assert_eq!(
             vec![
                 ConfigNode {
-                    source: dir.join("package.use"),
+                    sources: vec![dir.join("package.use")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Set,
                         filter: UseUpdateFilter {
@@ -191,7 +191,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("use.mask"),
+                    sources: vec![dir.join("use.mask")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Mask,
                         filter: UseUpdateFilter {
@@ -202,7 +202,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("use.stable.mask"),
+                    sources: vec![dir.join("use.stable.mask")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Mask,
                         filter: UseUpdateFilter {
@@ -213,7 +213,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.use.mask"),
+                    sources: vec![dir.join("package.use.mask")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Mask,
                         filter: UseUpdateFilter {
@@ -224,7 +224,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.use.stable.mask"),
+                    sources: vec![dir.join("package.use.stable.mask")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Mask,
                         filter: UseUpdateFilter {
@@ -235,7 +235,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("use.force"),
+                    sources: vec![dir.join("use.force")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Force,
                         filter: UseUpdateFilter {
@@ -246,7 +246,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("use.stable.force"),
+                    sources: vec![dir.join("use.stable.force")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Force,
                         filter: UseUpdateFilter {
@@ -257,7 +257,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.use.force"),
+                    sources: vec![dir.join("package.use.force")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Force,
                         filter: UseUpdateFilter {
@@ -268,7 +268,7 @@ mod tests {
                     }]),
                 },
                 ConfigNode {
-                    source: dir.join("package.use.stable.force"),
+                    sources: vec![dir.join("package.use.stable.force")],
                     value: ConfigNodeValue::Uses(vec![UseUpdate {
                         kind: UseUpdateKind::Force,
                         filter: UseUpdateFilter {
