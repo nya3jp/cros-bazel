@@ -2,7 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{collections::HashMap, collections::HashSet, iter};
+use std::{
+    collections::HashMap,
+    collections::HashSet,
+    iter,
+    path::{Path, PathBuf},
+};
 
 use anyhow::Result;
 use itertools::Itertools;
@@ -362,6 +367,15 @@ impl ConfigBundle {
         &self.provided_packages
     }
 
+    /// Returns a list of all the configuration sources.
+    pub fn sources(&self) -> Vec<&Path> {
+        self.nodes
+            .iter()
+            .flat_map(|node| &node.sources)
+            .map(|path| path.as_path())
+            .collect()
+    }
+
     /// Computes the effective IUSE of a package, which includes IUSE explicitly
     /// defined in ebuild/eclass and profile-injected IUSE.
     ///
@@ -702,6 +716,33 @@ mod tests {
             ),
             vec!["arm64", "~arm64"]
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_sources() -> Result<()> {
+        let bundle = ConfigBundle::new(
+            Vars::new(),
+            vec![
+                ConfigNode {
+                    sources: vec![PathBuf::from("a")],
+                    value: ConfigNodeValue::Vars(HashMap::from([(
+                        "ACCEPT_KEYWORDS".to_owned(),
+                        "amd64".to_owned(),
+                    )])),
+                },
+                ConfigNode {
+                    sources: vec![PathBuf::from("b")],
+                    value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
+                        atom: PackageAtom::from_str("=aaa/bbb-9999")?,
+                        accept_keywords: "".to_owned(),
+                    }]),
+                },
+            ],
+        );
+
+        assert_eq!(bundle.sources(), vec![Path::new("a"), Path::new("b")]);
 
         Ok(())
     }

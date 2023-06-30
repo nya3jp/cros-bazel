@@ -432,19 +432,17 @@ impl RepositoryDigest {
     /// Generates a digest from all the portage files in the repository set.
     pub fn new(
         repos: &UnorderedRepositorySet,
-        additional_dirs: Vec<PathBuf>,
+        additional_files: Vec<&Path>,
     ) -> Result<RepositoryDigest> {
         // create a Sha256 object
         let mut hasher = Sha256::new();
 
-        let mut files = Vec::<PathBuf>::new();
+        let mut files: Vec<_> = additional_files
+            .into_iter()
+            .map(|p| p.to_path_buf())
+            .collect();
         let mut symlinks = Vec::<PathBuf>::new();
-        for dir in repos
-            .repos
-            .iter()
-            .map(|overlay| overlay.base_dir().to_path_buf())
-            .chain(additional_dirs)
-        {
+        for dir in repos.repos.iter().map(|overlay| overlay.base_dir()) {
             for entry in WalkDir::new(dir)
                 .follow_links(true)
                 .into_iter()
@@ -455,7 +453,10 @@ impl RepositoryDigest {
                         if io_error.kind() == std::io::ErrorKind::NotFound {
                             // Handle dangling symlinks.
                             let path = e.path().unwrap();
-                            if std::fs::symlink_metadata(&path)?.is_symlink() {
+                            if std::fs::symlink_metadata(path)
+                                .with_context(|| format!("{}", path.display()))?
+                                .is_symlink()
+                            {
                                 symlinks.push(path.to_path_buf());
                             }
                             continue;
@@ -475,6 +476,10 @@ impl RepositoryDigest {
                 }
             }
         }
+
+        // Ensure we don't hash a file twice.
+        files.sort();
+        files.dedup();
 
         let mut files = Self::hash_items(files, Self::hash_file)?;
         let symlinks = Self::hash_items(symlinks, Self::hash_symlink)?;

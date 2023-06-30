@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::alchemist::TargetData;
 use alchemist::repository::{RepositoryDigest, UnorderedRepositorySet};
 use anyhow::Result;
-use std::path::PathBuf;
 
 #[derive(clap::Args, Clone, Debug)]
 pub struct Args {
@@ -17,26 +17,29 @@ pub struct Args {
 }
 
 /// The entry point of "digest-repo" subcommand.
-pub fn digest_repo_main(repos: &UnorderedRepositorySet, board: &str, args: Args) -> Result<()> {
-    // When running inside a cros chroot, files under /etc and /build/$BOARD/etc
-    // can also affect the build.
-    let additional_dirs_to_digest = vec![
-        PathBuf::from("/etc/make.conf"),
-        PathBuf::from("/etc/make.conf.board_setup"),
-        PathBuf::from("/etc/make.conf.host_setup"),
-        PathBuf::from("/etc/make.conf.user"),
-        PathBuf::from("/etc/portage"),
-        PathBuf::from("/build").join(board).join("etc/make.conf"),
-        PathBuf::from("/build")
-            .join(board)
-            .join("etc/make.conf.board_setup"),
-        PathBuf::from("/build")
-            .join(board)
-            .join("etc/make.conf.user"),
-        PathBuf::from("/build").join(board).join("etc/portage"),
-    ];
+pub fn digest_repo_main(
+    host: Option<&TargetData>,
+    target: Option<&TargetData>,
+    args: Args,
+) -> Result<()> {
+    let repos: UnorderedRepositorySet = [
+        host.map_or(vec![], |data| data.repos.get_repos()),
+        target.map_or(vec![], |data| data.repos.get_repos()),
+    ]
+    .into_iter()
+    .flat_map(|x| x.into_iter())
+    .cloned()
+    .collect();
 
-    let digest = RepositoryDigest::new(repos, additional_dirs_to_digest)?;
+    let sources = [
+        host.map_or(vec![], |data| data.config.sources()),
+        target.map_or(vec![], |data| data.config.sources()),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+
+    let digest = RepositoryDigest::new(&repos, sources)?;
 
     if args.print_files {
         for file in digest.file_hashes {

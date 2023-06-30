@@ -23,7 +23,7 @@ use alchemist::{
     dependency::package::PackageAtom,
     ebuild::{metadata::CachedEBuildEvaluator, CachedPackageLoader, PackageLoader},
     fakechroot::{enter_fake_chroot, PathTranslator},
-    repository::{RepositorySet, UnorderedRepositorySet},
+    repository::RepositorySet,
     resolver::PackageResolver,
     toolchain::load_toolchains,
 };
@@ -108,7 +108,7 @@ fn build_override_config_source() -> SimpleConfigSource {
         // HACK: Mask chromeos-base/chromeos-lacros-9999 as it's not functional.
         // TODO: Fix the ebuild and remove this hack.
         ConfigNode {
-            sources: vec![PathBuf::from("<override>")],
+            sources: vec![],
             value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
                 kind: PackageMaskKind::Mask,
                 atom: "=chromeos-base/chromeos-lacros-9999".parse().unwrap(),
@@ -267,17 +267,15 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         }
     };
 
-    let all_repos: UnorderedRepositorySet = [&target_data, &host_data]
-        .into_iter()
-        .filter_map(|x| x.as_ref())
-        .flat_map(|x| x.1.get_repos())
-        .cloned()
-        .collect();
-
     // We share an evaluator between both config ROOTS so we only have to parse
     // the ebuilds once.
     let evaluator = Arc::new(CachedEBuildEvaluator::new(
-        all_repos.clone(),
+        [&target_data, &host_data]
+            .into_iter()
+            .filter_map(|x| x.as_ref())
+            .flat_map(|x| x.1.get_repos())
+            .cloned()
+            .collect(),
         tools_dir.path(),
     ));
 
@@ -310,12 +308,6 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         }
     });
 
-    // TODO: Update all the sub commands to explicitly handle host and target.
-    let default_target = target
-        .as_ref()
-        .or(host.as_ref())
-        .context("--board was not specified or the host profile failed to load.")?;
-
     match args.command {
         Commands::DumpPackage { packages } => {
             let atoms = packages
@@ -338,7 +330,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             )?;
         }
         Commands::DigestRepo { args: local_args } => {
-            digest_repo_main(&all_repos, &default_target.board, local_args)?;
+            digest_repo_main(host.as_ref(), target.as_ref(), local_args)?;
         }
     }
 
