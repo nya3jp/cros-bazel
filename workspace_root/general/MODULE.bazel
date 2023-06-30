@@ -133,8 +133,8 @@ use_repo(files, "files")
 cros_deps = use_extension("//bazel/module_extensions/cros_deps:extension.bzl", "cros_deps")
 use_repo(cros_deps, "chromite", "depot_tools", "zstd")
 
-pre_portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "pre_portage")
-use_repo(pre_portage, "alchemist", "portage_digest", "portage_tarball")
-
 portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage")
-use_repo(portage, "portage", "portage_deps")
+use_repo(portage, "alchemist", "portage", "portage_digest")
+
+portage_deps = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage_deps")
+use_repo(portage_deps, "portage_deps")

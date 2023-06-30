@@ -11,27 +11,7 @@ package_group(
 )
 """
 
-_TARBALL_REPO_BUILD_FILE = """
-exports_files(["deps.json", "repo.tar.gz"])
-"""
-
-# See https://reproducible-builds.org/docs/archives/
-_TAR_HERMETIC_ARGS = [
-    "--format",
-    "gnu",
-    "--sort",
-    "name",
-    "--mtime",
-    "1970-1-1 00:00Z",
-    "--owner",
-    "0",
-    "--group",
-    "0",
-    "--numeric-owner",
-    "--auto-compress",
-]
-
-def _portage_tarball_impl(repo_ctx):
+def _portage_impl(repo_ctx):
     """Repository rule to generate the board's bazel BUILD files."""
 
     # Keep all the repo_ctx.path calls first to avoid expensive restarts
@@ -42,7 +22,7 @@ def _portage_tarball_impl(repo_ctx):
     # Ensure the repo rule reruns when the digest changes.
     repo_ctx.path(repo_ctx.attr.digest)
 
-    out = repo_ctx.path("out")
+    out = repo_ctx.path("")
 
     # --source-dir needs the repo root, not just the `src` directory
     root = repo_ctx.workspace_root.dirname
@@ -78,28 +58,8 @@ def _portage_tarball_impl(repo_ctx):
         repo_ctx.file(out.get_child("settings.bzl"), content = "BOARD = None")
         repo_ctx.file(out.get_child("BUILD.bazel"), content = _EMPTY_PORTAGE_BUILD)
 
-    tar = repo_ctx.which("tar")
-    if not tar:
-        fail("tar was not found on the path")
-    args = [tar] + _TAR_HERMETIC_ARGS + [
-        "--create",
-        "--file",
-        repo_ctx.path("repo.tar.gz"),
-        "-C",
-        out,
-        ".",
-    ]
-
-    # If parallel gzip is available, use that instead.
-    if repo_ctx.which("pigz"):
-        args.extend(["-I", "pigz"])
-    st = repo_ctx.execute(args)
-    if st.return_code:
-        fail("Error running command %s:\n%s%s" % (args, st.stdout, st.stderr))
-    repo_ctx.file("BUILD.bazel", _TARBALL_REPO_BUILD_FILE)
-
-portage_tarball = repository_rule(
-    implementation = _portage_tarball_impl,
+portage = repository_rule(
+    implementation = _portage_impl,
     attrs = dict(
         board = attr.label(allow_single_file = True),
         profile = attr.label(allow_single_file = True),
