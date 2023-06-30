@@ -72,19 +72,19 @@ fn generate_deps(packages: &[Package]) -> Result<Vec<Repository>> {
             let url = &dist.urls[0];
             if url.starts_with("cipd://") {
                 Repository::CipdFile {
-                    name: dist.repository_name,
+                    name: dist.name,
                     downloaded_file_path: dist.filename,
                     url: url.to_string(),
                 }
             } else if url.starts_with("gs://") {
                 Repository::GsFile {
-                    name: dist.repository_name,
+                    name: dist.name,
                     downloaded_file_path: dist.filename,
                     url: url.to_string(),
                 }
             } else {
                 Repository::HttpFile {
-                    name: dist.repository_name,
+                    name: dist.name,
                     downloaded_file_path: dist.filename,
                     integrity: dist.integrity,
                     urls: dist.urls.clone(),
@@ -242,14 +242,14 @@ mod tests {
         let expected = r#"[
   {
     "CipdFile": {
-      "name": "portage-dist_goldctl-2021.03.31-amd64.zip",
+      "name": "dist_goldctl-2021.03.31-amd64.zip",
       "downloaded_file_path": "goldctl-2021.03.31-amd64.zip",
       "url": "cipd://skia/tools/goldctl/linux-amd64:0ov3TU"
     }
   },
   {
     "HttpFile": {
-      "name": "portage-dist_google-api-core-1.19.0.tar.gz",
+      "name": "dist_google-api-core-1.19.0.tar.gz",
       "downloaded_file_path": "google-api-core-1.19.0.tar.gz",
       "integrity": "sha256-ASNG",
       "urls": [
@@ -259,7 +259,7 @@ mod tests {
   },
   {
     "GsFile": {
-      "name": "portage-dist_secret-file.tar.gz",
+      "name": "dist_secret-file.tar.gz",
       "downloaded_file_path": "secret-file.tar.gz",
       "url": "gs://secret-bucket/secret-file.tar.gz"
     }

@@ -97,7 +97,7 @@ ebuild(
     category = "{{ebuild.category}}",
     distfiles = {
         {%- for dist in ebuild.dists %}
-        "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
+        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
         {%- endfor %}
     },
     {%- if ebuild.sources %}
@@ -156,7 +156,7 @@ ebuild_debug(
     category = "{{ebuild.category}}",
     distfiles = {
         {%- for dist in ebuild.dists %}
-        "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
+        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
         {%- endfor %}
     },
     {%- if ebuild.sources %}
@@ -223,7 +223,7 @@ ebuild_test(
     category = "{{ebuild.category}}",
     distfiles = {
         {%- for dist in ebuild.dists %}
-        "@{{ dist.repository_name }}//file": "{{ dist.filename }}",
+        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
         {%- endfor %}
     },
     {%- if ebuild.sources %}

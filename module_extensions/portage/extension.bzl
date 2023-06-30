@@ -60,22 +60,21 @@ def _portage_impl(module_ctx):
     deps = json.decode(module_ctx.read(deps_path))
 
     aliases = {}
-    symlinks = {}
     for repo in deps:
         for rule, kwargs in repo.items():
             name = kwargs["name"]
             if rule == "HttpFile":
                 http_file(**kwargs)
-                symlinks[name] = "@%s//file" % name
+                aliases[name] = "@%s//file" % name
             elif rule == "GsFile":
                 gs_file(**kwargs)
-                symlinks[name] = "@%s//file" % name
+                aliases[name] = "@%s//file" % name
             elif rule == "RepoRepository":
                 repo_repository(**kwargs)
                 aliases["%s_src" % name] = "@%s//:src" % name
             elif rule == "CipdFile":
                 cipd_file(**kwargs)
-                symlinks[name] = "@%s//file" % name
+                aliases[name] = "@%s//file" % name
             elif rule == "CrosChromeRepository":
                 cros_chrome_repository(**kwargs)
                 aliases["%s_src" % name] = "@%s//:src" % name
@@ -85,8 +84,8 @@ def _portage_impl(module_ctx):
 
     hub_repo(
         name = "portage_deps",
-        symlinks = symlinks,
         aliases = aliases,
+        symlinks = {},
         visibility = ["@portage//:all_packages"],
     )
 

@@ -82,7 +82,7 @@ pub static TOOLCHAIN_PACKAGE_NAMES: &[&str] = &[
     "sys-devel/crossdev",
 ];
 
-fn file_name_to_repository_name(file_name: &str) -> String {
+fn file_name_to_name(file_name: &str) -> String {
     let escaped_file_name: String = file_name
         .chars()
         .map(|c| {
@@ -93,7 +93,7 @@ fn file_name_to_repository_name(file_name: &str) -> String {
             }
         })
         .join("");
-    format!("portage-dist_{}", escaped_file_name)
+    format!("dist_{}", escaped_file_name)
 }
 
 pub fn repository_set_to_target_path(repo_set: &RepositorySet) -> String {
@@ -137,7 +137,7 @@ pub struct Package {
 
 #[derive(Serialize)]
 pub struct DistFileEntry {
-    pub repository_name: String,
+    pub name: String,
     pub filename: String,
     pub integrity: String,
     pub urls: Vec<String>,
@@ -146,7 +146,7 @@ pub struct DistFileEntry {
 impl DistFileEntry {
     pub fn try_new(source: &PackageDistSource) -> Result<Self> {
         Ok(Self {
-            repository_name: file_name_to_repository_name(&source.filename),
+            name: file_name_to_name(&source.filename),
             filename: source.filename.clone(),
             integrity: source.compute_integrity()?,
             urls: source.urls.iter().map(|url| url.to_string()).collect(),

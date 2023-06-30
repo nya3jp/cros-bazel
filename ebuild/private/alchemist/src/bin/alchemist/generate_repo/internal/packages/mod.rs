@@ -198,7 +198,9 @@ impl EBuildEntry {
                 PackageLocalSource::Src(src) => {
                     format!("//internal/sources/{}:__tarballs__", src.to_string_lossy())
                 }
-                PackageLocalSource::Chrome(version) => format!("@chrome-{version}//:src"),
+                PackageLocalSource::Chrome(version) => {
+                    format!("@portage_deps//:chrome-{version}_src")
+                }
                 PackageLocalSource::Chromite => "@chromite//:src".to_string(),
             })
             .collect();
@@ -207,7 +209,7 @@ impl EBuildEntry {
             .sources
             .repo_sources
             .iter()
-            .map(|source| format!("@{}//:src", source.name.to_owned()))
+            .map(|source| format!("@portage_deps//:{}_src", source.name.to_owned()))
             .collect();
 
         let dists = package
