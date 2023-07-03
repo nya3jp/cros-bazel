@@ -9,8 +9,7 @@ package(default_visibility = ["//visibility:public"])
 
 bool_flag(
     name = "hermetic",
-    # TODO: Switch this to true once it's stable.
-    build_setting_default = False,
+    build_setting_default = True,
 )
 
 config_setting(
