@@ -8,8 +8,7 @@ load(
     "tool_path",
 )
 load("@rules_cc//cc:defs.bzl", "cc_toolchain", "cc_toolchain_suite")
-load("//bazel/module_extensions/toolchains:files.bzl", "PER_PLATFORM_FILES")
-load("//bazel/platforms:platforms.bzl", "ALL_PLATFORMS")
+load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM")
 load(":features.bzl", "get_features")
 
 SYSROOT = "external/_main~toolchains~toolchain_sdk"
@@ -78,58 +77,78 @@ cc_toolchain_config = rule(
     provides = [CcToolchainConfigInfo],
 )
 
-def generate_cc_toolchain(name, platform):
+def generate_cc_toolchain(name, platform, target_settings, package):
+    def target(name):
+        return "{package}:{triple}_{name}".format(
+            package = package,
+            triple = platform.triple,
+            name = name,
+        )
+
     triple = platform.triple
-    files = PER_PLATFORM_FILES[triple]
-    config_name = "config_{name}".format(name = name)
+    config_name = "{name}_config".format(name = name)
 
     cc_toolchain_config(
         name = config_name,
         triple = triple,
-        sysroot = files["sysroot"],
-        ar = files["ar"],
-        cpp = files["cpp"],
-        dwp = files["dwp"],
-        gcc = files["clang_selector"],
-        gcov = files["gcov"],
-        ld = files["ld"],
-        nm = files["nm"],
-        objcopy = files["objcopy"],
-        objdump = files["objdump"],
-        strip = files["strip"],
+        sysroot = target("sysroot"),
+        ar = target("ar"),
+        cpp = target("cpp"),
+        dwp = target("dwp"),
+        gcc = target("clang_selector"),
+        gcov = target("gcov"),
+        ld = target("ld"),
+        nm = target("nm"),
+        objcopy = target("objcopy"),
+        objdump = target("objdump"),
+        strip = target("strip"),
     )
 
     cc_toolchain(
         name = name,
-        all_files = files["all_files"],
-        ar_files = files["ar_files"],
-        compiler_files = files["compiler_files"],
-        dwp_files = files["dwp_files"],
-        linker_files = files["linker_files"],
-        objcopy_files = files["objcopy_files"],
-        strip_files = files["strip_files"],
+        all_files = target("all_files"),
+        ar_files = target("ar_files"),
+        compiler_files = target("compiler_files"),
+        dwp_files = target("dwp_files"),
+        linker_files = target("linker_files"),
+        objcopy_files = target("objcopy_files"),
+        strip_files = target("strip_files"),
         toolchain_config = ":" + config_name,
     )
 
     native.toolchain(
-        name = "native_{name}".format(name = name),
+        name = "{name}_toolchain".format(name = name),
         exec_compatible_with = [
             "@platforms//cpu:x86_64",
             "@platforms//os:linux",
         ],
         target_compatible_with = platform.constraints,
         toolchain = ":" + name,
-        target_settings = [
-            "@@//bazel/module_extensions/toolchains/cc:hermetic_enabled",
-        ],
+        target_settings = target_settings,
         toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
     )
 
 def generate_cc_toolchains():
-    for platform in ALL_PLATFORMS:
+    generate_cc_toolchain(
+        name = "cc_primordial",
+        platform = HOST_PLATFORM,
+        package = "@@//bazel/module_extensions/toolchains/files/primordial",
+        target_settings = [
+            "@@//bazel/module_extensions/toolchains/cc:hermetic_enabled",
+            "@@//bazel/module_extensions/toolchains:primordial_enabled",
+        ],
+    )
+
+    # TODO: Switch to ALL_PLATFORMS once it works.
+    for platform in []:
         generate_cc_toolchain(
-            name = "cc_toolchain_{triple}".format(triple = platform.triple),
+            name = "cc_bootstrapped_{triple}".format(triple = platform.triple),
             platform = platform,
+            target_settings = [
+                "@@//bazel/module_extensions/toolchains/cc:hermetic_enabled",
+                "@@//bazel/module_extensions/toolchains:primordial_disabled",
+            ],
+            package = "@@//bazel/module_extensions/toolchains/files/bootstrapped",
         )
 
     # Workaround for https://github.com/bazelbuild/bazel/issues/12712
