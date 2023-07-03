@@ -2,11 +2,26 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("//bazel/ebuild/private:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/ebuild/private:install_groups.bzl", "calculate_install_groups")
 load("//bazel/ebuild/private:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
+load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
-load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+
+# The stage1 SDK will need to be built with ebuild_primordial.
+# After that, they can use the ebuild rule.
+# This ensures that we don't build the stage1 targets twice.
+def maybe_primordial_rule(attrs, **kwargs):
+    return (
+        rule(attrs = attrs, **kwargs),
+        rule(cfg = primordial_transition, attrs = dict(
+            _allowlist_function_transition = attr.label(
+                default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+            ),
+            **attrs
+        ), **kwargs),
+    )
 
 # Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
 _EBUILD_COMMON_ATTRS = dict(
@@ -224,9 +239,9 @@ def _ebuild_impl(ctx):
             executable = ctx.executable._download_prebuilt,
             arguments = [gsutil_path, prebuilt, output_binary_package_file.path],
             execution_requirements = {
-                "requires-network": "",
-                "no-sandbox": "",
                 "no-remote": "",
+                "no-sandbox": "",
+                "requires-network": "",
             },
             progress_message = "Downloading %s" % prebuilt,
         )
@@ -248,12 +263,12 @@ def _ebuild_impl(ctx):
                 args,
             ],
             execution_requirements = {
-                # Send SIGTERM instead of SIGKILL on user interruption.
-                "supports-graceful-termination": "",
+                "no-remote": "",
                 # Disable sandbox to avoid creating a symlink forest.
                 # This does not affect hermeticity since ebuild runs in a container.
                 "no-sandbox": "",
-                "no-remote": "",
+                # Send SIGTERM instead of SIGKILL on user interruption.
+                "supports-graceful-termination": "",
             },
             mnemonic = "Ebuild",
             progress_message = "Building %{label}",
@@ -310,7 +325,7 @@ def _ebuild_impl(ctx):
         package_set_info,
     ] + interface_library_providers
 
-ebuild = rule(
+ebuild, ebuild_primordial = maybe_primordial_rule(
     implementation = _ebuild_impl,
     doc = "Builds a Portage binary package from an ebuild file.",
     attrs = dict(
@@ -401,7 +416,7 @@ def _ebuild_debug_impl(ctx):
         runfiles = ctx.runfiles(transitive_files = inputs),
     )
 
-ebuild_debug = rule(
+ebuild_debug, ebuild_debug_primordial = maybe_primordial_rule(
     implementation = _ebuild_debug_impl,
     executable = True,
     doc = "Enters the ephemeral chroot to build a Portage binary package in.",
@@ -476,7 +491,7 @@ def _ebuild_install_impl(ctx):
         runfiles = runfiles,
     )
 
-ebuild_install = rule(
+ebuild_install, ebuild_install_primordial = maybe_primordial_rule(
     implementation = _ebuild_install_impl,
     executable = True,
     doc = "Installs the package to the environment.",
@@ -521,7 +536,7 @@ def _ebuild_test_impl(ctx):
         runfiles = ctx.runfiles(transitive_files = inputs),
     )
 
-ebuild_test = rule(
+ebuild_test, ebuild_primordial_test = maybe_primordial_rule(
     implementation = _ebuild_test_impl,
     doc = "Runs ebuild tests.",
     attrs = dict(

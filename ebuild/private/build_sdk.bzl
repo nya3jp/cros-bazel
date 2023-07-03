@@ -2,8 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
-load("install_groups.bzl", "calculate_install_groups", "map_install_group")
+load("//bazel/transitions:primordial.bzl", "primordial_transition")
+load(":common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
+load(":install_groups.bzl", "calculate_install_groups", "map_install_group")
 
 def _build_sdk_impl(ctx):
     sdk = ctx.attr.sdk[SDKInfo]
@@ -49,11 +50,11 @@ def _build_sdk_impl(ctx):
         tools = [ctx.executable._build_sdk],
         arguments = [args],
         execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since ebuild runs in a container.
             "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
         },
         mnemonic = "InstallDeps",
         progress_message = progress_message,
@@ -69,31 +70,18 @@ def _build_sdk_impl(ctx):
 build_sdk = rule(
     implementation = _build_sdk_impl,
     attrs = {
-        "sdk": attr.label(
-            doc = """
-            The SDK that was used to create the packages listed in target_deps.
-            """,
-            mandatory = True,
-            providers = [SDKInfo],
-        ),
         "board": attr.string(
             mandatory = True,
             doc = """
             The board name of the target SDK board.
             """,
         ),
+        "extra_tarballs": attr.label_list(
+            allow_files = True,
+        ),
         "overlays": attr.label(
             providers = [OverlaySetInfo],
             mandatory = True,
-        ),
-        "target_deps": attr.label_list(
-            doc = """
-            Packages that will be used to create the new SDK.
-            """,
-            providers = [BinaryPackageSetInfo],
-        ),
-        "extra_tarballs": attr.label_list(
-            allow_files = True,
         ),
         "progress_message": attr.string(
             doc = """
@@ -102,6 +90,19 @@ build_sdk = rule(
             total number of dependencies that need to be installed.
             """,
             default = "Building %{label} with {dep_count} packages",
+        ),
+        "sdk": attr.label(
+            doc = """
+            The SDK that was used to create the packages listed in target_deps.
+            """,
+            mandatory = True,
+            providers = [SDKInfo],
+        ),
+        "target_deps": attr.label_list(
+            doc = """
+            Packages that will be used to create the new SDK.
+            """,
+            providers = [BinaryPackageSetInfo],
         ),
         "_action_wrapper": attr.label(
             executable = True,
@@ -114,4 +115,5 @@ build_sdk = rule(
             default = Label("//bazel/ebuild/private/cmd/build_sdk"),
         ),
     },
+    cfg = primordial_transition,
 )

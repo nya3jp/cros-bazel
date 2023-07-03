@@ -2,8 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
-load("install_deps.bzl", "install_deps")
+load("//bazel/transitions:primordial.bzl", "primordial_transition")
+load(":common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
+load(":install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
     output_prefix = ctx.attr.out or ctx.attr.name
@@ -46,17 +47,20 @@ sdk_from_archive = rule(
         "out": attr.string(
             doc = "Output directory name. Defaults to the target name.",
         ),
+        "progress_message": attr.string(
+            default = "Extracting SDK archive",
+        ),
         "src": attr.label(
             mandatory = True,
             allow_single_file = True,
-        ),
-        "progress_message": attr.string(
-            default = "Extracting SDK archive",
         ),
         "_action_wrapper": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
+        ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
         "_sdk_from_archive": attr.label(
             executable = True,
@@ -64,6 +68,7 @@ sdk_from_archive = rule(
             default = Label("//bazel/ebuild/private/cmd/sdk_from_archive"),
         ),
     },
+    cfg = primordial_transition,
 )
 
 def _sdk_update_impl(ctx):
@@ -99,11 +104,11 @@ def _sdk_update_impl(ctx):
         tools = [ctx.executable._sdk_update],
         arguments = [args],
         execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since sdk_update runs in a container.
             "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
         },
         mnemonic = "SdkUpdate",
         progress_message = "Building %{label}",
@@ -119,15 +124,15 @@ def _sdk_update_impl(ctx):
 sdk_update = rule(
     implementation = _sdk_update_impl,
     attrs = {
-        "out": attr.string(
-            doc = "Output directory name. Defaults to the target name.",
-        ),
         "base": attr.label(
             mandatory = True,
             providers = [SDKInfo],
         ),
         "extra_tarballs": attr.label_list(
             allow_files = True,
+        ),
+        "out": attr.string(
+            doc = "Output directory name. Defaults to the target name.",
         ),
         "progress_message": attr.string(
             doc = """
@@ -142,12 +147,16 @@ sdk_update = rule(
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/action_wrapper"),
         ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
         "_sdk_update": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/ebuild/private/cmd/sdk_update"),
         ),
     },
+    cfg = primordial_transition,
 )
 
 def _sdk_install_deps_impl(ctx):
@@ -188,9 +197,6 @@ def _sdk_install_deps_impl(ctx):
 sdk_install_deps = rule(
     implementation = _sdk_install_deps_impl,
     attrs = {
-        "out": attr.string(
-            doc = "Output directory name. Defaults to the target name.",
-        ),
         "base": attr.label(
             doc = """
             Base SDK to derive a new SDK from.
@@ -204,15 +210,12 @@ sdk_install_deps = rule(
             otherwise they are installed into the host's sysroot.
             """,
         ),
+        "out": attr.string(
+            doc = "Output directory name. Defaults to the target name.",
+        ),
         "overlays": attr.label(
             providers = [OverlaySetInfo],
             mandatory = True,
-        ),
-        "target_deps": attr.label_list(
-            doc = """
-            Target packages to install in the SDK.
-            """,
-            providers = [BinaryPackageSetInfo],
         ),
         "progress_message": attr.string(
             doc = """
@@ -221,6 +224,12 @@ sdk_install_deps = rule(
             total number of dependencies that need to be installed.
             """,
             default = "Installing {dep_count} packages into %{label}",
+        ),
+        "target_deps": attr.label_list(
+            doc = """
+            Target packages to install in the SDK.
+            """,
+            providers = [BinaryPackageSetInfo],
         ),
         "_action_wrapper": attr.label(
             executable = True,
@@ -304,11 +313,11 @@ def _sdk_install_glibc_impl(ctx):
         tools = [ctx.executable._sdk_install_glibc],
         arguments = [args],
         execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since sdk_install_glibc runs in a container.
             "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
         },
         mnemonic = "SdkInstallGlibc",
         progress_message = "Installing cross glibc into %{label}",
@@ -324,9 +333,6 @@ def _sdk_install_glibc_impl(ctx):
 sdk_install_glibc = rule(
     implementation = _sdk_install_glibc_impl,
     attrs = {
-        "out": attr.string(
-            doc = "Output directory name. Defaults to the target name.",
-        ),
         "base": attr.label(
             mandatory = True,
             providers = [SDKInfo],
@@ -339,6 +345,9 @@ sdk_install_glibc = rule(
             doc = "The cross-*-cros-linux-gnu/glibc package to install",
             mandatory = True,
             providers = [BinaryPackageInfo],
+        ),
+        "out": attr.string(
+            doc = "Output directory name. Defaults to the target name.",
         ),
         "_action_wrapper": attr.label(
             executable = True,
