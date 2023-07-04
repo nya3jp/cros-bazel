@@ -1,0 +1,109 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/build_defs:filter_files.bzl", "filter_files")
+load("//bazel/build_defs:gen_files.bzl", "gen_files")
+load(":glob.bzl", "glob_check")
+
+# These are "tests", but run during the analysis phase. Thus, they all run at
+# the same time. If you want to check an individual failure, just comment out
+# the rest of them.
+glob_check(
+    name = "exact",
+    glob = "a/b/c",
+    path = "a/b/c",
+    want = True,
+)
+
+glob_check(
+    name = "leftover",
+    glob = "a/b/c",
+    path = "a/b/c/d",
+    want = False,
+)
+
+glob_check(
+    name = "insufficient",
+    glob = "a/b/c/d",
+    path = "a/b/c",
+    want = False,
+)
+
+glob_check(
+    name = "single_star",
+    glob = "a*c",
+    path = "abc",
+    want = True,
+)
+
+glob_check(
+    name = "single_star_multiple_times",
+    glob = "a*b*c",
+    path = "abc",
+    want = True,
+)
+
+glob_check(
+    name = "star_empty_match",
+    glob = "*b*",
+    path = "b",
+    want = True,
+)
+
+glob_check(
+    name = "multi_star_empty",
+    glob = "a/**",
+    path = "a",
+    want = False,
+)
+
+glob_check(
+    name = "multi_star_no_suffix",
+    glob = "a/**",
+    path = "a/b/c",
+    want = True,
+)
+
+glob_check(
+    name = "multi_star_with_correct_suffix",
+    glob = "a/**/c",
+    path = "a/b/c",
+    want = True,
+)
+
+glob_check(
+    name = "multi_star_with_wrong_suffix",
+    glob = "a/**/c",
+    path = "a/b/d",
+    want = False,
+)
+
+glob_check(
+    name = "multi_star_with_multiple_options",
+    glob = "a/**/c",
+    path = "a/c/c",
+    want = True,
+)
+
+gen_files(
+    name = "testdata",
+    file_contents = {
+        "testdata/path/to/file": "",
+        "testdata/root": "",
+    },
+)
+
+filter_files(
+    name = "root",
+    srcs = [":testdata"],
+    include = ["root"],
+    strip_prefix = "bazel/build_defs/filter_files/testdata",
+)
+
+filter_files(
+    name = "nested",
+    srcs = [":testdata"],
+    include = ["path/to/*"],
+    strip_prefix = "bazel/build_defs/filter_files/testdata",
+)
