@@ -109,6 +109,9 @@ build_sdk = rule(
             cfg = "exec",
             default = Label("//bazel/portage/bin/action_wrapper"),
         ),
+        "_allowlist_function_transition": attr.label(
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
         "_build_sdk": attr.label(
             executable = True,
             cfg = "exec",
