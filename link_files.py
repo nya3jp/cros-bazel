@@ -60,10 +60,6 @@ def main() -> int:
             _create_link(os.path.join(path, entry), entry)
             known_symlinks.append(entry)
 
-    # Create a symlink to bazel/rules_cros.
-    _create_link("bazel/rules_cros", "rules_cros")
-    known_symlinks.append("rules_cros")
-
     # Remove unneeded symlinks.
     for entry in os.listdir("."):
         if os.path.islink(entry) and entry not in known_symlinks:

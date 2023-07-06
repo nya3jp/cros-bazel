@@ -1,8 +1,0 @@
-# bazelrc settings for developing & testing rules_cros itself.
-
-# Import the default cros bazelrc settings.
-import %workspace%/common.bazelrc
-
-# The host platform definition needs to be overridden to refer to a local target
-# to work around what appears to be a bug in Bazel.
-build --host_platform=//cros/platforms:linux_x86_64

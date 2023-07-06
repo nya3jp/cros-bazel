@@ -5,6 +5,8 @@
 load("@rules_foreign_cc//foreign_cc:providers.bzl", "ForeignCcDepsInfo")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "runfiles_path", "wrap_binary_with_args")
 
+visibility("public")
+
 _ENV_VARS = "export LD_LIBRARY_PATH={extra_libraries}:${{LD_LIBRARY_PATH:-}}"
 
 def _foreign_cc_standalone_binary_impl(ctx):

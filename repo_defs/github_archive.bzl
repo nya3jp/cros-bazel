@@ -4,6 +4,8 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+visibility("public")
+
 def github_archive(name, github_user, github_repo, tag, checksum = "", strip_prefix = None, patch_args = None, patch_strip = 1, **kwargs):
     """A rule to download a release from github.
 
