@@ -24,7 +24,7 @@ func TestThirdParty(t *testing.T) {
 }
 
 func TestRunfiles(t *testing.T) {
-	path, err := runfiles.Rlocation("cros/rules_cros/toolchains/testdata/example.txt")
+	path, err := runfiles.Rlocation("cros/bazel/go/examples/lib/testdata/example.txt")
 	if err != nil {
 		t.Fatalf("Expected rlocation to succeed. Got %v", err)
 	}

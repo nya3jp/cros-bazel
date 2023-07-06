@@ -21,7 +21,7 @@ go_test(
     srcs = [
         "lib_test.go",
     ],
-    data = ["//rules_cros/toolchains:testdata/example.txt"],
+    data = ["testdata/example.txt"],
     deps = [
         ":lib",
         "@com_github_google_go_cmp//cmp",

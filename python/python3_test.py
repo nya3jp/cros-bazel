@@ -27,7 +27,7 @@ class Py3Test(unittest.TestCase):
 
         r = runfiles.Create()
         path = pathlib.Path(
-            r.Rlocation("cros/rules_cros/toolchains/testdata/example.txt")
+            r.Rlocation("cros/bazel/python/testdata/example.txt")
         )
         self.assertTrue(path.is_file())
 
