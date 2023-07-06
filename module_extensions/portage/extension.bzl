@@ -3,14 +3,14 @@
 # found in the LICENSE file.
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
-load("//bazel:repo/cipd.bzl", "cipd_file")
-load("//bazel:repo/gs.bzl", "gs_file")
-load("//bazel:repo/repo_repository.bzl", "repo_repository")
 load("//bazel/module_extensions/portage:alchemist.bzl", "alchemist")
 load("//bazel/module_extensions/portage:portage.bzl", _portage = "portage")
 load("//bazel/module_extensions/portage:portage_digest.bzl", "portage_digest")
 load("//bazel/module_extensions/private:hub_repo.bzl", "hub_repo")
 load("//bazel/portage/repo_defs/chrome:cros_chrome_repository.bzl", "cros_chrome_repository")
+load("//bazel/repo_defs:cipd.bzl", "cipd_file")
+load("//bazel/repo_defs:gs.bzl", "gs_file")
+load("//bazel/repo_defs:repo_repository.bzl", "repo_repository")
 
 """Module extensions to generate the @portage repo.
 
