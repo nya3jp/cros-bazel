@@ -222,18 +222,21 @@ mod tests {
                 dependencies: dependencies.clone(),
                 sources: cipd_sources,
                 install_set: vec![],
+                build_host_deps: vec![],
             },
             Package {
                 details: details2.into(),
                 dependencies: dependencies.clone(),
                 sources: gs_sources,
                 install_set: vec![],
+                build_host_deps: vec![],
             },
             Package {
                 details: details3.into(),
                 dependencies: dependencies.clone(),
                 sources: https_sources,
                 install_set: vec![],
+                build_host_deps: vec![],
             },
         ];
 

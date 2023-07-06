@@ -225,7 +225,6 @@ impl EBuildEntry {
             PackageType::Host(host) => {
                 let (host_build_deps, provided_host_build_deps) = partition_provided(
                     package
-                        .dependencies
                         .build_host_deps
                         .iter()
                         .chain(package.dependencies.build_deps.iter()),
@@ -242,7 +241,7 @@ impl EBuildEntry {
                 // what's contained in the stage1 SDK.
                 if let Some(host) = host {
                     let (host_build_deps, provided_host_build_deps) = partition_provided(
-                        package.dependencies.build_host_deps.iter(),
+                        package.build_host_deps.iter(),
                         host.sdk_provided_packages,
                     );
 

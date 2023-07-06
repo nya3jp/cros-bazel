@@ -128,6 +128,64 @@ fn find_install_map<'a>(
     }
 }
 
+/// Adds `current` and all of `current`'s runtime deps into to `runtime_deps`.
+fn collect_runtime_deps<'a>(
+    partial_by_path: &'a HashMap<&Path, &PackagePartial>,
+    current: &'a Arc<PackageDetails>,
+    runtime_deps: &mut HashMap<&'a Path, Arc<PackageDetails>>,
+) {
+    use std::collections::hash_map::Entry::*;
+    match runtime_deps.entry(current.ebuild_path.as_path()) {
+        Occupied(_) => {
+            return;
+        }
+        Vacant(entry) => {
+            entry.insert(current.clone());
+        }
+    }
+
+    // PackagePartial can be unavailable when analysis failed for the package
+    // (e.g. failed to flatten RDEPEND). We can just skip traversing the graph
+    // in this case.
+    let current_partial = match partial_by_path.get(current.ebuild_path.as_path()) {
+        Some(partial) => partial,
+        None => {
+            return;
+        }
+    };
+
+    let deps = &current_partial.dependencies;
+    // TODO(rrangel): Profile this and see if we should instead cache the
+    // computed RDEPENDs instead of traversing the graph every call.
+    for runtime_dep in &deps.runtime_deps {
+        collect_runtime_deps(partial_by_path, runtime_dep, runtime_deps);
+    }
+}
+
+/// Returns the union of `current`'s `build_host_deps` and the
+/// `install_host_deps` of all the `build_deps` and their transitive
+/// `runtime_deps`.
+fn compute_host_build_deps<'a>(
+    partial_by_path: &'a HashMap<&Path, &PackagePartial>,
+    current: &'a PackagePartial,
+) -> Vec<Arc<PackageDetails>> {
+    let mut build_dep_runtime_deps: HashMap<&'a Path, Arc<PackageDetails>> = HashMap::new();
+
+    for build_dep in &current.dependencies.build_deps {
+        collect_runtime_deps(partial_by_path, build_dep, &mut build_dep_runtime_deps);
+    }
+
+    build_dep_runtime_deps
+        .into_values()
+        .filter_map(|details| partial_by_path.get(details.ebuild_path.as_path()))
+        .flat_map(|partial| &partial.dependencies.install_host_deps)
+        .chain(&current.dependencies.build_host_deps)
+        .sorted_by_key(|details| &details.ebuild_path)
+        .unique_by(|details| &details.ebuild_path)
+        .cloned()
+        .collect()
+}
+
 #[instrument(skip_all)]
 fn analyze_packages(
     config: &ConfigBundle,
@@ -218,10 +276,23 @@ fn analyze_packages(
         })
         .collect();
 
+    let mut build_host_deps_by_path: HashMap<PathBuf, Vec<Arc<PackageDetails>>> = partial_by_path
+        .iter()
+        .map(|(path, partial)| {
+            (
+                path.to_path_buf(),
+                compute_host_build_deps(&partial_by_path, partial),
+            )
+        })
+        .collect();
+
     let packages = all_partials
         .into_iter()
         .map(|partial| {
             let install_set = install_set_by_path
+                .remove(partial.details.ebuild_path.as_path())
+                .unwrap();
+            let build_host_deps = build_host_deps_by_path
                 .remove(partial.details.ebuild_path.as_path())
                 .unwrap();
             Package {
@@ -229,6 +300,7 @@ fn analyze_packages(
                 dependencies: partial.dependencies,
                 install_set,
                 sources: partial.sources,
+                build_host_deps,
             }
         })
         .collect();

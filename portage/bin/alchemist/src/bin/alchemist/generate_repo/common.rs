@@ -133,6 +133,15 @@ pub struct Package {
     /// RDEPEND and PDEPEND. Alchemist needs to compute it, instead of letting
     /// Bazel compute it, because there can be circular dependencies.
     pub install_set: Vec<Arc<PackageDetails>>,
+
+    /// The BDEPENDs declared by this package and all the IDEPENDs specified
+    /// by the package's DEPENDs and their transitive RDEPENDs.
+    ///
+    /// When building the `build_deps` SDK layer, we need to ensure that all
+    /// the IDEPENDs are installed into the `build_host_deps` SDK layer. We
+    /// Could add the concept of an IDEPEND to bazel, but it would make the
+    /// `sdk_install_deps` rule very complicated and harder to understand.
+    pub build_host_deps: Vec<Arc<PackageDetails>>,
 }
 
 #[derive(Serialize)]
