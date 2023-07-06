@@ -311,6 +311,12 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         }
     });
 
+    // TODO: Update all the sub commands to explicitly handle host and target.
+    let default_target = target
+        .as_ref()
+        .or(host.as_ref())
+        .context("--board was not specified or the host profile failed to load.")?;
+
     match args.command {
         Commands::DumpPackage { packages } => {
             let atoms = packages
