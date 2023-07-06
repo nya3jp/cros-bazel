@@ -89,7 +89,7 @@ pip = use_extension("@rules_python//python:extensions.bzl", "pip")
 pip.parse(
     name = "pip",
     python_interpreter_target = "@python_interpreter//:python",
-    requirements_lock = "//rules_cros/toolchains/python:requirements_lock.txt",
+    requirements_lock = "//bazel/python:requirements_lock.txt",
 )
 use_repo(pip, "pip")
 
