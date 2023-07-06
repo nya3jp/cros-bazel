@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+visibility("public")
+
 _RUNFILES_HEADERS = """#!/bin/bash
 
 # --- begin runfiles.bash initialization v3 ---
@@ -120,7 +122,7 @@ def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles 
 
         # We could define a separate executable target, but that would mean that
         # users would need to add something like this attribute to their rule:
-        # _write_to_file = attr.label(default=Label("//rules_cros/toolchains/bash:write_to_file"))
+        # _write_to_file = attr.label(default=Label("//bazel/bash:write_to_file"))
         write_to_file = ctx.actions.declare_file(basename + "_write_to_file.sh")
         ctx.actions.write(write_to_file, _WRITE_TO_FILE, is_executable = True)
         args_file = ctx.actions.declare_file(basename + "_args.txt")

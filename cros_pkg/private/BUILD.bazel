@@ -4,7 +4,7 @@
 
 load("@rules_python//python:defs.bzl", "py_test")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
-load("//bazel/rules_cros/toolchains/bash:defs.bzl", "sh_runfiles_test")
+load("//bazel/bash:defs.bzl", "sh_runfiles_test")
 load(":direct_ebuild.bzl", "direct_ebuild")
 
 rust_binary(

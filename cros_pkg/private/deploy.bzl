@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:providers.bzl", "PackageFilegroupInfo")
-load("//rules_cros/toolchains/bash:defs.bzl", "wrap_binary_with_args", _runfiles_path = "runfiles_path")
+load("//bazel/bash:defs.bzl", "wrap_binary_with_args", _runfiles_path = "runfiles_path")
 
 _PREFIX = """
 test -z "${RUNFILES_DIR:-}" && export RUNFILES_MANIFEST_ONLY=1

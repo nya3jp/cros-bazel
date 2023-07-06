@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//rules_cros/toolchains/bash:defs.bzl", "custom_args_test", "sh_runfiles_binary")
+load("//bazel/bash:defs.bzl", "custom_args_test", "sh_runfiles_binary")
 
 sh_runfiles_binary(
     name = "read_runfiles",

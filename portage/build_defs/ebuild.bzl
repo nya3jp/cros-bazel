@@ -7,7 +7,7 @@ load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "EbuildLibrar
 load("//bazel/portage/build_defs:install_groups.bzl", "calculate_install_groups")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
-load("//rules_cros/toolchains/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
+load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 
 # The stage1 SDK will need to be built with ebuild_primordial.
 # After that, they can use the ebuild rule.
