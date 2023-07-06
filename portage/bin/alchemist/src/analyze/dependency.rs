@@ -47,7 +47,8 @@ enum DependencyKind {
     /// `cross_compile` will be true when CBUILD != CHOST.
     BuildHost { cross_compile: bool },
     /// Install-time host tool dependencies, aka "IDEPEND" in Portage.
-    InstallHost,
+    /// `cross_compile` will be true when CBUILD != CHOST.
+    InstallHost { cross_compile: bool },
 }
 
 /// Parses a dependency represented as [`PackageDependency`] that can contain
@@ -153,6 +154,15 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
                 cross_compile: true,
             },
         ) => "dev-libs/nss",
+        // dev-libs/nss needs to run the `shlibsign` binary when installing.
+        // When cross-compiling that means we need need to use the build host's
+        // `shlibsign`.
+        (
+            "dev-libs/nss",
+            DependencyKind::InstallHost {
+                cross_compile: true,
+            },
+        ) => "dev-libs/nss",
         _ => "",
     }
 }
@@ -167,7 +177,7 @@ fn extract_dependencies(
         DependencyKind::Run => "RDEPEND",
         DependencyKind::Post => "PDEPEND",
         DependencyKind::BuildHost { .. } => "BDEPEND",
-        DependencyKind::InstallHost => "IDEPEND",
+        DependencyKind::InstallHost { .. } => "IDEPEND",
     };
 
     let raw_deps = details.vars.get_scalar_or_default(var_name)?;
@@ -232,14 +242,17 @@ pub fn analyze_dependencies(
     };
 
     let install_host_deps = if let Some(host_resolver) = host_resolver {
-        extract_dependencies(details, DependencyKind::InstallHost, host_resolver).with_context(
-            || {
-                format!(
-                    "Resolving install-time host dependencies for {}-{}",
-                    &details.package_name, &details.version
-                )
-            },
-        )?
+        extract_dependencies(
+            details,
+            DependencyKind::InstallHost { cross_compile },
+            host_resolver,
+        )
+        .with_context(|| {
+            format!(
+                "Resolving install-time host dependencies for {}-{}",
+                &details.package_name, &details.version
+            )
+        })?
     } else {
         vec![]
     };
