@@ -1,0 +1,20 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "build_sdk",
+    srcs = glob(["src/*.rs"]),
+    data = [":build_sdk.sh"],
+    visibility = ["//bazel:internal"],
+    deps = [
+        "//bazel/portage/common/cliutil:cliutil_rust",
+        "//bazel/portage/common/container",
+        "//bazel/portage/common/fileutil:fileutil_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@rules_rust//tools/runfiles",
+    ],
+)

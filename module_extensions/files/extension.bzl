@@ -4,8 +4,8 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_file_symlink = "http_file")
 load("//bazel/module_extensions/private:hub_repo.bzl", "hub_repo")
-load("//bazel/prebuilts:repositories.bzl", "prebuilts_dependencies")
-load("//bazel/sdk:repositories.bzl", "cros_sdk_repositories")
+load("//bazel/portage/repo_defs/prebuilts:repositories.bzl", "prebuilts_dependencies")
+load("//bazel/portage/sdk:repositories.bzl", "cros_sdk_repositories")
 
 def _files_impl(module_ctx):
     aliases = {}

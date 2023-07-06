@@ -104,7 +104,7 @@ ebuild(
     eclasses = [
         "//internal/overlays/third_party/portage-stable/eclass:flag-o-matic",
     ],
-    sdk = "@//bazel/sdk",
+    sdk = "@//bazel/portage/sdk",
     visibility = ["//visibility:public"],
 )
 ```

@@ -1,0 +1,13 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "logging",
+    srcs = ["logging.go"],
+    importpath = "cros.local/bazel/portage/bin/fakefs/logging",
+    visibility = ["//bazel/portage/bin/fakefs:__subpackages__"],
+    deps = ["@com_github_alessio_shellescape//:shellescape"],
+)

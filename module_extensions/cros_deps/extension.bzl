@@ -4,7 +4,7 @@
 
 load(":depot_tools/repositories.bzl", "depot_tools_repository")
 load(":chromite/repositories.bzl", "chromite")
-load("//bazel/zstd:repositories.bzl", "zstd_repository")
+load("//bazel/portage/repo_defs/zstd:repositories.bzl", "zstd_repository")
 
 def _cros_deps_impl(module_ctx):
     chromite(name = "chromite")

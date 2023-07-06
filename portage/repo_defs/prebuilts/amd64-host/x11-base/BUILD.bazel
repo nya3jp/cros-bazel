@@ -1,0 +1,13 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
+
+# x11-libs/libxcb needs this, but it looks missing in SDK and instead pulled in
+# by BDEPEND.
+binary_package(
+    name = "xcb-proto",
+    src = "@files//:amd64_host_xcb_proto_1_14_1",
+    visibility = ["//bazel:internal"],
+)

@@ -113,32 +113,15 @@ $ chromite/bin/cros_vm --stop
 
 ## Directory structure
 
-*** note
-**NOTE:** We will be reorganizing the directory structure soon. See
-[go/cros-build:alchemy-dirs](https://goto.google.com/cros-build:alchemy-dirs)
-for the discussion.
-***
-
-* `ebuild/`
-    * `cmd` ... misc commands for development
-    * `private/` ... contains programs used by Bazel rules
-        * `alchemist` ... generates a Bazel repository on `bazel build`
-        * `cmd/` commands internally used in the build
-            * `action_wrapper/` ... the generic wrapper of Bazel actions, handling logs and signals
-            * `build_image/` ... builds ChromeOS images
-            * `build_package/` ... builds a Portage binary package; used by `ebuild` rule
-            * `build_sdk/` ... builds SDK squashfs; used by `sdk` rule
-            * `extract_interface/` ... builds an interface library
-            * `fakefs/` ... simulates chown(2) in unprivileged user namespaces
-            * `install_deps/` ... installs binary packages into an ephemeral SDK
-            * `run_in_container/` ... runs a program within an unprivileged Linux container; used by other programs such as `build_sdk` and `build_package`
-            * `sdk_from_archive/` ... creates a base ephemeral SDK from an archive
-            * `sdk_update/` ... updates an ephemeral SDK with patches and packages
-        * `common/` ... common Rust/Go libraries
-* `prebuilts/` ... defines prebuilt binaries
+* `portage/` ... for building Portage packages (aka Alchemy)
+    * `bin/` ... executables
+    * `common/` ... common Rust/Go libraries
+    * `build_defs/` ... build rule definitions in Starlark
+    * `repo_defs/` ... additional repository definitions
+        * `prebuilts/` ... defines prebuilt binaries
+    * `sdk/` ... defines the base SDK
+    * `tools/` ... misc small tools for development
 * `images/` ... defines ChromeOS image targets
-* `sdk/` ... defines the base SDK
-* `tools/` ... misc small tools for development
 * `workspace_root/` ... contains various files to be symlinked to the workspace root, including `WORKSPACE.bazel` and `BUILD.bazel`
 
 ## Misc Memo
@@ -223,7 +206,7 @@ In case you need to extract the contents of a binary package so you can easily
 inspect it, you can use the `xpak split` CLI.
 
 ```sh
-bazel run //bazel/ebuild/cmd/xpak:xpak -- split --extract libffi-3.1-r8.tbz2 libusb-0-r2.tbz2
+bazel run //bazel/portage/bin/xpak:xpak -- split --extract libffi-3.1-r8.tbz2 libusb-0-r2.tbz2
 ```
 
 ### Running tests on every local commit

@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-visibility("//bazel/ebuild/private/...")
+visibility("//bazel/portage/...")
 
 def _primordial_transition_impl(settings, attr):
     _ignore = (settings, attr)

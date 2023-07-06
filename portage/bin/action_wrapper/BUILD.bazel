@@ -1,0 +1,37 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+rust_binary(
+    name = "action_wrapper",
+    srcs = glob(["src/*.rs"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel:internal"],
+    deps = [
+        "//bazel/portage/common/chrome-trace",
+        "//bazel/portage/common/cliutil:cliutil_rust",
+        "//bazel/portage/common/fileutil:fileutil_rust",
+        "//bazel/portage/common/processes",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:tempfile",
+    ],
+)
+
+rust_test(
+    name = "action_wrapper_test",
+    size = "small",
+    crate = ":action_wrapper",
+    data = [":action_wrapper"] + glob(["testdata/**"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@alchemy_crates//:libc",
+        "@alchemy_crates//:regex",
+        "@alchemy_crates//:tempfile",
+    ],
+)

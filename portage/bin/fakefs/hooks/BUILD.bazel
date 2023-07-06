@@ -1,0 +1,24 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "hooks",
+    srcs = ["hooks_amd64.go"],
+    importpath = "cros.local/bazel/portage/bin/fakefs/hooks",
+    visibility = ["//bazel/portage/bin/fakefs:__subpackages__"],
+    deps = select({
+        "@rules_go//go/platform:amd64": [
+            "//bazel/portage/bin/fakefs/fsop",
+            "//bazel/portage/bin/fakefs/logging",
+            "//bazel/portage/bin/fakefs/ptracearch",
+            "//bazel/portage/bin/fakefs/syscallabi",
+            "@com_github_elastic_go_seccomp_bpf//:go-seccomp-bpf",
+            "@org_golang_x_net//bpf",
+            "@org_golang_x_sys//unix",
+        ],
+        "//conditions:default": [],
+    }),
+)

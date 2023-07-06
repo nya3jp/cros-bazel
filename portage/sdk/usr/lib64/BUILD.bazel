@@ -1,0 +1,18 @@
+# Copyright 2022 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+
+pkg_files(
+    name = "lib64",
+    srcs = ["//bazel/portage/bin/fakefs:fakefs_preload"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "usr/lib64",
+    renames = {
+        "//bazel/portage/bin/fakefs:fakefs_preload": "libfakefs_preload.so",
+    },
+    visibility = ["//bazel/portage/sdk:__pkg__"],
+)

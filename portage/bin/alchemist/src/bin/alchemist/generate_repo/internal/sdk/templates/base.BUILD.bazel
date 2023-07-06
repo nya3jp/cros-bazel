@@ -1,0 +1,35 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/portage/build_defs:build_sdk.bzl", "build_sdk")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_update")
+
+build_sdk(
+    name = "tarball",
+    board = "amd64-host", # TODO: Delete this since we don't really need it.
+    overlays = "{{ overlay_set }}",
+    target_deps = ["{{ target}}"],
+    sdk = "{{ sdk }}",
+    visibility = ["@//bazel:internal"],
+)
+
+sdk_from_archive(
+    name = "base",
+    src = ":tarball",
+    # This rule just extracts an archive, do not bother dispatching to remotes.
+    tags = ["no-remote"],
+    progress_message = "Extracting %{label}",
+    visibility = ["@//bazel:internal"],
+)
+
+# This is required so we can monkey patch portage.
+sdk_update(
+    name = "{{ name }}",
+    base = ":base",
+    extra_tarballs = [
+        "@//bazel/portage/sdk:extra_tarball",
+    ],
+    progress_message = "Patching %{label}",
+    visibility = ["@//bazel:internal"],
+)

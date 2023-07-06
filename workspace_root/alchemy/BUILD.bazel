@@ -32,7 +32,7 @@ pkg_tar(
     srcs = [
         ":scripts_src_files",
     ],
-    compressor = "//bazel/zstd",
+    compressor = "//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     extension = "tar.zst",
     visibility = ["//bazel:internal"],

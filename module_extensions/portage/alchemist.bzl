@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//cargo:defs.bzl", "cargo_bootstrap_repository")
-load("//bazel/ebuild/private/alchemist:src.bzl", "ALCHEMIST_SRCS")
+load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_SRCS")
 
 _BUILD_MODE = "release"
 _TOOL_TEMPLATE = "@rust_host_tools//:bin/{tool}"
@@ -15,7 +15,7 @@ def alchemist(name):
         binary = "alchemist",
         build_mode = _BUILD_MODE,
         cargo_lockfile = "//:Cargo.lock",
-        cargo_toml = "//bazel/ebuild/private/alchemist:Cargo.toml",
+        cargo_toml = "//bazel/portage/bin/alchemist:Cargo.toml",
         rust_toolchain_cargo_template = _TOOL_TEMPLATE,
         rust_toolchain_rustc_template = _TOOL_TEMPLATE,
     )

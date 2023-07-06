@@ -1,0 +1,208 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_glibc", "sdk_install_deps")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
+
+pkg_files(
+    name = "make_conf_board",
+    srcs = [
+        {%- if board == "amd64-host" %}
+        "make.conf.host_setup",
+        {%- else %}
+        "make.conf.board",
+        {%- endif %}
+        "make.conf.board_setup",
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+)
+
+pkg_mklink(
+    name = "make_conf",
+    link_name = "make.conf",
+    {%- if board == "amd64-host" %}
+    target = "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
+    {%- else %}
+    target = "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.generic-target",
+    {%- endif %}
+)
+
+pkg_mklink(
+    name = "make_conf_user",
+    link_name = "make.conf.user",
+    target = "/etc/make.conf.user",
+)
+
+pkg_mklink(
+    name = "portage_hooks",
+    link_name = "portage/hooks",
+    target = "/mnt/host/source/src/scripts/hooks",
+)
+
+pkg_mklink(
+    name = "portage_make_profile",
+    link_name = "portage/make.profile",
+    target = "{{ profile_path }}",
+)
+
+pkg_filegroup(
+    name = "etc",
+    prefix = "build/{{ board }}/etc",
+    srcs = [
+        ":make_conf",
+        ":make_conf_board",
+        ":make_conf_user",
+        ":portage_hooks",
+        ":portage_make_profile",
+    ],
+)
+
+# Create /usr/share/aclocal to make autoconf work.
+# TODO: Figure out why this is needed.
+pkg_mkdirs(
+    name = "aclocal",
+    dirs = ["build/{{ board }}/usr/share/aclocal"],
+)
+
+pkg_files(
+    name = "wrappers_build_bin",
+    srcs = [
+        {%- for name in wrappers %}
+        "{{ name }}",
+        {%- endfor %}
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "build/{{ board }}/build/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
+pkg_files(
+    name = "wrappers_usr_local_bin",
+    srcs = [
+        {%- for name in wrappers %}
+        "{{ name }}",
+        {%- endfor %}
+    ],
+    renames = {
+        {%- for name in wrappers %}
+        "{{ name }}": "{{ name }}-{{ board }}",
+        {%- endfor %}
+    },
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "usr/local/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
+pkg_tar(
+    name = "board_extra_tarball",
+    srcs = [
+        ":aclocal",
+        ":etc",
+        ":wrappers_build_bin",
+        ":wrappers_usr_local_bin",
+    ],
+    extension = "tar",
+    visibility = ["@//bazel:internal"],
+)
+
+# Needed for the build_image targets
+alias(
+    name = "overlays",
+    actual = "{{ overlay_set }}",
+    visibility = ["@//bazel:internal"],
+)
+
+{%- if board != "amd64-host" %}
+package_set(
+    name = "cross-packages",
+    deps = [
+        {% for triple in triples -%}
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:binutils",
+        {% if triple == "aarch64-cros-linux-gnu" or triple == "armv7a-cros-linux-gnueabihf" -%}
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:compiler-rt",
+        {% endif -%}
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:gcc",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:gdb",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:glibc",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:go",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:libcxx",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:libxcrypt",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:linux-headers",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ triple }}:llvm-libunwind",
+        {%- endfor %}
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+sdk_install_deps(
+    name = "additional-host-tools",
+    base = "@//bazel/portage/sdk:stage1",
+    overlays = "{{ overlay_set }}",
+    target_deps = [
+        ":cross-packages",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-embedded:coreboot-sdk",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-embedded:hps-sdk",
+        "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-lang:rust",
+    ] + select({
+        "@//bazel/portage/sdk:new-sdk-enabled": [],
+        "//conditions:default": [
+            "@//bazel/portage/repo_defs/prebuilts/amd64-host/app-text:docbook-xml-dtd-4_4",
+            "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-util:meson-format-array",
+            "@//bazel/portage/repo_defs/prebuilts/amd64-host/x11-base:xcb-proto",
+        ],
+    }),
+    progress_message = "Installing {dep_count} host packages into %{label}",
+    visibility = ["@//bazel:internal"],
+)
+
+# The legacy setup_bord flow relied on manually copying glibc into the board's
+# SYSROOT instead of compiling glibc for the host. In order to not deviate
+# we need to do the same thing.
+# TODO(b/266979761): Make legacy flow compile glibc as a normal package.
+sdk_install_glibc(
+    name = "glibc",
+    base = ":additional-host-tools",
+    board = "{{ board }}",
+    glibc = "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-{{ primary_triple }}:glibc",
+)
+
+sdk_extend(
+    name = "base",
+    base = ":glibc",
+    extra_tarballs = [
+        ":board_extra_tarball",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+{%- else %}
+sdk_extend(
+    name = "base",
+    base = "@//bazel/portage/sdk:stage1",
+    extra_tarballs = [
+        ":board_extra_tarball",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+{%- endif %}
+
+sdk_install_deps(
+    name = "{{ name }}",
+    base = ":base",
+    board = "{{ board }}",
+    overlays = "{{ overlay_set }}",
+    target_deps = [
+        {%- for package in target_deps %}
+        "{{ package }}",
+        {%- endfor %}
+    ],
+    progress_message = "Installing {dep_count} stage 1 primordial packages for {{ board }}",
+    visibility = ["@//bazel:internal"],
+)

@@ -1,0 +1,294 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_failure")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+
+{%- for ebuild in ebuilds %}
+{% if ebuild.direct_build_target -%}
+direct_ebuild(
+    name = "{{ ebuild.version }}",
+    package = "{{ ebuild.direct_build_target }}",
+    category = "{{ ebuild.category }}",
+    package_name = "{{ ebuild.package_name }}",
+    version = "{{ ebuild.version }}",
+    slot = "{{ ebuild.slot }}",
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
+    runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    visibility = ["@//bazel:internal"],
+)
+{% else -%}
+string_flag(
+    name = "{{ ebuild.version }}_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+{% if ebuild.host_build_deps -%}
+sdk_install_deps(
+    name = "{{ ebuild.version }}_host_deps",
+    out = "{{ ebuild.basename }}_host_deps",
+    base = "{{ ebuild.sdk }}",
+    overlays = "{{ host_overlay_set }}",
+    target_deps = [
+        {%- if ebuild.provided_host_build_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_host_build_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.host_build_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    visibility = ["//visibility:private"],
+)
+{%- else -%}
+alias(
+    name = "{{ ebuild.version }}_host_deps",
+    actual = "{{ ebuild.sdk }}",
+    visibility = ["//visibility:private"],
+)
+{%- endif %}
+
+{% if ebuild.target_build_deps -%}
+sdk_install_deps(
+    name = "{{ ebuild.version }}_deps",
+    out = "{{ ebuild.basename }}_deps",
+    base = "{{ ebuild.version }}_host_deps",
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
+    overlays = "{{ target_overlay_set }}",
+    target_deps = [
+        {%- for dep in ebuild.target_build_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    visibility = ["//visibility:private"],
+)
+{%- else -%}
+alias(
+    name = "{{ ebuild.version }}_deps",
+    actual = "{{ ebuild.version }}_host_deps",
+    visibility = ["//visibility:private"],
+)
+{%- endif %}
+
+ebuild(
+    name = "{{ ebuild.version }}",
+    ebuild = "{{ ebuild.ebuild_name }}",
+    overlay = "{{ ebuild.overlay }}",
+    category = "{{ebuild.category}}",
+    distfiles = {
+        {%- for dist in ebuild.dists %}
+        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
+        {%- endfor %}
+    },
+    {%- if ebuild.sources %}
+    srcs = [
+        {%- for source in ebuild.sources %}
+        "{{ source }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.git_trees %}
+    git_trees = [
+        {%- for git_tree in ebuild.git_trees %}
+        "{{ git_tree }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
+    runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.host_install_deps %}
+    install_deps = [
+        {%- for dep in ebuild.host_install_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    # use = "{{ ebuild.uses }}",
+    files = glob(["files/**", "*.bashrc"]),
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
+    sdk = ":{{ ebuild.version }}_deps",
+    overlays = "{{ target_overlay_set }}",
+    {%- if ebuild.allow_network_access %}
+    # This ebuild declares RESTRICT="network-sandbox".
+    allow_network_access = True,
+    {%- endif %}
+    prebuilt = ":{{ ebuild.version }}_prebuilt",
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "{{ ebuild.version }}_debug",
+    ebuild = "{{ ebuild.ebuild_name }}",
+    overlay = "{{ ebuild.overlay }}",
+    category = "{{ebuild.category}}",
+    distfiles = {
+        {%- for dist in ebuild.dists %}
+        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
+        {%- endfor %}
+    },
+    {%- if ebuild.sources %}
+    srcs = [
+        {%- for source in ebuild.sources %}
+        "{{ source }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.git_trees %}
+    git_trees = [
+        {%- for git_tree in ebuild.git_trees %}
+        "{{ git_tree }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
+    runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    # use = "{{ ebuild.uses }}",
+    files = glob(["files/**", "*.bashrc"]),
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
+    sdk = ":{{ ebuild.version }}_deps",
+    overlays = "{{ target_overlay_set }}",
+    {%- if ebuild.allow_network_access %}
+    # This ebuild declares RESTRICT="network-sandbox".
+    allow_network_access = True,
+    {%- endif %}
+    visibility = ["@//bazel:internal"],
+)
+{% endif -%}
+
+{% if target_board -%}
+ebuild_install(
+    name = "{{ ebuild.version }}_install",
+    ebuild = "{{ ebuild.ebuild_name }}",
+    category = "{{ebuild.category}}",
+    board = "{{ target_board }}",
+    packages = [
+        {%- for dep in ebuild.install_set %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    visibility = ["@//bazel:internal"],
+)
+{% endif -%}
+
+ebuild_test(
+    name = "{{ ebuild.version }}_test",
+    ebuild = "{{ ebuild.ebuild_name }}",
+    overlay = "{{ ebuild.overlay }}",
+    category = "{{ebuild.category}}",
+    distfiles = {
+        {%- for dist in ebuild.dists %}
+        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
+        {%- endfor %}
+    },
+    {%- if ebuild.sources %}
+    srcs = [
+        {%- for source in ebuild.sources %}
+        "{{ source }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.git_trees %}
+    git_trees = [
+        {%- for git_tree in ebuild.git_trees %}
+        "{{ git_tree }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
+    runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    # use = "{{ ebuild.uses }}",
+    files = glob(["files/**", "*.bashrc"]),
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
+    sdk = ":{{ ebuild.version }}_deps",
+    overlays = "{{ target_overlay_set }}",
+    {%- if ebuild.allow_network_access %}
+    # This ebuild declares RESTRICT="network-sandbox".
+    allow_network_access = True,
+    {%- endif %}
+    visibility = ["@//bazel:internal"],
+)
+
+package_set(
+    name = "{{ ebuild.version }}_package_set",
+    deps = [
+        {%- for dep in ebuild.install_set %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+{% endfor %}
+{%- for failure in failures %}
+string_flag(
+    name = "{{ failure.version }}_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_failure(
+    name = "{{ failure.version }}",
+    ebuild = "{{ failure.ebuild_name }}",
+    error = """{{ failure.error }}""",
+    visibility = ["@//bazel:internal"],
+)
+{% endfor %}

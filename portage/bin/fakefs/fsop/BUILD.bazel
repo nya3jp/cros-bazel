@@ -1,0 +1,16 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "fsop",
+    srcs = [
+        "fsop.go",
+        "xattrdata.go",
+    ],
+    importpath = "cros.local/bazel/portage/bin/fakefs/fsop",
+    visibility = ["//bazel/portage/bin/fakefs:__subpackages__"],
+    deps = ["@org_golang_x_sys//unix"],
+)

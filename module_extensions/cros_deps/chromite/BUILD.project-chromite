@@ -65,7 +65,7 @@ pkg_tar(
         ":__files__",
     ],
     extension = "tar.zst",
-    compressor = "@//bazel/zstd",
+    compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     visibility = ["@//bazel:internal"],
 )

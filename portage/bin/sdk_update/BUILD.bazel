@@ -1,0 +1,26 @@
+# Copyright 2022 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "sdk_update",
+    srcs = ["src/main.rs"],
+    data = [
+        ":setup.sh",
+        "//bazel/portage/bin/run_in_container",
+    ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel:internal"],
+    deps = [
+        "//bazel/portage/common/cliutil:cliutil_rust",
+        "//bazel/portage/common/container",
+        "//bazel/portage/common/durabletree",
+        "//bazel/portage/common/fileutil:fileutil_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@rules_rust//tools/runfiles",
+    ],
+)

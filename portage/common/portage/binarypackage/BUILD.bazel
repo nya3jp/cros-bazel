@@ -1,0 +1,59 @@
+# Copyright 2022 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "binarypackage",
+    srcs = [
+        "binarypackage.go",
+        "helpers.go",
+    ],
+    importpath = "cros.local/bazel/portage/common/portage/binarypackage",
+    visibility = ["//bazel:internal"],
+    deps = [
+        "//bazel/portage/common/tar",
+        "@com_github_klauspost_compress//zstd",
+    ],
+)
+
+go_test(
+    name = "binarypackage_test",
+    size = "small",
+    srcs = ["binarypackage_test.go"],
+    data = [
+        "testdata/nano.tar.bz2",
+        "testdata/nano.tbz2",
+    ],
+    deps = [
+        ":binarypackage",
+        "@rules_go//go/tools/bazel:go_default_library",
+    ],
+)
+
+rust_library(
+    name = "binarypackage_rust",
+    srcs = glob(["src/*.rs"]),
+    crate_name = "binarypackage",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel:internal"],
+    deps = [
+        "//bazel/portage/common/cliutil:cliutil_rust",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:bytes",
+    ],
+)
+
+rust_test(
+    name = "binarypackage_rust_test",
+    size = "small",
+    crate = ":binarypackage_rust",
+    data = glob(["testdata/*"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@rules_rust//tools/runfiles",
+    ],
+)

@@ -1,0 +1,21 @@
+# Copyright 2022 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+cc_binary(
+    name = "fakefs_preload",
+    srcs = ["fakefs_preload.c"],
+    features = [
+        # Avoid linking libc++.
+        "-default_link_libs",
+        "c_compiler",
+    ],
+    linkopts = [
+        # Force linking to shared objects even if there are static archives.
+        # TODO: Compile this code with CrOS SDK and get rid of this hack.
+        "-l:libdl.so.2",
+        "-l:libpthread.so.0",
+    ],
+    linkshared = True,
+    visibility = ["//bazel/portage/bin/fakefs:__subpackages__"],
+)

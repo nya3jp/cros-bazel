@@ -47,7 +47,7 @@ rust_binary(
     srcs = ["gen_tbz2.rs"],
     visibility = ["//visibility:public"],
     deps = [
-        "//bazel/ebuild/private/common/portage/version:version_rust",
+        "//bazel/portage/common/portage/version:version_rust",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bytes",
         "@alchemy_crates//:bzip2",
@@ -69,7 +69,7 @@ rust_test(
     size = "small",
     crate = ":gen_tbz2",
     deps = [
-        "//bazel/ebuild/private/common/portage/binarypackage:binarypackage_rust",
+        "//bazel/portage/common/portage/binarypackage:binarypackage_rust",
         "@alchemy_crates//:tempfile",
     ],
 )

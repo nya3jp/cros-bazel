@@ -1,0 +1,62 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@//bazel/portage/build_defs:overlay.bzl", "overlay")
+
+pkg_files(
+    name = "files",
+    srcs = [
+        "metadata/layout.conf",
+        # Required by build_image.
+        "sys-boot/grub/files/sbat.csv",
+    ] + glob([
+        "chromeos/**",
+        "eclass/*.eclass",
+        "licenses/**",
+        "profiles/**",
+        # HACK: Include CrOS-specific bashrc files that override profile vars
+        # and several other files referenced by them.
+        #
+        # See cros_stack_bashrc in this file for details:
+        # https://source.corp.google.com/chromeos_public/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc
+        #
+        # TODO: Consider isolating those bashrc files from the overlay and
+        # associating them to corresponding packages. Note that we also need
+        # to take care of chromiumos-overlay/chromeos/config/env.
+        "*/*/*.bashrc",
+        "app-shells/bash/files/*.patch",
+        "app-shells/dash/files/*.patch",
+        "dev-libs/dbus-glib/files/*.patch",
+        "dev-python/python-daemon/files/*.patch",
+        "sys-apps/kmod/files/*.patch",
+        "sys-apps/man-pages/files/*.py",
+        "sys-apps/mawk/files/*.patch",
+        "*/*/files/*_waf_config_answers",
+    ]),
+    prefix = "{{ mount_path }}",
+    # chromeos/scripts/config_wrapper must be executable
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "layer",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":files"],
+    visibility = ["//visibility:private"],
+)
+
+overlay(
+    name = "{{ name }}",
+    path = "/{{ mount_path }}",
+    layer = ":layer",
+    visibility = ["@//bazel:internal"],
+)

@@ -1,0 +1,44 @@
+# Copyright 2022 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "fileutil",
+    srcs = [
+        "copy.go",
+        "dualpath.go",
+        "move.go",
+        "remove.go",
+    ],
+    importpath = "cros.local/bazel/portage/common/fileutil",
+    visibility = ["//bazel:internal"],
+    deps = [
+        "@org_golang_x_sys//unix",
+    ],
+)
+
+rust_library(
+    name = "fileutil_rust",
+    srcs = glob(["src/*.rs"]),
+    crate_name = "fileutil",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel:internal"],
+    deps = [
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:lazy_static",
+        "@alchemy_crates//:libc",
+        "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:walkdir",
+    ],
+)
+
+rust_test(
+    name = "fileutil_rust_test",
+    size = "small",
+    crate = ":fileutil_rust",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+)

@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/ebuild/private:build_image.bzl", "build_image")
+load("//bazel/portage/build_defs:build_image.bzl", "build_image")
 load("@portage//:settings.bzl", "BOARD")
 
 # Builds a very minimal image that contains Linux kernel and basic files only.

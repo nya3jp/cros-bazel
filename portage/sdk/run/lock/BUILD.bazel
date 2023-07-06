@@ -1,0 +1,14 @@
+# Copyright 2022 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_mkdirs")
+
+# build-docbook-catalog fails without /run/lock.
+pkg_mkdirs(
+    name = "lock",
+    dirs = [
+        "run/lock",
+    ],
+    visibility = ["//bazel/portage/sdk:__pkg__"],
+)

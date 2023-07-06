@@ -1,0 +1,23 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "tracer",
+    srcs = [
+        "state.go",
+        "tracer.go",
+        "utils.go",
+    ],
+    importpath = "cros.local/bazel/portage/bin/fakefs/tracer",
+    visibility = ["//bazel/portage/bin/fakefs:__subpackages__"],
+    deps = [
+        "//bazel/portage/bin/fakefs/hooks",
+        "//bazel/portage/bin/fakefs/logging",
+        "//bazel/portage/bin/fakefs/ptracearch",
+        "//bazel/portage/common/cliutil",
+        "@org_golang_x_sys//unix",
+    ],
+)
