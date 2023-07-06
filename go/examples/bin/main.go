@@ -4,7 +4,7 @@
 
 package main
 
-import "cros.local/rules_cros/toolchains/go/examples/lib"
+import "cros.local/bazel/go/examples/lib"
 
 func main() {
 	println("hello world")

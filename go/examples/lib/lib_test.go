@@ -11,7 +11,7 @@ import (
 	"github.com/bazelbuild/rules_go/go/runfiles"
 	"github.com/google/go-cmp/cmp"
 
-	"cros.local/rules_cros/toolchains/go/examples/lib"
+	"cros.local/bazel/go/examples/lib"
 )
 
 // Check that we can access libraries.
