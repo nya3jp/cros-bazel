@@ -15,7 +15,7 @@ use crate::alchemist::TargetData;
 fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
     println!("{dep_type}:");
     for dep in deps {
-        println!("  {}-{}", dep.package_name, dep.version);
+        println!("  {}-{}::{}", dep.package_name, dep.version, dep.repo_name);
     }
 }
 
