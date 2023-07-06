@@ -33,7 +33,7 @@ fn main() -> Result<()> {
 
     let gen_rust_project = r.rlocation("rules_rust/tools/rust_analyzer/gen_rust_project");
     let cquery_path = r
-        .rlocation("cros/rules_cros/toolchains/rust/ide_support/get_outputs.bzl")
+        .rlocation("cros/bazel/rust/ide_support/get_outputs.bzl")
         .to_string_lossy()
         .to_string();
 

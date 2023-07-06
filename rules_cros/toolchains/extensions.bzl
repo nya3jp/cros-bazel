@@ -5,7 +5,7 @@
 """cros_toolchains is a module extension for importing the toolchains from the CrOS SDK."""
 
 load(
-    "//rules_cros/toolchains/rust/module_extension:repo.bzl",
+    "//bazel/rust/module_extension:repo.bzl",
     "RUST_ATTRS",
     "rust_repo",
 )

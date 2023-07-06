@@ -33,7 +33,7 @@ rust_test(
 rust_library(
     name = "local_crate",
     srcs = ["local_crate.rs"],
-    visibility = ["//rules_cros/toolchains/rust/examples/use_local_crate:__pkg__"],
+    visibility = ["//bazel/rust/examples/use_local_crate:__pkg__"],
 )
 
 rust_test(

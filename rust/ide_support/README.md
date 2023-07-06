@@ -36,13 +36,13 @@ Add the following configuration to your vscode's settings.json.
 
 ```
 "rust-analyzer.linkedProjects": ["${workspaceFolder}/rust-project.json"],
-"rust-analyzer.check.overrideCommand": ["rules_cros/toolchains/rust/ide_support/flycheck.sh"],
+"rust-analyzer.check.overrideCommand": ["bazel/rust/ide_support/flycheck.sh"],
 "bazel-rust-analyzer.genRustProjectCommand": [
         "env",
         "RUST_LOG=info",
         "bazel",
         "run",
-        "//rules_cros/toolchains/rust/ide_support:gen_rust_project",
+        "//bazel/rust/ide_support:gen_rust_project",
         "--",
         "--files"
 ],

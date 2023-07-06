@@ -4,5 +4,5 @@
 
 exports_files(
     ["Cargo.toml"],
-    visibility = ["//rules_cros/toolchains/rust:__pkg__"],
+    visibility = ["//bazel/rust:__pkg__"],
 )

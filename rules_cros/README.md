@@ -18,7 +18,7 @@ Simply install the [rust_analyzer](https://marketplace.visualstudio.com/items?it
 
 For example, I might use the following line:
 
-`"args": ["run", "//rules_cros/toolchains/rust:gen_rust_project", "--", "//rules_cros/toolchains/rust/examples/use_local_crate/...", "//rules_cros/toolchains/rust/examples/hello_world:helllo_world"],`
+`"args": ["run", "//bazel/rust:gen_rust_project", "--", "//bazel/rust/examples/use_local_crate/...", "//bazel/rust/examples/hello_world:helllo_world"],`
 
 ```json
 {
@@ -27,7 +27,7 @@ For example, I might use the following line:
         {
             "label": "Generate rust-project.json",
             "command": "bazel",
-            "args": ["run", "//rules_cros/toolchains/rust:gen_rust_project", "--", "<TARGET1>", "<TARGET2>", "..."],
+            "args": ["run", "//bazel/rust:gen_rust_project", "--", "<TARGET1>", "<TARGET2>", "..."],
             "options": {
                 "cwd": "${workspaceFolder}"
             },

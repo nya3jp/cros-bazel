@@ -115,10 +115,10 @@ register_toolchains("@rust_toolchains//:all")
 crate = use_extension("@rules_rust//rust:extensions.bzl", "crate")
 crate.from_cargo(
     annotation_files = [
-        "//rules_cros/toolchains/rust/alchemy_crates:annotations.json",
+        "//bazel/rust/alchemy_crates:annotations.json",
     ],
-    cargo_lockfile = "//rules_cros/toolchains/rust/alchemy_crates:Cargo.lock",
-    manifests = ["//rules_cros/toolchains/rust/alchemy_crates:Cargo.toml"],
+    cargo_lockfile = "//bazel/rust/alchemy_crates:Cargo.lock",
+    manifests = ["//bazel/rust/alchemy_crates:Cargo.toml"],
     suffix = "alchemy",
 )
 use_repo(
