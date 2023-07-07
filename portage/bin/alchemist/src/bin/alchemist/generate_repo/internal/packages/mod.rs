@@ -227,12 +227,14 @@ impl EBuildEntry {
                     package
                         .build_host_deps
                         .iter()
-                        .chain(package.dependencies.build_deps.iter()),
+                        .chain(package.dependencies.build_deps.iter())
+                        .unique_by(|details| &details.ebuild_path),
                     host.sdk_provided_packages,
                 );
 
-                let host_build_deps =
+                let mut host_build_deps =
                     format_dependencies(host.prefix, host_build_deps.into_iter())?;
+                host_build_deps.sort();
 
                 (host_build_deps, provided_host_build_deps)
             }
@@ -245,8 +247,9 @@ impl EBuildEntry {
                         host.sdk_provided_packages,
                     );
 
-                    let host_build_deps =
+                    let mut host_build_deps =
                         format_dependencies(host.prefix, host_build_deps.into_iter())?;
+                    host_build_deps.sort();
 
                     (host_build_deps, provided_host_build_deps)
                 } else {
@@ -260,6 +263,7 @@ impl EBuildEntry {
         let provided_host_build_deps = provided_host_build_deps
             .into_iter()
             .map(|details| format!("{}-{}", details.package_name, details.version))
+            .sorted()
             .collect();
 
         let target_build_deps = match &target {
