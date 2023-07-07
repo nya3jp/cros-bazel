@@ -20,7 +20,6 @@ use alchemist::{
         bundle::ConfigBundle, profile::Profile, site::SiteSettings, ConfigNode, ConfigNodeValue,
         ConfigSource, PackageMaskKind, PackageMaskUpdate, SimpleConfigSource,
     },
-    dependency::package::PackageAtom,
     ebuild::{metadata::CachedEBuildEvaluator, CachedPackageLoader, PackageLoader},
     fakechroot::{enter_fake_chroot, PathTranslator},
     repository::RepositorySet,
@@ -69,8 +68,8 @@ pub struct Args {
 pub enum Commands {
     /// Dumps information of packages.
     DumpPackage {
-        /// Package names.
-        packages: Vec<String>,
+        #[command(flatten)]
+        args: crate::dump_package::Args,
     },
     /// Generates a Bazel repository containing overlays and packages.
     GenerateRepo {
@@ -309,12 +308,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     });
 
     match args.command {
-        Commands::DumpPackage { packages } => {
-            let atoms = packages
-                .iter()
-                .map(|raw| raw.parse::<PackageAtom>())
-                .collect::<Result<Vec<_>>>()?;
-            dump_package_main(host.as_ref(), target.as_ref(), atoms)?;
+        Commands::DumpPackage { args: local_args } => {
+            dump_package_main(host.as_ref(), target.as_ref(), local_args)?;
         }
         Commands::GenerateRepo {
             output_dir,

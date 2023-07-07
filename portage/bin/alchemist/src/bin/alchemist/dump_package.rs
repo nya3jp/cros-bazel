@@ -2,15 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use alchemist::analyze::dependency::analyze_dependencies;
 use alchemist::dependency::package::PackageAtom;
 use alchemist::ebuild::PackageDetails;
+use alchemist::{analyze::dependency::analyze_dependencies, bash::vars::BashValue};
 use anyhow::{Context, Result};
 use colored::Colorize;
 use itertools::Itertools;
 use std::sync::Arc;
 
 use crate::alchemist::TargetData;
+
+#[derive(clap::Args, Clone, Debug)]
+pub struct Args {
+    /// Additionally dump the environment for the package.
+    #[arg(short = 'e', long)]
+    env: bool,
+
+    /// Package names.
+    packages: Vec<String>,
+}
 
 fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
     println!("{dep_type}:");
@@ -22,8 +32,14 @@ fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
 pub fn dump_package_main(
     host: Option<&TargetData>,
     target: Option<&TargetData>,
-    atoms: Vec<PackageAtom>,
+    args: Args,
 ) -> Result<()> {
+    let atoms = args
+        .packages
+        .iter()
+        .map(|raw| raw.parse::<PackageAtom>())
+        .collect::<Result<Vec<_>>>()?;
+
     let resolver = target
         .or(host)
         .map(|data| &data.resolver)
@@ -102,6 +118,28 @@ pub fn dump_package_main(
             dump_deps("DEPEND", &deps.build_deps);
             dump_deps("RDEPEND", &deps.runtime_deps);
             dump_deps("PDEPEND", &deps.post_deps);
+
+            if args.env {
+                println!("Env: ");
+                let map = details.vars.hash_map();
+                for key in map.keys().sorted() {
+                    println!(
+                        "  \"{}\": {}",
+                        key,
+                        match map.get(key).unwrap() {
+                            BashValue::Scalar(val) => format!("\"{}\"", val),
+                            BashValue::IndexedArray(vec) => format!("{:#?}", vec)
+                                .lines()
+                                .map(|line| format!("  {line}"))
+                                .join("\n"),
+                            BashValue::AssociativeArray(map) => format!("{:#?}", map)
+                                .lines()
+                                .map(|line| format!("  {line}"))
+                                .join("\n"),
+                        }
+                    );
+                }
+            }
         }
     }
     Ok(())
