@@ -57,6 +57,7 @@ fn parse_dependencies(
     deps: PackageDependency,
     use_map: &UseMap,
     resolver: &PackageResolver,
+    allow_list: Option<&[&str]>,
 ) -> Result<Vec<Arc<PackageDetails>>> {
     let deps = elide_use_conditions(deps, use_map).unwrap_or_default();
 
@@ -70,6 +71,18 @@ fn parse_dependencies(
                         true,
                         &format!("Package block {} is ignored", atom),
                     ));
+                }
+
+                // Remove packages not specified in the allow list.
+                // This is a work around for EAPI < 7 packages that don't
+                // support BDEPENDs.
+                if let Some(allow_list) = allow_list {
+                    if !allow_list.contains(&atom.package_name()) {
+                        return Ok(Dependency::new_constant(
+                            true,
+                            &format!("Package {} is not in allowed list", atom),
+                        ));
+                    }
                 }
 
                 // Remove provided packages.
@@ -171,6 +184,7 @@ fn extract_dependencies(
     details: &PackageDetails,
     kind: DependencyKind,
     resolver: &PackageResolver,
+    allow_list: Option<&[&str]>,
 ) -> Result<Vec<Arc<PackageDetails>>> {
     let var_name = match kind {
         DependencyKind::Build => "DEPEND",
@@ -187,7 +201,7 @@ fn extract_dependencies(
     let joined_raw_deps = format!("{} {}", raw_deps, raw_extra_deps);
     let deps = joined_raw_deps.parse::<PackageDependency>()?;
 
-    parse_dependencies(deps, &details.use_map, resolver)
+    parse_dependencies(deps, &details.use_map, resolver, allow_list)
 }
 
 // TODO: Remove this hack.
@@ -201,6 +215,27 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
     is_rust_package && !is_cros_workon_package && !has_src_compile
 }
 
+// We don't want to open the flood gates and pull in ALL DEPENDs
+// because there are only a handful that are actually BDEPENDs.
+// We keep a hand curated list of packages that are known to be
+// BDEPENDs. Ideally we upgrade all ebuilds to EAPI7 and delete this
+// block, but that's a lot of work.
+static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 13] = [
+    "app-portage/elt-patches",
+    "dev-util/cmake",
+    "dev-util/meson",
+    "dev-util/meson-format-array",
+    "dev-util/ninja",
+    "sys-devel/autoconf",
+    "sys-devel/autoconf-archive",
+    "sys-devel/automake",
+    "sys-devel/bison",
+    "sys-devel/flex",
+    "sys-devel/gnuconfig",
+    "sys-devel/libtool",
+    "sys-devel/make",
+];
+
 /// Analyzes ebuild variables and returns [`PackageDependencies`] containing
 /// its dependencies as a list of [`PackageDetails`].
 pub fn analyze_dependencies(
@@ -209,7 +244,7 @@ pub fn analyze_dependencies(
     host_resolver: Option<&PackageResolver>,
     target_resolver: &PackageResolver,
 ) -> Result<PackageDependencies> {
-    let build_deps = extract_dependencies(details, DependencyKind::Build, target_resolver)
+    let build_deps = extract_dependencies(details, DependencyKind::Build, target_resolver, None)
         .with_context(|| {
             format!(
                 "Resolving build-time dependencies for {}-{}",
@@ -217,7 +252,7 @@ pub fn analyze_dependencies(
             )
         })?;
 
-    let runtime_deps = extract_dependencies(details, DependencyKind::Run, target_resolver)
+    let runtime_deps = extract_dependencies(details, DependencyKind::Run, target_resolver, None)
         .with_context(|| {
             format!(
                 "Resolving runtime dependencies for {}-{}",
@@ -226,11 +261,25 @@ pub fn analyze_dependencies(
         })?;
 
     let build_host_deps = if let Some(host_resolver) = host_resolver {
-        extract_dependencies(
-            details,
-            DependencyKind::BuildHost { cross_compile },
-            host_resolver,
-        )
+        if details.supports_bdepend() {
+            extract_dependencies(
+                details,
+                DependencyKind::BuildHost { cross_compile },
+                host_resolver,
+                None,
+            )
+        } else {
+            // We need to apply the allow list filtering during dependency
+            // evaluation instead of post-dependency evaluation because
+            // there are dependencies that we can't satisfy using the host
+            // resolver. i.e. `libchrome[cros_debug=]`.
+            extract_dependencies(
+                details,
+                DependencyKind::Build,
+                host_resolver,
+                Some(&DEPEND_AS_BDEPEND_ALLOW_LIST),
+            )
+        }
         .with_context(|| {
             format!(
                 "Resolving build-time host dependencies for {}-{}",
@@ -246,6 +295,7 @@ pub fn analyze_dependencies(
             details,
             DependencyKind::InstallHost { cross_compile },
             host_resolver,
+            None,
         )
         .with_context(|| {
             format!(
@@ -276,7 +326,7 @@ pub fn analyze_dependencies(
         runtime_deps
     };
 
-    let post_deps = extract_dependencies(details, DependencyKind::Post, target_resolver)
+    let post_deps = extract_dependencies(details, DependencyKind::Post, target_resolver, None)
         .with_context(|| {
             format!(
                 "Resolving post-time dependencies for {}-{}",

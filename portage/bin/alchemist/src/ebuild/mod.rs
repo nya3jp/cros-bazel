@@ -4,7 +4,7 @@
 
 pub mod metadata;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -92,6 +92,21 @@ impl PackageDetails {
                 sub: self.slot.sub.as_str(),
             },
         }
+    }
+
+    /// EAPI is technically a string, but working with an integer is easier.
+    fn eapi(&self) -> Result<i32> {
+        let eapi = self.vars.get_scalar("EAPI")?;
+        eapi.parse::<i32>().with_context(|| format!("EAPI: {eapi}"))
+    }
+
+    pub fn supports_bdepend(&self) -> bool {
+        let eapi = match self.eapi() {
+            Ok(val) => val,
+            Err(_) => return false,
+        };
+
+        eapi >= 7
     }
 }
 
