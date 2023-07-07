@@ -1,0 +1,24 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@bazel_skylib//rules:common_settings.bzl", "bool_setting")
+
+bool_setting(
+    name = "true",
+    # This can't be changed since it's a bool setting, not a bool flag.
+    build_setting_default = True,
+    visibility = ["//visibility:private"],
+)
+
+config_setting(
+    name = "always_false",
+    flag_values = {":true": "False"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "always_true",
+    flag_values = {":true": "True"},
+    visibility = ["//visibility:public"],
+)

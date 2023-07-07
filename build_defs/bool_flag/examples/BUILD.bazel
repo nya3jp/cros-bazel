@@ -1,0 +1,54 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/build_defs:bool_flag.bzl", "bool_flag", "config_setting_all", "config_setting_any", "config_setting_mutually_exclusive", "config_setting_not", "config_setting_requires")
+
+bool_flag(
+    name = "foo",
+    default = True,
+)
+
+bool_flag(
+    name = "bar",
+    # This makes it generate ":_bar_enabled" instead of ":bar_enabled".
+    # It still defines bar_disabled as not(":bar_enabled") for you, so you need
+    # to define bar_enabled yourself or you'll get an error.
+    custom_condition = True,
+    default = False,
+)
+
+# Equivalent to "foo implies bar"
+config_setting_any(
+    name = "bar_enabled",
+    targets = [
+        ":_bar_enabled",
+        ":foo_enabled",
+    ],
+)
+
+# Equivalent to "bar requires foo, and turn bar off if this isn't the case"
+config_setting_all(
+    # Should be called bar_enabled, but that name's taken for the example.
+    name = "bar_enabled_requires_foo",
+    targets = [
+        ":_bar_enabled",
+        ":foo_enabled",
+    ],
+)
+
+# Equivalent to "bar requires foo, and throw an error if it isn't the case"
+config_setting_requires(
+    # Should be called bar_enabled, but that name's taken for the example.
+    name = "bar_enabled_requires",
+    requires = ":foo_enabled",
+    target = ":_bar_enabled",
+)
+
+# Equivalent to "Foo and bar mutually exclusive"
+config_setting_mutually_exclusive(
+    # Should be called bar_enabled, but that name's taken for the example.
+    name = "bar_enabled_mutually_exclusive",
+    mutually_exclusive_with = ":foo_enabled",
+    target = ":_bar_enabled",
+)
