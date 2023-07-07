@@ -127,3 +127,5 @@ build:hermetic_rust --//bazel/module_extensions/toolchains/rust:hermetic
 build:nohermetic_toolchains --config=nohermetic_cc --config=nohermetic_rust
 build:nohermetic_cc --no//bazel/module_extensions/toolchains/cc:hermetic
 build:nohermetic_rust --no//bazel/module_extensions/toolchains/rust:hermetic
+
+build --config=nohermetic_toolchains

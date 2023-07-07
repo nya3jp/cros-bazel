@@ -195,8 +195,8 @@ set this option:
 We have several named config groupings in [prebuilts.bazelrc] that define
 typical options to inject prebuilts. You can specify `--config` to use them.
 
-- `--config=prebuilts/amd64-generic`: Injects prebuilt binary packages needed to
-  build amd64-generic images.
+- `--config=prebuilts/arm64-generic`: Injects prebuilt binary packages needed to
+  build arm64-generic images.
 
 [prebuilts.bazelrc]: ./bazelrcs/prebuilts.bazelrc
 
