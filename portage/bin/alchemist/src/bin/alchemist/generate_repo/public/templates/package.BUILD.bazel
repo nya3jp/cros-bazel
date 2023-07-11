@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
+
 {%- for alias in aliases %}
 alias(
     name = "{{ alias.name }}",
@@ -10,6 +12,22 @@ alias(
 )
 
 {%- endfor %}
+
+{%- if ebuild_failures %}
+always_fail(
+    name = "failure",
+    message = "\n--\nSome of ebuilds failed to analyze! Aborting the build " +
+              "to prevent possibly incorrect ebuild selection." +
+              "\ntarget: @" + repository_name() + "/" + package_name() +
+              "\nList of failures below:\n" +
+{%- for ebuild_failure in ebuild_failures %}
+              "\n** {{ ebuild_failure.name }} **\n" +
+              """{{ ebuild_failure.error }}""" +
+{%- endfor %}
+              "\n--\n",
+    visibility = ["@//bazel:internal"],
+)
+{%- endif %}
 
 {%- for test_suite in test_suites %}
 test_suite(
