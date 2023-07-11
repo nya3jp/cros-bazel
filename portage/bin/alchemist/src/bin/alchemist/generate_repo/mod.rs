@@ -619,7 +619,12 @@ pub fn generate_legacy_targets(
         // TODO:
         // * Make this generate host packages when the target is not specified.
         // * Make this point to the Stage 2 packages.
-        generate_public_packages(&target_packages, &target.resolver, output_dir)?;
+        generate_public_packages(
+            &target_packages,
+            &target_failures,
+            &target.resolver,
+            output_dir,
+        )?;
 
         // TODO: Generate the build_image targets so we can delete this.
         generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
