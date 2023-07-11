@@ -21,10 +21,19 @@ filegroup(
 """
 
 def _cipd_file_impl(repository_ctx):
-    package, version = repository_ctx.attr.url.lstrip("cipd://").split(":")
+    protocol, path = repository_ctx.attr.url.split("://")
+    if protocol != "cipd":
+        fail("Expected cipd:// URL, got %s" % (repository_ctx.attr.url))
+
+    package, version = path.split(":")
+
     repository_ctx.report_progress("Downloading from CIPD.")
-    repository_ctx.execute(["mkdir", "file"])
-    repository_ctx.execute([
+
+    st = repository_ctx.execute(["mkdir", "file"])
+    if st.return_code:
+        fail("Error creating file dir:\n%s%s" % (st.stdout, st.stderr))
+
+    cmd = [
         repository_ctx.attr._cipd,
         "pkg-fetch",
         package,
@@ -32,7 +41,11 @@ def _cipd_file_impl(repository_ctx):
         version,
         "-out",
         "file/" + repository_ctx.attr.downloaded_file_path,
-    ])
+    ]
+    st = repository_ctx.execute(cmd)
+    if st.return_code:
+        fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
+
     repository_ctx.file(
         "file/BUILD",
         _BUILD_TEMPLATE.format(file = repository_ctx.attr.downloaded_file_path),
