@@ -4,6 +4,7 @@
 
 use itertools::Itertools;
 use std::{
+    borrow::Cow,
     collections::{BTreeMap, HashMap},
     fs::{create_dir_all, File},
     io::Write,
@@ -35,27 +36,27 @@ lazy_static! {
 }
 
 #[derive(Serialize)]
-pub struct AliasEntry {
-    name: String,
-    actual: String,
+pub struct AliasEntry<'a> {
+    name: Cow<'a, str>,
+    actual: Cow<'a, str>,
 }
 
 #[derive(Serialize)]
-pub struct TestSuiteEntry {
-    name: String,
-    test_name: String,
+pub struct TestSuiteEntry<'a> {
+    name: Cow<'a, str>,
+    test_name: Cow<'a, str>,
 }
 
 #[derive(Serialize)]
 pub struct EbuildFailureEntry<'a> {
-    name: String,
-    error: &'a str,
+    name: Cow<'a, str>,
+    error: Cow<'a, str>,
 }
 
 #[derive(Serialize)]
 struct BuildTemplateContext<'a> {
-    aliases: Vec<AliasEntry>,
-    test_suites: Vec<TestSuiteEntry>,
+    aliases: Vec<AliasEntry<'a>>,
+    test_suites: Vec<TestSuiteEntry<'a>>,
     ebuild_failures: Vec<EbuildFailureEntry<'a>>,
 }
 
@@ -109,13 +110,16 @@ fn generate_public_package(
         );
         for suffix in ["", "_debug", "_package_set", "_install"] {
             aliases.push(AliasEntry {
-                name: format!("{}{}", version, suffix),
-                actual: format!("{}:{}{}", &internal_package_location, version, suffix),
+                name: Cow::from(format!("{}{}", version, suffix)),
+                actual: Cow::from(format!(
+                    "{}:{}{}",
+                    &internal_package_location, version, suffix
+                )),
             });
         }
         test_suites.push(TestSuiteEntry {
-            name: format!("{}_test", version),
-            test_name: format!("{}:{}_test", &internal_package_location, version),
+            name: Cow::from(format!("{}_test", version)),
+            test_name: Cow::from(format!("{}:{}_test", &internal_package_location, version)),
         });
     }
 
@@ -156,8 +160,8 @@ fn generate_public_package(
     // Generate unversioned aliases. In case of failures, all aliases point to
     // the error-printing target.
     let get_actual_target = |suffix: &str| match &maybe_best_version {
-        Some(v) => format!(":{}{}", v, suffix),
-        None => ":failure".to_string(),
+        Some(v) => Cow::from(format!(":{}{}", v, suffix)),
+        None => Cow::from(":failure"),
     };
     let short_package_name = package_output_dir
         .file_name()
@@ -165,30 +169,25 @@ fn generate_public_package(
         .to_string_lossy()
         .into_owned();
     aliases.push(AliasEntry {
-        name: short_package_name,
+        name: Cow::from(short_package_name),
         actual: get_actual_target(""),
     });
     aliases.extend(
         ["debug", "package_set", "install"].map(|suffix| AliasEntry {
-            name: suffix.to_owned(),
+            name: Cow::from(suffix),
             actual: get_actual_target(&format!("_{}", suffix)),
         }),
     );
     test_suites.push(TestSuiteEntry {
-        name: "test".to_owned(),
+        name: Cow::from("test"),
         test_name: get_actual_target("_test"),
     });
 
     let ebuild_failures = non_masked_failures
         .iter()
         .map(|failed_package| EbuildFailureEntry {
-            name: failed_package
-                .ebuild
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .to_string(),
-            error: &failed_package.error,
+            name: Cow::from(&failed_package.ebuild_name),
+            error: Cow::from(&failed_package.error),
         })
         .collect();
 

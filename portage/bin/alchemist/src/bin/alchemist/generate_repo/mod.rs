@@ -221,6 +221,12 @@ fn analyze_packages(
                     repo_name: details.repo_name.clone(),
                     package_name: details.package_name.clone(),
                     ebuild: details.ebuild_path.clone(),
+                    ebuild_name: details
+                        .ebuild_path
+                        .file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string(),
                     version: details.version.clone(),
                     masked: Some(details.masked),
                     error: format!("{err:#}"),

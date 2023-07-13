@@ -370,15 +370,8 @@ pub struct EBuildFailure {
 
 impl EBuildFailure {
     pub fn new(failure: &PackageError) -> Self {
-        let ebuild_name = failure
-            .ebuild
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
-
         EBuildFailure {
-            ebuild_name,
+            ebuild_name: failure.ebuild_name.clone(),
             version: failure.version.to_string(),
             error: failure.error.to_string(),
         }

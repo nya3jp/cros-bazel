@@ -48,6 +48,7 @@ pub struct PackageError {
     pub repo_name: String,
     pub package_name: String,
     pub ebuild: PathBuf,
+    pub ebuild_name: String,
     pub version: Version,
     pub masked: Option<bool>,
     pub error: String,
@@ -150,6 +151,11 @@ impl PackageLoader {
                     repo_name: metadata.repo_name.clone(),
                     package_name,
                     ebuild: ebuild_path.to_owned(),
+                    ebuild_name: ebuild_path
+                        .file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string(),
                     version: metadata.path_info.version.clone(),
                     masked: None,
                     error: e.to_string(),
