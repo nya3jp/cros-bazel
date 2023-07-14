@@ -3,28 +3,22 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:toolchain.bzl", "rust_toolchain")
-load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM", "HOST_TRIPLE")
+load("//bazel/platforms:platforms.bzl", "ALL_PLATFORMS", "HOST_TRIPLE")
 
-def _generate_rust_toolchain(name, platform_info, target_settings, package):
-    def target(name):
-        return "{package}:{triple}_{name}".format(
-            package = package,
-            triple = platform_info.triple,
-            name = name,
-        )
-
+def _generate_rust_toolchain(platform_info):
+    toolchain_name = platform_info.triple
     rust_toolchain(
-        name = name,
+        name = toolchain_name,
         binary_ext = "",
-        cargo = target("cargo"),
+        cargo = "@toolchain_sdk//:cargo",
         default_edition = "2021",
         dylib_ext = ".so",
         os = "linux",
-        rust_doc = target("rustdoc"),
-        rustfmt = target("rustfmt"),
-        rust_std = target("rust_stdlibs"),
-        rustc = target("rustc"),
-        rustc_lib = target("rustc_libs"),
+        rust_doc = "@toolchain_sdk//:rustdoc",
+        rustfmt = "@toolchain_sdk//:rustfmt",
+        rust_std = "@toolchain_sdk//:rust_stdlibs_{}".format(platform_info.triple),
+        rustc = "@toolchain_sdk//:rustc",
+        rustc_lib = "@toolchain_sdk//:rustc_libs_{}".format(platform_info.triple),
         staticlib_ext = ".a",
         stdlib_linkflags = [
             "-lpthread",
@@ -36,35 +30,17 @@ def _generate_rust_toolchain(name, platform_info, target_settings, package):
     )
 
     native.toolchain(
-        name = "{}_toolchain".format(name),
+        name = "{}_toolchain".format(toolchain_name),
         exec_compatible_with = [
             "@platforms//cpu:x86_64",
             "@platforms//os:linux",
         ],
         target_compatible_with = platform_info.constraints,
-        toolchain = ":" + name,
+        toolchain = ":" + toolchain_name,
+        target_settings = [":hermetic_enabled"],
         toolchain_type = "@rules_rust//rust:toolchain",
     )
 
 def generate_rust_toolchains():
-    _generate_rust_toolchain(
-        name = "primordial",
-        platform_info = HOST_PLATFORM,
-        package = "//bazel/module_extensions/toolchains/files/primordial",
-        target_settings = [
-            ":hermetic_enabled",
-            "//bazel/module_extensions/toolchains:primordial_enabled",
-        ],
-    )
-
-    # TODO: Switch to ALL_PLATFORMS once it works.
-    for platform_info in []:
-        _generate_rust_toolchain(
-            name = "bootstrapped_" + platform_info.triple,
-            platform_info = platform_info,
-            target_settings = [
-                ":hermetic_enabled",
-                "//bazel/module_extensions/toolchains:primordial_disabled",
-            ],
-            package = "//bazel/module_extensions/toolchains/files/bootstrapped",
-        )
+    for platform_info in ALL_PLATFORMS:
+        _generate_rust_toolchain(platform_info)
