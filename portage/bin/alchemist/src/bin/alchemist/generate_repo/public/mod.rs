@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use itertools::{Either, Itertools};
+use itertools::Itertools;
 use std::{
     collections::{BTreeMap, HashMap},
     fs::{create_dir_all, File},
@@ -47,16 +47,9 @@ pub struct TestSuiteEntry {
 }
 
 #[derive(Serialize)]
-pub struct EbuildFailureEntry<'a> {
-    name: String,
-    error: &'a str,
-}
-
-#[derive(Serialize)]
-struct BuildTemplateContext<'a> {
+struct BuildTemplateContext {
     aliases: Vec<AliasEntry>,
     test_suites: Vec<TestSuiteEntry>,
-    ebuild_failures: Vec<EbuildFailureEntry<'a>>,
 }
 
 enum MaybePackage<'a> {
@@ -92,6 +85,14 @@ fn generate_public_package(
 ) -> Result<()> {
     create_dir_all(package_output_dir)?;
 
+    let package_details = maybe_packages
+        .iter()
+        .filter_map(|maybe_package| match maybe_package {
+            MaybePackage::Package(p) => Some(p.details.clone()),
+            _ => None,
+        })
+        .collect_vec();
+
     // Deduplicate versions.
     let version_to_maybe_package: BTreeMap<&Version, &MaybePackage> =
         maybe_packages.iter().map(|p| (p.version(), p)).collect();
@@ -119,73 +120,45 @@ fn generate_public_package(
         });
     }
 
-    // Choose the best version to be used for unversioned aliases. If there's at
-    // least one analysis failure propagate it instead of the normal resolver
-    // results (otherwise the build results might be unexpected/incorrect).
-    let (package_details, failed_packages): (Vec<_>, Vec<_>) =
-        maybe_packages
-            .iter()
-            .partition_map(|maybe_package| match maybe_package {
-                MaybePackage::Package(p) => Either::Left(p.details.clone()),
-                MaybePackage::PackageError(p) => Either::Right(*p),
-            });
-    let maybe_best_version = if !failed_packages.is_empty() {
-        // There are analysis failures.
-        None
-    } else if let Some(best_package) = resolver
+    // Choose the best version to be used for unversioned aliases. Try resolver,
+    // with a fallback to a failed package.
+    let maybe_best_version = if let Some(best_package) = resolver
         .find_best_package_in(&package_details)
         .with_context(|| format!("Package {:?}", package_details.first()))?
     {
         Some(best_package.version.clone())
     } else {
-        // All packages are masked.
-        // TODO(emaxx): Generate ":failure" target with this explanation message.
-        None
+        maybe_packages
+            .iter()
+            .filter_map(|maybe_package| match maybe_package {
+                MaybePackage::PackageError(p) => Some(p.version.clone()),
+                _ => None,
+            })
+            .last()
     };
 
-    // Generate unversioned aliases. In case of failures, all aliases point to
-    // the error-printing target.
-    let get_actual_target = |suffix: &str| match &maybe_best_version {
-        Some(v) => format!(":{}{}", v, suffix),
-        None => ":failure".to_string(),
-    };
-    let short_package_name = package_output_dir
-        .file_name()
-        .unwrap()
-        .to_string_lossy()
-        .into_owned();
-    aliases.push(AliasEntry {
-        name: short_package_name,
-        actual: get_actual_target(""),
-    });
-    aliases.extend(
-        ["debug", "package_set", "install"].map(|suffix| AliasEntry {
-            name: suffix.to_owned(),
-            actual: get_actual_target(suffix),
-        }),
-    );
-    test_suites.push(TestSuiteEntry {
-        name: "test".to_owned(),
-        test_name: get_actual_target("_test"),
-    });
-
-    let ebuild_failures = failed_packages
-        .iter()
-        .map(|failed_package| EbuildFailureEntry {
-            name: failed_package
-                .ebuild
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .to_string(),
-            error: &failed_package.error,
-        })
-        .collect();
+    // Generate unversioned aliases.
+    if let Some(best_version) = maybe_best_version {
+        let short_package_name = &*package_output_dir.file_name().unwrap().to_string_lossy();
+        aliases.push(AliasEntry {
+            name: short_package_name.to_owned(),
+            actual: format!(":{}", &best_version),
+        });
+        aliases.extend(
+            ["debug", "package_set", "install"].map(|suffix| AliasEntry {
+                name: suffix.to_owned(),
+                actual: format!(":{}_{}", &best_version, suffix),
+            }),
+        );
+        test_suites.push(TestSuiteEntry {
+            name: "test".to_owned(),
+            test_name: format!(":{}_test", &best_version),
+        });
+    }
 
     let context = BuildTemplateContext {
         aliases,
         test_suites,
-        ebuild_failures,
     };
 
     let mut file = File::create(package_output_dir.join("BUILD.bazel"))?;
