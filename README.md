@@ -192,6 +192,18 @@ set this option:
 --@portage//internal/packages/stage1/target/board/chromiumos/chromeos-base/chromeos-chrome:114.0.5715.0_rc-r2_prebuilt=gs://chromeos-prebuilt/board/amd64-generic/postsubmit-R114-15427.0.0-49533-8783437624917045025/packages/chromeos-base/chromeos-chrome-114.0.5715.0_rc-r2.tbz2
 ```
 
+*** note
+You can run [generate_chrome_prebuilt_config.py] to generate the prebuilt config
+for the current version of chromeos-chrome.
+
+```sh
+% BOARD=amd64-generic portage/tools/generate_chrome_prebuilt_config.py
+```
+
+***
+
+[generate_chrome_prebuilt_config.py]: ./portage/tools/generate_chrome_prebuilt_config.py
+
 We have several named config groupings in [prebuilts.bazelrc] that define
 typical options to inject prebuilts. You can specify `--config` to use them.
 
