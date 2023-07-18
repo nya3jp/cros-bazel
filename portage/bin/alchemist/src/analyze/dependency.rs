@@ -156,6 +156,45 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         ("dev-python/m2crypto", DependencyKind::Build) => "dev-lang/python:3.6",
         // xau.pc contains "Requires: xproto", so it should be listed as RDEPEND.
         ("x11-libs/libXau", DependencyKind::Run) => "x11-base/xorg-proto",
+
+        // x11-misc/compose-tables requires the unprefixed cpp located at
+        // /usr/bin/cpp. This symlink points to `clang-cpp`, but the symlink
+        // is created by the `gcc` package. x11-misc/compose-tables doesn't
+        // actually use GCC for anything other than this symlink.
+        // See b/258234653
+        ("x11-misc/compose-tables", DependencyKind::BuildHost { .. }) => "sys-devel/gcc",
+        ("x11-libs/libX11", DependencyKind::BuildHost { .. }) => "sys-devel/gcc",
+
+        // The nls use flag claims that gettext is optional, but in reality
+        // the ./configure script calls `aclocal` and it expects the gettext
+        // macros.
+        ("media-libs/libexif", DependencyKind::BuildHost { .. }) => "sys-devel/gettext",
+
+        /*
+         * /build/arm64-generic/tmp/portage/sys-fs/fuse-2.9.8-r5/work/fuse-2.9.8/missing: line 81: aclocal-1.15: command not found
+         * CDPATH="${ZSH_VERSION+.}:" && cd . && /bin/sh /build/arm64-generic/tmp/portage/sys-fs/fuse-2.9.8-r5/work/fuse-2.9.8/missing aclocal-1.15 -I m4
+         * configure.ac:74: warning: macro 'AM_ICONV' not found in library
+         */
+        ("sys-fs/fuse", DependencyKind::BuildHost { .. }) => "sys-devel/automake sys-devel/gettext",
+
+        /*
+         * checking host system type... Invalid configuration `aarch64-cros-linux-gnu': machine `aarch64-cros' not recognized
+         */
+        ("dev-libs/libdaemon", DependencyKind::BuildHost { .. }) => "sys-devel/gnuconfig",
+
+        /*
+         * aclocal-1.15: command not found
+         *  ./Configure: line 39: which: command not found
+         */
+        ("sys-processes/lsof", DependencyKind::BuildHost { .. }) => {
+            "sys-devel/automake sys-apps/which"
+        }
+
+        /*
+         *  configure.ac:36: warning: macro 'AM_ICONV' not found in library
+         */
+        ("app-arch/cabextract", DependencyKind::BuildHost { .. }) => "sys-devel/gettext",
+
         // When cross compiling `dev-libs/nss`, it requires `dev-libs/nss` to be
         // installed on the build host. We can't add `dev-libs/nss` as a BDEPEND
         // to the ebuild because that would cause a circular dependency when
@@ -176,6 +215,154 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
                 cross_compile: true,
             },
         ) => "dev-libs/nss",
+
+        /*
+         * make[2]: Entering directory '/build/arm64-generic/tmp/portage/net-libs/rpcsvc-proto-1.3.1-r4/work/rpcsvc-proto-1.3.1/rpcsvc'
+         * rpcgen -h -o klm_prot.h klm_prot.x
+         * make[2]: rpcgen: Command not found
+         */
+        (
+            "net-libs/rpcsvc-proto",
+            DependencyKind::BuildHost {
+                cross_compile: true,
+            },
+        ) => "net-libs/rpcsvc-proto",
+
+        /*
+         * cannot find C preprocessor: cpp
+         *
+         * We use gcc for `cpp`, we should switch this to clang.
+         * /usr/bin/x86_64-pc-linux-gnu-cpp: symbolic link to /usr/x86_64-pc-linux-gnu/gcc-bin/10.2.0/x86_64-pc-linux-gnu-cpp
+         */
+        (
+            "net-libs/rpcsvc-proto",
+            DependencyKind::BuildHost {
+                cross_compile: false,
+            },
+        ) => "sys-devel/gcc",
+
+        /*
+         * configure: WARNING: nih-dbus-tool not found, but you are cross-compiling.  Using built copy, which is probably not what you want.  Set NIH_DBUS_TOOL maybe?
+         */
+        (
+            "sys-libs/libnih",
+            DependencyKind::BuildHost {
+                cross_compile: true,
+            },
+        ) => "sys-libs/libnih",
+
+        /*
+         * bc -c ./libmath.b </dev/null >libmath.h
+         * /bin/sh: line 1: bc: command not found
+         */
+        (
+            "sys-devel/bc",
+            DependencyKind::BuildHost {
+                cross_compile: true,
+            },
+        ) => "sys-devel/bc",
+
+        /*
+         * /bin/sh: line 2: -F/build/arm64-generic/tmp/portage/sys-apps/groff-1.22.4-r2/work/groff-1.22.4/font: No such file or directory
+         */
+        (
+            "sys-apps/groff",
+            DependencyKind::BuildHost {
+                cross_compile: true,
+            },
+        ) => "sys-apps/groff",
+
+        /*
+         * /bin/sh: line 1: bc: command not found
+         * make[2]: *** [/mnt/host/source/src/third_party/kernel/v5.15/./Kbuild:24: include/generated/timeconst.h] Error 127
+         *
+         * /bin/sh: line 1: perl: command not found
+         * make[2]: *** [/mnt/host/source/src/third_party/kernel/v5.15/lib/Makefile:323: lib/oid_registry_data.c] Error 127
+         *
+         * /build/arm64-generic/tmp/portage/sys-kernel/chromeos-kernel-5_15-9999/temp/environment: line 1659: lz4: command not found
+         *
+         * /build/arm64-generic/tmp/portage/sys-kernel/chromeos-kernel-5_15-9999/temp/environment: line 1748: fdtget: command not found
+         *
+         * /build/arm64-generic/tmp/portage/sys-kernel/chromeos-kernel-5_15-9999/temp/environment: line 2436: mkimage: command not found
+         *
+         * TODO: Update cros-kernel eclass
+         */
+        ("sys-kernel/chromeos-kernel-5_15", DependencyKind::BuildHost { .. }) => {
+            "sys-devel/bc dev-lang/perl app-arch/lz4 sys-apps/dtc dev-embedded/u-boot-tools"
+        }
+
+        /*
+         * checking for compile_et... no
+         * configure: error: cannot find compile_et
+         * ### /build/arm64-generic/tmp/portage/app-crypt/mit-krb5-1.20.1/work/krb5-1.20.1/src-.arm64/config.log:
+         */
+        ("app-crypt/mit-krb5", DependencyKind::BuildHost { .. }) => "sys-fs/e2fsprogs",
+
+        /*
+         * configure:13038: error: possibly undefined macro: AC_LIB_PREPARE_PREFIX
+         */
+        ("media-libs/libmtp", DependencyKind::BuildHost { .. }) => "sys-devel/gettext",
+
+        /*
+         * /bin/sh: line 1: glib-mkenums: command not found
+         * make: *** [Makefile:1301: gudev/gudevenumtypes.c] Error 127
+         */
+        ("dev-libs/libgudev", DependencyKind::BuildHost { .. }) => "dev-util/glib-utils",
+
+        /*
+         *  *    brltty_config ...
+         * /usr/bin/env: ‘tclsh’: No such file or directory
+         */
+        ("app-accessibility/brltty", DependencyKind::BuildHost { .. }) => "dev-lang/tcl",
+
+        /*
+         * perl ./xml2lst.pl < evdev.xml > evdev.lst
+         * /bin/sh: line 1: perl: command not found
+         */
+        ("x11-misc/xkeyboard-config", DependencyKind::BuildHost { .. }) => "dev-lang/perl",
+
+        /*
+         * ./Configure: line 39: which: command not found
+         * ./Configure: line 2873: perl: command not found
+         */
+        ("sys-process/lsof", DependencyKind::BuildHost { .. }) => "dev-lang/perl sys-apps/which",
+
+        /*
+         * /build/arm64-generic/tmp/portage/sys-fs/ecryptfs-utils-108-r5/temp/environment: line 876: intltoolize: command not found
+         */
+        ("sys-fs/ecryptfs-utils", DependencyKind::BuildHost { .. }) => "dev-util/intltool",
+
+        /*
+         * /bin/sh: line 15: soelim: command not found
+         */
+        ("net-nds/openldap", DependencyKind::BuildHost { .. }) => "sys-apps/groff",
+
+        /*
+         * Our fake sudo package uses dataclasses which is a python 3.8 feature.
+         * We need to add the dep when a target package uses sudo :/
+         *
+         * We need gcc because chrome uses a bundled ninja that is built against libstdc++.
+         *
+         * /home/root/chrome_root/src/third_party/ninja/ninja: error while loading shared libraries: libstdc++.so.6: cannot open shared object file: No such file or directory
+         */
+        ("chromeos-base/chrome-icu", DependencyKind::BuildHost { .. }) => {
+            "dev-python/dataclasses sys-devel/gcc"
+        }
+        ("chromeos-base/chromeos-chrome", DependencyKind::BuildHost { .. }) => {
+            "dev-python/dataclasses sys-devel/gcc"
+        }
+
+        /*
+         * /build/arm64-generic/tmp/portage/net-libs/libmbim-9999/temp/environment: line 3552: git: command not found
+         *
+         * So this one is annoying. It's an EAPI 6 ebuild, so it doesn't get the git BDEPEND,
+         * but we really only need git to get the VCS_ID. We need to update the cros-workon
+         * eclass to stop calling git if there is no .git directory.
+         */
+        ("net-libs/libmbim", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
+        ("media-libs/minigbm", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
+        ("media-libs/cros-camera-hal-usb", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
+
         _ => "",
     }
 }
@@ -220,12 +407,18 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
 // We keep a hand curated list of packages that are known to be
 // BDEPENDs. Ideally we upgrade all ebuilds to EAPI7 and delete this
 // block, but that's a lot of work.
-static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 13] = [
+static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 21] = [
+    "app-misc/jq",
     "app-portage/elt-patches",
+    "dev-lang/perl",
+    "dev-perl/XML-Parser",
+    "dev-python/m2crypto",
     "dev-util/cmake",
     "dev-util/meson",
     "dev-util/meson-format-array",
     "dev-util/ninja",
+    "dev-vcs/git", // TODO: We need to make cros-workon stop calling `git`.
+    "sys-apps/texinfo",
     "sys-devel/autoconf",
     "sys-devel/autoconf-archive",
     "sys-devel/automake",
@@ -233,7 +426,9 @@ static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 13] = [
     "sys-devel/flex",
     "sys-devel/gnuconfig",
     "sys-devel/libtool",
+    "sys-devel/m4",
     "sys-devel/make",
+    "virtual/yacc",
 ];
 
 /// Analyzes ebuild variables and returns [`PackageDependencies`] containing
