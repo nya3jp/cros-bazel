@@ -261,31 +261,51 @@ pub fn analyze_dependencies(
         })?;
 
     let build_host_deps = if let Some(host_resolver) = host_resolver {
-        if details.supports_bdepend() {
-            extract_dependencies(
-                details,
-                DependencyKind::BuildHost { cross_compile },
-                host_resolver,
-                None,
-            )
-        } else {
-            // We need to apply the allow list filtering during dependency
-            // evaluation instead of post-dependency evaluation because
-            // there are dependencies that we can't satisfy using the host
-            // resolver. i.e. `libchrome[cros_debug=]`.
-            extract_dependencies(
-                details,
-                DependencyKind::Build,
-                host_resolver,
-                Some(&DEPEND_AS_BDEPEND_ALLOW_LIST),
-            )
-        }
+        // We query BDEPEND regardless of EAPI because we want our overrides
+        // from `get_extra_dependencies` to allow specifying a BDEPEND even
+        // if the EAPI doesn't support it.
+        let mut build_host_deps = extract_dependencies(
+            details,
+            DependencyKind::BuildHost { cross_compile },
+            host_resolver,
+            None,
+        )
         .with_context(|| {
             format!(
                 "Resolving build-time host dependencies for {}-{}",
                 &details.package_name, &details.version
             )
-        })?
+        })?;
+
+        if !details.supports_bdepend() {
+            // We need to apply the allow list filtering during dependency
+            // evaluation instead of post-dependency evaluation because
+            // there are dependencies that we can't satisfy using the host
+            // resolver. i.e. `libchrome[cros_debug=]`.
+            let build_deps_for_host = extract_dependencies(
+                details,
+                DependencyKind::Build,
+                host_resolver,
+                Some(&DEPEND_AS_BDEPEND_ALLOW_LIST),
+            )
+            .with_context(|| {
+                format!(
+                    "Resolving build-time dependencies as host dependencies for {}-{}",
+                    &details.package_name, &details.version
+                )
+            })?;
+
+            for package_details in build_deps_for_host {
+                if !build_host_deps
+                    .iter()
+                    .any(|a| a.ebuild_path == package_details.ebuild_path)
+                {
+                    build_host_deps.push(package_details);
+                }
+            }
+        }
+
+        build_host_deps
     } else {
         vec![]
     };
