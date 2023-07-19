@@ -35,21 +35,28 @@ _HOST_FEATURES = [
                     ACTION_NAMES.cpp_link_executable,
                 ],
                 flag_groups = [flag_group(flags = [
-                    # The long term goal is probably:
-                    # * Use -dynamic-linker=<absolute path to custom binary>
-                    # * Have the binaries explicitly depend on lib*.so so they
-                    #   are a part of the runfiles.
-                    # * Have that dynamic linker look perform runfiles lookup
-                    #   for shared libraries.
-                    # This should work because the dynamic linker should never
-                    # need to change, but the shared libraries are subject to
-                    # change.
-                    ",".join([
-                        "-Wl",
-                        "-R/%s/lib" % _HOST_SYSROOT_PATH,
-                        # Probably not required, but no harm.
-                        "-dynamic-linker=%s/lib64/ld-linux-x86-64.so.2" % _HOST_SYSROOT_PATH,
-                    ]),
+                    "-Wl,-R/%s/lib" % _HOST_SYSROOT_PATH,
+                ])],
+            ),
+        ],
+    ),
+    feature(
+        name = "prebuilt_elfloader",
+        # Note that since this is linked dynamically, not statically, this will
+        # only work on the machine that built it, since only it has the special
+        # directory _HOST_SYSROOT_PATH.
+        # Specifically, this will not work:
+        # * Inside a chroot / user namespace without the directory linked in.
+        # * On another machine, eg. RBE (though it will probably work on a DUT).
+        enabled = True,
+        flag_sets = [
+            flag_set(
+                actions = [
+                    ACTION_NAMES.cpp_link_executable,
+                ],
+                flag_groups = [flag_group(flags = [
+                    # TODO: set this to the custom elf loader.
+                    "-Wl,-dynamic-linker=%s/lib64/ld-linux-x86-64.so.2" % _HOST_SYSROOT_PATH,
                 ])],
             ),
         ],

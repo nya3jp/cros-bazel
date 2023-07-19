@@ -34,6 +34,10 @@ TOOLCHAIN_FILEGROUPS = {
     "linker_files": ["**"],
     "objcopy_files": ["**"],
     "strip_files": ["**"],
+    "runtime_files": [
+        "lib/*",
+        "lib64/ld-linux-x86-64.so.2",
+    ],
 }
 
 FILEGROUPS = TOOLCHAIN_FILEGROUPS | {
