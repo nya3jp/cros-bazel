@@ -14,3 +14,13 @@ custom_constraint(
         "pc",
     ],
 )
+
+custom_constraint(
+    name = "abi",
+    default = "gnu",
+    options = [
+        "gnu",
+        "gnueabihf",
+        "musl",
+    ],
+)

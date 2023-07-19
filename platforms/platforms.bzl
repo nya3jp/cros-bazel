@@ -40,3 +40,14 @@ TARGET_PLATFORMS = [
 ]
 
 ALL_PLATFORMS = [HOST_PLATFORM] + TARGET_PLATFORMS
+
+HOST_PLATFORM_MUSL = PlatformInfo(
+    name = "host_musl",
+    cpu_arch = "x86_64",
+    vendor = "pc",
+    abi = "musl",
+)
+
+# Generally when we refer to all platforms, we actually don't mean to include
+# MUSL.
+ALL_PLATFORMS_AND_MUSL = ALL_PLATFORMS + [HOST_PLATFORM_MUSL]
