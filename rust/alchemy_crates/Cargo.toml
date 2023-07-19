@@ -16,6 +16,7 @@ by_address = "1.1.0"
 bzip2 = "0.4.4"
 clap = { version = "4.0.29", features = ["derive"] }
 colored = "2.0.0"
+elfloader = "0.16.0"
 env_logger = "0.9.3"
 hex = "0.4.3"
 itertools = "0.10.5"
