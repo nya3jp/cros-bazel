@@ -14,10 +14,10 @@ go_library(
     importpath = "cros.local/bazel/portage/bin/fakefs/tracer",
     visibility = ["//bazel/portage/bin/fakefs:__subpackages__"],
     deps = [
+        "//bazel/portage/bin/fakefs/exit",
         "//bazel/portage/bin/fakefs/hooks",
         "//bazel/portage/bin/fakefs/logging",
         "//bazel/portage/bin/fakefs/ptracearch",
-        "//bazel/portage/common/cliutil",
         "@org_golang_x_sys//unix",
     ],
 )

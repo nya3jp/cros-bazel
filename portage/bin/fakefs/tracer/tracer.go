@@ -12,10 +12,10 @@ import (
 
 	"golang.org/x/sys/unix"
 
+	"cros.local/bazel/portage/bin/fakefs/exit"
 	"cros.local/bazel/portage/bin/fakefs/hooks"
 	"cros.local/bazel/portage/bin/fakefs/logging"
 	"cros.local/bazel/portage/bin/fakefs/ptracearch"
-	"cros.local/bazel/portage/common/cliutil"
 )
 
 func startTracee(args []string, preloadPath string, verbose bool) (pid int, err error) {
@@ -85,7 +85,7 @@ func startTracee(args []string, preloadPath string, verbose bool) (pid int, err 
 }
 
 // waitNextStop waits for a next ptrace-stop event of any traced thread.
-// It returns cliutil.ExitCode if the last thread of rootPid exits.
+// It returns exit.Code if the last thread of rootPid exits.
 func waitNextStop(rootPid int, index *threadStateIndex, logger *logging.Logger) (*threadState, unix.WaitStatus, error) {
 	for {
 		var ws unix.WaitStatus
@@ -119,7 +119,7 @@ func waitNextStop(rootPid int, index *threadStateIndex, logger *logging.Logger) 
 			// the tracer itself with the same exit code.
 			if thread.Pid == rootPid && len(index.GetByPid(rootPid)) == 0 {
 				logger.PrintStats()
-				return nil, 0, cliutil.ExitCode(exitCode(ws))
+				return nil, 0, exit.Code(exitCode(ws))
 			}
 			continue
 		}

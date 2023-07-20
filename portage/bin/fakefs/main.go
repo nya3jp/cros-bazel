@@ -10,9 +10,9 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"cros.local/bazel/portage/bin/fakefs/exit"
 	"cros.local/bazel/portage/bin/fakefs/tracee"
 	"cros.local/bazel/portage/bin/fakefs/tracer"
-	"cros.local/bazel/portage/common/cliutil"
 )
 
 var flagTracee = &cli.BoolFlag{
@@ -71,5 +71,5 @@ var app = &cli.App{
 func main() {
 	// Lock the main thread to avoid confusing ptrace(2).
 	runtime.LockOSThread()
-	cliutil.Exit(app.Run(os.Args))
+	exit.Exit(app.Run(os.Args))
 }

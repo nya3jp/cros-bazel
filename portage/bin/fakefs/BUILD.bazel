@@ -10,9 +10,9 @@ go_library(
     importpath = "cros.local/bazel/portage/bin/fakefs",
     visibility = ["//visibility:private"],
     deps = [
+        "//bazel/portage/bin/fakefs/exit",
         "//bazel/portage/bin/fakefs/tracee",
         "//bazel/portage/bin/fakefs/tracer",
-        "//bazel/portage/common/cliutil",
         "@com_github_urfave_cli_v2//:cli",
     ],
 )
