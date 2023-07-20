@@ -26,7 +26,7 @@ use alchemist::{
     resolver::PackageResolver,
     toolchain::load_toolchains,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use tempfile::TempDir;
 

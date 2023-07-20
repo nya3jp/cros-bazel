@@ -2,12 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{
-    collections::HashMap,
-    collections::HashSet,
-    iter,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashMap, collections::HashSet, iter, path::Path};
 
 use anyhow::Result;
 use itertools::Itertools;
