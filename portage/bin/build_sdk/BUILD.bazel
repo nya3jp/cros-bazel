@@ -10,9 +10,9 @@ rust_binary(
     data = [":build_sdk.sh"],
     visibility = ["//bazel:internal"],
     deps = [
-        "//bazel/portage/common/cliutil:cliutil_rust",
+        "//bazel/portage/common/cliutil",
         "//bazel/portage/common/container",
-        "//bazel/portage/common/fileutil:fileutil_rust",
+        "//bazel/portage/common/fileutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@rules_rust//tools/runfiles",

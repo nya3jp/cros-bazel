@@ -13,10 +13,10 @@ rust_binary(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
-        "//bazel/portage/common/cliutil:cliutil_rust",
+        "//bazel/portage/common/cliutil",
         "//bazel/portage/common/container",
-        "//bazel/portage/common/fileutil:fileutil_rust",
-        "//bazel/portage/common/portage/binarypackage:binarypackage_rust",
+        "//bazel/portage/common/fileutil",
+        "//bazel/portage/common/portage/binarypackage",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:users",

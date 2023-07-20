@@ -19,8 +19,8 @@ rust_library(
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/portage/common/durabletree",
-        "//bazel/portage/common/fileutil:fileutil_rust",
-        "//bazel/portage/common/portage/binarypackage:binarypackage_rust",
+        "//bazel/portage/common/fileutil",
+        "//bazel/portage/common/portage/binarypackage",
         "//bazel/portage/common/processes",
         "//bazel/portage/common/run_in_container_lib",
         "@alchemy_crates//:anyhow",

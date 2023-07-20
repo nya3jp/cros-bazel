@@ -12,7 +12,7 @@ rust_library(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
-        "//bazel/portage/common/fileutil:fileutil_rust",
+        "//bazel/portage/common/fileutil",
         "//bazel/portage/common/testutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:itertools",

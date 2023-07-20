@@ -6,7 +6,7 @@ load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
-    name = "version_rust",
+    name = "version",
     srcs = glob(["src/*.rs"]),
     crate_name = "version",
     proc_macro_deps = [
@@ -24,9 +24,9 @@ rust_library(
 )
 
 rust_test(
-    name = "version_rust_test",
+    name = "version_test",
     size = "small",
-    crate = ":version_rust",
+    crate = ":version",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:proptest",

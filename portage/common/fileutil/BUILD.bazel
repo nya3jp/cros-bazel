@@ -6,7 +6,7 @@ load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
-    name = "fileutil_rust",
+    name = "fileutil",
     srcs = glob(["src/*.rs"]),
     crate_name = "fileutil",
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -21,8 +21,8 @@ rust_library(
 )
 
 rust_test(
-    name = "fileutil_rust_test",
+    name = "fileutil_test",
     size = "small",
-    crate = ":fileutil_rust",
+    crate = ":fileutil",
     rustc_flags = RUSTC_DEBUG_FLAGS,
 )

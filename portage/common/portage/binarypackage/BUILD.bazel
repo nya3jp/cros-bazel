@@ -6,22 +6,22 @@ load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
-    name = "binarypackage_rust",
+    name = "binarypackage",
     srcs = glob(["src/*.rs"]),
     crate_name = "binarypackage",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
-        "//bazel/portage/common/cliutil:cliutil_rust",
+        "//bazel/portage/common/cliutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bytes",
     ],
 )
 
 rust_test(
-    name = "binarypackage_rust_test",
+    name = "binarypackage_test",
     size = "small",
-    crate = ":binarypackage_rust",
+    crate = ":binarypackage",
     data = glob(["testdata/*"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [

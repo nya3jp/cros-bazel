@@ -6,7 +6,7 @@ load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 rust_library(
-    name = "cliutil_rust",
+    name = "cliutil",
     srcs = glob(["src/*.rs"]),
     crate_name = "cliutil",
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -22,9 +22,9 @@ rust_library(
 )
 
 rust_test(
-    name = "cliutil_rust_test",
+    name = "cliutil_test",
     size = "small",
-    crate = ":cliutil_rust",
+    crate = ":cliutil",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:tempfile",
