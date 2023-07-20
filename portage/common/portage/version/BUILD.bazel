@@ -4,21 +4,6 @@
 
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
-load("@rules_go//go:def.bzl", "go_library", "go_test")
-
-go_library(
-    name = "version",
-    srcs = ["version.go"],
-    importpath = "cros.local/bazel/portage/common/portage/version",
-    visibility = ["//bazel:internal"],
-)
-
-go_test(
-    name = "version_test",
-    size = "small",
-    srcs = ["version_test.go"],
-    deps = [":version"],
-)
 
 rust_library(
     name = "version_rust",

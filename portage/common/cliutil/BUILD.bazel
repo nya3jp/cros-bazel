@@ -4,14 +4,6 @@
 
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
-load("@rules_go//go:def.bzl", "go_library")
-
-go_library(
-    name = "cliutil",
-    srcs = ["exit.go"],
-    importpath = "cros.local/bazel/portage/common/cliutil",
-    visibility = ["//bazel:internal"],
-)
 
 rust_library(
     name = "cliutil_rust",
