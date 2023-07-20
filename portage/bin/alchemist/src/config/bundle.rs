@@ -111,11 +111,8 @@ impl ConfigBundle {
         let nodes = sources
             .into_iter()
             .flat_map(|source| source.evaluate_configs(&mut env))
-            .collect();
-        Self::new(env, nodes)
-    }
+            .collect::<Vec<_>>();
 
-    pub fn new(mut env: Vars, nodes: Vec<ConfigNode>) -> Self {
         // Compute incremental variables that are not specific to packages.
         let incremental_variables = Self::compute_general_incremental_variables(&nodes);
 
@@ -607,7 +604,10 @@ mod tests {
     use std::path::PathBuf;
     use std::str::FromStr;
 
-    use crate::{config::AcceptKeywordsUpdate, dependency::package::PackageAtom};
+    use crate::{
+        config::{AcceptKeywordsUpdate, SimpleConfigSource},
+        dependency::package::PackageAtom,
+    };
 
     #[test]
     fn test_compute_accept_keywords() -> Result<()> {
@@ -717,25 +717,22 @@ mod tests {
 
     #[test]
     fn test_sources() -> Result<()> {
-        let bundle = ConfigBundle::new(
-            Vars::new(),
-            vec![
-                ConfigNode {
-                    sources: vec![PathBuf::from("a")],
-                    value: ConfigNodeValue::Vars(HashMap::from([(
-                        "ACCEPT_KEYWORDS".to_owned(),
-                        "amd64".to_owned(),
-                    )])),
-                },
-                ConfigNode {
-                    sources: vec![PathBuf::from("b")],
-                    value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
-                        atom: PackageAtom::from_str("=aaa/bbb-9999")?,
-                        accept_keywords: "".to_owned(),
-                    }]),
-                },
-            ],
-        );
+        let bundle = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![
+            ConfigNode {
+                sources: vec![PathBuf::from("a")],
+                value: ConfigNodeValue::Vars(HashMap::from([(
+                    "ACCEPT_KEYWORDS".to_owned(),
+                    "amd64".to_owned(),
+                )])),
+            },
+            ConfigNode {
+                sources: vec![PathBuf::from("b")],
+                value: ConfigNodeValue::AcceptKeywords(vec![AcceptKeywordsUpdate {
+                    atom: PackageAtom::from_str("=aaa/bbb-9999")?,
+                    accept_keywords: "".to_owned(),
+                }]),
+            },
+        ])]);
 
         assert_eq!(bundle.sources(), vec![Path::new("a"), Path::new("b")]);
 

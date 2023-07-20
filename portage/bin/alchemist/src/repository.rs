@@ -2,10 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{
-    config::{bundle::ConfigBundle, site::SiteSettings, ConfigSource},
-    data::Vars,
-};
+use crate::config::{bundle::ConfigBundle, site::SiteSettings};
 use anyhow::Context;
 use anyhow::{anyhow, bail, Error, Result};
 use itertools::Itertools;
@@ -249,11 +246,7 @@ impl RepositorySet {
     pub fn load(root_dir: &Path) -> Result<Self> {
         // Locate repositories by reading PORTDIR and PORTDIR_OVERLAY in make.conf.
         let site_settings = SiteSettings::load(root_dir)?;
-        let bootstrap_config = {
-            let mut env = Vars::new();
-            let nodes = site_settings.evaluate_configs(&mut env);
-            ConfigBundle::new(env, nodes)
-        };
+        let bootstrap_config = ConfigBundle::from_sources(vec![site_settings]);
 
         let primary_repo_dir = bootstrap_config
             .env()

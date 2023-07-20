@@ -594,6 +594,7 @@ pub fn analyze_sources(
 mod tests {
     use super::*;
     use crate::bash::vars::BashVars;
+    use crate::config::{ConfigNode, ConfigNodeValue, SimpleConfigSource};
     use crate::data::{Slot, Vars};
     use crate::testutils::write_files;
     use std::collections::HashSet;
@@ -654,10 +655,13 @@ mod tests {
 
     #[test]
     fn src_uri_mirror_no_extra() -> Result<()> {
-        let config = ConfigBundle::new(
-            Vars::from([("GENTOO_MIRRORS".to_owned(), MIRRORS.to_owned())]),
-            vec![],
-        );
+        let config = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![ConfigNode {
+            sources: vec![],
+            value: ConfigNodeValue::Vars(Vars::from([(
+                "GENTOO_MIRRORS".to_owned(),
+                MIRRORS.to_owned(),
+            )])),
+        }])]);
 
         let (package, _tmpdir) = new_non_cros_workon_package(UseMap::new())?;
         let dist_sources = extract_remote_sources(&config, &package)?;
@@ -683,10 +687,13 @@ mod tests {
 
     #[test]
     fn src_uri_mirror_with_extra() -> Result<()> {
-        let config = ConfigBundle::new(
-            Vars::from([("GENTOO_MIRRORS".to_owned(), MIRRORS.to_owned())]),
-            vec![],
-        );
+        let config = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![ConfigNode {
+            sources: vec![],
+            value: ConfigNodeValue::Vars(Vars::from([(
+                "GENTOO_MIRRORS".to_owned(),
+                MIRRORS.to_owned(),
+            )])),
+        }])]);
 
         let (package, _tmpdir) =
             new_non_cros_workon_package(UseMap::from([("extra".to_string(), true)]))?;
