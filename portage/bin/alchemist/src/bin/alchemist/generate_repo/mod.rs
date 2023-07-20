@@ -32,7 +32,7 @@ use alchemist::{
     repository::RepositorySet,
     resolver::PackageResolver,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use itertools::{Either, Itertools};
 use rayon::prelude::*;
 use tracing::instrument;
@@ -199,6 +199,13 @@ fn analyze_packages(
     let (all_partials, failures): (Vec<PackagePartial>, Vec<PackageError>) =
         all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
+                if details.masked {
+                    // We do not support building masked packages because of
+                    // edge cases: e.g., if one masked package depends on
+                    // another masked one, this'd be treated as an unsatisfied
+                    // dependency error.
+                    bail!("The package is masked");
+                }
                 let dependencies =
                     analyze_dependencies(details, cross_compile, host_resolver, target_resolver)?;
                 let sources = analyze_sources(config, details, src_dir)?;
@@ -215,6 +222,7 @@ fn analyze_packages(
                     package_name: details.package_name.clone(),
                     ebuild: details.ebuild_path.clone(),
                     version: details.version.clone(),
+                    masked: Some(details.masked),
                     error: format!("{err:#}"),
                 }),
             }
