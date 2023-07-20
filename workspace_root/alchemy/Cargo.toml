@@ -14,6 +14,7 @@ members = [
     "bazel/portage/bin/sdk_from_archive",
     "bazel/portage/bin/sdk_install_glibc",
     "bazel/portage/bin/sdk_update",
+    "bazel/portage/bin/xpaktool",
     "bazel/portage/common/chrome-trace",
     "bazel/portage/common/cliutil",
     "bazel/portage/common/container",

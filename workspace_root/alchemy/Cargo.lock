@@ -2029,6 +2029,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "xpaktool"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "binarypackage",
+ "clap",
+ "cliutil",
+ "itertools",
+]
+
+[[package]]
 name = "yansi"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

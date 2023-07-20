@@ -1,0 +1,14 @@
+[package]
+name = "xpaktool"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cliutil = { path = "../../common/cliutil" }
+binarypackage = { path = "../../common/portage/binarypackage" }
+
+anyhow.workspace = true
+clap.workspace = true
+itertools.workspace = true
