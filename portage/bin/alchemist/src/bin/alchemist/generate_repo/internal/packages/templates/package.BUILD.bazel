@@ -2,8 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_failure")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
@@ -285,10 +286,11 @@ string_flag(
     visibility = ["@//bazel:internal"],
 )
 
-ebuild_failure(
+always_fail(
     name = "{{ failure.version }}",
-    ebuild = "{{ failure.ebuild_name }}",
-    error = """{{ failure.error }}""",
+    message = "\n--\nError analyzing ebuild!\ntarget: @" + repository_name() +
+              "/" + package_name() + "\nebuild: {{ failure.ebuild_name }}\n\n" +
+              """{{ failure.error }}\n--""",
     visibility = ["@//bazel:internal"],
 )
 {% endfor %}
