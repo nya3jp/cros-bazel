@@ -90,8 +90,11 @@ use tracing::instrument;
 /// archive might be missing some metadata. Therefore the raw directory must
 /// take precedence over the extra tarball.
 pub struct DurableTree {
-    raw_dir: PathBuf,
-    extra_dir: ExtraDir,
+    _extra_dir: ExtraDir,
+
+    // A list of layer directories to return from `layers`. This is a subset of
+    // the raw directory and the extra directory.
+    layer_dirs: Vec<PathBuf>,
 }
 
 impl DurableTree {
@@ -127,11 +130,27 @@ impl DurableTree {
     /// tree from multiple threads and processes in parallel.
     #[instrument]
     pub fn expand(root_dir: &Path) -> Result<Self> {
+        let raw_dir = root_dir.join(RAW_DIR_NAME);
         let extra_dir = expand_impl(root_dir)?;
 
+        // Compute a list of layer directories to return from `layers`. This is
+        // a subset of `raw_dir` and `extra_dir`, but we might be able to skip
+        // some of them when they're empty.
+        // See the comment of `DurableTree` for the reason the raw directory
+        // takes precedence.
+        let mut layer_dirs = Vec::new();
+        if dir_has_child(extra_dir.path())? {
+            layer_dirs.push(extra_dir.path().to_path_buf());
+            // We can omit the raw directory only when the extra directory is
+            // omitted.
+            layer_dirs.push(raw_dir.clone());
+        } else if dir_has_child(&raw_dir)? {
+            layer_dirs.push(raw_dir.clone());
+        }
+
         Ok(DurableTree {
-            raw_dir: root_dir.join(RAW_DIR_NAME),
-            extra_dir,
+            _extra_dir: extra_dir,
+            layer_dirs,
         })
     }
 
@@ -140,27 +159,15 @@ impl DurableTree {
     ///
     /// Directories are listed in the mount order. That is, a former directory
     /// is overridden by a latter directory.
+    ///
+    /// Depending on the content of a durable tree, this method may return the
+    /// different number of directories. In the case of an empty tree, this
+    /// method may return an empty vector.
     pub fn layers(&self) -> Vec<&Path> {
-        // See the comment of `DurableTree` for the reason the raw directory
-        // takes precedence.
-        vec![self.extra_dir.path(), &self.raw_dir]
+        self.layer_dirs.iter().map(|dir| dir.as_path()).collect()
     }
+}
 
-    /// Similar to [`DurableTree::layers`], but consumes [`DurableTree`].
-    ///
-    /// After calling this function, it is your responsibility to clean layers
-    /// up. Since layers might involve mounting file systems, properly cleaning
-    /// them up by yourself is difficult. Use this function only as a last
-    /// resort when you make changes to the file system mounts that prevents the
-    /// default clean-up from working properly, e.g. calling pivot_root(2).
-    ///
-    /// If you really have to clean things up by yourself, this is a way that
-    /// will work:
-    /// - Enter a new mount namespace before calling [`DurableTree::expand`].
-    /// - After you're done with durable trees, remove the whole $TMPDIR from
-    ///   a process outside of the mount namespace.
-    #[must_use]
-    pub fn into_layers(self) -> Vec<PathBuf> {
-        vec![self.extra_dir.into_path(), self.raw_dir]
-    }
+fn dir_has_child(dir: &Path) -> Result<bool> {
+    Ok(dir.read_dir()?.next().is_some())
 }

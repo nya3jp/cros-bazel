@@ -61,10 +61,7 @@ fn empty() -> Result<()> {
         .map(describe_tree)
         .collect::<Result<_>>()?;
 
-    assert_eq!(
-        files,
-        vec![vec![simple_dir("", 0o750)], vec![simple_dir("", 0o750)]]
-    );
+    assert_eq!(files, Vec::<Vec<FileDescription>>::new());
 
     Ok(())
 }
@@ -195,15 +192,12 @@ fn preserve_special_modes() -> Result<()> {
 
     assert_eq!(
         files,
-        vec![
-            vec![simple_dir("", 0o700)],
-            vec![
-                simple_dir("", 0o700),
-                simple_dir("tmp", 0o1777),
-                simple_file("tmp/setgid", 0o2700, EMPTY_HASH),
-                simple_file("tmp/setuid", 0o4700, EMPTY_HASH),
-            ],
-        ],
+        vec![vec![
+            simple_dir("", 0o700),
+            simple_dir("tmp", 0o1777),
+            simple_file("tmp/setgid", 0o2700, EMPTY_HASH),
+            simple_file("tmp/setuid", 0o4700, EMPTY_HASH),
+        ]],
     );
 
     Ok(())
@@ -238,32 +232,29 @@ fn preserve_user_xattrs() -> Result<()> {
 
     assert_eq!(
         files,
-        vec![
-            vec![simple_dir("", 0o700)],
-            vec![
-                FileDescription::Dir {
-                    path: PathBuf::from(""),
-                    mode: 0o700,
-                    user_xattrs: [
-                        ("user.aaa".to_owned(), Vec::from("xxx")),
-                        ("user.bbb".to_owned(), Vec::from("yyy")),
-                        ("user.ccc".to_owned(), Vec::from("zzz")),
-                    ]
-                    .into(),
-                },
-                FileDescription::File {
-                    path: PathBuf::from("file"),
-                    mode: 0o644,
-                    hash: EMPTY_HASH.to_owned(),
-                    user_xattrs: [
-                        ("user.aaa".to_owned(), Vec::from(111_u32.to_be_bytes())),
-                        ("user.bbb".to_owned(), Vec::from(222_u32.to_be_bytes())),
-                        ("user.ccc".to_owned(), Vec::from(333_u32.to_be_bytes())),
-                    ]
-                    .into(),
-                },
-            ],
-        ],
+        vec![vec![
+            FileDescription::Dir {
+                path: PathBuf::from(""),
+                mode: 0o700,
+                user_xattrs: [
+                    ("user.aaa".to_owned(), Vec::from("xxx")),
+                    ("user.bbb".to_owned(), Vec::from("yyy")),
+                    ("user.ccc".to_owned(), Vec::from("zzz")),
+                ]
+                .into(),
+            },
+            FileDescription::File {
+                path: PathBuf::from("file"),
+                mode: 0o644,
+                hash: EMPTY_HASH.to_owned(),
+                user_xattrs: [
+                    ("user.aaa".to_owned(), Vec::from(111_u32.to_be_bytes())),
+                    ("user.bbb".to_owned(), Vec::from(222_u32.to_be_bytes())),
+                    ("user.ccc".to_owned(), Vec::from(333_u32.to_be_bytes())),
+                ]
+                .into(),
+            },
+        ]],
     );
 
     Ok(())
@@ -297,14 +288,11 @@ fn restore_empty_dirs() -> Result<()> {
 
     assert_eq!(
         files,
-        vec![
-            vec![simple_dir("", 0o750)],
-            vec![
-                simple_dir("", 0o750),
-                simple_dir("aaa", 0o750),
-                simple_dir("aaa/bbb", 0o750),
-            ],
-        ],
+        vec![vec![
+            simple_dir("", 0o750),
+            simple_dir("aaa", 0o750),
+            simple_dir("aaa/bbb", 0o750),
+        ]],
     );
 
     Ok(())
@@ -441,15 +429,12 @@ fn inaccessible_files() -> Result<()> {
 
     assert_eq!(
         files,
-        vec![
-            vec![simple_dir("", 0o700)],
-            vec![
-                simple_dir("", 0o700),
-                simple_dir("dir1", 0),
-                simple_dir("dir1/dir2", 0),
-                simple_file("dir1/dir2/file", 0, EMPTY_HASH),
-            ],
-        ],
+        vec![vec![
+            simple_dir("", 0o700),
+            simple_dir("dir1", 0),
+            simple_dir("dir1/dir2", 0),
+            simple_file("dir1/dir2/file", 0, EMPTY_HASH),
+        ]],
     );
 
     Ok(())

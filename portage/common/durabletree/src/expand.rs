@@ -31,10 +31,6 @@ impl ExtraDir {
     pub fn path(&self) -> &Path {
         self.dir.as_ref().unwrap()
     }
-
-    pub fn into_path(mut self) -> PathBuf {
-        self.dir.take().unwrap()
-    }
 }
 
 impl Drop for ExtraDir {
