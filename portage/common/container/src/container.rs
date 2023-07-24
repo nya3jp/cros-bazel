@@ -542,10 +542,6 @@ mod tests {
 
     use super::*;
 
-    #[used]
-    #[link_section = ".init_array"]
-    static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
-
     /// Bind-mounts a statically-linked bash to the container.
     /// This is required for the container to work properly.
     fn bind_mount_bash(settings: &mut ContainerSettings) -> Result<()> {

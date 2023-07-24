@@ -6,9 +6,16 @@ mod clean_layer;
 mod container;
 mod control;
 mod install_group;
+mod mounts;
 mod namespace;
 
 pub use clean_layer::*;
 pub use container::*;
 pub use install_group::*;
 pub use namespace::*;
+
+// Run unit tests in a mount namespace.
+#[cfg(test)]
+#[used]
+#[link_section = ".init_array"]
+static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
