@@ -5,10 +5,10 @@
 
 set -eu -o pipefail
 
-# Add users go path before trying
-if GO="$(command -v go)"; then
-    # Add /bin to every entry in gopath.
-    PATH="${PATH}:$("${GO}" env GOPATH | sed 's/:/\/bin:/g')/bin"
+# We expect BAZEL_REAL to be set by Bazel.
+if [[ -z "${BAZEL_REAL:=}" ]]; then
+  echo "ERROR: BAZEL_REAL must be set." >&2
+  exit 1
 fi
 
 # Allow users to create a bazelrc file shared between all chromiumos checkouts.
@@ -19,35 +19,21 @@ if [ -e "${HOME}/.chromiumos.bazelrc" ]; then
   ARGS+=("--bazelrc=${HOME}/.chromiumos.bazelrc")
 fi
 
-if BAZELISK="$(command -v bazelisk)"; then
+while [[ "$#" -gt 1 ]]; do
+  if [[ "$1" == --* ]]; then
+    ARGS+=("$1")
+    shift
+  else
+    break
+  fi
+done
 
-    while [[ "$#" -gt 1 ]]; do
-        if [[ "$1" == --* ]]; then
-            ARGS+=("$1")
-            shift
-        else
-            break
-        fi
-    done
-
-    # Used to force the alchemist_digest repo rule to re-run every invocation.
-    if [[ "$#" -gt 1 ]]; then
-        ARGS+=("$1")
-        shift
-        CACHE_BUST_DATE="${CACHE_BUST_DATE:-$(date --iso-8601=ns)}"
-        ARGS+=("--repo_env=_CACHE_BUST_DATE=${CACHE_BUST_DATE}")
-    fi
-
-    # Create necessary symbolic links.
-    "$(dirname "${BASH_SOURCE[0]}")/../../../link_files.py"
-
-    # We don't want bazelisk to call us again.
-    export BAZELISK_SKIP_WRAPPER=true
-
-    exec "${BAZELISK}" "${ARGS[@]}" "$@"
+# Used to force the alchemist_digest repo rule to re-run every invocation.
+if [[ "$#" -gt 1 ]]; then
+  ARGS+=("$1")
+  shift
+  CACHE_BUST_DATE="${CACHE_BUST_DATE:-$(date --iso-8601=ns)}"
+  ARGS+=("--repo_env=_CACHE_BUST_DATE=${CACHE_BUST_DATE}")
 fi
 
-echo "Bazelisk was not found. Please install using the following command:" 1>&2
-echo "> go install github.com/bazelbuild/bazelisk@latest" 1>&2
-
-exit 1
+exec "${BAZEL_REAL}" "${ARGS[@]}" "$@"
