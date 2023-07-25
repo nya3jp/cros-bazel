@@ -19,19 +19,9 @@ pub struct BindMountConfig {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RunInContainerConfig {
-    /// The upper directory to be used by overlayfs.
-    /// After run_in_container finishes, this directory contains files
-    /// representing the difference to the lower directories.
-    /// It is caller's responsibility to remove the directory after
-    /// run_in_container finishes.
-    pub upper_dir: PathBuf,
-
-    /// The directory where run_in_container creates random files/directories.
-    /// This directory must be on the same file system as that of the upper
-    /// directory.
-    /// It is caller's responsibility to remove the directory after
-    /// run_in_container finishes.
-    pub scratch_dir: PathBuf,
+    /// The directory which processes see as their filesystem root. It must
+    /// contain a few essential directories: dev, host, proc, sys, tmp.
+    pub root_dir: PathBuf,
 
     /// The command to run in the container.
     pub args: Vec<OsString>,
@@ -43,20 +33,9 @@ pub struct RunInContainerConfig {
     /// Directory to use as the working directory while inside the namespace.
     pub chdir: PathBuf,
 
-    /// Lower directories of the overlayfs.
-    pub lower_dirs: Vec<PathBuf>,
-
-    /// Bind-mounts to apply. Applies on top of file system layers, and can
-    /// mount individual files as well as directories.
-    pub bind_mounts: Vec<BindMountConfig>,
-
     /// Allows network access. This option should be used only when it's
     /// absolutely needed since it reduces hermeticity.
     pub allow_network_access: bool,
-
-    /// Starts a privileged container. In order for this option to work, the
-    /// run_in_container process must be run with privilege (e.g. as root).
-    pub privileged: bool,
 
     /// If true, the contents of the host machine are mounted at /host.
     pub keep_host_mount: bool,

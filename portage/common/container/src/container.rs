@@ -20,7 +20,10 @@ use run_in_container_lib::{BindMountConfig, RunInContainerConfig};
 use strum_macros::EnumString;
 use tracing::info_span;
 
-use crate::control::ControlChannel;
+use crate::{
+    control::ControlChannel,
+    mounts::{bind_mount, mount_overlayfs, remount_readonly, MountGuard},
+};
 
 const DEFAULT_PATH: &str = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:\
     /sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools";
@@ -151,7 +154,6 @@ impl LayerType {
 pub struct ContainerSettings {
     mutable_base_dir: PathBuf,
     allow_network_access: bool,
-    privileged: bool,
     login_mode: LoginMode,
     keep_host_mount: bool,
     lower_dirs: Vec<PathBuf>,
@@ -167,7 +169,6 @@ impl ContainerSettings {
         Self {
             mutable_base_dir: std::env::temp_dir(),
             allow_network_access: false,
-            privileged: false,
             login_mode: LoginMode::Never,
             keep_host_mount: false,
             lower_dirs: Vec::new(),
@@ -193,12 +194,6 @@ impl ContainerSettings {
     /// reduces hermeticity of the container.
     pub fn set_allow_network_access(&mut self, allow_network_access: bool) {
         self.allow_network_access = allow_network_access;
-    }
-
-    /// Sets whether to give privilege to the container. In order for this
-    /// option to work, the current process must have privilege.
-    pub fn set_privileged(&mut self, privileged: bool) {
-        self.privileged = privileged;
     }
 
     /// Sets the login mode for containers.
@@ -317,6 +312,10 @@ impl Default for ContainerSettings {
 /// you to start a command in the container. You can call it multiple times as
 /// you like.
 ///
+/// Also, a prepared container comes with an overlayfs mount whose path can be
+/// obtained by [`PreparedContainer::root_dir`]. You can inspect or modify
+/// the contents of the overlay file system freely.
+///
 /// After you are done with the container, you have two choices:
 /// 1. Just drop `PreparedContainer`. Then changes to the container are lost.
 /// 2. Call [`PreparedContainer::into_upper_dir`] to convert it to its upper
@@ -324,22 +323,21 @@ impl Default for ContainerSettings {
 ///    container.
 pub struct PreparedContainer<'settings> {
     settings: &'settings ContainerSettings,
+
+    // Note: The order of fields matters here!
+    // `_overlayfs_guard` must come before `upper_dir` and `scratch_dir` so that
+    // the overlayfs is unmounted before removing its backing directories.
+    _overlayfs_guard: MountGuard,
+    root_dir: SafeTempDir,
+    _stage_dir: SafeTempDir,
+    _scratch_dir: SafeTempDir,
     upper_dir: SafeTempDir,
-    scratch_dir: SafeTempDir,
+
     base_envs: BTreeMap<OsString, OsString>,
 }
 
 impl<'settings> PreparedContainer<'settings> {
     fn new(settings: &'settings ContainerSettings) -> Result<Self> {
-        let upper_dir = SafeTempDirBuilder::new()
-            .base_dir(&settings.mutable_base_dir)
-            .prefix("upper.")
-            .build()?;
-        let scratch_dir = SafeTempDirBuilder::new()
-            .base_dir(&settings.mutable_base_dir)
-            .prefix("scratch.")
-            .build()?;
-
         let mut base_envs: BTreeMap<OsString, OsString> = BTreeMap::from_iter([
             ("PATH".into(), DEFAULT_PATH.into()),
             // Always enable Rust backtrace.
@@ -354,17 +352,110 @@ impl<'settings> PreparedContainer<'settings> {
             }
         }
 
+        // A stage directory is the most significant lower directory where we
+        // inject necessary files/directories.
+        let stage_dir = SafeTempDirBuilder::new()
+            .base_dir(&settings.mutable_base_dir)
+            .prefix("stage.")
+            .build()?;
+
+        // Create mount points for essential top-level directories.
+        for d in ["dev", "proc", "sys", "tmp", "host"] {
+            std::fs::create_dir(stage_dir.path().join(d))?;
+        }
+
+        // Copy `setup.sh` to `/.setup.sh`.
+        let runfiles = runfiles::Runfiles::create()?;
+        let setup_sh_path = stage_dir.path().join(".setup.sh");
+        std::fs::copy(
+            runfiles.rlocation("cros/bazel/portage/common/container/setup.sh"),
+            &setup_sh_path,
+        )?;
+        std::fs::set_permissions(&setup_sh_path, PermissionsExt::from_mode(0o755))?;
+
+        // Create mount points for bind-mounts.
+        for spec in settings.bind_mounts.iter() {
+            let target = stage_dir.path().join(spec.mount_path.strip_prefix("/")?);
+            let metadata = std::fs::metadata(&spec.source)?;
+            if metadata.is_file() {
+                std::fs::create_dir_all(target.parent().unwrap())?;
+                File::create(&target)?;
+            } else if metadata.is_dir() {
+                std::fs::create_dir_all(&target)?;
+            } else {
+                bail!(
+                    "Unsupport file type for bind-mounting: {:?}: {}",
+                    metadata.file_type(),
+                    spec.source.display()
+                )
+            }
+        }
+
+        let upper_dir = SafeTempDirBuilder::new()
+            .base_dir(&settings.mutable_base_dir)
+            .prefix("upper.")
+            .build()?;
+        let scratch_dir = SafeTempDirBuilder::new()
+            .base_dir(&settings.mutable_base_dir)
+            .prefix("scratch.")
+            .build()?;
+        let root_dir = SafeTempDirBuilder::new()
+            .base_dir(&settings.mutable_base_dir)
+            .prefix("root")
+            .build()?;
+
+        let lower_dirs: Vec<&Path> = settings
+            .lower_dirs
+            .iter()
+            .map(|p| p.as_path())
+            .chain([stage_dir.path()])
+            .collect();
+
+        // Mount the overlayfs.
+        let overlayfs_guard = mount_overlayfs(
+            root_dir.path(),
+            &lower_dirs,
+            upper_dir.path(),
+            scratch_dir.path(),
+        )?;
+
+        // Perform bind-mounts.
+        for spec in settings.bind_mounts.iter() {
+            let target = root_dir.path().join(spec.mount_path.strip_prefix("/")?);
+
+            // Unfortunately, the MS_RDONLY is ignored for bind-mounts.
+            // Thus, we mount a bind-mount, then remount it as readonly.
+            bind_mount(&spec.source, &target)?.leak();
+            if !spec.rw {
+                remount_readonly(&target)?;
+            }
+        }
+
+        // Bind-mount special file systems. Note that we don't need to umount
+        // them on errors because they're under `root_dir` and recursively
+        // unmounted by `overlayfs_guard`.
+        bind_mount(Path::new("/dev"), &root_dir.path().join("dev"))?.leak();
+        bind_mount(Path::new("/sys"), &root_dir.path().join("sys"))?.leak();
+
+        // Note that we don't mount /proc here but it is mounted by
+        // run_in_container instead. It is because we need privileges on the
+        // current PID namespace to mount one, but entering a new PID namespace
+        // in unit tests is not straightforward as it requires forking.
+
         Ok(Self {
             settings,
+            _overlayfs_guard: overlayfs_guard,
+            root_dir,
+            _stage_dir: stage_dir,
+            _scratch_dir: scratch_dir,
             upper_dir,
-            scratch_dir,
             base_envs,
         })
     }
 
-    /// Returns the upper directory path.
-    pub fn upper_dir(&self) -> &Path {
-        self.upper_dir.path()
+    /// Returns the directory that subprocesses will see as the filesystem root.
+    pub fn root_dir(&self) -> &Path {
+        self.root_dir.path()
     }
 
     /// Creates a [`ContainerCommand`] that can be used to run a command within
@@ -384,6 +475,7 @@ impl<'settings> PreparedContainer<'settings> {
     ///
     /// It is your responsibility to remove the returned upper directory once
     /// you are done with it.
+    #[must_use]
     pub fn into_upper_dir(self) -> PathBuf {
         self.upper_dir.into_path()
     }
@@ -471,59 +563,38 @@ impl<'container> ContainerCommand<'container> {
     pub fn status(&mut self) -> Result<ExitStatus> {
         let _span = info_span!("status").entered();
 
-        let stage_dir = SafeTempDir::new()?;
-        let stage_dir = stage_dir.path();
-
-        let mut real_args = vec!["/mnt/host/.container/setup.sh".into()];
+        let mut real_args = vec!["/.setup.sh".into()];
         real_args.extend(self.args.clone());
-
-        // Automatically bind-mount /mnt/host/.container.
-        let bind_mounts: Vec<BindMountConfig> = [BindMount {
-            mount_path: PathBuf::from("/mnt/host/.container"),
-            source: stage_dir.to_owned(),
-            rw: false,
-        }]
-        .into_iter()
-        .chain(self.container.settings.bind_mounts.clone())
-        .map(BindMount::into_config)
-        .collect();
 
         // This is the config passed to run_in_container.
         let config = RunInContainerConfig {
-            upper_dir: self.container.upper_dir.path().to_owned(),
-            scratch_dir: self.container.scratch_dir.path().to_owned(),
             args: real_args,
+            root_dir: self.container.root_dir.path().to_path_buf(),
             envs: self.envs.clone(),
             chdir: self.current_dir.clone(),
-            lower_dirs: self.container.settings.lower_dirs.clone(),
-            bind_mounts,
             allow_network_access: self.container.settings.allow_network_access,
-            privileged: self.container.settings.privileged,
             keep_host_mount: self.container.settings.keep_host_mount,
         };
 
         // Save run_in_container.json.
-        let config_dir = SafeTempDir::new()?;
+        let config_dir = SafeTempDirBuilder::new()
+            .base_dir(&self.container.settings.mutable_base_dir)
+            .prefix("config")
+            .build()?;
         let config_path = config_dir.path().join("run_in_container.json");
         config.serialize_to(&config_path)?;
-
-        // Copy setup.sh.
-        let runfiles = runfiles::Runfiles::create()?;
-        let setup_sh_path = stage_dir.join("setup.sh");
-        std::fs::copy(
-            runfiles.rlocation("cros/bazel/portage/common/container/setup.sh"),
-            &setup_sh_path,
-        )?;
-        std::fs::set_permissions(&setup_sh_path, PermissionsExt::from_mode(0o755))?;
 
         // Start a control channel for interactive shells if needed.
         let _control = if self.container.settings.login_mode == LoginMode::Never {
             None
         } else {
-            Some(ControlChannel::new(stage_dir.join("control"))?)
+            Some(ControlChannel::new(
+                self.container.root_dir.path().join(".control"),
+            )?)
         };
 
         // Now it's time to start a container!
+        let runfiles = runfiles::Runfiles::create()?;
         let run_in_container_path =
             runfiles.rlocation("cros/bazel/portage/bin/run_in_container/run_in_container");
         let status = processes::run(

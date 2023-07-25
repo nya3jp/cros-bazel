@@ -55,7 +55,6 @@ fn do_main() -> Result<()> {
 
     let mut settings = ContainerSettings::new();
     settings.apply_common_args(&args.common)?;
-    settings.set_privileged(true);
 
     let runfiles = runfiles::Runfiles::create()?;
 
@@ -138,7 +137,7 @@ fn do_main() -> Result<()> {
         .join(&args.board)
         .join("latest")
         .join(args.image_file_name + ".bin");
-    std::fs::copy(container.upper_dir().join(path), args.output)?;
+    std::fs::copy(container.root_dir().join(path), args.output)?;
 
     Ok(())
 }

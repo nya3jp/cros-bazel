@@ -196,15 +196,15 @@ fn do_main() -> Result<()> {
 
     let mut container = settings.prepare()?;
 
-    let upper_dir = container.upper_dir().to_owned();
+    let root_dir = container.root_dir().to_owned();
 
-    let out_dir = upper_dir.join(portage_pkg_dir.strip_prefix("/")?);
+    let out_dir = root_dir.join(portage_pkg_dir.strip_prefix("/")?);
     std::fs::create_dir_all(out_dir)?;
 
     // HACK: CrOS disables pkg_pretend in emerge(1), but ebuild(1) still tries to
     // run it.
     // TODO(b/280233260): Remove this hack once we fix ebuild(1).
-    let pretend_stamp_path = upper_dir
+    let pretend_stamp_path = root_dir
         .join(portage_tmp_dir.strip_prefix("/")?)
         .join(&args.ebuild.category)
         .join(
@@ -218,8 +218,8 @@ fn do_main() -> Result<()> {
     File::create(pretend_stamp_path)?;
 
     let sysroot = match &args.board {
-        Some(board) => upper_dir.join("build").join(board),
-        None => upper_dir.to_owned(),
+        Some(board) => root_dir.join("build").join(board),
+        None => root_dir.to_owned(),
     };
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
@@ -250,8 +250,13 @@ fn do_main() -> Result<()> {
     ));
 
     if let Some(output) = args.output {
-        std::fs::copy(upper_dir.join(binary_out_path.strip_prefix("/")?), output)
-            .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
+        std::fs::copy(
+            container
+                .root_dir()
+                .join(binary_out_path.strip_prefix("/")?),
+            output,
+        )
+        .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
     }
 
     Ok(())

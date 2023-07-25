@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result};
 use clap::Parser;
 use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
 use fileutil::SafeTempDir;
@@ -13,23 +13,16 @@ use nix::{
     mount::{mount, umount2, MsFlags},
     sched::{unshare, CloneFlags},
     sys::socket::{socket, AddressFamily, SockFlag, SockProtocol, SockType},
-    unistd::{getgid, getuid, pivot_root},
+    unistd::pivot_root,
 };
-use path_absolutize::Absolutize;
 use processes::status_to_exit_code;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
-    os::{
-        fd::{AsRawFd, FromRawFd, OwnedFd},
-        unix::fs::{DirBuilderExt, OpenOptionsExt},
-    },
+    os::fd::{AsRawFd, FromRawFd, OwnedFd},
     path::PathBuf,
     process::{Command, ExitCode, Stdio},
 };
 use tracing::info_span;
-
-const BIND_REC: MsFlags = MsFlags::MS_BIND.union(MsFlags::MS_REC);
-const NONE_STR: Option<&str> = None::<&str>;
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -59,20 +52,6 @@ pub fn main() -> ExitCode {
 fn enter_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     let r = runfiles::Runfiles::create()?;
     let dumb_init_path = r.rlocation("files/dumb_init");
-
-    // Enter a new user namespace if unprivileged.
-    if !cfg.privileged {
-        let uid = getuid();
-        let gid = getgid();
-        unshare(CloneFlags::CLONE_NEWUSER)
-            .with_context(|| "Failed to create an unprivileged user namespace")?;
-        std::fs::write("/proc/self/setgroups", "deny")
-            .with_context(|| "Writing /proc/self/setgroups")?;
-        std::fs::write("/proc/self/uid_map", format!("0 {uid} 1\n"))
-            .with_context(|| "Writing /proc/self/uid_map")?;
-        std::fs::write("/proc/self/gid_map", format!("0 {gid} 1\n"))
-            .with_context(|| "Writing /proc/self/gid_map")?;
-    }
 
     // Enter various namespaces except mount/PID namespace.
     let mut unshare_flags = CloneFlags::CLONE_NEWIPC;
@@ -183,176 +162,39 @@ fn enable_loopback_networking() -> Result<()> {
 fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     unshare(CloneFlags::CLONE_NEWNS).context("Failed to enter mount namespace")?;
 
-    let upper_dir = cfg.upper_dir.absolutize()?.into_owned();
-    let scratch_dir = cfg.scratch_dir.absolutize()?.into_owned();
+    // Remount all file systems as private so that we never interact with the
+    // original namespace. This is needed when the current process is privileged
+    // and did not enter an unprivileged user namespace.
+    mount(
+        Some(""),
+        "/",
+        Some(""),
+        MsFlags::MS_PRIVATE | MsFlags::MS_REC,
+        Some(""),
+    )
+    .context("Failed to remount file systems as private")?;
 
     if !cfg.allow_network_access {
         enable_loopback_networking()?;
     }
 
-    // We keep all the directories in the stage dir to keep relative file paths short.
-    let root_dir = scratch_dir.join("root"); // Merged directory
-    let base_dir = scratch_dir.join("base"); // Directory containing mount targets
-    let lowers_dir = scratch_dir.join("lowers");
-    let work_dir = scratch_dir.join("work");
-
-    let mut binding = std::fs::DirBuilder::new();
-    let dir_builder = binding.recursive(true).mode(0o755);
-    for dir in [&root_dir, &base_dir, &lowers_dir, &work_dir] {
-        dir_builder.create(dir)?;
-    }
-
-    for dir in [&base_dir, &lowers_dir] {
-        // Mount a tmpfs so that files are purged automatically on exit.
-        mount(
-            Some("tmpfs"),
-            dir,
-            Some("tmpfs"),
-            MsFlags::empty(),
-            NONE_STR,
-        )?;
-    }
-
-    // Set up the base directory.
-    for d in ["dev", "proc", "sys", "tmp", "host"] {
-        dir_builder.create(base_dir.join(d))?;
-    }
-
-    // Bind-mount lower directories so we can refer to them in overlayfs options
-    // in very short file paths because the maximum length of option strings for
-    // mount(2) is constrained.
-    let mut short_lower_dirs: Vec<String> = Vec::new();
-
-    dir_builder.create(lowers_dir.join("base"))?;
-    mount(
-        Some(&base_dir),
-        &lowers_dir.join("base"),
-        NONE_STR,
-        BIND_REC,
-        NONE_STR,
-    )
-    .with_context(|| format!("Bind-mounting {} failed", base_dir.display()))?;
-    short_lower_dirs.push("base".to_owned());
-
-    for (i, lower_dir) in cfg.lower_dirs.iter().enumerate() {
-        let name = i.to_string();
-        let path = lowers_dir.join(&name);
-        dir_builder.create(&path)?;
-        mount(Some(lower_dir), &path, NONE_STR, BIND_REC, NONE_STR)
-            .with_context(|| format!("Bind-mounting {} failed", lower_dir.display()))?;
-        short_lower_dirs.push(name);
-    }
-
-    // Change the current directory temporarily to use relative paths to refer
-    // to lower directories.
-    let orig_wd = std::env::current_dir()?;
-    std::env::set_current_dir(&lowers_dir)?;
-
-    // overlayfs fails to mount if there are 500+ lower layers. Check the
-    // condition in advance for better diagnostics.
-    ensure!(
-        cfg.lower_dirs.len() <= 500,
-        "Too many overlayfs lower dirs ({} > 500)",
-        cfg.lower_dirs.len()
-    );
-
-    // Overlayfs option treats the first lower directory as the least lower
-    // directory, while we order filesystem layers in the opposite order.
-    let short_lower_dirs_str = short_lower_dirs.into_iter().rev().join(":");
-
-    // Mount overlayfs.
-    let overlay_options = format!(
-        "upperdir={},workdir={},lowerdir={}",
-        upper_dir.display(),
-        work_dir.display(),
-        short_lower_dirs_str
-    );
-    mount(
-        Some("none"),
-        &root_dir,
-        Some("overlay"),
-        MsFlags::empty(),
-        Some::<&str>(&overlay_options),
-    )
-    .with_context(|| "mounting overlayfs")?;
-
-    // Mount misc file systems.
-    mount(
-        Some("/dev"),
-        &root_dir.join("dev"),
-        NONE_STR,
-        BIND_REC,
-        NONE_STR,
-    )
-    .with_context(|| "Bind-mounting /dev")?;
+    // Mount /proc. It is done here, not in the container crate, because we need
+    // to enter a PID namespace to mount one.
     mount(
         Some("/proc"),
-        &root_dir.join("proc"),
+        &cfg.root_dir.join("proc"),
         Some("proc"),
         MsFlags::empty(),
-        NONE_STR,
+        Some(""),
     )
-    .with_context(|| "Bind-mounting /proc")?;
-    mount(
-        Some("/sys"),
-        &root_dir.join("sys"),
-        NONE_STR,
-        BIND_REC,
-        NONE_STR,
-    )
-    .with_context(|| "Bind-mounting /sys")?;
+    .context("Failed to mount /proc")?;
 
-    for spec in cfg.bind_mounts {
-        let target = root_dir.join(spec.mount_path.strip_prefix("/")?);
-        // Paths are sometimes provided as relative paths, but we changed directory earlier.
-        // Thus, we need to join to the old working directory.
-        let source = orig_wd.join(spec.source);
-        dir_builder.create(
-            target
-                .parent()
-                .with_context(|| "Can't bind-mount the root directory")?,
-        )?;
-
-        // When bind-mounting, the destination must exist.
-        if !target.try_exists()? {
-            let info = std::fs::metadata(&source).with_context(|| {
-                format!("failed to get the metadata of a bind-mount source {source:?}")
-            })?;
-            if info.is_dir() {
-                dir_builder.create(&target)?;
-            } else {
-                std::fs::OpenOptions::new()
-                    .create(true)
-                    .write(true)
-                    .mode(0o755)
-                    .open(&target)?;
-            }
-        }
-
-        // Unfortunately, the unix.MS_RDONLY flag is ignored for bind-mounts.
-        // Thus, we mount a bind-mount, then remount it as readonly.
-        mount(Some(&source), &target, NONE_STR, MsFlags::MS_BIND, NONE_STR)
-            .with_context(|| format!("Failed bind-mounting {source:?} to {target:?}"))?;
-        if !spec.rw {
-            mount(
-                NONE_STR,
-                &target,
-                NONE_STR,
-                MsFlags::MS_REMOUNT
-                    .union(MsFlags::MS_BIND)
-                    .union(MsFlags::MS_RDONLY),
-                NONE_STR,
-            )
-            .with_context(|| format!("Failed remounting {target:?} as read-only"))?;
-        }
-    }
-
-    pivot_root(&root_dir, &root_dir.join("host")).with_context(|| "Failed to pivot root")?;
+    pivot_root(&cfg.root_dir, &cfg.root_dir.join("host")).context("Failed to pivot root")?;
 
     if !cfg.keep_host_mount {
         // Do a lazy unmount with DETACH. Since the binary is dynamically linked, we still have some
         // file descriptors such as /host/usr/lib/x86_64-linux-gnu/libc.so.6 open.
-        umount2("/host", MntFlags::MNT_DETACH).with_context(|| "unmounting host")?;
+        umount2("/host", MntFlags::MNT_DETACH).context("Failed to unmount /host")?;
     }
 
     let escaped_command = cfg
