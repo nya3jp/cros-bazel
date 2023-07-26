@@ -272,7 +272,26 @@ impl ContainerSettings {
     /// container settings until all [`PreparedContainer`] instances derived
     /// from it are destructed.
     pub fn prepare(&self) -> Result<PreparedContainer> {
-        PreparedContainer::new(self)
+        let upper_dir = SafeTempDirBuilder::new()
+            .base_dir(&self.mutable_base_dir)
+            .prefix("upper.")
+            .build()?;
+        PreparedContainer::new(self, upper_dir)
+    }
+
+    /// Prepares to start a container with a given upper directory.
+    ///
+    /// This is similar to [`prepare`], but callers can provide an upper
+    /// directory that may contain initial contents. Note that, the upper
+    /// directory must be under the same file system as the mutable base
+    /// directory due to requirements of overlayfs.
+    ///
+    /// This function takes ownership of the given upper directory. On success,
+    /// the returned [`PreparedContainer`] has the ownership of the directory
+    /// and deletes it on drop. On failure, it deletes the directory
+    /// immediately.
+    pub fn prepare_with_upper_dir(&self, upper_dir: SafeTempDir) -> Result<PreparedContainer> {
+        PreparedContainer::new(self, upper_dir)
     }
 
     fn request_archive_dir(&mut self) -> Result<PathBuf> {
@@ -337,7 +356,7 @@ pub struct PreparedContainer<'settings> {
 }
 
 impl<'settings> PreparedContainer<'settings> {
-    fn new(settings: &'settings ContainerSettings) -> Result<Self> {
+    fn new(settings: &'settings ContainerSettings, upper_dir: SafeTempDir) -> Result<Self> {
         let mut base_envs: BTreeMap<OsString, OsString> = BTreeMap::from_iter([
             ("PATH".into(), DEFAULT_PATH.into()),
             // Always enable Rust backtrace.
@@ -391,10 +410,6 @@ impl<'settings> PreparedContainer<'settings> {
             }
         }
 
-        let upper_dir = SafeTempDirBuilder::new()
-            .base_dir(&settings.mutable_base_dir)
-            .prefix("upper.")
-            .build()?;
         let scratch_dir = SafeTempDirBuilder::new()
             .base_dir(&settings.mutable_base_dir)
             .prefix("scratch.")
@@ -909,6 +924,23 @@ mod tests {
             &mut settings.prepare()?,
             Path::new("/hello.txt"),
             "This file is from the archive layer.",
+        )?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_initial_upper_dir() -> Result<()> {
+        let mut settings = ContainerSettings::new();
+        bind_mount_bash(&mut settings)?;
+
+        let upper_dir = SafeTempDir::new()?;
+        std::fs::write(upper_dir.path().join("hello.txt"), "Hello, world!")?;
+
+        assert_content(
+            &mut settings.prepare_with_upper_dir(upper_dir)?,
+            Path::new("/hello.txt"),
+            "Hello, world!",
         )?;
 
         Ok(())
