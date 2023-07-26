@@ -42,9 +42,12 @@ impl SafeTempDir {
         SafeTempDirBuilder::new().build()
     }
 
-    /// Creates a [`SafeTempDir`] from an existing directory.
-    fn from_dir(dir: PathBuf) -> Self {
-        Self { dir: Some(dir) }
+    /// Creates a [`SafeTempDir`] by taking the ownership of an existing
+    /// directory.
+    pub fn take(dir: &Path) -> Self {
+        Self {
+            dir: Some(dir.to_path_buf()),
+        }
     }
 
     /// Returns the path to the temporary directory.
@@ -104,7 +107,7 @@ impl<'prefix, 'suffix> SafeTempDirBuilder<'prefix, 'suffix> {
     /// Builds [`SafeTempDir`].
     pub fn build(self) -> Result<SafeTempDir> {
         let dir = self.builder.tempdir_in(self.base_dir)?;
-        Ok(SafeTempDir::from_dir(dir.into_path()))
+        Ok(SafeTempDir::take(&dir.into_path()))
     }
 }
 
@@ -174,6 +177,21 @@ mod tests {
             "Directory name: {}",
             temp_dir_name
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_safe_temp_dir_take() -> Result<()> {
+        let temp_dir = SafeTempDir::new()?;
+        let path = temp_dir.path().to_owned();
+
+        let temp_dir = temp_dir.into_path();
+        let temp_dir = SafeTempDir::take(&temp_dir);
+
+        assert!(path.try_exists()?);
+        drop(temp_dir);
+        assert!(!path.try_exists()?);
+
         Ok(())
     }
 }
