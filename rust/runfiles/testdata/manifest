@@ -1,0 +1,3 @@
+_main/bazel/rust/runfiles/testdata/sample.txt ../_main/bazel/rust/runfiles/testdata/sample.txt
+_main~toolchains~toolchain_sdk/usr/bin/cargo ../_main~toolchains~toolchain_sdk/usr/bin/cargo
+_repo_mapping ../_repo_mapping

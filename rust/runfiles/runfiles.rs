@@ -1,4 +1,8 @@
-//! Runfiles lookup library for Bazel-built Rust binaries and tests.
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+//! A re-implementation of bazel runfiles for rust which actually adheres to the runfiles spec.
 //!
 //! USAGE:
 //!
@@ -8,14 +12,12 @@
 //!           name = "my_binary",
 //!           ...
 //!           data = ["//path/to/my/data.txt"],
-//!           deps = ["@rules_rust//tools/runfiles"],
+//!           deps = ["//bazel/rust:runfiles"],
 //!       )
 //!     ```
 //!
 //! 2.  Import the runfiles library.
 //!     ```ignore
-//!     extern crate runfiles;
-//!
 //!     use runfiles::Runfiles;
 //!     ```
 //!
@@ -33,7 +35,6 @@
 
 use std::collections::HashMap;
 use std::env;
-use std::ffi::OsString;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -41,7 +42,6 @@ use std::path::PathBuf;
 
 const RUNFILES_DIR_ENV_VAR: &str = "RUNFILES_DIR";
 const MANIFEST_FILE_ENV_VAR: &str = "RUNFILES_MANIFEST_FILE";
-const TEST_SRCDIR_ENV_VAR: &str = "TEST_SRCDIR";
 
 #[derive(Debug)]
 enum Mode {
@@ -62,14 +62,19 @@ impl Runfiles {
     /// RUNFILES_MANIFEST_ONLY environment variable is present,
     /// or a directory based Runfiles object otherwise.
     pub fn create() -> io::Result<Self> {
+        // Consume the first argument (argv[0])
+        let exec_path = std::env::args().next().expect("arg 0 was not set");
+        Self::create_with_custom_binary_path(&exec_path)
+    }
+
+    pub fn create_with_custom_binary_path(binary_path: &str) -> io::Result<Self> {
         if let Some(runfiles_dir) = read_env_path(RUNFILES_DIR_ENV_VAR) {
             Self::create_directory_based(runfiles_dir)
         } else if let Some(manifest) = read_env_path(MANIFEST_FILE_ENV_VAR) {
             Self::create_manifest_based(manifest)
         } else {
-            Self::create_from_exec_path()
+            Self::create_from_exec_path(binary_path)
         }
-
     }
 
     fn create_directory_based(runfiles_dir: PathBuf) -> io::Result<Self> {
@@ -156,17 +161,12 @@ impl Runfiles {
 
     /// Returns the canonical name of the caller's Bazel repository.
     pub fn current_repository(&self) -> &str {
-        // This value must match the value of `_RULES_RUST_RUNFILES_WORKSPACE_NAME`
-        // which can be found in `@rules_rust//tools/runfiles/private:workspace_name.bzl`
-        env!("RULES_RUST_RUNFILES_WORKSPACE_NAME")
+        "_main"
     }
 
     /// Returns the .runfiles directory for the currently executing binary.
-    pub fn create_from_exec_path() -> io::Result<Self> {
-        // Consume the first argument (argv[0])
-        let exec_path = std::env::args().next().expect("arg 0 was not set");
-
-        let mut binary_path = PathBuf::from(&exec_path);
+    pub fn create_from_exec_path(binary_path: &str) -> io::Result<Self> {
+        let mut binary_path = PathBuf::from(binary_path);
         loop {
             // Check for our neighboring $binary.runfiles directory.
             let mut runfiles_name = binary_path.file_name().unwrap().to_owned();
@@ -176,11 +176,11 @@ impl Runfiles {
 
             let runfiles_path = binary_path.with_file_name(&runfiles_name);
             if runfiles_path.is_dir() {
-                return Self::create_directory_based(runfiles_path)
+                return Self::create_directory_based(runfiles_path);
             }
             let manifest_path = binary_path.with_file_name(&manifest_name);
             if manifest_path.is_file() {
-                return Self::create_manifest_based(manifest_path)
+                return Self::create_manifest_based(manifest_path);
             }
 
             // Check if we're already under a *.runfiles directory.
@@ -213,7 +213,6 @@ impl Runfiles {
 
         Err(make_io_error("failed to find .runfiles directory"))
     }
-
 }
 
 fn parse_repo_mapping(contents: String) -> io::Result<RepoMapping> {
@@ -244,112 +243,50 @@ fn make_io_error(msg: &str) -> io::Error {
 mod test {
     use super::*;
 
+    use anyhow::{Context, Result};
     use std::fs::File;
     use std::io::prelude::*;
 
+    fn run_test() -> Result<()> {
+        let r = Runfiles::create().context("Failed to create runfiles")?;
+        let path = r.rlocation("cros/bazel/rust/runfiles/testdata/sample.txt");
+        let mut f = File::open(&path).with_context(|| format!("Failed to open {path:?}"))?;
+
+        let mut buffer = String::new();
+        f.read_to_string(&mut buffer)?;
+
+        assert_eq!("Example Text!", buffer);
+
+        let path = r.rlocation("toolchain_sdk/usr/bin/cargo");
+        assert!(path.is_file(), "Failed to open {path:?}");
+
+        Ok(())
+    }
+
     #[test]
-    fn test_can_read_data_from_runfiles() {
+    fn test_can_read_data_from_runfiles() -> Result<()> {
         // We want to run multiple test cases with different environment variables set. Since
         // environment variables are global state, we need to ensure the two test cases do not run
         // concurrently. Rust runs tests in parallel and does not provide an easy way to synchronise
         // them, so we run all test cases in the same #[test] function.
+        env::var_os(RUNFILES_DIR_ENV_VAR).expect("bazel did not provide RUNFILES_DIR");
 
-        let test_srcdir =
-            env::var_os(TEST_SRCDIR_ENV_VAR).expect("bazel did not provide TEST_SRCDIR");
-        let runfiles_dir =
-            env::var_os(RUNFILES_DIR_ENV_VAR).expect("bazel did not provide RUNFILES_DIR");
+        let r = Runfiles::create()?;
 
-        // Test case 1: Only $RUNFILES_DIR is set.
-        {
-            env::remove_var(TEST_SRCDIR_ENV_VAR);
-            let r = Runfiles::create().unwrap();
+        run_test().context("Directory based runfiles")?;
+        env::remove_var(RUNFILES_DIR_ENV_VAR);
 
-            let mut f =
-                File::open(r.rlocation("rules_rust/tools/runfiles/data/sample.txt")).unwrap();
+        // Tests don't come with manifests.
+        env::set_var(
+            MANIFEST_FILE_ENV_VAR,
+            r.rlocation("cros/bazel/rust/runfiles/testdata/manifest"),
+        );
+        run_test().context("Manifest-based runfiles")?;
+        env::remove_var(MANIFEST_FILE_ENV_VAR);
 
-            let mut buffer = String::new();
-            f.read_to_string(&mut buffer).unwrap();
+        run_test().context("Auto-find runfiles")?;
 
-            assert_eq!("Example Text!", buffer);
-            env::set_var(TEST_SRCDIR_ENV_VAR, &test_srcdir)
-        }
-        // Test case 2: Only $TEST_SRCDIR is set.
-        {
-            env::remove_var(RUNFILES_DIR_ENV_VAR);
-            let r = Runfiles::create().unwrap();
-
-            let mut f =
-                File::open(r.rlocation("rules_rust/tools/runfiles/data/sample.txt")).unwrap();
-
-            let mut buffer = String::new();
-            f.read_to_string(&mut buffer).unwrap();
-
-            assert_eq!("Example Text!", buffer);
-            env::set_var(RUNFILES_DIR_ENV_VAR, &runfiles_dir)
-        }
-
-        // Test case 3: Neither are set
-        {
-            env::remove_var(RUNFILES_DIR_ENV_VAR);
-            env::remove_var(TEST_SRCDIR_ENV_VAR);
-
-            let r = Runfiles::create().unwrap();
-
-            let mut f =
-                File::open(r.rlocation("rules_rust/tools/runfiles/data/sample.txt")).unwrap();
-
-            let mut buffer = String::new();
-            f.read_to_string(&mut buffer).unwrap();
-
-            assert_eq!("Example Text!", buffer);
-
-            env::set_var(TEST_SRCDIR_ENV_VAR, &test_srcdir);
-            env::set_var(RUNFILES_DIR_ENV_VAR, &runfiles_dir);
-        }
-
-        // Because rules_rust currently doesn't work with modules, we need to pretend that we're
-        // using rules_rust in a repo that has bzlmod enabled.
-        env::set_current_dir(
-            Runfiles::create()
-                .unwrap()
-                .rlocation("rules_rust/tools/runfiles/data"),
-        )
-        .unwrap();
-        let module_runfiles = [
-            {
-                let r = Runfiles::create_directory_based(PathBuf::from("bzlmod")).unwrap();
-                ("directory", r)
-            },
-            {
-                let r = Runfiles::create_manifest_based(PathBuf::from("bzlmod_manifest")).unwrap();
-                ("manifest", r)
-            },
-        ];
-
-        for (name, r) in module_runfiles {
-            // TODO: we are unable to change what current_repository() returns
-            #[cfg(not(bazel_root_module))]
-            {
-                assert_eq!(
-                    r.rlocation("tinyjson/sample.txt"),
-                    PathBuf::from("bzlmod/rules_rust~tinyjson/sample.txt"),
-                    "{name}",
-                )
-            }
-            #[cfg(bazel_root_module)]
-            {
-                assert_eq!(
-                    r.rlocation("tinyjson/sample.txt"),
-                    PathBuf::from("bzlmod/my_module~tinyjson/sample.txt"),
-                    "{name}",
-                );
-                assert_eq!(
-                    r.rlocation("my_module/sample.txt"),
-                    PathBuf::from("bzlmod/_main/sample.txt"),
-                    "{name}",
-                );
-            }
-        }
+        Ok(())
     }
 
     #[test]
@@ -362,18 +299,5 @@ mod test {
         };
 
         assert_eq!(r.rlocation("a/b"), PathBuf::from("c/d"));
-    }
-
-    #[test]
-    fn test_current_repository() {
-        let r = Runfiles::create().unwrap();
-
-        // This check is unique to the rules_rust repository. The name
-        // here is expected to be different in consumers of this library
-        #[cfg(not(bazel_root_module))]
-        assert_eq!(r.current_repository(), "rules_rust");
-
-        #[cfg(bazel_root_module)]
-        assert_eq!(r.current_repository(), "_main");
     }
 }

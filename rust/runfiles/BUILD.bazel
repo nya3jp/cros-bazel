@@ -1,0 +1,21 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+rust_library(
+    name = "runfiles",
+    srcs = ["runfiles.rs"],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "runfiles_test",
+    size = "small",
+    crate = ":runfiles",
+    data = glob(["testdata/**"]) + [
+        "//bazel/module_extensions/toolchains/files/primordial:x86_64-pc-linux-gnu_cargo",
+    ],
+    deps = ["@alchemy_crates//:anyhow"],
+)
