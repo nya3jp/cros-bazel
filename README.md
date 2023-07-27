@@ -65,6 +65,12 @@ To build all packages included in the ChromeOS base image:
 $ BOARD=amd64-generic bazel build @portage//virtual/target-os:package_set
 ```
 
+### Inside CrOS SDK chroot
+
+Inside CrOS SDK chroot (i.e. the build environment you enter with `cros_sdk` command), you should be able to run the same `bazel build` command.
+
+You can also run `build_packages --bazel --board=$BOARD` to run `build_packages` with Bazel.
+
 ## Building images
 
 We have the following targets to build images:
