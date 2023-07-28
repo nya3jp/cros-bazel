@@ -67,6 +67,7 @@ pub struct PackageDetails {
     pub masked: bool,
     pub ebuild_path: PathBuf,
     pub inherited: HashSet<String>,
+    pub inherit_paths: Vec<PathBuf>,
     pub direct_build_target: Option<String>,
 }
 
@@ -180,6 +181,10 @@ impl PackageLoader {
             .map(|s| s.to_owned())
             .collect();
 
+        let raw_inherit_paths = vars.get_indexed_array("INHERIT_PATHS")?;
+        let inherit_paths: Vec<PathBuf> =
+            raw_inherit_paths.into_iter().map(PathBuf::from).collect();
+
         let (accepted, stable) = match self.config.is_package_accepted(&vars, &package)? {
             IsPackageAcceptedResult::Unaccepted => {
                 if self.force_accept_9999_ebuilds {
@@ -228,6 +233,7 @@ impl PackageLoader {
             stable,
             masked,
             inherited,
+            inherit_paths,
             ebuild_path: ebuild_path.to_owned(),
             direct_build_target,
         }))

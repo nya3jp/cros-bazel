@@ -3,6 +3,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+# Note: The variables are mangled with the "__xbuild_" prefix to reduce the risk
+# of colliding with definitions inside the ebuild and eclasses that are source'd
+# below.
+
 if [[ -z "${__xbuild_in_ebuild}" ]]; then
   echo "__xbuild_in_ebuild is not set" >&2
   exit 1
@@ -17,6 +21,8 @@ if [[ -z "${__xbuild_in_output_vars}" ]]; then
   echo "__xbuild_in_output_vars is not set" >&2
   exit 1
 fi
+
+declare -A __xbuild_eclass_paths
 
 readarray -t __xbuild_eclass_dirs <<< "${__xbuild_in_eclass_dirs}"
 
@@ -33,6 +39,7 @@ inherit() {
   local name path
   for name in "${names[@]}"; do
     path=$(__xbuild_find_eclass "${name}")
+    __xbuild_eclass_paths["${path}"]=1
     __xbuild_source_eclass "${name}" "${path}"
   done
 }
@@ -246,6 +253,8 @@ BDEPEND="${__xbuild_eclass_BDEPEND} ${BDEPEND}"
 RDEPEND="${__xbuild_eclass_RDEPEND} ${RDEPEND}"
 PDEPEND="${__xbuild_eclass_PDEPEND} ${PDEPEND}"
 IDEPEND="${__xbuild_eclass_IDEPEND} ${IDEPEND}"
+
+INHERIT_PATHS=("${!__xbuild_eclass_paths[@]}")
 
 if [[ "$(type -t src_compile)" == "function" ]]; then
   HAS_SRC_COMPILE=1
