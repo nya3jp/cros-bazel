@@ -116,8 +116,7 @@ pub(crate) fn mount_overlayfs(
     // Bind-mount lower directories so we can refer to them in overlayfs options
     // in very short file paths because the maximum length of option strings for
     // mount(2) is constrained.
-    let mut short_lower_dirs: Vec<String> = Vec::new();
-    let mut lower_dir_bind_mount_guards: Vec<MountGuard> = Vec::new();
+    let mut short_lower_dirs: Vec<(String, MountGuard)> = Vec::new();
 
     for (i, lower_dir) in lower_dirs.iter().enumerate() {
         let name = i.to_string();
@@ -126,17 +125,78 @@ pub(crate) fn mount_overlayfs(
         dir_builder.create(&path)?;
         let guard = bind_mount(lower_dir, &path)?;
 
-        short_lower_dirs.push(name);
-        lower_dir_bind_mount_guards.push(guard);
+        short_lower_dirs.push((name, guard));
     }
 
-    // overlayfs fails to mount if there are 500+ lower layers. Check the
-    // condition in advance for better diagnostics.
+    let runfiles = runfiles::Runfiles::create()?;
+    let helper_path = runfiles
+        .rlocation("cros/bazel/portage/bin/overlayfs_mount_helper/overlayfs_mount_helper")
+        .canonicalize()?;
+
+    // overlayfs supports up to 500 lower directories, but we often want to go beyond that.
+    // We workaround it by stacking two overlayfs. This way, we can support up to 250,000 lower
+    // directories, which should be sufficient. However note that Linux kernel supports stacking
+    // overlayfs up to 2 layers, so it means that this will fail if lower directories are already
+    // on overlayfs. Search the kernel code with FILESYSTEM_MAX_STACK_DEPTH for details.
+    const MAX_LOWER_DIRS: usize = 500;
+
     ensure!(
-        short_lower_dirs.len() <= 500,
-        "Too many overlayfs lower dirs ({} > 500)",
+        short_lower_dirs.len() <= MAX_LOWER_DIRS * MAX_LOWER_DIRS,
+        "Too many lower directories ({})",
         short_lower_dirs.len()
     );
+
+    if short_lower_dirs.len() > MAX_LOWER_DIRS {
+        eprintln!(
+            "WARNING: Stacking two overlayfs because there are too many lower directories \
+            ({} > {}). This may fail to mount if any lower directory is already on overlayfs.",
+            short_lower_dirs.len(),
+            MAX_LOWER_DIRS,
+        );
+
+        let mut new_short_lower_dirs: Vec<(String, MountGuard)> = Vec::new();
+
+        let chunks = short_lower_dirs.into_iter().chunks(MAX_LOWER_DIRS);
+        for (i, chunk) in chunks.into_iter().enumerate() {
+            let chunk: Vec<(String, MountGuard)> = chunk.into_iter().collect();
+            if chunk.len() == 1 {
+                // overlayfs fails to mount with no upper layer and exactly 1 lower layer, so
+                // specially handle this case.
+                let entry = chunk.into_iter().next().unwrap();
+                new_short_lower_dirs.push(entry);
+                continue;
+            }
+
+            let chunk_name = format!("c{}", i);
+            let chunk_dir = lowers_dir.join(&chunk_name);
+            dir_builder.create(&chunk_dir)?;
+
+            let overlay_options = format!(
+                "lowerdir={}",
+                // Overlayfs option treats the first lower directory as the least lower
+                // directory, while we order filesystem layers in the opposite order.
+                chunk.iter().map(|(name, _guard)| name).rev().join(":")
+            );
+
+            // Mount overlayfs via overlayfs_mount_helper.
+            // We don't call mount(2) directly because it requires us to change the
+            // working directory of the current process, which introduces tricky issues
+            // in multi-threaded programs, including unit tests.
+            let status = Command::new(&helper_path)
+                .arg(overlay_options)
+                .arg(&chunk_dir)
+                .current_dir(&lowers_dir)
+                .status()?;
+            ensure!(status.success(), "Failed to mount overlayfs: {:?}", status);
+
+            new_short_lower_dirs.push((chunk_name, MountGuard::new(&chunk_dir)));
+
+            // At this point bind-mounts for the lower directories are unmounted, but it's fine
+            // because overlayfs holds references to those mounts internally.
+        }
+
+        short_lower_dirs = new_short_lower_dirs;
+    }
 
     let overlay_options = format!(
         "upperdir={},workdir={},lowerdir={}",
@@ -144,18 +204,18 @@ pub(crate) fn mount_overlayfs(
         work_dir.display(),
         // Overlayfs option treats the first lower directory as the least lower
         // directory, while we order filesystem layers in the opposite order.
-        short_lower_dirs.into_iter().rev().join(":")
+        short_lower_dirs
+            .iter()
+            .map(|(name, _guard)| name)
+            .rev()
+            .join(":")
     );
 
     // Mount overlayfs via overlayfs_mount_helper.
     // We don't call mount(2) directly because it requires us to change the
     // working directory of the current process, which introduces tricky issues
     // in multi-threaded programs, including unit tests.
-    let runfiles = runfiles::Runfiles::create()?;
-    let helper_path = runfiles
-        .rlocation("cros/bazel/portage/bin/overlayfs_mount_helper/overlayfs_mount_helper")
-        .canonicalize()?;
-    let status = Command::new(helper_path)
+    let status = Command::new(&helper_path)
         .arg(overlay_options)
         .arg(mount_dir)
         .current_dir(&lowers_dir)
@@ -163,6 +223,8 @@ pub(crate) fn mount_overlayfs(
     ensure!(status.success(), "Failed to mount overlayfs: {:?}", status);
     let overlayfs_mount_guard = MountGuard::new(mount_dir);
 
+    // At this point bind-mounts for the lower directories are unmounted, but it's fine because
+    // overlayfs holds references to those mounts internally.
     Ok(overlayfs_mount_guard)
 }
 
@@ -338,6 +400,54 @@ mod tests {
         ensure_no_mount_under(&lower1_dir)?;
         ensure_no_mount_under(&lower2_dir)?;
         ensure_no_mount_under(&scratch_dir)?;
+
+        Ok(())
+    }
+
+    // Ensure we support any number of lower directories.
+    #[test]
+    fn many_lower_dirs() -> Result<()> {
+        for n in [1, 2, 3, 498, 499, 500, 501, 502, 998, 999, 1000, 1001, 1002] {
+            let temp_dir = SafeTempDir::new()?;
+            let temp_dir = temp_dir.path();
+
+            let mount_dir = temp_dir.join("mount");
+            let upper_dir = temp_dir.join("upper");
+            let lowers_dir = temp_dir.join("lowers");
+            let scratch_dir = temp_dir.join("scratch");
+            for dir in [&mount_dir, &upper_dir, &lowers_dir, &scratch_dir] {
+                std::fs::create_dir(dir)?;
+            }
+
+            let mut lower_dirs: Vec<PathBuf> = Vec::new();
+            for i in 0..n {
+                let lower_dir = lowers_dir.join(i.to_string());
+                std::fs::create_dir(&lower_dir)?;
+                File::create(lower_dir.join(format!("{}.txt", i)))?;
+                lower_dirs.push(lower_dir);
+            }
+
+            let mount_guard = mount_overlayfs(
+                &mount_dir,
+                &lower_dirs.iter().map(|d| d.as_path()).collect_vec(),
+                &upper_dir,
+                &scratch_dir,
+            )?;
+
+            // As soon as it finishes mounting, no mount points must be left outside
+            // the overlayfs mount directory.
+            ensure_no_mount_under(&upper_dir)?;
+            ensure_no_mount_under(&lowers_dir)?;
+            ensure_no_mount_under(&scratch_dir)?;
+
+            // The result is a directory with exactly `n` files.
+            assert_eq!(std::fs::read_dir(&mount_dir)?.count(), n);
+
+            // Unmount the overlayfs. Then only the empty directory should be left.
+            drop(mount_guard);
+            ensure_dir_is_empty(&mount_dir)?;
+            ensure_no_mount_under(&mount_dir)?;
+        }
 
         Ok(())
     }
