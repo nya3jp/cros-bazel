@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use std::{
-    fs::{create_dir, set_permissions, symlink_metadata, File},
+    fs::{create_dir, remove_dir, set_permissions, symlink_metadata, File},
     io::ErrorKind,
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
@@ -41,6 +41,7 @@ impl Drop for ExtraDir {
     fn drop(&mut self) {
         if let Some(dir) = &self.dir {
             umount2(dir, MntFlags::MNT_DETACH).expect("Failed to unmount tmpfs");
+            remove_dir(dir).expect("Failed to remove empty dir");
         }
     }
 }
