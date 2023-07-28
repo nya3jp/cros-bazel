@@ -123,6 +123,8 @@ impl RepositoryLocation {
 pub struct Repository {
     name: String,
     location: RepositoryLocation,
+    /// The list of parent repository locations (aka "masters"), in the order
+    /// from the least to the most preferred one.
     parents: Vec<RepositoryLocation>,
 }
 
@@ -158,12 +160,17 @@ impl Repository {
         &self.location.base_dir
     }
 
+    /// Returns directories to be used for searching eclass files.
+    ///
+    /// Returned paths are sorted so that a lower-priority eclass directory
+    /// comes before a higher-priority one.
     pub fn eclass_dirs(&self) -> impl Iterator<Item = &Path> {
-        iter::once(self.location.eclass_dir.borrow()).chain(
-            self.parents
-                .iter()
-                .map(|location| location.eclass_dir.borrow()),
-        )
+        // Note the "parents" field ("masters" in the overlay layout) is already
+        // ordered in the "later entries take precedence" order.
+        self.parents
+            .iter()
+            .map(|location| location.eclass_dir.borrow())
+            .chain(iter::once(self.location.eclass_dir.borrow()))
     }
 
     pub fn profiles_dir(&self) -> &Path {

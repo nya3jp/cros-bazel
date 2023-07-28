@@ -171,15 +171,17 @@ ver_cut() {
 
 __xbuild_find_eclass() {
   local name="$1"
-  local eclass_dir path
+  local eclass_dir path result
+  # In case of multiple matches, proceed with the latest one as the eclass dirs
+  # are in the order from the least-preferred to the most-preferred ones.
   for eclass_dir in "${__xbuild_eclass_dirs[@]}"; do
     path="${eclass_dir}/${name}.eclass"
     if [[ -f "${path}" ]]; then
-      echo -n "${path}"
-      return
+      result="${path}"
     fi
   done
-  die "${name}.eclass not found"
+  [[ -z "${result}" ]] && die "${name}.eclass not found"
+  echo -n "${result}"
 }
 
 __xbuild_source_eclass() {
