@@ -24,7 +24,12 @@ pkg_files(
         "profiles/**",
         "make.conf",
         "prebuilt.conf",
-    ], exclude = ANALYSIS_FILE_PATTERN),
+    ], exclude = ANALYSIS_FILE_PATTERN + [
+        "**/OWNERS",
+        "**/README",
+        "**/README.md",
+        "profiles/**/*.desc",
+    ]),
     prefix = "{{ mount_path }}",
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],

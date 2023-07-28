@@ -43,7 +43,12 @@ pkg_files(
         "sys-apps/man-pages/files/*.py",
         "sys-apps/mawk/files/*.patch",
         "*/*/files/*_waf_config_answers",
-    ], exclude = ANALYSIS_FILE_PATTERN),
+    ], exclude = ANALYSIS_FILE_PATTERN + [
+        "**/OWNERS",
+        "**/README",
+        "**/README.md",
+        "profiles/**/*.desc",
+    ]),
     prefix = "{{ mount_path }}",
     # chromeos/scripts/config_wrapper must be executable
     attributes = pkg_attributes(
