@@ -6,12 +6,20 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefi
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@//bazel/portage/build_defs:overlay.bzl", "overlay")
 
+# The list of files that are only needed when invoking emerge. We don't need
+# these when building a package since alchemist has performed the analysis.
+ANALYSIS_FILE_PATTERN = [
+    "profiles/**/package.accept_keywords",
+    "profiles/**/package.keywords",
+    "profiles/**/package.mask",
+    "profiles/**/package.provided",
+    "profiles/**/package.unmask",
+]
+
 pkg_files(
     name = "files",
     srcs = [
         "metadata/layout.conf",
-        # Required by build_image.
-        "sys-boot/grub/files/sbat.csv",
     ] + glob([
         "chromeos/**",
         "eclass/*.eclass",
@@ -35,7 +43,7 @@ pkg_files(
         "sys-apps/man-pages/files/*.py",
         "sys-apps/mawk/files/*.patch",
         "*/*/files/*_waf_config_answers",
-    ]),
+    ], exclude = ANALYSIS_FILE_PATTERN),
     prefix = "{{ mount_path }}",
     # chromeos/scripts/config_wrapper must be executable
     attributes = pkg_attributes(
@@ -58,5 +66,32 @@ overlay(
     name = "{{ name }}",
     path = "/{{ mount_path }}",
     layer = ":layer",
+    visibility = ["@//bazel:internal"],
+)
+
+pkg_files(
+    name = "files-full",
+    srcs = [
+        # Required by build_image.
+        "sys-boot/grub/files/sbat.csv",
+    ] + glob(ANALYSIS_FILE_PATTERN),
+    prefix = "{{ mount_path }}",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "layer-full",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":files-full"],
+    visibility = ["//visibility:private"],
+)
+
+overlay(
+    name = "full",
+    path = "/{{ mount_path }}",
+    layer = ":layer-full",
     visibility = ["@//bazel:internal"],
 )

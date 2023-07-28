@@ -6,11 +6,24 @@ load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
 
 {%- for overlay_set in overlay_sets %}
 
+# The overlay_set used for building packages.
 overlay_set(
     name = "{{ overlay_set.name }}",
     overlays = [
         {%- for overlay in overlay_set.overlays %}
         "{{ overlay }}",
+        {%- endfor %}
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+# The overlay_set used for the build_image targets.
+overlay_set(
+    name = "{{ overlay_set.name }}-full",
+    overlays = [
+        {%- for overlay in overlay_set.overlays %}
+        "{{ overlay }}",
+        "{{ overlay }}:full",
         {%- endfor %}
     ],
     visibility = ["@//bazel:internal"],

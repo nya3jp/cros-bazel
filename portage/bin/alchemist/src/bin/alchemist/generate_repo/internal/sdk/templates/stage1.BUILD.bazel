@@ -116,7 +116,7 @@ pkg_tar(
 # Needed for the build_image targets
 alias(
     name = "overlays",
-    actual = "{{ overlay_set }}",
+    actual = "{{ overlay_set }}-full",
     visibility = ["@//bazel:internal"],
 )
 
