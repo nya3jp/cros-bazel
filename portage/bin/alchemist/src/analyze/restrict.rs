@@ -58,6 +58,7 @@ mod tests {
             masked: false,
             ebuild_path: PathBuf::from("/path/to/some.ebuild"),
             inherited: HashSet::new(),
+            inherit_paths: vec![],
             direct_build_target: None,
         }
     }

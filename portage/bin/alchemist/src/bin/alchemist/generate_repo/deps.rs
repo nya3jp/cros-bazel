@@ -201,6 +201,7 @@ mod tests {
             masked: false,
             ebuild_path: "/somewhere/sys-apps/prototype-1.0.ebuild".into(),
             inherited: HashSet::new(),
+            inherit_paths: vec![],
             direct_build_target: None,
         };
 
