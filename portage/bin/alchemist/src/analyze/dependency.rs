@@ -363,6 +363,23 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         ("media-libs/minigbm", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
         ("media-libs/cros-camera-hal-usb", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
 
+        /* Our setuptools is way too old. b/293899573 */
+        ("dev-python/jinja", DependencyKind::BuildHost { .. }) => "dev-python/markupsafe",
+
+        /*
+         * /var/tmp/portage/sys-libs/binutils-libs-2.37_p1-r1/work/binutils-2.37/missing: line 81: makeinfo: command not found
+         */
+        ("sys-libs/binutils-libs", DependencyKind::BuildHost { .. }) => "sys-apps/texinfo",
+
+        /*
+         * make[1]: flex: Command not found
+         */
+        ("sys-libs/libsepol", DependencyKind::BuildHost { .. }) => "sys-devel/flex",
+
+        /* TODO: I lost the error message */
+        ("sys-fs/lvm2", DependencyKind::BuildHost { .. }) => "sys-apps/which sys-devel/binutils",
+        ("x11-misc/compose-tables", DependencyKind::Build) => "x11-misc/util-macros",
+
         _ => "",
     }
 }
