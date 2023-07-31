@@ -84,22 +84,6 @@ pub(crate) fn remount_readonly(path: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Finds mount(1) from the standard locations. It doesn't consider `$PATH`.
-fn find_mount() -> Result<&'static Path> {
-    for path in [
-        "/usr/sbin/mount",
-        "/usr/bin/mount",
-        "/sbin/mount",
-        "/bin/mount",
-    ] {
-        let path = Path::new(path);
-        if path.try_exists()? {
-            return Ok(path);
-        }
-    }
-    bail!("mount(1) not found")
-}
-
 /// Mounts overlayfs at the specified path.
 ///
 /// `scratch_dir` should point to an empty directory where the function will
@@ -163,13 +147,16 @@ pub(crate) fn mount_overlayfs(
         short_lower_dirs.into_iter().rev().join(":")
     );
 
-    // Mount overlayfs via mount(1).
+    // Mount overlayfs via overlayfs_mount_helper.
     // We don't call mount(2) directly because it requires us to change the
     // working directory of the current process, which introduces tricky issues
     // in multi-threaded programs, including unit tests.
-    // TODO(nya): Do this in a small utility program, instead of mount(1).
-    let status = Command::new(find_mount()?)
-        .args(["-t", "overlay", "-o", overlay_options.as_str(), "none"])
+    let runfiles = runfiles::Runfiles::create()?;
+    let helper_path = runfiles
+        .rlocation("cros/bazel/portage/bin/overlayfs_mount_helper/overlayfs_mount_helper")
+        .canonicalize()?;
+    let status = Command::new(helper_path)
+        .arg(overlay_options)
         .arg(mount_dir)
         .current_dir(&lowers_dir)
         .status()?;

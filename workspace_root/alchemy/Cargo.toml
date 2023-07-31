@@ -10,6 +10,7 @@ members = [
     "bazel/portage/bin/build_sdk",
     "bazel/portage/bin/extract_interface",
     "bazel/portage/bin/install_deps",
+    "bazel/portage/bin/overlayfs_mount_helper",
     "bazel/portage/bin/run_in_container",
     "bazel/portage/bin/sdk_from_archive",
     "bazel/portage/bin/sdk_install_glibc",
