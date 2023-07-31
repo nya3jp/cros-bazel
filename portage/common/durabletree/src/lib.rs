@@ -14,8 +14,14 @@ use crate::{convert::convert_impl, expand::expand_impl};
 use anyhow::Result;
 use consts::{MARKER_FILE_NAME, RAW_DIR_NAME};
 use expand::ExtraDir;
-use std::path::{Path, PathBuf};
+use std::{
+    fs::set_permissions,
+    os::unix::prelude::PermissionsExt,
+    path::{Path, PathBuf},
+};
 use tracing::instrument;
+use util::list_user_xattrs;
+use walkdir::WalkDir;
 
 /// Works with *a durable tree*, a special directory format designed to preserve
 /// file metadata in Bazel tree artifacts.
@@ -72,6 +78,29 @@ use tracing::instrument;
 /// we record in the top directory's xattrs whether we have already restored and
 /// skip it when it's set. We also use flock(2) on the top directory to prevent
 /// multiple restore operations from running in parallel.
+///
+/// ## Hot state
+///
+/// When a program creates a durable tree with [`DurableTree::convert`], it is
+/// initially marked as *hot*. A durable tree is considered hot if its root
+/// directory has a permission different from 0555.
+///
+/// It is an error to attempt to expand a hot durable tree with
+/// [`DurableTree::expand`] because it would mark the tree "already restored"
+/// (as we explained in the previous section), while Bazel would modify
+/// permissions of files in the tree after the current Bazel action finishes,
+/// which results in corrupted permissions.
+///
+/// Therefore, a Bazel action should convert its output directory to a durable
+/// tree at the end of its execution and should never attempt to expand it.
+/// Once the action finishes, Bazel modifies permissions of the durable tree to
+/// 0555, which essentially removes the hot state. From this point, Bazel won't
+/// modify file permissions anymore, so it is safe to expand the durable tree
+/// and set the "already restored" marker in other actions.
+///
+/// If you need to expand a hot durable tree in unit tests, you can use
+/// [`DurableTree::cool_down_for_testing`] to simulate the "cool down" process
+/// of Bazel.
 ///
 /// ## Limitations
 ///
@@ -165,6 +194,31 @@ impl DurableTree {
     /// method may return an empty vector.
     pub fn layers(&self) -> Vec<&Path> {
         self.layer_dirs.iter().map(|dir| dir.as_path()).collect()
+    }
+
+    /// Resets the "hot" state of a durable tree by resetting permissions of
+    /// files under a directory just like Bazel does.
+    ///
+    /// Use this function only in tests if you want to call
+    /// [`DurableTree::expand`] on a durable tree created with
+    /// [`DurableTree::convert`].
+    pub fn cool_down_for_testing(root_dir: &Path) -> Result<()> {
+        for entry in WalkDir::new(root_dir) {
+            let entry = entry?;
+            let path = entry.path();
+
+            // Make the file writable to allow listing/clearing user xattrs.
+            set_permissions(path, PermissionsExt::from_mode(0o755))?;
+
+            // Clear all user xattrs.
+            for key in list_user_xattrs(path)? {
+                xattr::remove(path, key)?;
+            }
+
+            // Set the file permission to 0555 that Bazel typically uses.
+            set_permissions(path, PermissionsExt::from_mode(0o555))?;
+        }
+        Ok(())
     }
 }
 

@@ -1,0 +1,16 @@
+[package]
+name = "durabletree_test_helper"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cliutil = { path = "../cliutil" }
+container = { path = "../container" }
+durabletree = { path = "../durabletree" }
+
+anyhow.workspace = true
+clap.workspace = true
+strum.workspace = true
+strum_macros.workspace = true

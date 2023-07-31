@@ -16,8 +16,7 @@ use std::{
 use crate::{
     consts::{MODE_MASK, RAW_DIR_NAME, RESTORED_XATTR},
     tests::testutil::{
-        describe_tree, reset_metadata, simple_dir, simple_file, CommandRunOk, FileDescription,
-        EMPTY_HASH,
+        describe_tree, simple_dir, simple_file, CommandRunOk, FileDescription, EMPTY_HASH,
     },
     DurableTree,
 };
@@ -52,7 +51,7 @@ fn empty() -> Result<()> {
     assert_eq!(0o750, dir.metadata()?.mode() & MODE_MASK);
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
     let tree = DurableTree::expand(dir)?;
 
     let files: Vec<Vec<FileDescription>> = tree
@@ -85,7 +84,7 @@ fn simple() -> Result<()> {
     symlink("../z.txt", dir.join("dir/link"))?;
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
     let tree = DurableTree::expand(dir)?;
 
     let files: Vec<Vec<FileDescription>> = tree
@@ -137,7 +136,7 @@ fn preserve_special_files() -> Result<()> {
         .run_ok()?;
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
     let tree = DurableTree::expand(dir)?;
 
     let files: Vec<Vec<FileDescription>> = tree
@@ -181,7 +180,7 @@ fn preserve_special_modes() -> Result<()> {
     File::create(dir.join("tmp/setuid"))?.set_permissions(PermissionsExt::from_mode(0o4700))?;
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
     let tree = DurableTree::expand(dir)?;
 
     let files: Vec<Vec<FileDescription>> = tree
@@ -221,7 +220,7 @@ fn preserve_user_xattrs() -> Result<()> {
     xattr::set(&file, "user.ccc", &333_u32.to_be_bytes())?;
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
     let tree = DurableTree::expand(dir)?;
 
     let files: Vec<Vec<FileDescription>> = tree
@@ -273,7 +272,7 @@ fn restore_empty_dirs() -> Result<()> {
     set_permissions(dir.join("aaa/bbb"), PermissionsExt::from_mode(0o750))?;
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
 
     // Remove empty directories.
     fileutil::remove_dir_all_with_chmod(&dir.join(RAW_DIR_NAME).join("aaa"))?;
@@ -308,7 +307,7 @@ fn restore_once() -> Result<()> {
     set_permissions(dir, PermissionsExt::from_mode(0o750))?;
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
 
     // Expansion once.
     DurableTree::expand(dir)?;
@@ -370,7 +369,7 @@ fn reproducible() -> Result<()> {
         .run_ok()?;
 
     DurableTree::convert(dir)?;
-    reset_metadata(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
 
     let files = describe_tree(dir)?;
 
@@ -419,6 +418,7 @@ fn inaccessible_files() -> Result<()> {
     set_permissions(dir, PermissionsExt::from_mode(0o700))?;
 
     DurableTree::convert(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
     let tree = DurableTree::expand(dir)?;
 
     let files: Vec<Vec<FileDescription>> = tree

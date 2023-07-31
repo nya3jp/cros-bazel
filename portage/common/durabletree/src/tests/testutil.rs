@@ -7,16 +7,15 @@ use itertools::Itertools;
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
-    fs::{read_link, set_permissions, File},
+    fs::{read_link, File},
     os::unix::prelude::*,
     path::{Path, PathBuf},
     process::Command,
 };
-use walkdir::WalkDir;
 
 use crate::{
     consts::MODE_MASK,
-    util::{get_user_xattrs_map, list_user_xattrs, SavedPermissions},
+    util::{get_user_xattrs_map, SavedPermissions},
 };
 
 /// A helper trait to implement `Command::run_ok`.
@@ -33,29 +32,6 @@ impl CommandRunOk for Command {
         }
         Ok(())
     }
-}
-
-/// Resets metadata of files under a directory as if Bazel does.
-/// Call this function between [`DurableTree::convert`] and
-/// [`DurableTree::expand`] in your tests to verify that the durable tree is
-/// reproducible without metadata.
-pub fn reset_metadata(root_dir: &Path) -> Result<()> {
-    for entry in WalkDir::new(root_dir) {
-        let entry = entry?;
-        let path = entry.path();
-
-        // Make the file writable allow listing/clearing user xattrs.
-        set_permissions(path, PermissionsExt::from_mode(0o755))?;
-
-        // Clear all user xattrs.
-        for key in list_user_xattrs(path)? {
-            xattr::remove(path, key)?;
-        }
-
-        // Set the file permission to 0555 that Bazel typically uses.
-        set_permissions(path, PermissionsExt::from_mode(0o555))?;
-    }
-    Ok(())
 }
 
 /// SHA256 hash of an empty data.

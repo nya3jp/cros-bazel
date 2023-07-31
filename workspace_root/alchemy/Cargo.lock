@@ -470,6 +470,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "durabletree_test_helper"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "cliutil",
+ "container",
+ "durabletree",
+ "strum",
+ "strum_macros",
+]
+
+[[package]]
 name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

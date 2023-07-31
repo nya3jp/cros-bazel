@@ -7,7 +7,7 @@ use fileutil::SafeTempDirBuilder;
 use itertools::Itertools;
 use std::{
     collections::HashSet,
-    fs::{read_link, rename, File, Metadata},
+    fs::{read_link, rename, set_permissions, File, Metadata, Permissions},
     os::unix::prelude::*,
     path::{Path, PathBuf},
 };
@@ -17,7 +17,6 @@ use tracing::instrument;
 use crate::{
     consts::{
         EXTRA_TARBALL_FILE_NAME, MANIFEST_FILE_NAME, MARKER_FILE_NAME, MODE_MASK, RAW_DIR_NAME,
-        RESTORED_XATTR,
     },
     manifest::{DurableTreeManifest, FileManifest},
     util::{get_user_xattrs_map, DirLock, SavedPermissions},
@@ -242,8 +241,8 @@ pub fn convert_impl(root_dir: &Path) -> Result<()> {
     pivot_to_raw_subdir(root_dir)?;
     build_manifest_and_extra_tarball(root_dir)?;
 
-    // Mark as restored initially.
-    xattr::set(root_dir, RESTORED_XATTR, &[] as &[u8])?;
+    // Mark as hot initially.
+    set_permissions(root_dir, Permissions::from_mode(0o755))?;
 
     // Mark as a durable tree.
     File::create(root_dir.join(MARKER_FILE_NAME))?;

@@ -10,7 +10,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use fileutil::SafeTempDir;
 use nix::mount::{mount, umount2, MntFlags, MsFlags};
 use tracing::instrument;
@@ -45,8 +45,21 @@ impl Drop for ExtraDir {
 /// Restores the raw directory if not yet.
 #[instrument]
 fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
+    // Resolve symlinks. Otherwise xattr syscalls might attempt to read/update
+    // xattrs of symlinks, not their destination.
+    let root_dir = root_dir.canonicalize()?;
+    let root_dir = root_dir.as_path();
+
     // Lock the root directory to avoid restoring the directory in parallel.
     let _lock = DirLock::try_new(root_dir)?;
+
+    // Ensure the durable tree is not hot. See the comment in `DurableTree` for
+    // details.
+    let metadata = std::fs::metadata(root_dir)?;
+    ensure!(
+        metadata.permissions().mode() & 0o777 == 0o555,
+        "Durable tree is hot, i.e. you attempted to expand it within the same Bazel action."
+    );
 
     // Check if the raw directory is already restored.
     if let Ok(Some(_)) = xattr::get(root_dir, RESTORED_XATTR) {
@@ -85,7 +98,6 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
     }
 
     // Mark as restored.
-    set_permissions(root_dir, PermissionsExt::from_mode(0o755))?;
     xattr::set(root_dir, RESTORED_XATTR, &[] as &[u8])?;
 
     Ok(())

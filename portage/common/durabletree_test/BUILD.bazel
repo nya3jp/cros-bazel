@@ -1,0 +1,46 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+load(":defs.bzl", "durabletree_test")
+
+rust_binary(
+    name = "durabletree_test_helper",
+    srcs = glob(["src/**/*.rs"]),
+    proc_macro_deps = [
+        "@alchemy_crates//:strum_macros",
+    ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel:internal"],
+    deps = [
+        "//bazel/portage/common/cliutil",
+        "//bazel/portage/common/container",
+        "//bazel/portage/common/durabletree",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:strum",
+    ],
+)
+
+# Define special tests that ensure durable trees can restore original files and
+# permissions. We have two variants where sandbox is enabled/disabled on
+# generating a durable tree. Checks must be run without sandbox to allow
+# restoring file permissions in durable trees.
+
+durabletree_test(
+    name = "sandbox_off",
+    size = "small",
+    bin = ":durabletree_test_helper",
+    sandbox_on_generate = False,
+    tags = ["no-sandbox"],
+)
+
+durabletree_test(
+    name = "sandbox_on",
+    size = "small",
+    bin = ":durabletree_test_helper",
+    sandbox_on_generate = True,
+    tags = ["no-sandbox"],
+)

@@ -817,6 +817,7 @@ mod tests {
             "This file is from the durable tree layer.",
         )?;
         DurableTree::convert(durable_tree_dir)?;
+        DurableTree::cool_down_for_testing(durable_tree_dir)?;
 
         let hello_path = Path::new("/hello.txt");
         let runfiles = runfiles::Runfiles::create()?;
