@@ -3,10 +3,10 @@
 // found in the LICENSE file.
 
 use crate::helpers::{AuxEntry, PAGE_SIZE};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use core::ffi::{c_char, CStr};
 
-pub(crate) fn real_main(args: &[*const c_char], aux: &[AuxEntry]) -> Result<()> {
+pub(crate) fn real_main(args: &[*const c_char], aux: &mut [AuxEntry]) -> Result<()> {
     // AT_EXECFN contains "A pointer to a string containing the pathname used
     // to execute the program."
     let exec_path = aux
@@ -18,6 +18,9 @@ pub(crate) fn real_main(args: &[*const c_char], aux: &[AuxEntry]) -> Result<()> 
     let r = runfiles::Runfiles::create_with_custom_binary_path(exec_path)?;
 
     let path = r.rlocation("toolchain_sdk/lib64/ld-linux-x86-64.so.2");
+    // We can't look for the sysroot directly since rlocation doesn't support
+    // searching for directories.
+    let sysroot = path.parent().unwrap().parent().unwrap();
     let binary_blob =
         std::fs::read(&path).with_context(|| format!("Unable to read interpreter at {path:?}"))?;
     let binary = elfloader::ElfBinary::new(binary_blob.as_slice())
@@ -36,6 +39,18 @@ pub(crate) fn real_main(args: &[*const c_char], aux: &[AuxEntry]) -> Result<()> 
         .map_err(|e| anyhow!("Unable to load the interpreter: {e:?}"))?;
 
     let entry = loader.relocate_address(binary.entry_point());
+
+    // We need to pass information to the real elf loader.
+    // Ideally we'd just add a new entry to args / env / aux.
+    // However, we need to take special care not to resize the stack,
+    // as if you do so, everything blows up.
+    // To solve this problem, we just write to the value of the AT_NULL entry,
+    // which nobody cares if you change.
+    let at_null_entry = aux.last_mut().unwrap();
+    if at_null_entry.value != 0 {
+        bail!("Final entry of auxv (AT_NULL) has non-zero value")
+    }
+    at_null_entry.value = crate::serialize::serialize(&sysroot)? as u64;
 
     // rsp needs to point to argc, which is always 8 bytes before argv.
     // See https://articles.manugarg.com/aboutelfauxiliaryvectors.html

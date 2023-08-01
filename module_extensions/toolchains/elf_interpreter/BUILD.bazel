@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_static_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("//bazel/bash:defs.bzl", "sh_runfiles_binary", "sh_runfiles_test")
 load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM_MUSL")
 load(":musl_transition.bzl", "musl_transition")
@@ -45,6 +45,16 @@ rust_binary(
 musl_transition(
     name = "elf_interpreter_musl",
     actual = "elf_interpreter",
+)
+
+# We can't do what we normally do and use crate = ":elf_interpreter" because of
+# the target_compatible_with constraint.
+# Thus, we just build a subset of elf_interpreter that is compatible with HOST.
+rust_test(
+    name = "serialize_test",
+    size = "small",
+    srcs = ["src/serialize.rs"],
+    deps = ["@alchemy_crates//:anyhow"],
 )
 
 cc_binary(

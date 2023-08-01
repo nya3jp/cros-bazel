@@ -5,6 +5,7 @@
 mod elf;
 mod helpers;
 mod real_main;
+mod serialize;
 
 use crate::helpers::{take_from_ptr_while, AuxEntry};
 use std::convert::TryInto;
