@@ -115,7 +115,10 @@ eend() {
 }
 
 EXPORT_FUNCTIONS() {
-  : # TODO: Implement
+  local name
+  for name in "$@"; do
+    eval "function ${name}() { ${ECLASS?}_name; }"
+  done
 }
 
 # HACK: This variable has been removed upstream, but we still have some packages
@@ -263,6 +266,35 @@ if [[ "$(type -t src_compile)" == "function" ]]; then
 else
   HAS_SRC_COMPILE=0
 fi
+
+__xbuild_defined_phases=()
+function populate_defined_phases() {
+  local all_phases=(
+    pkg_pretend
+    pkg_setup
+    pkg_nofetch
+    src_unpack
+    src_prepare
+    src_configure
+    src_compile
+    src_test
+    src_install
+    pkg_preinst
+    pkg_postinst
+    pkg_prerm
+    pkg_postrm
+  )
+  local phase
+  for phase in "${all_phases[@]}"; do
+    if [[ "$(type -t "${phase}")" == "function" ]]; then
+      # Strip the prefix to match what `egencache` generates.
+      phase="${phase#pkg_}"
+      phase="${phase#src_}"
+      __xbuild_defined_phases+=( "${phase}" )
+    fi
+  done
+}
+populate_defined_phases
 
 set -o posix
 set > "${__xbuild_in_output_vars}"
