@@ -367,6 +367,12 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             """,
         ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
+        has_hooks = attr.bool(
+            doc = """
+            If true, the package uses the preinst and postinst hooks to modify
+            ROOT or /.
+            """,
+        ),
         _extract_interface = attr.label(
             executable = True,
             cfg = "exec",

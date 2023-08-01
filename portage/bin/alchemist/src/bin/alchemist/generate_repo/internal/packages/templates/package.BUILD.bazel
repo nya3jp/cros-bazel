@@ -152,6 +152,11 @@ ebuild(
     allow_network_access = True,
     {%- endif %}
     prebuilt = ":{{ ebuild.version }}_prebuilt",
+    {%- if ebuild.has_hooks %}
+    has_hooks = True,
+    {% else -%}
+    has_hooks = False,
+    {%- endif %}
     visibility = ["@//bazel:internal"],
 )
 
