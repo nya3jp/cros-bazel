@@ -19,6 +19,12 @@ BinaryPackageInfo = provider(
         "file": """
             File: A binary package file (.tbz2) of this package.
         """,
+        "layer": """
+            File: The layer that contains the installed package. This
+            will only be set if the package doesn't require any pre/post install
+            hooks. This layer can be used directly instead of having to install
+            the package manually.
+        """,
         "category": """
             str: The category of this package.
         """,

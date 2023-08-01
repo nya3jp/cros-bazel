@@ -9,6 +9,7 @@ load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
+load(":install_deps.bzl", "install_deps")
 
 # The stage1 SDK will need to be built with ebuild_primordial.
 # After that, they can use the ebuild rule.
@@ -317,12 +318,41 @@ def _ebuild_impl(ctx):
         transitive = [pkg.all_files for pkg in direct_runtime_deps],
         order = "postorder",
     )
+
+    if not ctx.attr.has_hooks:
+        package_info = BinaryPackageInfo(
+            file = output_binary_package_file,
+            category = ctx.attr.category,
+            direct_runtime_deps = tuple(),
+            layer = None,
+        )
+        install_layers = install_deps(
+            ctx = ctx,
+            output_prefix = "%s_layer" % (ctx.attr.name),
+            board = ctx.attr.board,
+            sdk = ctx.attr.sdk[SDKInfo],
+            overlays = ctx.attr.overlays[OverlaySetInfo],
+            install_set = depset([package_info]),
+            executable_action_wrapper = ctx.executable._action_wrapper,
+            executable_install_deps = ctx.executable._install_deps,
+            progress_message = "Creating layer for %{label}",
+            use_layers = False,
+        )
+
+        if len(install_layers) != 1:
+            fail("Expected only one layer")
+
+        install_layer = install_layers[0]
+    else:
+        install_layer = None
+
     package_info = BinaryPackageInfo(
         file = output_binary_package_file,
         category = ctx.attr.category,
         all_files = all_files,
         direct_runtime_deps = direct_runtime_deps,
         transitive_runtime_deps = transitive_runtime_deps,
+        layer = install_layer,
     )
     package_set_info = single_binary_package_set_info(package_info)
     return [
@@ -478,6 +508,7 @@ def _ebuild_install_impl(ctx):
     install_groups = calculate_install_groups(
         [package[BinaryPackageInfo] for package in ctx.attr.packages],
         provided_packages = depset(),
+        use_layers = False,
     )
     for install_group in install_groups:
         atoms = [

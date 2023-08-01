@@ -43,6 +43,7 @@ def _build_sdk_impl(ctx):
     install_groups = calculate_install_groups(
         install_list,
         provided_packages = depset(),
+        use_layers = False,
     )
     args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
 

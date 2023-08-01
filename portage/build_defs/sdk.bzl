@@ -179,6 +179,7 @@ def _sdk_install_deps_impl(ctx):
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
         progress_message = ctx.attr.progress_message,
+        use_layers = ctx.attr.use_layers,
     )
 
     return [
@@ -218,13 +219,18 @@ sdk_install_deps = rule(
             If the message contains `{dep_count}' it will be replaced with the
             total number of dependencies that need to be installed.
             """,
-            default = "Installing {dep_count} packages into %{label}",
+            default = "Installing {dep_count} packages ({cached_count} cached) into %{label}",
         ),
         "target_deps": attr.label_list(
             doc = """
             Target packages to install in the SDK.
             """,
             providers = [BinaryPackageSetInfo],
+        ),
+        "use_layers": attr.bool(
+            doc = """
+            Use the extracted binary package layers if they are available.
+            """,
         ),
         "_action_wrapper": attr.label(
             executable = True,

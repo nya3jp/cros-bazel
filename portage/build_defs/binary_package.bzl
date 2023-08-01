@@ -31,6 +31,7 @@ def _binary_package_impl(ctx):
         all_files = all_files,
         direct_runtime_deps = direct_runtime_deps,
         transitive_runtime_deps = transitive_runtime_deps,
+        layer = None,
     )
     package_set_info = single_binary_package_set_info(package_info)
     return [

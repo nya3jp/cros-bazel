@@ -38,6 +38,7 @@ def _build_image_impl(ctx):
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
         progress_message = "Setting up SDK to build image",
+        use_layers = False,
     )
 
     # Compute arguments and inputs to build_image.

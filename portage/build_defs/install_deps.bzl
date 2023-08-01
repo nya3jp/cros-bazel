@@ -13,7 +13,8 @@ def install_deps(
         install_set,
         executable_action_wrapper,
         executable_install_deps,
-        progress_message):
+        progress_message,
+        use_layers):
     """
     Creates an action which builds file system layers in which the build dependencies are installed.
 
@@ -35,6 +36,8 @@ def install_deps(
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_install_deps: File: An executable file of install_deps.
         progress_message: str: Progress message for the installation action.
+        use_layers: bool: Use package layers when possible, otherwise perform
+            a binpkg installation.
 
     Returns:
         list[File]: Files representing file system layers.
@@ -56,18 +59,37 @@ def install_deps(
         args.add("--board=" + board)
 
     install_list = install_set.to_list()
-    direct_inputs = [pkg.file for pkg in install_list]
 
-    layer_inputs = sdk.layers + overlays.layers
+    install_tuple = calculate_install_groups(
+        install_list,
+        provided_packages = sdk.packages,
+        use_layers = use_layers,
+    )
+
+    if use_layers:
+        install_groups, install_layers = install_tuple
+    else:
+        install_groups, install_layers = install_tuple, []
+
+    args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
+
+    direct_inputs = []
+    for group in install_groups:
+        for package in group:
+            direct_inputs.append(package.file)
+
+    layer_inputs = sdk.layers + overlays.layers + install_layers
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(layer_inputs)
-
-    install_groups = calculate_install_groups(install_list, provided_packages = sdk.packages)
-    args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
 
     progress_message = progress_message.replace(
         "{dep_count}",
         str(len(install_list)),
+    )
+
+    progress_message = progress_message.replace(
+        "{cached_count}",
+        str(len(install_layers)),
     )
 
     ctx.actions.run(
@@ -87,4 +109,4 @@ def install_deps(
         progress_message = progress_message,
     )
 
-    return [output_root]
+    return install_layers + [output_root]
