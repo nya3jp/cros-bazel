@@ -23,6 +23,17 @@ pub(crate) unsafe fn slice_from_ptrs<'a, T>(start: *mut T, end: *mut T) -> &'a m
     unsafe { core::slice::from_raw_parts_mut(start, ptr_distance(start, end)) }
 }
 
+pub(crate) unsafe fn array_with_sentinel_to_slice<T: Sized + PartialEq>(
+    start: *mut T,
+    sentinel: T,
+) -> &'static mut [T] {
+    let mut end = start;
+    while unsafe { std::ptr::read(end) } != sentinel {
+        end = unsafe { end.add(1) };
+    }
+    unsafe { slice_from_ptrs(start, end.add(1)) }
+}
+
 pub(crate) fn mmap<T: Sized>(
     slice: &mut [T],
     prot: i32,

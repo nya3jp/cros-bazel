@@ -2,12 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::helpers::PAGE_SIZE;
+use crate::helpers::{AuxEntry, PAGE_SIZE};
 use anyhow::{anyhow, Context, Result};
-use core::ffi::c_char;
+use core::ffi::{c_char, CStr};
 
-pub(crate) fn real_main(args: &[*const c_char]) -> Result<()> {
-    let path = std::path::Path::new("/tmp/cros_bazel_host_sysroot/lib64/ld-linux-x86-64.so.2");
+pub(crate) fn real_main(args: &[*const c_char], aux: &[AuxEntry]) -> Result<()> {
+    // AT_EXECFN contains "A pointer to a string containing the pathname used
+    // to execute the program."
+    let exec_path = aux
+        .iter()
+        .find(|entry| entry.tag == libc::AT_EXECFN)
+        .context("Must have an execfn entry")?
+        .value as *const c_char;
+    let exec_path = unsafe { CStr::from_ptr(exec_path) }.to_str()?;
+    let r = runfiles::Runfiles::create_with_custom_binary_path(exec_path)?;
+
+    let path = r.rlocation("toolchain_sdk/lib64/ld-linux-x86-64.so.2");
     let binary_blob =
         std::fs::read(&path).with_context(|| format!("Unable to read interpreter at {path:?}"))?;
     let binary = elfloader::ElfBinary::new(binary_blob.as_slice())

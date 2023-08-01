@@ -35,6 +35,7 @@ rust_binary(
     # glibc doesn't like statically linking libc.
     target_compatible_with = HOST_PLATFORM_MUSL.constraints,
     deps = [
+        "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:elfloader",
         "@alchemy_crates//:libc",

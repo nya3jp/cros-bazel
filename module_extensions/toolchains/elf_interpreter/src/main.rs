@@ -6,6 +6,7 @@ mod elf;
 mod helpers;
 mod real_main;
 
+use crate::helpers::{array_with_sentinel_to_slice, AuxEntry};
 use std::convert::TryInto;
 
 // This binary:
@@ -34,12 +35,19 @@ pub fn main() {}
 pub(crate) extern "C" fn __wrap_main(
     argc: core::ffi::c_int,
     argv: *const *const core::ffi::c_char,
-    _envp: *const *const core::ffi::c_char,
+    envp: *mut *const core::ffi::c_char,
 ) -> core::ffi::c_int {
     // Turn pointers into slices so that we can have rust's safety guarantees.
     let args = unsafe { core::slice::from_raw_parts(argv, argc.try_into().unwrap()) };
+    let env = unsafe { array_with_sentinel_to_slice(envp, std::ptr::null()) };
+    let aux = unsafe {
+        array_with_sentinel_to_slice(
+            env.as_mut_ptr_range().end.cast::<AuxEntry>(),
+            AuxEntry { tag: 0, value: 0 },
+        )
+    };
 
-    match real_main::real_main(args) {
+    match real_main::real_main(args, aux) {
         Ok(()) => 0,
         Err(e) => {
             eprintln!("Error during ELF loader: {e:?}");
