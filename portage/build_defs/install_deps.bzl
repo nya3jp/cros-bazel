@@ -62,7 +62,7 @@ def install_deps(
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(layer_inputs)
 
-    install_groups = calculate_install_groups(install_list)
+    install_groups = calculate_install_groups(install_list, provided_packages = sdk.packages)
     args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
 
     ctx.actions.run(

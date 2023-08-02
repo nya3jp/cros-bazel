@@ -121,6 +121,10 @@ SDKInfo = provider(
             a file from a layer can be overridden by one in another layer that
             appears later in the list.
         """,
+        "packages": """
+            Depset[BinaryPackageInfo]: The packages that are installed in the
+            SDK layer.
+        """,
     },
 )
 

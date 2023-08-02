@@ -38,6 +38,7 @@ def _sdk_from_archive_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             layers = [output_root],
+            packages = depset(),
         ),
     ]
 
@@ -118,6 +119,7 @@ def _sdk_update_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             layers = base_sdk.layers + [output_root],
+            packages = base_sdk.packages,
         ),
     ]
 
@@ -191,6 +193,7 @@ def _sdk_install_deps_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             layers = sdk.layers + outputs,
+            packages = depset(transitive = [sdk.packages, install_set]),
         ),
     ]
 
@@ -249,6 +252,7 @@ def _sdk_extend_impl(ctx):
 
     sdk = SDKInfo(
         layers = sdk.layers + ctx.files.extra_tarballs,
+        packages = sdk.packages,
     )
 
     return [
@@ -327,6 +331,10 @@ def _sdk_install_glibc_impl(ctx):
         DefaultInfo(files = depset(outputs)),
         SDKInfo(
             layers = base_sdk.layers + [output_root],
+            packages = depset(
+                [ctx.attr.glibc[BinaryPackageInfo]],
+                transitive = [base_sdk.packages],
+            ),
         ),
     ]
 

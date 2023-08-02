@@ -14,21 +14,30 @@ def map_install_group(group):
     """
     return ":".join([pkg.file.path for pkg in group])
 
-def calculate_install_groups(install_list):
+def calculate_install_groups(install_list, provided_packages = None):
     """
     Splits a package set to install groups.
 
     Args:
         install_list: list[BinaryPackageInfo]: A list of packages to install.
             This list must be closed over transitive runtime dependencies.
+        provided_packages: depset(BinaryPackageInfo) | None: The packages that
+            have already been installed in previous SDK layers. These packages
+            will be filtered out.
 
     Returns:
         list[list[BinaryPackageInfo]]: An ordered list containing a list of
             packages that can be installed in parallel.
     """
+
+    # This is normally expected to be O(~20) or less.
+    provided_packages = provided_packages.to_list() if provided_packages else []
+
+    seen = {dep.file.path: True for dep in provided_packages}
+    install_list = [dep for dep in install_list if dep.file.path not in seen]
+
     groups = []
     remaining_packages = install_list[:]
-    seen = {}
 
     for _ in range(100):
         if len(remaining_packages) == 0:
