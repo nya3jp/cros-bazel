@@ -42,6 +42,7 @@ pkg_files(
         "sys-apps/kmod/files/*.patch",
         "sys-apps/man-pages/files/*.py",
         "sys-apps/mawk/files/*.patch",
+        "sys-devel/bc/files/*.patch",
         "*/*/files/*_waf_config_answers",
     ], exclude = ANALYSIS_FILE_PATTERN + [
         "**/OWNERS",
