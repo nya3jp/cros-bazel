@@ -16,39 +16,8 @@ $ repo sync -c -j 4
 $ cd src
 ```
 
-After checking out, you have to run the following command to create a few
-necessary symlinks. This is needed only on the first time.
-
-```sh
-$ bazel/link_files.py
-```
-
 Unless otherwise specified, examples in this doc assume that your current
 directory is `~/chromiumos/src`.
-
-## Installing Bazel/Bazelisk
-
-You need to use a certain version of Bazel for the build to succeed. The
-current supported Bazel version is denoted in `~/chromiumos/src/.bazelversion`.
-The easiest way to use Bazel of the correct version is to use Bazelisk, which
-automatically downloads a Bazel binary according to `.bazelversion`.
-
-To install Bazelisk, make sure you have Go toolchain installed, and run the
-following command:
-
-```sh
-$ GOBIN=$HOME/go/bin go install github.com/bazelbuild/bazelisk@latest
-```
-
-This command installs bazelisk at `~/go/bin/bazelisk`. You'll also need to get
-Bazelisk onto your `PATH`, to be executed before any Bazel that's already on
-your `PATH`, and we'd like to invoke Bazelisk whenever we run `bazel`. Create a
-symlink to bazelisk in a directory that'll be on your `PATH` before any other
-bazels, and name the link `bazel`. Example:
-
-```sh
-$ ln -s ~/go/bin/bazelisk ~/bin/bazel
-```
 
 ## Building packages
 
@@ -64,6 +33,12 @@ To build all packages included in the ChromeOS base image:
 ```sh
 $ BOARD=amd64-generic bazel build @portage//virtual/target-os:package_set
 ```
+
+*** note
+Please make sure that `which bazel` prints a path under your [depot_tools] checkout. The wrapper script provided by depot_tools performs additional tasks besides running the real `bazel` executable.
+***
+
+[depot_tools]: https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
 
 ### Inside CrOS SDK chroot
 
