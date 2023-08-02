@@ -92,6 +92,18 @@ You can also use `cros_vm` command to stop the VM.
 $ chromite/bin/cros_vm --stop
 ```
 
+## Testing your change
+
+The `run_tests.sh` script runs currently available tests:
+
+```
+$ portage/tools/run_tests.sh
+```
+
+Optionally, you can skip running some tests by specifying some of the following
+environment variables when running `run_tests.sh`: `SKIP_CARGO_TESTS=1`,
+`SKIP_BAZEL_TESTS=1`, `SKIP_PORTAGE_TESTS=1`.
+
 ## Directory structure
 
 * `portage/` ... for building Portage packages (aka Alchemy)
@@ -209,5 +221,5 @@ skip it with `git commit --no-verify`.
 
 ```sh
 cd ~/chromiumos/src/bazel
-ln -s tools/run_tests.sh .git/hooks/pre-commit
+ln -s ../../../../../src/bazel/portage/tools/run_tests.sh .git/hooks/pre-commit
 ```
