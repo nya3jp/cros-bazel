@@ -18,9 +18,20 @@ class Py3Test(unittest.TestCase):
     def test_interpreter(self):
         self.assertIn("python3_test.runfiles", sys.executable)
 
-    def test_no_implicit_deps(self):
+    def test_no_implicit_system_deps(self):
         with self.assertRaises(ImportError):
             import pylint
+
+    @unittest.skip("https://github.com/bazelbuild/rules_python/issues/1354")
+    def test_no_implicit_directory_deps(self):
+        with self.assertRaises(ImportError):
+            import pip_test
+
+    def test_hermetic_path(self):
+        # TODO(https://github.com/bazelbuild/rules_python/issues/1354):
+        #   Remove the [1:] once this bug is solved.
+        for path in sys.path[1:]:
+            self.assertIn("/execroot/_main/", path)
 
     def test_runfiles(self):
         from python.runfiles import runfiles

@@ -70,6 +70,11 @@ build --incompatible_allow_tags_propagation
 fetch --incompatible_allow_tags_propagation
 query --incompatible_allow_tags_propagation
 
+# See github.com/bazelbuild/rules_python/issues/1059
+# Without this, packages installed to $HOME/.local/lib/python3.10/site-packages
+# can be imported from bazel's python.
+build --action_env=PYTHONNOUSERSITE=1
+
 # These are symlinked elsewhere.
 build --deleted_packages=bazel/workspace_root/...
 query --deleted_packages=bazel/workspace_root/...
