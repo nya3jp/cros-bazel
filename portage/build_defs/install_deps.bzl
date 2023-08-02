@@ -65,6 +65,11 @@ def install_deps(
     install_groups = calculate_install_groups(install_list, provided_packages = sdk.packages)
     args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
 
+    progress_message = progress_message.replace(
+        "{dep_count}",
+        str(len(install_list)),
+    )
+
     ctx.actions.run(
         inputs = depset(direct_inputs),
         outputs = [output_root, output_log_file, output_profile_file],
