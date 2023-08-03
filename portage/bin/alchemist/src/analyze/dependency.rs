@@ -329,8 +329,12 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
 
         /*
          * /build/arm64-generic/tmp/portage/sys-fs/ecryptfs-utils-108-r5/temp/environment: line 876: intltoolize: command not found
+         * ERROR: sys-fs/ecryptfs-utils-108-r5::portage-stable failed (prepare phase):
+         * Failed Running glib-gettextize !
          */
-        ("sys-fs/ecryptfs-utils", DependencyKind::BuildHost { .. }) => "dev-util/intltool",
+        ("sys-fs/ecryptfs-utils", DependencyKind::BuildHost { .. }) => {
+            "dev-util/intltool dev-libs/glib"
+        }
 
         /*
          * /bin/sh: line 15: soelim: command not found
