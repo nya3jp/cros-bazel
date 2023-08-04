@@ -151,14 +151,7 @@ sdk_install_deps(
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-embedded:coreboot-sdk",
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-embedded:hps-sdk",
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-lang:rust",
-    ] + select({
-        "@//bazel/portage/sdk:new-sdk-enabled": [],
-        "//conditions:default": [
-            "@//bazel/portage/repo_defs/prebuilts/amd64-host/app-text:docbook-xml-dtd-4_4",
-            "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-util:meson-format-array",
-            "@//bazel/portage/repo_defs/prebuilts/amd64-host/x11-base:xcb-proto",
-        ],
-    }),
+    ],
     progress_message = "Installing {dep_count} host packages into %{label}",
     visibility = ["@//bazel:internal"],
 )
