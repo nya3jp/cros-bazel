@@ -325,6 +325,23 @@ impl RepositorySet {
     pub fn primary(&self) -> &Repository {
         let name = self
             .order
+            .iter()
+            // TODO (b/293383461): The amd64-host profile lists "chromeos" and
+            // "chromeos-partner" as the last repositories. e.g.,
+            // * portage-stable
+            // * x-crossdev
+            // * toolchains
+            // * chromiumos
+            // * eclass-overlay
+            // * amd64-host
+            // * chromeos-partner
+            // * chromeos
+            // We really want to return the `amd64-host` repository as the
+            // "primary" one since that's the one that contains the profile.
+            // In order to correctly fix this, we need to figure out how to
+            // correctly identify the "primary" repo using the `board`
+            // parameter.
+            .filter(|name| !["chromeos", "chromeos-partner"].contains(&name.as_str()))
             .last()
             .expect("repository set should not be empty");
         self.get_repo_by_name(name).unwrap()
