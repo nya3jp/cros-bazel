@@ -323,7 +323,6 @@ fn extract_cros_workon_sources(
 }
 
 fn apply_local_sources_workarounds(
-    config: &ConfigBundle,
     details: &PackageDetails,
     local_sources: &mut Vec<PackageLocalSource>,
 ) -> Result<()> {
@@ -342,35 +341,15 @@ fn apply_local_sources_workarounds(
         local_sources.push(PackageLocalSource::Chrome(version));
     }
 
-    // The meson eclass calls `meson_test.py` in platform2/common-mk.
-    if details.inherited.contains("meson") {
-        // On ARM, we replace meson_test.py with a fake which does nothing because it doesn't work
-        // yet.
-        // TODO(b/272275535): Delete this hack once platform2_test.py works on ARM.
-        let arch = config.env().get("ARCH").unwrap();
-        if arch == "arm64" {
-            local_sources.push(PackageLocalSource::BazelTarget(
-                "@//bazel/portage/sdk:meson_test_disable_hack".to_string(),
-            ));
-        } else {
-            let common_mk = PackageLocalSource::Src("platform2/common-mk".into());
-            if !local_sources.contains(&common_mk) {
-                local_sources.push(common_mk)
-            }
-        }
-    }
-
     // Running install hooks requires src/scripts/hooks and chromite.
     local_sources.push(PackageLocalSource::Src("scripts/hooks".into()));
     local_sources.push(PackageLocalSource::Chromite);
 
     // The platform eclass calls `platform2_test.py`.
     // The meson eclass calls `meson_test.py` which calls `platform2_test.py`.
-    // TODO(b/272275535): Delete this once platform2_test.py works
     if details.inherited.contains("platform") || details.inherited.contains("meson") {
-        local_sources.push(PackageLocalSource::BazelTarget(
-            "@//bazel/portage/sdk:platform2_test_hack".to_string(),
-        ));
+        let common_mk = PackageLocalSource::Src("platform2/common-mk".into());
+        local_sources.push(common_mk);
     }
 
     Ok(())
@@ -575,13 +554,10 @@ pub fn analyze_sources(
 ) -> Result<PackageSources> {
     let (mut local_sources, repo_sources) = extract_cros_workon_sources(details, src_dir)?;
 
-    // We sort before applying the workarounds because we want the
-    // meson_test_disable_hack layer to be last so it overrides the common-mk
-    // layer.
+    apply_local_sources_workarounds(details, &mut local_sources)?;
+
     local_sources.sort();
     local_sources.dedup();
-
-    apply_local_sources_workarounds(config, details, &mut local_sources)?;
 
     Ok(PackageSources {
         local_sources,
