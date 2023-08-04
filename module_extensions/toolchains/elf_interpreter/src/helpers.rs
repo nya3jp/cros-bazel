@@ -23,12 +23,17 @@ pub(crate) unsafe fn slice_from_ptrs<'a, T>(start: *mut T, end: *mut T) -> &'a m
     unsafe { core::slice::from_raw_parts_mut(start, ptr_distance(start, end)) }
 }
 
-pub(crate) unsafe fn array_with_sentinel_to_slice<T: Sized + PartialEq>(
+/// This returns a slice up to, and including, the first element failing the
+/// condition.
+pub(crate) unsafe fn take_from_ptr_while<T: Sized, F>(
     start: *mut T,
-    sentinel: T,
-) -> &'static mut [T] {
+    condition: F,
+) -> &'static mut [T]
+where
+    F: Fn(&T) -> bool,
+{
     let mut end = start;
-    while unsafe { std::ptr::read(end) } != sentinel {
+    while condition(&*end) {
         end = unsafe { end.add(1) };
     }
     unsafe { slice_from_ptrs(start, end.add(1)) }
