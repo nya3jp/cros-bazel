@@ -74,3 +74,25 @@ overlay(
     layer = ":layer-full",
     visibility = ["@//bazel:internal"],
 )
+
+{%- for eclass in eclasses %}
+# Enumerates files that need to be packed for the "{{ eclass.name }}" eclass.
+pkg_files(
+    name = "{{ eclass.name }}_eclass_files",
+    srcs = ["eclass/{{ eclass.name }}.eclass"],
+    prefix = "{{ mount_path }}",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+# Packs the files of the "{{ eclass.name }}" eclass.
+pkg_tar(
+    name = "{{ eclass.name }}_eclass",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":{{ eclass.name }}_eclass_files"],
+    visibility = ["@//bazel:internal"],
+)
+
+{% endfor %}

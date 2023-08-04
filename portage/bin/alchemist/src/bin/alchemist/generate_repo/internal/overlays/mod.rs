@@ -3,9 +3,10 @@
 // found in the LICENSE file.
 
 use std::{
+    borrow::Cow,
     collections::HashSet,
     ffi::OsStr,
-    fs::{create_dir, create_dir_all, File},
+    fs::{create_dir, create_dir_all, metadata, read_dir, File},
     io::Write,
     os::unix::fs::symlink,
     path::Path,
@@ -89,6 +90,11 @@ fn generate_overlay_symlinks(original_dir: &Path, output_dir: &Path) -> Result<(
 }
 
 #[derive(Serialize)]
+struct EclassTemplateContext<'a> {
+    name: Cow<'a, str>,
+}
+
+#[derive(Serialize)]
 struct OverlaysTemplateContext {
     overlay_sets: Vec<OverlaySetTemplateContext>,
 }
@@ -103,6 +109,7 @@ struct OverlaySetTemplateContext {
 struct OverlayBuildTemplateContext<'a> {
     name: &'a str,
     mount_path: &'a Path,
+    eclasses: Vec<EclassTemplateContext<'a>>,
 }
 
 /// Helper struct to easily compute unique overlays to generate.
@@ -119,6 +126,35 @@ impl<'a> From<&'a Repository> for SimpleRepository<'a> {
             base_dir: repo.base_dir(),
         }
     }
+}
+
+/// Creates template contexts for all eclass rules for the given repository.
+fn prepare_eclass_template_contexts(repo_dir: &Path) -> Result<Vec<EclassTemplateContext>> {
+    let eclass_dir = repo_dir.join("eclass");
+    if metadata(&eclass_dir).is_err() {
+        // It's allowed for a repository to have no eclasses.
+        return Ok(vec![]);
+    }
+
+    let mut eclasses = vec![];
+    for entry in read_dir(&eclass_dir)
+        .with_context(|| format!("Failed to read dir {}", eclass_dir.display()))?
+    {
+        let path = entry?.path();
+        if path.extension() != Some(OsStr::new("eclass")) {
+            continue;
+        }
+        let eclass_name = path
+            .file_stem()
+            .with_context(|| format!("file stem empty for eclass {}", path.display()))?
+            .to_string_lossy()
+            .to_string();
+        eclasses.push(EclassTemplateContext {
+            name: Cow::from(eclass_name),
+        });
+    }
+
+    Ok(eclasses)
 }
 
 fn generate_overlays_file(repo_sets: &[&RepositorySet], output_dir: &Path) -> Result<()> {
@@ -153,9 +189,13 @@ fn generate_overlays_file(repo_sets: &[&RepositorySet], output_dir: &Path) -> Re
 }
 
 fn generate_overlay_build_file(repo: &SimpleRepository, output_file: &Path) -> Result<()> {
+    let eclasses = prepare_eclass_template_contexts(&repo.base_dir)
+        .with_context(|| format!("Failed to generate eclass build information"))?;
+
     let context = OverlayBuildTemplateContext {
         name: repo.name,
         mount_path: repo.base_dir.strip_prefix("/").unwrap_or(repo.base_dir),
+        eclasses,
     };
 
     // The chromiumos-overlay repo contains a pretty complex BUILD.bazel file.
