@@ -67,12 +67,21 @@ def _cros_chrome_repository_impl(ctx):
     # Never auto update depot_tools since we won't have network access.
     ctx.file(paths.join(depot_tools_path, ".disable_auto_update"), "")
 
-    # This command will populate the cipd cache, create a python venv, and
-    # then run all the hooks.
+    # This command will populate the cipd cache and create a python venv.
+    _exec(
+        ctx,
+        [paths.join(depot_tools_path, "ensure_bootstrap")],
+        "Downloading depot_tools dependencies",
+        PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
+        CIPD_CACHE_DIR = cipd_cache_dir,
+        VPYTHON_VIRTUALENV_ROOT = vpython_root,
+        DEPOT_TOOLS_DIR = depot_tools_path,
+    )
+
+    # Run the hooks with the depot tools pinned by chromium.
     _exec(
         ctx,
         [
-            # Run the hooks with the depot tools pinned by chromium
             paths.join(depot_tools_path, "gclient"),
             "runhooks",
             "--force",

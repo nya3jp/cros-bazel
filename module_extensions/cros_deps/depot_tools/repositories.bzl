@@ -8,8 +8,8 @@ def depot_tools_repository():
     new_git_repository(
         name = "depot_tools",
         remote = "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-        commit = "512fd3bd855fe001443ee3328d139da8c4b95d00",
-        shallow_since = "1677704801 +0000",
+        commit = "b7c550a6bc8be23add49a01abf64feb099c2a232",
+        shallow_since = "1691174216 +0000",
         patch_cmds = [
             "touch .disable_auto_update",
             # We need gclient to fetch the chromium sources
@@ -24,9 +24,8 @@ exec "${ROOT}/gclient" "$@"
 EOF
             ''',
             "chmod +x gclient.wrapper.sh",
-            # Running gclient will force the cipd binaries and python venv to be
-            # downloaded.
-            "./gclient.wrapper.sh help",
+            # Force the cipd binaries and python venv to be downloaded.
+            "DEPOT_TOOLS_DIR=$PWD ./ensure_bootstrap",
         ],
         build_file = "@//bazel/module_extensions/cros_deps:depot_tools/BUILD.depot_tools-template",
     )
