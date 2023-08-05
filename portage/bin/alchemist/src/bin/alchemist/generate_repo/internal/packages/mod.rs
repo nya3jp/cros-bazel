@@ -56,6 +56,7 @@ pub struct EBuildEntry {
     sources: Vec<String>,
     git_trees: Vec<String>,
     dists: Vec<DistFileEntry>,
+    eclasses: Vec<String>,
     provided_host_build_deps: Vec<String>,
     host_build_deps: Vec<String>,
     host_install_deps: Vec<String>,
@@ -219,6 +220,23 @@ impl EBuildEntry {
             .map(DistFileEntry::try_new)
             .collect::<Result<_>>()?;
 
+        let eclasses = package
+            .details
+            .inherit_paths
+            .iter()
+            .map(|path| {
+                let eclass = path.file_stem().unwrap().to_string_lossy();
+
+                let repo_set = match &target {
+                    PackageType::Host(host) => host.repo_set,
+                    PackageType::CrossRoot { target, .. } => target.repo_set,
+                };
+                let repo = repo_set.get_repo_by_path(path).unwrap().name();
+
+                format!("//internal/overlays/{}:{}_eclass", repo, eclass)
+            })
+            .collect();
+
         let (host_build_deps, provided_host_build_deps) = match &target {
             // When building host packages we need to ensure DEPEND packages
             // are present on the host.
@@ -346,6 +364,7 @@ impl EBuildEntry {
             sources,
             git_trees,
             dists,
+            eclasses,
             host_build_deps,
             provided_host_build_deps,
             host_install_deps,

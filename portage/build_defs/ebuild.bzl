@@ -8,6 +8,7 @@ load("//bazel/portage/build_defs:install_groups.bzl", "calculate_install_groups"
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
+load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 
 # The stage1 SDK will need to be built with ebuild_primordial.
 # After that, they can use the ebuild rule.
@@ -34,6 +35,12 @@ _EBUILD_COMMON_ATTRS = dict(
         providers = [OverlayInfo],
         doc = """
         The overlay this package belongs to.
+        """,
+    ),
+    eclasses = attr.label_list(
+        providers = [PackageArtifactInfo],
+        doc = """
+        The eclasses this package inherits from (including transitive ones).
         """,
     ),
     category = attr.string(
@@ -179,10 +186,12 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
         args.add("--distfile=%s=%s" % (distfile_name, compute_input_file_path(file, use_runfiles)))
         direct_inputs.append(file)
 
-    # --layer for SDK and overlays
+    # --layer for SDK, overlays and eclasses
     sdk = ctx.attr.sdk[SDKInfo]
     overlays = ctx.attr.overlays[OverlaySetInfo]
     layer_inputs = sdk.layers + overlays.layers
+    for eclass in ctx.attr.eclasses:
+        layer_inputs.extend(eclass.files.to_list())
     args.add_all(layer_inputs, map_each = format_layer_arg, expand_directories = False, allow_closure = True)
     direct_inputs.extend(layer_inputs)
 

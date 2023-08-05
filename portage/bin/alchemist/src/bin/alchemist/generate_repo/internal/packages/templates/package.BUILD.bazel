@@ -142,6 +142,11 @@ ebuild(
     {%- endif %}
     sdk = ":{{ ebuild.version }}_deps",
     overlays = "{{ target_overlay_set }}",
+    eclasses = [
+        {%- for eclass in ebuild.eclasses %}
+        "{{ eclass }}",
+        {%- endfor %}
+    ],
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
