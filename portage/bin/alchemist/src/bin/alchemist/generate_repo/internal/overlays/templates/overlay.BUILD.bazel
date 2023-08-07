@@ -19,7 +19,6 @@ ANALYSIS_FILE_PATTERN=[
 pkg_files(
     name = "files",
     srcs = ["metadata/layout.conf"] + glob([
-        "eclass/*.eclass",
         "licenses/**",
         "profiles/**",
         "make.conf",

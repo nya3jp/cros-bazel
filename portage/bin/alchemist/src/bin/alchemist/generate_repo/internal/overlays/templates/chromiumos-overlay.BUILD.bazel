@@ -22,7 +22,6 @@ pkg_files(
         "metadata/layout.conf",
     ] + glob([
         "chromeos/**",
-        "eclass/*.eclass",
         "licenses/**",
         "profiles/**",
         # HACK: Include CrOS-specific bashrc files that override profile vars
