@@ -1,0 +1,12 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
+
+package(default_visibility = ["//bazel/portage/bin/extract_interface:__pkg__"])
+
+binary_package(
+    name = "nano",
+    src = ":nano.tbz2",
+)
