@@ -235,6 +235,25 @@ impl Repository {
     }
 }
 
+/// Looks up a repository that contains the specified file path.
+fn get_repo_by_path<'a, I>(path: &Path, repos: I) -> Result<&'a Repository>
+where
+    I: IntoIterator<Item = &'a Repository>,
+{
+    if !path.is_absolute() {
+        bail!(
+            "BUG: absolute path required to lookup repositories: {}",
+            path.display()
+        );
+    }
+    for repo in repos {
+        if path.starts_with(repo.base_dir()) {
+            return Ok(repo);
+        }
+    }
+    bail!("repository not found under {}", path.display());
+}
+
 /// Holds a set of at least one [`Repository`].
 #[derive(Clone, Debug)]
 pub struct RepositorySet {
@@ -317,6 +336,13 @@ impl RepositorySet {
         }
 
         repo_list
+    }
+
+    /// Looks up a repository that contains the specified file path.
+    /// It can be used, for example, to look up a repository that contains an
+    /// ebuild file.
+    pub fn get_repo_by_path(&self, path: &Path) -> Result<&Repository> {
+        get_repo_by_path(path, self.repos.values())
     }
 
     /// Returns the primary/leaf repository.
@@ -746,19 +772,8 @@ impl UnorderedRepositorySet {
     /// Looks up a repository that contains the specified file path.
     /// It can be used, for example, to look up a repository that contains an
     /// ebuild file.
-    pub fn get_repo_by_path(&self, ebuild_path: &Path) -> Result<&Repository> {
-        if !ebuild_path.is_absolute() {
-            bail!(
-                "BUG: absolute path required to lookup repositories: {}",
-                ebuild_path.display()
-            );
-        }
-        for repo in &self.repos {
-            if ebuild_path.starts_with(repo.base_dir()) {
-                return Ok(repo);
-            }
-        }
-        bail!("repository not found under {}", ebuild_path.display());
+    pub fn get_repo_by_path(&self, path: &Path) -> Result<&Repository> {
+        get_repo_by_path(path, self.repos.iter())
     }
 }
 
