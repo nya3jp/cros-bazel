@@ -55,6 +55,10 @@ pub struct Args {
     #[arg(long, value_name = "PROFILE", default_value = "sdk/bootstrap")]
     host_profile: String,
 
+    // For use in Alchemist's unit tests.
+    #[arg(long, default_value_t = false, hide = true)]
+    skip_unshare_for_testing: bool,
+
     /// Path to the ChromiumOS source directory root.
     /// If unset, it is inferred from the current directory.
     #[arg(short = 's', long, value_name = "DIR")]
@@ -268,7 +272,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         } else {
             vec![&host_target]
         };
-        enter_fake_chroot(&targets, &source_dir)?
+        enter_fake_chroot(&targets, &source_dir, args.skip_unshare_for_testing)?
     };
 
     let tools_dir = setup_tools()?;
@@ -361,4 +365,54 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs::remove_file;
+
+    use super::*;
+    use tempfile::tempdir;
+    use testutil::compare_with_golden_data;
+
+    #[used]
+    #[link_section = ".init_array"]
+    static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
+
+    const TESTDATA_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/src/bin/alchemist/testdata");
+
+    #[test]
+    fn main_test() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let temp = temp_dir.path();
+        let output_dir = temp.join("portage-repo");
+        let deps_file = temp.join("output_repos.json");
+
+        let testdata_dir = Path::new(TESTDATA_DIR);
+        let input_dir = testdata_dir.join("input").to_str().unwrap().to_owned();
+
+        let args = Args {
+            board: Some("amd64-generic".into()),
+            host: false,
+            profile: "base".into(),
+            host_board: "amd64-host".into(),
+            host_profile: "sdk/bootstrap".into(),
+            source_dir: Some(input_dir),
+            skip_unshare_for_testing: true,
+            command: Commands::GenerateRepo {
+                output_dir: output_dir.clone(),
+                output_repos_json: deps_file,
+            },
+        };
+
+        alchemist_main(args)?;
+
+        // trace.json changes every time we run.
+        remove_file(output_dir.join("trace.json"))?;
+
+        let golden_dir = testdata_dir.join("golden");
+        compare_with_golden_data(&output_dir, &golden_dir)?;
+
+        Ok(())
+    }
 }

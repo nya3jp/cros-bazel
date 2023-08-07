@@ -1,0 +1,38 @@
+# Copyright 2013 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Settings that are common to all target boards.  Do not place any board
+# specific settings in here, or settings for the sdk.
+#
+# See "man make.conf" for the available options.
+
+# Pull in definition of at least { ROOT, CHOST, [BOARD_OVERLAY] }
+source make.conf.board_setup
+
+# TODO: This will have to come from somewhere else when we support a 32-bit
+# build host environment.
+CBUILD=x86_64-pc-linux-gnu
+
+# We need a dummy setting here as make.conf files expect to expand ${USE}.
+# When we don't have this, they get the USE from the profile, and that has
+# a very different meaning when expanded at the make.conf level as it will
+# override all profile settings.
+USE=""
+
+PORTDIR_OVERLAY="
+  /mnt/host/source/src/third_party/chromiumos-overlay
+  ${BOARD_OVERLAY}
+"
+
+# Our chromium mirror should be more stable since we won't discard packages.
+GENTOO_MIRRORS="https://commondatastorage.googleapis.com/chromeos-localmirror"
+GENTOO_MIRRORS="$GENTOO_MIRRORS https://commondatastorage.googleapis.com/chromeos-mirror/gentoo"
+
+source /mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.common
+
+# Allow a board to override or define additional settings.
+source make.conf.board
+
+# Allow the user to override or define additional settings.
+source make.conf.user

@@ -1,0 +1,57 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
+alias(
+    name = "4.14",
+    actual = "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "4.14_debug",
+    actual = "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "4.14_package_set",
+    actual = "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "4.14_install",
+    actual = "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "linux-headers",
+    actual = ":4.14",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "debug",
+    actual = ":4.14_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "package_set",
+    actual = ":4.14_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "install",
+    actual = ":4.14_install",
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "4.14_test",
+    tests = [ "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "test",
+    tests = [ ":4.14_test" ],
+    visibility = ["@//bazel:internal"],
+)

@@ -1,0 +1,4 @@
+# The directory contains input and golden data for diff testing.
+# The files are based on ChromiumOS sources.
+golden/*
+input/*

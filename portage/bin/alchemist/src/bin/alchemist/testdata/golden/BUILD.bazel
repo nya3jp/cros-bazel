@@ -1,0 +1,31 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+
+package_group(
+    name = "all_packages",
+    packages = [
+        "//...",
+    ],
+)
+
+string_flag(
+    name = "binpkg-cache-strategy",
+    build_setting_default = "naive",
+)
+
+config_setting(
+    name = "binpkg-cache-none",
+    flag_values = {
+        ":binpkg-cache-strategy": "none",
+    },
+)
+
+config_setting(
+    name = "binpkg-cache-naive",
+    flag_values = {
+        ":binpkg-cache-strategy": "naive",
+    },
+)
