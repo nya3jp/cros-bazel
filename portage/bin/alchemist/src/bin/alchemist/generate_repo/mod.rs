@@ -14,10 +14,7 @@ use std::{
     io::{ErrorKind, Write},
     path::{Path, PathBuf},
     str::FromStr,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
+    sync::Arc,
 };
 
 use alchemist::{
@@ -63,21 +60,13 @@ fn evaluate_all_packages(
     loader: &CachedPackageLoader,
 ) -> Result<(Vec<Arc<PackageDetails>>, Vec<Arc<PackageError>>)> {
     let ebuild_paths = repos.find_all_ebuilds()?;
-    let ebuild_count = ebuild_paths.len();
-
-    let counter = Arc::new(AtomicUsize::new(0));
 
     // Evaluate packages in parallel.
     let results = ebuild_paths
         .into_par_iter()
-        .map(|ebuild_path| {
-            let result = loader.load_package(&ebuild_path);
-            let count = 1 + counter.fetch_add(1, Ordering::SeqCst);
-            eprint!("Loading ebuilds... {}/{}\r", count, ebuild_count);
-            result
-        })
+        .map(|ebuild_path| loader.load_package(&ebuild_path))
         .collect::<Result<Vec<_>>>()?;
-    eprintln!();
+    eprintln!("Loaded {} ebuilds", results.len());
 
     Ok(results.into_iter().partition_map(|eval| match eval {
         Ok(details) => Either::Left(details),
