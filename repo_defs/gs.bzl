@@ -52,7 +52,7 @@ gs_file = repository_rule(
         "_gsutil": attr.label(
             executable = True,
             cfg = "exec",
-            default = Label("@chromite//:scripts/gsutil"),
+            default = Label("@chromite//:bin/gsutil"),
         ),
     },
 )
