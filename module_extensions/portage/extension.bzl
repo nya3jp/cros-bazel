@@ -2,15 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("//bazel/module_extensions/portage:alchemist.bzl", "alchemist")
 load("//bazel/module_extensions/portage:portage.bzl", _portage = "portage")
 load("//bazel/module_extensions/portage:portage_digest.bzl", "portage_digest")
-load("//bazel/module_extensions/private:hub_repo.bzl", "hub_repo")
-load("//bazel/portage/repo_defs/chrome:cros_chrome_repository.bzl", "cros_chrome_repository")
-load("//bazel/repo_defs:cipd.bzl", "cipd_file")
-load("//bazel/repo_defs:gs.bzl", "gs_file")
-load("//bazel/repo_defs:repo_repository.bzl", "repo_repository")
+load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
+load("//bazel/portage/repo_defs/chrome:cros_chrome_repository.bzl", _cros_chrome_repository = "cros_chrome_repository")
+load("//bazel/repo_defs:repo_repository.bzl", _repo_repository = "repo_repository")
 
 """Module extensions to generate the @portage repo.
 
@@ -42,34 +39,37 @@ def _portage_deps_impl(module_ctx):
     deps_path = module_ctx.path(Label("@portage//:deps.json"))
 
     deps = json.decode(module_ctx.read(deps_path))
+    hub = hub_init()
+    cros_chrome_repository = hub.wrap_rule(
+        _cros_chrome_repository,
+        default_targets = {
+            "src": "//:src",
+            "src_internal": "//:src_internal",
+        },
+    )
+    repo_repository = hub.wrap_rule(
+        _repo_repository,
+        default_targets = {"src": "//:src"},
+    )
 
-    aliases = {}
     for repo in deps:
         for rule, kwargs in repo.items():
             name = kwargs["name"]
             if rule == "HttpFile":
-                http_file(**kwargs)
-                aliases[name] = "@%s//file" % name
+                hub.http_file.alias(**kwargs)
             elif rule == "GsFile":
-                gs_file(**kwargs)
-                aliases[name] = "@%s//file" % name
+                hub.gs_file.alias(**kwargs)
             elif rule == "RepoRepository":
-                repo_repository(**kwargs)
-                aliases["%s_src" % name] = "@%s//:src" % name
+                repo_repository.alias(**kwargs)
             elif rule == "CipdFile":
-                cipd_file(**kwargs)
-                aliases[name] = "@%s//file" % name
+                hub.cipd_file.alias(**kwargs)
             elif rule == "CrosChromeRepository":
-                cros_chrome_repository(**kwargs)
-                aliases["%s_src" % name] = "@%s//:src" % name
-                aliases["%s_src_internal" % name] = "@%s//:src_internal" % name
+                cros_chrome_repository.alias(**kwargs)
             else:
                 fail("Unknown rule %s" % rule)
 
-    hub_repo(
+    hub.generate_hub_repo(
         name = "portage_deps",
-        aliases = aliases,
-        symlinks = {},
         visibility = ["@portage//:all_packages"],
     )
 

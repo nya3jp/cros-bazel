@@ -2,26 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_file_symlink = "http_file")
-load("//bazel/module_extensions/private:hub_repo.bzl", "hub_repo")
+load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
 load("//bazel/portage/repo_defs/prebuilts:repositories.bzl", "prebuilts_dependencies")
 load("//bazel/portage/sdk:repositories.bzl", "cros_sdk_repositories")
 
 def _files_impl(module_ctx):
-    aliases = {}
-    symlinks = {}
+    hub = hub_init()
 
-    # Collect all these files into a single repo so we don't have to declare
-    # every repo in MODULE.bazel.
-    def http_file_symlink(name, **kwargs):
-        symlinks[name] = "@{}//file".format(name)
-        _http_file_symlink(name = name, **kwargs)
-
-    def http_file_alias(name, **kwargs):
-        aliases[name] = "@{}//file".format(name)
-        _http_file_symlink(name = name, **kwargs)
-
-    http_file_symlink(
+    hub.http_file.symlink(
         name = "dumb_init",
         executable = True,
         sha256 = "e874b55f3279ca41415d290c512a7ba9d08f98041b28ae7c2acb19a545f1c4df",
@@ -30,7 +18,7 @@ def _files_impl(module_ctx):
 
     # Statically-linked bash.
     # It is used by alchemist to evaluate ebuilds, and in some unit tests.
-    http_file_symlink(
+    hub.http_file.symlink(
         name = "bash-static",
         downloaded_file_path = "bash",
         executable = True,
@@ -38,10 +26,10 @@ def _files_impl(module_ctx):
         urls = ["https://github.com/robxu9/bash-static/releases/download/5.2.015-1.2.3-2/bash-linux-x86_64"],
     )
 
-    prebuilts_dependencies(http_file = http_file_alias)
-    cros_sdk_repositories(http_file = http_file_alias)
+    prebuilts_dependencies(http_file = hub.http_file.alias)
+    cros_sdk_repositories(http_file = hub.http_file.alias)
 
-    hub_repo(name = "files", aliases = aliases, symlinks = symlinks)
+    hub.generate_hub_repo(name = "files")
 
 files = module_extension(
     implementation = _files_impl,
