@@ -247,3 +247,25 @@ pub fn generate_public_packages(
             generate_public_package(maybe_packages, resolver, &package_output_dir)
         })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // TODO: test more than just the syntax and remove this test
+    #[test]
+    fn template_syntax_valid() -> Result<()> {
+        let context = BuildTemplateContext {
+            aliases: Vec::new(),
+            test_suites: Vec::new(),
+            ebuild_failures: Vec::new(),
+        };
+
+        let _ = TEMPLATES.render(
+            "package.BUILD.bazel",
+            &tera::Context::from_serialize(context)?,
+        );
+
+        Ok(())
+    }
+}

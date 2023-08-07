@@ -526,3 +526,27 @@ pub fn generate_internal_packages(
             generate_package(target, translator, &packages_in_dir, &output_package_dir)
         })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // TODO: test more than just the syntax and remove this test
+    #[test]
+    fn template_syntax_valid() -> Result<()> {
+        let context = BuildTemplateContext {
+            target_board: None,
+            host_overlay_set: None,
+            target_overlay_set: "target_overlay_set_for_testing".to_string(),
+            ebuilds: Vec::new(),
+            failures: Vec::new(),
+        };
+
+        let _ = TEMPLATES.render(
+            "package.BUILD.bazel",
+            &tera::Context::from_serialize(context)?,
+        );
+
+        Ok(())
+    }
+}
