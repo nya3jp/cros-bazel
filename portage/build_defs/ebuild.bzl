@@ -462,6 +462,7 @@ def _ebuild_install_impl(ctx):
     # Add script to install binary packages.
     install_groups = calculate_install_groups(
         [package[BinaryPackageInfo] for package in ctx.attr.packages],
+        provided_packages = depset(),
     )
     for install_group in install_groups:
         atoms = [
