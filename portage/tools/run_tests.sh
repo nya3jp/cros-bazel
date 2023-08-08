@@ -11,6 +11,9 @@ echo "Running precommits" >&2
 
 export BOARD="${BOARD:-amd64-generic}"
 
+# cd to the WORKSPACE_ROOT (src/)
+cd "$(dirname "${BASH_SOURCE[0]}")/../../.."
+
 TARGETS=(
   //bazel/...
   -//bazel/images/...
@@ -26,7 +29,8 @@ set -x
 
 if [[ -z "${SKIP_CARGO_TESTS:=}" ]]; then
   # We can run cargo in parallel with bazel.
-  cargo test --package alchemist -- --nocapture &
+  (cd bazel/portage/bin/alchemist && \
+    cargo test --package alchemist -- --nocapture) &
 fi
 
 if [[ -z "${SKIP_BAZEL_TESTS:=}" ]]; then

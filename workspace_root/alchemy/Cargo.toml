@@ -3,7 +3,6 @@
 [workspace]
 # List all local crates required by repo rules here.
 members = [
-    "bazel/portage/bin/alchemist",
     "bazel/portage/bin/action_wrapper",
     "bazel/portage/bin/build_image",
     "bazel/portage/bin/build_package",
