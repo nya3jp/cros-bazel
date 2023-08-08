@@ -11,3 +11,10 @@ binary_package(
     src = "@files//:amd64_host_meson_format_array_0",
     visibility = ["//bazel:internal"],
 )
+
+# dev-libs/json-glib and many other packages need this.
+binary_package(
+    name = "glib-utils",
+    src = "@files//:amd64_host_2023_08_03_170038_dev_util_glib_utils_2_74_1",
+    visibility = ["//bazel:internal"],
+)

@@ -151,7 +151,12 @@ sdk_install_deps(
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-embedded:coreboot-sdk",
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-embedded:hps-sdk",
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-lang:rust",
-    ],
+    ] + select({
+        "@//bazel/portage/sdk:new-sdk-enabled": [
+            "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-util:glib-utils",
+        ],
+        "//conditions:default": [],
+    }),
     progress_message = "Installing {dep_count} host packages into %{label}",
     visibility = ["@//bazel:internal"],
 )

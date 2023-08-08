@@ -52,6 +52,7 @@ PACKAGES=(
 	dev-lang/rust
 	dev-embedded/coreboot-sdk
 	dev-embedded/hps-sdk
+        dev-util/glib-utils
 )
 
 for PACKAGE in "${PACKAGES[@]}"; do
