@@ -8,16 +8,13 @@ use std::{
 };
 
 use anyhow::{ensure, Context, Result};
-use once_cell::sync::OnceCell;
-use runfiles::Runfiles;
 
 /// The name of the environment variable controlling whether to regenerate
 /// golden data.
 const REGENERATE_VAR_NAME: &str = "ALCHEMY_REGENERATE_GOLDEN";
 
 fn is_running_under_bazel() -> bool {
-    static CACHE: OnceCell<bool> = OnceCell::new();
-    *CACHE.get_or_init(|| Runfiles::create().is_ok())
+    std::option_env!("CARGO_MAKEFLAGS").is_none()
 }
 
 fn compute_real_golden_path(golden: &Path, regenerate: bool) -> Result<PathBuf> {
