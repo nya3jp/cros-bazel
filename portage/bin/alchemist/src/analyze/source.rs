@@ -347,7 +347,11 @@ fn apply_local_sources_workarounds(
 
     // The platform eclass calls `platform2_test.py`.
     // The meson eclass calls `meson_test.py` which calls `platform2_test.py`.
-    if details.inherited.contains("platform") || details.inherited.contains("meson") {
+    if details.inherited.contains("platform")
+        || details.inherited.contains("meson")
+        // TODO(b/295064725): Migrate chromeos-fonts to cros-workon
+        || details.package_name == "chromeos-base/chromeos-fonts"
+    {
         let common_mk = PackageLocalSource::Src("platform2/common-mk".into());
         local_sources.push(common_mk);
     }
