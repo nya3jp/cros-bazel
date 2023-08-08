@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//cargo:defs.bzl", "cargo_bootstrap_repository")
-load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_SRCS")
+load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_REPO_RULE_SRCS")
 
 _BUILD_MODE = "release"
 _TOOL_TEMPLATE = "@rust_host_tools//:bin/{tool}"
@@ -11,7 +11,7 @@ _TOOL_TEMPLATE = "@rust_host_tools//:bin/{tool}"
 def alchemist(name):
     cargo_bootstrap_repository(
         name = name,
-        srcs = ALCHEMIST_SRCS,
+        srcs = ALCHEMIST_REPO_RULE_SRCS,
         binary = "alchemist",
         build_mode = _BUILD_MODE,
         cargo_lockfile = "//:Cargo.lock",

@@ -5,6 +5,15 @@
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
+filegroup(
+    name = "srcs",
+    srcs = glob(
+        ["**"],
+        exclude = ["BUILD.bazel"],
+    ),
+    visibility = ["//bazel/portage/bin/alchemist:__pkg__"],
+)
+
 rust_library(
     name = "cliutil",
     srcs = glob(["src/*.rs"]),

@@ -45,7 +45,8 @@ edition = "2021"
 default-run = "alchemist"
 
 [dependencies]
-# When you add local dependencies here, remember to update regen-srcs.sh.
+# When you add local dependencies here, remember to update shared_crates.bzl and
+# rerun regen-srcs.sh.
 cliutil = { path = "../../common/cliutil" }
 version = { path = "../../common/portage/version" }
 

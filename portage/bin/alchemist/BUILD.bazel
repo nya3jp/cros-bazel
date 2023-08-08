@@ -2,7 +2,62 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/bash:defs.bzl", "custom_args_binary", "custom_args_test", "sh_runfiles_binary")
+load(":src.bzl", "ALCHEMIST_BAZEL_SRCS")
+
 exports_files(
     ["Cargo.toml"],
     visibility = ["//bazel/rust:__pkg__"],
+)
+
+# Even with --deleted_packages, glob(["src/**"]) won't pick up on any packages
+# with build files. However, --deleted_packages does allow you to explicitly
+# write ":foo/BUILD.bazel".
+filegroup(
+    name = "srcs",
+    srcs = ALCHEMIST_BAZEL_SRCS,
+)
+
+sh_runfiles_binary(
+    name = "cargo",
+    src = "cargo.sh",
+    data = [
+        ":srcs",
+        "@rust_host_tools//:cargo",
+        "@rust_host_tools//:rustc",
+        "@rust_host_tools//:rustdoc",
+    ],
+)
+
+custom_args_binary(
+    name = "build",
+    binary = ":cargo",
+    binary_args = [
+        "build",
+        "--package",
+        "alchemist",
+    ],
+)
+
+# Note that running "bazel build :alchemist" won't build alchemist.
+# To do that, run "bazel build :build"
+custom_args_binary(
+    name = "alchemist",
+    binary = ":cargo",
+    binary_args = [
+        "run",
+        "--package",
+        "alchemist",
+    ],
+)
+
+custom_args_test(
+    name = "alchemist_test",
+    size = "small",
+    binary = ":cargo",
+    binary_args = [
+        "test",
+        "--package",
+        "alchemist",
+    ],
 )
