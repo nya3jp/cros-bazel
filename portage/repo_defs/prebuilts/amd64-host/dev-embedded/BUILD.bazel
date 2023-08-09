@@ -8,7 +8,7 @@ load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 binary_package(
     name = "hps-sdk",
     src = select({
-        "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_dev_embedded_hps_sdk_0_0_1_r7",
+        "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_dev_embedded_hps_sdk_0_0_1_r7",
         "//conditions:default": "@files//:amd64_host_2023_04_05_144808_dev_embedded_hps_sdk_0_0_1_r5",
     }),
     visibility = ["//bazel:internal"],
@@ -18,7 +18,7 @@ binary_package(
 binary_package(
     name = "coreboot-sdk",
     src = select({
-        "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_dev_embedded_coreboot_sdk_0_0_1_r120",
+        "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_dev_embedded_coreboot_sdk_0_0_1_r120",
         "//conditions:default": "@files//:amd64_host_2023_04_05_144808_dev_embedded_coreboot_sdk_0_0_1_r119",
     }),
     visibility = ["//bazel:internal"],

@@ -8,7 +8,7 @@ binary_package(
     name = "binutils",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_binutils_2_39_r3",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_binutils_2_39_r3",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_binutils_2_36_1_r10",
         }),
     visibility = ["//bazel:internal"],
@@ -18,7 +18,7 @@ binary_package(
     name = "compiler-rt",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_compiler_rt_17_0_pre496208_r4",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_compiler_rt_17_0_pre496208_r4",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_compiler_rt_16_0_pre475826_r6",
         }),
     visibility = ["//bazel:internal"],
@@ -28,7 +28,7 @@ binary_package(
     name = "gcc",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_gcc_10_2_0_r34",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_gcc_10_2_0_r34",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_gcc_10_2_0_r30",
         }),
     visibility = ["//bazel:internal"],
@@ -38,7 +38,7 @@ binary_package(
     name = "gdb",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_gdb_9_2_20200923_r10",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_gdb_9_2_20200923_r10",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_gdb_11_2_r3",
         }),
     visibility = ["//bazel:internal"],
@@ -48,7 +48,7 @@ binary_package(
     name = "glibc",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_glibc_2_35_r22",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_glibc_2_35_r22",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_glibc_2_35_r17",
         }),
     visibility = ["//bazel:internal"],
@@ -58,7 +58,7 @@ binary_package(
     name = "go",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_go_1_20_5_r1",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_go_1_20_5_r1",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_go_1_20_2_r2",
         }),
     visibility = ["//bazel:internal"],
@@ -68,7 +68,7 @@ binary_package(
     name = "libcxx",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_libcxx_9999",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_libcxx_17_0_pre496208_r13",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_libcxx_16_0_pre475826_r5",
         }),
     visibility = ["//bazel:internal"],
@@ -78,7 +78,7 @@ binary_package(
     name = "libxcrypt",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_libxcrypt_4_4_28_r2",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_libxcrypt_4_4_28_r2",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_libxcrypt_4_4_28_r2",
         }),
     visibility = ["//bazel:internal"],
@@ -88,7 +88,7 @@ binary_package(
     name = "linux-headers",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_linux_headers_4_14_r2",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_linux_headers_4_14_r2",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_linux_headers_4_14_r61",
         }),
     visibility = ["//bazel:internal"],
@@ -98,7 +98,7 @@ binary_package(
     name = "llvm-libunwind",
     src =
         select({
-            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_03_170038_cross_aarch64_cros_linux_gnu_llvm_libunwind_17_0_pre496208_r7",
+            "//bazel/portage/sdk:new-sdk-enabled": "@files//:amd64_host_2023_08_08_170046_cross_aarch64_cros_linux_gnu_llvm_libunwind_17_0_pre496208_r7",
             "//conditions:default": "@files//:amd64_host_2023_04_05_144808_cross_aarch64_cros_linux_gnu_llvm_libunwind_16_0_pre475826_r5",
         }),
     visibility = ["//bazel:internal"],

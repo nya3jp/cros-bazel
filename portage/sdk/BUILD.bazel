@@ -34,7 +34,7 @@ config_setting(
 sdk_from_archive(
     name = "sdk_from_archive",
     src = select({
-        ":new-sdk-enabled": "@files//:cros-sdk-2023.08.03.170038",
+        ":new-sdk-enabled": "@files//:cros-sdk-2023.08.08.170046",
         "//conditions:default": "@files//:cros-sdk-2023.04.05.144808",
     }),
     progress_message = "Extracting bootstrap SDK tarball",
