@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_files(
@@ -40,6 +40,17 @@ pkg_files(
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
+{%- if dirs %}
+
+pkg_mkdirs(
+    name = "__dirs__",
+    dirs = [
+        {%- for dir in dirs %}
+        "{{ dir }}",
+        {%- endfor %}
+    ],
+)
+{%- endif %}
 {%- for symlink in symlinks %}
 
 pkg_mklink(
@@ -54,6 +65,9 @@ pkg_filegroup(
     name = "__files__",
     srcs = [
         ":__files_regular__",
+        {%- if dirs %}
+        ":__dirs__",
+        {%- endif %}
         {%- for symlink in symlinks %}
         ":{{ symlink.name }}",
         {%- endfor %}

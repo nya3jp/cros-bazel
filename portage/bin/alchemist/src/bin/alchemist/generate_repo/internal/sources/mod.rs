@@ -178,6 +178,9 @@ struct SourcePackage {
     /// Absolute path to the output directory.
     output_dir: PathBuf,
 
+    // Directory paths relative from the source package directory.
+    dirs: Vec<PathBuf>,
+
     /// File paths, relative from the source package directory, of symbolic
     /// links under the source package.
     symlinks: Vec<PathBuf>,
@@ -218,11 +221,13 @@ impl SourcePackage {
             .collect();
 
         // Find files to handle specially.
+        let mut dirs = Vec::new();
         let mut symlinks = Vec::new();
         let mut renames = Vec::new();
         let mut excludes = Vec::new();
         let mut walk = WalkDir::new(&source_dir)
             .sort_by_file_name()
+            .min_depth(1)
             .into_iter()
             .filter_entry(|entry| !child_paths.contains(entry.path()));
         // We cannot use "for ... in" here because WalkDir::skip_current_dir
@@ -247,6 +252,12 @@ impl SourcePackage {
                 continue;
             }
 
+            // Record directories.
+            if entry.file_type().is_dir() {
+                dirs.push(rel_path);
+                continue;
+            }
+
             // Record symlinks.
             if entry.file_type().is_symlink() {
                 symlinks.push(rel_path.clone());
@@ -258,7 +269,7 @@ impl SourcePackage {
             // We can ignore directories since they're not matched by glob().
             // This means that empty directories are not reproduced, but Git
             // doesn't support them anyway.
-            if file_path_needs_renaming(&rel_path) && !entry.file_type().is_dir() {
+            if file_path_needs_renaming(&rel_path) {
                 renames.push(Rename {
                     source_path: rel_path.clone(),
                     output_path: PathBuf::from(format!("__rename__{}", renames.len())),
@@ -272,6 +283,7 @@ impl SourcePackage {
             layout,
             source_dir,
             output_dir,
+            dirs,
             symlinks,
             renames,
             excludes,
@@ -296,6 +308,7 @@ struct RenameEntry {
 struct BuildTemplateContext {
     prefix: String,
     children: Vec<String>,
+    dirs: Vec<String>,
     symlinks: Vec<SymlinkEntry>,
     renames: Vec<RenameEntry>,
     excludes: Vec<String>,
@@ -311,6 +324,11 @@ fn generate_build_file(package: &SourcePackage) -> Result<()> {
             .child_prefixes
             .iter()
             .map(|prefix| prefix.to_string_lossy().into_owned())
+            .collect(),
+        dirs: package
+            .dirs
+            .iter()
+            .map(|path| path.to_string_lossy().into_owned())
             .collect(),
         symlinks: package
             .symlinks
@@ -629,6 +647,42 @@ mod tests {
             let inner_output_dir = output_dir.join("internal/sources");
             compare_with_golden_data(&inner_output_dir, &case_golden_dir)?;
         }
+        Ok(())
+    }
+
+    /// Tests [`generate_internal_sources`] with empty directories.
+    ///
+    /// This test case is separated from [`test_generate_internal_sources_with_golden_data`] because
+    /// Git cannot track empty directories.
+    ///
+    /// The golden output for BUILD.bazel is found at `testdata/empty_dirs.golden.BUILD.bazel`.
+    ///
+    /// You can regenerate golden directories by running the following command:
+    ///
+    /// `ALCHEMY_REGENERATE_GOLDEN=1 cargo test`
+    #[test]
+    fn test_generate_internal_sources_with_empty_dirs() -> Result<()> {
+        let source_dir = tempdir()?;
+        let source_dir = source_dir.path();
+
+        create_dir_all(source_dir.join("empty_dir"))?;
+        create_dir_all(source_dir.join("empty   dir"))?;
+        create_dir_all(source_dir.join("nested/empty_dir"))?;
+        create_dir_all(source_dir.join("nested/empty   dir"))?;
+
+        let output_dir = tempdir()?;
+        let output_dir = output_dir.path();
+
+        generate_internal_sources(
+            &[PackageLocalSource::Src(PathBuf::from(""))],
+            source_dir,
+            output_dir,
+        )?;
+
+        let output_path = output_dir.join("internal/sources/BUILD.bazel");
+        let golden_path = Path::new(TESTDATA_DIR).join("empty_dirs.golden.BUILD.bazel");
+        compare_with_golden_data(&output_path, &golden_path)?;
+
         Ok(())
     }
 }
