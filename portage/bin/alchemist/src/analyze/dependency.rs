@@ -367,6 +367,13 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         ("media-libs/minigbm", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
         ("media-libs/cros-camera-hal-usb", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
 
+        /*
+         * /bin/sh: line 1: git: command not found
+         *
+         * We should fix the package upstream so it doesn't depend on git.
+         */
+        ("sys-apps/proot", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
+
         /* Our setuptools is way too old. b/293899573 */
         ("dev-python/jinja", DependencyKind::BuildHost { .. }) => "dev-python/markupsafe",
 
