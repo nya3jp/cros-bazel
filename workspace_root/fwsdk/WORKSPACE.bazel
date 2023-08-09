@@ -1,0 +1,21 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+workspace(name = "cros_firmware")
+
+load("//platform/rules_cros_firmware/cros_firmware:workspace_phase1.bzl", "fwsdk_workspace_phase1")
+
+fwsdk_workspace_phase1()
+
+load("//platform/rules_cros_firmware/cros_firmware:workspace_phase2.bzl", "fwsdk_workspace_phase2")
+
+fwsdk_workspace_phase2()
+
+load("//platform/rules_cros_firmware/cros_firmware:workspace_phase3.bzl", "fwsdk_workspace_phase3")
+
+fwsdk_workspace_phase3()
+
+load("//platform/rules_cros_firmware/cros_firmware:workspace_phase4.bzl", "fwsdk_workspace_phase4")
+
+fwsdk_workspace_phase4()
