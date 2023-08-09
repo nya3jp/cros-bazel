@@ -1,1 +1,2 @@
 include /OWNERS.clover
+include chromiumos/platform/rules_cros_firmware:/OWNERS
