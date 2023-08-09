@@ -196,6 +196,12 @@ struct SourcePackage {
     /// should be excluded to avoid confusing Bazel, thus they appear here.
     /// `excludes` includes `symlinks` and `renames`.
     excludes: Vec<PathBuf>,
+
+    /// Whether to include .git in the source tarball.
+    /// This must not be enabled except for a few packages under active fixing
+    /// because .git structure is not canonicalized and thus harms caching.
+    /// TODO: Remove this hack.
+    include_git: bool,
 }
 
 impl SourcePackage {
@@ -279,6 +285,29 @@ impl SourcePackage {
             }
         }
 
+        // HACK: We intentionally include the .git repo for llvm because it's
+        // required to calculate which patches to apply. We really need to
+        // figure out another way of doing this.
+        // TODO: Remove this hack.
+        let include_git = layout.prefix.to_string_lossy() == "third_party/llvm-project";
+
+        if include_git {
+            // On including .git, explicitly scan directories as it may contain
+            // mandatory empty directories (e.g. .git/refs). We don't bother to
+            // handle file names with special characters under .git; if such
+            // files exist, they will just cause the build to fail.
+            let walk = WalkDir::new(source_dir.join(".git"))
+                .follow_links(true)
+                .sort_by_file_name();
+            for entry in walk {
+                let entry = entry?;
+                if entry.file_type().is_dir() {
+                    let rel_path = entry.path().strip_prefix(&source_dir)?.to_owned();
+                    dirs.push(rel_path);
+                }
+            }
+        }
+
         Ok(Self {
             layout,
             source_dir,
@@ -287,6 +316,7 @@ impl SourcePackage {
             symlinks,
             renames,
             excludes,
+            include_git,
         })
     }
 }
@@ -362,11 +392,7 @@ fn generate_build_file(package: &SourcePackage) -> Result<()> {
             .iter()
             .map(|path| path.to_string_lossy().into_owned())
             .collect(),
-        // HACK: We intentionally include the .git repo for llvm because it's
-        // required to calculate which patches to apply. We really need to
-        // figure out another way of doing this.
-        // TODO: Remove this hack.
-        include_git: package.layout.prefix.to_string_lossy() == "third_party/llvm-project",
+        include_git: package.include_git,
     };
 
     let mut file = File::create(package.output_dir.join("BUILD.bazel"))?;
@@ -682,6 +708,63 @@ mod tests {
         let output_path = output_dir.join("internal/sources/BUILD.bazel");
         let golden_path = Path::new(TESTDATA_DIR).join("empty_dirs.golden.BUILD.bazel");
         compare_with_golden_data(&output_path, &golden_path)?;
+
+        Ok(())
+    }
+
+    /// Tests [`generate_internal_sources`] with .git directory with empty directories.
+    ///
+    /// This test case is separated from [`test_generate_internal_sources_with_golden_data`] because
+    /// Git cannot track empty directories and files named ".git".
+    ///
+    /// The golden outputs for BUILD.bazel are found at:
+    /// - `testdata/empty_dirs_git.llvm-project.golden.BUILD.bazel`
+    /// - `testdata/empty_dirs_git.platform2.golden.BUILD.bazel`
+    ///
+    /// You can regenerate golden directories by running the following command:
+    ///
+    /// `ALCHEMY_REGENERATE_GOLDEN=1 cargo test`
+    #[test]
+    fn test_generate_internal_sources_with_empty_dirs_git() -> Result<()> {
+        let git_dir = tempdir()?;
+        let git_dir = git_dir.path();
+
+        create_dir_all(git_dir.join("refs"))?;
+        File::create(git_dir.join("packed-refs"))?;
+
+        let source_dir = tempdir()?;
+        let source_dir = source_dir.path();
+
+        // .git is usually a symlink.
+        create_dir_all(source_dir.join("third_party/llvm-project"))?;
+        symlink(git_dir, source_dir.join("third_party/llvm-project/.git"))?;
+        create_dir_all(source_dir.join("platform2"))?;
+        symlink(git_dir, source_dir.join("platform2/.git"))?;
+
+        let output_dir = tempdir()?;
+        let output_dir = output_dir.path();
+
+        generate_internal_sources(
+            &[
+                PackageLocalSource::Src(PathBuf::from("third_party/llvm-project")),
+                PackageLocalSource::Src(PathBuf::from("platform2")),
+            ],
+            source_dir,
+            output_dir,
+        )?;
+
+        // llvm-project's BUILD.bazel contains pkg_mkdirs.
+        compare_with_golden_data(
+            &output_dir.join("internal/sources/third_party/llvm-project/BUILD.bazel"),
+            &Path::new(TESTDATA_DIR).join("empty_dirs_git.llvm-project.golden.BUILD.bazel"),
+        )?;
+
+        // platform2's BUILD.bazel excludes .git and does not contain pkg_mkdirs because it's not
+        // allowlisted.
+        compare_with_golden_data(
+            &output_dir.join("internal/sources/platform2/BUILD.bazel"),
+            &Path::new(TESTDATA_DIR).join("empty_dirs_git.platform2.golden.BUILD.bazel"),
+        )?;
 
         Ok(())
     }
