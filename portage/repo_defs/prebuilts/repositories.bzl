@@ -430,3 +430,12 @@ def prebuilts_dependencies(http_file = _http_file):
         sha256 = "46ae28050ac648738a908284807184eb3dddd176b7a8054db63c14e8757d5b81",
         urls = ["https://commondatastorage.googleapis.com/chromeos-throw-away-bucket/cros-bazel/gn_without_rpmalloc"],
     )
+
+    # Force using the new version automake.
+    # TODO(b/295260057): Remove this after updating SDK archive.
+    http_file(
+        name = "automake-1.16.5-r1",
+        downloaded_file_path = "automake-1.16.5-r1.tbz2",
+        sha256 = "0303b2f4e3f684660e7d0156ff0cbe04b5b8be0e2326cfc9167d6e5912d01e8f",
+        urls = ["https://commondatastorage.googleapis.com/chromeos-throw-away-bucket/cros-bazel/automake-1.16.5-r1.tbz2"],
+    )
