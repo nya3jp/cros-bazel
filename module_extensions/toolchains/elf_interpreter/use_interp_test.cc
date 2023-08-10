@@ -5,6 +5,7 @@
 #include <sys/auxv.h>
 
 #include <array>
+#include <cstring>
 #include <iostream>
 
 int main(int argc, char **argv) {
