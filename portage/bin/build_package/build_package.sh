@@ -24,13 +24,4 @@ fi
 
 export FEATURES="${FEATURES} fakeroot"
 
-# Additional logging to debug b/294912568
-# TODO(b/294912568): Remove this.
-if [[ "$@[*]" == */mnt/host/source/src/third_party/chromiumos-overlay/sys-libs/llvm-libunwind/llvm-libunwind-*.ebuild* ]]; then
-  ls -la /mnt/host/source/src
-  ls -la /mnt/host/source/src/third_party
-  ls -la /mnt/host/source/src/third_party/llvm-project
-  ls -la /mnt/host/source/src/third_party/llvm-project/.git
-fi
-
 exec "$@"
