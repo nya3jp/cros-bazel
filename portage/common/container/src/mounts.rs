@@ -198,8 +198,10 @@ pub(crate) fn mount_overlayfs(
         short_lower_dirs = new_short_lower_dirs;
     }
 
+    // b/295780293 - We enable xino because otherwise we don't get persistent inodes, even when
+    // only writing to the upperdir.
     let overlay_options = format!(
-        "upperdir={},workdir={},lowerdir={}",
+        "upperdir={},workdir={},lowerdir={},xino=on",
         upper_dir.display(),
         work_dir.display(),
         // Overlayfs option treats the first lower directory as the least lower
