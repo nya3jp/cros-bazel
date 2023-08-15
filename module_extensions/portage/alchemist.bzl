@@ -14,7 +14,7 @@ def alchemist(name):
         srcs = ALCHEMIST_REPO_RULE_SRCS,
         binary = "alchemist",
         build_mode = _BUILD_MODE,
-        cargo_lockfile = "//:Cargo.lock",
+        cargo_lockfile = "//bazel/portage/bin/alchemist:Cargo.lock",
         cargo_toml = "//bazel/portage/bin/alchemist:Cargo.toml",
         rust_toolchain_cargo_template = _TOOL_TEMPLATE,
         rust_toolchain_rustc_template = _TOOL_TEMPLATE,
