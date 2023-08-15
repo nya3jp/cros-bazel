@@ -135,7 +135,7 @@ fn generate_make_conf_board_setup(
             // means we get different outputs when built on different systems.
             // We can't have that. So let's leave it hard coded for now and
             // figure out how to strip it from the environment.tgz.
-            "-j128",
+            "-j32",
         )),
         MakeVar::from(("PKG_CONFIG", format!("/build/{board}/build/bin/pkg-config"))),
         MakeVar::from((

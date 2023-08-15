@@ -3,4 +3,4 @@
 FETCHCOMMAND="curl -f -y 30 --retry 9 -L --output \"\${DISTDIR}/\${FILE}\" \"\${URI}\""
 RESUMECOMMAND="curl -C - -f -y 30 --retry 9 -L --output \"\${DISTDIR}/\${FILE}\" \"\${URI}\""
 
-MAKEOPTS="-j128"
+MAKEOPTS="-j32"
