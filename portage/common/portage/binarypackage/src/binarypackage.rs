@@ -79,9 +79,16 @@ impl BinaryPackage {
     }
 
     /// Returns a tarball reader.
-    pub fn new_tarball_reader(&mut self) -> Result<std::io::Take<&mut File>> {
+    pub fn new_tarball_reader(&mut self) -> Result<impl Sized + Read + '_> {
         self.file.rewind()?;
         Ok((&mut self.file).take(self.xpak_start))
+    }
+
+    /// Returns a tar archive.
+    pub fn archive(&mut self) -> Result<tar::Archive<impl Sized + Read + '_>> {
+        Ok(tar::Archive::new(zstd::stream::read::Decoder::new(
+            self.new_tarball_reader()?,
+        )?))
     }
 
     /// Extracts the contents of the archive to the specified directory.

@@ -82,6 +82,8 @@ dependencies = [
  "cliutil",
  "fileutil",
  "runfiles",
+ "tar",
+ "zstd",
 ]
 
 [[package]]

@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_library(
     name = "binarypackage",
@@ -18,6 +18,8 @@ rust_library(
         "//bazel/portage/common/cliutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bytes",
+        "@alchemy_crates//:tar",
+        "@alchemy_crates//:zstd",
         "@rules_rust//tools/runfiles",
     ],
 )
