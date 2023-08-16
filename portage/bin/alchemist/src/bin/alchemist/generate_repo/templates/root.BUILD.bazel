@@ -13,7 +13,7 @@ package_group(
 
 string_flag(
     name = "binpkg-cache-strategy",
-    build_setting_default = "none",
+    build_setting_default = "naive",
 )
 
 config_setting(
