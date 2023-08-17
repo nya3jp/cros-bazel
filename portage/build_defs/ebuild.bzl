@@ -224,6 +224,30 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     inputs = depset(direct_inputs, transitive = transitive_inputs)
     return args, inputs
 
+def _download_prebuilt(ctx, prebuilt, output_binary_package_file):
+    if prebuilt.startswith("http://") or prebuilt.startswith("https://"):
+        executable = "wget"
+        args = [prebuilt, "-O", output_binary_package_file.path]
+    elif prebuilt.startswith("gs://"):
+        executable = Label("@chromite//:src").workspace_root + "/bin/gsutil"
+        args = ["cp", prebuilt, output_binary_package_file.path]
+    else:
+        executable = "cp"
+        args = [prebuilt, output_binary_package_file.path]
+
+    ctx.actions.run(
+        inputs = [],
+        outputs = [output_binary_package_file],
+        executable = executable,
+        arguments = args,
+        execution_requirements = {
+            "no-remote": "",
+            "no-sandbox": "",
+            "requires-network": "",
+        },
+        progress_message = "Downloading %s" % prebuilt,
+    )
+
 def _ebuild_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
 
@@ -242,19 +266,7 @@ def _ebuild_impl(ctx):
     # Define the main action.
     prebuilt = ctx.attr.prebuilt[BuildSettingInfo].value
     if prebuilt:
-        gsutil_path = ctx.attr._gsutil_path[BuildSettingInfo].value
-        ctx.actions.run(
-            inputs = [],
-            outputs = [output_binary_package_file],
-            executable = ctx.executable._download_prebuilt,
-            arguments = [gsutil_path, prebuilt, output_binary_package_file.path],
-            execution_requirements = {
-                "no-remote": "",
-                "no-sandbox": "",
-                "requires-network": "",
-            },
-            progress_message = "Downloading %s" % prebuilt,
-        )
+        _download_prebuilt(ctx, prebuilt, output_binary_package_file)
         ctx.actions.write(output_log_file, "Downloaded from %s\n" % prebuilt)
         ctx.actions.write(output_profile_file, "[]")
     else:
@@ -407,15 +419,6 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/extract_interface"),
-        ),
-        _download_prebuilt = attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//bazel/portage/build_defs:download_prebuilt"),
-        ),
-        _gsutil_path = attr.label(
-            providers = [BuildSettingInfo],
-            default = Label("//bazel/portage/build_defs:gsutil_path"),
         ),
         **_EBUILD_COMMON_ATTRS
     ),
