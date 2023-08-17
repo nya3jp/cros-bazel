@@ -152,6 +152,14 @@ impl Repository {
         })
     }
 
+    pub fn new_for_testing(name: &str, base_dir: &Path) -> Self {
+        Self {
+            name: name.to_owned(),
+            location: RepositoryLocation::new(base_dir),
+            parents: vec![],
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -263,6 +271,19 @@ pub struct RepositorySet {
 }
 
 impl RepositorySet {
+    pub fn new_for_testing(repos: &[Repository]) -> Self {
+        let mut order: Vec<String> = Vec::new();
+        let mut repos_map: HashMap<String, Repository> = HashMap::new();
+        for repo in repos {
+            order.push(repo.name.clone());
+            repos_map.insert(repo.name.clone(), repo.clone());
+        }
+        Self {
+            repos: repos_map,
+            order,
+        }
+    }
+
     /// Loads repositories configured for a configuration root directory.
     ///
     /// It evaluates `make.conf` in configuration directories tunder `root_dir`

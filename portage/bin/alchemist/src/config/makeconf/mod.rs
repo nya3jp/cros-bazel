@@ -103,6 +103,18 @@ pub struct MakeConf {
 }
 
 impl MakeConf {
+    pub fn new_for_testing(sources: Vec<PathBuf>, values: HashMap<&str, &str>) -> Self {
+        let mut rvalues: HashMap<String, RVal> = HashMap::new();
+        for (name, value) in values {
+            let rval = RVal::from_iter([Value::Literal(value.to_owned())]);
+            rvalues.insert(name.to_string(), rval);
+        }
+        Self {
+            sources,
+            values: rvalues,
+        }
+    }
+
     pub fn load(
         path: &Path,
         base_dir: &Path,
