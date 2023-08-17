@@ -30,6 +30,11 @@ lazy_static! {
     static ref TEMPLATES: Tera = {
         let mut tera: Tera = Default::default();
         tera.add_raw_template(
+            "eclass.BUILD.bazel",
+            include_str!("templates/eclass.BUILD.bazel"),
+        )
+        .unwrap();
+        tera.add_raw_template(
             "overlays.BUILD.bazel",
             include_str!("templates/overlays.BUILD.bazel"),
         )
@@ -95,6 +100,12 @@ struct EclassTemplateContext<'a> {
 }
 
 #[derive(Serialize)]
+struct EclassSetTemplateContext<'a> {
+    mount_path: &'a Path,
+    eclasses: Vec<EclassTemplateContext<'a>>,
+}
+
+#[derive(Serialize)]
 struct OverlaysTemplateContext {
     overlay_sets: Vec<OverlaySetTemplateContext>,
 }
@@ -109,7 +120,6 @@ struct OverlaySetTemplateContext {
 struct OverlayBuildTemplateContext<'a> {
     name: &'a str,
     mount_path: &'a Path,
-    eclasses: Vec<EclassTemplateContext<'a>>,
 }
 
 /// Helper struct to easily compute unique overlays to generate.
@@ -128,12 +138,16 @@ impl<'a> From<&'a Repository> for SimpleRepository<'a> {
     }
 }
 
-/// Creates template contexts for all eclass rules for the given repository.
-fn prepare_eclass_template_contexts(repo_dir: &Path) -> Result<Vec<EclassTemplateContext>> {
-    let eclass_dir = repo_dir.join("eclass");
+fn get_mount_path(path: &Path) -> &Path {
+    path.strip_prefix("/").unwrap_or(path)
+}
+
+/// Creates BUILD.bazel file with all eclass rules for the given repository.
+fn generate_eclass_build_file(original_repo_dir: &Path, output_repo_dir: &Path) -> Result<()> {
+    let eclass_dir = original_repo_dir.join("eclass");
     if metadata(&eclass_dir).is_err() {
         // It's allowed for a repository to have no eclasses.
-        return Ok(vec![]);
+        return Ok(());
     }
 
     let mut eclasses = vec![];
@@ -154,7 +168,27 @@ fn prepare_eclass_template_contexts(repo_dir: &Path) -> Result<Vec<EclassTemplat
         });
     }
 
-    Ok(eclasses)
+    let mount_path = get_mount_path(&eclass_dir);
+    let context = EclassSetTemplateContext {
+        mount_path,
+        eclasses,
+    };
+
+    let output_eclass_dir = output_repo_dir.join("eclass");
+    create_dir_all(&output_eclass_dir)
+        .with_context(|| format!("mkdir -p {output_eclass_dir:?}"))?;
+
+    let output_file = output_eclass_dir.join("BUILD.bazel");
+    let mut file = File::create(&output_file)
+        .with_context(|| format!("Failed to create file {output_file:?}"))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    TEMPLATES.render_to(
+        "eclass.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
+
+    Ok(())
 }
 
 fn generate_overlays_file(repo_sets: &[&RepositorySet], output_dir: &Path) -> Result<()> {
@@ -189,13 +223,9 @@ fn generate_overlays_file(repo_sets: &[&RepositorySet], output_dir: &Path) -> Re
 }
 
 fn generate_overlay_build_file(repo: &SimpleRepository, output_file: &Path) -> Result<()> {
-    let eclasses = prepare_eclass_template_contexts(&repo.base_dir)
-        .with_context(|| format!("Failed to generate eclass build information"))?;
-
     let context = OverlayBuildTemplateContext {
         name: repo.name,
-        mount_path: repo.base_dir.strip_prefix("/").unwrap_or(repo.base_dir),
-        eclasses,
+        mount_path: get_mount_path(repo.base_dir),
     };
 
     // The chromiumos-overlay repo contains a pretty complex BUILD.bazel file.
@@ -243,6 +273,9 @@ pub fn generate_internal_overlays(
             generate_overlay_symlinks(&original_dir, &output_dir)?;
 
             generate_overlay_build_file(repo, &output_dir.join("BUILD.bazel"))?;
+
+            generate_eclass_build_file(&repo.base_dir, &output_dir)
+                .with_context(|| format!("Failed to generate eclass build file"))?;
 
             Ok(())
         })?;

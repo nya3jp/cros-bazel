@@ -23,6 +23,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/mod.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/overlays/mod.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/overlays/templates/chromiumos-overlay.BUILD.bazel",
+    "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/overlays/templates/eclass.BUILD.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/overlays/templates/overlay.BUILD.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/overlays/templates/overlays.BUILD.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/packages/mod.rs",

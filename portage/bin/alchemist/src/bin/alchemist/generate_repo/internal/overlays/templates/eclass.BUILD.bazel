@@ -1,0 +1,30 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# This BUILD file provides targets for an overlay's eclasses.
+
+{%- for eclass in eclasses %}
+# Enumerates files that need to be packed for the "{{ eclass.name }}" eclass.
+pkg_files(
+    name = "{{ eclass.name }}_files",
+    srcs = ["{{ eclass.name }}.eclass"],
+    prefix = "{{ mount_path }}",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+# Packs the files of the "{{ eclass.name }}" eclass.
+pkg_tar(
+    name = "{{ eclass.name }}",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":{{ eclass.name }}_files"],
+    visibility = ["@//bazel:internal"],
+)
+
+{% endfor %}

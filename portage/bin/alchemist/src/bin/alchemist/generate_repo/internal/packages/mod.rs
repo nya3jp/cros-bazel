@@ -234,7 +234,7 @@ impl EBuildEntry {
                 };
                 let repo = repo_set.get_repo_by_path(path).unwrap().name();
 
-                format!("//internal/overlays/{}:{}_eclass", repo, eclass)
+                format!("//internal/overlays/{}/eclass:{}", repo, eclass)
             })
             .collect();
 
