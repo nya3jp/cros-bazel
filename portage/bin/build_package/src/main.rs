@@ -9,6 +9,7 @@ use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings}
 use std::{
     collections::HashSet,
     fs::File,
+    os::unix::process::ExitStatusExt,
     path::{Path, PathBuf},
     process::ExitCode,
     str::FromStr,
@@ -239,7 +240,13 @@ fn do_main() -> Result<()> {
     }
 
     let status = command.status()?;
-    ensure!(status.success());
+    ensure!(
+        status.success(),
+        "Command failed: status={:?}, code={:?}, signal={:?}",
+        status,
+        status.code(),
+        status.signal()
+    );
 
     let binary_out_path = portage_pkg_dir.join(args.ebuild.category).join(format!(
         "{}.tbz2",
