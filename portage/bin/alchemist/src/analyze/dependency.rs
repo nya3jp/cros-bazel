@@ -357,6 +357,23 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         }
 
         /*
+         * b/296430298
+         *
+         * chromeos-chrome-118.0.5949.0_rc-r1: Traceback (most recent call last):
+         * chromeos-chrome-118.0.5949.0_rc-r1:   File "/build/arm64-generic/usr/local/build/autotest/utils/packager.py", line 11, in <module>
+         * chromeos-chrome-118.0.5949.0_rc-r1:     import common
+         * chromeos-chrome-118.0.5949.0_rc-r1:   File "/build/arm64-generic/usr/local/build/autotest/utils/common.py", line 6, in <module>
+         * chromeos-chrome-118.0.5949.0_rc-r1:     import setup_modules
+         * chromeos-chrome-118.0.5949.0_rc-r1:   File "/build/arm64-generic/usr/local/build/autotest/client/setup_modules.py", line 3, in <module>
+         * chromeos-chrome-118.0.5949.0_rc-r1:     import six
+         * chromeos-chrome-118.0.5949.0_rc-r1: ModuleNotFoundError: No module named 'six'
+         * chromeos-chrome-118.0.5949.0_rc-r1:  * ERROR: chromeos-base/chromeos-chrome-118.0.5949.0_rc-r1::chromiumos failed (postinst phase):
+         */
+        ("chromeos-base/chromeos-chrome", DependencyKind::InstallHost { .. }) => "dev-python/six",
+        /* pkg_postinst: ModuleNotFoundError: No module named 'six' */
+        ("chromeos-base/autotest", DependencyKind::InstallHost { .. }) => "dev-python/six",
+
+        /*
          * /build/arm64-generic/tmp/portage/net-libs/libmbim-9999/temp/environment: line 3552: git: command not found
          *
          * So this one is annoying. It's an EAPI 6 ebuild, so it doesn't get the git BDEPEND,
@@ -370,9 +387,10 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         /*
          * /bin/sh: line 1: git: command not found
          *
-         * We should fix the package upstream so it doesn't depend on git.
+         * We should fix these packages upstream so it doesn't depend on git.
          */
         ("sys-apps/proot", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
+        ("dev-go/syzkaller", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
 
         /* Our setuptools is way too old. b/293899573 */
         ("dev-python/jinja", DependencyKind::BuildHost { .. }) => "dev-python/markupsafe",
@@ -390,6 +408,70 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         /* TODO: I lost the error message */
         ("sys-fs/lvm2", DependencyKind::BuildHost { .. }) => "sys-apps/which sys-devel/binutils",
         ("x11-misc/compose-tables", DependencyKind::Build) => "x11-misc/util-macros",
+
+        /*
+         * pkg_resources.DistributionNotFound: The 'pip' distribution was not found and is required by the application
+         * ERROR: 'pip wheel' requires the 'wheel' package. To fix this, run: pip install wheel
+         */
+        ("dev-python/jaraco-functools", DependencyKind::BuildHost { .. }) => {
+            "dev-python/setuptools_scm"
+        }
+        ("dev-python/tempora", DependencyKind::BuildHost { .. }) => "dev-python/setuptools_scm",
+        ("dev-python/pyusb", DependencyKind::BuildHost { .. }) => "dev-python/setuptools_scm",
+        ("dev-python/portend", DependencyKind::BuildHost { .. }) => "dev-python/setuptools_scm",
+        ("dev-python/cherrypy", DependencyKind::BuildHost { .. }) => "dev-python/setuptools_scm",
+        ("dev-python/cryptography", DependencyKind::BuildHost { .. }) => "dev-python/cffi",
+
+        /*
+         * checking XSLTPROC requirement... configure: error: Missing XSLTPROC
+         */
+        ("dev-libs/opensc", DependencyKind::BuildHost { .. }) => {
+            "dev-libs/libxslt app-text/docbook-xsl-stylesheets"
+        }
+
+        /*
+         * /bin/sh: line 1: x86_64-pc-linux-gnu-gcc: command not found
+         * make[1]: *** [scripts/Makefile.host:104: scripts/basic/fixdep] Error 127
+         *
+         * We force busybox to be built with GCC instead of LLVM. We should see if we can use
+         * LLVM instead.
+         *
+         * /bin/sh: line 1: pod2text: command not found
+         * /bin/sh: line 1: pod2man: command not found
+         * /bin/sh: line 1: pod2html: command not found
+         */
+        ("sys-apps/busybox", DependencyKind::BuildHost { .. }) => "sys-devel/gcc dev-lang/perl",
+
+        /*
+         * File "build/servo/data/data_integrity_test.py", line 13, in <module>
+         *     import pytest
+         * ModuleNotFoundError: No module named 'pytest'
+         *
+         * Not sure if we should refactor hdctools to not require pytest.
+         */
+        ("dev-util/hdctools", DependencyKind::BuildHost { .. }) => "dev-python/pytest",
+
+        /*
+         * /build/arm64-generic/tmp/portage/media-gfx/perceptualdiff-1.1.1-r3/temp/environment: line 2412: cmake: command not found
+         *
+         * Fix the ebuild to use the cmake eclass.
+         */
+        ("media-gfx/perceptualdiff", DependencyKind::BuildHost { .. }) => "dev-util/cmake",
+
+        /*
+         * ninja: error: 'modules/dnn/protobuf::protoc', needed by '/build/arm64-generic/tmp/portage/media-libs/opencv-4.5.5-r1/work/opencv-4.5.5_build-.arm64/modules/dnn/opencv-caffe.pb.cc', missing and no known rule to make it
+         */
+        ("media-libs/opencv", DependencyKind::BuildHost { .. }) => "dev-libs/protobuf",
+
+        /* We need to upgrade distutils-r1 to latest from upstream */
+        ("dev-util/meson", DependencyKind::Run) => "dev-python/setuptools",
+
+        /*
+         * ModuleNotFoundError: No module named 'dataclasses'
+         *
+         * This can be dropped once we migrate to python 3.8.
+         */
+        ("app-emulation/qemu", DependencyKind::BuildHost { .. }) => "dev-python/dataclasses",
 
         _ => "",
     }
@@ -435,12 +517,13 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
 // We keep a hand curated list of packages that are known to be
 // BDEPENDs. Ideally we upgrade all ebuilds to EAPI7 and delete this
 // block, but that's a lot of work.
-static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 21] = [
+static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 22] = [
     "app-misc/jq",
     "app-portage/elt-patches",
     "dev-lang/perl",
     "dev-perl/XML-Parser",
     "dev-python/m2crypto",
+    "dev-python/setuptools",
     "dev-util/cmake",
     "dev-util/meson",
     "dev-util/meson-format-array",
