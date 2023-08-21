@@ -29,6 +29,9 @@ def _binary_package_impl(ctx):
     package_info = BinaryPackageInfo(
         file = src,
         all_files = all_files,
+        package_name = ctx.attr.package_name or ctx.label.name,
+        category = ctx.attr.category,
+        version = ctx.attr.version,
         direct_runtime_deps = direct_runtime_deps,
         transitive_runtime_deps = transitive_runtime_deps,
         layer = None,
@@ -43,12 +46,15 @@ def _binary_package_impl(ctx):
 binary_package = rule(
     implementation = _binary_package_impl,
     attrs = {
+        "category": attr.string(mandatory = True),
+        "package_name": attr.string(mandatory = True),
+        "runtime_deps": attr.label_list(
+            providers = [BinaryPackageInfo],
+        ),
         "src": attr.label(
             mandatory = True,
             allow_single_file = [".tbz2"],
         ),
-        "runtime_deps": attr.label_list(
-            providers = [BinaryPackageInfo],
-        ),
+        "version": attr.string(mandatory = True),
     },
 )

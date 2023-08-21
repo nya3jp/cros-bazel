@@ -50,6 +50,18 @@ _EBUILD_COMMON_ATTRS = dict(
         The category of this package.
         """,
     ),
+    package_name = attr.string(
+        mandatory = True,
+        doc = """
+        The name of this package.
+        """,
+    ),
+    version = attr.string(
+        mandatory = True,
+        doc = """
+        The version of this package.
+        """,
+    ),
     distfiles = attr.label_keyed_string_dict(
         allow_files = True,
     ),
@@ -336,6 +348,8 @@ def _ebuild_impl(ctx):
         package_info = BinaryPackageInfo(
             file = output_binary_package_file,
             category = ctx.attr.category,
+            package_name = ctx.attr.package_name,
+            version = ctx.attr.version,
             direct_runtime_deps = tuple(),
             layer = None,
         )
@@ -362,6 +376,8 @@ def _ebuild_impl(ctx):
     package_info = BinaryPackageInfo(
         file = output_binary_package_file,
         category = ctx.attr.category,
+        package_name = ctx.attr.package_name,
+        version = ctx.attr.version,
         all_files = all_files,
         direct_runtime_deps = direct_runtime_deps,
         transitive_runtime_deps = transitive_runtime_deps,

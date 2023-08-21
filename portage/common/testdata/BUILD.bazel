@@ -16,5 +16,8 @@ exports_files(
 
 binary_package(
     name = "nano",
+    package_name = "nano",
     src = "nano.tbz2",
+    category = "app-editors",
+    version = "6.4",
 )

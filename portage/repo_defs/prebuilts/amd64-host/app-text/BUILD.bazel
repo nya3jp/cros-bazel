@@ -2,11 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
+load("//bazel/portage/repo_defs/prebuilts:prebuilt_binary_package.bzl", "prebuilt_binary_package")
 
 # sys-libs/pam needs this, but it looks missing in SDK and instead pulled in by
 # BDEPEND.
-binary_package(
+prebuilt_binary_package(
     name = "docbook-xml-dtd-4_4",
     src = "@files//:amd64_host_docbook_xml_dtd_4_4_r3",
     visibility = ["//bazel:internal"],

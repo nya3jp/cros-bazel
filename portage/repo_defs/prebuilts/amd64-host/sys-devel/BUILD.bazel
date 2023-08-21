@@ -2,11 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
+load("//bazel/portage/repo_defs/prebuilts:prebuilt_binary_package.bzl", "prebuilt_binary_package")
 
 # Force using the new version automake.
 # TODO(b/295260057): Remove this after updating SDK archive.
-binary_package(
+prebuilt_binary_package(
     name = "automake",
     src = "@files//:automake-1.16.5-r1",
     visibility = ["//bazel:internal"],

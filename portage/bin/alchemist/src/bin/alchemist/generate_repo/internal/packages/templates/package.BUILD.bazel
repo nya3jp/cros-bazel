@@ -105,6 +105,8 @@ ebuild(
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
+    package_name = "{{ ebuild.package_name }}",
+    version = "{{ ebuild.version }}",
 {% if suffix -%}
     suffix = "{{ suffix }}",
 {%- endif %}
@@ -178,6 +180,8 @@ ebuild_debug(
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
+    package_name = "{{ ebuild.package_name }}",
+    version = "{{ ebuild.version }}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
@@ -250,6 +254,8 @@ ebuild_test(
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
+    package_name = "{{ ebuild.package_name }}",
+    version = "{{ ebuild.version }}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",

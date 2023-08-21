@@ -28,6 +28,12 @@ BinaryPackageInfo = provider(
         "category": """
             str: The category of this package.
         """,
+        "package_name": """
+            str: The name of this package.
+        """,
+        "version": """
+            str: The version of this package.
+        """,
         "all_files": """
             Depset[File]: All binary package files including this package's one
             itself and all transitive runtime dependencies.

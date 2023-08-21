@@ -4,6 +4,7 @@
 
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "single_binary_package_set_info")
+load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 
 def direct_ebuild(
         name,
@@ -35,56 +36,12 @@ def direct_ebuild(
         visibility = ["//visibility:private"],
     )
 
-    _direct_ebuild_providers(
+    binary_package(
         name = name,
-        tarball = tar_name,
-        package_deploy = package + "_deploy_local",
         category = category,
+        package_name = package_name,
+        version = version,
+        src = tar_name,
         runtime_deps = runtime_deps,
         visibility = visibility,
     )
-
-def _direct_ebuild_providers_impl(ctx):
-    tarball = ctx.file.tarball
-    runtime_deps = [dep[BinaryPackageInfo] for dep in ctx.attr.runtime_deps]
-
-    binpkg_info = BinaryPackageInfo(
-        file = tarball,
-        category = ctx.attr.category,
-        all_files = depset(
-            [tarball],
-            transitive = [dep.all_files for dep in runtime_deps],
-            order = "postorder",
-        ),
-        direct_runtime_deps = tuple(runtime_deps),
-        transitive_runtime_deps = depset(
-            transitive = [
-                depset(
-                    [dep],
-                    transitive = [dep.transitive_runtime_deps],
-                    order = "postorder",
-                )
-                for dep in runtime_deps
-            ],
-            order = "postorder",
-        ),
-    )
-
-    return [
-        DefaultInfo(files = depset([tarball])),
-        binpkg_info,
-        single_binary_package_set_info(binpkg_info),
-    ]
-
-_direct_ebuild_providers = rule(
-    implementation = _direct_ebuild_providers_impl,
-    attrs = dict(
-        category = attr.string(mandatory = True),
-        tarball = attr.label(mandatory = True, allow_single_file = True),
-        runtime_deps = attr.label_list(providers = [BinaryPackageInfo]),
-        # Never used, but without this we couldn't distinguish between cros_pkg
-        # and cros_pkg_filegroup.
-        package_deploy = attr.label(mandatory = True),
-    ),
-    provides = [BinaryPackageInfo, BinaryPackageSetInfo],
-)
