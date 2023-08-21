@@ -8,12 +8,13 @@ edition = "2021"
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
 binarypackage = { path = "../../common/portage/binarypackage" }
+processes = { path = "../../common/processes" }
 
 anyhow.workspace = true
 clap.workspace = true
+runfiles.workspace = true
 tar.workspace = true
 zstd.workspace = true
 
 [dev-dependencies]
 fileutil = { path = "../../common/fileutil" }
-runfiles.workspace = true
