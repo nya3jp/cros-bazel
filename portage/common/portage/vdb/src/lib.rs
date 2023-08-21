@@ -49,7 +49,7 @@ fn compute_md5_hash(path: &Path) -> Result<String> {
 
 /// Generates `CONTENTS` file from an image directory.
 pub fn generate_vdb_contents<W: Write>(mut w: W, image_dir: &Path) -> Result<()> {
-    for entry in WalkDir::new(image_dir).min_depth(1) {
+    for entry in WalkDir::new(image_dir).min_depth(1).sort_by_file_name() {
         let entry = entry?;
         let relative_path = entry.path().strip_prefix(image_dir)?;
         let file_type = entry.file_type();
@@ -129,8 +129,8 @@ mod tests {
             contents,
             r"dir usr
 dir usr/bin
-sym usr/bin/helloworld.symlink -> helloworld 0
 obj usr/bin/helloworld d9ee44d59390c7097f20a0ec1c449048 0
+sym usr/bin/helloworld.symlink -> helloworld 0
 "
         );
 
