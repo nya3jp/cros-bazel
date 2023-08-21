@@ -198,10 +198,34 @@ pub(crate) fn mount_overlayfs(
         short_lower_dirs = new_short_lower_dirs;
     }
 
+    // Print the kernel release and version for debugging.
+    // TODO(b/296450672): Stop printing this when we no longer need this.
+    let kernel_release = String::from_utf8(
+        Command::new("uname")
+            .arg("--kernel-release")
+            .output()?
+            .stdout,
+    )?
+    .trim()
+    .to_owned();
+    let kernel_version = String::from_utf8(
+        Command::new("uname")
+            .arg("--kernel-version")
+            .output()?
+            .stdout,
+    )?
+    .trim()
+    .to_owned();
+    let is_on_ubuntu_jammy = kernel_release.starts_with("6.") && kernel_version.contains("Ubuntu");
+    eprintln!(
+        "kernel_release = {}, kernel_version = {}, is_on_ubuntu_jammy = {}",
+        kernel_release, kernel_version, is_on_ubuntu_jammy
+    );
+
     // b/295780293 - We enable xino because otherwise we don't get persistent inodes, even when
     // only writing to the upperdir.
     let overlay_options = format!(
-        "upperdir={},workdir={},lowerdir={},xino=on",
+        "upperdir={},workdir={},lowerdir={},xino=on{}",
         upper_dir.display(),
         work_dir.display(),
         // Overlayfs option treats the first lower directory as the least lower
@@ -210,7 +234,15 @@ pub(crate) fn mount_overlayfs(
             .iter()
             .map(|(name, _guard)| name)
             .rev()
-            .join(":")
+            .join(":"),
+        // Ubuntu has applied their own patch to the kernel which changes the
+        // default behavior of overlayfs. Add "nouserxattr" to make it
+        // consistent with the upstream default behavior. b/296450672
+        if is_on_ubuntu_jammy {
+            ",nouserxattr"
+        } else {
+            ""
+        },
     );
 
     // Mount overlayfs via overlayfs_mount_helper.
