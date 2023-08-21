@@ -16,6 +16,9 @@ common --registry=https://bcr.bazel.build
 # be ChromeOS specific.
 common --registry=https://raw.githubusercontent.com/matts1/bazel-central-registry/main
 
+# Enable the use of RBE remote caching if the appropriate config is selected.
+import %workspace%/bazel/bazelrcs/remote_build_artifacts.bazelrc
+
 
 # Always show output from actions.
 common --experimental_ui_max_stdouterr_bytes=-1
