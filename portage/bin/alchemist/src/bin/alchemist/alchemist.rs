@@ -103,17 +103,48 @@ fn default_source_dir() -> Result<PathBuf> {
 }
 
 fn build_override_config_source() -> SimpleConfigSource {
-    let nodes = vec![
+    let mut masked = vec![
         // HACK: Mask chromeos-base/chromeos-lacros-9999 as it's not functional.
-        // TODO: Fix the ebuild and remove this hack.
-        ConfigNode {
-            sources: vec![],
-            value: ConfigNodeValue::PackageMasks(vec![PackageMaskUpdate {
-                kind: PackageMaskKind::Mask,
-                atom: "=chromeos-base/chromeos-lacros-9999".parse().unwrap(),
-            }]),
+        PackageMaskUpdate {
+            kind: PackageMaskKind::Mask,
+            atom: "=chromeos-base/chromeos-lacros-9999".parse().unwrap(),
+        },
+        // We don't want to build 9999 llvm-project ebuilds as they currently require
+        // the whole .git directory. This causes problems because everything will
+        // cache bust between hosts and syncs.
+        PackageMaskUpdate {
+            kind: PackageMaskKind::Mask,
+            atom: "=sys-libs/scudo-9999".parse().unwrap(),
+        },
+        PackageMaskUpdate {
+            kind: PackageMaskKind::Mask,
+            atom: "=sys-devel/llvm-9999".parse().unwrap(),
         },
     ];
+    let toolchain_categories = [
+        "sys-libs",
+        "cross-aarch64-cros-linux-gnu",
+        "cross-x86_64-cros-linux-gnux32",
+        "cross-i686-cros-linux-gnu",
+        "cross-x86_64-cros-linux-gnu",
+        "cross-armv7m-cros-eabi",
+        "cross-armv7a-cros-linux-gnueabihf",
+    ];
+
+    let toolchain_packages = ["libcxx", "compiler-rt", "llvm-libunwind"];
+    for category in toolchain_categories {
+        for package_name in toolchain_packages {
+            masked.push(PackageMaskUpdate {
+                kind: PackageMaskKind::Mask,
+                atom: format!("={category}/{package_name}-9999").parse().unwrap(),
+            });
+        }
+    }
+
+    let nodes = vec![ConfigNode {
+        sources: vec![],
+        value: ConfigNodeValue::PackageMasks(masked),
+    }];
     SimpleConfigSource::new(nodes)
 }
 
