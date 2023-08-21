@@ -30,13 +30,11 @@ if [[ -f /mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profi
 fi
 
 # b/296450672 - Ensure x86_64-cros-linux-gnu-* exist.
-(
-  set +e
-  mount
-  which x86_64-cros-linux-gnu-gcc
-  /usr/bin/x86_64-cros-linux-gnu-gcc --version
-  ls -l /usr/bin/x86_64-cros-linux-gnu-*
-  ls -lH /usr/bin/x86_64-cros-linux-gnu-*
-)
+set +e
+mount
+which x86_64-cros-linux-gnu-gcc
+/usr/bin/x86_64-cros-linux-gnu-gcc --version
+ls -l /usr/bin/x86_64-cros-linux-gnu-*
+ls -lH /usr/bin/x86_64-cros-linux-gnu-*
 
 exec "$@"
