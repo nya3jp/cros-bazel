@@ -24,9 +24,4 @@ fi
 
 export FEATURES="${FEATURES} fakeroot"
 
-# b/296450672 - Disable the compiler wrappers to see if this fixes the problem.
-if [[ -f /mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc ]]; then
-  sed -i -E -e '/cros_pre_src_prepare_build_toolchain_catch\(\)/a return' /mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc
-fi
-
 exec "$@"
