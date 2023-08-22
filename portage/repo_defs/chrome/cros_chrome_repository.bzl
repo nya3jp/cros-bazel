@@ -10,7 +10,9 @@ def _exec(ctx, cmd, msg = None, **kwargs):
     env.update(kwargs)
     if msg:
         ctx.report_progress(msg)
-    st = ctx.execute(cmd, environment = env)
+
+    # Use 3600 as timeout because gclient can take a long time to finish.
+    st = ctx.execute(cmd, timeout = 3600, environment = env)
     if st.return_code:
         fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
     return st.stdout
