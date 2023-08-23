@@ -48,6 +48,7 @@ pkg_files(
         "**/README",
         "**/README.md",
         "profiles/**/*.desc",
+        "chromeos/binhost/**"
     ]),
     prefix = "{{ mount_path }}",
     # chromeos/scripts/config_wrapper must be executable
