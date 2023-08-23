@@ -4,14 +4,13 @@ This repository provides the implementation to build ChromeOS with Bazel.
 
 ## Checking out
 
-Building ChromeOS with Bazel is currently possible only on a special branch for
-Bazel development. Use the following `repo` command to check out the branch with
-a few additional repositories.
+For building ChromeOS with Bazel, use the following `repo` command to check out
+with a few additional repositories.
 
 ```sh
 $ mkdir ~/chromiumos
 $ cd ~/chromiumos
-$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -b stabilize-15429.B -g default,bazel
+$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -g default,bazel
 $ repo sync -c -j 4
 $ cd src
 ```
