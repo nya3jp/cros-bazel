@@ -18,6 +18,26 @@ ANALYSIS_FILE_PATTERN = [
     "profiles/**/package.unmask",
 ]
 
+# We strip the BINHOST variables from the make.conf because they change
+# every time the SDK builder runs. We don't use this variable when building
+# portage packages, so we can remove it and avoid cache busting all the builds.
+genrule(
+    name = "amd64-host-make-conf",
+    srcs = ["chromeos/config/make.conf.amd64-host"],
+    outs = ["make.conf.amd64-host"],
+    cmd = "sed -e '/^FULL_BINHOST=/d' -e '/^PORTAGE_BINHOST=/d' '$<' > '$@'",
+)
+
+pkg_files(
+    name = "amd64-host-files",
+    srcs = [
+        ":amd64-host-make-conf"
+    ],
+    prefix = "mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
 pkg_files(
     name = "files",
     srcs = [
@@ -50,7 +70,8 @@ pkg_files(
         "**/README",
         "**/README.md",
         "profiles/**/*.desc",
-        "chromeos/binhost/**"
+        "chromeos/binhost/**",
+        "chromeos/config/make.conf.amd64-host",
     ]),
     prefix = "mnt/host/source/src/third_party/chromiumos-overlay",
     # chromeos/scripts/config_wrapper must be executable
@@ -66,7 +87,7 @@ pkg_tar(
     extension = "tar.zst",
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
-    srcs = [":files"],
+    srcs = [":files", ":amd64-host-files"],
     visibility = ["//visibility:private"],
 )
 
