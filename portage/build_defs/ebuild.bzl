@@ -285,7 +285,6 @@ def _ebuild_impl(ctx):
                 args,
             ],
             execution_requirements = {
-                "no-remote": "",
                 # Disable sandbox to avoid creating a symlink forest.
                 # This does not affect hermeticity since ebuild runs in a container.
                 "no-sandbox": "",
