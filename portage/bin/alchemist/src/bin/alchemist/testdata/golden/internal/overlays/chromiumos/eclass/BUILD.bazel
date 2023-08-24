@@ -1,0 +1,50 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# This BUILD file provides targets for an overlay's eclasses.
+# Enumerates files that need to be packed for the "myclass" eclass.
+pkg_files(
+    name = "myclass_files",
+    srcs = ["myclass.eclass"],
+    prefix = "mnt/host/source/src/third_party/chromiumos-overlay/eclass",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+# Packs the files of the "myclass" eclass.
+pkg_tar(
+    name = "myclass",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":myclass_files"],
+    visibility = ["@//bazel:internal"],
+)
+
+
+# Enumerates files that need to be packed for the "mysuper" eclass.
+pkg_files(
+    name = "mysuper_files",
+    srcs = ["mysuper.eclass"],
+    prefix = "mnt/host/source/src/third_party/chromiumos-overlay/eclass",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+# Packs the files of the "mysuper" eclass.
+pkg_tar(
+    name = "mysuper",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":mysuper_files"],
+    visibility = ["@//bazel:internal"],
+)
+
+
