@@ -8,4 +8,6 @@
 
 import %workspace%/bazel/bazelrcs/common.bazelrc
 
+build --config=rbe
+
 # Alchemy-only configuration goes here.
