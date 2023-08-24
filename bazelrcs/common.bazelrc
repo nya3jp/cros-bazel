@@ -81,6 +81,10 @@ query --incompatible_allow_tags_propagation
 # Without this, packages installed to $HOME/.local/lib/python3.10/site-packages
 # can be imported from bazel's python.
 build --action_env=PYTHONNOUSERSITE=1
+build --action_env=RUST_BACKTRACE=1
+# Allows actions to detect that they're running as a bazel action rather than as
+# a binary directly (eg. bazel run).
+build --action_env=IS_BAZEL_ACTION=1
 
 # These are symlinked elsewhere.
 build --deleted_packages=bazel/workspace_root/...
