@@ -17,6 +17,10 @@ common --registry=https://bcr.bazel.build
 common --registry=https://raw.githubusercontent.com/matts1/bazel-central-registry/main
 
 
+# Always show output from actions.
+common --experimental_ui_max_stdouterr_bytes=-1
+
+
 # Prevent writing to the remote cache if source files change during the build.
 # **DISABLED** Only useful when uploading artifacts from local builds, which we
 # won't do once we have Bazel running in CI builds, and it prevents uploading
