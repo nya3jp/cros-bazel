@@ -4,14 +4,26 @@
 
 use anyhow::Result;
 use binarypackage::BinaryPackage;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use cliutil::cli_main;
 use itertools::Itertools;
 use std::{path::PathBuf, process::ExitCode};
 
+#[derive(Parser, Debug)]
+#[command()]
+struct Cli {
+    #[clap(subcommand)]
+    commands: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    ExtractXpak(ExtractXpakArgs),
+}
+
 /// Shows XPAK entries in a Portage binary package file.
 #[derive(Parser, Debug)]
-struct Args {
+struct ExtractXpakArgs {
     #[arg(
         long,
         help = "Save raw XPAK entries to the specified directory instead of \
@@ -24,8 +36,13 @@ struct Args {
 }
 
 fn do_main() -> Result<()> {
-    let args = Args::parse();
+    let cli = Cli::parse();
+    match cli.commands {
+        Commands::ExtractXpak(args) => do_extract_xpak(args),
+    }
+}
 
+fn do_extract_xpak(args: ExtractXpakArgs) -> Result<()> {
     let pkg = BinaryPackage::open(&args.binary_package)?;
 
     if let Some(dump_dir) = args.dump {
