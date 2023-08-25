@@ -656,7 +656,12 @@ pub fn generate_repo_main(
     };
     create_dir_all(output_dir)?;
 
-    let _guard = cliutil::setup_tracing(&output_dir.join("trace.json"));
+    let _guard = cliutil::LoggingConfig {
+        trace_file: Some(output_dir.join("trace.json")),
+        log_file: None,
+        console_logger: None,
+    }
+    .setup()?;
 
     eprintln!("Generating @portage...");
 
@@ -702,6 +707,5 @@ pub fn generate_repo_main(
     )?;
 
     eprintln!("Generated @portage.");
-
     Ok(())
 }

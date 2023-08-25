@@ -5,7 +5,7 @@
 use anyhow::{ensure, Context, Result};
 use chrome_trace::{Event, Phase, Trace};
 use clap::Parser;
-use cliutil::{handle_top_level_result, PROFILES_DIR_ENV};
+use cliutil::{handle_top_level_result, TRACE_DIR_ENV};
 use fileutil::SafeTempDir;
 use nix::unistd::{getgid, getuid};
 use processes::status_to_exit_code;
@@ -177,7 +177,7 @@ fn do_main(args: Cli) -> Result<ExitStatus> {
     };
 
     let profiles_dir = SafeTempDir::new()?;
-    command.env(PROFILES_DIR_ENV, profiles_dir.path());
+    command.env(TRACE_DIR_ENV, profiles_dir.path());
 
     let start_time = Instant::now();
     let status = processes::run(&mut command)?;

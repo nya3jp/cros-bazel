@@ -4,7 +4,7 @@
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use cliutil::{cli_main, handle_top_level_result, print_current_command_line};
+use cliutil::{cli_main, handle_top_level_result, log_current_command_line};
 use fileutil::SafeTempDir;
 use itertools::Itertools;
 use nix::{
@@ -23,6 +23,7 @@ use std::{
     process::{Command, ExitCode, Stdio},
 };
 use tracing::info_span;
+use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -39,7 +40,18 @@ pub fn main() -> ExitCode {
     let args = Cli::parse();
 
     if !args.already_in_namespace {
-        print_current_command_line();
+        let _guard = cliutil::LoggingConfig {
+            trace_file: None,
+            log_file: None,
+            console_logger: Some(
+                EnvFilter::builder()
+                    .with_default_directive(LevelFilter::INFO.into())
+                    .from_env_lossy(),
+            ),
+        }
+        .setup()
+        .unwrap();
+        log_current_command_line();
         let result = || -> Result<_> {
             enter_namespace(RunInContainerConfig::deserialize_from(&args.config)?)
         }();

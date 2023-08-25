@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 # Note that the go and rust run_in_container are *not* CLI-compatible.
 # rust serializes and deserializes its arguments to a file, while go takes all
@@ -31,6 +31,7 @@ rust_binary(
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:shell-escape",
         "@alchemy_crates//:tracing",
+        "@alchemy_crates//:tracing-subscriber",
         "@rules_rust//tools/runfiles",
     ],
 )

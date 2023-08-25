@@ -964,6 +964,7 @@ dependencies = [
  "serde_json",
  "shell-escape",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

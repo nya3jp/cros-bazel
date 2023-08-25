@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 filegroup(
     name = "srcs",
@@ -37,7 +37,4 @@ rust_test(
     size = "small",
     crate = ":cliutil",
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    deps = [
-        "@alchemy_crates//:tempfile",
-    ],
 )
