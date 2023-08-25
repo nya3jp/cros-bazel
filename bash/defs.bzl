@@ -134,11 +134,19 @@ def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles 
         runfiles = runfiles.merge(ctx.runfiles(files = [args_file]))
         args = "$(cat %s)" % bash_rlocation(ctx, args_file)
     else:
-        args = " ".join(["'%s'" % arg for arg in args])
+        new_args = []
+        for arg in args:
+            if type(arg) == "File":
+                new_args.append('"%s"' % (bash_rlocation(ctx, arg)))
+            elif type(arg) == "string":
+                new_args.append("'%s'" % (arg))
+            else:
+                fail("Unknown type '%s' for arg '%s'" % (type(arg), arg))
+        args = " ".join(new_args)
     return _generate_bash_script(
         ctx,
         out,
-        content = '{content_prefix}\n\nexec {binary} {args} "$@"'.format(
+        content = '{content_prefix}\n\nexec "{binary}" {args} "$@"'.format(
             content_prefix = content_prefix,
             binary = bash_rlocation(ctx, binary_files[0]),
             args = args,
