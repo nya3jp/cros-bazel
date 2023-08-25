@@ -24,4 +24,7 @@ rust_test(
     size = "small",
     crate = ":xpaktool",
     rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@rules_rust//tools/runfiles",
+    ],
 )

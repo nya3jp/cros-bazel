@@ -12,3 +12,6 @@ binarypackage = { path = "../../common/portage/binarypackage" }
 anyhow.workspace = true
 clap.workspace = true
 itertools.workspace = true
+
+[dev-dependencies]
+runfiles.workspace = true

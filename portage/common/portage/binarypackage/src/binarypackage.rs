@@ -21,6 +21,7 @@ use std::{
 pub struct BinaryPackage {
     file: File,
     xpak_start: u64,
+    xpak_len: u64,
     xpak: HashMap<String, Vec<u8>>,
     category_pf: String,
 }
@@ -63,6 +64,7 @@ impl BinaryPackage {
         Ok(Self {
             file,
             xpak_start,
+            xpak_len: size - xpak_start,
             xpak,
             category_pf,
         })
@@ -82,6 +84,12 @@ impl BinaryPackage {
     pub fn new_tarball_reader(&mut self) -> Result<impl Sized + Read + '_> {
         self.file.rewind()?;
         Ok((&mut self.file).take(self.xpak_start))
+    }
+
+    /// Returns a xpak reader.
+    pub fn new_xpak_reader(&mut self) -> Result<impl Sized + Read + '_> {
+        self.file.seek(Start(self.xpak_start))?;
+        Ok((&mut self.file).take(self.xpak_len))
     }
 
     /// Returns a tar archive.
