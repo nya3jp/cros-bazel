@@ -90,12 +90,13 @@ fn file_path_needs_renaming(path: &Path) -> bool {
 /// information from other sources, such as the file system.
 #[derive(Clone, Debug)]
 struct SourcePackageLayout {
-    /// Relative directory path from the "src" directory of ChromeOS checkout.
-    /// e.g. "platform2/debugd".
+    /// Relative directory path from the "root" directory of ChromeOS checkout.
+    /// e.g. "src/platform2/debugd".
+    /// e.g. "chromite".
     prefix: PathBuf,
 
     /// Relative directory paths of child local source packages.
-    /// e.g. "platform2/debugd/dbus_bindings".
+    /// e.g. "src/platform2/debugd/dbus_bindings".
     child_prefixes: Vec<PathBuf>,
 }
 
@@ -210,10 +211,10 @@ impl SourcePackage {
     #[instrument(skip_all, fields(prefix = %layout.prefix.display()))]
     fn try_new(
         layout: SourcePackageLayout,
-        src_dir: &Path,
+        repo_dir: &Path,
         repository_output_dir: &Path,
     ) -> Result<Self> {
-        let source_dir = src_dir.join(&layout.prefix);
+        let source_dir = repo_dir.join(&layout.prefix);
 
         let output_dir = repository_output_dir
             .join("internal/sources")
@@ -223,7 +224,7 @@ impl SourcePackage {
         let child_paths: HashSet<PathBuf> = layout
             .child_prefixes
             .iter()
-            .map(|child_prefix| src_dir.join(child_prefix))
+            .map(|child_prefix| repo_dir.join(child_prefix))
             .collect();
 
         // Find files to handle specially.
@@ -289,7 +290,7 @@ impl SourcePackage {
         // required to calculate which patches to apply. We really need to
         // figure out another way of doing this.
         // TODO: Remove this hack.
-        let include_git = layout.prefix.to_string_lossy() == "third_party/llvm-project";
+        let include_git = layout.prefix.to_string_lossy() == "src/third_party/llvm-project";
 
         if include_git {
             // On including .git, explicitly scan directories as it may contain
@@ -556,7 +557,7 @@ fn generate_package(package: &SourcePackage) -> Result<()> {
 #[instrument(skip_all)]
 pub fn generate_internal_sources<'a>(
     all_local_sources: impl IntoIterator<Item = &'a PackageLocalSource>,
-    src_dir: &Path,
+    repo_dir: &Path,
     repository_output_dir: &Path,
 ) -> Result<()> {
     let source_layouts: Vec<SourcePackageLayout> = SourcePackageLayout::compute(all_local_sources)?;
@@ -565,7 +566,7 @@ pub fn generate_internal_sources<'a>(
         .into_iter()
         .flat_map(|layout| {
             let prefix_string = layout.prefix.to_string_lossy().into_owned();
-            match SourcePackage::try_new(layout, src_dir, repository_output_dir) {
+            match SourcePackage::try_new(layout, repo_dir, repository_output_dir) {
                 Ok(source_package) => Some(source_package),
                 Err(err) => {
                     eprintln!(
@@ -736,18 +737,21 @@ mod tests {
         let source_dir = source_dir.path();
 
         // .git is usually a symlink.
-        create_dir_all(source_dir.join("third_party/llvm-project"))?;
-        symlink(git_dir, source_dir.join("third_party/llvm-project/.git"))?;
-        create_dir_all(source_dir.join("platform2"))?;
-        symlink(git_dir, source_dir.join("platform2/.git"))?;
+        create_dir_all(source_dir.join("src/third_party/llvm-project"))?;
+        symlink(
+            git_dir,
+            source_dir.join("src/third_party/llvm-project/.git"),
+        )?;
+        create_dir_all(source_dir.join("src/platform2"))?;
+        symlink(git_dir, source_dir.join("src/platform2/.git"))?;
 
         let output_dir = tempdir()?;
         let output_dir = output_dir.path();
 
         generate_internal_sources(
             &[
-                PackageLocalSource::Src(PathBuf::from("third_party/llvm-project")),
-                PackageLocalSource::Src(PathBuf::from("platform2")),
+                PackageLocalSource::Src(PathBuf::from("src/third_party/llvm-project")),
+                PackageLocalSource::Src(PathBuf::from("src/platform2")),
             ],
             source_dir,
             output_dir,
@@ -755,14 +759,14 @@ mod tests {
 
         // llvm-project's BUILD.bazel contains pkg_mkdirs.
         compare_with_golden_data(
-            &output_dir.join("internal/sources/third_party/llvm-project/BUILD.bazel"),
+            &output_dir.join("internal/sources/src/third_party/llvm-project/BUILD.bazel"),
             &Path::new(TESTDATA_DIR).join("empty_dirs_git.llvm-project.golden.BUILD.bazel"),
         )?;
 
         // platform2's BUILD.bazel excludes .git and does not contain pkg_mkdirs because it's not
         // allowlisted.
         compare_with_golden_data(
-            &output_dir.join("internal/sources/platform2/BUILD.bazel"),
+            &output_dir.join("internal/sources/src/platform2/BUILD.bazel"),
             &Path::new(TESTDATA_DIR).join("empty_dirs_git.platform2.golden.BUILD.bazel"),
         )?;
 

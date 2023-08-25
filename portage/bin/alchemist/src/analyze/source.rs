@@ -45,10 +45,8 @@ pub enum PackageLocalSource {
     /// sorted, this comes first, and thus results in being in the higher
     /// overlay fs layer.
     BazelTarget(String),
-    /// ChromeOS source code at `/mnt/host/source/src`.
+    /// ChromeOS source code at `/mnt/host/source`.
     Src(PathBuf),
-    /// Chromite source code at `/mnt/host/source/chromite`.
-    Chromite,
     /// Chrome source code.
     Chrome(ChromeVersion),
 }
@@ -276,6 +274,8 @@ fn extract_cros_workon_sources(
     let source_dirs: Vec<PathBuf> = source_paths
         .into_iter()
         .flat_map(|path| {
+            let src_name = Path::new(src_dir.file_name().expect("src_dir to have a name"));
+
             let full_path = src_dir.join(&path);
 
             let meta = match metadata(&full_path) {
@@ -291,6 +291,19 @@ fn extract_cros_workon_sources(
                     );
                 }
                 Ok(meta) => meta,
+            };
+
+            let path = match path.strip_prefix("../") {
+                Ok(rest) => {
+                    if rest.starts_with("chromite") {
+                        rest.to_owned()
+                    } else {
+                        return Some(Err(anyhow!(
+                            "Unknown relative path found in CROS_WORKON_LOCALNAME"
+                        )));
+                    }
+                }
+                Err(_) => src_name.join(path),
             };
 
             if meta.is_dir() {
@@ -315,7 +328,7 @@ fn extract_cros_workon_sources(
         .any(|p| p == "chromiumos/third_party/kernel")
     {
         sources.push(PackageLocalSource::Src(
-            "third_party/chromiumos-overlay/eclass/cros-kernel".into(),
+            "src/third_party/chromiumos-overlay/eclass/cros-kernel".into(),
         ));
     }
 
@@ -342,8 +355,8 @@ fn apply_local_sources_workarounds(
     }
 
     // Running install hooks requires src/scripts/hooks and chromite.
-    local_sources.push(PackageLocalSource::Src("scripts/hooks".into()));
-    local_sources.push(PackageLocalSource::Chromite);
+    local_sources.push(PackageLocalSource::Src("src/scripts/hooks".into()));
+    local_sources.push(PackageLocalSource::Src("chromite".into()));
 
     // The platform eclass calls `platform2_test.py`.
     // The meson eclass calls `meson_test.py` which calls `platform2_test.py`.
@@ -352,7 +365,7 @@ fn apply_local_sources_workarounds(
         // TODO(b/295064725): Migrate chromeos-fonts to cros-workon
         || details.package_name == "chromeos-base/chromeos-fonts"
     {
-        let common_mk = PackageLocalSource::Src("platform2/common-mk".into());
+        let common_mk = PackageLocalSource::Src("src/platform2/common-mk".into());
         local_sources.push(common_mk);
     }
 
@@ -924,6 +937,281 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn cros_workon_pinned_package_with_chromite_subtree() -> Result<()> {
+        let package = PackageDetails {
+            repo_name: "baz".to_owned(),
+            package_name: "chromeos-base/hwid_extractor".to_owned(),
+            version: Version::try_new("0.1.0")?,
+            vars: BashVars::new(HashMap::from([
+                (
+                    "CROS_WORKON_PROJECT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "chromiumos/platform/factory".to_owned(),
+                        "chromiumos/chromite".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_LOCALNAME".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "platform/factory".to_owned(),
+                        "../chromite".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_SUBTREE".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "py".to_owned(),
+                        "lib bin scripts PRESUBMIT.cfg".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_COMMIT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
+                        "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_TREE".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
+                        "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
+                        "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
+                        "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
+                        "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                    BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
+                ),
+            ])),
+            slot: Slot::new("0"),
+            use_map: HashMap::new(),
+            accepted: true,
+            stable: true,
+            masked: false,
+            ebuild_path: PathBuf::from("/dev/null"),
+            inherited: HashSet::new(),
+            inherit_paths: vec![],
+            direct_build_target: None,
+        };
+        let (local_sources, repo_sources) =
+            extract_cros_workon_sources(&package, Path::new("/src"))?;
+
+        assert_eq!(local_sources, []);
+        assert_eq!(
+            repo_sources,
+            [
+                PackageRepoSource {
+                    name:
+                        "tree-chromiumos-platform-factory-6f11773570dfaaade362374b0d0392c28cf17206"
+                            .into(),
+                    project: "chromiumos/platform/factory".into(),
+                    tree_hash: "6f11773570dfaaade362374b0d0392c28cf17206".into(),
+                    project_path: "platform/factory".into(),
+                    subtree: Some("py".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-chromite-5e822365b04b4690729ca6ec32935a177db97ed2"
+                        .into(),
+                    project: "chromiumos/chromite".into(),
+                    tree_hash: "5e822365b04b4690729ca6ec32935a177db97ed2".into(),
+                    project_path: "../chromite".into(),
+                    subtree: Some("lib".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-chromite-514603540da793957fa87fa22df81b288fb39d0f"
+                        .into(),
+                    project: "chromiumos/chromite".into(),
+                    tree_hash: "514603540da793957fa87fa22df81b288fb39d0f".into(),
+                    project_path: "../chromite".into(),
+                    subtree: Some("bin".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-chromite-b2307ed1e70bf1a5718afaa81217ec9504854005"
+                        .into(),
+                    project: "chromiumos/chromite".into(),
+                    tree_hash: "b2307ed1e70bf1a5718afaa81217ec9504854005".into(),
+                    project_path: "../chromite".into(),
+                    subtree: Some("scripts".into()),
+                },
+                PackageRepoSource {
+                    name: "tree-chromiumos-chromite-bc55f0377f73029f50c4c74d5936e4d7bde877c6"
+                        .into(),
+                    project: "chromiumos/chromite".into(),
+                    tree_hash: "bc55f0377f73029f50c4c74d5936e4d7bde877c6".into(),
+                    project_path: "../chromite".into(),
+                    subtree: Some("PRESUBMIT.cfg".into()),
+                },
+            ]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn cros_workon_9999_package_with_chromite_subtree() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                ("src/platform/factory/py/README", ""),
+                ("chromite/lib/README", ""),
+                ("chromite/bin/README", ""),
+                ("chromite/scripts/README", ""),
+                ("chromite/PRESUBMIT.cfg", ""),
+            ],
+        )?;
+
+        let package = PackageDetails {
+            repo_name: "baz".to_owned(),
+            package_name: "chromeos-base/hwid_extractor".to_owned(),
+            version: Version::try_new("0.1.0")?,
+            vars: BashVars::new(HashMap::from([
+                (
+                    "CROS_WORKON_PROJECT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "chromiumos/platform/factory".to_owned(),
+                        "chromiumos/chromite".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_LOCALNAME".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "platform/factory".to_owned(),
+                        "../chromite".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_SUBTREE".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "py".to_owned(),
+                        "lib bin scripts PRESUBMIT.cfg".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_COMMIT".to_owned(),
+                    BashValue::Scalar("".to_owned()),
+                ),
+                (
+                    "CROS_WORKON_TREE".to_owned(),
+                    BashValue::Scalar("".to_owned()),
+                ),
+                (
+                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                    BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
+                ),
+            ])),
+            slot: Slot::new("0"),
+            use_map: HashMap::new(),
+            accepted: true,
+            stable: true,
+            masked: false,
+            ebuild_path: PathBuf::from("/dev/null"),
+            inherited: HashSet::new(),
+            inherit_paths: vec![],
+            direct_build_target: None,
+        };
+        let (local_sources, repo_sources) =
+            extract_cros_workon_sources(&package, &dir.join("src"))?;
+
+        assert_eq!(repo_sources, []);
+        assert_eq!(
+            local_sources,
+            [
+                PackageLocalSource::Src("src/platform/factory/py".into()),
+                PackageLocalSource::Src("chromite/lib".into()),
+                PackageLocalSource::Src("chromite/bin".into()),
+                PackageLocalSource::Src("chromite/scripts".into()),
+                PackageLocalSource::Src("chromite".into()),
+            ]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn cros_workon_9999_third_party_package_with_chromite() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                ("src/third_party/coreboot/README", ""),
+                ("src/platform/vboot_reference/README", ""),
+                ("chromite/README", ""),
+            ],
+        )?;
+
+        let package = PackageDetails {
+            repo_name: "baz".to_owned(),
+            package_name: "sys-boot/coreboot".to_owned(),
+            version: Version::try_new("0.1.0")?,
+            vars: BashVars::new(HashMap::from([
+                (
+                    "CROS_WORKON_PROJECT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "chromiumos/third_party/coreboot".to_owned(),
+                        "chromiumos/platform/vboot_reference".to_owned(),
+                        "chromiumos/chromite".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_LOCALNAME".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "coreboot".to_owned(),
+                        "../platform/vboot_reference".to_owned(),
+                        "../../chromite".to_owned(),
+                    ])),
+                ),
+                (
+                    "CROS_WORKON_SUBTREE".to_owned(),
+                    BashValue::Scalar("".to_owned()),
+                ),
+                (
+                    "CROS_WORKON_COMMIT".to_owned(),
+                    BashValue::Scalar("".to_owned()),
+                ),
+                (
+                    "CROS_WORKON_TREE".to_owned(),
+                    BashValue::Scalar("".to_owned()),
+                ),
+                (
+                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                    BashValue::Scalar("".to_owned()),
+                ),
+            ])),
+            slot: Slot::new("0"),
+            use_map: HashMap::new(),
+            accepted: true,
+            stable: true,
+            masked: false,
+            ebuild_path: PathBuf::from("/dev/null"),
+            inherited: HashSet::new(),
+            inherit_paths: vec![],
+            direct_build_target: None,
+        };
+        let (local_sources, repo_sources) =
+            extract_cros_workon_sources(&package, &dir.join("src"))?;
+
+        assert_eq!(repo_sources, []);
+        assert_eq!(
+            local_sources,
+            [
+                PackageLocalSource::Src("src/third_party/coreboot".into()),
+                PackageLocalSource::Src("src/platform/vboot_reference".into()),
+                PackageLocalSource::Src("chromite".into()),
+            ]
+        );
+
+        Ok(())
+    }
+
     fn create_optional_subtree_package(use_map: UseMap) -> PackageDetails {
         PackageDetails {
             repo_name: "baz".to_owned(),
@@ -1078,10 +1366,20 @@ mod tests {
         Ok(())
     }
 
-    // TODO: We need to construct a real src tree for this to work.
-    #[ignore]
     #[test]
     fn cros_workon_9999_package() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                ("src/platform/depthcharge/README", ""),
+                ("src/platform/vboot_reference/README", ""),
+                ("src/third_party/coreboot/README", ""),
+            ],
+        )?;
+
         let package = PackageDetails {
             repo_name: "baz".to_owned(),
             package_name: "sys-boot/depthcharge".to_owned(),
@@ -1115,6 +1413,14 @@ mod tests {
                     "CROS_WORKON_SUBTREE".to_owned(),
                     BashValue::Scalar("".to_owned()),
                 ),
+                (
+                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                    BashValue::IndexedArray(Vec::from([
+                        "".to_owned(),
+                        "".to_owned(),
+                        "".to_owned(),
+                    ])),
+                ),
             ])),
             slot: Slot::new("0"),
             use_map: HashMap::new(),
@@ -1127,15 +1433,15 @@ mod tests {
             direct_build_target: None,
         };
         let (local_sources, repo_sources) =
-            extract_cros_workon_sources(&package, Path::new("/src"))?;
+            extract_cros_workon_sources(&package, &dir.join("src"))?;
 
         assert_eq!(repo_sources, []);
         assert_eq!(
             local_sources,
             [
-                PackageLocalSource::Src("platform/depthcharge".into()),
-                PackageLocalSource::Src("platform/vboot_reference".into()),
-                PackageLocalSource::Src("third_party/coreboot".into()),
+                PackageLocalSource::Src("src/platform/depthcharge".into()),
+                PackageLocalSource::Src("src/platform/vboot_reference".into()),
+                PackageLocalSource::Src("src/third_party/coreboot".into()),
             ]
         );
 

@@ -52,7 +52,7 @@ pkg_filegroup(
         ":__symlink__another%20symlink",
         ":__symlink__symlink",
     ],
-    prefix = "/mnt/host/source/src/",
+    prefix = "/mnt/host/source/",
     visibility = ["//visibility:private"],
 )
 

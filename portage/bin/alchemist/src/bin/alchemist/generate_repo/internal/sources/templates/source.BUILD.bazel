@@ -72,7 +72,7 @@ pkg_filegroup(
         ":{{ symlink.name }}",
         {%- endfor %}
     ],
-    prefix = "/mnt/host/source/src/{{ prefix }}",
+    prefix = "/mnt/host/source/{{ prefix }}",
     visibility = ["//visibility:private"],
 )
 

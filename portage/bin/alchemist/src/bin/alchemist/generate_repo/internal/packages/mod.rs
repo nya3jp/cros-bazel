@@ -203,7 +203,6 @@ impl EBuildEntry {
                 PackageLocalSource::Chrome(version) => {
                     format!("@portage_deps//:chrome-{version}_src")
                 }
-                PackageLocalSource::Chromite => "@chromite//:src".to_string(),
             })
             .collect();
 

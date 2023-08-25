@@ -34,7 +34,7 @@ pkg_filegroup(
     srcs = [
         ":__files_regular__",
     ],
-    prefix = "/mnt/host/source/src/foo",
+    prefix = "/mnt/host/source/foo",
     visibility = ["//visibility:private"],
 )
 

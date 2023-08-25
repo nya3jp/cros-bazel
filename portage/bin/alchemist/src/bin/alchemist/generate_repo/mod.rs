@@ -695,7 +695,9 @@ pub fn generate_repo_main(
         all_packages
             .iter()
             .flat_map(|package| &package.sources.local_sources),
-        src_dir,
+        src_dir
+            .parent()
+            .expect("src_dir '{src_dir:?} to have a parent"),
         output_dir,
     )?;
 
