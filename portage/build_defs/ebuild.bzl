@@ -594,3 +594,51 @@ ebuild_test, ebuild_primordial_test = maybe_primordial_rule(
     ),
     test = True,
 )
+
+def _ebuild_compare_package_test_impl(ctx):
+    if len(ctx.attr.packages) != 2:
+        fail("Expected two packages, got %d" % (len(ctx.attr.packages)))
+
+    inputs = [
+        package[BinaryPackageInfo].file
+        for package in ctx.attr.packages
+    ]
+
+    args = ["compare-packages"]
+    for file in inputs:
+        args.append(file)
+
+    return wrap_binary_with_args(
+        ctx,
+        out = ctx.outputs.executable,
+        binary = ctx.attr._xpaktool,
+        args = args,
+        content_prefix = "export RUST_BACKTRACE=1",
+        runfiles = ctx.runfiles(transitive_files = depset(inputs)),
+    )
+
+ebuild_compare_package_test, ebuild_compare_package_primordial_test = maybe_primordial_rule(
+    implementation = _ebuild_compare_package_test_impl,
+    doc = """
+    Compares two binary packages and ensures they are identical. This test is
+    helpful to ensure that ebuild outputs are hermetic.
+
+    Unfortunately this test can't guarantee that two hosts will produce the same
+    binary package. i.e., The `make -j <cores>` might get logged into the ebuild
+    environment file which is build machine specific.
+    """,
+    attrs = {
+        "packages": attr.label_list(
+            doc = "The two binary packages to compare.",
+            providers = [BinaryPackageInfo],
+            mandatory = True,
+        ),
+        "_xpaktool": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/xpaktool"),
+        ),
+        "_bash_runfiles": BASH_RUNFILES_ATTR,
+    },
+    test = True,
+)
