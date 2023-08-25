@@ -19,24 +19,9 @@ pkg_tar(
     visibility = ["//bazel:internal"],
 )
 
-bool_flag(
-    name = "new-sdk",
-    build_setting_default = True,
-)
-
-config_setting(
-    name = "new-sdk-enabled",
-    flag_values = {
-        ":new-sdk": "True",
-    },
-)
-
 sdk_from_archive(
     name = "sdk_from_archive",
-    src = select({
-        ":new-sdk-enabled": "@files//:cros-sdk-2023.08.08.170046",
-        "//conditions:default": "@files//:cros-sdk-2023.04.05.144808",
-    }),
+    src = "@files//:cros-sdk-2023.08.08.170046",
     progress_message = "Extracting bootstrap SDK tarball",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
