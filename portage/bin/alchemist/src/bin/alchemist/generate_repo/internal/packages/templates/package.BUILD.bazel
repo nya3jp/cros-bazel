@@ -4,7 +4,7 @@
 
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
@@ -99,11 +99,15 @@ alias(
 )
 {%- endif %}
 
+{%- for suffix in ["","_hermetic_test_package"] %}
 ebuild(
-    name = "{{ ebuild.version }}",
+    name = "{{ ebuild.version }}{{ suffix }}",
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
+{% if suffix -%}
+    suffix = "{{ suffix }}",
+{%- endif %}
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
@@ -167,6 +171,7 @@ ebuild(
     {%- endif %}
     visibility = ["@//bazel:internal"],
 )
+{% endfor -%}
 
 ebuild_debug(
     name = "{{ ebuild.version }}_debug",
@@ -293,6 +298,25 @@ ebuild_test(
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
     {%- endif %}
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "{{ ebuild.version }}_hermetic_test",
+    packages = [
+        ":{{ ebuild.version }}",
+        ":{{ ebuild.version }}_hermetic_test_package",
+    ],
+    size="small",
+)
+
+test_suite(
+    name = "{{ ebuild.version }}_package_set_hermetic_test",
+    tests = [
+        {%- for dep in ebuild.install_set %}
+        "{{ dep }}_hermetic_test",
+        {%- endfor %}
+    ],
     visibility = ["@//bazel:internal"],
 )
 

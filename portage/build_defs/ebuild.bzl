@@ -250,6 +250,8 @@ def _download_prebuilt(ctx, prebuilt, output_binary_package_file):
 
 def _ebuild_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
+    if ctx.attr.suffix:
+        src_basename += ctx.attr.suffix
 
     # Declare outputs.
     output_binary_package_file = ctx.actions.declare_file(
@@ -405,6 +407,11 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             allow_empty = True,
             doc = """
             The path inside the binpkg that contains static libraries.
+            """,
+        ),
+        suffix = attr.string(
+            doc = """
+            Suffix to add to the output file. i.e., libcxx-17.0-r15<suffix>.tbz2
             """,
         ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
