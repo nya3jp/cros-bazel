@@ -14,6 +14,8 @@ done
 
 locale-gen --jobs 1
 
+export SOURCE_DATE_EPOCH=946710000
+
 for PYTHON_VERSION in python3.6 python3.8
 do
   if ! command -v "${PYTHON_VERSION}" > /dev/null; then
@@ -49,6 +51,8 @@ do
   # TODO: Land https://chromium-review.googlesource.com/c/chromiumos/third_party/portage_tool/+/4519681
   sed -i "s/fakeroot = fakeroot and uid != 0/fakeroot = fakeroot/" \
     "/usr/${PYTHON_LIBDIR}/${PYTHON_VERSION}/site-packages/portage/package/ebuild/doebuild.py"
+
+  "${PYTHON_VERSION}" -m compileall "/usr/${PYTHON_LIBDIR}/${PYTHON_VERSION}/site-packages/portage/"
 done
 
 rm -f /usr/src/portage/*
