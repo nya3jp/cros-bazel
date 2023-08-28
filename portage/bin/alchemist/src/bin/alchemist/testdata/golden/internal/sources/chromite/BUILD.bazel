@@ -14,6 +14,7 @@ pkg_files(
         exclude = [
             "**/.git",
             "**/.git/**",
+            "__pycache__",
             "BUILD.bazel",
             "BUILD",
             "WORKSPACE.bazel",
@@ -29,18 +30,10 @@ pkg_files(
     visibility = ["//visibility:private"],
 )
 
-pkg_mkdirs(
-    name = "__dirs__",
-    dirs = [
-        "__pycache__",
-    ],
-)
-
 pkg_filegroup(
     name = "__files__",
     srcs = [
         ":__files_regular__",
-        ":__dirs__",
     ],
     prefix = "/mnt/host/source/chromite",
     visibility = ["//visibility:private"],

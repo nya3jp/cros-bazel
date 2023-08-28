@@ -259,6 +259,12 @@ impl SourcePackage {
                 continue;
             }
 
+            // These files contain timestamps, so exclude them.
+            if file_name_str == "__pycache__" {
+                excludes.push(rel_path);
+                continue;
+            }
+
             // Record directories.
             if entry.file_type().is_dir() {
                 dirs.push(rel_path);
