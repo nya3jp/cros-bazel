@@ -12,8 +12,6 @@ pkg_files(
     srcs = glob(
         ["**"],
         exclude = [
-            "**/.git",
-            "**/.git/**",
             "BUILD.bazel",
             "WORKSPACE.bazel",
             "hello world.txt",

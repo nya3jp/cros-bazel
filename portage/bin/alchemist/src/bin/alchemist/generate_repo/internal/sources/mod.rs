@@ -197,12 +197,6 @@ struct SourcePackage {
     /// should be excluded to avoid confusing Bazel, thus they appear here.
     /// `excludes` includes `symlinks` and `renames`.
     excludes: Vec<PathBuf>,
-
-    /// Whether to include .git in the source tarball.
-    /// This must not be enabled except for a few packages under active fixing
-    /// because .git structure is not canonicalized and thus harms caching.
-    /// TODO: Remove this hack.
-    include_git: bool,
 }
 
 impl SourcePackage {
@@ -248,14 +242,15 @@ impl SourcePackage {
             let rel_path = entry.path().strip_prefix(&source_dir)?.to_owned();
             let file_name_str = &*rel_path.file_name().unwrap_or_default().to_string_lossy();
 
-            // Skip .git directory. Note that this is also hard-coded in
-            // the template BUILD.bazel.
+            // Skip .git directory because it is non-deterministic.
             if file_name_str == ".git" {
                 // Note that .git can be a symlink, in which case we must not
                 // call WalkDir::skip_current_dir.
                 if entry.file_type().is_dir() {
                     walk.skip_current_dir();
                 }
+
+                excludes.push(rel_path);
                 continue;
             }
 
@@ -292,29 +287,6 @@ impl SourcePackage {
             }
         }
 
-        // HACK: We intentionally include the .git repo for llvm because it's
-        // required to calculate which patches to apply. We really need to
-        // figure out another way of doing this.
-        // TODO: Remove this hack.
-        let include_git = layout.prefix.to_string_lossy() == "src/third_party/llvm-project";
-
-        if include_git {
-            // On including .git, explicitly scan directories as it may contain
-            // mandatory empty directories (e.g. .git/refs). We don't bother to
-            // handle file names with special characters under .git; if such
-            // files exist, they will just cause the build to fail.
-            let walk = WalkDir::new(source_dir.join(".git"))
-                .follow_links(true)
-                .sort_by_file_name();
-            for entry in walk {
-                let entry = entry?;
-                if entry.file_type().is_dir() {
-                    let rel_path = entry.path().strip_prefix(&source_dir)?.to_owned();
-                    dirs.push(rel_path);
-                }
-            }
-        }
-
         Ok(Self {
             layout,
             source_dir,
@@ -323,7 +295,6 @@ impl SourcePackage {
             symlinks,
             renames,
             excludes,
-            include_git,
         })
     }
 }
@@ -349,7 +320,6 @@ struct BuildTemplateContext {
     symlinks: Vec<SymlinkEntry>,
     renames: Vec<RenameEntry>,
     excludes: Vec<String>,
-    include_git: bool,
 }
 
 /// Generates `BUILD.bazel` file for a source package.
@@ -399,7 +369,6 @@ fn generate_build_file(package: &SourcePackage) -> Result<()> {
             .iter()
             .map(|path| path.to_string_lossy().into_owned())
             .collect(),
-        include_git: package.include_git,
     };
 
     let mut file = File::create(package.output_dir.join("BUILD.bazel"))?;

@@ -10,10 +10,6 @@ pkg_files(
     srcs = glob(
         ["**"],
         exclude = [
-            {%- if not include_git %}
-            "**/.git",
-            "**/.git/**",
-            {%- endif %}
             {%- for path in excludes %}
             "{{ path }}",
             {%- endfor %}

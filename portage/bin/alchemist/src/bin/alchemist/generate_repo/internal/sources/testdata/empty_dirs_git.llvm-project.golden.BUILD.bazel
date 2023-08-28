@@ -12,6 +12,7 @@ pkg_files(
     srcs = glob(
         ["**"],
         exclude = [
+            ".git",
             "BUILD.bazel",
             "BUILD",
             "WORKSPACE.bazel",
@@ -27,19 +28,10 @@ pkg_files(
     visibility = ["//visibility:private"],
 )
 
-pkg_mkdirs(
-    name = "__dirs__",
-    dirs = [
-        ".git",
-        ".git/refs",
-    ],
-)
-
 pkg_filegroup(
     name = "__files__",
     srcs = [
         ":__files_regular__",
-        ":__dirs__",
     ],
     prefix = "/mnt/host/source/src/third_party/llvm-project",
     visibility = ["//visibility:private"],
