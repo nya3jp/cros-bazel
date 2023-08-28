@@ -204,7 +204,7 @@ mod tests {
     const NANORC_SIZE: u64 = 11225;
     const NANO_SIZE: u64 = 225112;
 
-    const BINARY_PKG_RUNFILE: &str = "cros/bazel/portage/bin/extract_interface/testdata/nano.tbz2";
+    const BINARY_PKG_RUNFILE: &str = "cros/bazel/portage/common/testdata/nano.tbz2";
 
     fn binary_package() -> Result<BinaryPackage> {
         let r = runfiles::Runfiles::create()?;

@@ -23,6 +23,11 @@ rust_test(
     name = "xpaktool_test",
     size = "small",
     crate = ":xpaktool",
+    data = [
+        "//bazel/portage/common/testdata:nano.tbz2",
+        "//bazel/portage/common/testdata:nano-diff-tar.tbz2",
+        "//bazel/portage/common/testdata:nano-diff-xpak.tbz2",
+    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@rules_rust//tools/runfiles",

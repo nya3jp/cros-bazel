@@ -4,9 +4,17 @@
 
 load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 
-package(default_visibility = ["//bazel/portage/bin/extract_interface:__pkg__"])
+package(default_visibility = ["//bazel/portage:__subpackages__"])
+
+exports_files(
+    [
+        "nano.tbz2",
+        "nano-diff-xpak.tbz2",
+        "nano-diff-tar.tbz2",
+    ],
+)
 
 binary_package(
     name = "nano",
-    src = ":nano.tbz2",
+    src = "nano.tbz2",
 )

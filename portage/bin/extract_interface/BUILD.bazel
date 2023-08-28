@@ -28,7 +28,7 @@ rust_test(
     name = "extract_interface_test",
     size = "small",
     crate = ":extract_interface",
-    data = ["//bazel/portage/bin/extract_interface/testdata:nano"],
+    data = ["//bazel/portage/common/testdata:nano"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/portage/common/fileutil",
@@ -43,5 +43,5 @@ extract_interface(
     files = {
         "/bin/nano": "nano",
     },
-    pkg = "//bazel/portage/bin/extract_interface/testdata:nano",
+    pkg = "//bazel/portage/common/testdata:nano",
 )
