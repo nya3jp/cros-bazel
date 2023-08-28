@@ -34,6 +34,13 @@ def _files_impl(module_ctx):
         targets = "//:bin/patchelf",
     )
 
+    hub.http_file.symlink(
+        name = "buildozer",
+        urls = ["https://github.com/bazelbuild/buildtools/releases/download/v6.1.2/buildozer-linux-amd64"],
+        executable = True,
+        sha256 = "2aef0f1ef80a0140b8fe6e6a8eb822e14827d8855bfc6681532c7530339ea23b",
+    )
+
     prebuilts_dependencies(http_file = hub.http_file.alias)
     cros_sdk_repositories(http_file = hub.http_file.alias)
 
