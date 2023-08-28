@@ -168,6 +168,8 @@ fn generate_eclass_build_file(original_repo_dir: &Path, output_repo_dir: &Path) 
         });
     }
 
+    eclasses.sort_by(|a, b| a.name.cmp(&b.name));
+
     let mount_path = get_mount_path(&eclass_dir);
     let context = EclassSetTemplateContext {
         mount_path,
