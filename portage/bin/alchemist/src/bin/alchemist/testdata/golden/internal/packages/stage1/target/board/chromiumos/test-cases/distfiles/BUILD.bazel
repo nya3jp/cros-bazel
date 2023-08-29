@@ -32,6 +32,8 @@ ebuild(
     ebuild = "distfiles-1.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "test-cases",
+    package_name = "distfiles",
+    version = "1.0",
 
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
@@ -56,6 +58,8 @@ ebuild(
     ebuild = "distfiles-1.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "test-cases",
+    package_name = "distfiles",
+    version = "1.0",
 suffix = "_hermetic_test_package",
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
@@ -79,6 +83,8 @@ ebuild_debug(
     ebuild = "distfiles-1.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "test-cases",
+    package_name = "distfiles",
+    version = "1.0",
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
     },
@@ -110,6 +116,8 @@ ebuild_test(
     ebuild = "distfiles-1.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "test-cases",
+    package_name = "distfiles",
+    version = "1.0",
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
     },

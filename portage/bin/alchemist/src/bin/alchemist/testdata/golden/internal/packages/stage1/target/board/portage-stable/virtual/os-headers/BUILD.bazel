@@ -32,6 +32,8 @@ ebuild(
     ebuild = "os-headers-0-r2.ebuild",
     overlay = "//internal/overlays/portage-stable",
     category = "virtual",
+    package_name = "os-headers",
+    version = "0-r2",
 
     distfiles = {
     },
@@ -55,6 +57,8 @@ ebuild(
     ebuild = "os-headers-0-r2.ebuild",
     overlay = "//internal/overlays/portage-stable",
     category = "virtual",
+    package_name = "os-headers",
+    version = "0-r2",
 suffix = "_hermetic_test_package",
     distfiles = {
     },
@@ -77,6 +81,8 @@ ebuild_debug(
     ebuild = "os-headers-0-r2.ebuild",
     overlay = "//internal/overlays/portage-stable",
     category = "virtual",
+    package_name = "os-headers",
+    version = "0-r2",
     distfiles = {
     },
     srcs = [
@@ -107,6 +113,8 @@ ebuild_test(
     ebuild = "os-headers-0-r2.ebuild",
     overlay = "//internal/overlays/portage-stable",
     category = "virtual",
+    package_name = "os-headers",
+    version = "0-r2",
     distfiles = {
     },
     srcs = [

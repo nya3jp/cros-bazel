@@ -32,6 +32,8 @@ ebuild(
     ebuild = "gcc-libs-10.2.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "gcc-libs",
+    version = "10.2.0",
 
     distfiles = {
     },
@@ -55,6 +57,8 @@ ebuild(
     ebuild = "gcc-libs-10.2.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "gcc-libs",
+    version = "10.2.0",
 suffix = "_hermetic_test_package",
     distfiles = {
     },
@@ -77,6 +81,8 @@ ebuild_debug(
     ebuild = "gcc-libs-10.2.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "gcc-libs",
+    version = "10.2.0",
     distfiles = {
     },
     srcs = [
@@ -107,6 +113,8 @@ ebuild_test(
     ebuild = "gcc-libs-10.2.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "gcc-libs",
+    version = "10.2.0",
     distfiles = {
     },
     srcs = [

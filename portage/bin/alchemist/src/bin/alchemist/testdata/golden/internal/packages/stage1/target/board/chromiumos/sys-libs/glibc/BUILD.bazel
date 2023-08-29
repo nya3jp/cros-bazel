@@ -32,6 +32,8 @@ ebuild(
     ebuild = "glibc-2.35-r20.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "glibc",
+    version = "2.35-r20",
 
     distfiles = {
     },
@@ -55,6 +57,8 @@ ebuild(
     ebuild = "glibc-2.35-r20.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "glibc",
+    version = "2.35-r20",
 suffix = "_hermetic_test_package",
     distfiles = {
     },
@@ -77,6 +81,8 @@ ebuild_debug(
     ebuild = "glibc-2.35-r20.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "glibc",
+    version = "2.35-r20",
     distfiles = {
     },
     srcs = [
@@ -107,6 +113,8 @@ ebuild_test(
     ebuild = "glibc-2.35-r20.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
+    package_name = "glibc",
+    version = "2.35-r20",
     distfiles = {
     },
     srcs = [

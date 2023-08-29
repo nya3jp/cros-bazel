@@ -32,6 +32,8 @@ ebuild(
     ebuild = "linux-headers-4.14.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-kernel",
+    package_name = "linux-headers",
+    version = "4.14",
 
     distfiles = {
     },
@@ -55,6 +57,8 @@ ebuild(
     ebuild = "linux-headers-4.14.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-kernel",
+    package_name = "linux-headers",
+    version = "4.14",
 suffix = "_hermetic_test_package",
     distfiles = {
     },
@@ -77,6 +81,8 @@ ebuild_debug(
     ebuild = "linux-headers-4.14.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-kernel",
+    package_name = "linux-headers",
+    version = "4.14",
     distfiles = {
     },
     srcs = [
@@ -107,6 +113,8 @@ ebuild_test(
     ebuild = "linux-headers-4.14.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-kernel",
+    package_name = "linux-headers",
+    version = "4.14",
     distfiles = {
     },
     srcs = [
