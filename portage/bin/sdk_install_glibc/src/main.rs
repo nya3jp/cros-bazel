@@ -73,8 +73,7 @@ fn do_main() -> Result<()> {
     // Delete the mutable base directory that contains the upper directory.
     drop(mutable_base_dir);
 
-    container::clean_layer(None, &args.output)
-        .with_context(|| "Failed to clean the output dir.")?;
+    container::clean_layer(&args.output).with_context(|| "Failed to clean the output dir.")?;
 
     DurableTree::convert(&args.output)?;
 

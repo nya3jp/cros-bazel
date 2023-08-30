@@ -5,7 +5,8 @@
 use anyhow::{Context, Result};
 use fileutil::with_permissions;
 use itertools::Itertools;
-use std::{path::Path, path::PathBuf};
+use libc::ENOTEMPTY;
+use std::{io::ErrorKind, path::Path, path::PathBuf};
 use tracing::instrument;
 use walkdir::WalkDir;
 
@@ -88,43 +89,148 @@ fn clean_portage_database(root: &Path) -> Result<()> {
     Ok(())
 }
 
-#[instrument]
-pub fn clean_layer(board: Option<&str>, output_dir: &Path) -> Result<()> {
-    let mut dirs = vec![
-        PathBuf::from("mnt/host"),
-        PathBuf::from("run"),
-        PathBuf::from("stage"),
-        PathBuf::from("tmp"),
-        PathBuf::from("var/cache"),
-        PathBuf::from("var/lib/portage/pkgs"),
-        PathBuf::from("var/log"),
-        PathBuf::from("var/tmp"),
-    ];
-    if let Some(b) = board {
-        dirs.push(PathBuf::from("build").join(b).join("tmp"));
-        dirs.push(PathBuf::from("build").join(b).join("var/cache"));
-        dirs.push(PathBuf::from("build").join(b).join("packages"));
-    }
-
-    for dir in dirs {
-        let path = output_dir.join(dir);
-        fileutil::remove_dir_all_with_chmod(&path)?;
-    }
-
+fn clean_root(root_dir: &Path) -> Result<()> {
     // So this is kind of annoying, since we monkey patch the portage .py files the
     // python interpreter will regenerate the bytecode cache. This bytecode file
     // has the timestamp of the source file embedded. Once we stop monkey patching
     // portage and get the changes bundled in the SDK we can delete the following.
     for file in find_files(
-        &output_dir.join("usr/lib64/python3.6/site-packages"),
+        &root_dir.join("usr/lib64/python3.6/site-packages"),
         |file_name| file_name.ends_with(".pyc"),
     )? {
         fileutil::remove_file_with_chmod(&file)?;
     }
 
-    clean_portage_database(output_dir)?;
-    if let Some(b) = board {
-        clean_portage_database(&output_dir.join("build").join(b))?;
+    for subdir in [
+        "mnt/host",
+        "packages",
+        "run",
+        "stage",
+        "tmp",
+        "var/cache",
+        "var/lib/portage/pkgs",
+        "var/log",
+        "var/tmp",
+    ] {
+        let target_dir = root_dir.join(subdir);
+        fileutil::remove_dir_all_with_chmod(&target_dir)?;
+
+        // Remove anscestors if they're empty.
+        for dir in target_dir
+            .ancestors()
+            .skip(1)
+            .take_while(|dir| *dir != root_dir)
+        {
+            match std::fs::remove_dir(dir) {
+                Err(e) if e.kind() == ErrorKind::NotFound => continue,
+                Err(e) if e.raw_os_error() == Some(ENOTEMPTY) => break,
+                other => other.with_context(|| format!("Failed to delete {}", dir.display()))?,
+            }
+        }
+    }
+
+    clean_portage_database(root_dir)?;
+
+    Ok(())
+}
+
+#[instrument]
+pub fn clean_layer(output_dir: &Path) -> Result<()> {
+    clean_root(output_dir)?;
+    let build_dir = output_dir.join("build");
+    if build_dir.try_exists()? {
+        for entry in std::fs::read_dir(build_dir)? {
+            let entry = entry?;
+            if entry.metadata()?.is_dir() {
+                clean_root(&entry.path())?;
+            }
+        }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use fileutil::SafeTempDir;
+
+    use super::*;
+
+    #[test]
+    fn test_clean_layer_remove_dirs() -> Result<()> {
+        let output_dir = SafeTempDir::new()?;
+        let output_dir = output_dir.path();
+
+        for subdir in [
+            // These directories will be deleted.
+            "build/foo/mnt/host",
+            "build/foo/run",
+            "build/foo/stage",
+            "build/foo/tmp",
+            "build/foo/usr/lib64/python3.6/site-packages",
+            "build/foo/var/cache",
+            "build/foo/var/lib/portage/pkgs",
+            "build/foo/var/log",
+            "build/foo/var/tmp",
+            "mnt/host",
+            "run",
+            "stage",
+            "tmp",
+            "var/cache",
+            "var/lib/portage/pkgs",
+            "var/log",
+            "var/tmp",
+            // These directories will be kept.
+            "build/foo/opt",
+            "build/foo/sbin",
+            "build/foo/usr/bin",
+            "build/foo/var/mail",
+            "opt",
+            "sbin",
+            "usr/bin",
+            "var/lib/keep",
+            "usr/lib64/python3.6/site-packages",
+            "var/mail",
+        ] {
+            std::fs::create_dir_all(output_dir.join(subdir))?;
+        }
+
+        clean_layer(output_dir)?;
+
+        let paths: Vec<PathBuf> = WalkDir::new(output_dir)
+            .min_depth(1)
+            .sort_by_file_name()
+            .into_iter()
+            .map(|entry| Ok(entry?.path().strip_prefix(output_dir)?.to_path_buf()))
+            .collect::<Result<_>>()?;
+
+        assert_eq!(
+            paths,
+            vec![
+                PathBuf::from("build"),
+                PathBuf::from("build/foo"),
+                PathBuf::from("build/foo/opt"),
+                PathBuf::from("build/foo/sbin"),
+                PathBuf::from("build/foo/usr"),
+                PathBuf::from("build/foo/usr/bin"),
+                PathBuf::from("build/foo/usr/lib64"),
+                PathBuf::from("build/foo/usr/lib64/python3.6"),
+                PathBuf::from("build/foo/usr/lib64/python3.6/site-packages"),
+                PathBuf::from("build/foo/var"),
+                PathBuf::from("build/foo/var/mail"),
+                PathBuf::from("opt"),
+                PathBuf::from("sbin"),
+                PathBuf::from("usr"),
+                PathBuf::from("usr/bin"),
+                PathBuf::from("usr/lib64"),
+                PathBuf::from("usr/lib64/python3.6"),
+                PathBuf::from("usr/lib64/python3.6/site-packages"),
+                PathBuf::from("var"),
+                PathBuf::from("var/lib"),
+                PathBuf::from("var/lib/keep"),
+                PathBuf::from("var/mail"),
+            ]
+        );
+
+        Ok(())
+    }
 }
