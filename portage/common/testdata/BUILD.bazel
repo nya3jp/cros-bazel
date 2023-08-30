@@ -3,6 +3,8 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
+load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup", "pkg", "strip_prefix")
+load("//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 
 package(default_visibility = ["//bazel/portage:__subpackages__"])
 
@@ -11,6 +13,136 @@ exports_files(
         "nano.tbz2",
         "nano-diff-xpak.tbz2",
         "nano-diff-tar.tbz2",
+    ],
+)
+
+cros_pkg_filegroup(
+    name = "executable_file",
+    srcs = [
+        pkg.exe(
+            srcs = ["usr/bin/hello_world.sh"],
+            prefix = "/",
+            strip_prefix = strip_prefix.from_pkg(),
+        ),
+    ],
+)
+
+direct_ebuild(
+    name = "executable",
+    package_name = "executable",
+    category = "demo",
+    package = ":executable_file",
+    slot = "0",
+    version = "1",
+    runtime_deps = [":shared_libs"],
+)
+
+cros_pkg_filegroup(
+    name = "shared_libs_files",
+    srcs = [
+        pkg.file(
+            srcs = [
+                "lib/libbar.so.1.2.3",
+                "lib/libfoo.so.1.2.3",
+                "lib64/libfoo.so.1.2.3",
+            ],
+            prefix = "/",
+            strip_prefix = strip_prefix.from_pkg(),
+        ),
+        pkg.symlink(
+            link_name = "/lib/libfoo.so",
+            target = "libfoo.so.1.2.3",
+        ),
+    ],
+)
+
+direct_ebuild(
+    name = "shared_libs",
+    package_name = "shared_libs",
+    category = "demo",
+    package = ":shared_libs_files",
+    slot = "0",
+    version = "1",
+    runtime_deps = [],
+)
+
+cros_pkg_filegroup(
+    name = "symlink_files",
+    srcs = [
+        pkg.file(
+            srcs = ["path/to/hello.txt"],
+            prefix = "/",
+            strip_prefix = strip_prefix.from_pkg(),
+        ),
+        pkg.symlink(
+            link_name = "/symlinks/absolute_symlink.txt",
+            target = "/path/to/hello.txt",
+        ),
+        pkg.symlink(
+            link_name = "/symlinks/relative_symlink.txt",
+            target = "../path/to/hello.txt",
+        ),
+        pkg.symlink(
+            link_name = "/symlinks/broken_relative_symlink.txt",
+            target = "../path/to/nonexistent_file",
+        ),
+        pkg.symlink(
+            link_name = "/symlinks/broken_absolute_symlink.txt",
+            target = "../path/to/nonexistent_file",
+        ),
+    ],
+)
+
+direct_ebuild(
+    name = "symlinks",
+    package_name = "symlinks",
+    category = "demo",
+    package = ":symlink_files",
+    slot = "0",
+    version = "1",
+    runtime_deps = [],
+)
+
+cros_pkg_filegroup(
+    name = "system_headers_files",
+    srcs = [
+        pkg.file(
+            srcs = [
+                "usr/include/foo.h",
+                "usr/include/subdir/bar.h",
+            ],
+            prefix = "/",
+            strip_prefix = strip_prefix.from_pkg(),
+        ),
+    ],
+)
+
+direct_ebuild(
+    name = "system_headers",
+    package_name = "system_headers",
+    category = "demo",
+    package = ":system_headers_files",
+    slot = "0",
+    version = "1",
+    runtime_deps = [],
+)
+
+cros_pkg_filegroup(
+    name = "sysroot_files",
+    srcs = [],
+)
+
+direct_ebuild(
+    name = "sysroot",
+    package_name = "sysroot",
+    category = "demo",
+    package = ":sysroot_files",
+    slot = "0",
+    version = "1",
+    runtime_deps = [
+        ":executable",
+        ":symlinks",
+        ":system_headers",
     ],
 )
 
