@@ -6,6 +6,8 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 
+visibility("public")
+
 def direct_ebuild(
         name,
         package,
@@ -15,12 +17,6 @@ def direct_ebuild(
         slot,
         runtime_deps = [],
         visibility = None):
-    # Make package an absolute label.
-    if ":" not in package:
-        package += ":" + package.rsplit("/", 1)[-1]
-    if not package.startswith("@"):
-        package = "@@" + package
-
     tar_name = "_%s_tbz2" % name
     pkg_tar(
         name = tar_name,

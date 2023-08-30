@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/cros_pkg/private:cros_pkg_filegroup.bzl", _cros_pkg_filegroup = "cros_pkg_filegroup", _custom_file_type = "custom_file_type", _unimplemented = "unimplemented")
+load("//bazel/cros_pkg/private:cros_pkg_filegroup.bzl", "dirs", "symlink", _cros_pkg_filegroup = "cros_pkg_filegroup", _custom_file_type = "custom_file_type", _unimplemented = "unimplemented")
 load("//bazel/cros_pkg/private:pkg_files.bzl", _strip_prefix = "strip_prefix")
 
 cros_pkg_filegroup = _cros_pkg_filegroup
@@ -44,6 +44,8 @@ strip_prefix = _strip_prefix
 #       * strip_prefix.from_root(): path relative to the root
 
 pkg = struct(
+    symlink = symlink,
+    dirs = dirs,
     bin = custom_file_type(
         mode = "0755",
         prefix = "/usr/bin",

@@ -52,6 +52,14 @@ class TarballTest(unittest.TestCase):
 
             self.assertIn("tmp/dest", files)
 
+            empty_dir = members.get("inline/empty_dir")
+            self.assertIsNotNone(empty_dir)
+            self.assertTrue(empty_dir.isdir())
+            symlink = members.get("inline/symlink_inline")
+            self.assertIsNotNone(symlink)
+            self.assertTrue(symlink.issym())
+            self.assertEqual(symlink.linkname, "../tmp/dest")
+
 
 if __name__ == "__main__":
     unittest.main()

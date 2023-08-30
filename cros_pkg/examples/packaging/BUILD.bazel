@@ -79,10 +79,20 @@ cros_pkg_filegroup(
             srcs = [":testdata/dest"],
             dst = "/tmp/dest",
         ),
+        pkg.dirs(
+            dirs = ["/inline/empty_dir"],
+            mode = "0640",
+        ),
+        pkg.symlink(
+            link_name = "/inline/symlink_inline",
+            target = "../tmp/dest",
+        ),
     ],
-    pkg_dirs = [":pkg_dir"],
-    pkg_filegroups = [":pkg_filegroup"],
-    pkg_files = [":pkg_file"],
-    pkg_symlinks = [":pkg_symlink"],
+    include = [
+        ":pkg_dir",
+        ":pkg_filegroup",
+        ":pkg_file",
+        ":pkg_symlink",
+    ],
     visibility = ["//bazel/cros_pkg/private:__pkg__"],
 )

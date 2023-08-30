@@ -67,6 +67,6 @@ alias(
 
 cros_pkg_filegroup(
     name = "different_location",
-    pkg_filegroups = [":filegroup_per_arch"],
+    include = [":filegroup_per_arch"],
     visibility = ["//bazel:internal"],
 )
