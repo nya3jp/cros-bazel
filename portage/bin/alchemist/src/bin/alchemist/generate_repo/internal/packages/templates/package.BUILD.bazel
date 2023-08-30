@@ -304,6 +304,8 @@ ebuild_test(
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
     {%- endif %}
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
     visibility = ["@//bazel:internal"],
 )
 

@@ -136,6 +136,8 @@ ebuild_test(
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
     ],
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
     visibility = ["@//bazel:internal"],
 )
 

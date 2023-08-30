@@ -128,6 +128,8 @@ ebuild_test(
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
     visibility = ["@//bazel:internal"],
 )
 
