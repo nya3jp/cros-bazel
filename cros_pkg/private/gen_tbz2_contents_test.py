@@ -21,44 +21,46 @@ class TarballTest(unittest.TestCase):
             tar = tarfile.TarFile(fileobj=f, mode="r")
             members = {member.name: member for member in tar.getmembers()}
             files = sorted(members)
-            self.assertIn("pkg/empty_dir", files)
-            self.assertIn("pkg/file", files)
-            self.assertIn("pkg/filegroup_file", files)
-            self.assertIn("pkg/link", files)
+            self.assertIn("./pkg/empty_dir", files)
+            self.assertIn("./pkg/file", files)
+            self.assertIn("./pkg/filegroup_file", files)
+            self.assertIn("./pkg/link", files)
 
-            f = members["pkg/file"]
+            f = members["./pkg/file"]
             # This should be hardcoded by rules_pkg to prevent caching issues.
             self.assertEqual(f.mtime, 946684800)
             self.assertEqual(f.mode, 0o644)
             self.assertEqual(f.uname, "")
             self.assertEqual(f.gname, "")
 
-            self.assertIn("usr/share/doc/doc1.md", files)
-            self.assertIn("usr/share/doc/doc2.md", files)
+            self.assertIn("./usr/share/doc/doc1.md", files)
+            self.assertIn("./usr/share/doc/doc2.md", files)
 
-            self.assertIn("usr/bin/renamed_bin", files)
-            bin = members["usr/bin/renamed_bin"]
+            self.assertIn("./usr/bin/renamed_bin", files)
+            bin = members["./usr/bin/renamed_bin"]
             self.assertEqual(bin.mode, 0o755)
             self.assertEqual(bin.uname, "root")
             self.assertEqual(bin.gname, "root")
             self.assertEqual(bin.uid, 0)
             self.assertEqual(bin.gid, 0)
 
-            self.assertIn("path/to/file1", files)
-            self.assertIn("path/to/file2", files)
-            file1 = members["path/to/file1"]
+            self.assertIn("./path/to/file1", files)
+            self.assertIn("./path/to/file2", files)
+            file1 = members["./path/to/file1"]
             self.assertEqual(file1.mode, 0o640)
 
-            self.assertIn("demo/files_only", files)
-            self.assertIn("demo/testdata/strip_prefix/from_current_pkg", files)
-            self.assertIn("demo/strip_prefix/from_pkg", files)
+            self.assertIn("./demo/files_only", files)
+            self.assertIn(
+                "./demo/testdata/strip_prefix/from_current_pkg", files
+            )
+            self.assertIn("./demo/strip_prefix/from_pkg", files)
 
-            self.assertIn("tmp/dest", files)
+            self.assertIn("./tmp/dest", files)
 
-            empty_dir = members.get("inline/empty_dir")
+            empty_dir = members.get("./inline/empty_dir")
             self.assertIsNotNone(empty_dir)
             self.assertTrue(empty_dir.isdir())
-            symlink = members.get("inline/symlink_inline")
+            symlink = members.get("./inline/symlink_inline")
             self.assertIsNotNone(symlink)
             self.assertTrue(symlink.issym())
             self.assertEqual(symlink.linkname, "../tmp/dest")

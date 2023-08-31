@@ -98,3 +98,10 @@ rust_test(
     size = "small",
     crate = ":manifest",
 )
+
+py_binary(
+    name = "build_tar",
+    srcs = ["build_tar.py"],
+    visibility = ["//visibility:public"],
+    deps = ["@rules_pkg//pkg/private/tar:build_tar"],
+)

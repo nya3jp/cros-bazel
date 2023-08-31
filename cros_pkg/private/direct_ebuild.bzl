@@ -23,6 +23,7 @@ def direct_ebuild(
         out = name + ".tbz2",
         srcs = [package],
         compressor = "@@//bazel/cros_pkg/private:gen_tbz2",
+        build_tar = "//bazel/cros_pkg/private:build_tar",
         compressor_args = " ".join([
             "--category=" + category,
             "--package-name=" + package_name,
