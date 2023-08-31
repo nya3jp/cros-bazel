@@ -4,23 +4,19 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
-load(":extract_interface.bzl", "extract_interface")
+load("//bazel/portage/build_defs:extract_interface.bzl", "extract_interface")
 
 rust_binary(
     name = "extract_interface",
-    srcs = glob(["src/*.rs"]),
-    data = ["@files//:patchelf"],
+    srcs = glob(["src/**/*.rs"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/portage/common/cliutil",
+        "//bazel/portage/common/extract_tarball",
         "//bazel/portage/common/portage/binarypackage",
-        "//bazel/portage/common/processes",
-        "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
-        "@alchemy_crates//:tar",
-        "@alchemy_crates//:zstd",
     ],
 )
 
@@ -32,7 +28,7 @@ rust_test(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/portage/common/fileutil",
-        "@rules_rust//tools/runfiles",
+        "//bazel/rust/runfiles",
     ],
 )
 

@@ -1,0 +1,37 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+
+rust_library(
+    name = "extract_tarball",
+    srcs = glob(["src/*.rs"]),
+    crate_name = "common_extract_tarball",
+    data = ["@files//:patchelf"],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel/portage/bin:__subpackages__"],
+    deps = [
+        "//bazel/portage/common/processes",
+        "//bazel/rust/runfiles",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:pathdiff",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:tar",
+    ],
+)
+
+rust_test(
+    name = "extract_tarball_test",
+    size = "small",
+    crate = ":extract_tarball",
+    data = ["//bazel/portage/common/testdata:nano"],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "//bazel/portage/common/fileutil",
+        "//bazel/portage/common/portage/binarypackage",
+        "//bazel/rust/runfiles",
+    ],
+)

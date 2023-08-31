@@ -4,25 +4,16 @@
 
 mod specs;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Context, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use cliutil::cli_main;
 use specs::{OutputFileSpec, XpakSpec};
 use std::{
-    collections::HashMap,
-    fs::OpenOptions,
-    io::Read,
-    os::unix::prelude::OpenOptionsExt,
+    collections::{BTreeMap, BTreeSet},
     path::{Path, PathBuf},
-    process::{Command, ExitCode, Stdio},
+    process::ExitCode,
 };
-use tar::EntryType;
-
-const PATCHELF_PATH: &str = "files/patchelf";
-const EXECUTABLE_MASK: u32 = 0o111;
-// All ELF files start with these 4 bytes.
-const ELF_MAGIC: [u8; 4] = [0x7f, b'E', b'L', b'F'];
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
@@ -32,7 +23,8 @@ struct Cli {
 
     #[arg(
         long,
-        help = "<inside path>=<outside path>: Extracts a file from the binpkg and writes it to the outside path"
+        help = "<inside path>=<outside path>: Extracts a file from the binpkg and writes it to \
+        the outside path"
     )]
     output_file: Vec<OutputFileSpec>,
 
@@ -43,19 +35,11 @@ struct Cli {
     )]
     xpak: Vec<XpakSpec>,
 
-    #[arg(
-        long,
-        help = "If true, when outputting an elf file, patch it to be able to \
-    run outside of the SDK."
-    )]
-    patch_elf: bool,
+    #[command(flatten)]
+    common: common_extract_tarball::CommonArgs,
 }
 
 fn extract_xpak_files(pkg: &mut BinaryPackage, specs: &[XpakSpec]) -> Result<()> {
-    if specs.is_empty() {
-        return Ok(());
-    }
-
     let xpak = pkg.xpak();
 
     for spec in specs.iter() {
@@ -63,103 +47,42 @@ fn extract_xpak_files(pkg: &mut BinaryPackage, specs: &[XpakSpec]) -> Result<()>
         let contents = xpak
             .get(&spec.xpak_header)
             .or(if spec.optional { Some(&v) } else { None })
-            .ok_or_else(|| anyhow!("XPAK key {} not found in header", spec.xpak_header))?;
+            .with_context(|| format!("XPAK key {} not found in header", spec.xpak_header))?;
         std::fs::write(&spec.target_path, contents)?;
     }
     Ok(())
 }
 
-fn apply_patch(patcher: &Path, out_path: &Path) -> Result<()> {
-    let mut command = Command::new(patcher);
-    command
-        .args([
-            "--set-interpreter",
-            "/tmp/cros_bazel_host_sysroot/lib64/ld-linux-x86-64.so.2",
-            "--add-rpath",
-            "/tmp/cros_bazel_host_sysroot/lib",
-        ])
-        .arg(out_path)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    processes::run_and_check(&mut command)?;
-    Ok(())
-}
-
 fn extract_out_files(
-    pkg: &mut BinaryPackage,
+    binpkg: &mut BinaryPackage,
     specs: &[OutputFileSpec],
-    patch_elf: Option<PathBuf>,
+    patch_elf: bool,
 ) -> Result<()> {
-    let patch_elf = patch_elf.as_ref();
     if specs.is_empty() {
         return Ok(());
     }
 
-    let mut file_map: HashMap<String, &PathBuf> = HashMap::new();
+    let want_files: BTreeMap<&Path, &Path> = specs
+        .iter()
+        .map(|spec| (spec.inside_path.as_path(), spec.target_path.as_path()))
+        .collect();
+    let content = common_extract_tarball::extract_tarball(
+        &mut binpkg.archive()?,
+        Some(Path::new(".")),
+        patch_elf,
+        |path| {
+            Ok(want_files
+                .get(Path::new("/").join(path).as_path())
+                .map(|p| p.to_path_buf()))
+        },
+    )?;
 
-    for spec in specs.iter() {
-        // We might request for /bin/nano, but it's stored in the archive as ./bin/nano
-        file_map.insert(format!(".{}", spec.inside_path), &spec.target_path);
-    }
+    let got_paths: BTreeSet<&Path> = content.all_files().collect();
 
-    let mut archive =
-        tar::Archive::new(zstd::stream::read::Decoder::new(pkg.new_tarball_reader()?)?);
-
-    for entry_result in archive.entries()? {
-        let mut entry = entry_result?;
-        let header = &entry.header();
-        let path = entry.path()?;
-        match file_map.remove_entry(&path.to_string_lossy().to_string()) {
-            None => continue,
-            Some((_, out_path)) => {
-                match header.entry_type() {
-                    EntryType::Regular => {
-                        let mode = header.mode()?;
-                        let mut content: Vec<u8> = vec![];
-                        entry.read_to_end(&mut content)?;
-
-                        let is_elf: bool =
-                            mode & EXECUTABLE_MASK != 0 && content.starts_with(&ELF_MAGIC);
-
-                        std::io::copy(
-                            &mut content.as_slice(),
-                            &mut OpenOptions::new()
-                                .write(true)
-                                .create(true)
-                                .mode(mode)
-                                .open(out_path)?,
-                        )?;
-
-                        if let Some(patcher) = patch_elf {
-                            if is_elf {
-                                apply_patch(&patcher, out_path)?
-                            }
-                        };
-                    }
-                    EntryType::Symlink => {
-                        let dest = header
-                            .link_name()?
-                            .ok_or_else(|| anyhow!("Link name doesn't exist"))?;
-                        // bazel only supports relative symlinks that point to existing files.
-                        // Let's limit this to symlinks that point to files in the same
-                        // directory for now.
-                        if !dest.is_relative() || dest.parent() != Some(Path::new("")) {
-                            bail!(
-                                "symlinks paths separators are currently unsupported {:?} -> {:?}",
-                                path,
-                                dest
-                            )
-                        }
-                        std::os::unix::fs::symlink(out_path, dest)?;
-                    }
-                    entry_type => bail!("Unsupported tar entry type: {:?}", entry_type),
-                }
-            }
+    for (tar_path, extracted_path) in want_files {
+        if !got_paths.contains(Path::new("/").join(extracted_path).as_path()) {
+            bail!("Failed to extract {tar_path:?} from archive")
         }
-    }
-
-    if !file_map.is_empty() {
-        bail!("Failed to extract {file_map:?}")
     }
 
     Ok(())
@@ -169,7 +92,7 @@ fn extract_files(
     bin_pkg: &Path,
     xpak_specs: &[XpakSpec],
     output_file_specs: &[OutputFileSpec],
-    patch_elf: Option<PathBuf>,
+    patch_elf: bool,
 ) -> Result<()> {
     if xpak_specs.is_empty() && output_file_specs.is_empty() {
         return Ok(());
@@ -182,11 +105,12 @@ fn extract_files(
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-
-    let r = runfiles::Runfiles::create()?;
-    let patch_elf = args.patch_elf.then(|| r.rlocation(PATCHELF_PATH));
-
-    extract_files(&args.binpkg, &args.xpak, &args.output_file, patch_elf)
+    extract_files(
+        &args.binpkg,
+        &args.xpak,
+        &args.output_file,
+        args.common.patch_elf,
+    )
 }
 
 fn main() -> ExitCode {
@@ -201,7 +125,6 @@ mod tests {
 
     use super::*;
 
-    const NANORC_SIZE: u64 = 11225;
     const NANO_SIZE: u64 = 225112;
 
     const BINARY_PKG_RUNFILE: &str = "cros/bazel/portage/common/testdata/nano.tbz2";
@@ -254,57 +177,14 @@ mod tests {
         let tmp_dir = SafeTempDir::new()?;
 
         let nano = OutputFileSpec {
-            inside_path: "/bin/nano".to_string(),
+            inside_path: PathBuf::from("/bin/nano"),
             target_path: tmp_dir.path().join("nano"),
         };
-        let nanorc = OutputFileSpec {
-            inside_path: "/etc/nanorc".to_string(),
-            target_path: tmp_dir.path().join("nanorc"),
-        };
 
-        extract_out_files(&mut bp, &[nano.clone(), nanorc.clone()], None)?;
+        extract_out_files(&mut bp, &[nano.clone()], false)?;
         let nano_md = std::fs::metadata(nano.target_path)?;
         assert_eq!(nano_md.mode() & 0o777, 0o755);
         assert_eq!(nano_md.size(), NANO_SIZE);
-
-        let nanorc_md = std::fs::metadata(nanorc.target_path)?;
-        assert_eq!(nanorc_md.mode() & 0o777, 0o644);
-        assert_eq!(nanorc_md.size(), NANORC_SIZE);
-
-        Ok(())
-    }
-
-    #[test]
-    fn extracts_out_files_patched() -> Result<()> {
-        let r = runfiles::Runfiles::create()?;
-
-        let mut bp = binary_package()?;
-        let tmp_dir = SafeTempDir::new()?;
-
-        let nano = OutputFileSpec {
-            inside_path: "/bin/nano".to_string(),
-            target_path: tmp_dir.path().join("nano"),
-        };
-        let nanorc = OutputFileSpec {
-            inside_path: "/etc/nanorc".to_string(),
-            target_path: tmp_dir.path().join("nanorc"),
-        };
-
-        extract_out_files(
-            &mut bp,
-            &[nano.clone(), nanorc.clone()],
-            Some(r.rlocation(PATCHELF_PATH)),
-        )?;
-        let nano_md = std::fs::metadata(nano.target_path)?;
-        assert_eq!(nano_md.mode() & 0o777, 0o755);
-        // It's quite difficult to get the interpreter / rpath and verify that
-        // we have the extra entries.
-        // We'll just assert that we've added data to the file.
-        assert!(nano_md.size() > NANO_SIZE);
-
-        let nanorc_md = std::fs::metadata(nanorc.target_path)?;
-        assert_eq!(nanorc_md.mode() & 0o777, 0o644);
-        assert_eq!(nanorc_md.size(), NANORC_SIZE);
 
         Ok(())
     }

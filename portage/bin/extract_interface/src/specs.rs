@@ -1,4 +1,4 @@
-// Copyright 2022 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -34,7 +34,7 @@ impl FromStr for XpakSpec {
 
 #[derive(Debug, Clone)]
 pub struct OutputFileSpec {
-    pub inside_path: String,
+    pub inside_path: PathBuf,
     pub target_path: PathBuf,
 }
 
@@ -44,10 +44,10 @@ impl FromStr for OutputFileSpec {
     fn from_str(spec: &str) -> Result<Self> {
         let (inside_path, target_path) = cliutil::split_key_value(spec)?;
         let res = Self {
-            inside_path: inside_path.to_string(),
+            inside_path: PathBuf::from_str(inside_path)?,
             target_path: PathBuf::from_str(target_path)?,
         };
-        if !res.inside_path.starts_with('/') {
+        if !res.inside_path.is_absolute() {
             bail!(
                 "Invalid overlay spec: {spec}, {0:?} must be absolute",
                 res.inside_path

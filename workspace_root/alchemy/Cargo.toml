@@ -21,6 +21,7 @@ members = [
     "bazel/portage/common/container",
     "bazel/portage/common/durabletree",
     "bazel/portage/common/durabletree_test",
+    "bazel/portage/common/extract_tarball",
     "bazel/portage/common/fileutil",
     "bazel/portage/common/portage/binarypackage",
     "bazel/portage/common/portage/vdb",
