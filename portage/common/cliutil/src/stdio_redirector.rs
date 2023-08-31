@@ -3,7 +3,47 @@
 // found in the LICENSE file.
 
 use anyhow::{Context, Result};
-use std::{fs::File, os::fd::AsRawFd, os::fd::FromRawFd, os::fd::OwnedFd, path::Path};
+use std::{
+    fs::File, os::fd::AsRawFd, os::fd::FromRawFd, os::fd::OwnedFd, path::Path, path::PathBuf,
+};
+
+static STDIO_REDIRECT_ENV: &str = "CROS_BAZEL_STDIO_REDIRECT";
+
+pub enum RedirectorConfig {
+    DisableRedirection,
+    RedirectTo(PathBuf),
+}
+
+impl From<Option<PathBuf>> for RedirectorConfig {
+    fn from(path: Option<PathBuf>) -> RedirectorConfig {
+        match path {
+            Some(path) => RedirectorConfig::RedirectTo(path),
+            None => RedirectorConfig::DisableRedirection,
+        }
+    }
+}
+
+impl RedirectorConfig {
+    /// If CROS_BAZEL_STDIO_REDIRECT is provided, then redirects to that file.
+    /// Otherwise, disables redirection.
+    pub fn from_env() -> RedirectorConfig {
+        match std::env::var(STDIO_REDIRECT_ENV).ok().as_deref() {
+            None => RedirectorConfig::DisableRedirection,
+            Some(path) => RedirectorConfig::RedirectTo(PathBuf::from(path)),
+        }
+    }
+
+    pub(crate) fn create(&self) -> Result<Option<StdioRedirector>> {
+        Ok(match self {
+            RedirectorConfig::DisableRedirection => None,
+            RedirectorConfig::RedirectTo(path) => {
+                // Instruct child processes not to redirect to a file, since we'll do it for them.
+                std::env::remove_var(STDIO_REDIRECT_ENV);
+                Some(StdioRedirector::new(path)?)
+            }
+        })
+    }
+}
 
 /// Redirects stdout and stderr to the specified file, and returns the saved
 /// stdout/stderr file descriptors.

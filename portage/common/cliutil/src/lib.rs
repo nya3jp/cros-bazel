@@ -19,7 +19,7 @@ mod stdio_redirector;
 
 pub use crate::config::*;
 pub use crate::logging::*;
-pub use crate::stdio_redirector::StdioRedirector;
+pub use crate::stdio_redirector::{RedirectorConfig, StdioRedirector};
 
 /// Wraps a CLI main function to provide the common startup/cleanup logic.
 ///
@@ -38,7 +38,17 @@ where
         log_current_command_line();
     }
     let result = main();
-    handle_top_level_result(result)
+    let failure = result.is_err();
+
+    let exit_code = handle_top_level_result(result);
+
+    if failure {
+        if let Some(redirector) = config.stdio_redirector {
+            redirector.flush_to_real_stderr().unwrap();
+        }
+    }
+
+    exit_code
 }
 
 /// Logs the command line of the current process.

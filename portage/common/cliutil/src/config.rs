@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::stdio_redirector::{RedirectorConfig, StdioRedirector};
 use crate::LoggingConfig;
 use anyhow::Result;
 
@@ -23,6 +24,8 @@ pub struct ConfigBuilder {
     logging: Option<LoggingConfig>,
 
     log_command_line: bool,
+
+    redirect_stdio: Option<RedirectorConfig>,
 }
 
 // Manually mark as inline, because rust doesn't like inlining across crate boundaries.
@@ -32,6 +35,7 @@ impl ConfigBuilder {
         Self {
             logging: None,
             log_command_line: true,
+            redirect_stdio: None,
         }
     }
 
@@ -51,11 +55,22 @@ impl ConfigBuilder {
     }
 
     #[inline(always)]
+    /// `cfg` controls redirection. Defaults to `RedirectorConfig::from_env()`.
+    pub fn redirect_stdio(mut self, cfg: RedirectorConfig) -> Self {
+        self.redirect_stdio = Some(cfg);
+        self
+    }
+
+    #[inline(always)]
     /// Builds a Config suitable for use with cli_main.
     pub fn build(self) -> Result<Config> {
         Ok(Config {
             logging: unwrap_or_else(self.logging, LoggingConfig::from_env)?,
             log_command_line: self.log_command_line,
+            stdio_redirector: self
+                .redirect_stdio
+                .unwrap_or_else(RedirectorConfig::from_env)
+                .create()?,
         })
     }
 }
@@ -65,6 +80,7 @@ impl ConfigBuilder {
 pub struct Config {
     pub(crate) logging: LoggingConfig,
     pub(crate) log_command_line: bool,
+    pub(crate) stdio_redirector: Option<StdioRedirector>,
 }
 
 impl Default for Config {
