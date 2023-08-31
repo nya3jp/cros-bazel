@@ -30,7 +30,9 @@ got_dir="${tmp}/got"
 want_dir="${tmp}/want"
 mkdir "${got_dir}" "${want_dir}"
 
-tar -xf "${tarball}" -C "${want_dir}"
+# Extracting tbz2 files with the tar command doesn't work because the zstd
+# decoder complains about the trailing bytes.
+tar -xf "${tarball}" -C "${want_dir}" 2>/dev/null || true
 "${deploy}" "--install-dir=${got_dir}"
 
 diff --recursive --no-dereference "${got_dir}" "${want_dir}"

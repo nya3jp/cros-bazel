@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@pip//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_test")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/bash:defs.bzl", "sh_runfiles_test")
@@ -53,6 +54,7 @@ rust_binary(
         "@alchemy_crates//:bzip2",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:shell-escape",
+        "@alchemy_crates//:zstd",
     ],
 )
 
@@ -61,7 +63,10 @@ py_test(
     size = "small",
     srcs = ["gen_tbz2_contents_test.py"],
     data = [":_direct_example_tbz2"],
-    deps = ["@rules_python//python/runfiles"],
+    deps = [
+        "@rules_python//python/runfiles",
+        requirement("zstandard"),
+    ],
 )
 
 rust_test(

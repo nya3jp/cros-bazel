@@ -7,6 +7,7 @@ import tarfile
 import unittest
 
 from python.runfiles import runfiles
+import zstandard
 
 
 class TarballTest(unittest.TestCase):
@@ -15,7 +16,9 @@ class TarballTest(unittest.TestCase):
         path = pathlib.Path(
             r.Rlocation("cros/bazel/cros_pkg/private/direct_example.tbz2")
         )
-        with tarfile.open(path) as tar:
+        with open(path, "rb") as f:
+            f = zstandard.ZstdDecompressor().stream_reader(f)
+            tar = tarfile.TarFile(fileobj=f, mode="r")
             members = {member.name: member for member in tar.getmembers()}
             files = sorted(members)
             self.assertIn("pkg/empty_dir", files)

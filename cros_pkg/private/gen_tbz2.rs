@@ -132,7 +132,7 @@ fn gen_tbz2(r: impl Read, xpak: BTreeMap<String, Vec<u8>>, mut w: impl Write) ->
     xpak.extend(data);
     xpak.extend(b"XPAKSTOP");
 
-    std::io::copy(&mut BzEncoder::new(r, Compression::best()), &mut w)?;
+    std::io::copy(&mut zstd::stream::read::Encoder::new(r, 0)?, &mut w)?;
     w.write_all(&xpak)?;
     w.write_all(&len_bytes(&xpak)?)?;
     w.write_all(b"STOP")?;
@@ -145,7 +145,6 @@ mod tests {
     use super::*;
 
     use binarypackage::BinaryPackage;
-    use bzip2::read::BzDecoder;
 
     #[test]
     fn generates_readable_tbz2() -> Result<()> {
@@ -163,7 +162,8 @@ mod tests {
         let mut binpkg = BinaryPackage::open(out.path())?;
 
         let mut got_content: Vec<u8> = vec![];
-        BzDecoder::new(binpkg.new_tarball_reader()?).read_to_end(&mut got_content)?;
+        zstd::stream::read::Decoder::new(binpkg.new_tarball_reader()?)?
+            .read_to_end(&mut got_content)?;
 
         assert_eq!(got_content, want_content);
 

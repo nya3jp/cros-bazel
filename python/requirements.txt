@@ -1,1 +1,2 @@
 pylint~=2.16.1
+zstandard~=0.21.0
