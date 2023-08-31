@@ -235,7 +235,9 @@ name = "cliutil"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "fileutil",
  "itertools",
+ "nix",
  "shell-escape",
  "tracing",
  "tracing-chrome-trace",
@@ -375,6 +377,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51093e27b0797c359783294ca4f0a911c270184cb10f85783b118614a1501be"
 dependencies = [
  "instant",
+]
+
+[[package]]
+name = "fileutil"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "lazy_static",
+ "libc",
+ "tempfile",
+ "walkdir",
 ]
 
 [[package]]

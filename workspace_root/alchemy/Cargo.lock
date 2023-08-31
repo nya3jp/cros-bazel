@@ -236,7 +236,9 @@ name = "cliutil"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "fileutil",
  "itertools",
+ "nix",
  "shell-escape",
  "tempfile",
  "tracing",

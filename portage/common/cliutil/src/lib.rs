@@ -18,6 +18,10 @@ use tracing::info_span;
 use tracing_chrome_trace::ChromeTraceLayer;
 use tracing_subscriber::prelude::*;
 
+mod stdio_redirector;
+
+pub use crate::stdio_redirector::StdioRedirector;
+
 /// Wraps a CLI main function to provide the common startup/cleanup logic.
 ///
 /// Most programs implementing Alchemy actions likely want to call this function

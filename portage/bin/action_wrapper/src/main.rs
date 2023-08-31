@@ -12,7 +12,6 @@ use processes::status_to_exit_code;
 use serde_json::json;
 use std::collections::HashMap;
 use std::fs::File;
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, ExitStatus};
@@ -75,24 +74,6 @@ fn ensure_passwordless_sudo() -> Result<()> {
         "Failed to run sudo without password; run \"sudo true\" and try again"
     );
     Ok(())
-}
-
-/// Redirects stdout and stderr to the specified file, and returns the saved
-/// stdout/stderr file descriptors.
-fn redirect_stdout_stderr(output: &File) -> Result<(OwnedFd, OwnedFd)> {
-    let stdout_fd = std::io::stdout().as_raw_fd();
-    let saved_stdout_fd = nix::fcntl::fcntl(stdout_fd, nix::fcntl::F_DUPFD_CLOEXEC(3))?;
-    let saved_stdout = unsafe { OwnedFd::from_raw_fd(saved_stdout_fd) };
-
-    let stderr_fd = std::io::stderr().as_raw_fd();
-    let saved_stderr_fd = nix::fcntl::fcntl(stderr_fd, nix::fcntl::F_DUPFD_CLOEXEC(3))?;
-    let saved_stderr = unsafe { OwnedFd::from_raw_fd(saved_stderr_fd) };
-
-    let output_fd = output.as_raw_fd();
-    nix::unistd::dup2(output_fd, stdout_fd)?;
-    nix::unistd::dup2(output_fd, stderr_fd)?;
-
-    Ok((saved_stdout, saved_stderr))
 }
 
 fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Result<()> {
@@ -250,11 +231,8 @@ fn main() -> ExitCode {
     std::env::set_var("RUST_BACKTRACE", "1");
 
     // Redirect stdout/stderr to a file if `--log` was specified.
-    let mut saved_output: Option<(File, OwnedFd)> = if let Some(log_name) = &args.log {
-        let file = File::create(log_name).expect("Failed to create the log file");
-        let (_saved_stdout, saved_stderr) =
-            redirect_stdout_stderr(&file).expect("Failed to redirect stdout/stderr");
-        Some((file, saved_stderr))
+    let redirector = if let Some(log_name) = &args.log {
+        Some(cliutil::StdioRedirector::new(log_name).unwrap())
     } else {
         None
     };
@@ -269,11 +247,8 @@ fn main() -> ExitCode {
     match status {
         Ok(status) if status.code() == Some(0) => {}
         _ => {
-            if let Some((write_file, saved_stderr)) = saved_output.take() {
-                // Reopen the file to get an independent seek position.
-                let mut read_file = File::open(format!("/proc/self/fd/{}", write_file.as_raw_fd()))
-                    .expect("Failed to reopen the log file");
-                std::io::copy(&mut read_file, &mut File::from(saved_stderr)).ok();
+            if let Some(redirector) = redirector {
+                redirector.flush_to_real_stderr().unwrap()
             }
         }
     }
