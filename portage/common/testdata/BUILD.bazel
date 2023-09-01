@@ -42,15 +42,16 @@ cros_pkg_filegroup(
     srcs = [
         pkg.file(
             srcs = [
-                "lib/libbar.so.1.2.3",
-                "lib/libfoo.so.1.2.3",
+                "lib32/libbaz.so.1.2.3",
+                "lib32/libfoo.so.1.2.3",
+                "lib64/libbar.so.1.2.3",
                 "lib64/libfoo.so.1.2.3",
             ],
             prefix = "/",
             strip_prefix = strip_prefix.from_pkg(),
         ),
         pkg.symlink(
-            link_name = "/lib/libfoo.so",
+            link_name = "/lib64/libfoo.so",
             target = "libfoo.so.1.2.3",
         ),
     ],
