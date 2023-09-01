@@ -44,6 +44,7 @@ bytes = "0.4.12"
 clap = { version = "4.0.29", features = ["derive"] }
 colored = "2.0.0"
 env_logger = "0.9.3"
+flate2 = "1.0"
 hex = "0.4.3"
 itertools = "0.10.5"
 lazy_static = "1.4.0"

@@ -26,6 +26,7 @@ rust_library(
         "//bazel/portage/common/run_in_container_lib",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:flate2",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:libc",
         "@alchemy_crates//:nix",

@@ -136,7 +136,10 @@ impl LayerType {
             Ok(LayerType::DurableTree)
         } else if std::fs::metadata(path)?.is_dir() {
             Ok(LayerType::Dir)
-        } else if file_name.ends_with(".tar.zst") || file_name.ends_with(".tar") {
+        } else if file_name.ends_with(".tar.zst")
+            || file_name.ends_with(".tar.gz")
+            || file_name.ends_with(".tar")
+        {
             Ok(LayerType::Archive)
         } else {
             bail!("unsupported file type: {}", path.display());
@@ -309,10 +312,10 @@ impl ContainerSettings {
 
     fn extract_archive(archive_path: &Path, extract_dir: &Path) -> Result<()> {
         let f = File::open(archive_path)?;
-        let decompressed: Box<dyn Read> = if archive_path.extension() == Some(OsStr::new("zst")) {
-            Box::new(zstd::stream::read::Decoder::new(f)?)
-        } else {
-            Box::new(f)
+        let decompressed: Box<dyn Read> = match archive_path.extension() {
+            Some(s) if s == OsStr::new("zst") => Box::new(zstd::stream::read::Decoder::new(f)?),
+            Some(s) if s == OsStr::new("gz") => Box::new(flate2::read::GzDecoder::new(f)),
+            _ => Box::new(f),
         };
         tar::Archive::new(decompressed).unpack(extract_dir)?;
         Ok(())
