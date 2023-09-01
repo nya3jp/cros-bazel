@@ -25,6 +25,7 @@ pub struct BinaryPackage {
     xpak_len: u64,
     xpak: HashMap<String, Vec<u8>>,
     category_pf: String,
+    slot: String,
 }
 
 impl BinaryPackage {
@@ -61,6 +62,12 @@ impl BinaryPackage {
         )?
         .trim();
         let category_pf = format!("{category}/{pf}");
+        let slot = std::str::from_utf8(
+            xpak.get("SLOT")
+                .with_context(|| "Binary package missing SLOT")?,
+        )?
+        .trim()
+        .to_string();
 
         Ok(Self {
             file,
@@ -68,12 +75,18 @@ impl BinaryPackage {
             xpak_len: size - xpak_start,
             xpak,
             category_pf,
+            slot,
         })
     }
 
     /// Returns the XPAK key-value map.
     pub fn xpak(&self) -> &HashMap<String, Vec<u8>> {
         &self.xpak
+    }
+
+    /// Returns the value of SLOT.
+    pub fn slot(&self) -> &str {
+        &self.slot
     }
 
     /// Returns the string combining CATEGORY and PF, e.g. "sys-apps/attr-2.5.1".

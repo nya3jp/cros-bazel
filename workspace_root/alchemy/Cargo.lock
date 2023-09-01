@@ -451,6 +451,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "extract_package_from_manifest_package"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "binarypackage",
+ "clap",
+ "common_extract_tarball",
+ "fileutil",
+ "regex",
+ "runfiles",
+ "serde",
+ "version",
+]
+
+[[package]]
 name = "fast_install_packages"
 version = "0.1.0"
 dependencies = [
