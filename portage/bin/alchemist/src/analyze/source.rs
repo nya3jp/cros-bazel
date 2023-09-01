@@ -47,6 +47,8 @@ pub enum PackageLocalSource {
     BazelTarget(String),
     /// ChromeOS source code at `/mnt/host/source`.
     Src(PathBuf),
+    /// Chromite source code at `/mnt/host/source/chromite`.
+    Chromite,
     /// Chrome source code.
     Chrome(ChromeVersion),
 }
@@ -356,7 +358,7 @@ fn apply_local_sources_workarounds(
 
     // Running install hooks requires src/scripts/hooks and chromite.
     local_sources.push(PackageLocalSource::Src("src/scripts/hooks".into()));
-    local_sources.push(PackageLocalSource::Src("chromite".into()));
+    local_sources.push(PackageLocalSource::Chromite);
 
     // The platform eclass calls `platform2_test.py`.
     // The meson eclass calls `meson_test.py` which calls `platform2_test.py`.
