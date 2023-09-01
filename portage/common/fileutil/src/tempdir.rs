@@ -9,6 +9,7 @@ use std::{
 
 use anyhow::Result;
 use lazy_static::lazy_static;
+use tracing::info_span;
 
 use crate::remove_dir_all_with_chmod;
 
@@ -65,6 +66,7 @@ impl SafeTempDir {
 impl Drop for SafeTempDir {
     fn drop(&mut self) {
         if let Some(dir) = &self.dir {
+            let _span = info_span!("SafeTempDir::drop", dir = ?dir).entered();
             remove_dir_all_with_chmod(dir).expect("Failed to remove temporary directory");
         }
     }

@@ -10,4 +10,5 @@ anyhow.workspace = true
 lazy_static.workspace = true
 libc.workspace = true
 tempfile.workspace = true
+tracing.workspace = true
 walkdir.workspace = true

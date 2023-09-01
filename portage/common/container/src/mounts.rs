@@ -11,6 +11,7 @@ use std::{
 use anyhow::{bail, ensure, Context, Result};
 use itertools::Itertools;
 use nix::mount::{mount, umount2, MntFlags, MsFlags};
+use tracing::info_span;
 
 fn ensure_dir_is_empty(dir: &Path) -> Result<()> {
     match std::fs::read_dir(dir)?.next() {
@@ -48,6 +49,7 @@ impl MountGuard {
 impl Drop for MountGuard {
     fn drop(&mut self) {
         if let Some(dir) = self.dir.take() {
+            let _span = info_span!("MountGuard::drop", dir = ?dir).entered();
             umount2(&dir, MntFlags::MNT_DETACH).expect("Failed to unmount");
         }
     }

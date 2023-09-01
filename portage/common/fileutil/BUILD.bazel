@@ -25,6 +25,7 @@ rust_library(
         "@alchemy_crates//:lazy_static",
         "@alchemy_crates//:libc",
         "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:tracing",
         "@alchemy_crates//:walkdir",
     ],
 )
