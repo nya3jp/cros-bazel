@@ -37,7 +37,8 @@ fn sort_contents(pkg_dir: &Path) -> Result<()> {
             .split('\n')
             .filter(|line| !line.is_empty())
             .sorted()
-            .join("\n");
+            .interleave_shortest(std::iter::repeat("\n"))
+            .join("");
         with_permissions(&path, 0o744, || {
             std::fs::write(&path, contents)
                 .with_context(|| format!("Sorting CONTENTS for: {path:?}"))
@@ -230,6 +231,50 @@ mod tests {
                 PathBuf::from("var/mail"),
             ]
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_clean_layer_canonicalize_vdb() -> Result<()> {
+        let output_dir = SafeTempDir::new()?;
+        let output_dir = output_dir.path();
+
+        let vdb_dir = output_dir.join("build/foo/var/db/pkg/sys-apps/bar-1.0");
+
+        std::fs::create_dir_all(&vdb_dir)?;
+        std::fs::write(
+            vdb_dir.join("CONTENTS"),
+            r#"dir usr
+dir usr/bin
+obj usr/bin/world d41d8cd98f00b204e9800998ecf8427e 1111
+obj usr/bin/hello d41d8cd98f00b204e9800998ecf8427e 2222
+dir bin
+sym bin/world -> ../usr/bin/world 3333
+sym bin/hello -> /usr/bin/hello 4444
+"#,
+        )?;
+        std::fs::write(vdb_dir.join("COUNTER"), "12345")?;
+        std::fs::write(vdb_dir.join("environment.bz2"), "fake environment")?;
+
+        clean_layer(output_dir)?;
+
+        let contents = std::fs::read_to_string(vdb_dir.join("CONTENTS"))?;
+        assert_eq!(
+            contents,
+            r#"dir bin
+dir usr
+dir usr/bin
+obj usr/bin/hello d41d8cd98f00b204e9800998ecf8427e 2222
+obj usr/bin/world d41d8cd98f00b204e9800998ecf8427e 1111
+sym bin/hello -> /usr/bin/hello 4444
+sym bin/world -> ../usr/bin/world 3333
+"#
+        );
+        let counter = std::fs::read_to_string(vdb_dir.join("COUNTER"))?;
+        assert_eq!(counter, "0");
+        let environment = std::fs::read_to_string(vdb_dir.join("environment.bz2"))?;
+        assert_eq!(environment, "");
 
         Ok(())
     }
