@@ -4,6 +4,7 @@
 
 use anyhow::{ensure, Context, Error, Result};
 use binarypackage::BinaryPackage;
+use bzip2::read::BzDecoder;
 use clap::Parser;
 use cliutil::cli_main;
 use container::{
@@ -13,13 +14,16 @@ use durabletree::DurableTree;
 use fileutil::{resolve_symlink_forest, SafeTempDir, SafeTempDirBuilder};
 use itertools::Itertools;
 use nix::mount::{mount, umount2, MntFlags, MsFlags};
+use runfiles::Runfiles;
 use std::{
-    fs::File,
+    fs::{File, Permissions},
     io::ErrorKind,
+    os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
     process::{Command, ExitCode},
     str::FromStr,
 };
+use tempfile::NamedTempFile;
 use tracing::info_span;
 use vdb::{generate_vdb_contents, get_vdb_dir};
 
@@ -116,6 +120,56 @@ fn move_directory(source_dir: &Path, target_dir: &Path) -> Result<()> {
         .status()?;
     ensure!(status.success(), "mv failed: {:?}", status);
     Ok(())
+}
+
+/// Checks if we can skip install hooks for the package.
+fn can_skip_install_hooks(binary_package: &BinaryPackage) -> Result<bool> {
+    // Extract environment.
+    let environment_compressed = binary_package
+        .xpak()
+        .get("environment.bz2")
+        .map(|value| value.as_slice())
+        .unwrap_or_default();
+    let mut environment_file = NamedTempFile::new()?;
+    std::io::copy(
+        &mut BzDecoder::new(environment_compressed),
+        environment_file.as_file_mut(),
+    )
+    .with_context(|| {
+        format!(
+            "Failed to decode environment.bz2 for {}",
+            binary_package.category_pf()
+        )
+    })?;
+
+    // Run pkg_hook_check.sh.
+    let runfiles = Runfiles::create()?;
+    let output = Command::new(runfiles.rlocation("files/bash-static"))
+        .args([
+            "-c",
+            r#"
+    source "$1"
+    source "bazel/portage/bin/fast_install_packages/pkg_hook_check.sh"
+    "#,
+            "pkg_hook_check",
+        ])
+        .arg(environment_file.path())
+        .output()
+        .with_context(|| {
+            format!(
+                "pkg_hook_check.sh failed for {}",
+                binary_package.category_pf()
+            )
+        })?;
+    if !output.status.success() {
+        eprintln!(
+            "We have to run install hooks: {}",
+            String::from_utf8_lossy(&output.stdout)
+        );
+        return Ok(false);
+    }
+    eprintln!("Skipping install hooks safely");
+    Ok(true)
 }
 
 /// Bind-mounts the binary package to the container.
@@ -304,6 +358,21 @@ fn install_package(
     let category_pf = binary_package.category_pf();
 
     eprintln!("Installing {}", category_pf);
+
+    // Make sure output directories have right permissions.
+    std::fs::set_permissions(&spec.output_preinst_dir, Permissions::from_mode(0o755))?;
+    std::fs::set_permissions(&spec.output_postinst_dir, Permissions::from_mode(0o755))?;
+
+    // Check if we can skip install hooks.
+    if can_skip_install_hooks(&binary_package)? {
+        let _span = info_span!("install_without_hooks", package = category_pf).entered();
+
+        // Enough to just mount the installed contents layer.
+        // TODO(b/299564235): Check file collisions.
+        settings.push_layer(&resolve_symlink_forest(&spec.input_installed_contents_dir)?)?;
+
+        return Ok(());
+    }
 
     // Bind-mount the binary package.
     bind_mount_binary_package(settings, &spec.input_binary_package, root_dir, category_pf)?;

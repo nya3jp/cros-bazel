@@ -10,6 +10,10 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 rust_binary(
     name = "fast_install_packages",
     srcs = glob(["src/**/*.rs"]),
+    data = [
+        ":pkg_hook_check.sh",
+        "@files//:bash-static",
+    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [
@@ -20,10 +24,12 @@ rust_binary(
         "//bazel/portage/common/portage/binarypackage",
         "//bazel/portage/common/portage/vdb",
         "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:bzip2",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:libc",
         "@alchemy_crates//:nix",
+        "@alchemy_crates//:tempfile",
         "@alchemy_crates//:tracing",
         "@rules_rust//tools/runfiles",
     ],

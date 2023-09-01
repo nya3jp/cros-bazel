@@ -13,15 +13,15 @@ fileutil = { path = "../../common/fileutil" }
 binarypackage = { path = "../../common/portage/binarypackage" }
 vdb = { path = "../../common/portage/vdb" }
 anyhow.workspace = true
+bzip2.workspace = true
 clap.workspace = true
 itertools.workspace = true
 libc.workspace = true
 nix.workspace = true
 runfiles.workspace = true
+tempfile.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
 testutil = { path = "../../common/testutil" }
 bytes.workspace = true
-bzip2.workspace = true
-tempfile.workspace = true
