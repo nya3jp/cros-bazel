@@ -2,9 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup", "pkg", "strip_prefix")
 load("//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 
 package(default_visibility = ["//bazel/portage:__subpackages__"])
 
@@ -13,6 +13,7 @@ exports_files(
         "nano.tbz2",
         "nano-diff-xpak.tbz2",
         "nano-diff-tar.tbz2",
+        "sysroot.bzl",
     ],
 )
 

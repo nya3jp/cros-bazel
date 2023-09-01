@@ -40,7 +40,7 @@ def bash_rlocation(ctx, file):
     """Returns code that will generate the path of a file in bash."""
     return "$(rlocation '%s')" % runfiles_path(ctx, file)
 
-def _generate_bash_script(
+def generate_bash_script(
         ctx,
         out,
         content,
@@ -61,7 +61,7 @@ def _generate_bash_script(
 def _sh_runfiles_impl(ctx):
     # The file is likely named name + .sh already.
     out = ctx.actions.declare_file(ctx.label.name + "_generated.sh")
-    return _generate_bash_script(
+    return generate_bash_script(
         ctx,
         out,
         content = "source %s" % bash_rlocation(ctx, ctx.file.src),
@@ -143,7 +143,7 @@ def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles 
             else:
                 fail("Unknown type '%s' for arg '%s'" % (type(arg), arg))
         args = " ".join(new_args)
-    return _generate_bash_script(
+    return generate_bash_script(
         ctx,
         out,
         content = '{content_prefix}\n\nexec "{binary}" {args} "$@"'.format(

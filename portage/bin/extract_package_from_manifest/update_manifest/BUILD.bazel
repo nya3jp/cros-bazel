@@ -1,0 +1,29 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+
+rust_binary(
+    name = "update_manifest",
+    srcs = glob(["src/*.rs"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/portage/bin/extract_package_from_manifest/package",
+        "//bazel/portage/common/cliutil",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:chrono",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:rayon",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
+    ],
+)
+
+rust_test(
+    name = "update_manifest_test",
+    size = "small",
+    crate = ":update_manifest",
+)

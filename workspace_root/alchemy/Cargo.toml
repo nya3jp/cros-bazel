@@ -11,6 +11,7 @@ members = [
     "bazel/portage/bin/extract_interface",
     "bazel/portage/bin/extract_package",
     "bazel/portage/bin/extract_package_from_manifest/package",
+    "bazel/portage/bin/extract_package_from_manifest/update_manifest",
     "bazel/portage/bin/fast_install_packages",
     "bazel/portage/bin/install_deps",
     "bazel/portage/bin/overlayfs_mount_helper",

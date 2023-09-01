@@ -1,0 +1,19 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@@//bazel/portage/common/testdata:sysroot.bzl", "SYSROOT_MANIFEST_CONTENT")
+load("//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_package")
+
+# A demo of how you can extract a whole tarball.
+extract_package(
+    name = "sysroot",
+    header_file_dir_regexes = ["/usr/include"],
+    manifest_content = SYSROOT_MANIFEST_CONTENT,
+    manifest_file = "//bazel/portage/common/testdata:sysroot.bzl",
+    pkg = "//bazel/portage/common/testdata:sysroot",
+    shared_library_dir_regexes = [
+        "/lib64",
+        "/lib32",
+    ],
+)
