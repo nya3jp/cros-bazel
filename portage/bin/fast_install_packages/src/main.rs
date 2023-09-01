@@ -476,6 +476,15 @@ fn do_main() -> Result<()> {
     settings.set_mutable_base_dir(tmpfs.path());
     settings.apply_common_args(&args.common)?;
 
+    // Bind-mount the portageq cache script.
+    let runfiles = Runfiles::create()?;
+    settings.push_bind_mount(BindMount {
+        mount_path: PathBuf::from("/usr/local/bin/portageq"),
+        source: runfiles
+            .rlocation("cros/bazel/portage/bin/fast_install_packages/portageq_wrapper.py"),
+        rw: false,
+    });
+
     for spec in &args.install {
         install_package(&mut settings, spec, &args.root_dir, tmpfs.path())?;
     }

@@ -12,6 +12,7 @@ rust_binary(
     srcs = glob(["src/**/*.rs"]),
     data = [
         ":pkg_hook_check.sh",
+        ":portageq_wrapper.py",
         "@files//:bash-static",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -91,4 +92,21 @@ pkg_files(
 pkg_tar(
     name = "fake_sdk_extras",
     srcs = [":fake_sdk_extras_files"],
+)
+
+py_library(
+    name = "portageq",
+    srcs = ["portageq_wrapper.py"],
+)
+
+py_test(
+    name = "portageq_wrapper_test",
+    size = "small",
+    srcs = ["portageq_wrapper_test.py"],
+    data = [
+        "portageq_wrapper.py",
+        "testdata/fake_portageq.py",
+    ],
+    python_version = "PY3",
+    deps = [":portageq"],
 )
