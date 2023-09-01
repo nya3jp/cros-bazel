@@ -31,9 +31,10 @@ sdk_install_deps(
     target_deps = [
         "//internal/packages/stage1/target/board/chromiumos/simple/aaa:1.0",
     ],
-    use_layers = select({
-        "//:binpkg-cache-naive": True,
-        "//conditions:default": False,
+    install_strategy = select({
+        "//:binpkg-cache-fast": "fast",
+        "//:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
 )
@@ -48,9 +49,10 @@ sdk_install_deps(
         "//internal/packages/stage1/target/board/chromiumos/simple/aaa:1.0",
         "//internal/packages/stage1/target/board/chromiumos/simple/bbb:1.0",
     ],
-    use_layers = select({
-        "//:binpkg-cache-naive": True,
-        "//conditions:default": False,
+    install_strategy = select({
+        "//:binpkg-cache-fast": "fast",
+        "//:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
 )

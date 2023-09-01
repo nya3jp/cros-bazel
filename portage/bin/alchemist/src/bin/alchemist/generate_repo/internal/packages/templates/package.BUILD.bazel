@@ -57,9 +57,10 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    use_layers = select({
-        "//:binpkg-cache-naive": True,
-        "//conditions:default": False,
+    install_strategy = select({
+        "//:binpkg-cache-fast": "fast",
+        "//:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
 )
@@ -85,9 +86,10 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    use_layers = select({
-        "//:binpkg-cache-naive": True,
-        "//conditions:default": False,
+    install_strategy = select({
+        "//:binpkg-cache-fast": "fast",
+        "//:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
 )
@@ -113,9 +115,10 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    use_layers = select({
-        "//:binpkg-cache-naive": True,
-        "//conditions:default": False,
+    install_strategy = select({
+        "//:binpkg-cache-fast": "fast",
+        "//:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
 )

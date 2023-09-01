@@ -378,10 +378,13 @@ def _ebuild_impl(ctx):
             sdk = ctx.attr.sdk[SDKInfo],
             overlays = ctx.attr.overlays[OverlaySetInfo],
             install_set = depset([package_info]),
+            strategy = "slow",
             executable_action_wrapper = ctx.executable._action_wrapper,
             executable_install_deps = ctx.executable._install_deps,
+            # Pass an invalid value as this code path is incompatible with
+            # fast_install_packages.
+            executable_fast_install_packages = None,
             progress_message = "Creating layer for %{label}",
-            use_layers = False,
         )
 
         if len(install_layers) != 1:

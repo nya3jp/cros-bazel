@@ -4,7 +4,7 @@
 
 load("install_groups.bzl", "calculate_install_groups", "map_install_group")
 
-def install_deps(
+def _fast_install_packages(
         ctx,
         output_prefix,
         board,
@@ -12,9 +12,114 @@ def install_deps(
         overlays,
         install_set,
         executable_action_wrapper,
+        executable_fast_install_packages,
+        progress_message):
+    # Skip already installed packages.
+    installed = {}
+    for package in sdk.packages.to_list():
+        installed[package.file] = True
+    install_list = [
+        package
+        for package in install_set.to_list()
+        if not installed.get(package.file, False)
+    ]
+
+    output_log_file = ctx.actions.declare_file("%s.log" % output_prefix)
+    output_profile_file = ctx.actions.declare_file(
+        "%s.profile.json" % output_prefix,
+    )
+    outputs = [output_log_file, output_profile_file]
+
+    args = ctx.actions.args()
+    args.add_all([
+        "--log=" + output_log_file.path,
+        "--profile=" + output_profile_file.path,
+        executable_fast_install_packages.path,
+    ])
+    if board:
+        args.add("--root-dir=/build/%s" % board)
+    else:
+        args.add("--root-dir=/")
+
+    input_layers = sdk.layers + overlays.layers
+    args.add_all(
+        input_layers,
+        format_each = "--layer=%s",
+        expand_directories = False,
+    )
+    inputs = input_layers[:]
+
+    new_layers = []
+
+    for i, package in enumerate(install_list):
+        package_output_prefix = "%s.%d" % (output_prefix, i)
+        output_preinst = ctx.actions.declare_directory(
+            "%s.preinst" % package_output_prefix,
+        )
+        output_postinst = ctx.actions.declare_directory(
+            "%s.postinst" % package_output_prefix,
+        )
+
+        contents_info = getattr(package.contents, board or "__host__")
+        args.add("--install=%s,%s,%s,%s,%s" % (
+            package.file.path,
+            contents_info.installed.path,
+            contents_info.staged.path,
+            output_preinst.path,
+            output_postinst.path,
+        ))
+
+        inputs.extend([
+            package.file,
+            contents_info.installed,
+            contents_info.staged,
+        ])
+        outputs.extend([output_preinst, output_postinst])
+        new_layers.extend([
+            output_preinst,
+            contents_info.installed,
+            output_postinst,
+        ])
+
+    actual_progress_message = progress_message.replace(
+        "{dep_count}",
+        str(len(install_list)),
+    ).replace(
+        "{cached_count}",
+        str(len(install_list)),
+    )
+
+    ctx.actions.run(
+        inputs = depset(inputs),
+        outputs = outputs,
+        executable = executable_action_wrapper,
+        tools = [executable_fast_install_packages],
+        arguments = [args],
+        execution_requirements = {
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+            # Disable sandbox to avoid creating a symlink forest.
+            # This does not affect hermeticity since ebuild runs in a container.
+            "no-sandbox": "",
+        },
+        mnemonic = "InstallDeps",
+        progress_message = actual_progress_message,
+    )
+
+    return new_layers
+
+def install_deps(
+        ctx,
+        output_prefix,
+        board,
+        sdk,
+        overlays,
+        install_set,
+        strategy,
+        executable_action_wrapper,
         executable_install_deps,
-        progress_message,
-        use_layers):
+        executable_fast_install_packages,
+        progress_message):
     """
     Creates an action which builds file system layers in which the build dependencies are installed.
 
@@ -33,20 +138,43 @@ def install_deps(
             This depset's to_list() must return packages in a valid installation
             order, i.e. a package's runtime dependencies are fully satisfied by
             packages that appear before it.
+        strategy: str: Specifies the strategy to install packages. Valid values
+            are:
+                "fast": Uses installed contents layers to fully avoid copying
+                    package contents.
+                "naive": Similar to "fast" but uses installed contents layers
+                    only for packages without install hooks.
+                "slow": Simply uses emerge to install packages into a single
+                    layer.
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_install_deps: File: An executable file of install_deps.
+        executable_fast_install_packages: File: An executable file of
+            fast_install_packages.
         progress_message: str: Progress message for the installation action.
-        use_layers: bool: Use package layers when possible, otherwise perform
-            a binpkg installation.
 
     Returns:
         list[File]: Files representing file system layers.
     """
+    if strategy == "fast":
+        return _fast_install_packages(
+            ctx = ctx,
+            output_prefix = output_prefix,
+            board = board,
+            sdk = sdk,
+            overlays = overlays,
+            install_set = install_set,
+            executable_action_wrapper = executable_action_wrapper,
+            executable_fast_install_packages = executable_fast_install_packages,
+            progress_message = progress_message,
+        )
+
     output_root = ctx.actions.declare_directory(output_prefix)
     output_log_file = ctx.actions.declare_file(output_prefix + ".log")
     output_profile_file = ctx.actions.declare_file(
         output_prefix + ".profile.json",
     )
+
+    use_layers = strategy == "naive"
 
     args = ctx.actions.args()
     args.add_all([

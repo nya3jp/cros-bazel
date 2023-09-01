@@ -17,6 +17,11 @@ sdk_install_deps(
             "{{ package }}",
         {%- endfor %}
     ],
+    install_strategy = select({
+        "//:binpkg-cache-fast": "fast",
+        "//:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
+    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -56,5 +61,10 @@ sdk_install_deps(
         "{{ package }}",
     {%- endfor %}
     ],
+    install_strategy = select({
+        "//:binpkg-cache-fast": "fast",
+        "//:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
+    }),
     visibility = ["@//bazel:internal"],
 )

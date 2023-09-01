@@ -176,10 +176,12 @@ def _sdk_install_deps_impl(ctx):
         sdk = sdk,
         overlays = ctx.attr.overlays[OverlaySetInfo],
         install_set = install_set,
+        strategy = ctx.attr.install_strategy,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
+        executable_fast_install_packages =
+            ctx.executable._fast_install_packages,
         progress_message = ctx.attr.progress_message,
-        use_layers = ctx.attr.use_layers,
     )
 
     return [
@@ -227,10 +229,18 @@ sdk_install_deps = rule(
             """,
             providers = [BinaryPackageSetInfo],
         ),
-        "use_layers": attr.bool(
+        "install_strategy": attr.string(
             doc = """
-            Use the extracted binary package layers if they are available.
+            Specifies the strategy to install packages. Valid values are:
+                "fast": Uses installed contents layers to fully avoid copying
+                    package contents.
+                "naive": Similar to "fast" but uses installed contents layers
+                    only for packages without install hooks.
+                "slow": Simply uses emerge to install packages into a single
+                    layer.
             """,
+            mandatory = True,
+            values = ["fast", "naive", "slow"],
         ),
         "_action_wrapper": attr.label(
             executable = True,
@@ -241,6 +251,11 @@ sdk_install_deps = rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/install_deps"),
+        ),
+        "_fast_install_packages": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/fast_install_packages"),
         ),
     },
 )
