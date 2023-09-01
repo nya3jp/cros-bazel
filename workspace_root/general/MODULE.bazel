@@ -135,7 +135,7 @@ files = use_extension("//bazel/module_extensions:files/extension.bzl", "files")
 use_repo(files, "files")
 
 cros_deps = use_extension("//bazel/module_extensions/cros_deps:extension.bzl", "cros_deps")
-use_repo(cros_deps, "chromite", "depot_tools", "zstd")
+use_repo(cros_deps, "alpine-minirootfs", "chromite", "depot_tools", "zstd")
 
 portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage")
 use_repo(portage, "alchemist", "portage", "portage_digest")
