@@ -12,11 +12,12 @@ use container::{
 use durabletree::DurableTree;
 use fileutil::{resolve_symlink_forest, SafeTempDir, SafeTempDirBuilder};
 use itertools::Itertools;
+use nix::mount::{mount, umount2, MntFlags, MsFlags};
 use std::{
     fs::File,
     io::ErrorKind,
     path::{Path, PathBuf},
-    process::ExitCode,
+    process::{Command, ExitCode},
     str::FromStr,
 };
 use tracing::info_span;
@@ -63,6 +64,58 @@ impl FromStr for InstallSpec {
             output_postinst_dir: output_postinst_dir.into(),
         })
     }
+}
+
+/// Tracks a tmpfs mount point. It unmounts the file system on drop.
+struct TmpfsTempDir {
+    dir: SafeTempDir,
+}
+
+impl TmpfsTempDir {
+    /// Creates a temporary directory and mounts a tmpfs on the directory.
+    pub fn new() -> Result<TmpfsTempDir> {
+        let dir = SafeTempDir::new()?;
+        mount(
+            Some("tmpfs"),
+            dir.path(),
+            Some("tmpfs"),
+            MsFlags::empty(),
+            Some("mode=0755"),
+        )
+        .context("Failed to mount tmpfs for extra dir")?;
+        Ok(TmpfsTempDir { dir })
+    }
+
+    /// Returns the path of the tmpfs mount point.
+    pub fn path(&self) -> &Path {
+        self.dir.path()
+    }
+}
+
+impl Drop for TmpfsTempDir {
+    fn drop(&mut self) {
+        umount2(self.dir.path(), MntFlags::MNT_DETACH)
+            .with_context(|| format!("Failed to unmount {}", self.dir.path().display()))
+            .unwrap();
+    }
+}
+
+/// Moves a directory to another location, possibly by copying them across different file systems.
+/// The target directory must not exist or empty initially.
+fn move_directory(source_dir: &Path, target_dir: &Path) -> Result<()> {
+    match std::fs::remove_dir(target_dir) {
+        Err(e) if e.raw_os_error() == Some(libc::ENOTEMPTY) => {}
+        other => other?,
+    }
+
+    // Use /bin/mv to perform cross-filesystem moves.
+    let status = Command::new("/bin/mv")
+        .arg("--")
+        .arg(source_dir)
+        .arg(target_dir)
+        .status()?;
+    ensure!(status.success(), "mv failed: {:?}", status);
+    Ok(())
 }
 
 /// Bind-mounts the binary package to the container.
@@ -128,7 +181,7 @@ fn run_pkg_setup_and_preinst(
 
     let mut container = settings.prepare()?;
     run_hooks_general(&mut container, root_dir, category_pf, &["setup", "preinst"])?;
-    std::fs::rename(container.into_upper_dir(), preinst_dir)?;
+    move_directory(&container.into_upper_dir(), preinst_dir)?;
     Ok(())
 }
 
@@ -145,12 +198,13 @@ fn mangle_preinst_layer(
     preinst_dir: &Path,
     root_dir: &Path,
     category_pf: &str,
+    mutable_base_dir: &Path,
 ) -> Result<SafeTempDir> {
     let _span = info_span!("mangle_preinst_layer").entered();
 
     // Prepare an upper directory for the postinst hook.
     let postinst_upper_dir = SafeTempDirBuilder::new()
-        .base_dir(Path::new("."))
+        .base_dir(mutable_base_dir)
         .prefix("upper.")
         .build()?;
 
@@ -176,12 +230,8 @@ fn mangle_preinst_layer(
                 .strip_prefix("/")
                 .expect("--root-dir must be absolute"),
         );
-        std::fs::create_dir_all(
-            postinst_root_dir
-                .parent()
-                .expect("invalid postinst root dir"),
-        )?;
-        std::fs::rename(&preinst_image_dir, &postinst_root_dir)?;
+        std::fs::create_dir_all(&postinst_root_dir)?;
+        move_directory(&preinst_image_dir, &postinst_root_dir)?;
     }
 
     // Migrate preinst modifications to the VDB directory (e.g. environment.bz2) to the postinst
@@ -193,8 +243,8 @@ fn mangle_preinst_layer(
     let preinst_vdb_dir = preinst_dir.join(relative_vdb_dir);
     let postinst_vdb_dir = postinst_upper_dir.path().join(relative_vdb_dir);
 
-    std::fs::create_dir_all(postinst_vdb_dir.parent().expect("invalid postinst vdb dir"))?;
-    std::fs::rename(&preinst_vdb_dir, &postinst_vdb_dir)?;
+    std::fs::create_dir_all(&postinst_vdb_dir)?;
+    move_directory(&preinst_vdb_dir, &postinst_vdb_dir)?;
 
     // If we recomputed CONTENTS, it's time to apply it now that we've reflected VDB
     // modifications.
@@ -229,7 +279,7 @@ fn run_pkg_postinst(
 
     let mut container = settings.prepare_with_upper_dir(upper_dir)?;
     run_hooks_general(&mut container, root_dir, category_pf, &["postinst"])?;
-    std::fs::rename(container.into_upper_dir(), postinst_dir)?;
+    move_directory(&container.into_upper_dir(), postinst_dir)?;
     Ok(())
 }
 
@@ -241,6 +291,7 @@ fn install_package(
     settings: &mut ContainerSettings,
     spec: &InstallSpec,
     root_dir: &Path,
+    mutable_base_dir: &Path,
 ) -> Result<()> {
     let _span = info_span!(
         "install",
@@ -269,8 +320,13 @@ fn install_package(
     settings.push_layer(&spec.output_preinst_dir)?;
 
     // Mangle the preinst layer and get the initial postinst upper dir.
-    let postinst_upper_dir =
-        mangle_preinst_layer(settings, &spec.output_preinst_dir, root_dir, category_pf)?;
+    let postinst_upper_dir = mangle_preinst_layer(
+        settings,
+        &spec.output_preinst_dir,
+        root_dir,
+        category_pf,
+        mutable_base_dir,
+    )?;
 
     // Create an empty file to hide /.image. This file will be removed from the layer later.
     File::create(postinst_upper_dir.path().join(STAGE_DIR_NAME))?;
@@ -335,14 +391,24 @@ struct Args {
 fn do_main() -> Result<()> {
     let args = Args::parse();
 
+    // Mount a tmpfs and use it as the mutable base directory.
+    //
+    // We do this to workaround the issue where overlayfs blocks on unmounting to flush all dirty
+    // writes to the file system of upper directories.
+    // See: https://www.cloudfoundry.org/blog/an-overlayfs-journey-with-the-garden-team/
+    //
+    // This means that:
+    // - File system modifications made by package hooks are recorded in memory (until they are
+    //   finally moved to the output directory).
+    // - Package hooks can not modify file ownership because fakefs fails to set xattrs.
+    let tmpfs = TmpfsTempDir::new()?;
+
     let mut settings = ContainerSettings::new();
-    // Use the current directory (execroot) as the mutable base directory since
-    // it should be on the same file system as output directories.
-    settings.set_mutable_base_dir(Path::new("."));
+    settings.set_mutable_base_dir(tmpfs.path());
     settings.apply_common_args(&args.common)?;
 
     for spec in &args.install {
-        install_package(&mut settings, spec, &args.root_dir)?;
+        install_package(&mut settings, spec, &args.root_dir, tmpfs.path())?;
     }
 
     for spec in &args.install {

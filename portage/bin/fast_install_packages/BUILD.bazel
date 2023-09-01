@@ -23,6 +23,7 @@ rust_binary(
         "@alchemy_crates//:clap",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:libc",
+        "@alchemy_crates//:nix",
         "@alchemy_crates//:tracing",
         "@rules_rust//tools/runfiles",
     ],

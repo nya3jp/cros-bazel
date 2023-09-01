@@ -464,6 +464,7 @@ dependencies = [
  "fileutil",
  "itertools",
  "libc",
+ "nix",
  "runfiles",
  "tempfile",
  "testutil",
