@@ -16,6 +16,6 @@ def alchemist(name):
         build_mode = _BUILD_MODE,
         cargo_lockfile = "//bazel/portage/bin/alchemist:Cargo.lock",
         cargo_toml = "//bazel/portage/bin/alchemist:Cargo.toml",
-        rust_toolchain_cargo_template = _TOOL_TEMPLATE,
+        rust_toolchain_cargo_template = "@@//bazel/module_extensions/portage:alchemist_cargo_wrapper.sh",
         rust_toolchain_rustc_template = _TOOL_TEMPLATE,
     )
