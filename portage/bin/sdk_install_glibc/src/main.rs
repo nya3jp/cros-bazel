@@ -82,5 +82,5 @@ fn do_main() -> Result<()> {
 
 fn main() -> ExitCode {
     enter_mount_namespace().expect("Failed to enter a mount namespace");
-    cli_main(do_main)
+    cli_main(do_main, Default::default())
 }

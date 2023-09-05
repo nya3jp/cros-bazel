@@ -57,7 +57,10 @@ pub fn main() -> ExitCode {
         }();
         handle_top_level_result(result)
     } else {
-        cli_main(|| continue_namespace(RunInContainerConfig::deserialize_from(&args.config)?))
+        cli_main(
+            || continue_namespace(RunInContainerConfig::deserialize_from(&args.config)?),
+            Default::default(),
+        )
     }
 }
 

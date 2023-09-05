@@ -18,5 +18,13 @@ fn do_main() -> Result<()> {
 }
 
 fn main() -> std::process::ExitCode {
-    cliutil::cli_main(do_main)
+    cliutil::cli_main(
+        do_main,
+        cliutil::ConfigBuilder::new()
+            // Not required, just to show how you can change the logging config.
+            .logging(cliutil::LoggingConfig::from_env().unwrap())
+            .log_command_line(false)
+            .build()
+            .unwrap(),
+    )
 }

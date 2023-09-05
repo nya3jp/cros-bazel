@@ -92,5 +92,5 @@ fn do_main() -> Result<()> {
 fn main() -> ExitCode {
     // We want CAP_DAC_OVERRIDE to scan read-protected directories on generating CONTENTS.
     enter_mount_namespace().expect("Failed to enter a mount namespace");
-    cli_main(do_main)
+    cli_main(do_main, Default::default())
 }

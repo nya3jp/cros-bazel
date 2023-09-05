@@ -62,5 +62,5 @@ fn do_main() -> Result<()> {
 }
 
 fn main() -> ExitCode {
-    cli_main(do_main)
+    cli_main(do_main, Default::default())
 }

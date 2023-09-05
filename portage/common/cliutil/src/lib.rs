@@ -13,9 +13,11 @@ use std::{
 
 use anyhow::{bail, Result};
 
+mod config;
 mod logging;
 mod stdio_redirector;
 
+pub use crate::config::*;
 pub use crate::logging::*;
 pub use crate::stdio_redirector::StdioRedirector;
 
@@ -25,15 +27,16 @@ pub use crate::stdio_redirector::StdioRedirector;
 /// Exceptions include:
 /// - Programs that want to stay single-threaded (e.g. run_in_container that
 ///   calls unshare(2)).
-pub fn cli_main<F, T, E>(main: F) -> ExitCode
+pub fn cli_main<F, T, E>(main: F, config: Config) -> ExitCode
 where
     F: FnOnce() -> Result<T, E>,
     T: Termination,
     E: Debug,
 {
-    let log_config = LoggingConfig::from_env().unwrap();
-    let _log_guard = log_config.setup().unwrap();
-    log_current_command_line();
+    let _log_guard = config.logging.setup().unwrap();
+    if config.log_command_line {
+        log_current_command_line();
+    }
     let result = main();
     handle_top_level_result(result)
 }
