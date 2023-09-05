@@ -103,12 +103,10 @@ func dirfdPath(tid int, dfd int) string {
 // rewritePerThreadPaths rewrites file paths specific to threads.
 // TODO: Improve the method to reduce false negatives.
 func rewritePerThreadPaths(tid int, path string) string {
-	path = filepath.Clean(path)
-
 	// /proc/self/ -> /proc/$tid/
 	const procSelf = "/proc/self/"
 	if strings.HasPrefix(path, procSelf) {
-		path = fmt.Sprintf("/proc/%d/%s", tid, path[len(procSelf):])
+		return fmt.Sprintf("/proc/%d/%s", tid, path[len(procSelf):])
 	}
 	return path
 }

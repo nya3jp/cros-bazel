@@ -29,6 +29,7 @@ go_test(
     srcs = ["main_test.go"],
     data = [
         ":fakefs",
+        "//bazel/portage/bin/fakefs/testhelper",
     ],
     embed = [":fakefs_lib"],
     deps = [

@@ -1,0 +1,23 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "testhelper_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/portage/bin/testhelper",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//bazel/portage/bin/fakefs/exit",
+        "@com_github_urfave_cli_v2//:cli",
+        "@org_golang_x_sys//unix",
+    ],
+)
+
+go_binary(
+    name = "testhelper",
+    embed = [":testhelper_lib"],
+    visibility = ["//bazel:internal"],
+)

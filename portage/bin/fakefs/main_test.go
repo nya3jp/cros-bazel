@@ -21,6 +21,14 @@ func fakeFsBin(t *testing.T) string {
 	return bin
 }
 
+func testHelperBin(t *testing.T) string {
+	bin, ok := bazel.FindBinary("bazel/portage/bin/fakefs/testhelper", "testhelper")
+	if !ok {
+		t.Fatal("testhelper not found")
+	}
+	return bin
+}
+
 // Runs the command under fakefs and returns stdout
 func runCmd(t *testing.T, cwd string, cmd []string) string {
 	args := []string{"--verbose", "--"}
@@ -42,6 +50,11 @@ func runCmd(t *testing.T, cwd string, cmd []string) string {
 
 func runBash(t *testing.T, cwd string, cmd string) string {
 	return runCmd(t, cwd, []string{"bash", "-xe", "-c", cmd})
+}
+
+func runTestHelper(t *testing.T, cwd string, cmd string, args ...string) string {
+	bin := testHelperBin(t)
+	return runCmd(t, cwd, append([]string{bin, cmd}, args...))
 }
 
 func TestChownRelative(t *testing.T) {
@@ -97,5 +110,29 @@ func TestChgrpAbsolute(t *testing.T) {
 
 	if owner != "nobody" {
 		t.Fatalf("Expected owner '%s', got '%s'", "nobody", owner)
+	}
+}
+
+func TestFstatatEmptyPath(t *testing.T) {
+	dir := t.TempDir()
+
+	runBash(t, dir, "touch foo; chown 123:234 foo")
+	got := runTestHelper(t, dir, "fstatat-empty-path", "foo")
+
+	const want = "123:234"
+	if got != want {
+		t.Fatalf("Unexpected ownership: got %s, want %s", got, want)
+	}
+}
+
+func TestProcSelf(t *testing.T) {
+	dir := t.TempDir()
+
+	runBash(t, dir, "touch foo; chown 123:234 foo")
+	got := runTestHelper(t, dir, "stat-proc-self-fd", "foo")
+
+	const want = "123:234"
+	if got != want {
+		t.Fatalf("Unexpected ownership: got %s, want %s", got, want)
 	}
 }
