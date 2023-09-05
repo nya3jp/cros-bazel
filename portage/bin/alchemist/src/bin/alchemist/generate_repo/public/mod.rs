@@ -169,17 +169,29 @@ fn generate_public_package(
         .to_string_lossy()
         .into_owned();
     aliases.push(AliasEntry {
-        name: Cow::from(short_package_name),
+        name: Cow::from(&short_package_name),
         actual: get_actual_target(""),
     });
-    aliases.extend(
-        ["debug", "package_set", "install"].map(|suffix| AliasEntry {
-            name: Cow::from(suffix),
+    for suffix in ["debug", "package_set", "install"] {
+        if suffix != short_package_name {
+            aliases.push(AliasEntry {
+                name: Cow::from(suffix),
+                actual: get_actual_target(&format!("_{}", suffix)),
+            });
+        }
+        aliases.push(AliasEntry {
+            name: Cow::from(format!("{}_{}", short_package_name, suffix)),
             actual: get_actual_target(&format!("_{}", suffix)),
-        }),
-    );
+        });
+    }
+    if short_package_name != "test" {
+        test_suites.push(TestSuiteEntry {
+            name: Cow::from("test"),
+            test_name: get_actual_target("_test"),
+        });
+    }
     test_suites.push(TestSuiteEntry {
-        name: Cow::from("test"),
+        name: Cow::from(format!("{}_test", short_package_name)),
         test_name: get_actual_target("_test"),
     });
 
