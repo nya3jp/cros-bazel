@@ -38,8 +38,8 @@ ebuild(
     distfiles = {
     },
     srcs = [
-        "//internal/sources/chromite:__tarballs__",
         "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
     ],
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
@@ -63,8 +63,8 @@ suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [
-        "//internal/sources/chromite:__tarballs__",
         "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
     ],
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
@@ -86,8 +86,8 @@ ebuild_debug(
     distfiles = {
     },
     srcs = [
-        "//internal/sources/chromite:__tarballs__",
         "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
     ],
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
@@ -118,8 +118,8 @@ ebuild_test(
     distfiles = {
     },
     srcs = [
-        "//internal/sources/chromite:__tarballs__",
         "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
     ],
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
