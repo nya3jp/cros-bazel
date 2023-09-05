@@ -371,6 +371,13 @@ fn apply_local_sources_workarounds(
         local_sources.push(common_mk);
     }
 
+    // Needed for `bazel test`. See b/298920283 for details.
+    if details.inherited.contains("platform") {
+        local_sources.push(PackageLocalSource::Src(
+            "src/third_party/gtest-parallel".into(),
+        ));
+    }
+
     Ok(())
 }
 
