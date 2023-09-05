@@ -27,6 +27,12 @@ alias(
     actual = "2.35-r20_host_deps",
     visibility = ["//visibility:private"],
 )
+
+alias(
+    name = "2.35-r20_test_deps",
+    actual = "2.35-r20_host_deps",
+    visibility = ["//visibility:private"],
+)
 ebuild(
     name = "2.35-r20",
     ebuild = "glibc-2.35-r20.ebuild",
@@ -128,7 +134,7 @@ ebuild_test(
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":2.35-r20_deps",
+    sdk = ":2.35-r20_test_deps",
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],

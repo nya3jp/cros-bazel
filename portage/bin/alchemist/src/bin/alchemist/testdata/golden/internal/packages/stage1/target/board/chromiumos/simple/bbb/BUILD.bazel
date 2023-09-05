@@ -27,6 +27,12 @@ alias(
     actual = "1.0_host_deps",
     visibility = ["//visibility:private"],
 )
+
+alias(
+    name = "1.0_test_deps",
+    actual = "1.0_host_deps",
+    visibility = ["//visibility:private"],
+)
 ebuild(
     name = "1.0",
     ebuild = "bbb-1.0.ebuild",
@@ -128,7 +134,7 @@ ebuild_test(
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_test_deps",
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],

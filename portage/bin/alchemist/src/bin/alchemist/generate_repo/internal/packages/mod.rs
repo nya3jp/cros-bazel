@@ -61,6 +61,7 @@ pub struct EBuildEntry {
     host_build_deps: Vec<String>,
     host_install_deps: Vec<String>,
     target_build_deps: Vec<String>,
+    target_test_deps: Vec<String>,
     provided_runtime_deps: Vec<String>,
     runtime_deps: Vec<String>,
     install_set: Vec<String>,
@@ -294,6 +295,15 @@ impl EBuildEntry {
             }
         };
 
+        // TODO(b:299056510): Consider not emitting a separate sdk_install_deps,
+        // if it is the same for the binary and test targets.
+        let target_test_deps = match &target {
+            PackageType::Host { .. } => Vec::new(),
+            PackageType::CrossRoot { target, .. } => {
+                format_dependencies(target.prefix, package.dependencies.test_deps.iter())?
+            }
+        };
+
         let (runtime_deps, provided_runtime_deps) = match &target {
             PackageType::Host(host) => {
                 let (runtime_deps, provided_runtime_deps) = partition_provided(
@@ -370,6 +380,7 @@ impl EBuildEntry {
             provided_host_build_deps,
             host_install_deps,
             target_build_deps,
+            target_test_deps,
             runtime_deps,
             provided_runtime_deps,
             install_set,

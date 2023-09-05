@@ -27,6 +27,12 @@ alias(
     actual = "10.2.0_host_deps",
     visibility = ["//visibility:private"],
 )
+
+alias(
+    name = "10.2.0_test_deps",
+    actual = "10.2.0_host_deps",
+    visibility = ["//visibility:private"],
+)
 ebuild(
     name = "10.2.0",
     ebuild = "gcc-libs-10.2.0.ebuild",
@@ -128,7 +134,7 @@ ebuild_test(
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":10.2.0_deps",
+    sdk = ":10.2.0_test_deps",
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],

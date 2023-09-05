@@ -27,6 +27,12 @@ alias(
     actual = "0-r2_host_deps",
     visibility = ["//visibility:private"],
 )
+
+alias(
+    name = "0-r2_test_deps",
+    actual = "0-r2_host_deps",
+    visibility = ["//visibility:private"],
+)
 ebuild(
     name = "0-r2",
     ebuild = "os-headers-0-r2.ebuild",
@@ -128,7 +134,7 @@ ebuild_test(
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":0-r2_deps",
+    sdk = ":0-r2_test_deps",
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],

@@ -28,6 +28,7 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct PackageDependencies {
     pub build_deps: Vec<Arc<PackageDetails>>,
+    pub test_deps: Vec<Arc<PackageDetails>>,
     pub runtime_deps: Vec<Arc<PackageDetails>>,
     pub post_deps: Vec<Arc<PackageDetails>>,
     pub build_host_deps: Vec<Arc<PackageDetails>>,
@@ -504,8 +505,19 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
     }
 }
 
+// TODO(b:299056510): Consider removing 4-argument variant of this function.
 fn extract_dependencies(
     details: &PackageDetails,
+    kind: DependencyKind,
+    resolver: &PackageResolver,
+    allow_list: Option<&[&str]>,
+) -> Result<Vec<Arc<PackageDetails>>> {
+    extract_dependencies_use(details, &details.use_map, kind, resolver, allow_list)
+}
+
+fn extract_dependencies_use(
+    details: &PackageDetails,
+    use_map: &UseMap,
     kind: DependencyKind,
     resolver: &PackageResolver,
     allow_list: Option<&[&str]>,
@@ -525,7 +537,7 @@ fn extract_dependencies(
     let joined_raw_deps = format!("{} {}", raw_deps, raw_extra_deps);
     let deps = joined_raw_deps.parse::<PackageDependency>()?;
 
-    parse_dependencies(deps, &details.use_map, resolver, allow_list)
+    parse_dependencies(deps, use_map, resolver, allow_list)
 }
 
 // TODO: Remove this hack.
@@ -584,6 +596,30 @@ pub fn analyze_dependencies(
                 &details.package_name, &details.version
             )
         })?;
+
+    let test_deps = if details.use_map.contains_key("test") {
+        let mut test_use_map = details.use_map.clone();
+        test_use_map.insert("test".into(), true);
+        // Hack: We often (more than 100 packages) fail to resolve test-only
+        // dependencies. This happens when a package pulls something that
+        // cannot be found (for example, sys-apps/dbus depends on
+        // x11-base/xorg-server) or requires a package compiled with a flag
+        // (chromeos-base/libhwsec:=[test?]). In this case we fall back on
+        // build_deps.
+        // TODO(b:299056510): Emit always_fail if there are unresolved deps.
+        let test_deps_result = extract_dependencies_use(
+            details,
+            &test_use_map,
+            DependencyKind::Build,
+            target_resolver,
+            None,
+        );
+        test_deps_result.unwrap_or(build_deps.clone())
+    } else {
+        // The ebuild does not care about use flag, so test deps are the same
+        // as build deps.
+        build_deps.clone()
+    };
 
     let runtime_deps = extract_dependencies(details, DependencyKind::Run, target_resolver, None)
         .with_context(|| {
@@ -689,6 +725,7 @@ pub fn analyze_dependencies(
 
     Ok(PackageDependencies {
         build_deps,
+        test_deps,
         runtime_deps,
         post_deps,
         build_host_deps,

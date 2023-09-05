@@ -99,6 +99,34 @@ alias(
 )
 {%- endif %}
 
+{% if ebuild.target_test_deps -%}
+sdk_install_deps(
+    name = "{{ ebuild.version }}_test_deps",
+    out = "{{ ebuild.basename }}_test_deps",
+    base = "{{ ebuild.version }}_host_deps",
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
+    overlays = "{{ target_overlay_set }}",
+    target_deps = [
+        {%- for dep in ebuild.target_test_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    use_layers = select({
+        "//:binpkg-cache-naive": True,
+        "//conditions:default": False,
+    }),
+    visibility = ["//visibility:private"],
+)
+{%- else -%}
+alias(
+    name = "{{ ebuild.version }}_test_deps",
+    actual = "{{ ebuild.version }}_host_deps",
+    visibility = ["//visibility:private"],
+)
+{%- endif %}
+
 {%- for suffix in ["","_hermetic_test_package"] %}
 ebuild(
     name = "{{ ebuild.version }}{{ suffix }}",
@@ -296,7 +324,7 @@ ebuild_test(
     {%- if target_board %}
     board = "{{ target_board }}",
     {%- endif %}
-    sdk = ":{{ ebuild.version }}_deps",
+    sdk = ":{{ ebuild.version }}_test_deps",
     overlays = "{{ target_overlay_set }}",
     eclasses = [
         {%- for eclass in ebuild.eclasses %}

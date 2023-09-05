@@ -27,6 +27,12 @@ alias(
     actual = "16.0_pre484197_host_deps",
     visibility = ["//visibility:private"],
 )
+
+alias(
+    name = "16.0_pre484197_test_deps",
+    actual = "16.0_pre484197_host_deps",
+    visibility = ["//visibility:private"],
+)
 ebuild(
     name = "16.0_pre484197",
     ebuild = "libcxx-16.0_pre484197.ebuild",
@@ -128,7 +134,7 @@ ebuild_test(
     # use = "",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":16.0_pre484197_deps",
+    sdk = ":16.0_pre484197_test_deps",
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],

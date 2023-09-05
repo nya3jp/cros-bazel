@@ -37,6 +37,23 @@ sdk_install_deps(
     }),
     visibility = ["//visibility:private"],
 )
+
+sdk_install_deps(
+    name = "1.0_test_deps",
+    out = "testonlydeps-1.0_test_deps",
+    base = "1.0_host_deps",
+    board = "amd64-generic",
+    overlays = "//internal/overlays:amd64-generic",
+    target_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/simple/aaa:1.0",
+        "//internal/packages/stage1/target/board/chromiumos/simple/bbb:1.0",
+    ],
+    use_layers = select({
+        "//:binpkg-cache-naive": True,
+        "//conditions:default": False,
+    }),
+    visibility = ["//visibility:private"],
+)
 ebuild(
     name = "1.0",
     ebuild = "testonlydeps-1.0.ebuild",
@@ -52,7 +69,7 @@ ebuild(
         "//internal/sources/src/scripts/hooks:__tarballs__",
         "@chromite//:src",
     ],
-    # use = "",
+    # use = "-test",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":1.0_deps",
@@ -78,7 +95,7 @@ suffix = "_hermetic_test_package",
         "//internal/sources/src/scripts/hooks:__tarballs__",
         "@chromite//:src",
     ],
-    # use = "",
+    # use = "-test",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":1.0_deps",
@@ -102,7 +119,7 @@ ebuild_debug(
         "//internal/sources/src/scripts/hooks:__tarballs__",
         "@chromite//:src",
     ],
-    # use = "",
+    # use = "-test",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":1.0_deps",
@@ -135,10 +152,10 @@ ebuild_test(
         "//internal/sources/src/scripts/hooks:__tarballs__",
         "@chromite//:src",
     ],
-    # use = "",
+    # use = "-test",
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_test_deps",
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
