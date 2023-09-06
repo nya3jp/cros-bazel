@@ -3,7 +3,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# TODO: Consider replacing this shell script with Go.
+export ROOT="/${BOARD:+build/${BOARD}/}"
+export SYSROOT="${ROOT}"
+export PORTAGE_CONFIGROOT="${ROOT}"
 
 # cros_sdk will bind mount depot_tools to /mnt/host/depot_tools. This is only
 # needed for chrome and chrome-icu. Since chromium includes depot_tools, we can

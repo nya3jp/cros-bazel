@@ -3,7 +3,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-: "${BOARD?}"
+export ROOT="/${BOARD:+build/${BOARD}/}"
+export SYSROOT="${ROOT}"
+export PORTAGE_CONFIGROOT="${ROOT}"
 
 # Install libc to sysroot.
 #

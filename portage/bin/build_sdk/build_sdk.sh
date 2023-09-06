@@ -5,8 +5,9 @@
 
 set -eu -o pipefail
 
-# Ensure ROOT is set
-: "${ROOT:?}"
+export ROOT="/${BOARD:+build/${BOARD}/}"
+export SYSROOT="${ROOT}"
+export PORTAGE_CONFIGROOT="${ROOT}"
 
 # TODO(b/278728702): Figure out how this symlink gets created.
 # glibc uses the SYMLINK_LIB environment variable to determine if it should

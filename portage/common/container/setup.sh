@@ -8,16 +8,10 @@ if [[ $# -gt 0 ]]; then
   exec >&2
 fi
 
+# Environment variables common to all containers.
+# Do not set ROOT, SYSROOT, PORTAGE_CONFIGROOT here! They are confusing when
+# developers enter a container with an interactive shell and run Portage tools.
 export LANG=en_US.UTF-8
-
-# TODO: Move these Portage-specific variables to somewhere else.
-if [[ -v "BOARD" ]]; then
-  export ROOT="/build/${BOARD}/"
-else
-  export ROOT="/"
-fi
-export SYSROOT="${ROOT}"
-export PORTAGE_CONFIGROOT="${ROOT}"
 export PORTAGE_USERNAME=root
 export PORTAGE_GRPNAME=root
 export RESTRICT="fetch binchecks"
