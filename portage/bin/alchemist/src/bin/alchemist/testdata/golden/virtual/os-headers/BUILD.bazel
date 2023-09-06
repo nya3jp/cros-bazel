@@ -36,12 +36,27 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "os-headers_debug",
+    actual = ":0-r2_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "package_set",
     actual = ":0-r2_package_set",
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "os-headers_package_set",
+    actual = ":0-r2_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "install",
+    actual = ":0-r2_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "os-headers_install",
     actual = ":0-r2_install",
     visibility = ["@//bazel:internal"],
 )
@@ -52,6 +67,11 @@ test_suite(
 )
 test_suite(
     name = "test",
+    tests = [ ":0-r2_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "os-headers_test",
     tests = [ ":0-r2_test" ],
     visibility = ["@//bazel:internal"],
 )

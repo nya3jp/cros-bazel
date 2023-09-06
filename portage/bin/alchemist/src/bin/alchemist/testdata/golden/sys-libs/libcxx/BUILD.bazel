@@ -36,12 +36,27 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "libcxx_debug",
+    actual = ":16.0_pre484197_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "package_set",
     actual = ":16.0_pre484197_package_set",
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "libcxx_package_set",
+    actual = ":16.0_pre484197_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "install",
+    actual = ":16.0_pre484197_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "libcxx_install",
     actual = ":16.0_pre484197_install",
     visibility = ["@//bazel:internal"],
 )
@@ -52,6 +67,11 @@ test_suite(
 )
 test_suite(
     name = "test",
+    tests = [ ":16.0_pre484197_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "libcxx_test",
     tests = [ ":16.0_pre484197_test" ],
     visibility = ["@//bazel:internal"],
 )

@@ -36,12 +36,27 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "linux-headers_debug",
+    actual = ":4.14_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "package_set",
     actual = ":4.14_package_set",
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "linux-headers_package_set",
+    actual = ":4.14_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "install",
+    actual = ":4.14_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "linux-headers_install",
     actual = ":4.14_install",
     visibility = ["@//bazel:internal"],
 )
@@ -52,6 +67,11 @@ test_suite(
 )
 test_suite(
     name = "test",
+    tests = [ ":4.14_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "linux-headers_test",
     tests = [ ":4.14_test" ],
     visibility = ["@//bazel:internal"],
 )

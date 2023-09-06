@@ -36,12 +36,27 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "inherit_debug",
+    actual = ":1.0_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "package_set",
     actual = ":1.0_package_set",
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "inherit_package_set",
+    actual = ":1.0_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "install",
+    actual = ":1.0_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "inherit_install",
     actual = ":1.0_install",
     visibility = ["@//bazel:internal"],
 )
@@ -52,6 +67,11 @@ test_suite(
 )
 test_suite(
     name = "test",
+    tests = [ ":1.0_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "inherit_test",
     tests = [ ":1.0_test" ],
     visibility = ["@//bazel:internal"],
 )

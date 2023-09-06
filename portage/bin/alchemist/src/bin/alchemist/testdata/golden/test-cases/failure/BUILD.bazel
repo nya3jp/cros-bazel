@@ -36,12 +36,27 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "failure_debug",
+    actual = ":failure",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "package_set",
     actual = ":failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "failure_package_set",
+    actual = ":failure",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "install",
+    actual = ":failure",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "failure_install",
     actual = ":failure",
     visibility = ["@//bazel:internal"],
 )
@@ -65,6 +80,11 @@ test_suite(
 )
 test_suite(
     name = "test",
+    tests = [ ":failure" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "failure_test",
     tests = [ ":failure" ],
     visibility = ["@//bazel:internal"],
 )
