@@ -10,6 +10,7 @@ rust_library(
     srcs = glob(["src/*.rs"]),
     crate_name = "binarypackage",
     data = [
+        "//bazel/portage/bin/fakefs",
         "//bazel/portage/repo_defs/zstd",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -28,7 +29,7 @@ rust_test(
     name = "binarypackage_test",
     size = "small",
     crate = ":binarypackage",
-    data = glob(["testdata/*"]),
+    data = ["testdata/binpkg-test-1.2.3.tbz2"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/portage/common/fileutil",

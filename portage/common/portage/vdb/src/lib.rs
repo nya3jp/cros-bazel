@@ -84,6 +84,13 @@ mod tests {
 
     use super::*;
 
+    // These unit tests need to run in an user namespace so that the current process UID/GID are 0.
+    // Otherwise `BinaryPackage::extract_image` fails because it cannot chown symlinks.
+    #[cfg(test)]
+    #[used]
+    #[link_section = ".init_array"]
+    static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
+
     fn open_test_binary_package() -> Result<BinaryPackage> {
         BinaryPackage::open(Path::new(
             "bazel/portage/common/portage/vdb/testdata/vdb-test-1.2.3.tbz2",

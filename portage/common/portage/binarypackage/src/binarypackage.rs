@@ -100,14 +100,19 @@ impl BinaryPackage {
     }
 
     /// Extracts the contents of the archive to the specified directory.
+    /// It uses fakefs to apply ownership information.
     pub fn extract_image(&mut self, output_dir: &Path) -> Result<()> {
         let runfiles = Runfiles::create()?;
+        let fakefs_path = runfiles.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
         let zstd_path = runfiles.rlocation("zstd/zstd");
 
         let mut tarball = self.new_tarball_reader()?;
 
-        let mut child = Command::new("/usr/bin/tar")
+        let mut child = Command::new(fakefs_path)
+            .arg("/usr/bin/tar")
             .arg("-x")
+            .arg("--same-permissions")
+            .arg("--same-owner")
             .arg("-I")
             .arg(&zstd_path)
             .arg("-C")
@@ -190,18 +195,11 @@ mod tests {
 
     use super::*;
 
-    const BINARY_PKG_RUNFILE: &str =
-        "cros/bazel/portage/common/portage/binarypackage/testdata/nano.tbz2";
-
-    // This is the contents of the tarball from the binary package, extracted with
-    // qtbz2. We are unable to use the qtbz2 binary in bazel, as this would require
-    // first being able to extract the qtbz2 binary from a package.
-    const TARBALL_RUNFILE: &str =
-        "cros/bazel/portage/common/portage/binarypackage/testdata/nano.tar.bz2";
-
     fn binary_package() -> Result<BinaryPackage> {
         let runfiles = Runfiles::create()?;
-        BinaryPackage::open(&runfiles.rlocation(BINARY_PKG_RUNFILE))
+        BinaryPackage::open(&runfiles.rlocation(
+            "cros/bazel/portage/common/portage/binarypackage/testdata/binpkg-test-1.2.3.tbz2",
+        ))
     }
 
     #[test]
@@ -211,16 +209,16 @@ mod tests {
         assert_eq!(
             xpak.get("CATEGORY")
                 .map(|x| std::str::from_utf8(x).unwrap()),
-            Some("app-editors\n")
+            Some("sys-apps\n")
         );
         assert_eq!(
             xpak.get("PF").map(|x| std::str::from_utf8(x).unwrap()),
-            Some("nano-6.4\n")
+            Some("binpkg-test-1.2.3\n")
         );
         assert_eq!(
             xpak.get("repository")
                 .map(|x| std::str::from_utf8(x).unwrap()),
-            Some("portage-stable\n")
+            Some("chromiumos\n")
         );
         Ok(())
     }
@@ -228,24 +226,29 @@ mod tests {
     #[test]
     fn category_pf() -> Result<()> {
         let bp = binary_package()?;
-        assert_eq!("app-editors/nano-6.4", bp.category_pf());
+        assert_eq!("sys-apps/binpkg-test-1.2.3", bp.category_pf());
         Ok(())
     }
 
     #[test]
     fn valid_tarball() -> Result<()> {
-        let runfiles = Runfiles::create()?;
         let mut bp = binary_package()?;
 
-        let mut got: Vec<u8> = Vec::new();
-        bp.new_tarball_reader()?.read_to_end(&mut got)?;
-
-        let mut want: Vec<u8> = Vec::new();
-        File::open(runfiles.rlocation(TARBALL_RUNFILE))?.read_to_end(&mut want)?;
-
-        assert_eq!(got.len(), want.len());
-        // Don't use assert_eq, since the files are massive and it'd print out bytes to stderr.
-        assert!(got == want);
+        // Just ensure that /usr/bin/tar accepts the tarball without any error.
+        let runfiles = Runfiles::create()?;
+        let zstd_path = runfiles.rlocation("zstd/zstd");
+        let mut tar = Command::new("/usr/bin/tar")
+            .arg("-I")
+            .arg(&zstd_path)
+            .arg("-t")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .spawn()?;
+        let mut stdin = tar.stdin.take().expect("stdin must be piped");
+        std::io::copy(&mut bp.new_tarball_reader()?, &mut stdin)?;
+        drop(stdin);
+        let status = tar.wait()?;
+        assert!(status.success(), "tar failed: {:?}", status);
 
         Ok(())
     }
@@ -259,9 +262,21 @@ mod tests {
 
         bp.extract_image(temp_dir)?;
 
-        // Spot-check a file.
-        let nano = temp_dir.join("bin/nano");
-        assert!(nano.try_exists()?);
+        let hello_path = temp_dir.join("usr/bin/hello");
+        assert!(hello_path.try_exists()?);
+
+        // File ownership info should be available via fakefs.
+        let runfiles = Runfiles::create()?;
+        let fakefs_path = runfiles.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
+        let output = Command::new(fakefs_path)
+            .arg("stat")
+            .arg("--format=%u:%g")
+            .arg(&hello_path)
+            .stderr(Stdio::inherit())
+            .output()?;
+        assert!(output.status.success(), "stat failed: {:?}", output.status);
+        let stdout = String::from_utf8(output.stdout)?;
+        assert_eq!(stdout.trim(), "123:234");
 
         Ok(())
     }
