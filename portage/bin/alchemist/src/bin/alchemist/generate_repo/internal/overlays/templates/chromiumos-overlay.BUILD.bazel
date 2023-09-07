@@ -57,6 +57,8 @@ pkg_files(
         "app-shells/bash/files/*.patch",
         "app-shells/dash/files/*.patch",
         "dev-libs/dbus-glib/files/*.patch",
+        # openssl uses some files other than *.patch
+        "dev-libs/openssl/files/*",
         "dev-python/python-daemon/files/*.patch",
         "sys-apps/kmod/files/*.patch",
         "sys-apps/man-pages/files/*.py",
