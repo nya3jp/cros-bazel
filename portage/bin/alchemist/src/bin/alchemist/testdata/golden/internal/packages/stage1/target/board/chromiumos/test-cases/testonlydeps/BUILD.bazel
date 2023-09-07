@@ -44,6 +44,7 @@ ebuild(
     category = "test-cases",
     package_name = "testonlydeps",
     version = "1.0",
+    slot = "0/0",
 
     distfiles = {
     },
@@ -69,6 +70,7 @@ ebuild(
     category = "test-cases",
     package_name = "testonlydeps",
     version = "1.0",
+    slot = "0/0",
 suffix = "_hermetic_test_package",
     distfiles = {
     },
@@ -93,6 +95,7 @@ ebuild_debug(
     category = "test-cases",
     package_name = "testonlydeps",
     version = "1.0",
+    slot = "0/0",
     distfiles = {
     },
     srcs = [
@@ -125,6 +128,7 @@ ebuild_test(
     category = "test-cases",
     package_name = "testonlydeps",
     version = "1.0",
+    slot = "0/0",
     distfiles = {
     },
     srcs = [

@@ -9,6 +9,10 @@ def _binary_package_impl(ctx):
     src = ctx.file.src
     src_basename = src.basename.rsplit(".", 1)[0]
 
+    slot = ctx.attr.slot
+    if "/" not in slot:
+        fail("Slot must be of the form '{main_slot}/{subslot}'")
+
     contents = generate_contents(
         ctx = ctx,
         binary_package = src,
@@ -46,6 +50,7 @@ def _binary_package_impl(ctx):
         package_name = ctx.attr.package_name or ctx.label.name,
         category = ctx.attr.category,
         version = ctx.attr.version,
+        slot = slot,
         direct_runtime_deps = direct_runtime_deps,
         transitive_runtime_deps = transitive_runtime_deps,
         layer = None,
@@ -70,6 +75,7 @@ binary_package = rule(
             allow_single_file = [".tbz2"],
         ),
         "version": attr.string(mandatory = True),
+        "slot": attr.string(default = "0/0"),
         "_action_wrapper": attr.label(
             executable = True,
             cfg = "exec",

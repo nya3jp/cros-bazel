@@ -34,6 +34,7 @@ ebuild(
     category = "test-cases",
     package_name = "distfiles",
     version = "1.0",
+    slot = "0/0",
 
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
@@ -60,6 +61,7 @@ ebuild(
     category = "test-cases",
     package_name = "distfiles",
     version = "1.0",
+    slot = "0/0",
 suffix = "_hermetic_test_package",
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
@@ -85,6 +87,7 @@ ebuild_debug(
     category = "test-cases",
     package_name = "distfiles",
     version = "1.0",
+    slot = "0/0",
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
     },
@@ -118,6 +121,7 @@ ebuild_test(
     category = "test-cases",
     package_name = "distfiles",
     version = "1.0",
+    slot = "0/0",
     distfiles = {
         "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
     },

@@ -51,6 +51,9 @@ BinaryPackageInfo = provider(
         "version": """
             str: The version of this package.
         """,
+        "slot": """
+            str: The slot this package is installed to.
+        """,
         "all_files": """
             Depset[File]: All binary package files including this package's one
             itself and all transitive runtime dependencies.

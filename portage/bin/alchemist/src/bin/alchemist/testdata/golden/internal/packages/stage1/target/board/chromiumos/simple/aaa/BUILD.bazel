@@ -34,6 +34,7 @@ ebuild(
     category = "simple",
     package_name = "aaa",
     version = "1.0",
+    slot = "0/0",
 
     distfiles = {
     },
@@ -59,6 +60,7 @@ ebuild(
     category = "simple",
     package_name = "aaa",
     version = "1.0",
+    slot = "0/0",
 suffix = "_hermetic_test_package",
     distfiles = {
     },
@@ -83,6 +85,7 @@ ebuild_debug(
     category = "simple",
     package_name = "aaa",
     version = "1.0",
+    slot = "0/0",
     distfiles = {
     },
     srcs = [
@@ -115,6 +118,7 @@ ebuild_test(
     category = "simple",
     package_name = "aaa",
     version = "1.0",
+    slot = "0/0",
     distfiles = {
     },
     srcs = [

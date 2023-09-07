@@ -14,7 +14,7 @@ def direct_ebuild(
         category,
         package_name,
         version,
-        slot,
+        slot = "0/0",
         runtime_deps = [],
         visibility = None):
     tar_name = "_%s_tbz2" % name
@@ -38,6 +38,7 @@ def direct_ebuild(
         category = category,
         package_name = package_name,
         version = version,
+        slot = slot,
         src = tar_name,
         runtime_deps = runtime_deps,
         visibility = visibility,

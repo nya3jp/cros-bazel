@@ -107,6 +107,7 @@ ebuild(
     category = "{{ebuild.category}}",
     package_name = "{{ ebuild.package_name }}",
     version = "{{ ebuild.version }}",
+    slot = "{{ ebuild.slot }}",
 {% if suffix -%}
     suffix = "{{ suffix }}",
 {%- endif %}
@@ -182,6 +183,7 @@ ebuild_debug(
     category = "{{ebuild.category}}",
     package_name = "{{ ebuild.package_name }}",
     version = "{{ ebuild.version }}",
+    slot = "{{ ebuild.slot }}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
@@ -256,6 +258,7 @@ ebuild_test(
     category = "{{ebuild.category}}",
     package_name = "{{ ebuild.package_name }}",
     version = "{{ ebuild.version }}",
+    slot = "{{ ebuild.slot }}",
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",

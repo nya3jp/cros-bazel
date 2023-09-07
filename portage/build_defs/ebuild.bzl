@@ -63,6 +63,12 @@ _EBUILD_COMMON_ATTRS = dict(
         The version of this package.
         """,
     ),
+    slot = attr.string(
+        mandatory = True,
+        doc = """
+        The slot the package is installed to.
+        """,
+    ),
     distfiles = attr.label_keyed_string_dict(
         allow_files = True,
     ),
@@ -360,6 +366,7 @@ def _ebuild_impl(ctx):
             file = output_binary_package_file,
             category = ctx.attr.category,
             package_name = ctx.attr.package_name,
+            slot = ctx.attr.slot,
             version = ctx.attr.version,
             direct_runtime_deps = tuple(),
             layer = None,
@@ -390,6 +397,7 @@ def _ebuild_impl(ctx):
         category = ctx.attr.category,
         package_name = ctx.attr.package_name,
         version = ctx.attr.version,
+        slot = ctx.attr.slot,
         all_files = all_files,
         direct_runtime_deps = direct_runtime_deps,
         transitive_runtime_deps = transitive_runtime_deps,

@@ -38,7 +38,7 @@ direct_ebuild(
     package_name = "packaging_demo",
     category = "chromeos-base",
     package = "//bazel/cros_pkg/examples/packaging",
-    slot = "0",
+    slot = "0/0",
     version = "1.0.0-r1",
     runtime_deps = [],
 )

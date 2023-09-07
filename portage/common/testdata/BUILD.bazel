@@ -32,7 +32,6 @@ direct_ebuild(
     package_name = "executable",
     category = "demo",
     package = ":executable_file",
-    slot = "0",
     version = "1",
     runtime_deps = [":shared_libs"],
 )
@@ -62,7 +61,6 @@ direct_ebuild(
     package_name = "shared_libs",
     category = "demo",
     package = ":shared_libs_files",
-    slot = "0",
     version = "1",
     runtime_deps = [],
 )
@@ -99,7 +97,6 @@ direct_ebuild(
     package_name = "symlinks",
     category = "demo",
     package = ":symlink_files",
-    slot = "0",
     version = "1",
     runtime_deps = [],
 )
@@ -123,7 +120,6 @@ direct_ebuild(
     package_name = "system_headers",
     category = "demo",
     package = ":system_headers_files",
-    slot = "0",
     version = "1",
     runtime_deps = [],
 )
@@ -138,7 +134,6 @@ direct_ebuild(
     package_name = "sysroot",
     category = "demo",
     package = ":sysroot_files",
-    slot = "0",
     version = "1",
     runtime_deps = [
         ":executable",
