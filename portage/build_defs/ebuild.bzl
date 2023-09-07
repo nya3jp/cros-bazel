@@ -514,6 +514,7 @@ def _ebuild_debug_impl(ctx):
         runfiles = ctx.runfiles(transitive_files = inputs),
     )
 
+# TODO(b/298889830): Remove this rule once chromite starts using install_list.
 ebuild_debug, ebuild_debug_primordial = maybe_primordial_rule(
     implementation = _ebuild_debug_impl,
     executable = True,
@@ -595,6 +596,65 @@ ebuild_install, ebuild_install_primordial = maybe_primordial_rule(
     implementation = _ebuild_install_impl,
     executable = True,
     doc = "Installs the package to the environment.",
+    attrs = dict(
+        ebuild = attr.label(
+            mandatory = True,
+            allow_single_file = [".ebuild"],
+        ),
+        category = attr.string(
+            mandatory = True,
+            doc = """
+            The category name of the package.
+            """,
+        ),
+        board = attr.string(
+            mandatory = True,
+            doc = """
+            The target board name to build the package for.
+            """,
+        ),
+        packages = attr.label_list(
+            providers = [BinaryPackageInfo],
+        ),
+    ),
+)
+
+def _ebuild_install_list_impl(ctx):
+    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
+
+    packages = []
+    for package in ctx.attr.packages:
+        info = package[BinaryPackageInfo]
+        name = "%s/%s" % (info.category, info.file.basename)
+        path = info.file.path
+        deps = ["%s/%s" % (dep.category, dep.file.basename) for dep in info.direct_runtime_deps]
+
+        packages.append("""{
+            "name": "%s",
+            "path": "%s",
+            "deps": [%s]
+        }""" % (name, path, ",".join(["\"%s\"" % dep for dep in deps])))
+
+    contents = "[%s]" % ",".join(packages)
+
+    output = ctx.actions.declare_file(src_basename + "_install_list.json")
+    ctx.actions.write(
+        output,
+        contents,
+    )
+
+    runfiles = ctx.runfiles(files = [
+        package[BinaryPackageInfo].file
+        for package in ctx.attr.packages
+    ])
+    return DefaultInfo(
+        files = depset([output]),
+        runfiles = runfiles,
+    )
+
+ebuild_install_list, ebuild_install_list_primordial = maybe_primordial_rule(
+    implementation = _ebuild_install_list_impl,
+    doc = "Generates a JSON file which contains necessary info to install the package to the environment.",
     attrs = dict(
         ebuild = attr.label(
             mandatory = True,

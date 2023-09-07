@@ -108,7 +108,7 @@ fn generate_public_package(
             maybe_package.repo_name(),
             maybe_package.package_name()
         );
-        for suffix in ["", "_debug", "_package_set", "_install"] {
+        for suffix in ["", "_debug", "_package_set", "_install", "_install_list"] {
             aliases.push(AliasEntry {
                 name: Cow::from(format!("{}{}", version, suffix)),
                 actual: Cow::from(format!(
@@ -172,7 +172,7 @@ fn generate_public_package(
         name: Cow::from(&short_package_name),
         actual: get_actual_target(""),
     });
-    for suffix in ["debug", "package_set", "install"] {
+    for suffix in ["debug", "package_set", "install", "install_list"] {
         if suffix != short_package_name {
             aliases.push(AliasEntry {
                 name: Cow::from(suffix),
