@@ -1,0 +1,161 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+string_flag(
+    name = "1.0_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "1.0_host_deps",
+    actual = "//internal/sdk/stage1/target/board",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1.0_deps",
+    actual = "1.0_host_deps",
+    visibility = ["//visibility:private"],
+)
+ebuild(
+    name = "1.0",
+    ebuild = "bashrcandpatches-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "bashrcandpatches",
+    version = "1.0",
+
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    # use = "",
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    prebuilt = ":1.0_prebuilt",has_hooks = False,
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild(
+    name = "1.0_hermetic_test_package",
+    ebuild = "bashrcandpatches-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "bashrcandpatches",
+    version = "1.0",
+suffix = "_hermetic_test_package",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    # use = "",
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    prebuilt = ":1.0_prebuilt",has_hooks = False,
+    visibility = ["@//bazel:internal"],
+)
+ebuild_debug(
+    name = "1.0_debug",
+    ebuild = "bashrcandpatches-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "bashrcandpatches",
+    version = "1.0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    # use = "",
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_install(
+    name = "1.0_install",
+    ebuild = "bashrcandpatches-1.0.ebuild",
+    category = "test-cases",
+    board = "amd64-generic",
+    packages = [
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/bashrcandpatches:1.0",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_test(
+    name = "1.0_test",
+    ebuild = "bashrcandpatches-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "bashrcandpatches",
+    version = "1.0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    # use = "",
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "1.0_hermetic_test",
+    packages = [
+        ":1.0",
+        ":1.0_hermetic_test_package",
+    ],
+    size="small",
+)
+
+test_suite(
+    name = "1.0_package_set_hermetic_test",
+    tests = [
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/bashrcandpatches:1.0_hermetic_test",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+package_set(
+    name = "1.0_package_set",
+    deps = [
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/bashrcandpatches:1.0",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+
