@@ -23,6 +23,7 @@ rust_library(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:libc",
         "@alchemy_crates//:once_cell",
+        "@alchemy_crates//:walkdir",
         "@rules_rust//tools/runfiles",
     ],
 )

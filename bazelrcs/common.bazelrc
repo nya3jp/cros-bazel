@@ -87,12 +87,8 @@ build --action_env=RUST_BACKTRACE=1
 build --action_env=IS_BAZEL_ACTION=1
 
 # These are symlinked elsewhere.
-build --deleted_packages=bazel/workspace_root/...
-query --deleted_packages=bazel/workspace_root/...
-
-# We have files like bazel/portage/bin/alchemist/.../golden/BUILD.bazel.
-build --deleted_packages=bazel/portage/bin/alchemist/src/...
-query --deleted_packages=bazel/portage/bin/alchemist/src/...
+build --deleted_packages=bazel/workspace_root
+query --deleted_packages=bazel/workspace_root
 
 ### Toolchain resolution.
 build --host_platform=//bazel/platforms:host

@@ -17,6 +17,18 @@ fn is_running_under_bazel() -> bool {
     std::option_env!("CARGO_MAKEFLAGS").is_none()
 }
 
+// Renames output files as required to ensure that bazel doesn't interpret them as bazel packages.
+fn rename_bazel_special_files(dir: &Path) -> std::io::Result<()> {
+    for entry in walkdir::WalkDir::new(dir) {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() && path.file_name() == Some(std::ffi::OsStr::new("BUILD.bazel")) {
+            std::fs::rename(&path, path.with_file_name("BUILD.golden.bazel"))?;
+        }
+    }
+    Ok(())
+}
+
 fn compute_real_golden_path(golden: &Path, regenerate: bool) -> Result<PathBuf> {
     if is_running_under_bazel() {
         ensure!(
@@ -68,6 +80,10 @@ fn compute_real_golden_path(golden: &Path, regenerate: bool) -> Result<PathBuf> 
 pub fn compare_with_golden_data(output: &Path, golden: &Path) -> Result<()> {
     let regenerate = std::env::var(REGENERATE_VAR_NAME).unwrap_or_default() != "";
     let real_golden = &compute_real_golden_path(golden, regenerate)?;
+
+    if output.is_dir() {
+        rename_bazel_special_files(output)?;
+    }
 
     if regenerate {
         if real_golden.is_dir() {

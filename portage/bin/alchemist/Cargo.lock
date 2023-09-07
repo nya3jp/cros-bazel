@@ -1240,6 +1240,7 @@ dependencies = [
  "anyhow",
  "libc",
  "once_cell",
+ "walkdir",
 ]
 
 [[package]]
