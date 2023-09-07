@@ -390,7 +390,12 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
          * We should fix these packages upstream so it doesn't depend on git.
          */
         ("sys-apps/proot", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
-        ("dev-go/syzkaller", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
+        ("app-misc/jq", DependencyKind::BuildHost { .. }) => "dev-vcs/git",
+
+        /*
+         * b/299325226 - gcc is missing (exec: "gcc": executable file not found in syzkaller-0.0.21ATH)
+         */
+        ("dev-go/syzkaller", DependencyKind::BuildHost { .. }) => "dev-vcs/git sys-devel/gcc",
 
         /* Our setuptools is way too old. b/293899573 */
         ("dev-python/jinja", DependencyKind::BuildHost { .. }) => "dev-python/markupsafe",
@@ -472,6 +477,28 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
          * This can be dropped once we migrate to python 3.8.
          */
         ("app-emulation/qemu", DependencyKind::BuildHost { .. }) => "dev-python/dataclasses",
+
+        /*
+         * checking for curl-config... no
+         * /build/amd64-generic/tmp/portage/dev-libs/xmlrpc-c-1.51.06-r3/work/xmlrpc-c-1.51.06/configure: line 410: test: then: integer expression expected
+         */
+        ("dev-libs/xmlrpc-c", DependencyKind::BuildHost { .. }) => "net-misc/curl",
+
+        /*
+         * /bin/sh: line 1: bison: command not found
+         * /bin/sh: line 1: flex: command not found
+         */
+        ("sys-power/iasl", DependencyKind::BuildHost { .. }) => "sys-devel/bison sys-devel/flex",
+
+        /*
+         * configure.ac:141: warning: macro 'AM_ICONV' not found in library
+         * configure.ac:142: warning: macro 'AM_GNU_GETTEXT' not found in library
+         * configure.ac:143: warning: macro 'AM_GNU_GETTEXT_VERSION' not found in library
+         * configure.ac:144: warning: macro 'AM_GNU_GETTEXT_REQUIRE_VERSION' not found in library
+         */
+        ("media-gfx/zbar", DependencyKind::BuildHost { .. }) => {
+            "sys-devel/gettext virtual/libiconv"
+        }
 
         _ => "",
     }
