@@ -7,6 +7,6 @@ load("//bazel/portage/repo_defs/prebuilts:prebuilt_binary_package.bzl", "prebuil
 # We need to pull in the rust cross compiler libs
 prebuilt_binary_package(
     name = "rust",
-    src = "@files//:amd64_host_2023_08_08_170046_dev_lang_rust_1_70_0",
+    src = "@files//:amd64_host_2023_09_08_050046_dev_lang_rust_1_70_0",
     visibility = ["//bazel:internal"],
 )
