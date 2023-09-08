@@ -7,27 +7,42 @@
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 alias(
     name = "16.0_pre484197",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "16.0_pre484197_debug",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_debug",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_debug",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_debug",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "16.0_pre484197_package_set",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_package_set",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_package_set",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_package_set",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "16.0_pre484197_install",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "16.0_pre484197_install_list",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install_list",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install_list",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install_list",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(

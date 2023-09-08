@@ -36,9 +36,16 @@ lazy_static! {
 }
 
 #[derive(Serialize)]
+pub enum SelectValue<'a> {
+    Single(Cow<'a, str>),
+    // Generates a bazel select() statement with key -> value.
+    Select(Vec<(Cow<'a, str>, Cow<'a, str>)>),
+}
+
+#[derive(Serialize)]
 pub struct AliasEntry<'a> {
     name: Cow<'a, str>,
-    actual: Cow<'a, str>,
+    actual: SelectValue<'a>,
 }
 
 #[derive(Serialize)]
@@ -102,24 +109,48 @@ fn generate_public_package(
 
     for (version, maybe_package) in version_to_maybe_package.iter() {
         // TODO(b/278728702): Remove the stage1 hard coded value.
-        let internal_package_location = format!(
+        let internal_package_location_stage1 = format!(
             "//internal/packages/{}/{}/{}",
             "stage1/target/board",
+            maybe_package.repo_name(),
+            maybe_package.package_name()
+        );
+        let internal_package_location_stage2 = format!(
+            "//internal/packages/{}/{}/{}",
+            "stage2/target/board",
             maybe_package.repo_name(),
             maybe_package.package_name()
         );
         for suffix in ["", "_debug", "_package_set", "_install", "_install_list"] {
             aliases.push(AliasEntry {
                 name: Cow::from(format!("{}{}", version, suffix)),
-                actual: Cow::from(format!(
-                    "{}:{}{}",
-                    &internal_package_location, version, suffix
-                )),
+                actual: SelectValue::Select(vec![
+                    (
+                        Cow::Borrowed("//:stage1"),
+                        Cow::from(format!(
+                            "{}:{}{}",
+                            &internal_package_location_stage1, version, suffix
+                        )),
+                    ),
+                    (
+                        Cow::Borrowed("//:stage2"),
+                        Cow::from(format!(
+                            "{}:{}{}",
+                            &internal_package_location_stage2, version, suffix
+                        )),
+                    ),
+                ]),
             });
         }
+        // The test_suite's tests attribute is not configurable, so we can't
+        // use a select. We also can't generate aliases to a test_suite.
+        // For now we keep stage1 hard coded until we officially switch over.
         test_suites.push(TestSuiteEntry {
             name: Cow::from(format!("{}_test", version)),
-            test_name: Cow::from(format!("{}:{}_test", &internal_package_location, version)),
+            test_name: Cow::from(format!(
+                "{}:{}_test",
+                &internal_package_location_stage1, version
+            )),
         });
     }
 
@@ -170,18 +201,18 @@ fn generate_public_package(
         .into_owned();
     aliases.push(AliasEntry {
         name: Cow::from(&short_package_name),
-        actual: get_actual_target(""),
+        actual: SelectValue::Single(get_actual_target("")),
     });
     for suffix in ["debug", "package_set", "install", "install_list"] {
         if suffix != short_package_name {
             aliases.push(AliasEntry {
                 name: Cow::from(suffix),
-                actual: get_actual_target(&format!("_{}", suffix)),
+                actual: SelectValue::Single(get_actual_target(&format!("_{}", suffix))),
             });
         }
         aliases.push(AliasEntry {
             name: Cow::from(format!("{}_{}", short_package_name, suffix)),
-            actual: get_actual_target(&format!("_{}", suffix)),
+            actual: SelectValue::Single(get_actual_target(&format!("_{}", suffix))),
         });
     }
     if short_package_name != "test" {

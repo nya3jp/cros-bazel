@@ -7,27 +7,42 @@
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 alias(
     name = "1.0",
-    actual = "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/inherit:1.0",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "1.0_debug",
-    actual = "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_debug",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_debug",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/inherit:1.0_debug",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "1.0_package_set",
-    actual = "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_package_set",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_package_set",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/inherit:1.0_package_set",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "1.0_install",
-    actual = "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_install",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_install",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/inherit:1.0_install",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "1.0_install_list",
-    actual = "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_install_list",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_install_list",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/inherit:1.0_install_list",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(

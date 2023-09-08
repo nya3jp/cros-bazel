@@ -7,7 +7,15 @@ load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 {%- for alias in aliases %}
 alias(
     name = "{{ alias.name }}",
-    actual = "{{ alias.actual }}",
+    actual = {% if alias.actual.Single -%}
+    "{{ alias.actual.Single }}"
+    {%- elif alias.actual.Select -%}
+    select({
+        {%- for pair in alias.actual.Select %}
+        "{{ pair[0] }}": "{{ pair[1] }}",
+        {%- endfor %}
+    })
+    {%- endif %},
     visibility = ["@//bazel:internal"],
 )
 

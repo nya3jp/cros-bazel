@@ -7,27 +7,42 @@
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 alias(
     name = "2.35-r20",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/glibc:2.35-r20",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "2.35-r20_debug",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_debug",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_debug",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/glibc:2.35-r20_debug",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "2.35-r20_package_set",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_package_set",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_package_set",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/glibc:2.35-r20_package_set",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "2.35-r20_install",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_install",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_install",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/glibc:2.35-r20_install",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "2.35-r20_install_list",
-    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_install_list",
+    actual = select({
+        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_install_list",
+        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-libs/glibc:2.35-r20_install_list",
+    }),
     visibility = ["@//bazel:internal"],
 )
 alias(
