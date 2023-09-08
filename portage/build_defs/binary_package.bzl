@@ -70,3 +70,41 @@ binary_package = rule(
         ),
     },
 )
+
+def _add_runtime_deps(ctx):
+    binpkg = ctx.attr.binpkg[BinaryPackageInfo]
+
+    info = BinaryPackageInfo(
+        file = binpkg.file,
+        layer = binpkg.layer,
+        contents = binpkg.contents,
+        category = binpkg.category,
+        package_name = binpkg.package_name,
+        version = binpkg.version,
+        slot = binpkg.slot,
+        direct_runtime_deps = [
+            dep[BinaryPackageInfo]
+            for dep in ctx.attr.runtime_deps
+        ] + list(binpkg.direct_runtime_deps),
+    )
+    return [
+        DefaultInfo(
+            files = depset([info.file]),
+            runfiles = ctx.runfiles(info.all_files.to_list()),
+        ),
+        info,
+    ]
+
+add_runtime_deps = rule(
+    implementation = _add_runtime_deps,
+    attrs = dict(
+        binpkg = attr.label(providers = [BinaryPackageInfo]),
+        runtime_deps = attr.label_list(providers = [BinaryPackageInfo]),
+    ),
+    provides = [BinaryPackageInfo],
+    doc = """
+    Adds runtime dependencies to a binary package.
+    Useful to add "provided" dependencies to a package (ones that are
+    preinstalled in the SDK), so it can be used without the SDK.
+    """,
+)

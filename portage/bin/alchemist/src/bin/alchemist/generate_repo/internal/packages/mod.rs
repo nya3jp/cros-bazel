@@ -313,10 +313,8 @@ impl EBuildEntry {
 
                 let runtime_deps = format_dependencies(host.prefix, runtime_deps.into_iter())?;
 
-                let provided_runtime_deps = provided_runtime_deps
-                    .iter()
-                    .map(|details| format!("{}-{}", details.package_name, details.version))
-                    .collect();
+                let provided_runtime_deps =
+                    format_dependencies(host.prefix, provided_runtime_deps.into_iter())?;
 
                 (runtime_deps, provided_runtime_deps)
             }

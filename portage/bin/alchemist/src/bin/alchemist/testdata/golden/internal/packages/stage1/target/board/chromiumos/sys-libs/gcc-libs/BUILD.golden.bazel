@@ -6,6 +6,7 @@
 
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
@@ -59,6 +60,15 @@ ebuild(
     visibility = ["@//bazel:internal"],
 )
 
+add_runtime_deps(
+    name = "10.2.0_including_provided",
+    binpkg = ":10.2.0",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+
 ebuild(
     name = "10.2.0_hermetic_test_package",
     ebuild = "gcc-libs-10.2.0.ebuild",
@@ -84,6 +94,15 @@ suffix = "_hermetic_test_package",
     prebuilt = ":10.2.0_prebuilt",has_hooks = False,
     visibility = ["@//bazel:internal"],
 )
+
+add_runtime_deps(
+    name = "10.2.0_hermetic_test_package_including_provided",
+    binpkg = ":10.2.0",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild_debug(
     name = "10.2.0_debug",
     ebuild = "gcc-libs-10.2.0.ebuild",

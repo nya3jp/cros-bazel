@@ -4,6 +4,7 @@
 
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
@@ -33,6 +34,18 @@ direct_ebuild(
     {%- endif %}
     visibility = ["@//bazel:internal"],
 )
+
+add_runtime_deps(
+    name = "{{ ebuild.version }}_including_provided",
+    binpkg = ":{{ ebuild.version }}",
+    runtime_deps = [
+        {%- for dep in ebuild.provided_runtime_deps %}
+        "{{ dep }}_including_provided",
+        {%- endfor %}
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
 {% else -%}
 string_flag(
     name = "{{ ebuild.version }}_prebuilt",
@@ -205,6 +218,18 @@ ebuild(
     {%- endif %}
     visibility = ["@//bazel:internal"],
 )
+
+add_runtime_deps(
+    name = "{{ ebuild.version }}{{ suffix }}_including_provided",
+    binpkg = ":{{ ebuild.version }}",
+    runtime_deps = [
+        {%- for dep in ebuild.provided_runtime_deps %}
+        "{{ dep }}_including_provided",
+        {%- endfor %}
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
 {% endfor -%}
 
 ebuild_debug(
