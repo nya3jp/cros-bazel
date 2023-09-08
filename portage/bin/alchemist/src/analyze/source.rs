@@ -366,6 +366,9 @@ fn apply_local_sources_workarounds(
         || details.inherited.contains("meson")
         // TODO(b/295064725): Migrate chromeos-fonts to cros-workon
         || details.package_name == "chromeos-base/chromeos-fonts"
+        // b/299597288: cros-rust calls platform2_test.py
+        // TODO(b/299597288): Add this only for tests.
+        || details.inherited.contains("cros-rust")
     {
         let common_mk = PackageLocalSource::Src("src/platform2/common-mk".into());
         local_sources.push(common_mk);
