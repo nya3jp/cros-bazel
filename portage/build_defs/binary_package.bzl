@@ -23,36 +23,18 @@ def _binary_package_impl(ctx):
         executable_extract_package = ctx.executable._extract_package,
     )
 
-    direct_runtime_deps = tuple([
+    direct_runtime_deps = [
         target[BinaryPackageInfo]
         for target in ctx.attr.runtime_deps
-    ])
-    transitive_runtime_deps = depset(
-        transitive = [
-            depset(
-                [dep],
-                transitive = [dep.transitive_runtime_deps],
-                order = "postorder",
-            )
-            for dep in direct_runtime_deps
-        ],
-        order = "postorder",
-    )
-    all_files = depset(
-        [src],
-        transitive = [pkg.all_files for pkg in direct_runtime_deps],
-        order = "postorder",
-    )
+    ]
     package_info = BinaryPackageInfo(
         file = src,
         contents = contents,
-        all_files = all_files,
         package_name = ctx.attr.package_name or ctx.label.name,
         category = ctx.attr.category,
         version = ctx.attr.version,
         slot = slot,
         direct_runtime_deps = direct_runtime_deps,
-        transitive_runtime_deps = transitive_runtime_deps,
         layer = None,
     )
     package_set_info = single_binary_package_set_info(package_info)

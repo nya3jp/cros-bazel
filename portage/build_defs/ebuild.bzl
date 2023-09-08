@@ -340,26 +340,10 @@ def _ebuild_impl(ctx):
     )
 
     # Compute provider data.
-    direct_runtime_deps = tuple([
+    direct_runtime_deps = [
         target[BinaryPackageInfo]
         for target in ctx.attr.runtime_deps
-    ])
-    transitive_runtime_deps = depset(
-        transitive = [
-            depset(
-                [dep],
-                transitive = [dep.transitive_runtime_deps],
-                order = "postorder",
-            )
-            for dep in direct_runtime_deps
-        ],
-        order = "postorder",
-    )
-    all_files = depset(
-        [output_binary_package_file],
-        transitive = [pkg.all_files for pkg in direct_runtime_deps],
-        order = "postorder",
-    )
+    ]
 
     if not ctx.attr.has_hooks:
         package_info = BinaryPackageInfo(
@@ -368,7 +352,7 @@ def _ebuild_impl(ctx):
             package_name = ctx.attr.package_name,
             slot = ctx.attr.slot,
             version = ctx.attr.version,
-            direct_runtime_deps = tuple(),
+            direct_runtime_deps = [],
             layer = None,
         )
         install_layers = install_deps(
@@ -401,9 +385,7 @@ def _ebuild_impl(ctx):
         package_name = ctx.attr.package_name,
         version = ctx.attr.version,
         slot = ctx.attr.slot,
-        all_files = all_files,
         direct_runtime_deps = direct_runtime_deps,
-        transitive_runtime_deps = transitive_runtime_deps,
         layer = install_layer,
     )
     package_set_info = single_binary_package_set_info(package_info)
