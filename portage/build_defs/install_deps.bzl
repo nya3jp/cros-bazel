@@ -99,6 +99,8 @@ def install_deps(
         tools = [executable_install_deps],
         arguments = [args],
         execution_requirements = {
+            # No need to cache the extracted binpkgs.
+            "no-remote-cache": "",
             # Send SIGTERM instead of SIGKILL on user interruption.
             "supports-graceful-termination": "",
             # Disable sandbox to avoid creating a symlink forest.
