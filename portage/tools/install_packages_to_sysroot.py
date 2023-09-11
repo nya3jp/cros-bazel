@@ -40,6 +40,8 @@ def main():
             _BAZEL_PATH,
             "build",
             "--profile=/tmp/allpackages_command.profile.gz",
+            "--execution_log_binary_file=/tmp/allpackages_exec.log",
+            "--noexecution_log_sort",
         ]
         + [
             "@portage//%s:install_list" % package_name
