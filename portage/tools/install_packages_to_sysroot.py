@@ -36,7 +36,11 @@ def main():
 
     # Build packages and install lists.
     subprocess.check_call(
-        [_BAZEL_PATH, "build"]
+        [
+            _BAZEL_PATH,
+            "build",
+            "--profile=/tmp/allpackages_command.profile.gz",
+        ]
         + [
             "@portage//%s:install_list" % package_name
             for package_name in args.package_names
