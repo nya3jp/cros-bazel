@@ -8,7 +8,7 @@ import sys
 import unittest
 
 
-PYTHON_VERSION = "3.10.8"
+PYTHON_VERSION = "3.11.4"
 
 
 class Py3Test(unittest.TestCase):
@@ -22,15 +22,12 @@ class Py3Test(unittest.TestCase):
         with self.assertRaises(ImportError):
             import pylint
 
-    @unittest.skip("https://github.com/bazelbuild/rules_python/issues/1354")
     def test_no_implicit_directory_deps(self):
         with self.assertRaises(ImportError):
             import pip_test
 
     def test_hermetic_path(self):
-        # TODO(https://github.com/bazelbuild/rules_python/issues/1354):
-        #   Remove the [1:] once this bug is solved.
-        for path in sys.path[1:]:
+        for path in sys.path:
             self.assertIn("/execroot/_main/", path)
 
     def test_runfiles(self):

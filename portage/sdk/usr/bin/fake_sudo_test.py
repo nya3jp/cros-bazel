@@ -7,7 +7,7 @@
 from typing import Mapping
 import unittest
 
-import fake_sudo
+from bazel.portage.sdk.usr.bin import fake_sudo
 
 
 # Stop unittest from truncating the error messages.

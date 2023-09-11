@@ -65,30 +65,30 @@ use_repo(
 )
 
 # Python support
-PY_VERSION = "3.10.8"
+PY_VERSION = "3.11"
 
-bazel_dep(name = "rules_python", version = "0.18.0")
+bazel_dep(name = "rules_python", version = "0.25.0")
 
-python = use_extension("@rules_python//python:extensions.bzl", "python")
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+
 python.toolchain(
-    name = "python%s" % PY_VERSION,
     python_version = PY_VERSION,
+    is_default = True,
 )
 
-PY_INTERPRETER_REPO = "python%s_x86_64-unknown-linux-gnu" % PY_VERSION
+PY_INTERPRETER_REPO = "python_%s_x86_64-unknown-linux-gnu" % PY_VERSION.replace(".", "_")
 
 use_repo(
     python,
-    "python%s_toolchains" % PY_VERSION,
     python_interpreter = PY_INTERPRETER_REPO,
 )
 
 register_toolchains("//bazel/python/toolchains:all")
 
-pip = use_extension("@rules_python//python:extensions.bzl", "pip")
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
-    name = "pip",
-    python_interpreter_target = "@python_interpreter//:python",
+    hub_name = "pip",
+    python_version = PY_VERSION,
     requirements_lock = "//bazel/python:requirements_lock.txt",
 )
 use_repo(pip, "pip")
