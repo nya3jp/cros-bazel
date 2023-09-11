@@ -6,7 +6,7 @@
 
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
@@ -109,6 +109,16 @@ ebuild_debug(
 )
 ebuild_install(
     name = "2.35-r20_install",
+    ebuild = "glibc-2.35-r20.ebuild",
+    category = "sys-libs",
+    board = "amd64-generic",
+    packages = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_install_list(
+    name = "2.35-r20_install_list",
     ebuild = "glibc-2.35-r20.ebuild",
     category = "sys-libs",
     board = "amd64-generic",

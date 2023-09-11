@@ -26,6 +26,11 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "1.0_install_list",
+    actual = "//internal/packages/stage1/target/board/chromiumos/test-cases/bashrcandpatches:1.0_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "bashrcandpatches",
     actual = ":1.0",
     visibility = ["@//bazel:internal"],
@@ -58,6 +63,16 @@ alias(
 alias(
     name = "bashrcandpatches_install",
     actual = ":1.0_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "install_list",
+    actual = ":1.0_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "bashrcandpatches_install_list",
+    actual = ":1.0_install_list",
     visibility = ["@//bazel:internal"],
 )
 test_suite(

@@ -6,7 +6,7 @@
 
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
@@ -115,6 +115,16 @@ ebuild_debug(
 )
 ebuild_install(
     name = "1.0_install",
+    ebuild = "inherit-1.0.ebuild",
+    category = "test-cases",
+    board = "amd64-generic",
+    packages = [
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_install_list(
+    name = "1.0_install_list",
     ebuild = "inherit-1.0.ebuild",
     category = "test-cases",
     board = "amd64-generic",

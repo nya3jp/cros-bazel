@@ -26,6 +26,11 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "2.35-r20_install_list",
+    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r20_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "glibc",
     actual = ":2.35-r20",
     visibility = ["@//bazel:internal"],
@@ -58,6 +63,16 @@ alias(
 alias(
     name = "glibc_install",
     actual = ":2.35-r20_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "install_list",
+    actual = ":2.35-r20_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "glibc_install_list",
+    actual = ":2.35-r20_install_list",
     visibility = ["@//bazel:internal"],
 )
 test_suite(

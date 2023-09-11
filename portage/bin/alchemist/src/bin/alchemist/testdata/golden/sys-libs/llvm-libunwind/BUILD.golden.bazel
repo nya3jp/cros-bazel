@@ -26,6 +26,11 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "16.0_pre484197_install_list",
+    actual = "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "llvm-libunwind",
     actual = ":16.0_pre484197",
     visibility = ["@//bazel:internal"],
@@ -58,6 +63,16 @@ alias(
 alias(
     name = "llvm-libunwind_install",
     actual = ":16.0_pre484197_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "install_list",
+    actual = ":16.0_pre484197_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "llvm-libunwind_install_list",
+    actual = ":16.0_pre484197_install_list",
     visibility = ["@//bazel:internal"],
 )
 test_suite(

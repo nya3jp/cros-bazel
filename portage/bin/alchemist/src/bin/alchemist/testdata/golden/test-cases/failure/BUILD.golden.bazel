@@ -26,6 +26,11 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "1.0_install_list",
+    actual = "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "failure",
     actual = ":failure",
     visibility = ["@//bazel:internal"],
@@ -57,6 +62,16 @@ alias(
 )
 alias(
     name = "failure_install",
+    actual = ":failure",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "install_list",
+    actual = ":failure",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "failure_install_list",
     actual = ":failure",
     visibility = ["@//bazel:internal"],
 )
