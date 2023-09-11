@@ -7,7 +7,7 @@ use std::{
     process::Command,
 };
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 
 /// The name of the environment variable controlling whether to regenerate
 /// golden data.
@@ -109,7 +109,18 @@ pub fn compare_with_golden_data(output: &Path, golden: &Path) -> Result<()> {
             .arg(output)
             .arg(real_golden)
             .status()?;
-        ensure!(status.success(), "Found mismatch with golden data");
+        if !status.success() {
+            // Print a friendly instruction if we're running under Bazel.
+            if let Ok(bazel_target) = std::env::var("TEST_TARGET") {
+                bail!(
+                    "Found mismatch with golden data; \
+                    consider regenerating them with: ALCHEMY_REGENERATE_GOLDEN=1 bazel run {}",
+                    bazel_target,
+                )
+            } else {
+                bail!("Found mismatch with golden data");
+            }
+        }
     }
     Ok(())
 }
