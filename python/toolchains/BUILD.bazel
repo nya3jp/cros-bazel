@@ -1,0 +1,48 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@bazel_tools//tools/python:toolchain.bzl", "py_runtime_pair")
+load("//bazel/bash:defs.bzl", "sh_runfiles_binary")
+load(":runfiles_to_files.bzl", "runfiles_to_files")
+
+# Bazel selects this toolchain to get a Python interpreter
+# for executing build actions.
+toolchain(
+    name = "host_toolchain",
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    toolchain = ":python_runtimes",
+    toolchain_type = "@bazel_tools//tools/python:toolchain_type",
+)
+
+sh_runfiles_binary(
+    name = "interpreter",
+    src = "interpreter.sh",
+    data = [
+        ":sitecustomize.py",
+        "@python_interpreter//:files",
+    ],
+)
+
+runfiles_to_files(
+    name = "interpreter_files",
+    actual = ":interpreter",
+)
+
+# Copied from @python_interpreter//:BUILD.bazel.
+py_runtime(
+    name = "py3_runtime",
+    # Unfortunately, it reads DefaultInfo.files, and skips runfiles.
+    files = [":interpreter_files"],
+    interpreter = ":interpreter",
+    python_version = "PY3",
+)
+
+py_runtime_pair(
+    name = "python_runtimes",
+    py2_runtime = None,
+    py3_runtime = ":py3_runtime",
+)

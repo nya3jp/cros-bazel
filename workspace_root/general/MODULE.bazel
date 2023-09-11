@@ -83,7 +83,7 @@ use_repo(
     python_interpreter = PY_INTERPRETER_REPO,
 )
 
-register_toolchains("@python%s_toolchains//:all" % PY_VERSION)
+register_toolchains("//bazel/python/toolchains:all")
 
 pip = use_extension("@rules_python//python:extensions.bzl", "pip")
 pip.parse(
