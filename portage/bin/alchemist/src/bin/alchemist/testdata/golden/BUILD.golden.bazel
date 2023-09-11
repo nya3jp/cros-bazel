@@ -14,12 +14,13 @@ package_group(
 string_flag(
     name = "binpkg-cache-strategy",
     build_setting_default = "naive",
+    values = ["fast", "naive", "slow"],
 )
 
 config_setting(
-    name = "binpkg-cache-none",
+    name = "binpkg-cache-fast",
     flag_values = {
-        ":binpkg-cache-strategy": "none",
+        ":binpkg-cache-strategy": "fast",
     },
 )
 
