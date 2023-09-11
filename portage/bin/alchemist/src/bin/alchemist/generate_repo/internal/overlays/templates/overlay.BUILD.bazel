@@ -22,7 +22,6 @@ pkg_files(
         "licenses/**",
         "profiles/**",
         "make.conf",
-        "prebuilt.conf",
     ], exclude = ANALYSIS_FILE_PATTERN + [
         "**/OWNERS",
         "**/README",
