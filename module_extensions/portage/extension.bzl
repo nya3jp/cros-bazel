@@ -56,15 +56,15 @@ def _portage_deps_impl(module_ctx):
         for rule, kwargs in repo.items():
             name = kwargs["name"]
             if rule == "HttpFile":
-                hub.http_file.alias(**kwargs)
+                hub.http_file.alias_only(**kwargs)
             elif rule == "GsFile":
-                hub.gs_file.alias(**kwargs)
+                hub.gs_file.alias_only(**kwargs)
             elif rule == "RepoRepository":
-                repo_repository.alias(**kwargs)
+                repo_repository.alias_only(**kwargs)
             elif rule == "CipdFile":
-                hub.cipd_file.alias(**kwargs)
+                hub.cipd_file.alias_only(**kwargs)
             elif rule == "CrosChromeRepository":
-                cros_chrome_repository.alias(**kwargs)
+                cros_chrome_repository.alias_only(**kwargs)
             else:
                 fail("Unknown rule %s" % rule)
 

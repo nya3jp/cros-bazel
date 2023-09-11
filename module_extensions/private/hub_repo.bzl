@@ -6,41 +6,64 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 load("//bazel/repo_defs:cipd.bzl", "cipd_file")
 load("//bazel/repo_defs:gs.bzl", "gs_file")
 
+_SELECT_ALIAS_OR_SYMLINK_ERR = """
+
+Use ":{k}_alias" or ":{k}_symlink" instead of ":{k}".
+":{k}_symlink" is required if you need to look up the file using rlocation.
+Otherwise, ":{k}_alias" is generally preferred.
+
+"""
+
+_EXTRA_ALIAS_ERR = """
+
+{k} is marked as alias_only, rather than alias_and_symlink.
+Use ":{k}" instead of ":{k}_alias",
+
+"""
+
+_SYMLINK_IN_ALIAS_ONLY_ERR = """
+
+{k} is marked as alias_only, rather than alias_and_symlink.
+If you don't need a symlink, use ":{k}".
+If you do, update the repo rule to use alias_and_symlink, then update usages of
+":{k}" with ":{k}_alias".
+
+"""
+
 # This follows the hub-and-spoke model recommended by bzlmod in
 # https://github.com/bazelbuild/bazel/issues/17048#issuecomment-1357752280
 def _hub_repo_impl(repo_ctx):
-    symlinks = repo_ctx.attr.symlinks
-    aliases = repo_ctx.attr.aliases
-    content = ['load("@cros//bazel/module_extensions/private:symlink.bzl", "symlink")']
+    content = [
+        'load("@cros//bazel/module_extensions/private:symlink.bzl", "symlink")',
+        'load("@cros//bazel/build_defs:always_fail.bzl", "always_fail")',
+    ]
 
-    def add_target(rule, name, label):
+    for name, kwargs in sorted(repo_ctx.attr.invocations.items()):
+        kwargs = json.decode(kwargs)
         content.extend([
             "",
-            "%s(" % rule,
+            "%s(" % kwargs.pop("rule"),
             '    name="%s",' % name,
-            '    actual="%s",' % label,
+        ])
+
+        for k, v in sorted(kwargs.items()):
+            content.append("    %s = %r," % (k, v))
+        content.extend([
             '    visibility=["//visibility:public"]',
             ")",
         ])
-
-    for name, label in sorted(symlinks.items()):
-        add_target("symlink", name, label)
-    for name, label in sorted(aliases.items()):
-        add_target("alias", name, label)
 
     repo_ctx.file("BUILD.bazel", "\n".join(content))
 
 _hub_repo = repository_rule(
     implementation = _hub_repo_impl,
     attrs = dict(
-        symlinks = attr.string_dict(),
-        aliases = attr.string_dict(),
+        invocations = attr.string_dict(),
     ),
 )
 
 def hub_init():
-    aliases = {}
-    symlinks = {}
+    invocations = {}
 
     def wrap(wrapper, default_targets):
         def labels(name, targets):
@@ -56,29 +79,45 @@ def hub_init():
                 result[alias] = "@" + name + target
             return result
 
-        def alias(name, targets = None, **kwargs):
+        def alias_only(name, targets = None, **kwargs):
             for k, v in labels(name, targets).items():
-                # TODO: This target is deprecated. Remove it once unused.
-                aliases[k] = v
-                aliases[k + "_alias"] = v
-                symlinks[k + "_symlink"] = v
+                invocations[k] = dict(rule = "alias", actual = v)
+
+                # Some people may assume that this is an 'alias_and_symlink'
+                # rule. Give them a helpful error message.
+                invocations[k + "_alias"] = dict(
+                    rule = "always_fail",
+                    message = _EXTRA_ALIAS_ERR.format(k = k),
+                )
+                invocations[k + "_symlink"] = dict(
+                    rule = "always_fail",
+                    message = _SYMLINK_IN_ALIAS_ONLY_ERR.format(k = k),
+                )
             wrapper(name = name, **kwargs)
 
-        def symlink(name, targets = None, **kwargs):
+        def alias_and_symlink(name, targets = None, **kwargs):
             for k, v in labels(name, targets).items():
-                # TODO: This target is deprecated. Remove it once unused.
-                symlinks[k] = v
-                aliases[k + "_alias"] = v
-                symlinks[k + "_symlink"] = v
+                # People will (quite reasonably) assume that the label has no
+                # suffix. Give them a helpful error message in this case.
+                invocations[k] = dict(
+                    rule = "always_fail",
+                    message = _SELECT_ALIAS_OR_SYMLINK_ERR.format(k = k),
+                )
+                invocations[k + "_alias"] = dict(rule = "alias", actual = v)
+                invocations[k + "_symlink"] = dict(rule = "symlink", out = k, actual = v)
             wrapper(name = name, **kwargs)
 
         return struct(
-            alias = alias,
-            symlink = symlink,
+            alias_only = alias_only,
+            alias_and_symlink = alias_and_symlink,
         )
 
     def generate_hub_repo(name, **kwargs):
-        _hub_repo(name = name, aliases = aliases, symlinks = symlinks, **kwargs)
+        _hub_repo(
+            name = name,
+            invocations = {k: json.encode(v) for k, v in invocations.items()},
+            **kwargs
+        )
 
     return struct(
         wrap_rule = wrap,

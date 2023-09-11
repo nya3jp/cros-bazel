@@ -6,6 +6,6 @@ py_test(
     name = "symlink_test",
     size = "small",
     srcs = ["symlink_test.py"],
-    data = ["@files//:dumb_init"],
+    data = ["@files//:dumb_init_symlink"],
     deps = ["@rules_python//python/runfiles"],
 )

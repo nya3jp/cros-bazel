@@ -12,7 +12,7 @@ rust_binary(
     name = "run_in_container",
     srcs = glob(["src/*.rs"]),
     data = [
-        "@files//:dumb_init",
+        "@files//:dumb_init_symlink",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],

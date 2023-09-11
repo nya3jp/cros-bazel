@@ -13,7 +13,7 @@ rust_binary(
     data = [
         ":pkg_hook_check.sh",
         ":portageq_wrapper.py",
-        "@files//:bash-static",
+        "@files//:bash-static_symlink",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
@@ -64,27 +64,18 @@ rust_test(
     ],
 )
 
-# Works around the issue that @files//bash-static is resolved to multiple files.
-# TODO(b/299563985): Fix it.
-genrule(
-    name = "bash_static_gen",
-    srcs = ["@files//:bash-static"],
-    outs = ["bash_static"],
-    cmd = "v=($(SRCS)); cp $${v[0]} $@",
-)
-
 pkg_files(
     name = "fake_sdk_extras_files",
     srcs = [
-        ":bash_static",
         "//bazel/portage/bin/drive_binary_package:drive_binary_package.sh",
         "//bazel/portage/bin/fakefs",
+        "@files//:bash-static_alias",
     ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     renames = {
-        ":bash_static": "bin/bash",
+        "@files//:bash-static_alias": "bin/bash",
         "//bazel/portage/bin/drive_binary_package:drive_binary_package.sh": "usr/bin/drive_binary_package.sh",
         "//bazel/portage/bin/fakefs": "usr/bin/fakeroot",
     },

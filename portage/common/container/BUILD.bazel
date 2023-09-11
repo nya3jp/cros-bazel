@@ -45,7 +45,7 @@ rust_test(
     name = "container_test",
     size = "small",
     crate = ":container",
-    data = ["@files//:bash-static"] + glob(["testdata/**"]),
+    data = ["@files//:bash-static_symlink"] + glob(["testdata/**"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/portage/common/testutil",
