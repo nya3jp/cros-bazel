@@ -58,12 +58,18 @@ def hub_init():
 
         def alias(name, targets = None, **kwargs):
             for k, v in labels(name, targets).items():
+                # TODO: This target is deprecated. Remove it once unused.
                 aliases[k] = v
+                aliases[k + "_alias"] = v
+                symlinks[k + "_symlink"] = v
             wrapper(name = name, **kwargs)
 
         def symlink(name, targets = None, **kwargs):
             for k, v in labels(name, targets).items():
+                # TODO: This target is deprecated. Remove it once unused.
                 symlinks[k] = v
+                aliases[k + "_alias"] = v
+                symlinks[k + "_symlink"] = v
             wrapper(name = name, **kwargs)
 
         return struct(
