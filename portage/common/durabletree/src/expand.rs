@@ -56,9 +56,13 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
     // Ensure the durable tree is not hot. See the comment in `DurableTree` for
     // details.
     let metadata = std::fs::metadata(root_dir)?;
+    let mode = metadata.permissions().mode() & 0o777;
     ensure!(
-        metadata.permissions().mode() & 0o777 == 0o555,
-        "Durable tree is hot, i.e. you attempted to expand it within the same Bazel action."
+        mode == 0o555,
+        "Durable tree is hot (mode=0{:03o} != 0555): {}\n\
+        Did you attempt to expand the durable tree within the same Bazel action?",
+        mode,
+        root_dir.display(),
     );
 
     // Check if the raw directory is already restored.
