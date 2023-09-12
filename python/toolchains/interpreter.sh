@@ -7,4 +7,11 @@
 SITE_CUSTOMIZE_RPATH='cros/bazel/python/toolchains/sitecustomize.py'
 SITE_CUSTOMIZE_DIR="$(dirname "$(rlocation "${SITE_CUSTOMIZE_RPATH}")")"
 INTERP="$(rlocation python_interpreter/bin/python3)"
-PYTHONPATH="${SITE_CUSTOMIZE_DIR}:${PYTHONPATH:-}" exec "${INTERP}" "$@"
+
+ARGS=("${INTERP}")
+if [[ -n "${PYTHON_INTERACTIVE:-}" ]]; then
+  ARGS+=("-i")
+  unset PYTHON_INTERACTIVE
+fi
+
+PYTHONPATH="${SITE_CUSTOMIZE_DIR}:${PYTHONPATH:-}" exec "${ARGS[@]}" "$@"
