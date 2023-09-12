@@ -39,6 +39,10 @@ class Py3Test(unittest.TestCase):
         )
         self.assertTrue(path.is_file())
 
+    def test_import_from_repo_rule(self):
+        # sitecustomize.py should do the repo mapping for us.
+        from rules_python.python.runfiles import runfiles
+
 
 if __name__ == "__main__":
     unittest.main()

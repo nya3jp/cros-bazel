@@ -24,6 +24,7 @@ sh_runfiles_binary(
     data = [
         ":sitecustomize.py",
         "@python_interpreter//:files",
+        "@rules_python//python/runfiles",
     ],
 )
 
