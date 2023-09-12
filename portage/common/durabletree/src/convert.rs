@@ -19,7 +19,7 @@ use crate::{
         EXTRA_TARBALL_FILE_NAME, MANIFEST_FILE_NAME, MARKER_FILE_NAME, MODE_MASK, RAW_DIR_NAME,
     },
     manifest::{DurableTreeManifest, FileManifest},
-    util::{get_user_xattrs_map, DirLock, SavedPermissions},
+    util::{get_user_xattrs_map, DirLock},
 };
 
 struct ExtraTarballBuilder {
@@ -173,12 +173,13 @@ fn build_manifest_and_extra_tarball_impl(
         );
     } else {
         extra_builder.move_into_tarball(relative_path, &metadata)?;
+        return Ok(());
     }
 
-    if metadata.is_dir() {
-        let mut perms = SavedPermissions::try_new(&full_path)?;
-        perms.ensure_full_access()?;
+    // Ensure full access to the file so that Bazel can read the file/directory later.
+    std::fs::set_permissions(&full_path, Permissions::from_mode(0o755))?;
 
+    if metadata.is_dir() {
         let entries = std::fs::read_dir(full_path)?
             .collect::<std::io::Result<Vec<_>>>()?
             .into_iter()

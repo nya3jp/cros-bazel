@@ -12,6 +12,7 @@ use std::{
     path::PathBuf,
     process::Command,
 };
+use walkdir::WalkDir;
 
 use crate::{
     consts::{MODE_MASK, RAW_DIR_NAME, RESTORED_XATTR},
@@ -418,6 +419,20 @@ fn inaccessible_files() -> Result<()> {
     set_permissions(dir, PermissionsExt::from_mode(0o700))?;
 
     DurableTree::convert(dir)?;
+
+    // Ensure that all files under the raw directory has the permission 0755.
+    for entry in WalkDir::new(dir.join("raw")) {
+        let entry = entry?;
+        let mode = entry.metadata()?.mode() & MODE_MASK;
+        assert_eq!(
+            mode,
+            0o755,
+            "Unexpected permission: {}: got 0{:03o}, want 0755",
+            entry.path().display(),
+            mode
+        );
+    }
+
     DurableTree::cool_down_for_testing(dir)?;
     let tree = DurableTree::expand(dir)?;
 
