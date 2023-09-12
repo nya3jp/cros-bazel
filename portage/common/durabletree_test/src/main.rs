@@ -102,5 +102,11 @@ fn do_main() -> Result<()> {
 
 fn main() -> ExitCode {
     enter_mount_namespace().expect("Failed to enter a mount namespace");
-    cliutil::cli_main(do_main, Default::default())
+    cliutil::cli_main(
+        do_main,
+        cliutil::ConfigBuilder::new()
+            .log_command_line(false)
+            .build()
+            .unwrap(),
+    )
 }
