@@ -53,6 +53,7 @@ rust_test(
         "//bazel/portage/common/durabletree",
         "//bazel/portage/common/fileutil",
         "//bazel/portage/common/portage/vdb",
+        "//bazel/portage/common/processes",
         "//bazel/portage/common/testutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bytes",

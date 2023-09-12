@@ -17,6 +17,7 @@ rust_library(
     visibility = ["//bazel:internal"],
     deps = [
         "//bazel/portage/common/cliutil",
+        "//bazel/portage/common/processes",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bytes",
         "@alchemy_crates//:tar",

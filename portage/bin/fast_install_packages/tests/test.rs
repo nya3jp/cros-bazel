@@ -14,6 +14,7 @@ use container::ContainerSettings;
 use durabletree::DurableTree;
 use fileutil::{SafeTempDir, SafeTempDirBuilder};
 use itertools::Itertools;
+use processes::locate_system_binary;
 use runfiles::Runfiles;
 use std::{
     fs::{OpenOptions, Permissions},
@@ -137,7 +138,7 @@ fn fast_install_packages(
     let container_image_path = container_image_path.path();
     {
         let container = settings.prepare()?;
-        let status = Command::new("/usr/bin/tar")
+        let status = Command::new(locate_system_binary("tar")?)
             .arg("-czf")
             .arg(container_image_path)
             .arg("--exclude=dev")
@@ -217,7 +218,7 @@ fn create_binary_package(
 
     let binary_package_file = tempfile::Builder::new().suffix(".tbz2").tempfile()?;
 
-    let status = Command::new("/usr/bin/tar")
+    let status = Command::new(locate_system_binary("tar")?)
         .arg("-c")
         .arg("-f")
         .arg(binary_package_file.path())

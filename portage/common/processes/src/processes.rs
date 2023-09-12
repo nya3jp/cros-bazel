@@ -10,6 +10,7 @@ use signal_hook::{
 };
 use std::{
     os::unix::process::ExitStatusExt,
+    path::{Path, PathBuf},
     process::{Command, ExitCode, ExitStatus},
 };
 use tracing::instrument;
@@ -74,6 +75,21 @@ pub fn status_to_exit_code(status: &ExitStatus) -> ExitCode {
     }
 }
 
+/// Returns an absolute path to a system-installed binary.
+///
+/// Use this function only for binaries universally available in Linux (e.g.
+/// part of coreutils or util-linux).
+pub fn locate_system_binary(name: impl AsRef<Path>) -> Result<PathBuf> {
+    let name = name.as_ref();
+    for dir in ["/usr/sbin", "/usr/bin", "/sbin", "/bin"] {
+        let path = Path::new(dir).join(name);
+        if path.try_exists()? {
+            return Ok(path);
+        }
+    }
+    bail!("{} not found on the system", name.display());
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -89,5 +105,13 @@ mod tests {
         run(&mut Command::new("false"))?;
         assert!(run_and_check(&mut Command::new("false")).is_err());
         Ok(())
+    }
+
+    #[test]
+    fn test_locate_system_binary() {
+        locate_system_binary("bash").unwrap();
+        locate_system_binary("ls").unwrap();
+        locate_system_binary("tar").unwrap();
+        locate_system_binary("__no_such_binary__").unwrap_err();
     }
 }

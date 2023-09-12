@@ -4,6 +4,7 @@
 
 use anyhow::{bail, ensure, Context, Result};
 use bytes::ByteOrder;
+use processes::locate_system_binary;
 use runfiles::Runfiles;
 use std::{
     collections::HashMap,
@@ -109,7 +110,7 @@ impl BinaryPackage {
         let mut tarball = self.new_tarball_reader()?;
 
         let mut child = Command::new(fakefs_path)
-            .arg("/usr/bin/tar")
+            .arg(locate_system_binary("tar")?)
             .arg("-x")
             .arg("--same-permissions")
             .arg("--same-owner")
@@ -234,10 +235,10 @@ mod tests {
     fn valid_tarball() -> Result<()> {
         let mut bp = binary_package()?;
 
-        // Just ensure that /usr/bin/tar accepts the tarball without any error.
+        // Just ensure that tar accepts the tarball without any error.
         let runfiles = Runfiles::create()?;
         let zstd_path = runfiles.rlocation("zstd/zstd");
-        let mut tar = Command::new("/usr/bin/tar")
+        let mut tar = Command::new(locate_system_binary("tar")?)
             .arg("-I")
             .arg(&zstd_path)
             .arg("-t")
