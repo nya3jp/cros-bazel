@@ -33,7 +33,7 @@ config_setting(
 
 string_flag(
     name = "default-stage",
-    build_setting_default = "stage1",
+    build_setting_default = "stage2",
 )
 
 config_setting(
