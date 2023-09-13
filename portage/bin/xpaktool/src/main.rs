@@ -2,16 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#[cfg(test)]
+mod testdata;
+mod validate_package;
+
 use anyhow::{bail, Context, Result};
 use binarypackage::BinaryPackage;
 use clap::{Parser, Subcommand};
-use cliutil::cli_main;
+use cliutil::{cli_main, ConfigBuilder};
 use itertools::Itertools;
 use std::fs::File;
 use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 
+use crate::validate_package::{do_validate_package, ValidatePackageArgs};
 use std::{path::PathBuf, process::ExitCode};
 
 #[derive(Parser, Debug)]
@@ -25,6 +30,7 @@ struct Cli {
 enum Commands {
     ExtractXpak(ExtractXpakArgs),
     ComparePackages(ComparePackagesArgs),
+    ValidatePackage(ValidatePackageArgs),
 }
 
 /// Shows XPAK entries in a Portage binary package file.
@@ -55,6 +61,7 @@ fn do_main() -> Result<()> {
     match cli.commands {
         Commands::ExtractXpak(args) => do_extract_xpak(args),
         Commands::ComparePackages(args) => do_compare_packages(args),
+        Commands::ValidatePackage(args) => do_validate_package(args),
     }
 }
 
@@ -162,25 +169,19 @@ fn do_compare_packages(args: ComparePackagesArgs) -> Result<()> {
 }
 
 fn main() -> ExitCode {
-    cli_main(do_main, Default::default())
+    cli_main(
+        do_main,
+        ConfigBuilder::new()
+            .log_command_line(false)
+            .build()
+            .expect("valid config"),
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const BINPKG: &str = "nano.tbz2";
-    const BINPKG_DIFF_XPAK: &str = "nano-diff-xpak.tbz2";
-    const BINPKG_DIFF_TAR: &str = "nano-diff-tar.tbz2";
-
-    fn testdata(path: impl AsRef<Path>) -> Result<PathBuf> {
-        match runfiles::Runfiles::create() {
-            Ok(r) => Ok(r.rlocation(Path::new("cros/bazel/portage/common/testdata").join(path))),
-            Err(_) => Ok(Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("testdata")
-                .join(path)),
-        }
-    }
+    use testdata::*;
 
     #[test]
     fn packages_equal_match() -> Result<()> {
