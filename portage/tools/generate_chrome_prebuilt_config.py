@@ -16,15 +16,14 @@ def _run_command(args: list[str]) -> str:
     return subprocess.check_output(args, encoding="utf-8")
 
 
-def _resolve_alias(label: str) -> str:
-    """Resolves the specified Bazel alias and returns its actual label."""
-    while True:
-        actual = _run_command(
-            ["bazel", "query", f"labels('actual', {label})"]
-        ).strip()
-        if actual == "":
-            return label
-        label = actual
+def _resolve_alias(label: str) -> list[str]:
+    """Resolves the specified Bazel alias and returns its actual labels."""
+    actuals = _run_command(
+        ["bazel", "query", f"labels('actual', {label})"]
+    ).splitlines()
+    if len(actuals) == 0:
+        return [label]
+    return [l for actual in actuals for l in _resolve_alias(actual)]
 
 
 def _get_chromeos_version_sh_path() -> str:
@@ -86,13 +85,14 @@ def main():
     )
 
     chrome_label = "@portage//chromeos-base/chromeos-chrome"
-    chrome_actual_label = _resolve_alias(chrome_label)
-    prebuilt_label = chrome_actual_label + "_prebuilt"
-    logging.info("Prebuilt label is %s", prebuilt_label)
+    chrome_actual_labels = _resolve_alias(chrome_label)
+    prebuilt_labels = [label + "_prebuilt" for label in chrome_actual_labels]
+    logging.info("Prebuilt labels are %s", prebuilt_labels)
 
     prebuilt_url = _find_chrome_prebuilt(board, branch, build)
 
-    print(f"--{prebuilt_label}={prebuilt_url}")
+    for label in prebuilt_labels:
+        print(f"--{label}={prebuilt_url}")
 
 
 if __name__ == "__main__":
