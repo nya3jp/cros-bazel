@@ -194,7 +194,11 @@ ebuild(
         {%- endfor %}
     ],
     {%- endif %}
-    # use = "{{ ebuild.uses }}",
+    use_flags = [
+        {%- for flag in ebuild.uses %}
+        "{{ flag }}",
+        {%- endfor %}
+    ],
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}
     board = "{{ target_board }}",

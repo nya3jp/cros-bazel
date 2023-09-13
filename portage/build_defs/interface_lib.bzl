@@ -195,14 +195,6 @@ def generate_interface_libraries(
     )
 
     providers = [
-        OutputGroupInfo(
-            binpkg = depset([input_binary_package_file]),
-            xpak = depset(xpak_outputs),
-            headers = depset(header_outputs),
-            pkg_configs = depset(pkg_config_outputs),
-            shared_libs = depset(shared_lib_outputs),
-            static_libs = depset(static_lib_outputs),
-        ),
         # TODO: Only generate EbuildLibraryInfo if we have files specified.
         EbuildLibraryInfo(
             # TODO: Fix the computation of strip_prefix. Currently this assumes

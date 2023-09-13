@@ -287,6 +287,7 @@ def _ebuild_impl(ctx):
     output_profile_file = ctx.actions.declare_file(
         src_basename + ".profile.json",
     )
+    validation_file = ctx.actions.declare_file(src_basename + ".validation")
 
     # Compute arguments and inputs to run build_package.
     args, inputs = _compute_build_package_args(ctx, output_path = output_binary_package_file.path, use_runfiles = False)
@@ -395,12 +396,33 @@ def _ebuild_impl(ctx):
         direct_runtime_deps = direct_runtime_deps,
         layer = install_layer,
     )
+
+    args = ctx.actions.args()
+    args.add_all([
+        "validate-package",
+        "--touch",
+        validation_file,
+        "--package",
+        output_binary_package_file,
+    ])
+    args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",", omit_if_empty = False)
+
+    ctx.actions.run(
+        inputs = depset([output_binary_package_file]),
+        outputs = [validation_file],
+        executable = ctx.executable._xpaktool,
+        arguments = [args],
+        mnemonic = "EbuildValidation",
+        progress_message = "Building %{label}",
+    )
+
     package_set_info = single_binary_package_set_info(package_info)
     return [
         DefaultInfo(files = depset(
             [output_binary_package_file, output_log_file] +
             interface_library_outputs,
         )),
+        OutputGroupInfo(_validation = depset([validation_file])),
         package_info,
         package_set_info,
     ] + interface_library_providers
@@ -437,6 +459,12 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             The path inside the binpkg that contains static libraries.
             """,
         ),
+        use_flags = attr.string_list(
+            allow_empty = True,
+            doc = """
+            The USE flags the binpkg is expected to have.
+            """,
+        ),
         suffix = attr.string(
             doc = """
             Suffix to add to the output file. i.e., libcxx-17.0-r15<suffix>.tbz2
@@ -458,6 +486,11 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/extract_interface"),
+        ),
+        _xpaktool = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/xpaktool"),
         ),
         **_EBUILD_COMMON_ATTRS
     ),

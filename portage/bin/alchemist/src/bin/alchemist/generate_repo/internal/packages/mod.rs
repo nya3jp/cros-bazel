@@ -66,7 +66,7 @@ pub struct EBuildEntry {
     runtime_deps: Vec<String>,
     install_set: Vec<String>,
     allow_network_access: bool,
-    uses: String,
+    uses: Vec<String>,
     sdk: String,
     direct_build_target: Option<String>,
     has_hooks: bool,
@@ -346,7 +346,7 @@ impl EBuildEntry {
                 a_value.cmp(b_value).reverse().then(a_name.cmp(b_name))
             })
             .map(|(name, value)| format!("{}{}", if *value { "" } else { "-" }, name))
-            .join(" ");
+            .collect();
 
         // The PRIMORDIAL_PACKAGES are only applicable to the board's SDK. The
         // Host SDK has all the packages already built in.
