@@ -472,6 +472,9 @@ impl ConfigBundle {
                 ConfigNodeValue::Uses(updates) => updates
                     .iter()
                     .filter(|update| {
+                        if update.kind != UseUpdateKind::Set {
+                            return false;
+                        }
                         if let Some(atom) = &update.filter.atom {
                             if !atom.matches(package) {
                                 return false;
@@ -921,6 +924,56 @@ mod tests {
             .collect_vec();
 
         assert_eq!(use_flags, Vec::<String>::new());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_mask_use_expand() -> Result<()> {
+        let bundle = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![
+            ConfigNode {
+                sources: vec![PathBuf::from("make.defaults")],
+                value: ConfigNodeValue::Vars(HashMap::from([
+                    ("USE_EXPAND".to_owned(), "VIDEO_CARDS".to_owned()),
+                    ("VIDEO_CARDS".to_owned(), "vesa vmware".to_owned()),
+                ])),
+            },
+            ConfigNode {
+                sources: vec![PathBuf::from("use.mask.1")],
+                value: ConfigNodeValue::Uses(vec![UseUpdate {
+                    kind: UseUpdateKind::Mask,
+                    filter: UseUpdateFilter {
+                        atom: None,
+                        stable_only: false,
+                    },
+                    use_tokens: "video_cards_vmware".to_string(),
+                }]),
+            },
+            ConfigNode {
+                sources: vec![PathBuf::from("use.mask.2")],
+                value: ConfigNodeValue::Uses(vec![UseUpdate {
+                    kind: UseUpdateKind::Mask,
+                    filter: UseUpdateFilter {
+                        atom: None,
+                        stable_only: false,
+                    },
+                    use_tokens: "-video_cards_vmware".to_string(),
+                }]),
+            },
+        ])]);
+
+        let iuse = HashMap::from([("video_cards_vmware".to_string(), false)]);
+        let use_flags = bundle
+            .compute_use_variable_for_package(&PACKAGE_REF_A, true, &iuse)
+            .collect_vec();
+
+        assert_eq!(
+            use_flags,
+            [
+                "video_cards_vesa".to_string(),
+                "video_cards_vmware".to_string()
+            ]
+        );
 
         Ok(())
     }
