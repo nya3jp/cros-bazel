@@ -151,6 +151,7 @@ mod tests {
         let xpak: BTreeMap<String, Vec<u8>> = [
             ("CATEGORY".to_string(), b"app-editors".to_vec()),
             ("PF".to_string(), b"nano-6.4".to_vec()),
+            ("SLOT".to_string(), b"0/0".to_vec()),
         ]
         .into();
 
