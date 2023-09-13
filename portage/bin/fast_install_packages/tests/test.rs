@@ -31,6 +31,8 @@ use vdb::get_vdb_dir;
 #[link_section = ".init_array"]
 static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
 
+static DEFAULT_SLOT: &str = "0/0";
+
 /// Creates a temporary directory in the execroot (".").
 fn temp_dir_for_testing() -> Result<SafeTempDir> {
     SafeTempDirBuilder::new().base_dir(Path::new(".")).build()
@@ -233,8 +235,8 @@ fn create_binary_package(
     // Compute XPAK key/values.
     let (category, pf) = cpf.split_once('/').expect("Invalid CPF");
     let environment = format!(
-        "EAPI=7\nCATEGORY={}\nPF={}\n{}",
-        category, pf, extra_environment
+        "EAPI=7\nCATEGORY={}\nPF={}\nSLOT={}\n{}",
+        category, pf, DEFAULT_SLOT, extra_environment
     );
     let mut environment_bz2: Vec<u8> = Vec::new();
     BzEncoder::new(environment.as_bytes(), Compression::fast())
@@ -244,6 +246,7 @@ fn create_binary_package(
         ("repository", Vec::from("chromiumos")),
         ("CATEGORY", Vec::from(category)),
         ("PF", Vec::from(pf)),
+        ("SLOT", DEFAULT_SLOT.into()),
         ("environment.bz2", environment_bz2),
     ];
 
