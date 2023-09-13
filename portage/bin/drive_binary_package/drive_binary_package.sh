@@ -184,13 +184,18 @@ eend() {
 }
 
 has_version() {
-  # TODO: Avoid depending on qlist.
-  [[ -n "$(qlist -eIqC "$1")" ]] 2> /dev/null
+  [[ -n "$(best_version "$@")" ]]
 }
 
 best_version() {
-  # TODO: Avoid depending on qlist.
-  qlist -evIqC "$1" 2> /dev/null
+  local root="${ROOT}"
+  case "$1" in
+  --host-root|-b) root="/"; shift;;
+  -r) shift;;
+  -d) root="${SYSROOT}"; shift;;
+  esac
+  ROOT="${root}" SYSROOT="${root}" PORTAGE_CONFIGROOT="${root}" \
+    portageq best_version "${root}" "$@"
 }
 
 # ver_cut, ver_rs, ver_test are included in environment.

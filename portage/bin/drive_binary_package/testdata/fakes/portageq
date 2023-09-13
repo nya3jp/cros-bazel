@@ -1,0 +1,35 @@
+#!/bin/bash -e
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+abort() {
+  echo "portageq: ABORT: $1" >&2
+  exit 2
+}
+
+readonly command="$1"
+readonly root_dir="$2"
+readonly atom="$3"
+
+if [[ "${command}" != "best_version" ]]; then
+  abort "unsupported command: ${command}"
+fi
+
+case "${root_dir}" in
+"/")
+  case "${atom}" in
+  "pkg/aaa") echo "pkg/aaa-1.2.3";;
+  "pkg/bbb") echo "pkg/bbb-2.3.4";;
+  *) exit 1;;
+  esac
+  ;;
+"${ROOT?}")
+  case "${atom}" in
+  "pkg/aaa") echo "pkg/aaa-1.2.3";;
+  "pkg/ccc") echo "pkg/ccc-3.4.5";;
+  *) exit 1;;
+  esac
+  ;;
+*) abort "unknown root: ${root_dir}";;
+esac

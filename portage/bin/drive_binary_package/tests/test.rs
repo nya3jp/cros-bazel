@@ -24,6 +24,10 @@ fn run_drive_binary_package(
     let runfiles = Runfiles::create()?;
     let program_path =
         runfiles.rlocation("cros/bazel/portage/bin/drive_binary_package/drive_binary_package.sh");
+    let path_with_fakes = format!(
+        "bazel/portage/bin/drive_binary_package/testdata/fakes:{}",
+        std::env::var("PATH")?
+    );
     let output = Command::new(program_path)
         .arg("-r")
         .arg(root_dir)
@@ -32,6 +36,7 @@ fn run_drive_binary_package(
         .arg("-p")
         .arg(cpf)
         .args(phases)
+        .env("PATH", path_with_fakes)
         .output()?;
     ensure!(
         output.status.success(),
@@ -209,6 +214,29 @@ fn modify_file_system() -> Result<()> {
     assert!(root_dir.join("pkg_preinst").exists());
     assert!(root_dir.join("pkg_postinst").exists());
     assert!(image_dir.join("pkg_preinst_d").exists());
+
+    Ok(())
+}
+
+// Verify the ability to modify the file system via defined variables.
+#[test]
+fn ebuild_function_tests() -> Result<()> {
+    let root_dir = TempDir::new()?;
+    let root_dir = root_dir.path();
+    let image_dir = &root_dir.join(".image");
+    std::fs::create_dir_all(image_dir)?;
+
+    let test_script = std::fs::read_to_string(
+        "bazel/portage/bin/drive_binary_package/testdata/ebuild_function_tests.sh",
+    )?;
+
+    create_test_vdb(root_dir, TEST_CPF, &test_script)?;
+    run_drive_binary_package(
+        root_dir,
+        image_dir,
+        TEST_CPF,
+        &["setup", "preinst", "postinst"],
+    )?;
 
     Ok(())
 }
