@@ -445,9 +445,11 @@ dependencies = [
  "durabletree",
  "fileutil",
  "runfiles",
+ "tempfile",
  "testutil",
  "vdb",
  "walkdir",
+ "xattr 1.0.0",
 ]
 
 [[package]]

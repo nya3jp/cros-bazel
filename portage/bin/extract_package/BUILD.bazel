@@ -18,11 +18,23 @@ rust_binary(
         "//bazel/portage/common/portage/vdb",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:walkdir",
+        "@alchemy_crates//:xattr",
     ],
 )
 
 rust_test(
     name = "extract_package_test",
+    size = "small",
+    crate = ":extract_package",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@alchemy_crates//:tempfile",
+    ],
+)
+
+rust_test(
+    name = "extract_package_cli_test",
     size = "small",
     srcs = glob(["tests/**/*.rs"]),
     data = [":extract_package"] + glob(["testdata/**"]),
