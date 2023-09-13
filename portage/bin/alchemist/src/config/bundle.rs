@@ -491,8 +491,8 @@ impl ConfigBundle {
         // Compute the actual value by concatenating values from sources.
         merge_incremental_tokens(
             ebuild_uses
-                .chain(config_uses)
-                .chain(self.use_expand_values.iter().map(|s| &**s)),
+                .chain(self.use_expand_values.iter().map(|s| &**s))
+                .chain(config_uses),
         )
     }
 
@@ -604,8 +604,10 @@ mod tests {
     use std::path::PathBuf;
     use std::str::FromStr;
 
+    use lazy_static::lazy_static;
+
     use crate::{
-        config::{AcceptKeywordsUpdate, SimpleConfigSource},
+        config::{AcceptKeywordsUpdate, SimpleConfigSource, UseUpdate, UseUpdateFilter},
         dependency::package::PackageAtom,
     };
 
@@ -848,6 +850,77 @@ mod tests {
             &["~*"],
             &[]
         ));
+
+        Ok(())
+    }
+
+    lazy_static! {
+        static ref VERSION_9999: Version = Version::try_new("9999").unwrap();
+        static ref PACKAGE_REF_A: ThinPackageRef<'static> = ThinPackageRef {
+            package_name: "aaa/bbb",
+            version: &VERSION_9999,
+            slot: Slot {
+                main: "0",
+                sub: "0",
+            },
+        };
+    }
+
+    #[test]
+    fn test_use_expand_simple() -> Result<()> {
+        let bundle = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![ConfigNode {
+            sources: vec![PathBuf::from("a")],
+            value: ConfigNodeValue::Vars(HashMap::from([
+                ("USE_EXPAND".to_owned(), "PYTHON_TARGETS".to_owned()),
+                (
+                    "PYTHON_TARGETS".to_owned(),
+                    "-python2_7 python3_6".to_owned(),
+                ),
+            ])),
+        }])]);
+
+        let iuse = HashMap::from([("python_targets_python3_6".to_string(), false)]);
+        let use_flags = bundle
+            .compute_use_variable_for_package(&PACKAGE_REF_A, true, &iuse)
+            .collect_vec();
+
+        assert_eq!(use_flags, vec!["python_targets_python3_6"]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_use_expand_override() -> Result<()> {
+        let bundle = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![
+            ConfigNode {
+                sources: vec![PathBuf::from("make.defaults")],
+                value: ConfigNodeValue::Vars(HashMap::from([
+                    ("USE_EXPAND".to_owned(), "PYTHON_TARGETS".to_owned()),
+                    (
+                        "PYTHON_TARGETS".to_owned(),
+                        "-python2_7 python3_6".to_owned(),
+                    ),
+                ])),
+            },
+            ConfigNode {
+                sources: vec![PathBuf::from("package.use")],
+                value: ConfigNodeValue::Uses(vec![UseUpdate {
+                    kind: UseUpdateKind::Set,
+                    filter: UseUpdateFilter {
+                        atom: None,
+                        stable_only: false,
+                    },
+                    use_tokens: "-python_targets_python3_6".to_string(),
+                }]),
+            },
+        ])]);
+
+        let iuse = HashMap::from([("python_targets_python3_6".to_string(), false)]);
+        let use_flags = bundle
+            .compute_use_variable_for_package(&PACKAGE_REF_A, true, &iuse)
+            .collect_vec();
+
+        assert_eq!(use_flags, Vec::<String>::new());
 
         Ok(())
     }
