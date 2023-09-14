@@ -8,12 +8,14 @@ use std::{
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
     process::{Command, Stdio},
+    thread::sleep,
+    time::{Duration, Instant},
 };
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{bail, Context, Result};
 use fileutil::SafeTempDir;
 use nix::mount::{mount, umount2, MntFlags, MsFlags};
-use tracing::instrument;
+use tracing::{instrument, warn};
 
 use crate::{
     consts::{
@@ -56,14 +58,43 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
     // Ensure the durable tree is not hot. See the comment in `DurableTree` for
     // details.
     let metadata = std::fs::metadata(root_dir)?;
-    let mode = metadata.permissions().mode() & 0o777;
-    ensure!(
-        mode == 0o555,
-        "Durable tree is hot (mode=0{:03o} != 0555): {}\n\
-        Did you attempt to expand the durable tree within the same Bazel action?",
-        mode,
-        root_dir.display(),
-    );
+    let initial_mode = metadata.permissions().mode() & 0o777;
+    if initial_mode != 0o555 {
+        // We will eventually fail, but wait up to a minute to see if the permission is fixed
+        // asynchronously, which suggests that it can be by race conditions in Bazel (b/299934607).
+        warn!(
+            "Durable tree is hot (mode = 0{:03o} != 0555): {}\n\
+            Will wait up to 1 minute to see if it is a race condition",
+            initial_mode,
+            root_dir.display(),
+        );
+        let start_time = Instant::now();
+        let mut last_mode = initial_mode;
+        loop {
+            if start_time.elapsed() >= Duration::from_secs(60) {
+                bail!(
+                    "Durable tree is hot (mode = 0{:03o} -> 0{:03o} != 0555): {}\n\
+                    Did you attempt to expand the durable tree within the same Bazel action?",
+                    initial_mode,
+                    last_mode,
+                    root_dir.display(),
+                );
+            }
+            let metadata = std::fs::metadata(root_dir)?;
+            last_mode = metadata.permissions().mode() & 0o777;
+            if last_mode == 0o555 {
+                bail!(
+                    "Durable tree was hot (mode = 0{:03o} != 0555) but the hot state was \
+                    cleared later (mode = 0{:03o}): {}\n\
+                    This is likely caused by race conditions in Bazel (b/299934607)",
+                    initial_mode,
+                    last_mode,
+                    root_dir.display(),
+                );
+            }
+            sleep(Duration::from_secs(1));
+        }
+    }
 
     // Check if the raw directory is already restored.
     if let Ok(Some(_)) = xattr::get(root_dir, RESTORED_XATTR) {
