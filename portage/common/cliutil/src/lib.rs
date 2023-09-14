@@ -28,14 +28,25 @@ pub use crate::stdio_redirector::{RedirectorConfig, StdioRedirector};
 ///   calls unshare(2)).
 pub fn cli_main<F, T>(main: F, config: Config) -> ExitCode
 where
-    F: FnOnce() -> Result<T, anyhow::Error>,
+    F: FnOnce() -> Result<T, anyhow::Error> + std::panic::UnwindSafe,
     T: Termination,
 {
     let _log_guard = config.logging.setup().unwrap();
     if config.log_command_line {
         log_current_command_line();
     }
-    let result = main();
+
+    let result = match std::panic::catch_unwind(main) {
+        Ok(result) => result,
+        Err(err) => {
+            if let Some(redirector) = config.stdio_redirector {
+                redirector.flush_to_real_stderr().unwrap();
+            }
+            std::panic::resume_unwind(err);
+        }
+    };
+
+    // ExitCode doesn't implement Eq, so we can't check whether it's a success or a failure.
     let failure = result.is_err();
 
     let exit_code = handle_top_level_result(result);

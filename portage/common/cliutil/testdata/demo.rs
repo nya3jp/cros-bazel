@@ -26,15 +26,19 @@ pub fn do_main() -> Result<()> {
         panic!("{}", value);
     }
 
+    if let Ok(value) = std::env::var("PROCESS_EXIT") {
+        std::process::exit(value.parse::<i32>()?)
+    }
+
     Ok(())
 }
 
-pub fn main() {
+pub fn main() -> std::process::ExitCode {
     cliutil::cli_main(
         do_main,
         cliutil::ConfigBuilder::new()
             .log_command_line(false)
             .build()
             .unwrap(),
-    );
+    )
 }
