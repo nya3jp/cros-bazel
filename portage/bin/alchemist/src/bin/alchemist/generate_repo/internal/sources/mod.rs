@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     fs::{create_dir_all, read_link, File},
     io::{ErrorKind, Write},
     os::unix::fs::symlink,
@@ -95,6 +95,10 @@ struct SourcePackageLayout {
     /// e.g. "chromite".
     prefix: PathBuf,
 
+    /// The package should contain "__single_files_tarball__", which contains
+    /// the files listed here.
+    single_files: Vec<PathBuf>,
+
     /// Relative directory paths of child local source packages.
     /// e.g. "src/platform2/debugd/dbus_bindings".
     child_prefixes: Vec<PathBuf>,
@@ -105,11 +109,22 @@ impl SourcePackageLayout {
     fn compute<'a>(
         all_local_sources: impl IntoIterator<Item = &'a PackageLocalSource>,
     ) -> Result<Vec<Self>> {
+        let mut required_single_files: HashMap<PathBuf, HashSet<PathBuf>> = HashMap::new();
+
         // Deduplicate all local source prefixes.
         let sorted_prefixes: Vec<PathBuf> = all_local_sources
             .into_iter()
             .filter_map(|origin| match origin {
                 PackageLocalSource::Src(src) => Some(PathBuf::from(src)),
+                PackageLocalSource::SrcFile(src) => {
+                    let dir_name = PathBuf::from(src.parent().unwrap());
+                    let file_name = PathBuf::from(src.file_name().unwrap());
+                    required_single_files
+                        .entry(dir_name.clone())
+                        .or_default()
+                        .insert(file_name);
+                    Some(dir_name)
+                }
                 _ => None,
             })
             .sorted()
@@ -123,6 +138,12 @@ impl SourcePackageLayout {
                     prefix.clone(),
                     SourcePackageLayout {
                         prefix: prefix.clone(),
+                        single_files: required_single_files
+                            .entry(prefix.clone())
+                            .or_default()
+                            .clone()
+                            .into_iter()
+                            .collect(),
                         child_prefixes: Vec::new(),
                     },
                 )
@@ -197,6 +218,9 @@ struct SourcePackage {
     /// should be excluded to avoid confusing Bazel, thus they appear here.
     /// `excludes` includes `symlinks` and `renames`.
     excludes: Vec<PathBuf>,
+
+    // If this is not empty, generate "__single_files_tarball__" target.
+    single_files: Vec<PathBuf>,
 }
 
 impl SourcePackage {
@@ -287,6 +311,8 @@ impl SourcePackage {
             }
         }
 
+        let single_files = layout.single_files.clone();
+
         Ok(Self {
             layout,
             source_dir,
@@ -295,6 +321,7 @@ impl SourcePackage {
             symlinks,
             renames,
             excludes,
+            single_files,
         })
     }
 }
@@ -320,6 +347,7 @@ struct BuildTemplateContext {
     symlinks: Vec<SymlinkEntry>,
     renames: Vec<RenameEntry>,
     excludes: Vec<String>,
+    single_files: Vec<String>,
 }
 
 /// Generates `BUILD.bazel` file for a source package.
@@ -366,6 +394,11 @@ fn generate_build_file(package: &SourcePackage) -> Result<()> {
             .collect(),
         excludes: package
             .excludes
+            .iter()
+            .map(|path| path.to_string_lossy().into_owned())
+            .collect(),
+        single_files: package
+            .single_files
             .iter()
             .map(|path| path.to_string_lossy().into_owned())
             .collect(),

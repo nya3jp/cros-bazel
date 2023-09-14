@@ -32,7 +32,7 @@ pkg_filegroup(
     srcs = [
         ":__files_regular__",
     ],
-    prefix = "/mnt/host/source/",
+    prefix = "/mnt/host/source/aaa",
     visibility = ["//visibility:private"],
 )
 

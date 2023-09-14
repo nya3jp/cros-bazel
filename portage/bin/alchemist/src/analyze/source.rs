@@ -45,8 +45,10 @@ pub enum PackageLocalSource {
     /// sorted, this comes first, and thus results in being in the higher
     /// overlay fs layer.
     BazelTarget(String),
-    /// ChromeOS source code at `/mnt/host/source`.
+    /// ChromeOS source code directory at `/mnt/host/source`.
     Src(PathBuf),
+    /// ChromeOS source file at `/mnt/host/source`.
+    SrcFile(PathBuf),
     /// Chromite source code at `/mnt/host/source/chromite`.
     Chromite,
     /// Chrome source code.
@@ -273,7 +275,7 @@ fn extract_cros_workon_sources(
     }
 
     // Handle regular/missing files.
-    let source_dirs: Vec<PathBuf> = source_paths
+    let mut sources: Vec<PackageLocalSource> = source_paths
         .into_iter()
         .flat_map(|path| {
             let src_name = Path::new(src_dir.file_name().expect("src_dir to have a name"));
@@ -309,19 +311,12 @@ fn extract_cros_workon_sources(
             };
 
             if meta.is_dir() {
-                Some(Ok(path))
+                Some(Ok(PackageLocalSource::Src(path)))
             } else {
-                // If the file is a regular file, use its parent directory.
-                // TODO: Improve this to include the file only.
-                Some(Ok(path.parent().unwrap().to_owned()))
+                Some(Ok(PackageLocalSource::SrcFile(path)))
             }
         })
         .collect::<Result<_>>()?;
-
-    let mut sources = source_dirs
-        .into_iter()
-        .map(PackageLocalSource::Src)
-        .collect_vec();
 
     // Kernel packages need extra eclasses.
     // TODO: Remove this hack.
@@ -1139,7 +1134,7 @@ mod tests {
                 PackageLocalSource::Src("chromite/lib".into()),
                 PackageLocalSource::Src("chromite/bin".into()),
                 PackageLocalSource::Src("chromite/scripts".into()),
-                PackageLocalSource::Src("chromite".into()),
+                PackageLocalSource::SrcFile("chromite/PRESUBMIT.cfg".into()),
             ]
         );
 

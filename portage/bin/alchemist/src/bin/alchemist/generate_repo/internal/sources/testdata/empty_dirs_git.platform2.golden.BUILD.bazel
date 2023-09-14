@@ -29,7 +29,7 @@ pkg_files(
 )
 
 pkg_filegroup(
-    name = "__files__",
+    name = "__filegroup__",
     srcs = [
         ":__files_regular__",
     ],
@@ -40,7 +40,7 @@ pkg_filegroup(
 pkg_tar(
     name = "__tarball__",
     srcs = [
-        ":__files__",
+        ":__filegroup__",
     ],
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",

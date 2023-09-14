@@ -26,11 +26,30 @@ pkg_files(
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
+pkg_files(
+    name = "__single_files__",
+    srcs = [
+        "file.txt",
+    ],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
 
 pkg_filegroup(
     name = "__filegroup__",
     srcs = [
         ":__files_regular__",
+    ],
+    prefix = "/mnt/host/source/",
+    visibility = ["//visibility:private"],
+)
+pkg_filegroup(
+    name = "__single_files_filegroup__",
+    srcs = [
+        ":__single_files__",
     ],
     prefix = "/mnt/host/source/",
     visibility = ["//visibility:private"],
@@ -46,11 +65,25 @@ pkg_tar(
     extension = "tar.zst",
     visibility = ["//visibility:private"],
 )
+pkg_tar(
+    name = "__single_files_tarball__",
+    srcs = [
+        ":__single_files_filegroup__",
+    ],
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    extension = "tar.zst",
+    visibility = [
+        "//internal/packages:__subpackages__",
+        "//internal/sources:__subpackages__",
+    ],
+)
 
 filegroup(
     name = "__tarballs__",
     srcs = [
         ":__tarball__",
+        "//internal/sources/aaa:__tarballs__",
     ],
     visibility = [
         "//internal/packages:__subpackages__",

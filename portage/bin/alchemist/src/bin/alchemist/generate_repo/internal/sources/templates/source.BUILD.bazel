@@ -36,6 +36,23 @@ pkg_files(
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
 )
+
+{%- if single_files %}
+pkg_files(
+    name = "__single_files__",
+    srcs = [
+        {%- for file in single_files %}
+        "{{ file }}",
+        {%- endfor %}
+    ],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+{%- endif %}
+
 {%- if dirs %}
 
 pkg_mkdirs(
@@ -58,7 +75,7 @@ pkg_mklink(
 {%- endfor %}
 
 pkg_filegroup(
-    name = "__files__",
+    name = "__filegroup__",
     srcs = [
         ":__files_regular__",
         {%- if dirs %}
@@ -72,16 +89,43 @@ pkg_filegroup(
     visibility = ["//visibility:private"],
 )
 
+{%- if single_files %}
+pkg_filegroup(
+    name = "__single_files_filegroup__",
+    srcs = [
+        ":__single_files__",
+    ],
+    prefix = "/mnt/host/source/{{ prefix }}",
+    visibility = ["//visibility:private"],
+)
+{%- endif %}
+
 pkg_tar(
     name = "__tarball__",
     srcs = [
-        ":__files__",
+        ":__filegroup__",
     ],
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     extension = "tar.zst",
     visibility = ["//visibility:private"],
 )
+
+{%- if single_files %}
+pkg_tar(
+    name = "__single_files_tarball__",
+    srcs = [
+        ":__single_files_filegroup__",
+    ],
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    extension = "tar.zst",
+    visibility = [
+        "//internal/packages:__subpackages__",
+        "//internal/sources:__subpackages__",
+    ],
+)
+{%- endif %}
 
 filegroup(
     name = "__tarballs__",

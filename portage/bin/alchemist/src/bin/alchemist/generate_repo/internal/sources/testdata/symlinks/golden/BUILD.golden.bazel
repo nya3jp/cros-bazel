@@ -44,7 +44,7 @@ pkg_mklink(
 )
 
 pkg_filegroup(
-    name = "__files__",
+    name = "__filegroup__",
     srcs = [
         ":__files_regular__",
         ":__symlink__another%20symlink",
@@ -57,7 +57,7 @@ pkg_filegroup(
 pkg_tar(
     name = "__tarball__",
     srcs = [
-        ":__files__",
+        ":__filegroup__",
     ],
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",

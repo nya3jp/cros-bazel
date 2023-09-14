@@ -192,21 +192,45 @@ impl EBuildEntry {
 
         let version = package.details.version.to_string();
 
-        let sources = package
+        let mut sources: Vec<String> = package
             .sources
             .local_sources
             .iter()
-            .map(|source| match source {
-                PackageLocalSource::BazelTarget(target) => target.clone(),
-                PackageLocalSource::Src(src) => {
-                    format!("//internal/sources/{}:__tarballs__", src.to_string_lossy())
-                }
+            .filter_map(|source| match source {
+                PackageLocalSource::BazelTarget(target) => Some(target.clone()),
+                PackageLocalSource::Src(src) => Some(format!(
+                    "//internal/sources/{}:__tarballs__",
+                    src.to_string_lossy()
+                )),
                 PackageLocalSource::Chrome(version) => {
-                    format!("@portage_deps//:chrome-{version}_src")
+                    Some(format!("@portage_deps//:chrome-{version}_src"))
                 }
-                PackageLocalSource::Chromite => "@chromite//:src".to_string(),
+                PackageLocalSource::Chromite => Some("@chromite//:src".to_string()),
+                PackageLocalSource::SrcFile(_) => None,
             })
             .collect();
+
+        let file_sources: Vec<String> = package
+            .sources
+            .local_sources
+            .iter()
+            .filter_map(|source| match source {
+                PackageLocalSource::SrcFile(src_file) => {
+                    Some(src_file.parent().unwrap().to_owned())
+                }
+                _ => None,
+            })
+            .dedup()
+            .map(|dir_name| {
+                format!(
+                    "//internal/sources/{}:__single_files_tarball__",
+                    dir_name.to_string_lossy()
+                )
+            })
+            .collect();
+
+        sources.extend(file_sources);
+        sources.sort();
 
         let git_trees = package
             .sources
