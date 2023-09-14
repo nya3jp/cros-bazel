@@ -18,7 +18,8 @@ use alchemist::toolchain::ToolchainConfig;
 use alchemist::{
     config::{
         bundle::ConfigBundle, profile::Profile, site::SiteSettings, ConfigNode, ConfigNodeValue,
-        ConfigSource, PackageMaskKind, PackageMaskUpdate, SimpleConfigSource,
+        ConfigSource, PackageMaskKind, PackageMaskUpdate, SimpleConfigSource, UseUpdate,
+        UseUpdateFilter, UseUpdateKind,
     },
     ebuild::{metadata::CachedEBuildEvaluator, CachedPackageLoader, PackageLoader},
     fakechroot::{enter_fake_chroot, PathTranslator},
@@ -145,10 +146,36 @@ fn build_override_config_source() -> SimpleConfigSource {
         }
     }
 
-    let nodes = vec![ConfigNode {
-        sources: vec![],
-        value: ConfigNodeValue::PackageMasks(masked),
-    }];
+    let nodes = vec![
+        ConfigNode {
+            sources: vec![],
+            value: ConfigNodeValue::PackageMasks(masked),
+        },
+        // We run the hooks in the chrome repository rule, so prevent them
+        // from running in the ebuild action. We also have this USE flag hard
+        // coded in build_package.sh.
+        ConfigNode {
+            sources: vec![],
+            value: ConfigNodeValue::Uses(vec![
+                UseUpdate {
+                    kind: UseUpdateKind::Set,
+                    filter: UseUpdateFilter {
+                        atom: Some("chromeos-base/chrome-icu".parse().unwrap()),
+                        stable_only: false,
+                    },
+                    use_tokens: "-runhooks".to_string(),
+                },
+                UseUpdate {
+                    kind: UseUpdateKind::Set,
+                    filter: UseUpdateFilter {
+                        atom: Some("chromeos-base/chromeos-chrome".parse().unwrap()),
+                        stable_only: false,
+                    },
+                    use_tokens: "-runhooks".to_string(),
+                },
+            ]),
+        },
+    ];
     SimpleConfigSource::new(nodes)
 }
 
