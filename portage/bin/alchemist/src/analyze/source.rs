@@ -275,7 +275,7 @@ fn extract_cros_workon_sources(
     }
 
     // Handle regular/missing files.
-    let mut sources: Vec<PackageLocalSource> = source_paths
+    let sources: Vec<PackageLocalSource> = source_paths
         .into_iter()
         .flat_map(|path| {
             let src_name = Path::new(src_dir.file_name().expect("src_dir to have a name"));
@@ -317,17 +317,6 @@ fn extract_cros_workon_sources(
             }
         })
         .collect::<Result<_>>()?;
-
-    // Kernel packages need extra eclasses.
-    // TODO: Remove this hack.
-    if projects
-        .iter()
-        .any(|p| p == "chromiumos/third_party/kernel")
-    {
-        sources.push(PackageLocalSource::Src(
-            "src/third_party/chromiumos-overlay/eclass/cros-kernel".into(),
-        ));
-    }
 
     Ok((sources, repo_sources))
 }

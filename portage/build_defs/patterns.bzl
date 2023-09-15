@@ -31,10 +31,14 @@ OVERLAY_USE_FILE_PATTERN = [
     "profiles/**/use.mask/**",
 ]
 
-# These files don't serve a purpose inside the container.
-OVERLAY_EXCLUDE = [
+# Patterns matching files that aren't used for building packages.
+NON_BUILD_FILE_PATTERNS = [
     "**/OWNERS",
     "**/README",
     "**/README.md",
+]
+
+# These files don't serve a purpose inside the container.
+OVERLAY_EXCLUDE = NON_BUILD_FILE_PATTERNS + [
     "profiles/**/*.desc",
 ]
