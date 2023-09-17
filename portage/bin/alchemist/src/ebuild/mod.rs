@@ -137,7 +137,7 @@ impl PackageDetails {
             .get_indexed_array("__xbuild_defined_phases")
             .expect("__xbuild_defined_phases to exist");
 
-        phases.iter().any(|x| x == "preinst" || x == "postinst")
+        phases.iter().any(|x| x == "preinst" || x == "postinst") || self.inherited.contains("user")
     }
 }
 
