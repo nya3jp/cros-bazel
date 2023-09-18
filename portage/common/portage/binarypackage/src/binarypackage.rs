@@ -24,6 +24,7 @@ pub struct BinaryPackage {
     xpak_start: u64,
     xpak_len: u64,
     xpak: HashMap<String, Vec<u8>>,
+    xpak_order: Vec<String>,
     category_pf: String,
     slot: String,
 }
@@ -49,7 +50,7 @@ impl BinaryPackage {
 
         expect_magic(&mut file, xpak_start, "XPAKPACK").context(CORRUPTED)?;
 
-        let xpak = parse_xpak(&mut file, xpak_start, size)?;
+        let (xpak_order, xpak) = parse_xpak(&mut file, xpak_start, size)?;
 
         let category = std::str::from_utf8(
             xpak.get("CATEGORY")
@@ -74,6 +75,7 @@ impl BinaryPackage {
             xpak_start,
             xpak_len: size - xpak_start,
             xpak,
+            xpak_order,
             category_pf,
             slot,
         })
@@ -82,6 +84,11 @@ impl BinaryPackage {
     /// Returns the XPAK key-value map.
     pub fn xpak(&self) -> &HashMap<String, Vec<u8>> {
         &self.xpak
+    }
+
+    /// Returns the insertion order of the XPAK keys.
+    pub fn xpak_order(&self) -> &Vec<String> {
+        &self.xpak_order
     }
 
     /// Returns the value of SLOT.
@@ -162,7 +169,11 @@ fn expect_magic(f: &mut File, offset: u64, want: &str) -> Result<()> {
     Ok(())
 }
 
-fn parse_xpak(file: &mut File, xpak_start: u64, size: u64) -> Result<HashMap<String, Vec<u8>>> {
+fn parse_xpak(
+    file: &mut File,
+    xpak_start: u64,
+    size: u64,
+) -> Result<(Vec<String>, HashMap<String, Vec<u8>>)> {
     let index_len = u64::from(read_u32(file, xpak_start + 8)?);
     let data_len = u64::from(read_u32(file, xpak_start + 12)?);
     let index_start = xpak_start + 16;
@@ -172,6 +183,7 @@ fn parse_xpak(file: &mut File, xpak_start: u64, size: u64) -> Result<HashMap<Str
     }
 
     let mut xpak: HashMap<String, Vec<u8>> = HashMap::new();
+    let mut xpak_order: Vec<String> = Vec::new();
     let mut index_pos = index_start;
     while index_pos < data_start {
         let name_len = u64::from(read_u32(file, index_pos)?);
@@ -181,6 +193,7 @@ fn parse_xpak(file: &mut File, xpak_start: u64, size: u64) -> Result<HashMap<Str
         if name.len() != name_len.try_into()? {
             bail!("Got '{name}', want a name of length {name_len}")
         }
+
         index_pos += name_len;
         let data_offset = u64::from(read_u32(file, index_pos)?);
         index_pos += 4;
@@ -198,9 +211,10 @@ fn parse_xpak(file: &mut File, xpak_start: u64, size: u64) -> Result<HashMap<Str
             );
         }
 
+        xpak_order.push(name.clone());
         xpak.insert(name, data);
     }
-    Ok(xpak)
+    Ok((xpak_order, xpak))
 }
 
 #[cfg(test)]
@@ -233,6 +247,36 @@ mod tests {
             xpak.get("repository")
                 .map(|x| std::str::from_utf8(x).unwrap()),
             Some("chromiumos\n")
+        );
+        assert_eq!(
+            bp.xpak_order(),
+            &vec![
+                "BUILD_TIME".to_string(),
+                "CATEGORY".to_string(),
+                "CBUILD".to_string(),
+                "CC".to_string(),
+                "CFLAGS".to_string(),
+                "CHOST".to_string(),
+                "CXX".to_string(),
+                "CXXFLAGS".to_string(),
+                "DEFINED_PHASES".to_string(),
+                "EAPI".to_string(),
+                "FEATURES".to_string(),
+                "IUSE".to_string(),
+                "IUSE_EFFECTIVE".to_string(),
+                "KEYWORDS".to_string(),
+                "LDFLAGS".to_string(),
+                "LICENSE".to_string(),
+                "PF".to_string(),
+                "PKG_INSTALL_MASK".to_string(),
+                "SIZE".to_string(),
+                "SLOT".to_string(),
+                "USE".to_string(),
+                "binpkg-test-1.2.3.ebuild".to_string(),
+                "environment.bz2".to_string(),
+                "license.json".to_string(),
+                "repository".to_string(),
+            ],
         );
         Ok(())
     }

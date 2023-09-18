@@ -54,6 +54,59 @@ fn reader_contents_equal(reader_a: &mut impl Read, reader_b: &mut impl Read) -> 
     }
 }
 
+fn diff_xpak_contents(pkg_a: &BinaryPackage, pkg_b: &BinaryPackage) -> Result<()> {
+    let keys_a: HashSet<&String> = pkg_a.xpak_order().iter().collect();
+    let keys_b: HashSet<&String> = pkg_b.xpak_order().iter().collect();
+
+    if keys_a != keys_b {
+        println!("XPAK keys equal - ❌");
+        println!(
+            "  * A: {}\n  \
+                * B: {}\n  \
+                * New keys: {}\n  \
+                * Missing Keys: {}",
+            keys_a.iter().sorted().join(", "),
+            keys_b.iter().sorted().join(", "),
+            keys_b.difference(&keys_a).sorted().join(", "),
+            keys_a.difference(&keys_b).sorted().join(", ")
+        );
+    } else if pkg_a.xpak_order() == pkg_b.xpak_order() {
+        println!("XPAK keys equal - ✅");
+    } else {
+        println!("XPAK key order equal - ❌");
+
+        println!(
+            "  * A: {}\n  * B: {}",
+            pkg_a.xpak_order().join(", "),
+            pkg_b.xpak_order().join(", "),
+        );
+    }
+
+    for key in keys_a.intersection(&keys_b).sorted() {
+        let value_a = pkg_a.xpak().get(*key).expect("key to exist");
+        let value_b = pkg_b.xpak().get(*key).expect("key to exist");
+        if value_a == value_b {
+            continue;
+        }
+
+        println!("  * XPAK key '{:?}' has a value mismatch:", key);
+        if let Ok(value_a) = std::str::from_utf8(value_a) {
+            println!("    * A: {:?}", value_a);
+        } else {
+            println!("    * A: {:x?}", value_a);
+        }
+
+        if let Ok(value_b) = std::str::from_utf8(value_b) {
+            println!("    * B: {:?}", value_b);
+        } else {
+            println!("    * B: {:x?}", value_b);
+        }
+    }
+
+    // TODO: Check the order of the xpak data entries.
+    Ok(())
+}
+
 fn packages_equal(path_a: &Path, path_b: &Path) -> Result<bool> {
     if files_size_equal(path_a, path_b)? {
         println!("File size equal - ✅");
@@ -84,7 +137,7 @@ fn packages_equal(path_a: &Path, path_b: &Path) -> Result<bool> {
         println!("XPAK contents equal - ✅");
     } else {
         println!("XPAK contents equal - ❌");
-        // TODO: compare xpak contents
+        diff_xpak_contents(&pkg_a, &pkg_b)?;
     }
 
     Ok(false)
