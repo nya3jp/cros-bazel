@@ -9,7 +9,7 @@ rust_library(
     name = "package",
     srcs = glob(["src/*.rs"]),
     crate_name = "extract_package_from_manifest_package",
-    data = ["@files//:patchelf"],
+    data = ["@files//:patchelf_symlink"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel/portage/bin/extract_package_from_manifest:__subpackages__"],
     deps = [

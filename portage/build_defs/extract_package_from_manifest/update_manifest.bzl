@@ -68,7 +68,7 @@ update_manifest = rule(
     implementation = _update_manifest_impl,
     attrs = BASH_RUNFILES_ATTRS | EXTRACT_COMMON_ATTRS | dict(
         manifest_file = attr.label(allow_single_file = [".bzl"], mandatory = True),
-        _buildozer = attr.label(default = "@files//:buildozer"),
+        _buildozer = attr.label(default = "@files//:buildozer_symlink"),
         _update_manifest = attr.label(
             executable = True,
             default = "//bazel/portage/bin/extract_package_from_manifest/update_manifest",
