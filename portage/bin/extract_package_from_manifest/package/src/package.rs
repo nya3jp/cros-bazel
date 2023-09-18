@@ -19,9 +19,6 @@ pub struct PackageCommonArgs {
 
     #[arg(long, help = "A regex matching all header files we care about.")]
     pub header_file_dir_regex: Vec<Regex>,
-
-    #[command(flatten)]
-    pub common: common_extract_tarball::CommonArgs,
 }
 
 /// A unique *stable* identifier for a package.
@@ -60,17 +57,14 @@ impl Ord for Package {
 impl Package {
     pub fn create(
         binpkg_path: &Path,
-        out_dir: Option<&Path>,
+        out_dir: &Path,
         package_common_args: &PackageCommonArgs,
     ) -> Result<Self> {
         let mut binpkg = BinaryPackage::open(&binpkg_path)
             .with_context(|| format!("Failed to open {binpkg_path:?}"))?;
 
-        let tarball_content = common_extract_tarball::extract_tarball(
-            &mut binpkg.archive()?,
-            out_dir,
-            package_common_args.common.patch_elf,
-            |path| {
+        let tarball_content =
+            common_extract_tarball::extract_tarball(&mut binpkg.archive()?, out_dir, |path| {
                 // HACK: Rename directories that collide with well-known symlinks.
                 // sys-apps/gentoo-functions writes to /lib, but /lib is really a symlink
                 // provided by glibc to /lib64.
@@ -89,9 +83,8 @@ impl Package {
                 } else {
                     Ok(Some(path))
                 }
-            },
-        )
-        .with_context(|| format!("While trying to extract {binpkg_path:?}"))?;
+            })
+            .with_context(|| format!("While trying to extract {binpkg_path:?}"))?;
 
         // Strip the version from packages. This ensures that if I were to uprev
         // category/name-r1 to category/name-r2, then I wouldn't have to update
@@ -177,13 +170,13 @@ mod tests {
                 },
             ),
         ] {
+            let out = fileutil::SafeTempDir::new()?;
             let pkg = Package::create(
                 &r.rlocation(path),
-                None,
+                out.path(),
                 &PackageCommonArgs {
                     shared_library_dir_regex: vec![Regex::new("/lib64")?, Regex::new("/lib32")?],
                     header_file_dir_regex: vec![Regex::new("/usr/include")?],
-                    common: common_extract_tarball::CommonArgs { patch_elf: false },
                 },
             )?;
             assert_eq!(pkg, want);

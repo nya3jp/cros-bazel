@@ -19,10 +19,6 @@ EXTRACT_COMMON_ATTRS = dict(
         providers = [BinaryPackageSetInfo],
         doc = "The binary package to extract from (including transitive deps)",
     ),
-    patch_elf = attr.bool(
-        default = True,
-        doc = "Whether to patch elf files to run outside of the SDK.",
-    ),
 )
 
 ExtractedPackageSetInfo = provider(

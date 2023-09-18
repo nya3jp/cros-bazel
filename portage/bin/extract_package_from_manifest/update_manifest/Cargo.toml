@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 extract_package_from_manifest_package = { path = "../package" }
 cliutil = { path = "../../../common/cliutil" }
+fileutil = { path = "../../../common/fileutil" }
 
 anyhow.workspace = true
 chrono.workspace = true

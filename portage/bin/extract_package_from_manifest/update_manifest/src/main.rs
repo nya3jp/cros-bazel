@@ -24,10 +24,7 @@ use std::{
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
 struct Cli {
-    #[arg(
-        long,
-        help = "The command to execute to regenerate the manifest"
-    )]
+    #[arg(long, help = "The command to execute to regenerate the manifest")]
     regenerate_command: String,
 
     #[arg(long, required=true, num_args=1.., help="The binary packages to unpack")]
@@ -106,10 +103,11 @@ fn validate_packages(packages: &[Package]) -> Result<()> {
 fn do_main() -> Result<()> {
     let args = Cli::parse();
 
+    let out = fileutil::SafeTempDir::new()?;
     let mut packages = args
         .binpkg
         .into_par_iter()
-        .map(|path| Package::create(&path, None, &args.common))
+        .map(|path| Package::create(&path, out.path(), &args.common))
         .collect::<Result<Vec<Package>>>()?;
 
     let root_package = packages[0].uid.clone();
@@ -138,13 +136,12 @@ fn do_main() -> Result<()> {
         header_file_dirs,
     };
 
-    let mut f = std::fs::File::create(&args.manifest_out)
-        .with_context(|| {
-            format!(
-                "Error while trying to open {:?} for writing",
-                &args.manifest_out
-            )
-        })?;
+    let mut f = std::fs::File::create(&args.manifest_out).with_context(|| {
+        format!(
+            "Error while trying to open {:?} for writing",
+            &args.manifest_out
+        )
+    })?;
     let year = chrono::Utc::now().date_naive().year();
     f.write_fmt(format_args!(
         "# Copyright {year} The ChromiumOS Authors\n\

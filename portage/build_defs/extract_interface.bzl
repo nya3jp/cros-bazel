@@ -10,8 +10,6 @@ def _extract_interface_impl(ctx):
     files = ctx.attr.files
     binpkg = ctx.attr.pkg[BinaryPackageInfo].file
     args = ctx.actions.args()
-    if ctx.attr.patch_elf:
-        args.add("--patch-elf")
     args.add("--binpkg", binpkg)
     outs = []
     executable = None
@@ -43,7 +41,6 @@ _EXTRACT_ATTRS = dict(
         cfg = "exec",
     ),
     pkg = attr.label(mandatory = True, providers = [BinaryPackageInfo]),
-    patch_elf = attr.bool(default = True),
     files = attr.string_dict(mandatory = True),
     executable = attr.string(),
 )

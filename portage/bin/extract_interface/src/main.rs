@@ -34,9 +34,6 @@ struct Cli {
     specified file. If =? is used then an empty file is created if XPAK key doesn't exist."
     )]
     xpak: Vec<XpakSpec>,
-
-    #[command(flatten)]
-    common: common_extract_tarball::CommonArgs,
 }
 
 fn extract_xpak_files(pkg: &mut BinaryPackage, specs: &[XpakSpec]) -> Result<()> {
@@ -53,11 +50,7 @@ fn extract_xpak_files(pkg: &mut BinaryPackage, specs: &[XpakSpec]) -> Result<()>
     Ok(())
 }
 
-fn extract_out_files(
-    binpkg: &mut BinaryPackage,
-    specs: &[OutputFileSpec],
-    patch_elf: bool,
-) -> Result<()> {
+fn extract_out_files(binpkg: &mut BinaryPackage, specs: &[OutputFileSpec]) -> Result<()> {
     if specs.is_empty() {
         return Ok(());
     }
@@ -66,16 +59,12 @@ fn extract_out_files(
         .iter()
         .map(|spec| (spec.inside_path.as_path(), spec.target_path.as_path()))
         .collect();
-    let content = common_extract_tarball::extract_tarball(
-        &mut binpkg.archive()?,
-        Some(Path::new(".")),
-        patch_elf,
-        |path| {
+    let content =
+        common_extract_tarball::extract_tarball(&mut binpkg.archive()?, Path::new("."), |path| {
             Ok(want_files
                 .get(Path::new("/").join(path).as_path())
                 .map(|p| p.to_path_buf()))
-        },
-    )?;
+        })?;
 
     let got_paths: BTreeSet<&Path> = content.all_files().collect();
 
@@ -92,25 +81,19 @@ fn extract_files(
     bin_pkg: &Path,
     xpak_specs: &[XpakSpec],
     output_file_specs: &[OutputFileSpec],
-    patch_elf: bool,
 ) -> Result<()> {
     if xpak_specs.is_empty() && output_file_specs.is_empty() {
         return Ok(());
     }
     let mut pkg = BinaryPackage::open(bin_pkg)?;
     extract_xpak_files(&mut pkg, xpak_specs)?;
-    extract_out_files(&mut pkg, output_file_specs, patch_elf)?;
+    extract_out_files(&mut pkg, output_file_specs)?;
     Ok(())
 }
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
-    extract_files(
-        &args.binpkg,
-        &args.xpak,
-        &args.output_file,
-        args.common.patch_elf,
-    )
+    extract_files(&args.binpkg, &args.xpak, &args.output_file)
 }
 
 fn main() -> ExitCode {
@@ -181,7 +164,7 @@ mod tests {
             target_path: tmp_dir.path().join("nano"),
         };
 
-        extract_out_files(&mut bp, &[nano.clone()], false)?;
+        extract_out_files(&mut bp, &[nano.clone()])?;
         let nano_md = std::fs::metadata(nano.target_path)?;
         assert_eq!(nano_md.mode() & 0o777, 0o755);
         assert_eq!(nano_md.size(), NANO_SIZE);

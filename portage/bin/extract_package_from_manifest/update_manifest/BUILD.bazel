@@ -13,6 +13,7 @@ rust_binary(
     deps = [
         "//bazel/portage/bin/extract_package_from_manifest/package",
         "//bazel/portage/common/cliutil",
+        "//bazel/portage/common/fileutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:chrono",
         "@alchemy_crates//:clap",
