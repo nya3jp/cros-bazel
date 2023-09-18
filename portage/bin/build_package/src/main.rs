@@ -40,6 +40,14 @@ struct Cli {
     #[arg(long, help = "Git trees used by CROS_WORKON_TREE")]
     git_tree: Vec<PathBuf>,
 
+    #[arg(
+        long,
+        help = "USE flags to set when building. \
+                This must be the full set of all possible USE flags. i.e., IUSE_EFFECTIVE",
+        value_delimiter = ','
+    )]
+    use_flags: Vec<String>,
+
     #[arg(long)]
     output: Option<PathBuf>,
 
@@ -99,7 +107,7 @@ struct EbuildMetadata {
     source: PathBuf,
     mount_path: PathBuf,
     category: String,
-    _package_name: String,
+    package_name: String,
     file_name: String,
 }
 
@@ -120,10 +128,39 @@ impl FromStr for EbuildMetadata {
             source: source.into(),
             mount_path: path.into(),
             category: parts[parts.len() - 3].into(),
-            _package_name: parts[parts.len() - 2].into(),
+            package_name: parts[parts.len() - 2].into(),
             file_name: parts[parts.len() - 1].into(),
         })
     }
+}
+
+/// Writes a package.use for the specific package that sets the specified USE flags.
+/// If there are no flags, nothing is written.
+fn write_use_flags(
+    sysroot: &Path,
+    package: &EbuildMetadata,
+    use_flags: &Vec<String>,
+) -> Result<()> {
+    if use_flags.is_empty() {
+        return Ok(());
+    }
+
+    let profile_path = sysroot.join("etc").join("portage").join("profile");
+    std::fs::create_dir_all(&profile_path)?;
+
+    let package_use_path = profile_path.join("package.use");
+
+    let content = format!(
+        "{}/{} {}",
+        package.category,
+        package.package_name,
+        use_flags.join(" ")
+    );
+
+    std::fs::write(&package_use_path, content)
+        .with_context(|| format!("Error creating {package_use_path:?}"))?;
+
+    Ok(())
 }
 
 fn do_main() -> Result<()> {
@@ -141,7 +178,7 @@ fn do_main() -> Result<()> {
     });
 
     settings.push_bind_mount(BindMount {
-        source: args.ebuild.source,
+        source: args.ebuild.source.clone(),
         mount_path: args.ebuild.mount_path.clone(),
         rw: false,
     });
@@ -220,11 +257,13 @@ fn do_main() -> Result<()> {
 
     let sysroot = match &args.board {
         Some(board) => root_dir.join("build").join(board),
-        None => root_dir.to_owned(),
+        None => root_dir,
     };
     for spec in args.sysroot_file {
         spec.install(&sysroot)?;
     }
+
+    write_use_flags(&sysroot, &args.ebuild, &args.use_flags)?;
 
     let mut command = container.command(MAIN_SCRIPT);
     command

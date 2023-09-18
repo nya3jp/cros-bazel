@@ -2,19 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@//bazel/portage/build_defs:overlay.bzl", "overlay")
-
-# The list of files that are only needed when invoking emerge. We don't need
-# these when building a package since alchemist has performed the analysis.
-ANALYSIS_FILE_PATTERN = [
-    "profiles/**/package.accept_keywords",
-    "profiles/**/package.keywords",
-    "profiles/**/package.mask",
-    "profiles/**/package.provided",
-    "profiles/**/package.unmask",
-]
+load("@//bazel/portage/build_defs:patterns.bzl", "OVERLAY_ANALYSIS_FILE_PATTERN", "OVERLAY_EXCLUDE", "OVERLAY_USE_FILE_PATTERN")
 
 # We strip the BINHOST variables from the make.conf because they change
 # every time the SDK builder runs. We don't use this variable when building
@@ -29,10 +20,20 @@ genrule(
 pkg_files(
     name = "amd64-host-files",
     srcs = [
-        ":amd64-host-make-conf"
+        ":amd64-host-make-conf",
     ],
     prefix = "{{ mount_path }}/chromeos/config",
     strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+# Since we filter out the use.mask files below, this directory never gets
+# created. We need the directory to exist because it's the root profile.
+pkg_mkdirs(
+    name = "arch_dir",
+    dirs = [
+        "{{ mount_path }}/profiles/arch/base",
+    ],
     visibility = ["//visibility:private"],
 )
 
@@ -43,7 +44,7 @@ pkg_files(
     ] + glob([
         "chromeos/**",
         "licenses/**",
-        "profiles/**",
+
         # HACK: Include CrOS-specific bashrc files that override profile vars
         # and several other files referenced by them.
         #
@@ -65,14 +66,23 @@ pkg_files(
         "sys-apps/mawk/files/*.patch",
         "sys-devel/bc/files/*.patch",
         "*/*/files/*_waf_config_answers",
-    ], exclude = ANALYSIS_FILE_PATTERN + [
-        "**/OWNERS",
-        "**/README",
-        "**/README.md",
-        "profiles/**/*.desc",
+    ], exclude = OVERLAY_EXCLUDE + [
         "chromeos/binhost/**",
         "chromeos/config/make.conf.amd64-host",
-    ]),
+        "profiles/**/*.bashrc",
+    ]) + select({
+        "//:alchemist-use-flags": glob(
+            ["profiles/**"],
+            exclude = OVERLAY_EXCLUDE +
+                      OVERLAY_ANALYSIS_FILE_PATTERN +
+                      OVERLAY_USE_FILE_PATTERN,
+        ),
+        "//:portage-use-flags": glob(
+            ["profiles/**"],
+            exclude = OVERLAY_EXCLUDE +
+                      OVERLAY_ANALYSIS_FILE_PATTERN,
+        ),
+    }),
     prefix = "{{ mount_path }}",
     # chromeos/scripts/config_wrapper must be executable
     attributes = pkg_attributes(
@@ -87,7 +97,7 @@ pkg_tar(
     extension = "tar.zst",
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
-    srcs = [":files", ":amd64-host-files"],
+    srcs = [":arch_dir", ":files", ":amd64-host-files"],
     visibility = ["//visibility:private"],
 )
 
@@ -103,7 +113,10 @@ pkg_files(
     srcs = [
         # Required by build_image.
         "sys-boot/grub/files/sbat.csv",
-    ] + glob(ANALYSIS_FILE_PATTERN),
+    ] + glob(OVERLAY_ANALYSIS_FILE_PATTERN) + select({
+        "//:alchemist-use-flags": glob(OVERLAY_USE_FILE_PATTERN),
+        "//:portage-use-flags": [],
+    }),
     prefix = "{{ mount_path }}",
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],

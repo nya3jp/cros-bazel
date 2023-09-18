@@ -51,6 +51,10 @@ ebuild(
     ],
     use_flags = [
     ],
+    inject_use_flags = select({
+        "//:alchemist-use-flags": True,
+        "//:portage-use-flags": False,
+    }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_deps",
@@ -87,6 +91,10 @@ suffix = "_hermetic_test_package",
     ],
     use_flags = [
     ],
+    inject_use_flags = select({
+        "//:alchemist-use-flags": True,
+        "//:portage-use-flags": False,
+    }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_deps",
@@ -119,7 +127,12 @@ ebuild_debug(
         "//internal/sources/src/scripts/hooks:__tarballs__",
         "@chromite//:src",
     ],
-    # use = "[]",
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "//:alchemist-use-flags": True,
+        "//:portage-use-flags": False,
+    }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_deps",
@@ -162,7 +175,12 @@ ebuild_test(
         "//internal/sources/src/scripts/hooks:__tarballs__",
         "@chromite//:src",
     ],
-    # use = "[]",
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "//:alchemist-use-flags": True,
+        "//:portage-use-flags": False,
+    }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_test_deps",

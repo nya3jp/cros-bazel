@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 
 package_group(
     name = "all_packages",
@@ -47,5 +47,24 @@ config_setting(
     name = "stage2",
     flag_values = {
         ":default-stage": "stage2",
+    },
+)
+
+bool_flag(
+    name = "compiled-use-flags",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "alchemist-use-flags",
+    flag_values = {
+        ":compiled-use-flags": "True",
+    },
+)
+
+config_setting(
+    name = "portage-use-flags",
+    flag_values = {
+        ":compiled-use-flags": "False",
     },
 )

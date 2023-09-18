@@ -7,29 +7,29 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@//bazel/portage/build_defs:overlay.bzl", "overlay")
-
-# The list of files that are only needed when invoking emerge. We don't need
-# these when building a package since alchemist has performed the analysis.
-ANALYSIS_FILE_PATTERN=[
-    "profiles/**/package.accept_keywords",
-    "profiles/**/package.keywords",
-    "profiles/**/package.mask",
-    "profiles/**/package.provided",
-    "profiles/**/package.unmask",
-]
+load("@//bazel/portage/build_defs:patterns.bzl", "OVERLAY_ANALYSIS_FILE_PATTERN", "OVERLAY_EXCLUDE", "OVERLAY_USE_FILE_PATTERN")
 
 pkg_files(
     name = "files",
-    srcs = ["metadata/layout.conf"] + glob([
-        "licenses/**",
-        "profiles/**",
-        "make.conf",
-    ], exclude = ANALYSIS_FILE_PATTERN + [
-        "**/OWNERS",
-        "**/README",
-        "**/README.md",
-        "profiles/**/*.desc",
-    ]),
+    srcs = ["metadata/layout.conf"] + glob(
+        [
+            "licenses/**",
+            "make.conf",
+        ],
+        exclude = OVERLAY_EXCLUDE,
+    ) + select({
+        "//:alchemist-use-flags": glob(
+            ["profiles/**"],
+            exclude = OVERLAY_EXCLUDE +
+                      OVERLAY_ANALYSIS_FILE_PATTERN +
+                      OVERLAY_USE_FILE_PATTERN,
+        ),
+        "//:portage-use-flags": glob(
+            ["profiles/**"],
+            exclude = OVERLAY_EXCLUDE +
+                      OVERLAY_ANALYSIS_FILE_PATTERN,
+        ),
+    }),
     prefix = "mnt/host/source/src/overlays/overlay-amd64-generic",
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
@@ -53,7 +53,7 @@ overlay(
 
 pkg_files(
     name = "files-full",
-    srcs = glob(ANALYSIS_FILE_PATTERN),
+    srcs = glob(OVERLAY_ANALYSIS_FILE_PATTERN),
     prefix = "mnt/host/source/src/overlays/overlay-amd64-generic",
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],

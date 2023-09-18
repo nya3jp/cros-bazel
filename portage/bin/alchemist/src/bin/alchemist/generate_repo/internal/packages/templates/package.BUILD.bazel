@@ -199,6 +199,10 @@ ebuild(
         "{{ flag }}",
         {%- endfor %}
     ],
+    inject_use_flags = select({
+        "//:alchemist-use-flags": True,
+        "//:portage-use-flags": False,
+    }),
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}
     board = "{{ target_board }}",
@@ -276,7 +280,15 @@ ebuild_debug(
         {%- endfor %}
     ],
     {%- endif %}
-    # use = "{{ ebuild.uses }}",
+    use_flags = [
+        {%- for flag in ebuild.uses %}
+        "{{ flag }}",
+        {%- endfor %}
+    ],
+    inject_use_flags = select({
+        "//:alchemist-use-flags": True,
+        "//:portage-use-flags": False,
+    }),
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}
     board = "{{ target_board }}",
@@ -366,7 +378,15 @@ ebuild_test(
         {%- endfor %}
     ],
     {%- endif %}
-    # use = "{{ ebuild.uses }}",
+    use_flags = [
+        {%- for flag in ebuild.uses %}
+        "{{ flag }}",
+        {%- endfor %}
+    ],
+    inject_use_flags = select({
+        "//:alchemist-use-flags": True,
+        "//:portage-use-flags": False,
+    }),
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}
     board = "{{ target_board }}",

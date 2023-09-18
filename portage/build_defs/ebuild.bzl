@@ -84,6 +84,19 @@ _EBUILD_COMMON_ATTRS = dict(
         allow_empty = True,
         allow_files = True,
     ),
+    use_flags = attr.string_list(
+        allow_empty = True,
+        doc = """
+        The USE flags used to build the package.
+        """,
+    ),
+    inject_use_flags = attr.bool(
+        default = False,
+        doc = """
+        Inject the USE flags into the container as opposed to letting portage
+        compute them.
+        """,
+    ),
     files = attr.label_list(
         allow_files = True,
     ),
@@ -234,6 +247,10 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # --allow-network-access
     if ctx.attr.allow_network_access:
         args.add("--allow-network-access")
+
+    # --use-flags
+    if ctx.attr.inject_use_flags:
+        args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",")
 
     # Consume interface libraries.
     interface_library_inputs = add_interface_library_args(
@@ -457,12 +474,6 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             allow_empty = True,
             doc = """
             The path inside the binpkg that contains static libraries.
-            """,
-        ),
-        use_flags = attr.string_list(
-            allow_empty = True,
-            doc = """
-            The USE flags the binpkg is expected to have.
             """,
         ),
         suffix = attr.string(
