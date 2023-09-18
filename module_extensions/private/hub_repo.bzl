@@ -5,6 +5,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 load("//bazel/repo_defs:cipd.bzl", "cipd_file")
 load("//bazel/repo_defs:gs.bzl", "gs_file")
+load("//bazel/repo_defs:prebuilt_binpkg.bzl", "prebuilt_binpkg")
 
 _SELECT_ALIAS_OR_SYMLINK_ERR = """
 
@@ -125,5 +126,6 @@ def hub_init():
         http_archive = wrap(http_archive, default_targets = "//:src"),
         gs_file = wrap(gs_file, default_targets = "//file"),
         cipd_file = wrap(cipd_file, default_targets = "//file"),
+        prebuilt_binpkg = wrap(prebuilt_binpkg, default_targets = "//:binpkg"),
         generate_hub_repo = generate_hub_repo,
     )
