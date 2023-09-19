@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+mod b299934607;
+
 use anyhow::{ensure, Context, Result};
 use chrome_trace::{Event, Phase, Trace};
 use clap::Parser;
@@ -165,6 +167,8 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
 }
 
 fn do_main(args: Cli) -> Result<ExitStatus> {
+    b299934607::check_durable_trees(&args.command_line)?;
+
     let mut command = if args.privileged {
         ensure_passwordless_sudo()?;
         let mut command = Command::new(SUDO_PATH);

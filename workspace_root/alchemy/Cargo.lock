@@ -15,6 +15,7 @@ dependencies = [
  "nix",
  "processes",
  "regex",
+ "runfiles",
  "serde_json",
  "tempfile",
 ]
