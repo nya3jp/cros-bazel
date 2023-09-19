@@ -51,7 +51,9 @@ pub struct ValidatePackageArgs {
     touch: Option<PathBuf>,
 }
 
-fn extract_use_flags(package: &BinaryPackage) -> Result<HashSet<String>> {
+/// Returns a set of the USE flags that were enabled when the package was built.
+/// This doesn't include any flags that were disabled.
+fn extract_use_flags(package: &binarypackage::BinaryPackage) -> Result<HashSet<&str>> {
     let use_flags = std::str::from_utf8(
         package
             .xpak()
@@ -59,21 +61,31 @@ fn extract_use_flags(package: &BinaryPackage) -> Result<HashSet<String>> {
             .context("USE XPAK entry not found")?,
     )?;
 
-    Ok(use_flags
-        .split_whitespace()
-        .map(|flag| flag.to_string())
-        .collect())
+    Ok(use_flags.split_whitespace().collect())
+}
+
+/// Returns a set of all possible USE flags that could have been enabled
+/// when the package was built.
+fn extract_iuse_effective_flags(package: &binarypackage::BinaryPackage) -> Result<HashSet<&str>> {
+    let use_flags = std::str::from_utf8(
+        package
+            .xpak()
+            .get("IUSE_EFFECTIVE")
+            .context("IUSE_EFFECTIVE XPAK entry not found")?,
+    )?;
+
+    Ok(use_flags.split_whitespace().collect())
 }
 
 pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
     let package =
         BinaryPackage::open(&args.package).with_context(|| format!("{:?}", args.package))?;
 
-    if let Some(expected_use_flags) = args.use_flags {
+    if let Some(input_use_flags) = args.use_flags {
         let actual_use_flags = extract_use_flags(&package)?;
-        let expected_use_flags = expected_use_flags
-            .into_iter()
-            .filter_map(|(k, v)| v.then_some(k))
+        let expected_use_flags = input_use_flags
+            .iter()
+            .filter_map(|(k, v)| v.then_some(k.as_ref()))
             .collect();
 
         if actual_use_flags != expected_use_flags {
@@ -92,6 +104,30 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
                     .join(", "),
                 expected_use_flags
                     .difference(&actual_use_flags)
+                    .sorted()
+                    .join(", "),
+            );
+        }
+
+        let actual_iuse_effective_flags = extract_iuse_effective_flags(&package)?;
+        let expected_iuse_effective_flags = input_use_flags.keys().map(|k| k.as_ref()).collect();
+
+        if actual_iuse_effective_flags != expected_iuse_effective_flags {
+            bail!(
+                "\n* IUSE Flag mismatch!\n  \
+                Expected IUSE: {}\n  \
+                Actual IUSE: {}\n  \
+                Extra flags: {}\n  \
+                Missing flags: {}\n  \
+                ",
+                expected_iuse_effective_flags.iter().sorted().join(", "),
+                actual_iuse_effective_flags.iter().sorted().join(", "),
+                actual_iuse_effective_flags
+                    .difference(&expected_iuse_effective_flags)
+                    .sorted()
+                    .join(", "),
+                expected_iuse_effective_flags
+                    .difference(&actual_iuse_effective_flags)
                     .sorted()
                     .join(", "),
             );
@@ -188,13 +224,13 @@ mod tests {
         assert_eq!(
             flags,
             HashSet::from([
-                "abi_x86_64".to_string(),
-                "amd64".to_string(),
-                "ncurses".to_string(),
-                "spell".to_string(),
-                "kernel_linux".to_string(),
-                "userland_GNU".to_string(),
-                "elibc_glibc".to_string(),
+                "abi_x86_64",
+                "amd64",
+                "ncurses",
+                "spell",
+                "kernel_linux",
+                "userland_GNU",
+                "elibc_glibc",
             ])
         );
 
@@ -207,16 +243,97 @@ mod tests {
             package: testdata(BINPKG)?,
             touch: None,
             use_flags: Some(HashMap::from([
-                ("abi_x86_64".to_string(), true),
-                ("abi_arm".to_string(), false),
-                ("abi_arm64".to_string(), false),
-                ("amd64".to_string(), true),
-                ("arm".to_string(), false),
-                ("ncurses".to_string(), true),
-                ("spell".to_string(), true),
-                ("kernel_linux".to_string(), true),
-                ("userland_GNU".to_string(), true),
-                ("elibc_glibc".to_string(), true),
+                ("abi_x86_64".into(), true),
+                ("alpha".into(), false),
+                ("amd64".into(), true),
+                ("amd64-fbsd".into(), false),
+                ("amd64-linux".into(), false),
+                ("arm".into(), false),
+                ("arm-linux".into(), false),
+                ("arm64".into(), false),
+                ("debug".into(), false),
+                ("elibc_AIX".into(), false),
+                ("elibc_bionic".into(), false),
+                ("elibc_Cygwin".into(), false),
+                ("elibc_Darwin".into(), false),
+                ("elibc_DragonFly".into(), false),
+                ("elibc_FreeBSD".into(), false),
+                ("elibc_glibc".into(), false),
+                ("elibc_glibc".into(), true),
+                ("elibc_HPUX".into(), false),
+                ("elibc_Interix".into(), false),
+                ("elibc_mingw".into(), false),
+                ("elibc_mintlib".into(), false),
+                ("elibc_musl".into(), false),
+                ("elibc_NetBSD".into(), false),
+                ("elibc_OpenBSD".into(), false),
+                ("elibc_SunOS".into(), false),
+                ("elibc_uclibc".into(), false),
+                ("elibc_Winnt".into(), false),
+                ("hppa".into(), false),
+                ("hppa-hpux".into(), false),
+                ("ia64".into(), false),
+                ("ia64-hpux".into(), false),
+                ("ia64-linux".into(), false),
+                ("justify".into(), false),
+                ("kernel_AIX".into(), false),
+                ("kernel_Darwin".into(), false),
+                ("kernel_FreeBSD".into(), false),
+                ("kernel_freemint".into(), false),
+                ("kernel_HPUX".into(), false),
+                ("kernel_linux".into(), false),
+                ("kernel_linux".into(), true),
+                ("kernel_NetBSD".into(), false),
+                ("kernel_OpenBSD".into(), false),
+                ("kernel_SunOS".into(), false),
+                ("kernel_Winnt".into(), false),
+                ("m68k".into(), false),
+                ("m68k-mint".into(), false),
+                ("magic".into(), false),
+                ("minimal".into(), false),
+                ("mips".into(), false),
+                ("ncurses".into(), true),
+                ("nios2".into(), false),
+                ("nls".into(), false),
+                ("ppc".into(), false),
+                ("ppc-aix".into(), false),
+                ("ppc-macos".into(), false),
+                ("ppc-openbsd".into(), false),
+                ("ppc64".into(), false),
+                ("ppc64-linux".into(), false),
+                ("prefix".into(), false),
+                ("prefix-guest".into(), false),
+                ("prefix-stack".into(), false),
+                ("riscv".into(), false),
+                ("s390".into(), false),
+                ("sh".into(), false),
+                ("sparc".into(), false),
+                ("sparc-fbsd".into(), false),
+                ("sparc-solaris".into(), false),
+                ("sparc64-freebsd".into(), false),
+                ("sparc64-solaris".into(), false),
+                ("spell".into(), true),
+                ("split-usr".into(), false),
+                ("static".into(), false),
+                ("unicode".into(), false),
+                ("userland_BSD".into(), false),
+                ("userland_GNU".into(), true),
+                ("x64-cygwin".into(), false),
+                ("x64-freebsd".into(), false),
+                ("x64-macos".into(), false),
+                ("x64-openbsd".into(), false),
+                ("x64-solaris".into(), false),
+                ("x86".into(), false),
+                ("x86-cygwin".into(), false),
+                ("x86-fbsd".into(), false),
+                ("x86-freebsd".into(), false),
+                ("x86-interix".into(), false),
+                ("x86-linux".into(), false),
+                ("x86-macos".into(), false),
+                ("x86-netbsd".into(), false),
+                ("x86-openbsd".into(), false),
+                ("x86-solaris".into(), false),
+                ("x86-winnt".into(), false),
             ])),
         };
 
@@ -230,10 +347,7 @@ mod tests {
         let args = ValidatePackageArgs {
             package: testdata(BINPKG)?,
             touch: None,
-            use_flags: Some(HashMap::from([
-                ("foo".to_string(), true),
-                ("bar".to_string(), false),
-            ])),
+            use_flags: Some(HashMap::from([("foo".into(), true), ("bar".into(), false)])),
         };
 
         assert!(do_validate_package(args).is_err());
