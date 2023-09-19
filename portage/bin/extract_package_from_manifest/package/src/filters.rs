@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use regex::Regex;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
@@ -23,36 +23,12 @@ pub fn filter_shared_libs<'a>(
     paths: &[&'a Path],
     directory_regexes: &[Regex],
 ) -> Result<Vec<&'a Path>> {
-    let file_name_regex = Regex::new(r"^.+\.so(?:\.[0-9]+){0,3}$").unwrap();
-    let mut ordered_paths = paths
-        .iter()
-        .flat_map(|p| {
-            let file_name = p.file_name()?.to_string_lossy();
-            if file_name_regex.is_match(&file_name) {
-                let dir = p.parent()?.to_string_lossy();
-                directory_regexes
-                    .iter()
-                    .enumerate()
-                    .find(|(_, matcher)| matcher.is_match(&dir))
-                    .map(|(idx, _)| (idx, *p))
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
-
-    ordered_paths.sort();
-
-    let mut seen: HashSet<&OsStr> = HashSet::new();
-    let mut shared_libs: Vec<&'a Path> = vec![];
-    for (_, path) in ordered_paths {
-        let name = path.file_name().unwrap();
-        if seen.insert(name) {
-            shared_libs.push(path);
-        }
-    }
-    shared_libs.sort();
-    Ok(shared_libs)
+    let ld_library_path = crate::library_path::generate_ld_library_path(paths, directory_regexes)?;
+    Ok(
+        crate::library_path::calculate_shared_libraries(paths, &ld_library_path)?
+            .into_iter()
+            .collect(),
+    )
 }
 
 #[derive(Debug, PartialEq)]
@@ -107,61 +83,6 @@ pub fn filter_header_files(paths: &[&Path], directory_regexes: &[Regex]) -> Resu
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_requires_shared_library() -> Result<()> {
-        assert_eq!(
-            filter_shared_libs(
-                &[
-                    Path::new("/path/to/libfoo"),
-                    Path::new("/path/to/libfoo.so"),
-                    Path::new("/path/to/libfoo.so.1"),
-                    Path::new("/path/to/libfoo.so.1.2"),
-                    Path::new("/path/to/libfoo.so.1.2.3"),
-                ],
-                &[Regex::new("/path/to")?]
-            )?,
-            vec![
-                PathBuf::from("/path/to/libfoo.so"),
-                PathBuf::from("/path/to/libfoo.so.1"),
-                PathBuf::from("/path/to/libfoo.so.1.2"),
-                PathBuf::from("/path/to/libfoo.so.1.2.3"),
-            ]
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn test_priorities() -> Result<()> {
-        assert_eq!(
-            filter_shared_libs(
-                &[
-                    Path::new("/high/priority/path/to/libfoo.so"),
-                    Path::new("/low/priority/path/to/libfoo.so"),
-                ],
-                &[
-                    Regex::new("/high/priority/path/to")?,
-                    Regex::new("/low/priority/path/to")?,
-                ],
-            )?,
-            vec![PathBuf::from("/high/priority/path/to/libfoo.so"),]
-        );
-
-        assert_eq!(
-            filter_shared_libs(
-                &[
-                    Path::new("/low/priority/path/to/libfoo.so"),
-                    Path::new("/high/priority/path/to/libfoo.so"),
-                ],
-                &[
-                    Regex::new("/high/priority/path/to")?,
-                    Regex::new("/low/priority/path/to")?,
-                ],
-            )?,
-            vec![PathBuf::from("/high/priority/path/to/libfoo.so"),]
-        );
-        Ok(())
-    }
 
     #[test]
     fn test_invalid_headers() -> Result<()> {
