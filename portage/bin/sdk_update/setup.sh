@@ -40,7 +40,8 @@ do
     sed -e "s/PYTHON_VERSION/${PYTHON_VERSION}/g" \
         -e "s/PYTHON_LIBDIR/${PYTHON_LIBDIR}/g" \
       /usr/src/portage/0001-bin-Add-binpkg-hermetic-feature.patch \
-      /usr/src/portage/0002-bin-phase-functions-Move-du-stats-into-subshell.patch
+      /usr/src/portage/0002-bin-phase-functions-Move-du-stats-into-subshell.patch \
+      /usr/src/portage/0003-config-Don-t-directly-modify-FEATURES.patch
   )
 
   # TODO: Consider using fakeroot-like approach to emulate file permissions.

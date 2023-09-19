@@ -1,0 +1,34 @@
+From 3ea752fbefda2e030c8e7614d891b8bc82a78df0 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Tue, 19 Sep 2023 12:35:18 -0600
+Subject: [PATCH] config: Don't directly modify FEATURES
+
+Iterating on self.features returns items in a non-deterministic order,
+it also leaves self.features out of sync. If we instead use the `remove`
+method, the values get sorted and synchronized correctly.
+
+BUG=b:300690593
+TEST=BOARD=amd64-generic bazel build @portage//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r22_hermetic_test
+
+Change-Id: I0af29d5d41e5303a2f88f4f35f61ae91481c62dd
+---
+ usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/config.py | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/config.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/config.py
+index 075a9b1d9d..f8abe8fdd0 100644
+--- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/config.py
++++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/config.py
+@@ -1800,8 +1800,7 @@ class config(object):
+ 				# "test" is in IUSE and USE=test is masked, so execution
+ 				# of src_test() probably is not reliable. Therefore,
+ 				# temporarily disable FEATURES=test just for this package.
+-				self["FEATURES"] = " ".join(x for x in self.features \
+-					if x != "test")
++				self.features.remove("test")
+ 
+ 		if eapi_attrs.feature_flag_targetroot and \
+ 			("targetroot" in explicit_iuse or iuse_implicit_match("targetroot")):
+-- 
+2.42.0.459.ge4e396fd5e-goog
+
