@@ -182,6 +182,7 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
          * checking host system type... Invalid configuration `aarch64-cros-linux-gnu': machine `aarch64-cros' not recognized
          */
         ("dev-libs/libdaemon", DependencyKind::BuildHost { .. }) => "sys-devel/gnuconfig",
+        ("net-misc/iperf", DependencyKind::BuildHost { .. }) => "sys-devel/gnuconfig",
 
         /*
          * aclocal-1.15: command not found
