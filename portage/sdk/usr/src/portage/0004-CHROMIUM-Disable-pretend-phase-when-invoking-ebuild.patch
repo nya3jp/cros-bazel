@@ -1,0 +1,32 @@
+From ae73862e21980b0d98e089f13ad466a98aad6612 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Tue, 19 Sep 2023 16:46:18 -0600
+Subject: [PATCH] CHROMIUM: Disable pretend phase when invoking ebuild
+
+This changes disables the pretend phase from getting automatically
+called when using the `ebuild package` command.
+
+BUG=b:280233260
+TEST=rm -rf  /build/amd64-host/tmp/portage && 'ebuild' '--skip-manifest' '/mnt/host/source/src/third_party/eclass-overlay/acct-user/fwupd/fwupd-0.0.1.ebuild' 'package'
+
+Change-Id: I96e5c326c9600aa87218fbf6b6973b4b01df7119
+---
+ usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
+index 2e0a247f93..084c3ad7e6 100644
+--- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
++++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
+@@ -688,7 +688,7 @@ def doebuild(myebuild, mydo, _unused=DeprecationWarning, settings=None, debug=0,
+ 	# to collapse targets down.
+ 	actionmap_deps={
+ 	"pretend"  : [],
+-	"setup":  ["pretend"],
++	"setup":  [], # CrOS: We don't use pretend.
+ 	"unpack": ["setup"],
+ 	"prepare": ["unpack"],
+ 	"configure": ["prepare"],
+-- 
+2.42.0.459.ge4e396fd5e-goog
+

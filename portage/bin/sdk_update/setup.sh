@@ -41,7 +41,8 @@ do
         -e "s/PYTHON_LIBDIR/${PYTHON_LIBDIR}/g" \
       /usr/src/portage/0001-bin-Add-binpkg-hermetic-feature.patch \
       /usr/src/portage/0002-bin-phase-functions-Move-du-stats-into-subshell.patch \
-      /usr/src/portage/0003-config-Don-t-directly-modify-FEATURES.patch
+      /usr/src/portage/0003-config-Don-t-directly-modify-FEATURES.patch \
+      /usr/src/portage/0004-CHROMIUM-Disable-pretend-phase-when-invoking-ebuild.patch
   )
 
   # TODO: Consider using fakeroot-like approach to emulate file permissions.

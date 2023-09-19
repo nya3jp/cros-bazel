@@ -8,7 +8,6 @@ use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use std::{
     collections::HashSet,
-    fs::File,
     os::unix::process::ExitStatusExt,
     path::{Path, PathBuf},
     process::ExitCode,
@@ -236,24 +235,11 @@ fn do_main() -> Result<()> {
 
     let root_dir = container.root_dir().to_owned();
 
+    // Ensure PORTAGE_TMPDIR exists
+    std::fs::create_dir_all(root_dir.join(portage_tmp_dir.strip_prefix("/")?))?;
+
     let out_dir = root_dir.join(portage_pkg_dir.strip_prefix("/")?);
     std::fs::create_dir_all(out_dir)?;
-
-    // HACK: CrOS disables pkg_pretend in emerge(1), but ebuild(1) still tries to
-    // run it.
-    // TODO(b/280233260): Remove this hack once we fix ebuild(1).
-    let pretend_stamp_path = root_dir
-        .join(portage_tmp_dir.strip_prefix("/")?)
-        .join(&args.ebuild.category)
-        .join(
-            args.ebuild
-                .file_name
-                .strip_suffix(EBUILD_EXT)
-                .with_context(|| anyhow!("Ebuild file must end with .ebuild"))?,
-        )
-        .join(".pretended");
-    std::fs::create_dir_all(pretend_stamp_path.parent().unwrap())?;
-    File::create(pretend_stamp_path)?;
 
     let sysroot = match &args.board {
         Some(board) => root_dir.join("build").join(board),
