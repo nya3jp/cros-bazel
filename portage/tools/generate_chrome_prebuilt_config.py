@@ -9,14 +9,15 @@ import logging
 import os
 import re
 import subprocess
+from typing import Dict, List
 
 
-def _run_command(args: list[str]) -> str:
+def _run_command(args: List[str]) -> str:
     """Runs the specified command and returns its output."""
     return subprocess.check_output(args, encoding="utf-8")
 
 
-def _resolve_alias(label: str) -> list[str]:
+def _resolve_alias(label: str) -> List[str]:
     """Resolves the specified Bazel alias and returns its actual labels."""
     actuals = _run_command(
         ["bazel", "query", f"labels('actual', {label})"]
@@ -34,7 +35,7 @@ def _get_chromeos_version_sh_path() -> str:
     )
 
 
-def _get_chromeos_version_info() -> dict[str, str]:
+def _get_chromeos_version_info() -> Dict[str, str]:
     """Returns ChromeOS version info."""
     result = {}
     for line in _run_command([_get_chromeos_version_sh_path()]).split("\n"):
