@@ -12,6 +12,7 @@ require (
 	github.com/bazelbuild/rules_go v0.38.1
 	github.com/elastic/go-seccomp-bpf v1.2.0
 	github.com/google/go-cmp v0.5.9
+	github.com/hanwen/go-fuse/v2 v2.4.0
 	github.com/urfave/cli/v2 v2.20.3
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sys v0.4.0

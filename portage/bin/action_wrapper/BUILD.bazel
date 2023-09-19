@@ -8,6 +8,9 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 rust_binary(
     name = "action_wrapper",
     srcs = glob(["src/*.rs"]),
+    data = [
+        "//bazel/portage/bin/trapfs",
+    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//visibility:public"],
     deps = [
@@ -20,6 +23,7 @@ rust_binary(
         "@alchemy_crates//:nix",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
     ],
 )
 

@@ -242,6 +242,12 @@ pub fn convert_impl(root_dir: &Path) -> Result<()> {
     pivot_to_raw_subdir(root_dir)?;
     build_manifest_and_extra_tarball(root_dir)?;
 
+    // For investigation of b/299934607, create an almost-empty directory for trapfs mount point.
+    // TODO(b/299934607): Remove this hack.
+    let mount_dir = root_dir.join("trapfs_mount_point_b299934607");
+    std::fs::create_dir(&mount_dir)?;
+    File::create(mount_dir.join(".keepdir"))?;
+
     // Mark as hot initially.
     set_permissions(root_dir, Permissions::from_mode(0o755))?;
 
