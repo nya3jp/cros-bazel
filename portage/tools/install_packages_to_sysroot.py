@@ -12,6 +12,7 @@ import os
 import subprocess
 
 
+_SCRIPT_DIR = os.path.dirname(__file__)
 _SCRIPT_NAME = os.path.basename(__file__)
 _BAZEL_PATH = "/mnt/host/source/chromite/bin/bazel"
 
@@ -34,6 +35,26 @@ def main():
         [_BAZEL_PATH, "info", "workspace"], encoding="utf-8"
     ).strip()
 
+    # Generate chromeos-chrome prebuilt config.
+    chrome_prebuilt_configs = []
+    try:
+        chrome_prebuilt_configs = (
+            subprocess.check_output(
+                [
+                    os.path.join(
+                        _SCRIPT_DIR, "generate_chrome_prebuilt_config.py"
+                    ),
+                    "--no-lookback",
+                ],
+                encoding="utf-8",
+            )
+            .strip()
+            .splitlines()
+        )
+    except subprocess.CalledProcessError as e:
+        logging.info("Could not find chromeos-chrome prebuilt: %s", e)
+    logging.info("Chrome prebuilt configs are %s", chrome_prebuilt_configs)
+
     # Build packages and install lists.
     subprocess.check_call(
         [
@@ -43,6 +64,7 @@ def main():
             "--execution_log_binary_file=/tmp/allpackages_exec.log",
             "--noexecution_log_sort",
         ]
+        + chrome_prebuilt_configs
         + [
             "@portage//%s:%s" % (package_name, target_type)
             for target_type in ["package_set", "install_list"]
@@ -66,6 +88,9 @@ def main():
                     _BAZEL_PATH,
                     "cquery",
                     "--output=files",
+                ]
+                + chrome_prebuilt_configs
+                + [
                     "@portage//%s:install_list" % package_name,
                 ],
                 encoding="utf-8",

@@ -89,24 +89,32 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
             .collect();
 
         if actual_use_flags != expected_use_flags {
-            bail!(
-                "\n* USE Flag mismatch!\n  \
-                Expected USE: {}\n  \
-                Actual USE: {}\n  \
-                Extra flags: {}\n  \
-                Missing flags: {}\n  \
-                ",
-                expected_use_flags.iter().sorted().join(", "),
-                actual_use_flags.iter().sorted().join(", "),
-                actual_use_flags
-                    .difference(&expected_use_flags)
-                    .sorted()
-                    .join(", "),
-                expected_use_flags
-                    .difference(&actual_use_flags)
-                    .sorted()
-                    .join(", "),
-            );
+            let is_chromeos_chrome = package
+                .category_pf()
+                .starts_with("chromeos-base/chromeos-chrome");
+
+            // Ignore USE flag mismatch for chromeos-chrome.
+            // We add "-runhooks" for it, but the prebuilt doesn't have it.
+            if !is_chromeos_chrome {
+                bail!(
+                    "\n* USE Flag mismatch!\n  \
+                    Expected USE: {}\n  \
+                    Actual USE: {}\n  \
+                    Extra flags: {}\n  \
+                    Missing flags: {}\n  \
+                    ",
+                    expected_use_flags.iter().sorted().join(", "),
+                    actual_use_flags.iter().sorted().join(", "),
+                    actual_use_flags
+                        .difference(&expected_use_flags)
+                        .sorted()
+                        .join(", "),
+                    expected_use_flags
+                        .difference(&actual_use_flags)
+                        .sorted()
+                        .join(", "),
+                );
+            }
         }
 
         let actual_iuse_effective_flags = extract_iuse_effective_flags(&package)?;

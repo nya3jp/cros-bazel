@@ -5,11 +5,15 @@
 
 """A tool to generate bazel config to use a prebuilt for chromeos-chrome."""
 
+import argparse
 import logging
 import os
 import re
 import subprocess
 from typing import Dict, List
+
+
+_SCRIPT_NAME = os.path.basename(__file__)
 
 
 def _run_command(args: List[str]) -> str:
@@ -45,11 +49,13 @@ def _get_chromeos_version_info() -> Dict[str, str]:
     return result
 
 
-def _find_chrome_prebuilt(board: str, branch: int, build: int) -> str:
+def _find_chrome_prebuilt(
+    board: str, branch: int, build: int, lookback: bool
+) -> str:
     """Finds a chromeos-chrome prebuilt and returns its URL."""
 
-    # Try up to 10 versions.
-    for _ in range(10):
+    # Try up to 10 versions if lookback==True.
+    for _ in range(10 if lookback else 1):
         logging.info(
             "Trying to find a prebuilt: branch = %i, build = %i", branch, build
         )
@@ -73,6 +79,22 @@ def main():
 
     logging.basicConfig(level=logging.INFO)
 
+    arg_parser = argparse.ArgumentParser(prog=_SCRIPT_NAME)
+    arg_parser.add_argument(
+        "--lookback",
+        action="store_true",
+        default=True,
+        dest="lookback",
+        help="Look back for old version prebuilts.",
+    )
+    arg_parser.add_argument(
+        "--no-lookback",
+        action="store_false",
+        dest="lookback",
+        help="Do not look back for old version prebuilts.",
+    )
+    args = arg_parser.parse_args()
+
     board = os.environ["BOARD"]
     logging.info("Board name is %s", board)
 
@@ -90,7 +112,7 @@ def main():
     prebuilt_labels = [label + "_prebuilt" for label in chrome_actual_labels]
     logging.info("Prebuilt labels are %s", prebuilt_labels)
 
-    prebuilt_url = _find_chrome_prebuilt(board, branch, build)
+    prebuilt_url = _find_chrome_prebuilt(board, branch, build, args.lookback)
 
     for label in prebuilt_labels:
         print(f"--{label}={prebuilt_url}")
