@@ -4,8 +4,7 @@
 //
 // A fuse file system that mounts an empty directory and waits for some process
 // to call setattr on the directory. When it happens, it prints info of the
-// process and exits. It exits automatically after 10 seconds if setattr is not
-// called.
+// process. It exits automatically after 10 seconds.
 
 package main
 
@@ -23,14 +22,10 @@ import (
 
 type trapRoot struct {
 	fs.Inode
-	exitCh chan<- struct{}
 }
 
-func newTrapRoot() (*trapRoot, <-chan struct{}) {
-	exitCh := make(chan struct{}, 1)
-	return &trapRoot{
-		exitCh: exitCh,
-	}, exitCh
+func newTrapRoot() *trapRoot {
+	return &trapRoot{}
 }
 
 func (r *trapRoot) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
@@ -52,8 +47,7 @@ func (r *trapRoot) Setattr(ctx context.Context, f fs.FileHandle, in *fuse.SetAtt
 	cmd.Stderr = os.Stderr
 	_ = cmd.Run()
 
-	r.exitCh <- struct{}{}
-	return syscall.EPROTO // random error code
+	return 0
 }
 
 var _ = (fs.NodeGetattrer)(&trapRoot{})
@@ -69,7 +63,7 @@ func main() {
 		}
 
 		mountPoint := os.Args[1]
-		root, exitCh := newTrapRoot()
+		root := newTrapRoot()
 		options := &fs.Options{
 			MountOptions: fuse.MountOptions{
 				AllowOther: true,
@@ -84,18 +78,12 @@ func main() {
 
 		fmt.Println("[trapfs] started")
 
-		// Unmount when setattr is called or 10 seconds pass.
-		go func() {
-			select {
-			case <-exitCh:
-			case <-time.After(10 * time.Second):
-				fmt.Println("[trapfs] timeout was reached")
-			}
-			server.Unmount()
-		}()
+		// Unmount after 10 seconds.
+		time.Sleep(10 * time.Second)
+		fmt.Println("[trapfs] timeout was reached")
 
+		server.Unmount()
 		server.Wait()
-
 		fmt.Println("[trapfs] finished")
 		return nil
 	}(); err != nil {
