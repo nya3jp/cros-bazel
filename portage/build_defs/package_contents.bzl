@@ -100,8 +100,8 @@ def generate_contents(
         binary_package: File: Binary package file.
         output_prefix: str: A file name prefix to prepend to output directories
             defined in this function.
-        board: Option[str]: The target board name the given binary package was
-            built for. None is equivalent to "amd64-host".
+        board: str: The target board name the given binary package was built
+            for. Specify "amd64-host" for host packages.
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_extract_package: File: An executable file of extract_package.
 
@@ -109,9 +109,6 @@ def generate_contents(
         struct[ContentsLayersInfo]: A struct suitable to set in
             BinaryPackageInfo.contents.
     """
-
-    if board == None:
-        board = _HOST_BOARD
 
     contents = {}
 

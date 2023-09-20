@@ -124,9 +124,10 @@ _EBUILD_COMMON_ATTRS = dict(
         """,
     ),
     board = attr.string(
+        mandatory = True,
         doc = """
-        The target board name to build the package for. If unset, then the host
-        will be targeted.
+        The target board name to build the package for. Specify "amd64-host" for
+        host packages.
         """,
     ),
     sdk = attr.label(

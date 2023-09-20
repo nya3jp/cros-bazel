@@ -90,9 +90,7 @@ sdk_install_deps(
     name = "{{ ebuild.version }}_deps",
     out = "{{ ebuild.basename }}_deps",
     base = "{{ ebuild.version }}_host_deps",
-    {%- if target_board %}
     board = "{{ target_board }}",
-    {%- endif %}
     overlays = "{{ target_overlay_set }}",
     target_deps = [
         {%- for dep in ebuild.target_build_deps %}
@@ -119,9 +117,7 @@ sdk_install_deps(
     name = "{{ ebuild.version }}_test_deps",
     out = "{{ ebuild.basename }}_test_deps",
     base = "{{ ebuild.version }}_host_deps",
-    {%- if target_board %}
     board = "{{ target_board }}",
-    {%- endif %}
     overlays = "{{ target_overlay_set }}",
     target_deps = [
         {%- for dep in ebuild.target_test_deps %}
@@ -204,9 +200,7 @@ ebuild(
         "//:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
-    {%- if target_board %}
     board = "{{ target_board }}",
-    {%- endif %}
     sdk = ":{{ ebuild.version }}_deps",
     overlays = "{{ target_overlay_set }}",
     eclasses = [
@@ -290,9 +284,7 @@ ebuild_debug(
         "//:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
-    {%- if target_board %}
     board = "{{ target_board }}",
-    {%- endif %}
     sdk = ":{{ ebuild.version }}_deps",
     overlays = "{{ target_overlay_set }}",
     eclasses = [
@@ -308,7 +300,7 @@ ebuild_debug(
 )
 {% endif -%}
 
-{% if target_board -%}
+{% if target_board != "amd64-host" -%}
 ebuild_install(
     name = "{{ ebuild.version }}_install",
     ebuild = "{{ ebuild.ebuild_name }}",
@@ -323,7 +315,7 @@ ebuild_install(
 )
 {% endif -%}
 
-{% if target_board -%}
+{% if target_board != "amd64-host" -%}
 ebuild_install_list(
     name = "{{ ebuild.version }}_install_list",
     ebuild = "{{ ebuild.ebuild_name }}",
@@ -388,9 +380,7 @@ ebuild_test(
         "//:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
-    {%- if target_board %}
     board = "{{ target_board }}",
-    {%- endif %}
     sdk = ":{{ ebuild.version }}_test_deps",
     overlays = "{{ target_overlay_set }}",
     eclasses = [
