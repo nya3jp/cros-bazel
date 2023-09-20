@@ -49,6 +49,9 @@ pub struct ValidatePackageArgs {
         hide = true
     )]
     touch: Option<PathBuf>,
+
+    #[arg(long, help = "Do not exit abnormally on finding package differences")]
+    report_only: bool,
 }
 
 /// Returns a set of the USE flags that were enabled when the package was built.
@@ -81,6 +84,16 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
     let package =
         BinaryPackage::open(&args.package).with_context(|| format!("{:?}", args.package))?;
 
+    // Reports a validation error. If --report-only is set, it just prints the error to stdout and
+    // return success. Otherwise, it returns an error value with the given message.
+    let report = |message: std::fmt::Arguments| -> Result<()> {
+        if args.report_only {
+            println!("{}", message);
+            return Ok(());
+        }
+        bail!("{}", message)
+    };
+
     if let Some(input_use_flags) = args.use_flags {
         let actual_use_flags = extract_use_flags(&package)?;
         let expected_use_flags = input_use_flags
@@ -96,7 +109,7 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
             // Ignore USE flag mismatch for chromeos-chrome.
             // We add "-runhooks" for it, but the prebuilt doesn't have it.
             if !is_chromeos_chrome {
-                bail!(
+                report(format_args!(
                     "\n* USE Flag mismatch!\n  \
                     Expected USE: {}\n  \
                     Actual USE: {}\n  \
@@ -113,7 +126,7 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
                         .difference(&actual_use_flags)
                         .sorted()
                         .join(", "),
-                );
+                ))?;
             }
         }
 
@@ -121,7 +134,7 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
         let expected_iuse_effective_flags = input_use_flags.keys().map(|k| k.as_ref()).collect();
 
         if actual_iuse_effective_flags != expected_iuse_effective_flags {
-            bail!(
+            report(format_args!(
                 "\n* IUSE Flag mismatch!\n  \
                 Expected IUSE: {}\n  \
                 Actual IUSE: {}\n  \
@@ -138,7 +151,7 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
                     .difference(&actual_iuse_effective_flags)
                     .sorted()
                     .join(", "),
-            );
+            ))?;
         }
     }
 
@@ -170,6 +183,7 @@ mod tests {
                 package: PathBuf::from("foo.tbz2"),
                 touch: Some(PathBuf::from("touch")),
                 use_flags: None,
+                report_only: false,
             }
         );
 
@@ -195,6 +209,7 @@ mod tests {
                     ("foo".to_string(), true),
                     ("bar".to_string(), false)
                 ])),
+                report_only: false,
             }
         );
 
@@ -217,6 +232,7 @@ mod tests {
                 package: PathBuf::from("foo.tbz2"),
                 touch: None,
                 use_flags: Some(HashMap::new()),
+                report_only: false,
             }
         );
 
@@ -343,6 +359,7 @@ mod tests {
                 ("x86-solaris".into(), false),
                 ("x86-winnt".into(), false),
             ])),
+            report_only: false,
         };
 
         do_validate_package(args)?;
@@ -356,9 +373,24 @@ mod tests {
             package: testdata(BINPKG)?,
             touch: None,
             use_flags: Some(HashMap::from([("foo".into(), true), ("bar".into(), false)])),
+            report_only: false,
         };
 
         assert!(do_validate_package(args).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn use_flags_not_equal_report_only() -> Result<()> {
+        let args = ValidatePackageArgs {
+            package: testdata(BINPKG)?,
+            touch: None,
+            use_flags: Some(HashMap::from([("foo".into(), true), ("bar".into(), false)])),
+            report_only: true,
+        };
+
+        do_validate_package(args)?;
 
         Ok(())
     }
@@ -374,6 +406,7 @@ mod tests {
             package: testdata(BINPKG)?,
             touch: Some(validation.clone()),
             use_flags: None,
+            report_only: false,
         };
 
         do_validate_package(args)?;
