@@ -9,7 +9,6 @@ rust_library(
     name = "extract_tarball",
     srcs = glob(["src/*.rs"]),
     crate_name = "common_extract_tarball",
-    data = ["@files//:patchelf_symlink"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel/portage/bin:__subpackages__"],
     deps = [
