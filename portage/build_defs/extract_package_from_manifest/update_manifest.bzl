@@ -41,8 +41,8 @@ def _update_manifest_impl(ctx):
     for binpkg in binpkgs:
         args.extend(["--binpkg", bash_rlocation(ctx, binpkg)])
 
-    for regex in ctx.attr.shared_library_dir_regexes:
-        args.extend(["--shared-library-dir-regex", regex.replace("\\", "\\\\")])
+    for regex in ctx.attr.ld_library_path_regexes:
+        args.extend(["--ld-library-path-regex", regex.replace("\\", "\\\\")])
     for regex in ctx.attr.header_file_dir_regexes:
         args.extend(["--header-file-dir-regex", regex.replace("\\", "\\\\")])
 

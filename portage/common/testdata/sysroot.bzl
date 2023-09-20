@@ -8,6 +8,11 @@
 # However, you should never need to run this unless
 # bazel explicitly tells you to.
 
+# These three lines ensures that the following json is valid skylark.
+false = False
+true = True
+null = None
+
 SYSROOT_MANIFEST_CONTENT = {
     "root_package": {
         "name": "demo/shared_libs",
@@ -17,72 +22,54 @@ SYSROOT_MANIFEST_CONTENT = {
         {
             "name": "demo/executable",
             "slot": "0/0",
-            "symlinks": [],
-            "files": [
-                "/usr/bin/hello_world.sh",
-            ],
-            "header_files": [],
-            "shared_libraries": [],
+            "content": {
+                "/usr/bin/hello_world.sh": {},
+            },
         },
         {
             "name": "demo/shared_libs",
             "slot": "0/0",
-            "symlinks": [
-                "/lib64/libfoo.so",
-            ],
-            "files": [
-                "/lib32/libbaz.so.1.2.3",
-                "/lib32/libfoo.so.1.2.3",
-                "/lib64/libbar.so.1.2.3",
-                "/lib64/libfoo.so.1.2.3",
-            ],
-            "header_files": [],
-            "shared_libraries": [
-                "/lib32/libbaz.so.1.2.3",
-                "/lib64/libbar.so.1.2.3",
-                "/lib64/libfoo.so",
-                "/lib64/libfoo.so.1.2.3",
-            ],
+            "content": {
+                "/lib32/libbaz.so.1.2.3": {},
+                "/lib32/libfoo.so.1.2.3": {},
+                "/lib64/libbar.so.1.2.3": {},
+                "/lib64/libfoo.so": {
+                    "symlink": true,
+                },
+                "/lib64/libfoo.so.1.2.3": {},
+            },
         },
         {
             "name": "demo/symlinks",
             "slot": "0/0",
-            "symlinks": [
-                "/symlinks/absolute_symlink.txt",
-                "/symlinks/broken_absolute_symlink.txt",
-                "/symlinks/broken_relative_symlink.txt",
-                "/symlinks/relative_symlink.txt",
-            ],
-            "files": [
-                "/path/to/hello.txt",
-            ],
-            "header_files": [],
-            "shared_libraries": [],
+            "content": {
+                "/path/to/hello.txt": {},
+                "/symlinks/absolute_symlink.txt": {
+                    "symlink": true,
+                },
+                "/symlinks/broken_absolute_symlink.txt": {
+                    "symlink": true,
+                },
+                "/symlinks/broken_relative_symlink.txt": {
+                    "symlink": true,
+                },
+                "/symlinks/relative_symlink.txt": {
+                    "symlink": true,
+                },
+            },
         },
         {
             "name": "demo/sysroot",
             "slot": "0/0",
-            "symlinks": [],
-            "files": [],
-            "header_files": [],
-            "shared_libraries": [],
+            "content": {},
         },
         {
             "name": "demo/system_headers",
             "slot": "0/0",
-            "symlinks": [],
-            "files": [
-                "/usr/include/foo.h",
-                "/usr/include/subdir/bar.h",
-            ],
-            "header_files": [
-                "/usr/include/foo.h",
-                "/usr/include/subdir/bar.h",
-            ],
-            "shared_libraries": [],
+            "content": {
+                "/usr/include/foo.h": {},
+                "/usr/include/subdir/bar.h": {},
+            },
         },
-    ],
-    "header_file_dirs": [
-        "/usr/include",
     ],
 }

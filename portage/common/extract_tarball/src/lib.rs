@@ -3,29 +3,24 @@
 // found in the LICENSE file.
 
 use anyhow::{anyhow, bail, Context, Result};
-use serde::{Deserialize, Serialize};
 use std::{
+    collections::BTreeSet,
     fs::OpenOptions,
     io::Read,
-    iter::Iterator,
     os::unix::prelude::OpenOptionsExt,
     path::{Path, PathBuf},
 };
 use tar::EntryType;
 
-#[derive(Default, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct TarballContent {
-    pub symlinks: Vec<PathBuf>,
-    pub files: Vec<PathBuf>,
+#[derive(Clone, Default, Debug, PartialEq, Eq, Ord, PartialOrd)]
+pub struct TarballFile {
+    pub path: PathBuf,
+    pub symlink: bool,
 }
 
-impl TarballContent {
-    pub fn all_files(&self) -> impl Iterator<Item = &Path> {
-        self.files
-            .iter()
-            .chain(self.symlinks.iter())
-            .map(|p| p.as_path())
-    }
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
+pub struct TarballContent {
+    pub files: BTreeSet<TarballFile>,
 }
 
 /// Extracts from the specified tarball to out_dir.
@@ -55,9 +50,9 @@ pub fn extract_tarball(
         if let Some(relative_path) = want_file(&path)? {
             let out_path = Path::new("/").join(&relative_path);
             match header.entry_type() {
-                EntryType::Regular => out_files.files.push(out_path),
-                EntryType::Symlink | EntryType::Link => out_files.symlinks.push(out_path),
-                _ => (),
+                EntryType::Regular => out_files.files.insert(TarballFile {path: out_path, symlink: false}),
+                EntryType::Symlink => out_files.files.insert(TarballFile {path: out_path, symlink: true}),
+                _ => true,
             };
 
             let out_path = out_dir.join(&relative_path);
@@ -94,8 +89,6 @@ pub fn extract_tarball(
         }
     }
 
-    out_files.files.sort();
-    out_files.symlinks.sort();
     Ok(out_files)
 }
 
@@ -138,8 +131,11 @@ mod tests {
         assert_eq!(
             content,
             TarballContent {
-                files: vec![PathBuf::from("/nano"), PathBuf::from("/nanorc")],
-                symlinks: vec![PathBuf::from("/rnano")],
+                files: [
+                    TarballFile {path: PathBuf::from("/nano"), symlink: false},
+                    TarballFile {path: PathBuf::from("/nanorc"), symlink: false},
+                    TarballFile {path: PathBuf::from("/rnano"), symlink: true},
+                ].into(),
             }
         );
 

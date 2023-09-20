@@ -9,11 +9,11 @@ load("//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_pa
 extract_package(
     name = "sysroot",
     header_file_dir_regexes = ["/usr/include"],
-    manifest_content = SYSROOT_MANIFEST_CONTENT,
-    manifest_file = "//bazel/portage/common/testdata:sysroot.bzl",
-    pkg = "//bazel/portage/common/testdata:sysroot",
-    shared_library_dir_regexes = [
+    ld_library_path_regexes = [
         "/lib64",
         "/lib32",
     ],
+    manifest_content = SYSROOT_MANIFEST_CONTENT,
+    manifest_file = "//bazel/portage/common/testdata:sysroot.bzl",
+    pkg = "//bazel/portage/common/testdata:sysroot",
 )

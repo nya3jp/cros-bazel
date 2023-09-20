@@ -13,7 +13,6 @@ clap.workspace = true
 runfiles.workspace = true
 tar.workspace = true
 pathdiff.workspace = true
-serde.workspace = true
 
 [dev-dependencies]
 binarypackage = { path = "../portage/binarypackage" }

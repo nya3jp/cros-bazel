@@ -29,6 +29,9 @@ rust_test(
     data = [
         "//bazel/portage/common/testdata:shared_libs",
         "//bazel/portage/common/testdata:system_headers",
+        "@files//:testdata_glibc_symlink",
+        "@files//:testdata_nano_symlink",
+        "@files//:testdata_ncurses_symlink",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [

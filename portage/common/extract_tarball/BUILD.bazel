@@ -17,7 +17,6 @@ rust_library(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:pathdiff",
-        "@alchemy_crates//:serde",
         "@alchemy_crates//:tar",
     ],
 )

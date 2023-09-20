@@ -66,7 +66,7 @@ fn extract_out_files(binpkg: &mut BinaryPackage, specs: &[OutputFileSpec]) -> Re
                 .map(|p| p.to_path_buf()))
         })?;
 
-    let got_paths: BTreeSet<&Path> = content.all_files().collect();
+    let got_paths: BTreeSet<&Path> = content.files.iter().map(|f| f.path.as_path()).collect();
 
     for (tar_path, extracted_path) in want_files {
         if !got_paths.contains(Path::new("/").join(extracted_path).as_path()) {

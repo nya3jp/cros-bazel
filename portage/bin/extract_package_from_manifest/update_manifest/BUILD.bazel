@@ -17,7 +17,7 @@ rust_binary(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:chrono",
         "@alchemy_crates//:clap",
-        "@alchemy_crates//:rayon",
+        "@alchemy_crates//:regex",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
     ],

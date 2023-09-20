@@ -7,7 +7,7 @@ load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo")
 visibility("private")
 
 EXTRACT_COMMON_ATTRS = dict(
-    shared_library_dir_regexes = attr.string_list(
+    ld_library_path_regexes = attr.string_list(
         doc = "A list of regexes for directories containing shared libraries.",
     ),
     header_file_dir_regexes = attr.string_list(
