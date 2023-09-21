@@ -13,12 +13,31 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 )
+
+func lookupPIDFromTID(tid uint32) (uint32, error) {
+	path := fmt.Sprintf("/proc/%d/status", tid)
+	text, err := os.ReadFile(path)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read %s: %w", path, err)
+	}
+	match := regexp.MustCompile("\nTgid:\\s*(\\d+)").FindStringSubmatch(string(text))
+	if match == nil {
+		return 0, fmt.Errorf("failed to find PID from %s", path)
+	}
+	pid64, err := strconv.ParseUint(match[1], 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse %s: %w", path, err)
+	}
+	return uint32(pid64), nil
+}
 
 type trapRoot struct {
 	fs.Inode
@@ -34,8 +53,14 @@ func (r *trapRoot) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.Attr
 }
 
 func (r *trapRoot) Setattr(ctx context.Context, f fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
-	pid := in.Caller.Pid
-	fmt.Printf("[trapfs] PID %d called setattr on us\n", pid)
+	tid := in.Caller.Pid
+	pid, err := lookupPIDFromTID(tid)
+	if err != nil {
+		fmt.Printf("[trapfs] %v\n", err)
+		return 0
+	}
+
+	fmt.Printf("[trapfs] PID %d TID %d called setattr on us\n", pid, tid)
 
 	cmd := exec.Command("ps", fmt.Sprintf("%d", pid))
 	cmd.Stdout = os.Stdout
