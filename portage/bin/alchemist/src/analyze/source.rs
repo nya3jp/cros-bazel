@@ -364,6 +364,8 @@ fn apply_local_sources_workarounds(
         // b/299597288: cros-rust calls platform2_test.py
         // TODO(b/299597288): Add this only for tests.
         || details.inherited.contains("cros-rust")
+        // Cups needs `platform2_test.py` to run its tests.
+        || details.package_name == "net-print/cups"
     {
         let common_mk = PackageLocalSource::Src("src/platform2/common-mk".into());
         local_sources.push(common_mk);
