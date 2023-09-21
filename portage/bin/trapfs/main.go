@@ -83,7 +83,12 @@ func main() {
 		fmt.Println("[trapfs] timeout was reached")
 
 		server.Unmount()
-		server.Wait()
+		// For some reasons, server.Wait causes deadlock. I'm suspecting that this
+		// is because the FUSE mountpoint is still alive in other mount namespaces,
+		// but I'm not 100% sure. In any case, after 10-second timeout, we don't
+		// have reasons to serve the file system, so let us forcibly exit the FUSE
+		// process. This may put left mountpoints inaccessible, but we don't care
+		// about them as the build is doomed to failure.
 		fmt.Println("[trapfs] finished")
 		return nil
 	}(); err != nil {
