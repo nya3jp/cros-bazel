@@ -376,6 +376,17 @@ fn apply_local_sources_workarounds(
         ));
     }
 
+    // third-party-crates-src uses 'project` directory, but
+    // does not add it to CROS_WORKON_SUBTREE to avoid
+    // unnecessary uprevs (see the comment in its ebuild).
+    // See b/301352675.
+    // TODO: Remove this workaround when b/301526906 is fixed.
+    if details.package_name == "dev-rust/third-party-crates-src" {
+        local_sources.push(PackageLocalSource::Src(
+            "src/third_party/rust_crates/projects".into(),
+        ));
+    }
+
     Ok(())
 }
 
