@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 filegroup(
@@ -37,4 +37,18 @@ rust_test(
     size = "small",
     crate = ":cliutil",
     rustc_flags = RUSTC_DEBUG_FLAGS,
+)
+
+rust_test_suite(
+    name = "cliutil_integration_tests",
+    size = "small",
+    srcs = glob(["tests/**/*.rs"]),
+    data = ["//bazel/portage/common/cliutil/testdata:demo"],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "//bazel/portage/common/fileutil",
+        "//bazel/rust/runfiles",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:regex",
+    ],
 )

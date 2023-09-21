@@ -295,6 +295,8 @@ dependencies = [
  "fileutil",
  "itertools",
  "nix",
+ "regex",
+ "runfiles",
  "shell-escape",
  "tempfile",
  "tracing",
