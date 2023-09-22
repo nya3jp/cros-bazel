@@ -10,7 +10,7 @@ with a few additional repositories.
 ```sh
 $ mkdir ~/chromiumos
 $ cd ~/chromiumos
-$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -g default,bazel
+$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -g default,bazel -b main
 $ repo sync -c -j 4
 $ cd src
 ```
@@ -41,7 +41,12 @@ Please make sure that `which bazel` prints a path under your [depot_tools] check
 
 ### Inside CrOS SDK chroot
 
-Inside CrOS SDK chroot (i.e. the build environment you enter with `cros_sdk` command), you should be able to run the same `bazel build` command.
+Inside CrOS SDK chroot (i.e. the build environment you enter with `cros_sdk` command), you should be able to run the same command except that you need to use `/mnt/host/source/chromite/bin/bazel` instead of `bazel`.
+
+For example:
+```sh
+$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//sys-apps/attr
+```
 
 You can also run `build_packages --bazel --board=$BOARD` to run `build_packages` with Bazel.
 
