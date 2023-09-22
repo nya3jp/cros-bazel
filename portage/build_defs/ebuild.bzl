@@ -152,6 +152,10 @@ _EBUILD_COMMON_ATTRS = dict(
         cfg = "exec",
         default = Label("//bazel/portage/bin/build_package"),
     ),
+    _goma_info = attr.label(
+        allow_single_file = True,
+        default = Label("@goma_info//:goma_info"),
+    ),
 )
 
 # TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
@@ -251,6 +255,10 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # --use-flags
     if ctx.attr.inject_use_flags:
         args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",")
+
+    # --goma-info
+    # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
+    args.add("--goma-info=%s" % ctx.file._goma_info.path)
 
     # Consume interface libraries.
     interface_library_inputs = add_interface_library_args(

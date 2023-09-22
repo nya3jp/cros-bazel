@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("//bazel/module_extensions/portage:alchemist.bzl", "alchemist")
+load("//bazel/module_extensions/portage:goma_info.bzl", "goma_info")
 load("//bazel/module_extensions/portage:portage.bzl", _portage = "portage")
 load("//bazel/module_extensions/portage:portage_digest.bzl", "portage_digest")
 load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
@@ -18,6 +19,9 @@ declared in other module extensions."""
 
 def _portage_impl(module_ctx):
     alchemist(name = "alchemist")
+    goma_info(
+        name = "goma_info",
+    )
     portage_digest(
         name = "portage_digest",
         alchemist = "@alchemist//:alchemist",

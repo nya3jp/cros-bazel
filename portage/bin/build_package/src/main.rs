@@ -8,6 +8,8 @@ use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use std::{
     collections::HashSet,
+    fs::File,
+    io::BufReader,
     os::unix::process::ExitStatusExt,
     path::{Path, PathBuf},
     process::ExitCode,
@@ -58,6 +60,9 @@ struct Cli {
 
     #[arg(long, help = "Allows network access during build")]
     allow_network_access: bool,
+
+    #[arg(long, help = "Goma-related info encoded as JSON.")]
+    goma_info: PathBuf,
 
     #[arg(long)]
     test: bool,
@@ -162,6 +167,13 @@ fn write_use_flags(
     Ok(())
 }
 
+#[derive(serde::Deserialize)]
+struct GomaInfo {
+    use_goma: bool,
+    luci_context: Option<PathBuf>,
+    oauth2_config_file: Option<PathBuf>,
+}
+
 fn do_main() -> Result<()> {
     let args = Cli::parse();
 
@@ -231,12 +243,12 @@ fn do_main() -> Result<()> {
         ),
     };
 
-    // TODO(b/300218625): Stop checking envvars here to make it work for non-debug targets.
     let goma_envs = if args.ebuild.category == "chromeos-base"
         && args.ebuild.package_name == "chromeos-chrome"
     {
-        let use_goma = std::env::var_os("USE_GOMA").map_or(false, |x| x == "true");
-        if use_goma {
+        let goma_info: GomaInfo =
+            serde_json::from_reader(BufReader::new(File::open(args.goma_info)?))?;
+        if goma_info.use_goma {
             // TODO(b/300218625): Also set GLOG_log_dir to support uploading build logs.
             let mut goma_envs = vec![
                 ("USE_GOMA".to_string(), "true".to_string()),
@@ -248,21 +260,30 @@ fn do_main() -> Result<()> {
                 rw: false,
             });
 
-            // TODO(b/300218625): Support other auth methods supported by goma.
-            let default_oauth2_config_file =
-                PathBuf::from(std::env::var_os("HOME").expect("HOME is not set"))
-                    .join(".goma_client_oauth2_config");
-            if default_oauth2_config_file.try_exists()? {
+            if let Some(oauth2_config_file) = goma_info.oauth2_config_file {
                 settings.push_bind_mount(BindMount {
-                    source: default_oauth2_config_file.clone(),
-                    mount_path: default_oauth2_config_file.clone(),
+                    source: oauth2_config_file.clone(),
+                    mount_path: oauth2_config_file.clone(),
                     rw: false,
                 });
                 goma_envs.push((
                     "GOMA_OAUTH2_CONFIG_FILE".to_string(),
-                    default_oauth2_config_file.to_string_lossy().to_string(),
+                    oauth2_config_file.to_string_lossy().to_string(),
                 ));
             }
+
+            if let Some(luci_context) = goma_info.luci_context {
+                settings.push_bind_mount(BindMount {
+                    source: luci_context.clone(),
+                    mount_path: luci_context.clone(),
+                    rw: false,
+                });
+                goma_envs.push((
+                    "LUCI_CONTEXT".to_string(),
+                    luci_context.to_string_lossy().to_string(),
+                ));
+            }
+
             goma_envs
         } else {
             Vec::new()

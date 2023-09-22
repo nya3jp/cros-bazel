@@ -21,6 +21,8 @@ rust_binary(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:nix",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
         "@rules_rust//tools/runfiles",
     ],
 )
