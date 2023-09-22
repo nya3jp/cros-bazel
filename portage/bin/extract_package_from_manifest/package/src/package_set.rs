@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::package::{Package, PackageUid};
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
+use regex::Regex;
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     iter::Iterator,
@@ -11,7 +11,7 @@ use std::{
 };
 
 use crate::extract::{extract_binpkg, ExtractedPackage};
-use crate::package::{FileMetadata, FileType};
+use crate::package::{FileMetadata, FileType, Package, PackageUid};
 
 pub struct PackageSet {
     packages: Vec<PackageUid>,
@@ -77,7 +77,37 @@ impl PackageSet {
         })
     }
 
-    // TODO: implement methods to determine the file types of files.
+    /// Returns an iterator through all files that we haven't yet determined the file type for.
+    fn unknown_files(&self) -> impl Iterator<Item = &Path> {
+        self.owners.iter().flat_map(|(path, (_, metadata))| {
+            if metadata.kind == FileType::Unknown {
+                Some(path.as_path())
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Sets the filetype of a file.
+    fn set_filetype(&mut self, path: &Path, value: FileType) -> Result<()> {
+        let (_, metadata) = self
+            .owners
+            .get_mut(path)
+            .with_context(|| format!("{path:?} must exist in package set"))?;
+        metadata.kind = value;
+        Ok(())
+    }
+
+    pub fn fill_headers(&mut self, header_file_dir_regexes: &[Regex]) -> Result<BTreeSet<PathBuf>> {
+        let header_files = crate::headers::filter_header_files(
+            &self.unknown_files().collect::<Vec<_>>(),
+            header_file_dir_regexes,
+        )?;
+        for path in header_files.header_files {
+            self.set_filetype(&path, FileType::HeaderFile)?;
+        }
+        Ok(header_files.header_file_dirs)
+    }
 
     pub fn into_packages(self) -> Vec<Package> {
         let mut uid_to_files: BTreeMap<PackageUid, BTreeMap<PathBuf, FileMetadata>> =
@@ -99,7 +129,6 @@ impl PackageSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Context;
     use common_extract_tarball::{TarballContent, TarballFile};
 
     fn gen_package(name: &str, content: &[&Path]) -> ExtractedPackage {
@@ -175,13 +204,16 @@ mod tests {
         let ncurses_tbz2 = r.rlocation("files/testdata_ncurses");
         let nano_tbz2 = r.rlocation("files/testdata_nano");
 
+        let request_header_regexes = vec![Regex::new("/usr/include")?];
+        let want_headers = BTreeSet::from([PathBuf::from("/usr/include")]);
+
         // Simulate the workflow for a real package.
         // Step 1: run update_manifest.
         let (glibc, ncurses, nano) = {
             let out = fileutil::SafeTempDir::new()?;
             let out = out.path();
             // Construct it in an arbitrary order. The order shouldn't matter.
-            let package_set = PackageSet::create(
+            let mut package_set = PackageSet::create(
                 out,
                 &[
                     nano_tbz2.as_path(),
@@ -189,6 +221,9 @@ mod tests {
                     glibc_tbz2.as_path(),
                 ],
             )?;
+
+            let headers = package_set.fill_headers(&request_header_regexes)?;
+            assert_eq!(headers, want_headers);
 
             let packages = package_set.into_packages();
 
@@ -235,6 +270,14 @@ mod tests {
             })
         );
 
+        assert_eq!(
+            ncurses.content.get(Path::new("/usr/include/ncurses.h")),
+            Some(&FileMetadata {
+                symlink: true,
+                kind: FileType::HeaderFile,
+            })
+        );
+
         // Step 2: Extract packages. Here, each package is its own action, so each package gets
         // their own package set. However, each package has its transitive dependencies already
         // installed into the directory.
@@ -245,7 +288,10 @@ mod tests {
             (ncurses_tbz2, ncurses),
             (nano_tbz2, nano),
         ] {
-            let package_set = PackageSet::create(out, &[tbz2.as_path()])?;
+            let mut package_set = PackageSet::create(out, &[tbz2.as_path()])?;
+
+            package_set.fill_headers(&request_header_regexes)?;
+
             let got = &package_set.into_packages()[0];
             assert_eq!(*got, want)
         }

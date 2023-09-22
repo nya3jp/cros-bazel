@@ -8,29 +8,6 @@ use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-/// Filters a list of files down to only specific shared libraries.
-/// Outputs shared libraries in library search path ordering, removing duplicates.
-///
-/// # Arguments
-/// * `paths` - A list of paths that may or may not be shared libraries.
-/// * `directory_regexes` - A list of regexes, treated similarly to LD_LIBRARY_PATH.
-///
-/// # Examples
-/// `filter_shared_libs(["/usr/lib/libfoo.so", "/lib/libfoo.so"], [r"/lib\d*", r"/usr/lib\d*"])`
-/// The example above would return `["/lib/libfoo.so"]`, since, while they both match, according to
-/// it prioritizes the first entry in regexes like it would LD_LIBRARY_PATH.
-pub fn filter_shared_libs<'a>(
-    paths: &[&'a Path],
-    directory_regexes: &[Regex],
-) -> Result<Vec<&'a Path>> {
-    let ld_library_path = crate::library_path::generate_ld_library_path(paths, directory_regexes)?;
-    Ok(
-        crate::library_path::calculate_shared_libraries(paths, &ld_library_path)?
-            .into_iter()
-            .collect(),
-    )
-}
-
 #[derive(Debug, PartialEq)]
 pub struct HeaderFiles {
     /// The directories matched by the regexes in `filter_header_files`

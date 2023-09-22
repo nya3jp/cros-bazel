@@ -10,7 +10,7 @@ use extract_package_from_manifest_package::package::{Package, PackageUid};
 use extract_package_from_manifest_package::package_set::PackageSet;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{io::Write, path::PathBuf, process::ExitCode};
+use std::{collections::BTreeSet, io::Write, path::PathBuf, process::ExitCode};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
@@ -51,13 +51,17 @@ struct Cli {
 struct Manifest {
     root_package: PackageUid,
     packages: Vec<Package>,
+    header_file_dirs: BTreeSet<PathBuf>,
+    header_file_dir_regexes: Vec<String>,
 }
 
 fn do_main() -> Result<()> {
     let args = Cli::parse();
 
     let out = fileutil::SafeTempDir::new()?;
-    let package_set = PackageSet::create(out.path(), &args.binpkg)?;
+    let mut package_set = PackageSet::create(out.path(), &args.binpkg)?;
+
+    let header_file_dirs = package_set.fill_headers(&args.header_file_dir_regex)?;
 
     let mut packages = package_set.into_packages();
     let root_package = packages[0].uid.clone();
@@ -72,6 +76,12 @@ fn do_main() -> Result<()> {
     let manifest = Manifest {
         root_package,
         packages,
+        header_file_dirs,
+        header_file_dir_regexes: args
+            .header_file_dir_regex
+            .iter()
+            .map(|r| r.as_str().to_string())
+            .collect(),
     };
 
     let mut f = std::fs::File::create(&args.manifest_out).with_context(|| {

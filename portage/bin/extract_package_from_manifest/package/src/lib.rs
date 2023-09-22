@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 mod extract;
-mod filters;
+mod headers;
 mod library_path;
 pub mod package;
 pub mod package_set;

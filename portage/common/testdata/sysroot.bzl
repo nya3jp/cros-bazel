@@ -67,9 +67,19 @@ SYSROOT_MANIFEST_CONTENT = {
             "name": "demo/system_headers",
             "slot": "0/0",
             "content": {
-                "/usr/include/foo.h": {},
-                "/usr/include/subdir/bar.h": {},
+                "/usr/include/foo.h": {
+                    "type": "HeaderFile",
+                },
+                "/usr/include/subdir/bar.h": {
+                    "type": "HeaderFile",
+                },
             },
         },
+    ],
+    "header_file_dirs": [
+        "/usr/include",
+    ],
+    "header_file_dir_regexes": [
+        "/usr/include",
     ],
 }
