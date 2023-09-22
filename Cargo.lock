@@ -553,6 +553,7 @@ dependencies = [
  "regex",
  "runfiles",
  "serde",
+ "serde_json",
  "version",
 ]
 

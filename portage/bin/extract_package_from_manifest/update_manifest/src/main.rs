@@ -66,6 +66,7 @@ fn do_main() -> Result<()> {
 
     let ld_library_path = package_set.generate_ld_library_path(&args.ld_library_path_regex)?;
     package_set.fill_shared_libraries(&ld_library_path)?;
+    package_set.wrap_elf_files(&ld_library_path)?;
 
     let mut packages = package_set.into_packages();
     let root_package = packages[0].uid.clone();

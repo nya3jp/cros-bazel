@@ -13,8 +13,9 @@ version = { path = "../../../common/portage/version" }
 anyhow.workspace = true
 clap.workspace = true
 regex.workspace = true
+runfiles.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 fileutil = { path = "../../../common/fileutil" }
-runfiles.workspace = true

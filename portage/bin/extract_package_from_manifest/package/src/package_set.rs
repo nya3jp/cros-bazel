@@ -14,6 +14,7 @@ use crate::extract::{extract_binpkg, ExtractedPackage};
 use crate::package::{FileMetadata, FileType, Package, PackageUid, SymlinkMetadata};
 
 pub struct PackageSet {
+    dir: PathBuf,
     packages: Vec<PackageUid>,
     owners: HashMap<PathBuf, (PackageUid, FileType)>,
 }
@@ -70,6 +71,7 @@ impl PackageSet {
         validate_unique_packages(&packages)?;
 
         Ok(PackageSet {
+            dir: dir.to_path_buf(),
             owners: calculate_owners(&packages)?,
             packages: packages.into_iter().map(|pkg| pkg.uid).collect(),
         })
@@ -130,6 +132,15 @@ impl PackageSet {
         Ok(())
     }
 
+    pub fn wrap_elf_files(&mut self, ld_library_path: &[PathBuf]) -> Result<()> {
+        let metadata =
+            crate::elf::wrap_elf_files(&self.dir, ld_library_path, self.unknown_files())?;
+        for (path, metadata) in metadata {
+            self.set_filetype(&path, FileType::ElfBinary(metadata))?;
+        }
+        Ok(())
+    }
+
     pub fn into_packages(self) -> Vec<Package> {
         let mut uid_to_files: BTreeMap<PackageUid, BTreeMap<PathBuf, FileMetadata>> =
             BTreeMap::new();
@@ -153,6 +164,8 @@ impl PackageSet {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::elf::ElfFileMetadata;
+    use anyhow::Context;
     use common_extract_tarball::{TarballContent, TarballFile};
 
     fn gen_package(name: &str, content: &[&Path]) -> ExtractedPackage {
@@ -213,6 +226,13 @@ mod tests {
 
     #[test]
     fn package_set_cuj() -> Result<()> {
+        let default_elf = ElfFileMetadata {
+            interp: "/lib64/ld-linux-x86-64.so.2".into(),
+            libs: Default::default(),
+            rpath: Default::default(),
+            runpath: Default::default(),
+        };
+
         let r = runfiles::Runfiles::create()?;
 
         let glibc_tbz2 = r.rlocation("files/testdata_glibc");
@@ -245,6 +265,7 @@ mod tests {
                 .generate_ld_library_path(&[Regex::new("/lib64")?, Regex::new("/usr/lib64")?])?;
             assert_eq!(got_ld_library_path, ld_library_path);
             package_set.fill_shared_libraries(&ld_library_path)?;
+            package_set.wrap_elf_files(&ld_library_path)?;
 
             let packages = package_set.into_packages();
 
@@ -307,10 +328,41 @@ mod tests {
         );
 
         assert_eq!(
+            glibc.content.get(Path::new("/usr/bin/locale")),
+            Some(&FileMetadata {
+                file_type: FileType::ElfBinary(ElfFileMetadata {
+                    libs: [("libc.so.6".to_string(), PathBuf::from("/lib64/libc.so.6"))].into(),
+                    ..default_elf.clone()
+                })
+            })
+        );
+
+        assert_eq!(
             ncurses.content.get(Path::new("/usr/include/ncurses.h")),
             Some(&FileMetadata {
                 file_type: FileType::Symlink(SymlinkMetadata {
                     target: PathBuf::from("/usr/include/curses.h")
+                })
+            })
+        );
+
+        assert_eq!(
+            nano.content.get(Path::new("/bin/nano")),
+            Some(&FileMetadata {
+                file_type: FileType::ElfBinary(ElfFileMetadata {
+                    libs: [
+                        ("libc.so.6".to_string(), PathBuf::from("/lib64/libc.so.6")),
+                        (
+                            "libncursesw.so.6".to_string(),
+                            PathBuf::from("/usr/lib64/libncursesw.so.6")
+                        ),
+                        (
+                            "libtinfow.so.6".to_string(),
+                            PathBuf::from("/usr/lib64/libtinfow.so.6")
+                        ),
+                    ]
+                    .into(),
+                    ..default_elf
                 })
             })
         );
@@ -329,12 +381,15 @@ mod tests {
 
             package_set.fill_headers(&request_header_regexes)?;
             package_set.fill_shared_libraries(&ld_library_path)?;
+            package_set.wrap_elf_files(&ld_library_path)?;
             let got = &package_set.into_packages()[0];
             assert_eq!(*got, want)
         }
 
         assert!(out.join("bin/nano").is_file());
+        assert!(out.join("bin/nano.elf").is_file());
         assert!(out.join("bin/rnano").is_file());
+        assert!(!out.join("bin/rnano.elf").is_file());
 
         Ok(())
     }

@@ -49,6 +49,7 @@ fn do_main() -> Result<()> {
     let mut package_set = PackageSet::create(&args.out_dir, &[args.binpkg.as_path()])?;
     package_set.fill_headers(&args.header_file_dir_regex)?;
     package_set.fill_shared_libraries(&args.ld_library_path)?;
+    package_set.wrap_elf_files(&args.ld_library_path)?;
 
     let got_pkg = &package_set.into_packages()[0];
 

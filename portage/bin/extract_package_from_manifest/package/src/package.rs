@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::elf::ElfFileMetadata;
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, path::PathBuf};
 
 /// Useful for serde.
-fn is_default<T: Default + PartialEq>(v: &T) -> bool {
+pub(crate) fn is_default<T: Default + PartialEq>(v: &T) -> bool {
     v == &T::default()
 }
 
@@ -42,7 +43,7 @@ pub enum FileType {
     Symlink(SymlinkMetadata),
     HeaderFile,
     SharedLibrary,
-    ElfBinary,
+    ElfBinary(ElfFileMetadata),
 }
 
 /// A package, including both analysis-phase metadata accessible to bazel, and runtime metadata
