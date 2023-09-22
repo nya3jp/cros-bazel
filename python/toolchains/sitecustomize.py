@@ -39,6 +39,16 @@ def should_override_import(name) -> bool:
     )
 
 
+def valid_python_module(name):
+    # The __main__ module is reserved.
+    if name == "__main__":
+        return False
+    # python doesn't allow you to import with dashes.
+    if "-" in name:
+        return False
+    return True
+
+
 class ThirdParty(types.ModuleType):
     """This rewrites 'from third_party import bar' to 'import bar'"""
 
@@ -95,11 +105,7 @@ for (current_real, target_name), target_real in r._repo_mapping.items():
 
 
 for target_name, repo_mapping in global_repo_mapping.items():
-    # find_spec("__main__") fails because it doesn't like the name main for a
-    # python module.
-    # We may need to update the following line if we find that there are other
-    # repos it doesn't like dealing with.
-    if target_name != "__main__":
+    if valid_python_module(target_name):
         # Ensure that if we create a repo called foo, we don't override the
         # existing foo in the standard library.
         if should_override_import(target_name):
