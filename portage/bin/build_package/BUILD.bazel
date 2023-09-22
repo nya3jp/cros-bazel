@@ -9,7 +9,10 @@ rust_binary(
     name = "build_package",
     srcs = glob(["src/*.rs"]),
     crate_name = "build_package",
-    data = [":build_package.sh"],
+    data = [
+        ":build_package.sh",
+        "@files//:goma-chromeos-modified-for-alchemy.tgz_symlink",
+    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel:internal"],
     deps = [

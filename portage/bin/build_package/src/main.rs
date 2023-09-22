@@ -231,6 +231,46 @@ fn do_main() -> Result<()> {
         ),
     };
 
+    // TODO(b/300218625): Stop checking envvars here to make it work for non-debug targets.
+    let goma_envs = if args.ebuild.category == "chromeos-base"
+        && args.ebuild.package_name == "chromeos-chrome"
+    {
+        let use_goma = std::env::var_os("USE_GOMA").map_or(false, |x| x == "true");
+        if use_goma {
+            // TODO(b/300218625): Also set GLOG_log_dir to support uploading build logs.
+            let mut goma_envs = vec![
+                ("USE_GOMA".to_string(), "true".to_string()),
+                ("GOMA_TMP_DIR".to_string(), "/tmp/goma".to_string()),
+            ];
+            settings.push_bind_mount(BindMount {
+                source: runfiles.rlocation("files/goma-chromeos-modified-for-alchemy.tgz"),
+                mount_path: PathBuf::from("/mnt/host/goma.tgz"),
+                rw: false,
+            });
+
+            // TODO(b/300218625): Support other auth methods supported by goma.
+            let default_oauth2_config_file =
+                PathBuf::from(std::env::var_os("HOME").expect("HOME is not set"))
+                    .join(".goma_client_oauth2_config");
+            if default_oauth2_config_file.try_exists()? {
+                settings.push_bind_mount(BindMount {
+                    source: default_oauth2_config_file.clone(),
+                    mount_path: default_oauth2_config_file.clone(),
+                    rw: false,
+                });
+                goma_envs.push((
+                    "GOMA_OAUTH2_CONFIG_FILE".to_string(),
+                    default_oauth2_config_file.to_string_lossy().to_string(),
+                ));
+            }
+            goma_envs
+        } else {
+            Vec::new()
+        }
+    } else {
+        Vec::new()
+    };
+
     let mut container = settings.prepare()?;
 
     let root_dir = container.root_dir().to_owned();
@@ -256,7 +296,8 @@ fn do_main() -> Result<()> {
         .arg("ebuild")
         .arg("--skip-manifest")
         .arg(args.ebuild.mount_path)
-        .arg("package");
+        .arg("package")
+        .envs(goma_envs);
     if args.test {
         command.arg("test");
     }
