@@ -109,6 +109,30 @@ impl PackageSet {
         Ok(header_files.header_file_dirs)
     }
 
+    pub fn generate_ld_library_path(&self, directory_regexes: &[Regex]) -> Result<Vec<PathBuf>> {
+        crate::library_path::generate_ld_library_path(
+            &self.unknown_files().collect::<Vec<_>>(),
+            directory_regexes,
+        )
+    }
+
+    pub fn fill_shared_libraries(&mut self, ld_library_path: &[PathBuf]) -> Result<()> {
+        let shared_libs = crate::library_path::calculate_shared_libraries(
+            &self.unknown_files().collect::<Vec<_>>(),
+            ld_library_path,
+        )?;
+        // Convert it from a Path that borrows self immutably to a PathBuf to allow us to call
+        // set_filetype safely.
+        let shared_libs = shared_libs
+            .iter()
+            .map(|p| p.to_path_buf())
+            .collect::<Vec<_>>();
+        for path in shared_libs {
+            self.set_filetype(&path, FileType::SharedLibrary)?;
+        }
+        Ok(())
+    }
+
     pub fn into_packages(self) -> Vec<Package> {
         let mut uid_to_files: BTreeMap<PackageUid, BTreeMap<PathBuf, FileMetadata>> =
             BTreeMap::new();
@@ -206,6 +230,7 @@ mod tests {
 
         let request_header_regexes = vec![Regex::new("/usr/include")?];
         let want_headers = BTreeSet::from([PathBuf::from("/usr/include")]);
+        let ld_library_path = vec![PathBuf::from("/lib64"), PathBuf::from("/usr/lib64")];
 
         // Simulate the workflow for a real package.
         // Step 1: run update_manifest.
@@ -224,6 +249,11 @@ mod tests {
 
             let headers = package_set.fill_headers(&request_header_regexes)?;
             assert_eq!(headers, want_headers);
+
+            let got_ld_library_path = package_set
+                .generate_ld_library_path(&[Regex::new("/lib64")?, Regex::new("/usr/lib64")?])?;
+            assert_eq!(got_ld_library_path, ld_library_path);
+            package_set.fill_shared_libraries(&ld_library_path)?;
 
             let packages = package_set.into_packages();
 
@@ -259,13 +289,22 @@ mod tests {
             glibc.content.get(Path::new("/lib64/ld-linux-x86-64.so.2")),
             Some(&FileMetadata {
                 symlink: false,
-                kind: FileType::Unknown
+                kind: FileType::SharedLibrary
             })
         );
         assert_eq!(
             glibc.content.get(Path::new("/lib64/ld-linux.so.2")),
             Some(&FileMetadata {
                 symlink: true,
+                kind: FileType::SharedLibrary
+            })
+        );
+
+        // While this is a shared library, it shouldn't count because it's not in LD_LIBRARY_PATH.
+        assert_eq!(
+            glibc.content.get(Path::new("/usr/lib64/gconv/IBM278.so")),
+            Some(&FileMetadata {
+                symlink: false,
                 kind: FileType::Unknown
             })
         );
@@ -291,7 +330,7 @@ mod tests {
             let mut package_set = PackageSet::create(out, &[tbz2.as_path()])?;
 
             package_set.fill_headers(&request_header_regexes)?;
-
+            package_set.fill_shared_libraries(&ld_library_path)?;
             let got = &package_set.into_packages()[0];
             assert_eq!(*got, want)
         }

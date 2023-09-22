@@ -30,13 +30,20 @@ SYSROOT_MANIFEST_CONTENT = {
             "name": "demo/shared_libs",
             "slot": "0/0",
             "content": {
-                "/lib32/libbaz.so.1.2.3": {},
+                "/lib32/libbaz.so.1.2.3": {
+                    "type": "SharedLibrary",
+                },
                 "/lib32/libfoo.so.1.2.3": {},
-                "/lib64/libbar.so.1.2.3": {},
+                "/lib64/libbar.so.1.2.3": {
+                    "type": "SharedLibrary",
+                },
                 "/lib64/libfoo.so": {
                     "symlink": true,
+                    "type": "SharedLibrary",
                 },
-                "/lib64/libfoo.so.1.2.3": {},
+                "/lib64/libfoo.so.1.2.3": {
+                    "type": "SharedLibrary",
+                },
             },
         },
         {
@@ -81,5 +88,9 @@ SYSROOT_MANIFEST_CONTENT = {
     ],
     "header_file_dir_regexes": [
         "/usr/include",
+    ],
+    "ld_library_path": [
+        "/lib64",
+        "/lib32",
     ],
 }

@@ -53,6 +53,7 @@ struct Manifest {
     packages: Vec<Package>,
     header_file_dirs: BTreeSet<PathBuf>,
     header_file_dir_regexes: Vec<String>,
+    ld_library_path: Vec<PathBuf>,
 }
 
 fn do_main() -> Result<()> {
@@ -62,6 +63,9 @@ fn do_main() -> Result<()> {
     let mut package_set = PackageSet::create(out.path(), &args.binpkg)?;
 
     let header_file_dirs = package_set.fill_headers(&args.header_file_dir_regex)?;
+
+    let ld_library_path = package_set.generate_ld_library_path(&args.ld_library_path_regex)?;
+    package_set.fill_shared_libraries(&ld_library_path)?;
 
     let mut packages = package_set.into_packages();
     let root_package = packages[0].uid.clone();
@@ -82,6 +86,7 @@ fn do_main() -> Result<()> {
             .iter()
             .map(|r| r.as_str().to_string())
             .collect(),
+        ld_library_path,
     };
 
     let mut f = std::fs::File::create(&args.manifest_out).with_context(|| {
