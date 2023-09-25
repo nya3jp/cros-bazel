@@ -311,6 +311,7 @@ dependencies = [
  "binarypackage",
  "clap",
  "fileutil",
+ "path-absolutize",
  "pathdiff",
  "processes",
  "runfiles",

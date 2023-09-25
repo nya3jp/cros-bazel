@@ -68,11 +68,11 @@ mod tests {
     pub fn extract_demo_sysroot() -> Result<()> {
         let file = |path| TarballFile {
             path: PathBuf::from(path),
-            symlink: false,
+            symlink: None,
         };
-        let symlink = |path| TarballFile {
+        let symlink = |path, dest| TarballFile {
             path: PathBuf::from(path),
-            symlink: true,
+            symlink: Some(PathBuf::from(dest)),
         };
 
         let r = runfiles::Runfiles::create()?;
@@ -86,7 +86,7 @@ mod tests {
                     },
                     content: TarballContent {
                         files: BTreeSet::from([
-                            symlink("/lib64/libfoo.so"),
+                            symlink("/lib64/libfoo.so", "/lib64/libfoo.so.1.2.3"),
                             file("/lib32/libbaz.so.1.2.3"),
                             file("/lib32/libfoo.so.1.2.3"),
                             file("/lib64/libbar.so.1.2.3"),

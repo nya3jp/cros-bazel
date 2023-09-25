@@ -16,6 +16,7 @@ rust_library(
         "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:path-absolutize",
         "@alchemy_crates//:pathdiff",
         "@alchemy_crates//:tar",
     ],
@@ -25,7 +26,7 @@ rust_test(
     name = "extract_tarball_test",
     size = "small",
     crate = ":extract_tarball",
-    data = ["//bazel/portage/common/testdata:nano"],
+    data = ["@files//:testdata_nano_symlink"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/portage/common/fileutil",

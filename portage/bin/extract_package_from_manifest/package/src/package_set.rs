@@ -42,7 +42,7 @@ fn calculate_owners(
                 (
                     pkg.uid.clone(),
                     FileMetadata {
-                        symlink: file.symlink,
+                        symlink: file.symlink.is_some(),
                         kind: FileType::Unknown,
                     },
                 ),
@@ -166,7 +166,7 @@ mod tests {
                     .iter()
                     .map(|p| TarballFile {
                         path: p.to_path_buf(),
-                        symlink: false,
+                        symlink: None,
                     })
                     .collect(),
             },

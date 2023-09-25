@@ -13,6 +13,7 @@ clap.workspace = true
 runfiles.workspace = true
 tar.workspace = true
 pathdiff.workspace = true
+path-absolutize.workspace = true
 
 [dev-dependencies]
 binarypackage = { path = "../portage/binarypackage" }
