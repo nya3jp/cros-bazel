@@ -421,7 +421,6 @@ def _ebuild_impl(ctx):
         validation_file,
         "--package",
         output_binary_package_file,
-        "--report-only",
     ])
     args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",", omit_if_empty = False)
 
