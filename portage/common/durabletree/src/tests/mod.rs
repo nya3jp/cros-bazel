@@ -15,7 +15,7 @@ use std::{
 use walkdir::WalkDir;
 
 use crate::{
-    consts::{MODE_MASK, RAW_DIR_NAME, RESTORED_XATTR},
+    consts::{MODE_MASK, RAW_DIR_NAME},
     tests::testutil::{
         describe_tree, simple_dir, simple_file, CommandRunOk, FileDescription, EMPTY_HASH,
     },
@@ -321,8 +321,8 @@ fn restore_once() -> Result<()> {
     DurableTree::expand(dir)?;
     assert_eq!(describe_tree(&raw_dir)?, vec![simple_dir("", 0o700)]);
 
-    // By clearing xattr, restoration happens again.
-    xattr::remove(dir, RESTORED_XATTR)?;
+    // By cooling down, restoration happens again.
+    DurableTree::cool_down_for_testing(dir)?;
 
     DurableTree::expand(dir)?;
     assert_eq!(describe_tree(&raw_dir)?, vec![simple_dir("", 0o750)]);

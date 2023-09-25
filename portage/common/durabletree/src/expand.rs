@@ -8,8 +8,7 @@ use std::{
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
     process::{Command, Stdio},
-    thread::sleep,
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 use anyhow::{bail, Context, Result};
@@ -18,6 +17,7 @@ use nix::mount::{mount, umount2, MntFlags, MsFlags};
 use tracing::{instrument, warn};
 
 use crate::{
+    b299934607,
     consts::{
         EXTRA_TARBALL_FILE_NAME, MANIFEST_FILE_NAME, MARKER_FILE_NAME, RAW_DIR_NAME, RESTORED_XATTR,
     },
@@ -58,42 +58,14 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
     // Ensure the durable tree is not hot. See the comment in `DurableTree` for
     // details.
     let metadata = std::fs::metadata(root_dir)?;
-    let initial_mode = metadata.permissions().mode() & 0o777;
-    if initial_mode != 0o555 {
-        // We will eventually fail, but wait up to a minute to see if the permission is fixed
-        // asynchronously, which suggests that it can be by race conditions in Bazel (b/299934607).
-        warn!(
+    let mode = metadata.permissions().mode() & 0o777;
+    if mode == 0o700 {
+        bail!(
             "Durable tree is hot (mode = 0{:03o} != 0555): {}\n\
-            Will wait up to 1 minute to see if it is a race condition",
-            initial_mode,
+            Did you attempt to expand the durable tree within the same Bazel action?",
+            mode,
             root_dir.display(),
         );
-        let start_time = Instant::now();
-        let mut last_mode = initial_mode;
-        loop {
-            if start_time.elapsed() >= Duration::from_secs(60) {
-                bail!(
-                    "Durable tree is hot (mode = 0{:03o} -> 0{:03o} != 0555): {}\n\
-                    Did you attempt to expand the durable tree within the same Bazel action?",
-                    initial_mode,
-                    last_mode,
-                    root_dir.display(),
-                );
-            }
-            let metadata = std::fs::metadata(root_dir)?;
-            last_mode = metadata.permissions().mode() & 0o777;
-            if last_mode == 0o555 {
-                bail!(
-                    "Durable tree was hot (mode = 0{:03o} != 0555) but the hot state was \
-                    cleared later (mode = 0{:03o}): {}\n\
-                    This is likely caused by race conditions in Bazel (b/299934607)",
-                    initial_mode,
-                    last_mode,
-                    root_dir.display(),
-                );
-            }
-            sleep(Duration::from_secs(1));
-        }
     }
 
     // Check if the raw directory is already restored.
@@ -101,6 +73,10 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
         // Already restored.
         return Ok(());
     }
+
+    // Wait until Bazel finishes calling chmod on the durable tree.
+    // TODO(b/299934607): Remove this hack once a fix lands to Bazel.
+    b299934607::wait_chmods(root_dir, Duration::from_secs(60))?;
 
     let raw_dir = root_dir.join(RAW_DIR_NAME);
 

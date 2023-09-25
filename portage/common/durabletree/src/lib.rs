@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+mod b299934607;
 mod consts;
 mod convert;
 mod expand;
@@ -83,7 +84,7 @@ use walkdir::WalkDir;
 ///
 /// When a program creates a durable tree with [`DurableTree::convert`], it is
 /// initially marked as *hot*. A durable tree is considered hot if its root
-/// directory has a permission different from 0555.
+/// directory has the permission 0700.
 ///
 /// It is an error to attempt to expand a hot durable tree with
 /// [`DurableTree::expand`] because it would mark the tree "already restored"

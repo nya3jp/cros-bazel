@@ -243,7 +243,7 @@ pub fn convert_impl(root_dir: &Path) -> Result<()> {
     build_manifest_and_extra_tarball(root_dir)?;
 
     // Mark as hot initially.
-    set_permissions(root_dir, Permissions::from_mode(0o755))?;
+    set_permissions(root_dir, Permissions::from_mode(0o700))?;
 
     // Mark as a durable tree.
     File::create(root_dir.join(MARKER_FILE_NAME))?;
