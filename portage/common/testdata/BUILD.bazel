@@ -82,14 +82,6 @@ cros_pkg_filegroup(
             link_name = "/symlinks/relative_symlink.txt",
             target = "../path/to/hello.txt",
         ),
-        pkg.symlink(
-            link_name = "/symlinks/broken_relative_symlink.txt",
-            target = "../path/to/nonexistent_file",
-        ),
-        pkg.symlink(
-            link_name = "/symlinks/broken_absolute_symlink.txt",
-            target = "../path/to/nonexistent_file",
-        ),
     ],
 )
 

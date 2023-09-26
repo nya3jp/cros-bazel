@@ -38,8 +38,8 @@ SYSROOT_MANIFEST_CONTENT = {
                     "type": "SharedLibrary",
                 },
                 "/lib64/libfoo.so": {
-                    "symlink": true,
-                    "type": "SharedLibrary",
+                    "type": "Symlink",
+                    "target": "/lib64/libfoo.so.1.2.3",
                 },
                 "/lib64/libfoo.so.1.2.3": {
                     "type": "SharedLibrary",
@@ -52,16 +52,12 @@ SYSROOT_MANIFEST_CONTENT = {
             "content": {
                 "/path/to/hello.txt": {},
                 "/symlinks/absolute_symlink.txt": {
-                    "symlink": true,
-                },
-                "/symlinks/broken_absolute_symlink.txt": {
-                    "symlink": true,
-                },
-                "/symlinks/broken_relative_symlink.txt": {
-                    "symlink": true,
+                    "type": "Symlink",
+                    "target": "/path/to/hello.txt",
                 },
                 "/symlinks/relative_symlink.txt": {
-                    "symlink": true,
+                    "type": "Symlink",
+                    "target": "/path/to/hello.txt",
                 },
             },
         },

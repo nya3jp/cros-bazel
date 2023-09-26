@@ -18,29 +18,19 @@ pub struct PackageUid {
     pub slot: String,
 }
 
+// This type isn't useful, but just allows serde to skip if the serialization is empty.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct FileMetadata {
-    #[serde(default, skip_serializing_if = "is_default")]
-    pub(crate) symlink: bool,
     #[serde(flatten)]
     #[serde(default, skip_serializing_if = "is_default")]
-    pub(crate) kind: FileType,
+    pub file_type: FileType,
 }
 
-impl FileMetadata {
-    pub fn new_file() -> Self {
-        Self {
-            symlink: false,
-            kind: Default::default(),
-        }
-    }
-
-    pub fn new_symlink() -> Self {
-        Self {
-            symlink: true,
-            kind: Default::default(),
-        }
-    }
+// A pathbuf would be better, but this allows serde to serialize it.
+// https://github.com/serde-rs/serde/issues/1307
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct SymlinkMetadata {
+    pub target: PathBuf,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -48,6 +38,7 @@ impl FileMetadata {
 pub enum FileType {
     #[default]
     Unknown,
+    Symlink(SymlinkMetadata),
     HeaderFile,
     SharedLibrary,
     ElfBinary,

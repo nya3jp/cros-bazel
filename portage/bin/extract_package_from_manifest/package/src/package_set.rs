@@ -11,11 +11,11 @@ use std::{
 };
 
 use crate::extract::{extract_binpkg, ExtractedPackage};
-use crate::package::{FileMetadata, FileType, Package, PackageUid};
+use crate::package::{FileMetadata, FileType, Package, PackageUid, SymlinkMetadata};
 
 pub struct PackageSet {
     packages: Vec<PackageUid>,
-    owners: HashMap<PathBuf, (PackageUid, FileMetadata)>,
+    owners: HashMap<PathBuf, (PackageUid, FileType)>,
 }
 
 /// Validates that no two packages have the same unique identifier.
@@ -33,20 +33,18 @@ fn validate_unique_packages(packages: &[ExtractedPackage]) -> Result<()> {
 /// If multiple packages contain the same file, then returns an error.
 fn calculate_owners(
     packages: &[ExtractedPackage],
-) -> Result<HashMap<PathBuf, (PackageUid, FileMetadata)>> {
-    let mut owners: HashMap<PathBuf, (PackageUid, FileMetadata)> = HashMap::new();
+) -> Result<HashMap<PathBuf, (PackageUid, FileType)>> {
+    let mut owners: HashMap<PathBuf, (PackageUid, FileType)> = HashMap::new();
     for pkg in packages {
         for file in &pkg.content.files {
-            if let Some(old_owner) = owners.insert(
-                file.path.clone(),
-                (
-                    pkg.uid.clone(),
-                    FileMetadata {
-                        symlink: file.symlink.is_some(),
-                        kind: FileType::Unknown,
-                    },
-                ),
-            ) {
+            let file_type = match &file.symlink {
+                None => FileType::Unknown,
+                Some(path) => FileType::Symlink(SymlinkMetadata {
+                    target: path.to_path_buf(),
+                }),
+            };
+            if let Some(old_owner) = owners.insert(file.path.clone(), (pkg.uid.clone(), file_type))
+            {
                 bail!(
                     "Conflict: Packages {:?} and {:?} both create file {:?}",
                     old_owner,
@@ -79,22 +77,21 @@ impl PackageSet {
 
     /// Returns an iterator through all files that we haven't yet determined the file type for.
     fn unknown_files(&self) -> impl Iterator<Item = &Path> {
-        self.owners.iter().flat_map(|(path, (_, metadata))| {
-            if metadata.kind == FileType::Unknown {
-                Some(path.as_path())
-            } else {
-                None
-            }
-        })
+        self.owners
+            .iter()
+            .flat_map(|(path, (_, file_type))| match file_type {
+                FileType::Unknown => Some(path.as_path()),
+                _ => None,
+            })
     }
 
     /// Sets the filetype of a file.
     fn set_filetype(&mut self, path: &Path, value: FileType) -> Result<()> {
-        let (_, metadata) = self
+        let (_, file_type) = self
             .owners
             .get_mut(path)
             .with_context(|| format!("{path:?} must exist in package set"))?;
-        metadata.kind = value;
+        *file_type = value;
         Ok(())
     }
 
@@ -136,8 +133,11 @@ impl PackageSet {
     pub fn into_packages(self) -> Vec<Package> {
         let mut uid_to_files: BTreeMap<PackageUid, BTreeMap<PathBuf, FileMetadata>> =
             BTreeMap::new();
-        for (path, (pkg, metadata)) in self.owners {
-            uid_to_files.entry(pkg).or_default().insert(path, metadata);
+        for (path, (pkg, file_type)) in self.owners {
+            uid_to_files
+                .entry(pkg)
+                .or_default()
+                .insert(path, FileMetadata { file_type });
         }
         // Preserve the original package order.
         self.packages
@@ -196,23 +196,14 @@ mod tests {
 
         assert_eq!(
             calculate_owners(&[foo.clone()])?,
-            HashMap::from([(
-                PathBuf::from("/foo"),
-                (foo.uid.clone(), FileMetadata::new_file())
-            )])
+            HashMap::from([(PathBuf::from("/foo"), (foo.uid.clone(), FileType::Unknown))])
         );
 
         assert_eq!(
             calculate_owners(&[foo.clone(), bar.clone()])?,
             HashMap::from([
-                (
-                    PathBuf::from("/foo"),
-                    (foo.uid.clone(), FileMetadata::new_file())
-                ),
-                (
-                    PathBuf::from("/bar"),
-                    (bar.uid.clone(), FileMetadata::new_file())
-                ),
+                (PathBuf::from("/foo"), (foo.uid.clone(), FileType::Unknown)),
+                (PathBuf::from("/bar"), (bar.uid.clone(), FileType::Unknown)),
             ])
         );
 
@@ -288,15 +279,15 @@ mod tests {
         assert_eq!(
             glibc.content.get(Path::new("/lib64/ld-linux-x86-64.so.2")),
             Some(&FileMetadata {
-                symlink: false,
-                kind: FileType::SharedLibrary
+                file_type: FileType::SharedLibrary
             })
         );
         assert_eq!(
             glibc.content.get(Path::new("/lib64/ld-linux.so.2")),
             Some(&FileMetadata {
-                symlink: true,
-                kind: FileType::SharedLibrary
+                file_type: FileType::Symlink(SymlinkMetadata {
+                    target: PathBuf::from("/lib32/ld-linux.so.2")
+                })
             })
         );
 
@@ -304,16 +295,23 @@ mod tests {
         assert_eq!(
             glibc.content.get(Path::new("/usr/lib64/gconv/IBM278.so")),
             Some(&FileMetadata {
-                symlink: false,
-                kind: FileType::Unknown
+                file_type: FileType::Unknown
+            })
+        );
+
+        assert_eq!(
+            ncurses.content.get(Path::new("/usr/include/curses.h")),
+            Some(&FileMetadata {
+                file_type: FileType::HeaderFile
             })
         );
 
         assert_eq!(
             ncurses.content.get(Path::new("/usr/include/ncurses.h")),
             Some(&FileMetadata {
-                symlink: true,
-                kind: FileType::HeaderFile,
+                file_type: FileType::Symlink(SymlinkMetadata {
+                    target: PathBuf::from("/usr/include/curses.h")
+                })
             })
         );
 
