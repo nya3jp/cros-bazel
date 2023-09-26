@@ -494,6 +494,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "extract_package_from_manifest"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "cliutil",
+ "extract_package_from_manifest_package",
+ "regex",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "extract_package_from_manifest_package"
 version = "0.1.0"
 dependencies = [

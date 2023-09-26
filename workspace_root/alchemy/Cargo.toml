@@ -10,6 +10,7 @@ members = [
     "bazel/portage/bin/drive_binary_package",
     "bazel/portage/bin/extract_interface",
     "bazel/portage/bin/extract_package",
+    "bazel/portage/bin/extract_package_from_manifest/extract",
     "bazel/portage/bin/extract_package_from_manifest/package",
     "bazel/portage/bin/extract_package_from_manifest/update_manifest",
     "bazel/portage/bin/fast_install_packages",
