@@ -9,6 +9,7 @@ It is required to fix various incompatibilities with imports in python.
 
 import collections
 import importlib.util
+import itertools
 import os
 import sys
 import types
@@ -62,6 +63,18 @@ class ThirdParty(types.ModuleType):
 sys.modules["third_party"] = ThirdParty(name="third_party")
 
 
+def current_repository() -> int:
+    # Start from 2 because 0 is this function, and 1 is the caller inside
+    # sitecustomize.
+    for i in itertools.count(2):
+        try:
+            code = sys._getframe(i).f_code.co_filename
+            if not code.startswith("<frozen importlib."):
+                return r.CurrentRepository(i + 1)
+        except ValueError:
+            raise ValueError("Unable to find importing module in call stack")
+
+
 class RepoMappedModule(types.ModuleType):
     """A virtual module corresponding to @foo.
 
@@ -80,7 +93,7 @@ class RepoMappedModule(types.ModuleType):
 
     def __getattr__(self, item):
         """Dispatches the getattr to the real module."""
-        current_real = r.CurrentRepository(frame=2)
+        current_real = current_repository()
         target_real = self._repo_mapping[current_real]
         mod = self._module_mapping.get(target_real, None)
         if mod is None:
