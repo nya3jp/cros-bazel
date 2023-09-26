@@ -24,6 +24,14 @@ pub struct TarballContent {
     pub files: BTreeSet<TarballFile>,
 }
 
+/// Resolves a symlink transitively until it reaches a non-symlink.
+fn resolve_symlink<'a>(symlinks: &'a HashMap<PathBuf, PathBuf>, dest: &'a Path) -> &'a Path {
+    match symlinks.get(dest) {
+        Some(ref transitive_dest) => resolve_symlink(symlinks, &transitive_dest),
+        None => dest,
+    }
+}
+
 /// Extracts from the specified tarball to out_dir.
 /// If out_dir is specified, then we extract to the specified directory.
 /// want_file is a mapping from the path within the archive to the path outside, relative to
@@ -88,6 +96,7 @@ pub fn extract_tarball(
         }
     }
 
+    let mut symlinks: HashMap<PathBuf, PathBuf> = HashMap::new();
     for file in &mut out_files {
         if let Some(symlink) = file.symlink.as_mut() {
             *symlink = path_mapping
@@ -99,7 +108,22 @@ pub fn extract_tarball(
                     )
                 })?
                 .clone();
+            symlinks.insert(file.path.to_path_buf(), symlink.to_path_buf());
+        }
+    }
 
+    let out_files: BTreeSet<TarballFile> = out_files
+        .into_iter()
+        .map(|f| TarballFile {
+            path: f.path,
+            symlink: f
+                .symlink
+                .map(|dst| resolve_symlink(&symlinks, &dst).to_path_buf()),
+        })
+        .collect();
+
+    for file in &out_files {
+        if let Some(symlink) = &file.symlink {
             let target = pathdiff::diff_paths(symlink, file.path.parent().unwrap())
                 .context("Unable to diff paths")?;
             let path = out_dir.join(file.path.strip_prefix(Path::new("/"))?);
@@ -108,9 +132,7 @@ pub fn extract_tarball(
         }
     }
 
-    Ok(TarballContent {
-        files: out_files.into_iter().collect(),
-    })
+    Ok(TarballContent { files: out_files })
 }
 
 #[cfg(test)]
@@ -131,6 +153,32 @@ mod tests {
     fn binary_package() -> Result<BinaryPackage> {
         let r = runfiles::Runfiles::create()?;
         BinaryPackage::open(&r.rlocation(BINARY_PKG_RUNFILE))
+    }
+
+    #[test]
+    fn transitive_symlinks() {
+        let symlinks: HashMap<PathBuf, PathBuf> = HashMap::from([
+            (
+                PathBuf::from("/lib64/libfoo.so.1"),
+                PathBuf::from("/lib64/libfoo.so.1.2"),
+            ),
+            (
+                PathBuf::from("/lib64/libfoo.so.1.2"),
+                PathBuf::from("/lib64/libfoo.so.1.2.3"),
+            ),
+        ]);
+        assert_eq!(
+            resolve_symlink(&symlinks, Path::new("/lib64/libfoo.so.1.2.3")),
+            Path::new("/lib64/libfoo.so.1.2.3")
+        );
+        assert_eq!(
+            resolve_symlink(&symlinks, Path::new("/lib64/libfoo.so.1.2")),
+            Path::new("/lib64/libfoo.so.1.2.3")
+        );
+        assert_eq!(
+            resolve_symlink(&symlinks, Path::new("/lib64/libfoo.so.1")),
+            Path::new("/lib64/libfoo.so.1.2.3")
+        );
     }
 
     #[test]
