@@ -291,10 +291,41 @@ def _download_prebuilt(ctx, prebuilt, output_binary_package_file):
         progress_message = "Downloading %s" % prebuilt,
     )
 
-def _ebuild_impl(ctx):
+def _get_basename(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
     if ctx.attr.suffix:
         src_basename += ctx.attr.suffix
+
+    return src_basename
+
+def generate_ebuild_validation_action(ctx, binpkg):
+    src_basename = _get_basename(ctx.rule)
+
+    validation_file = ctx.actions.declare_file(src_basename + ".validation")
+
+    args = ctx.actions.args()
+    args.add_all([
+        "validate-package",
+        "--touch",
+        validation_file,
+        "--package",
+        binpkg,
+    ])
+    args.add_joined("--use-flags", ctx.rule.attr.use_flags, join_with = ",", omit_if_empty = False)
+
+    ctx.actions.run(
+        inputs = depset([binpkg]),
+        outputs = [validation_file],
+        executable = ctx.rule.executable._xpaktool,
+        arguments = [args],
+        mnemonic = "EbuildValidation",
+        progress_message = "Building %{label}",
+    )
+
+    return validation_file
+
+def _ebuild_impl(ctx):
+    src_basename = _get_basename(ctx)
 
     # Declare outputs.
     output_binary_package_file = ctx.actions.declare_file(
@@ -304,7 +335,6 @@ def _ebuild_impl(ctx):
     output_profile_file = ctx.actions.declare_file(
         src_basename + ".profile.json",
     )
-    validation_file = ctx.actions.declare_file(src_basename + ".validation")
 
     # Compute arguments and inputs to run build_package.
     args, inputs = _compute_build_package_args(ctx, output_path = output_binary_package_file.path, use_runfiles = False)
@@ -414,32 +444,12 @@ def _ebuild_impl(ctx):
         layer = install_layer,
     )
 
-    args = ctx.actions.args()
-    args.add_all([
-        "validate-package",
-        "--touch",
-        validation_file,
-        "--package",
-        output_binary_package_file,
-    ])
-    args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",", omit_if_empty = False)
-
-    ctx.actions.run(
-        inputs = depset([output_binary_package_file]),
-        outputs = [validation_file],
-        executable = ctx.executable._xpaktool,
-        arguments = [args],
-        mnemonic = "EbuildValidation",
-        progress_message = "Building %{label}",
-    )
-
     package_set_info = single_binary_package_set_info(package_info)
     return [
         DefaultInfo(files = depset(
             [output_binary_package_file, output_log_file] +
             interface_library_outputs,
         )),
-        OutputGroupInfo(_validation = depset([validation_file])),
         package_info,
         package_set_info,
     ] + interface_library_providers

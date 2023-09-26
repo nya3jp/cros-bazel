@@ -143,3 +143,7 @@ build:nohermetic_cc --no//bazel/module_extensions/toolchains/cc:hermetic
 build:nohermetic_rust --no//bazel/module_extensions/toolchains/rust:hermetic
 
 build --config=nohermetic_toolchains
+
+# Enable printing artifact hashes + verifying ebuilds
+build --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_tracer,//bazel/portage/build_defs:hash_tracer.bzl%hash_tracer_validator
+query --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_tracer,//bazel/portage/build_defs:hash_tracer.bzl%hash_tracer_validator
