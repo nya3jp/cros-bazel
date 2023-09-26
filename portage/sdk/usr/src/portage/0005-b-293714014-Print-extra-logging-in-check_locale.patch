@@ -1,4 +1,4 @@
-From 4a0c31408f3bbb6a29ca1b0d62a266abf4758263 Mon Sep 17 00:00:00 2001
+From dc74a6d7b8bb2204fda8e5b752ad18cd73e53ed8 Mon Sep 17 00:00:00 2001
 From: Raul E Rangel <rrangel@chromium.org>
 Date: Fri, 22 Sep 2023 15:54:28 -0600
 Subject: [PATCH] b/293714014 - Print extra logging in check_locale
@@ -11,70 +11,65 @@ TEST=sudo emerge -av virtual/os-headers and see logs printed to stdout
 
 Change-Id: Ia91fb14c2e61abd56e03ef74bdf0dfe920adf15c
 ---
- usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/util/locale.py | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/util/locale.py | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/util/locale.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/util/locale.py
-index 5b09945d66..234e78a444 100644
+index 5b09945d66..dcc9f50fd5 100644
 --- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/util/locale.py
 +++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/util/locale.py
-@@ -11,6 +11,8 @@ from __future__ import absolute_import, unicode_literals
+@@ -11,7 +11,9 @@ from __future__ import absolute_import, unicode_literals
  import locale
  import logging
  import os
-+import signal
 +import subprocess
  import textwrap
++import threading
  import traceback
  
-@@ -79,6 +81,9 @@ def _check_locale(silent):
- 
- 	return True
- 
-+def debug_signal(_signum, _frame):
-+	import pdb
-+	pdb.set_trace()
- 
- def check_locale(silent=False, env=None):
- 	"""
-@@ -100,9 +105,15 @@ def check_locale(silent=False, env=None):
+ import portage
+@@ -100,9 +102,19 @@ def check_locale(silent=False, env=None):
  		except KeyError:
  			pass
  
-+	print("check_locale(%d): Checking locale" % (os.getpid()))
++	print("check_locale(%d): Checking locale" % (threading.get_native_id()), flush=True)
 +
  	pid = os.fork()
  	if pid == 0:
++		import faulthandler
  		try:
-+			print("check_locale(%d): I'm alive" % (os.getpid()), flush=True)
++			print("check_locale_inner(%d): I'm alive" % (threading.get_native_id()), flush=True)
++
++			# exit=True exit's with 0 which isn't what we want :/
++			faulthandler.dump_traceback_later(60)
++
 +			subprocess.run(['/bin/bash', '-c', 'data="$(echo "---"; ps fx)"; echo "$data"'])
-+			signal.signal(signal.SIGUSR1, debug_signal)
-+			
++
  			if env is not None:
  				try:
  					locale.setlocale(locale.LC_CTYPE,
-@@ -111,6 +122,8 @@ def check_locale(silent=False, env=None):
+@@ -111,6 +123,8 @@ def check_locale(silent=False, env=None):
  					os._exit(2)
  
  			ret = _check_locale(silent)
 +
-+			print("check_locale(%d): ret=%d" % (os.getpid(), ret), flush=True)
++			print("check_locale_inner(%d): ret=%d" % (threading.get_native_id(), ret), flush=True)
  			if ret is None:
  				os._exit(2)
  			else:
-@@ -119,6 +132,7 @@ def check_locale(silent=False, env=None):
+@@ -119,6 +133,7 @@ def check_locale(silent=False, env=None):
  			traceback.print_exc()
  			os._exit(2)
  
-+	print("check_locale(%d): Waiting for pid %d" % (os.getpid(), pid))
++	print("check_locale(%d): Waiting for pid %d" % (threading.get_native_id(), pid), flush=True)
  	pid2, ret = os.waitpid(pid, 0)
  	assert pid == pid2
  	pyret = None
-@@ -129,6 +143,7 @@ def check_locale(silent=False, env=None):
+@@ -129,6 +144,7 @@ def check_locale(silent=False, env=None):
  
  	if env is not None:
  		_check_locale_cache[mylocale] = pyret
-+	print("check_locale(%d): ret=%d" % (os.getpid(), pyret))
++	print("check_locale(%d): ret=%d" % (threading.get_native_id(), pyret), flush=True)
  	return pyret
  
  
