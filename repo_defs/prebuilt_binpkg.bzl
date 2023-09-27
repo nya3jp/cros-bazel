@@ -18,6 +18,7 @@ binary_package(
     package_name = {package_name},
     runtime_deps = {runtime_deps},
     version = {version},
+    slot = {slot},
     # Use public visibility since bzlmod repo namespacing prevents unwanted
     # visibility.
     visibility = ["//visibility:public"],
@@ -42,6 +43,7 @@ def _prebuilt_binpkg_impl(repo_ctx):
             [str(label) for label in repo_ctx.attr.runtime_deps],
         ),
         version = repr(version),
+        slot = repr(repo_ctx.attr.slot),
     ))
 
     download_gs_file(repo_ctx)
@@ -54,5 +56,6 @@ prebuilt_binpkg = repository_rule(
     """,
     attrs = GS_ATTRS | {
         "runtime_deps": attr.label_list(),
+        "slot": attr.string(default = "0/0"),
     },
 )

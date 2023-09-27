@@ -10,8 +10,6 @@ def _binary_package_impl(ctx):
     src_basename = src.basename.rsplit(".", 1)[0]
 
     slot = ctx.attr.slot
-    if "/" not in slot:
-        fail("Slot must be of the form '{main_slot}/{subslot}'")
 
     contents = generate_contents(
         ctx = ctx,

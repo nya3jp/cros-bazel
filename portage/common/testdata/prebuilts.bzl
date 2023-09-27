@@ -8,13 +8,15 @@ def portage_testdata_prebuilts(prebuilt_binpkg):
     prebuilt_binpkg(
         name = "testdata_ncurses",
         url = "gs://chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.09.12.050023/packages/sys-libs/ncurses-6.3_p20220423-r1.tbz2",
-        runtime_deps = [],
+        runtime_deps = ["@files//:testdata_glibc_alias"],
+        slot = "0/6",
     )
 
     prebuilt_binpkg(
         name = "testdata_glibc",
         url = "gs://chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.09.12.050023/packages/sys-libs/glibc-2.35-r22.tbz2",
         runtime_deps = [],
+        slot = "2.2",
     )
 
     prebuilt_binpkg(
@@ -24,4 +26,5 @@ def portage_testdata_prebuilts(prebuilt_binpkg):
             "@files//:testdata_glibc_alias",
             "@files//:testdata_ncurses_alias",
         ],
+        slot = "0",
     )
