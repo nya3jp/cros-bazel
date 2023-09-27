@@ -3,5 +3,8 @@
 # found in the LICENSE file.
 
 load(":files_test.bzl", "test_files")
+load(":package_test.bzl", "test_package")
 
 test_files(name = "files_test")
+
+test_package(name = "package_test")
