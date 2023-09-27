@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("//bazel/build_defs:always_fail.bzl", "always_fail")
-load(":extract_package_from_manifest/update_manifest.bzl", "update_manifest")
+load("//bazel/portage/build_defs/extract_package_from_manifest:update_manifest.bzl", "update_manifest")
 
 visibility("public")
 

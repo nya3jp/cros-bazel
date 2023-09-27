@@ -4,9 +4,9 @@
 
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "bash_rlocation", "generate_bash_script")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo")
-load(":extract_package_from_manifest/common.bzl", "EXTRACT_COMMON_ATTRS")
+load(":common.bzl", "EXTRACT_COMMON_ATTRS")
 
-visibility("private")
+visibility("//bazel/portage/build_defs")
 
 _CONTENT = """
 BUILDOZER="$(rlocation files/buildozer)"

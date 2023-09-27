@@ -33,6 +33,7 @@ pub struct SymlinkMetadata {
     pub target: PathBuf,
 }
 
+// When changing this, also change bazel/portage/build_defs/extract_package_from_manifest/files.bzl
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub enum FileType {
