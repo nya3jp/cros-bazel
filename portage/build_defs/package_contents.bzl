@@ -100,8 +100,10 @@ def generate_contents(
         binary_package: File: Binary package file.
         output_prefix: str: A file name prefix to prepend to output directories
             defined in this function.
-        board: Option[str]: The target board name the given binary package was
-            built for. None is equivalent to "amd64-host".
+        board: str: The target board name to install a package for. If it is
+            non-empty, the package is to be installed to the corresponding
+            sysroot (ROOT="/build/<board>"). If it is an empty string, the
+            package is to be installed to the host (ROOT="/").
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_extract_package: File: An executable file of extract_package.
 
@@ -110,7 +112,7 @@ def generate_contents(
             BinaryPackageInfo.contents.
     """
 
-    if board == None:
+    if not board:
         board = _HOST_BOARD
 
     contents = {}

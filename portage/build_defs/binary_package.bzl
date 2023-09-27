@@ -16,7 +16,7 @@ def _binary_package_impl(ctx):
         binary_package = src,
         output_prefix = src_basename,
         # Currently all usage of the binary_package rule is for host packages.
-        board = None,
+        board = "",
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_extract_package = ctx.executable._extract_package,
     )

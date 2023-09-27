@@ -127,8 +127,10 @@ def install_deps(
         ctx: ctx: A context object passed to the rule implementation.
         output_prefix: str: A file name prefix to prepend to output files
             defined in this function.
-        board: Option[str]: The target board name to install dependencies for. If None
-            then the packages are installed into the host sysroot.
+        board: str: The target board name to install dependencies for. If it is
+            non-empty, packages are installed to the corresponding sysroot
+            (ROOT="/build/<board>"). If it is an empty string, packages are
+            installed to the host (ROOT="/").
         sdk: SDKInfo: The provider describing the base file system layers.
         overlays: OverlaySetInfo: Overlays providing packages.
         install_set: Depset[BinaryPackageInfo]: Binary package targets to
