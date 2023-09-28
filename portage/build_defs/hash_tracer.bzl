@@ -48,8 +48,8 @@ def _generate_hash_action(ctx, files):
                 else
                     HASH="$(sha256sum "${FILE}" | cut -f1 -d ' ')"
                 fi
-                SIZE="$(du -hs "${FILE}" | cut -f1 -d$'\t')"
-                echo "* Hash Tracer: ${FILE} -> ${HASH} (${SIZE})" | tee -a "$out"
+                SIZE="$(du -bs "${FILE}" | cut -f1 -d$'\t')"
+                echo "* Hash Tracer: ${FILE} -> ${HASH} (${SIZE} bytes)" | tee -a "$out"
             done
         """,
     )
