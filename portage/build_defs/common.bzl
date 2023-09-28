@@ -57,21 +57,15 @@ BinaryPackageInfo, _new_binary_package_info = provider(
             the package manually.
         """,
         "contents": """
-            struct[ContentsLayersInfo]: Locates installed/staged contents layers
-            that are used to implement fast package installation.
+            ContentsLayersInfo: Locates installed/staged contents layers that
+            are used to implement fast package installation.
 
-            Since packages can be installed to several different sysroot
-            locations, this struct contains multiple entries corresponding
-            to possible installation locations.
-
-            An attribute name of the struct is a board name that you can
-            derive a sysroot directory from, e.g. "amd64-generic" or "eve",
-            or the special name "__host__" for the host installation. A value
-            of the struct is ContentsLayersInfo that locates an installed/staged
-            contents layer.
-
-            See the provider description for why this field is a struct,
-            not a dictionary.
+            Since a BinaryPackageInfo contains exactly one ContentsLayersInfo,
+            a binary package can be installed only to a single sysroot directory
+            that is specified statically in the rule building BinaryPackageInfo.
+            An implication of this is that, when building a host package, we
+            have to statically choose whether to install it to "/" or
+            "/build/amd64-host".
         """,
         "category": """
             str: The category of this package.
@@ -124,6 +118,10 @@ ContentsLayersInfo = provider(
     BinaryPackageInfo.
     """,
     fields = {
+        "sysroot": """
+            str: A sysroot directory path where the package is installed. It
+            must be either "/build/<board>" or "/".
+        """,
         "installed": """
             File: A durable tree directory containing an installed contents
             layer.

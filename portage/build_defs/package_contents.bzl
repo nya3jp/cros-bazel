@@ -4,9 +4,6 @@
 
 load("common.bzl", "ContentsLayersInfo")
 
-_HOST_BOARD = "amd64-host"
-_HOST_KEY = "__host__"
-
 def _generate_contents_layer(
         ctx,
         binary_package,
@@ -49,42 +46,6 @@ def _generate_contents_layer(
 
     return output_contents_dir
 
-def _generate_contents_layers(
-        ctx,
-        binary_package,
-        output_prefix,
-        board,
-        executable_action_wrapper,
-        executable_extract_package):
-    # board is None when we're generating for /, instead of /build/$BOARD.
-    # Note that board can be still "amd64-host" when we're generating for
-    # /build/amd64-host.
-    sysroot = "build/%s" % board if board else ""
-    host = board == None or board == _HOST_BOARD
-    name = board or "host"
-    return ContentsLayersInfo(
-        installed = _generate_contents_layer(
-            ctx = ctx,
-            binary_package = binary_package,
-            output_name = "%s.%s.installed.contents" % (output_prefix, name),
-            image_prefix = sysroot,
-            vdb_prefix = sysroot,
-            host = host,
-            executable_action_wrapper = executable_action_wrapper,
-            executable_extract_package = executable_extract_package,
-        ),
-        staged = _generate_contents_layer(
-            ctx = ctx,
-            binary_package = binary_package,
-            output_name = "%s.%s.staged.contents" % (output_prefix, name),
-            image_prefix = ".image",
-            vdb_prefix = sysroot,
-            host = host,
-            executable_action_wrapper = executable_action_wrapper,
-            executable_extract_package = executable_extract_package,
-        ),
-    )
-
 def generate_contents(
         ctx,
         binary_package,
@@ -108,33 +69,40 @@ def generate_contents(
         executable_extract_package: File: An executable file of extract_package.
 
     Returns:
-        struct[ContentsLayersInfo]: A struct suitable to set in
+        ContentsLayersInfo: A struct suitable to set in
             BinaryPackageInfo.contents.
     """
+    if board:
+        name = board
+        sysroot = "/build/%s" % board
+        host = board == "amd64-host"
+    else:
+        name = "host"
+        sysroot = "/"
+        host = True
 
-    if not board:
-        board = _HOST_BOARD
+    prefix = sysroot.lstrip("/")
 
-    contents = {}
-
-    contents[board] = _generate_contents_layers(
-        ctx = ctx,
-        binary_package = binary_package,
-        output_prefix = output_prefix,
-        board = board,
-        executable_action_wrapper = executable_action_wrapper,
-        executable_extract_package = executable_extract_package,
-    )
-
-    # If the target board is amd64-host, also generate a host installation.
-    if board == _HOST_BOARD:
-        contents[_HOST_KEY] = _generate_contents_layers(
+    return ContentsLayersInfo(
+        sysroot = sysroot,
+        installed = _generate_contents_layer(
             ctx = ctx,
             binary_package = binary_package,
-            output_prefix = output_prefix,
-            board = None,
+            output_name = "%s.%s.installed.contents" % (output_prefix, name),
+            image_prefix = prefix,
+            vdb_prefix = prefix,
+            host = host,
             executable_action_wrapper = executable_action_wrapper,
             executable_extract_package = executable_extract_package,
-        )
-
-    return struct(**contents)
+        ),
+        staged = _generate_contents_layer(
+            ctx = ctx,
+            binary_package = binary_package,
+            output_name = "%s.%s.staged.contents" % (output_prefix, name),
+            image_prefix = ".image",
+            vdb_prefix = prefix,
+            host = host,
+            executable_action_wrapper = executable_action_wrapper,
+            executable_extract_package = executable_extract_package,
+        ),
+    )

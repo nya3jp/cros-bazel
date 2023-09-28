@@ -14,6 +14,8 @@ def _fast_install_packages(
         executable_action_wrapper,
         executable_fast_install_packages,
         progress_message):
+    sysroot = "/build/%s" % board if board else "/"
+
     # Skip already installed packages.
     installed = {}
     for package in sdk.packages.to_list():
@@ -36,10 +38,7 @@ def _fast_install_packages(
         "--profile=" + output_profile_file.path,
         executable_fast_install_packages.path,
     ])
-    if board:
-        args.add("--root-dir=/build/%s" % board)
-    else:
-        args.add("--root-dir=/")
+    args.add("--root-dir=%s" % sysroot)
 
     input_layers = sdk.layers + overlays.layers
     args.add_all(
@@ -60,24 +59,34 @@ def _fast_install_packages(
             "%s.postinst" % package_output_prefix,
         )
 
-        contents_info = getattr(package.contents, board or "__host__")
+        if package.contents.sysroot != sysroot:
+            fail(
+                ("Requested to install %s/%s-%s to %s, but its installed " +
+                 "contents layers were generated only for %s") % (
+                    package.category,
+                    package.package_name,
+                    package.version,
+                    sysroot,
+                    package.contents.sysroot,
+                ),
+            )
         args.add("--install=%s,%s,%s,%s,%s" % (
             package.file.path,
-            contents_info.installed.path,
-            contents_info.staged.path,
+            package.contents.installed.path,
+            package.contents.staged.path,
             output_preinst.path,
             output_postinst.path,
         ))
 
         inputs.extend([
             package.file,
-            contents_info.installed,
-            contents_info.staged,
+            package.contents.installed,
+            package.contents.staged,
         ])
         outputs.extend([output_preinst, output_postinst])
         new_layers.extend([
             output_preinst,
-            contents_info.installed,
+            package.contents.installed,
             output_postinst,
         ])
 
