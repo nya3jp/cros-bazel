@@ -127,13 +127,6 @@ def _hash_tracer_impl(target, ctx):
 
         files = [binpkg]
 
-        # TODO: Remove this once we switch to fast package installation.
-        # Otherwise we will always create the layers when we don't need them.
-        # We don't have a good way to access @portage//:binpkg-cache-naive.
-        # We should probably move the flag out of the @portage repo.
-        if target[BinaryPackageInfo].layer:
-            files.append(target[BinaryPackageInfo].layer)
-
         # Only one rule or aspect can currently generate the _validation output group.
         # So we have this very ebuild specific validator defined here.
         # See https://github.com/bazelbuild/bazel/issues/19624
