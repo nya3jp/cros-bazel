@@ -124,7 +124,7 @@ def _processes_rule(rule):
 
 def _hash_tracer_impl(target, ctx):
     direct_outputs = []
-    depsets = []
+    transitive_outputs = []
 
     # We consider these terminal nodes since we just want to print out the
     # output hash.
@@ -145,7 +145,7 @@ def _hash_tracer_impl(target, ctx):
         last_layer = layers[-1]
 
         direct_outputs.append(_generate_hash_action(ctx, [last_layer]))
-        depsets.extend(_processes_rule(ctx.rule))
+        transitive_outputs.extend(_processes_rule(ctx.rule))
 
     elif ctx.rule.kind in ["ebuild"]:
         binpkg = target[BinaryPackageInfo].file
@@ -160,12 +160,12 @@ def _hash_tracer_impl(target, ctx):
 
         direct_outputs.append(_generate_hash_action(ctx, files))
 
-        depsets.extend(_processes_rule(ctx.rule))
+        transitive_outputs.extend(_processes_rule(ctx.rule))
     else:
         # For all the intermediary nodes we just propagate the dependencies.
-        depsets.extend(_processes_rule(ctx.rule))
+        transitive_outputs.extend(_processes_rule(ctx.rule))
 
-    return [HashTracerInfo(files = depset(direct_outputs, transitive = depsets))]
+    return [HashTracerInfo(files = depset(direct_outputs, transitive = transitive_outputs))]
 
 hash_tracer = aspect(
     implementation = _hash_tracer_impl,
