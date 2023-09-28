@@ -146,3 +146,4 @@ build --config=nohermetic_toolchains
 
 # Enable printing artifact hashes + verifying ebuilds
 build --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_tracer,//bazel/portage/build_defs:hash_tracer.bzl%hash_tracer_validator
+build:hash_tracer --aspects_parameters hash_tracer_enabled=true
