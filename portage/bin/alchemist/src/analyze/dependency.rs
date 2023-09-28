@@ -350,12 +350,14 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
          * We need gcc because chrome uses a bundled ninja that is built against libstdc++.
          *
          * /home/root/chrome_root/src/third_party/ninja/ninja: error while loading shared libraries: libstdc++.so.6: cannot open shared object file: No such file or directory
+         *
+         * We need lsof for chromeos-chrome to use goma.
          */
         ("chromeos-base/chrome-icu", DependencyKind::BuildHost { .. }) => {
             "dev-python/dataclasses sys-devel/gcc"
         }
         ("chromeos-base/chromeos-chrome", DependencyKind::BuildHost { .. }) => {
-            "dev-python/dataclasses sys-devel/gcc"
+            "dev-python/dataclasses sys-devel/gcc sys-process/lsof"
         }
 
         /*
