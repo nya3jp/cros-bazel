@@ -18,6 +18,31 @@ HashTracerInfo = provider(
     },
 )
 
+def _generate_cat_action(ctx, files):
+    output = ctx.actions.declare_file(ctx.rule.attr.name + ".hash.cat")
+    args = ctx.actions.args()
+    args.add(output)
+    args.add_all(files)
+
+    ctx.actions.run_shell(
+        outputs = [output],
+        inputs = files,
+        arguments = [args],
+        execution_requirements = {
+            # We don't cache this because we want to increase the chance of
+            # the hash being printed.
+            "no-cache": "",
+        },
+        command = """set -eu -o pipefail
+            out="$1"
+            shift
+            cat "$@"
+            touch "${out}"
+        """,
+    )
+
+    return output
+
 def _generate_hash_action(ctx, files):
     output = ctx.actions.declare_file(ctx.rule.attr.name + ".hash")
     args = ctx.actions.args()
@@ -30,9 +55,6 @@ def _generate_hash_action(ctx, files):
         arguments = [args],
         mnemonic = "HashTracer",
         execution_requirements = {
-            # We don't cache this because we want to increase the chance of
-            # the hash being printed.
-            "no-cache": "",
             # Disable the sandbox to avoid creating a symlink forest.
             # The symlink forest will mess up the `find` command.
             "no-sandbox": "",
@@ -49,12 +71,15 @@ def _generate_hash_action(ctx, files):
                     HASH="$(sha256sum "${FILE}" | cut -f1 -d ' ')"
                 fi
                 SIZE="$(du -bs "${FILE}" | cut -f1 -d$'\t')"
-                echo "* Hash Tracer: ${FILE} -> ${HASH} (${SIZE} bytes)" | tee -a "$out"
+                echo "* Hash Tracer: ${FILE} -> ${HASH} (${SIZE} bytes)" > "$out"
             done
         """,
     )
 
-    return output
+    # We split the hashing and printing of the hash into two actions. This
+    # allows the hash calculation to be cached and avoids putting extra strain
+    # on the RBE CAS.
+    return _generate_cat_action(ctx, [output])
 
 def _processes_rule(rule):
     """
