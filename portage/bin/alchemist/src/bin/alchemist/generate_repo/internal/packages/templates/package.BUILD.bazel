@@ -71,8 +71,8 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "//:binpkg-cache-fast": "fast",
-        "//:binpkg-cache-naive": "naive",
+        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -100,8 +100,8 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "//:binpkg-cache-fast": "fast",
-        "//:binpkg-cache-naive": "naive",
+        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -129,8 +129,8 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "//:binpkg-cache-fast": "fast",
-        "//:binpkg-cache-naive": "naive",
+        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -200,8 +200,8 @@ ebuild(
         {%- endfor %}
     ],
     inject_use_flags = select({
-        "//:alchemist-use-flags": True,
-        "//:portage-use-flags": False,
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}
@@ -286,8 +286,8 @@ ebuild_debug(
         {%- endfor %}
     ],
     inject_use_flags = select({
-        "//:alchemist-use-flags": True,
-        "//:portage-use-flags": False,
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}
@@ -384,8 +384,8 @@ ebuild_test(
         {%- endfor %}
     ],
     inject_use_flags = select({
-        "//:alchemist-use-flags": True,
-        "//:portage-use-flags": False,
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}

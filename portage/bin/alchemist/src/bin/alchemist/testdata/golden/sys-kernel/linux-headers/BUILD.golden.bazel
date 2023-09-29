@@ -8,40 +8,40 @@ load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 alias(
     name = "4.14",
     actual = select({
-        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14",
-        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "4.14_debug",
     actual = select({
-        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_debug",
-        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_debug",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_debug",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_debug",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "4.14_package_set",
     actual = select({
-        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_package_set",
-        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_package_set",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_package_set",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_package_set",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "4.14_install",
     actual = select({
-        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_install",
-        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_install",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_install",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_install",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "4.14_install_list",
     actual = select({
-        "//:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_install_list",
-        "//:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_install_list",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_install_list",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_install_list",
     }),
     visibility = ["@//bazel:internal"],
 )

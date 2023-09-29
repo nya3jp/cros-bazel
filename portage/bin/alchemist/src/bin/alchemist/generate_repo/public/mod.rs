@@ -126,14 +126,14 @@ fn generate_public_package(
                 name: Cow::from(format!("{}{}", version, suffix)),
                 actual: SelectValue::Select(vec![
                     (
-                        Cow::Borrowed("//:stage1"),
+                        Cow::Borrowed("@//bazel/portage:stage1"),
                         Cow::from(format!(
                             "{}:{}{}",
                             &internal_package_location_stage1, version, suffix
                         )),
                     ),
                     (
-                        Cow::Borrowed("//:stage2"),
+                        Cow::Borrowed("@//bazel/portage:stage2"),
                         Cow::from(format!(
                             "{}:{}{}",
                             &internal_package_location_stage2, version, suffix

@@ -53,8 +53,8 @@ ebuild(
     use_flags = [
     ],
     inject_use_flags = select({
-        "//:alchemist-use-flags": True,
-        "//:portage-use-flags": False,
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -94,8 +94,8 @@ suffix = "_hermetic_test_package",
     use_flags = [
     ],
     inject_use_flags = select({
-        "//:alchemist-use-flags": True,
-        "//:portage-use-flags": False,
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -133,8 +133,8 @@ ebuild_debug(
     use_flags = [
     ],
     inject_use_flags = select({
-        "//:alchemist-use-flags": True,
-        "//:portage-use-flags": False,
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -182,8 +182,8 @@ ebuild_test(
     use_flags = [
     ],
     inject_use_flags = select({
-        "//:alchemist-use-flags": True,
-        "//:portage-use-flags": False,
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",

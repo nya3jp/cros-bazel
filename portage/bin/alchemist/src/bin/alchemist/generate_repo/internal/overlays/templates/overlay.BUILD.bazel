@@ -16,13 +16,13 @@ pkg_files(
         ],
         exclude = OVERLAY_EXCLUDE,
     ) + select({
-        "//:alchemist-use-flags": glob(
+        "@//bazel/portage:alchemist-use-flags": glob(
             ["profiles/**"],
             exclude = OVERLAY_EXCLUDE +
                       OVERLAY_ANALYSIS_FILE_PATTERN +
                       OVERLAY_USE_FILE_PATTERN,
         ),
-        "//:portage-use-flags": glob(
+        "@//bazel/portage:portage-use-flags": glob(
             ["profiles/**"],
             exclude = OVERLAY_EXCLUDE +
                       OVERLAY_ANALYSIS_FILE_PATTERN,

@@ -71,13 +71,13 @@ pkg_files(
         "chromeos/config/make.conf.amd64-host",
         "profiles/**/*.bashrc",
     ]) + select({
-        "//:alchemist-use-flags": glob(
+        "@//bazel/portage:alchemist-use-flags": glob(
             ["profiles/**"],
             exclude = OVERLAY_EXCLUDE +
                       OVERLAY_ANALYSIS_FILE_PATTERN +
                       OVERLAY_USE_FILE_PATTERN,
         ),
-        "//:portage-use-flags": glob(
+        "@//bazel/portage:portage-use-flags": glob(
             ["profiles/**"],
             exclude = OVERLAY_EXCLUDE +
                       OVERLAY_ANALYSIS_FILE_PATTERN,
@@ -114,8 +114,8 @@ pkg_files(
         # Required by build_image.
         "sys-boot/grub/files/sbat.csv",
     ] + glob(OVERLAY_ANALYSIS_FILE_PATTERN) + select({
-        "//:alchemist-use-flags": glob(OVERLAY_USE_FILE_PATTERN),
-        "//:portage-use-flags": [],
+        "@//bazel/portage:alchemist-use-flags": glob(OVERLAY_USE_FILE_PATTERN),
+        "@//bazel/portage:portage-use-flags": [],
     }),
     prefix = "{{ mount_path }}",
     strip_prefix = strip_prefix.from_pkg(),
