@@ -53,11 +53,18 @@ custom_args_binary(
 
 custom_args_test(
     name = "alchemist_test",
-    size = "small",
+    # If it's not cached, it can be quite slow to download all the dependencies.
+    size = "medium",
     binary = ":cargo",
     binary_args = [
         "test",
         "--package",
         "alchemist",
+    ],
+    # We require network access to download from crates.io, and require
+    # disabling the sandbox to write them to the local cache of the registry.
+    tags = [
+        "no-sandbox",
+        "requires-network",
     ],
 )
