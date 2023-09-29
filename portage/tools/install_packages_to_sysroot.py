@@ -37,22 +37,23 @@ def main():
 
     # Generate chromeos-chrome prebuilt config.
     chrome_prebuilt_configs = []
-    try:
-        chrome_prebuilt_configs = (
-            subprocess.check_output(
-                [
-                    os.path.join(
-                        _SCRIPT_DIR, "generate_chrome_prebuilt_config.py"
-                    ),
-                    "--no-lookback",
-                ],
-                encoding="utf-8",
-            )
-            .strip()
-            .splitlines()
-        )
-    except subprocess.CalledProcessError as e:
-        logging.info("Could not find chromeos-chrome prebuilt: %s", e)
+    # Stop using chrome prebuilt to verify goma works (b/300218625).
+    # try:
+    #     chrome_prebuilt_configs = (
+    #         subprocess.check_output(
+    #             [
+    #                 os.path.join(
+    #                     _SCRIPT_DIR, "generate_chrome_prebuilt_config.py"
+    #                 ),
+    #                 "--no-lookback",
+    #             ],
+    #             encoding="utf-8",
+    #         )
+    #         .strip()
+    #         .splitlines()
+    #     )
+    # except subprocess.CalledProcessError as e:
+    #     logging.info("Could not find chromeos-chrome prebuilt: %s", e)
     logging.info("Chrome prebuilt configs are %s", chrome_prebuilt_configs)
 
     # Build packages and install lists.
