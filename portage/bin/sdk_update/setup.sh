@@ -36,15 +36,24 @@ do
   # $ sed -i -E -e 's|([ab])/bin/|\1/usr/PYTHON_LIBDIR/portage/PYTHON_VERSION/|g' \
   #       -e 's|([ab])/lib/portage/|\1/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/|g' \
   #       *.patch
-  patch -d "/" -p 1 < <(
-    sed -e "s/PYTHON_VERSION/${PYTHON_VERSION}/g" \
-        -e "s/PYTHON_LIBDIR/${PYTHON_LIBDIR}/g" \
-      /usr/src/portage/0001-bin-Add-binpkg-hermetic-feature.patch \
-      /usr/src/portage/0002-bin-phase-functions-Move-du-stats-into-subshell.patch \
-      /usr/src/portage/0003-config-Don-t-directly-modify-FEATURES.patch \
-      /usr/src/portage/0004-CHROMIUM-Disable-pretend-phase-when-invoking-ebuild.patch \
-      /usr/src/portage/0005-b-293714014-Print-extra-logging-in-check_locale.patch
-  )
+
+  if ! patch --forward -d "/" -p 1 < <(
+        sed -e "s/PYTHON_VERSION/${PYTHON_VERSION}/g" \
+            -e "s/PYTHON_LIBDIR/${PYTHON_LIBDIR}/g" \
+          /usr/src/portage/0001-bin-Add-binpkg-hermetic-feature.patch \
+          /usr/src/portage/0002-bin-phase-functions-Move-du-stats-into-subshell.patch \
+          /usr/src/portage/0003-config-Don-t-directly-modify-FEATURES.patch \
+          /usr/src/portage/0004-CHROMIUM-Disable-pretend-phase-when-invoking-ebuild.patch \
+          /usr/src/portage/0005-b-293714014-Print-extra-logging-in-check_locale.patch
+      ) && RC="$?"; then
+    # Exit code 1 means some hunks failed to apply. They were either already applied, or
+    # had a merge conflict. Not ideal that we can't differentiate between the two.
+    # Exit code 2 means something bad happened. Let's ignore exit 1 for now.
+    # We will eventually land all of this upstream.
+    if [[ "${RC}" -gt 1 ]]; then
+      exit 1
+    fi
+  fi
 
   # TODO: Consider using fakeroot-like approach to emulate file permissions.
   sed -i -e '/dir_mode_map = {/,/}/s/False/True/' \
