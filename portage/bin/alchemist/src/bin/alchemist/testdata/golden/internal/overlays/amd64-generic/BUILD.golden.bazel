@@ -53,7 +53,10 @@ overlay(
 
 pkg_files(
     name = "files-full",
-    srcs = glob(OVERLAY_ANALYSIS_FILE_PATTERN),
+    srcs = glob(OVERLAY_ANALYSIS_FILE_PATTERN) + select({
+        "@//bazel/portage:alchemist-use-flags": glob(OVERLAY_USE_FILE_PATTERN),
+        "@//bazel/portage:portage-use-flags": [],
+    }),
     prefix = "mnt/host/source/src/overlays/overlay-amd64-generic",
     strip_prefix = strip_prefix.from_pkg(),
     visibility = ["//visibility:private"],
