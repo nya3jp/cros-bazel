@@ -4,7 +4,6 @@
 
 load("//bazel/build_defs:bool_flag.bzl", "bool_flag")
 load("//bazel/module_extensions/toolchains/rust:rust_toolchain.bzl", "generate_rust_toolchains")
-load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM", "HOST_PLATFORM_MUSL")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -14,11 +13,3 @@ bool_flag(
 )
 
 generate_rust_toolchains()
-
-toolchain(
-    name = "host_musl_toolchain",
-    exec_compatible_with = HOST_PLATFORM.constraints,
-    target_compatible_with = HOST_PLATFORM_MUSL.constraints,
-    toolchain = "@rust_musl_toolchain//:rust_toolchain",
-    toolchain_type = "@rules_rust//rust:toolchain",
-)

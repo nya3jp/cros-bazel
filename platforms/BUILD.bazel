@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load(":platforms.bzl", "ALL_PLATFORMS_AND_MUSL")
+load(":platforms.bzl", "ALL_PLATFORMS")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -11,5 +11,5 @@ package(default_visibility = ["//visibility:public"])
         name = platform_info.name,
         constraint_values = platform_info.constraints,
     )
-    for platform_info in ALL_PLATFORMS_AND_MUSL
+    for platform_info in ALL_PLATFORMS
 ]

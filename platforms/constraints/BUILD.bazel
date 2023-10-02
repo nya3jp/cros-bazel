@@ -21,6 +21,5 @@ custom_constraint(
     options = [
         "gnu",
         "gnueabihf",
-        "musl",
     ],
 )
