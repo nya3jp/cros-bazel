@@ -18,6 +18,7 @@ use std::{
 
 const EBUILD_EXT: &str = ".ebuild";
 const MAIN_SCRIPT: &str = "/mnt/host/.build_package/build_package.sh";
+const JOB_SERVER: &str = "/mnt/host/.build_package/jobserver";
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
@@ -48,6 +49,12 @@ struct Cli {
         value_delimiter = ','
     )]
     use_flags: Vec<String>,
+
+    #[arg(
+        long,
+        help = "Points to a named pipe that is used for the GNU Make jobserver."
+    )]
+    jobserver: Option<PathBuf>,
 
     #[arg(long)]
     output: Option<PathBuf>,
@@ -244,7 +251,7 @@ fn do_main() -> Result<()> {
         ),
     };
 
-    let goma_envs = if args.ebuild.category == "chromeos-base"
+    let mut envs = if args.ebuild.category == "chromeos-base"
         && args.ebuild.package_name == "chromeos-chrome"
     {
         let goma_info: GomaInfo =
@@ -297,6 +304,21 @@ fn do_main() -> Result<()> {
         Vec::new()
     };
 
+    if let Some(jobserver) = args.jobserver {
+        // TODO(b/303061227): Should we check if we can open the FIFO?
+
+        settings.push_bind_mount(BindMount {
+            source: jobserver,
+            mount_path: PathBuf::from(JOB_SERVER),
+            rw: false,
+        });
+
+        envs.push((
+            "MAKEFLAGS".to_string(),
+            format!("--jobserver-auth=fifo:{}", JOB_SERVER),
+        ));
+    }
+
     let mut container = settings.prepare()?;
 
     let root_dir = container.root_dir().to_owned();
@@ -323,7 +345,7 @@ fn do_main() -> Result<()> {
         .arg("--skip-manifest")
         .arg(args.ebuild.mount_path)
         .arg("package")
-        .envs(goma_envs);
+        .envs(envs);
     if args.test {
         command.arg("test");
     }
