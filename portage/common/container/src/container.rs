@@ -399,17 +399,11 @@ impl<'settings> PreparedContainer<'settings> {
         for spec in settings.bind_mounts.iter() {
             let target = stage_dir.path().join(spec.mount_path.strip_prefix("/")?);
             let metadata = std::fs::metadata(&spec.source)?;
-            if metadata.is_file() {
-                std::fs::create_dir_all(target.parent().unwrap())?;
-                File::create(&target)?;
-            } else if metadata.is_dir() {
+            if metadata.is_dir() {
                 std::fs::create_dir_all(&target)?;
             } else {
-                bail!(
-                    "Unsupport file type for bind-mounting: {:?}: {}",
-                    metadata.file_type(),
-                    spec.source.display()
-                )
+                std::fs::create_dir_all(target.parent().unwrap())?;
+                File::create(&target)?;
             }
         }
 
@@ -758,6 +752,7 @@ mod tests {
 
         let temp_dir = SafeTempDir::new()?;
         File::create(temp_dir.path().join("ok"))?;
+        nix::unistd::mkfifo(&temp_dir.path().join("fifo"), nix::sys::stat::Mode::S_IRWXU)?;
 
         // Create bind mounts of a directory and a regular file.
         // In both cases, mount points should be created automatically.
@@ -771,11 +766,19 @@ mod tests {
             source: temp_dir.path().join("ok"),
             rw: false,
         });
+        settings.push_bind_mount(BindMount {
+            mount_path: PathBuf::from("/bind3/fifo"),
+            source: temp_dir.path().join("fifo"),
+            rw: false,
+        });
 
         let mut container = settings.prepare()?;
         let status = container
             .command("bash")
-            .args(["-c", "[[ -f /bind1/ok ]] && [[ -f /bind2/ok ]]"])
+            .args([
+                "-c",
+                "[[ -f /bind1/ok ]] && [[ -f /bind2/ok ]] && [[ -p /bind3/fifo ]]",
+            ])
             .status()?;
         assert!(status.success());
 
