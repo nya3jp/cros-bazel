@@ -222,7 +222,7 @@ __dbp_dump_environment() {
 
 __dbp_set_up_temporary_dir() {
   __dbp_temp_dir="/tmp/drive_binary_package/${__dbp_cpf}"
-  trap 'rm -rf "${__dbp_temp_dir}"' EXIT
+  mkdir -p "${__dbp_temp_dir}"
 }
 
 __dbp_define_vars() {
