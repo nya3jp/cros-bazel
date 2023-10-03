@@ -13,7 +13,7 @@ use std::process;
 
 #[derive(Parser)]
 struct Args {
-    #[arg(long, num_args=0..)]
+    #[arg(long, num_args=1..)]
     files: Vec<PathBuf>,
 }
 
@@ -76,8 +76,30 @@ fn main() -> Result<()> {
         })
         .collect::<Result<HashSet<String>>>()?;
 
+    // gen_rust_project will look like:
+    // <OUTPUT_BASE>/execroot/_main/bazel-out/k8-dbg/bin/.../gen_rust_project.runfiles/...
+    let mut execroot: &Path = &gen_rust_project;
+    while execroot.file_name() != Some(std::ffi::OsStr::new("execroot")) {
+        execroot = execroot.parent().with_context(|| {
+            format!("There must be a directory below {gen_rust_project:?} named execroot")
+        })?;
+    }
+
     eprintln!("Generating rust-project.json");
-    let mut cmd = process::Command::new(gen_rust_project);
+    let mut cmd = process::Command::new(&gen_rust_project);
+    cmd.arg("--workspace");
+    cmd.arg(
+        std::env::var_os("BUILD_WORKSPACE_DIRECTORY")
+            .context("gen_rust_project must be run via 'bazel run'")?,
+    );
+    cmd.arg("--execution-root");
+    cmd.arg(&execroot);
+    cmd.arg("--output-base");
+    cmd.arg(
+        &execroot
+            .parent()
+            .context("The execroot must have a parent directory")?,
+    );
     cmd.args(&pkgs);
     run_command(cmd)?;
 
