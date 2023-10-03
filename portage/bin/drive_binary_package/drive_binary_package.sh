@@ -255,7 +255,7 @@ __dbp_define_vars() {
   export BROOT=""
   export T="${__dbp_temp_dir?}"
   export TMPDIR="/tmp"
-  export HOME="/.home-unavailable"
+  export HOME="/"
   export EPREFIX=""
   export ED="${D?}"
   export MERGE_TYPE="binary"
