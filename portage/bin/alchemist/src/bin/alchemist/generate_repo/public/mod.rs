@@ -96,6 +96,8 @@ impl MaybePackage<'_> {
 fn generate_public_package(
     maybe_packages: Vec<MaybePackage>,
     resolver: &PackageResolver,
+    targets: &[TargetConfig],
+    test_prefix: &str,
     package_output_dir: &Path,
 ) -> Result<()> {
     create_dir_all(package_output_dir)?;
@@ -108,38 +110,27 @@ fn generate_public_package(
     let mut test_suites = Vec::new();
 
     for (version, maybe_package) in version_to_maybe_package.iter() {
-        // TODO(b/278728702): Remove the stage1 hard coded value.
-        let internal_package_location_stage1 = format!(
-            "//internal/packages/{}/{}/{}",
-            "stage1/target/board",
-            maybe_package.repo_name(),
-            maybe_package.package_name()
-        );
-        let internal_package_location_stage2 = format!(
-            "//internal/packages/{}/{}/{}",
-            "stage2/target/board",
-            maybe_package.repo_name(),
-            maybe_package.package_name()
-        );
         for suffix in ["", "_debug", "_package_set", "_install", "_install_list"] {
             aliases.push(AliasEntry {
                 name: Cow::from(format!("{}{}", version, suffix)),
-                actual: SelectValue::Select(vec![
-                    (
-                        Cow::Borrowed("@//bazel/portage:stage1"),
-                        Cow::from(format!(
-                            "{}:{}{}",
-                            &internal_package_location_stage1, version, suffix
-                        )),
-                    ),
-                    (
-                        Cow::Borrowed("@//bazel/portage:stage2"),
-                        Cow::from(format!(
-                            "{}:{}{}",
-                            &internal_package_location_stage2, version, suffix
-                        )),
-                    ),
-                ]),
+                actual: SelectValue::Select(
+                    targets
+                        .iter()
+                        .map(|target| {
+                            (
+                                Cow::from(format!("@//bazel/portage:{}", target.config)),
+                                Cow::from(format!(
+                                    "//internal/packages/{}/{}/{}:{}{}",
+                                    target.prefix,
+                                    maybe_package.repo_name(),
+                                    maybe_package.package_name(),
+                                    version,
+                                    suffix,
+                                )),
+                            )
+                        })
+                        .collect(),
+                ),
             });
         }
         // The test_suite's tests attribute is not configurable, so we can't
@@ -148,8 +139,11 @@ fn generate_public_package(
         test_suites.push(TestSuiteEntry {
             name: Cow::from(format!("{}_test", version)),
             test_name: Cow::from(format!(
-                "{}:{}_test",
-                &internal_package_location_stage1, version
+                "//internal/packages/{}/{}/{}:{}_test",
+                test_prefix,
+                maybe_package.repo_name(),
+                maybe_package.package_name(),
+                version,
             )),
         });
     }
@@ -273,11 +267,28 @@ fn join_by_package_name<'a>(
     packages_by_name
 }
 
+#[derive(Debug)]
+pub struct TargetConfig<'a> {
+    /// The //bazel/portage:<config> setting used to select this target.
+    pub config: &'a str,
+    /// Package prefix to use when constructing the full target path.
+    pub prefix: &'a str,
+}
+
+/// Generates the public aliases
+///
+/// # Arguments
+///
+/// * test_prefix: The package prefix to use for testing targets. We can't use
+///   a switch statement with `test_suite`, so we can only define one stage
+///   to run tests for.
 #[instrument(skip_all)]
 pub fn generate_public_packages(
     all_packages: &[Package],
     failed_packages: &[PackageError],
     resolver: &PackageResolver,
+    targets: &[TargetConfig],
+    test_prefix: &str,
     output_dir: &Path,
 ) -> Result<()> {
     let packages_by_name = join_by_package_name(all_packages, failed_packages);
@@ -286,8 +297,14 @@ pub fn generate_public_packages(
     packages_by_name
         .into_par_iter()
         .try_for_each(|(package_name, maybe_packages)| {
-            let package_output_dir = output_dir.join(&package_name);
-            generate_public_package(maybe_packages, resolver, &package_output_dir)
+            let package_output_dir = output_dir.join(package_name);
+            generate_public_package(
+                maybe_packages,
+                resolver,
+                targets,
+                test_prefix,
+                &package_output_dir,
+            )
         })
 }
 

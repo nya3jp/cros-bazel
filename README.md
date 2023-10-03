@@ -33,17 +33,34 @@ Before you start building a package you need to ensure that `which bazel` prints
 your [depot_tools] checkout. The wrapper script provided by `depot_tools` performs additional
 tasks besides running the real `bazel` executable.
 
+The syntax for specifying a `portage` package is:
+
+```
+@portage//<host|target>/<category>/<package>`.
+```
+
+`host` means the build host ([CBUILD]), and `target` means the cross-compiled target ([CHOST])
+specified by the `BOARD` environment variable.
+
 Now you're ready to start building. To build a single Portage package, e.g.
-sys-apps/attr:
+`sys-apps/attr`:
 
 ```sh
-$ BOARD=amd64-generic bazel build @portage//sys-apps/attr
+$ BOARD=amd64-generic bazel build @portage//target/sys-apps/attr
 ```
 
 To build all packages included in the ChromeOS base image:
 
 ```sh
-$ BOARD=amd64-generic bazel build @portage//virtual/target-os:package_set
+$ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set
+```
+
+A `package_set` is a special target that also includes the target's [PDEPEND]s.
+
+To build a package for the `host` , use the `host` prefix:
+
+```sh
+$ BOARD=amd64-generic bazel build @portage//host/app-shells/bash
 ```
 
 When building packages outside the chroot, the `9999` version of packages (if they exist and are
@@ -51,6 +68,9 @@ not marked as `CROS_WORKON_MANUAL_UPREV`) will be chosen by default. This means 
 your source code and feel confident that the correct packages are getting rebuilt.
 
 [depot_tools]: https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
+[PDEPEND]: https://devmanual.gentoo.org/general-concepts/dependencies/#post-dependencies
+[CBUILD]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
+[CHOST]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
 
 ### Inside CrOS SDK chroot
 
@@ -63,7 +83,7 @@ Before you do anything, ensure you have created the `amd64-host` `sysroot`.
 ```
 
 This will create `/build/amd64-host`. This `sysroot` contains the portage configuration that is
-used when building `host` tool packages. i.e., [CBUILD](https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples).
+used when building `host` tool packages. i.e., [CBUILD].
 
 You can then proceed to create the board's `sysroot`:
 
@@ -74,7 +94,7 @@ You can then proceed to create the board's `sysroot`:
 Now that you have configured your chroot, you can invoke a build:
 
 ```sh
-(cr) $ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//sys-apps/attr
+(cr) $ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/sys-apps/attr
 ```
 
 You can also run `build_packages --bazel --board=$BOARD` to run `build_packages` with Bazel.
@@ -176,7 +196,7 @@ failing to inspect the environment interactively.
 To enter an ephemeral CrOS chroot, run the following command:
 
 ```
-$ BOARD=arm64-generic bazel run @portage//sys-apps/attr:debug -- --login=after
+$ BOARD=arm64-generic bazel run @portage//target/sys-apps/attr:debug -- --login=after
 ```
 
 This command will give you an interactive shell after building a package.
@@ -210,8 +230,8 @@ for the current version of chromeos-chrome.
 ```sh
 % BOARD=amd64-generic portage/tools/generate_chrome_prebuilt_config.py
 ```
+***
 
-*** note
 When performing changes to `eclasses`, `build_packages`, `chromite` or other
 things that cache bust large parts of the graph, it might be beneficial to pin
 the binary packages for already built packages so you don't need to rebuild
@@ -232,10 +252,8 @@ packages with versions that still exist in your `bazel-bin`.
 Running a build with pinned packages:
 
 ```sh
-$ BOARD=amd64-generic bazel build --config=prebuilts/stage2-board-sdk @portage//sys-apps/attr
+$ BOARD=amd64-generic bazel build --config=prebuilts/stage2-board-sdk @portage//target/sys-apps/attr
 ```
-
-***
 
 [generate_chrome_prebuilt_config.py]: ./portage/tools/generate_chrome_prebuilt_config.py
 [generate-stage2-prebuilts]: ./portage/tools/generate-stage2-prebuilts

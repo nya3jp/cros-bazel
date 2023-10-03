@@ -534,6 +534,24 @@ pub fn generate_stages(
     // TODO: Add stage3/host package if we decide we want to build targets
     // against the stage 3 SDK.
 
+    generate_public_packages(
+        &host_packages,
+        &host_failures,
+        &host.resolver,
+        &[
+            public::TargetConfig {
+                config: "stage1",
+                prefix: "stage1/target/host",
+            },
+            public::TargetConfig {
+                config: "stage2",
+                prefix: "stage2/host",
+            },
+        ],
+        "stage2/host",
+        &output_dir.join("host"),
+    )?;
+
     all_packages.extend(host_packages);
 
     if let Some(target) = target {
@@ -599,14 +617,41 @@ pub fn generate_stages(
             output_dir,
         )?;
 
-        // TODO:
-        // * Make this generate host packages when the target is not specified.
-        // * Make this point to the Stage 2 packages.
+        // TODO(b/303136802): Delete this once we migrate the CQ builders.
         generate_public_packages(
             &target_packages,
             &target_failures,
             &target.resolver,
+            &[
+                public::TargetConfig {
+                    config: "stage1",
+                    prefix: "stage1/target/board",
+                },
+                public::TargetConfig {
+                    config: "stage2",
+                    prefix: "stage2/target/board",
+                },
+            ],
+            "stage1/target/board",
             output_dir,
+        )?;
+
+        generate_public_packages(
+            &target_packages,
+            &target_failures,
+            &target.resolver,
+            &[
+                public::TargetConfig {
+                    config: "stage1",
+                    prefix: "stage1/target/board",
+                },
+                public::TargetConfig {
+                    config: "stage2",
+                    prefix: "stage2/target/board",
+                },
+            ],
+            "stage1/target/board",
+            &output_dir.join("target"),
         )?;
 
         // TODO: Generate the build_image targets so we can delete this.
