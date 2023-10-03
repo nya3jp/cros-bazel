@@ -10,10 +10,19 @@ with a few additional repositories.
 ```sh
 $ mkdir ~/chromiumos
 $ cd ~/chromiumos
-$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -g default,bazel -b main
-$ repo sync -c -j 4
+$ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -g default,bazel -b snapshot
+$ repo sync -c -j 16
 $ cd src
 ```
+
+We use the `snapshot` branch rather than `main` because Bazel's caching logic
+requires all inputs to match exactly, so you're better off working from the
+`snapshot` branch that was already built by the Snapshot/CQ builders rather
+than working from `main` and picking up whatever commit happened to be at ToT
+at the time you ran `repo sync`. You'll be at most 40 minutes behind ToT, and
+you'll have the best chance of getting cache hits to speed your builds. It's
+safe to run the `repo init` command atop an existing checkout, which will
+switch you to the `snapshot` branch.
 
 Unless otherwise specified, examples in this doc assume that your current
 directory is `~/chromiumos/src`.
