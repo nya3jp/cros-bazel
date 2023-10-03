@@ -170,6 +170,7 @@ fn write_use_flags(
 #[derive(serde::Deserialize)]
 struct GomaInfo {
     use_goma: bool,
+    gce_service_account: Option<String>,
     luci_context: Option<PathBuf>,
     oauth2_config_file: Option<PathBuf>,
 }
@@ -270,6 +271,10 @@ fn do_main() -> Result<()> {
                     "GOMA_OAUTH2_CONFIG_FILE".to_string(),
                     oauth2_config_file.to_string_lossy().to_string(),
                 ));
+            }
+
+            if let Some(gce_service_account) = goma_info.gce_service_account {
+                goma_envs.push(("GOMA_GCE_SERVICE_ACCOUNT".to_string(), gce_service_account));
             }
 
             if let Some(luci_context) = goma_info.luci_context {

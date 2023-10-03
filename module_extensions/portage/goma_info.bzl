@@ -25,12 +25,25 @@ def _goma_info_repository_impl(repo_ctx):
     if oauth2_config_file:
         goma_info_dict["oauth2_config_file"] = oauth2_config_file
 
+    gce_service_account = repo_ctx.os.environ.get("GOMA_GCE_SERVICE_ACCOUNT")
+    if gce_service_account:
+        goma_info_dict["gce_service_account"] = gce_service_account
+
     luci_context = repo_ctx.os.environ.get("LUCI_CONTEXT")
     if luci_context:
         goma_info_dict["luci_context"] = luci_context
 
+    # TODO(b/300218625): Remove this to make this failure fatal when this becomes stable.
+    if goma_info_dict["use_goma"] and not (
+        goma_info_dict.get("gce_service_account") or goma_info_dict.get("luci_context") or
+        goma_info_dict.get("oauth2_config_file")
+    ):
+        print("USE_GOMA is set to true, but no valid auth is provided. Force-disabling goma.")
+        goma_info_dict["use_goma"] = False
+
     if goma_info_dict["use_goma"]:
         print("Goma is enabled. Going to use goma to build chromeos-chrome.")
+        print("gce_service_account=" + str(goma_info_dict.get("gce_service_account")))
         print("luci_context=" + str(goma_info_dict.get("luci_context")))
         print("oauth2_config_file=" + str(goma_info_dict.get("oauth2_config_file")))
 
@@ -42,6 +55,7 @@ def _goma_info_repository_impl(repo_ctx):
 goma_info = repository_rule(
     implementation = _goma_info_repository_impl,
     environ = [
+        "GOMA_GCE_SERVICE_ACCOUNT",
         "GOMA_OAUTH2_CONFIG_FILE",
         "HOME",
         "LUCI_CONTEXT",
