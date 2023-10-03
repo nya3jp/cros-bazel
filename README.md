@@ -29,6 +29,10 @@ directory is `~/chromiumos/src`.
 
 ## Building packages
 
+Before you start building a package you need to ensure that `which bazel` prints a path under
+your [depot_tools] checkout. The wrapper script provided by `depot_tools` performs additional
+tasks besides running the real `bazel` executable.
+
 Now you're ready to start building. To build a single Portage package, e.g.
 sys-apps/attr:
 
@@ -42,9 +46,9 @@ To build all packages included in the ChromeOS base image:
 $ BOARD=amd64-generic bazel build @portage//virtual/target-os:package_set
 ```
 
-*** note
-Please make sure that `which bazel` prints a path under your [depot_tools] checkout. The wrapper script provided by depot_tools performs additional tasks besides running the real `bazel` executable.
-***
+When building packages outside the chroot, the `9999` version of packages (if they exist and are
+not marked as `CROS_WORKON_MANUAL_UPREV`) will be chosen by default. This means you can edit
+your source code and feel confident that the correct packages are getting rebuilt.
 
 [depot_tools]: https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
 
@@ -52,12 +56,31 @@ Please make sure that `which bazel` prints a path under your [depot_tools] check
 
 Inside CrOS SDK chroot (i.e. the build environment you enter with `cros_sdk` command), you should be able to run the same command except that you need to use `/mnt/host/source/chromite/bin/bazel` instead of `bazel`.
 
-For example:
+Before you do anything, ensure you have created the `amd64-host` `sysroot`.
+
 ```sh
-$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//sys-apps/attr
+(cr) $ /mnt/host/source/src/scripts/create_sdk_board_root --board amd64-host --profile sdk/bootstrap
+```
+
+This will create `/build/amd64-host`. This `sysroot` contains the portage configuration that is
+used when building `host` tool packages. i.e., [CBUILD](https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples).
+
+You can then proceed to create the board's `sysroot`:
+
+```sh
+(cr) $ setup_board --board amd64-generic --skip-chroot-upgrade --skip-toolchain-update
+```
+
+Now that you have configured your chroot, you can invoke a build:
+
+```sh
+(cr) $ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//sys-apps/attr
 ```
 
 You can also run `build_packages --bazel --board=$BOARD` to run `build_packages` with Bazel.
+
+`cros-workon-$BOARD start <pkg>` is required to work on a `9999` package when working inside the
+chroot.
 
 ## Building images
 
@@ -105,6 +128,19 @@ You can also use `cros_vm` command to stop the VM.
 $ chromite/bin/cros_vm --stop
 ```
 
+## Enabling @portage tab completion
+
+By default you can't tab complete the `@portage//` repository. This is because
+bazel doesn't provide support for tab completing external repositories. By
+setting `export ENABLE_PORTAGE_TAB_COMPLETION=1` in your `.bashrc`/`.profile`,
+`bazel` will create a `@portage` symlink in the workspace root (i.e.,
+`~/chromiumos/src`). This allows the bazel tab completion to work, but comes
+with one caveat. You can no longer run `bazel build //...` because it will
+generate analysis errors. This is why this flag is not enabled by default.
+
+The `@portage` symlink has another added benefit, you can easily browse the
+generated `BUILD.bazel` files.
+
 ## Testing your change
 
 The `run_tests.sh` script runs currently available tests:
@@ -134,37 +170,6 @@ environment variables when running `run_tests.sh`: `SKIP_CARGO_TESTS=1`,
 
 ### Debugging a failing package
 
-*** note
-**TODO:** Fix the ability to get the build working directory. The method
-described here is no longer working.
-***
-
-If a package is failing to build, it's sometimes useful to view the package's
-work directory. To do this run:
-
-```
-bazel build --sandbox_debug //your/ebuild
-```
-
-In the build output you will see a `cd` into the `execroot`:
-
-```
-cd /home/rrangel/.cache/bazel/_bazel_rrangel/ca19c0757f7accdebe9bbcbd2cb0838e/sandbox/linux-sandbox/842/execroot/__main__
-```
-
-This directory will contain a directory called `build_package.*`. It contains
-all the artifacts that were generated while building the package.
-
-Build logs can be found in:
-
-    scratch/diff/build/arm64-generic/tmp/portage/logs/
-
-The package work dir can be found in:
-
-    scratch/diff/build/<board>/tmp/portage/<category>/<package>-<version>
-
-### Debugging an ephemeral CrOS chroot
-
 Sometimes you want to enter an ephemeral CrOS chroot where a package build is
 failing to inspect the environment interactively.
 
@@ -179,7 +184,7 @@ You can also specify other values to `--login` to choose the timing to enter
 an interactive console:
 
 - `--login=before`: before building the package
-- `--login=after`: after building the package
+- `--login=after`: after building the package (default)
 - `--login=after-fail`: after failing to build the package
 
 ### Injecting prebuilt binary packages
@@ -209,14 +214,6 @@ for the current version of chromeos-chrome.
 ***
 
 [generate_chrome_prebuilt_config.py]: ./portage/tools/generate_chrome_prebuilt_config.py
-
-We have several named config groupings in [prebuilts.bazelrc] that define
-typical options to inject prebuilts. You can specify `--config` to use them.
-
-- `--config=prebuilts/arm64-generic`: Injects prebuilt binary packages needed to
-  build arm64-generic images.
-
-[prebuilts.bazelrc]: ./bazelrcs/prebuilts.bazelrc
 
 ### Extracting binary packages
 

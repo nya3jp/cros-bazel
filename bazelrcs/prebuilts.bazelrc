@@ -1,4 +1,0 @@
-# Injects prebuilt binary packages needed to build images.
-
-common:prebuilts/arm64-generic --@portage//internal/packages/stage1/target/board/chromiumos/dev-libs/gobject-introspection:1.72.0-r1_prebuilt=gs://chromeos-prebuilt/board/arm64-generic/postsubmit-R114-15419.0.0-49247-8784004392384695153/packages/dev-libs/gobject-introspection-1.72.0-r1.tbz2
-common:prebuilts/arm64-generic --@portage//internal/packages/stage1/target/board/chromiumos/chromeos-base/chromeos-fonts:0.0.1-r60_prebuilt=gs://chromeos-prebuilt/board/arm64-generic/postsubmit-R114-15427.0.0-49525-8783453064471378049/packages/chromeos-base/chromeos-fonts-0.0.1-r60.tbz2
