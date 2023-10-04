@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "BinaryPackageInfo", "single_binary_package_set_info")
+load("common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "single_binary_package_set_info")
 load("package_contents.bzl", "generate_contents")
 
 def _binary_package_impl(ctx):
@@ -21,10 +21,6 @@ def _binary_package_impl(ctx):
         executable_extract_package = ctx.executable._extract_package,
     )
 
-    direct_runtime_deps = [
-        target[BinaryPackageInfo]
-        for target in ctx.attr.runtime_deps
-    ]
     package_info = BinaryPackageInfo(
         file = src,
         contents = contents,
@@ -32,10 +28,19 @@ def _binary_package_impl(ctx):
         category = ctx.attr.category,
         version = ctx.attr.version,
         slot = slot,
-        direct_runtime_deps = direct_runtime_deps,
+        direct_runtime_deps = tuple([
+            target[BinaryPackageInfo]
+            for target in ctx.attr.runtime_deps
+        ]),
         layer = None,
     )
-    package_set_info = single_binary_package_set_info(package_info)
+    package_set_info = single_binary_package_set_info(
+        package_info,
+        [
+            target[BinaryPackageSetInfo]
+            for target in ctx.attr.runtime_deps
+        ],
+    )
     return [
         DefaultInfo(files = depset([src])),
         package_info,
@@ -48,7 +53,7 @@ binary_package = rule(
         "category": attr.string(mandatory = True),
         "package_name": attr.string(mandatory = True),
         "runtime_deps": attr.label_list(
-            providers = [BinaryPackageInfo],
+            providers = [BinaryPackageInfo, BinaryPackageSetInfo],
         ),
         "src": attr.label(
             mandatory = True,
@@ -70,36 +75,53 @@ binary_package = rule(
 )
 
 def _add_runtime_deps(ctx):
-    binpkg = ctx.attr.binpkg[BinaryPackageInfo]
+    original_package_info = ctx.attr.binpkg[BinaryPackageInfo]
+    original_package_set_info = ctx.attr.binpkg[BinaryPackageSetInfo]
 
-    info = BinaryPackageInfo(
-        file = binpkg.file,
-        layer = binpkg.layer,
-        contents = binpkg.contents,
-        category = binpkg.category,
-        package_name = binpkg.package_name,
-        version = binpkg.version,
-        slot = binpkg.slot,
+    package_info = BinaryPackageInfo(
+        file = original_package_info.file,
+        layer = original_package_info.layer,
+        contents = original_package_info.contents,
+        category = original_package_info.category,
+        package_name = original_package_info.package_name,
+        version = original_package_info.version,
+        slot = original_package_info.slot,
         direct_runtime_deps = [
             dep[BinaryPackageInfo]
             for dep in ctx.attr.runtime_deps
-        ] + list(binpkg.direct_runtime_deps),
+        ] + list(original_package_info.direct_runtime_deps),
+    )
+    package_set_info = BinaryPackageSetInfo(
+        packages = depset(
+            transitive = [
+                dep[BinaryPackageSetInfo].packages
+                for dep in ctx.attr.runtime_deps
+            ] + [original_package_set_info.packages],
+            order = "postorder",
+        ),
+        files = depset(
+            transitive = [
+                dep[BinaryPackageSetInfo].files
+                for dep in ctx.attr.runtime_deps
+            ] + [original_package_set_info.files],
+        ),
     )
     return [
         DefaultInfo(
-            files = depset([info.file]),
-            runfiles = ctx.runfiles(info.all_files.to_list()),
+            files = depset([package_info.file]),
+            runfiles = ctx.runfiles(package_set_info.files.to_list()),
         ),
-        info,
+        package_info,
+        package_set_info,
     ]
 
 add_runtime_deps = rule(
     implementation = _add_runtime_deps,
     attrs = dict(
-        binpkg = attr.label(providers = [BinaryPackageInfo]),
-        runtime_deps = attr.label_list(providers = [BinaryPackageInfo]),
+        binpkg = attr.label(providers = [BinaryPackageInfo, BinaryPackageSetInfo]),
+        runtime_deps = attr.label_list(providers = [BinaryPackageInfo, BinaryPackageSetInfo]),
     ),
-    provides = [BinaryPackageInfo],
+    provides = [BinaryPackageInfo, BinaryPackageSetInfo],
     doc = """
     Adds runtime dependencies to a binary package.
     Useful to add "provided" dependencies to a package (ones that are

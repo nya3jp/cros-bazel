@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 
 visibility("public")

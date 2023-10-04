@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("//bazel/portage/build_defs:install_groups.bzl", "calculate_install_groups")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
@@ -100,14 +100,8 @@ _EBUILD_COMMON_ATTRS = dict(
     files = attr.label_list(
         allow_files = True,
     ),
-    provided_runtime_deps = attr.label_list(
-        doc = """
-        The runtime deps that this package depends provided by the SDK.
-        """,
-        providers = [BinaryPackageInfo],
-    ),
     runtime_deps = attr.label_list(
-        providers = [BinaryPackageInfo],
+        providers = [BinaryPackageInfo, BinaryPackageSetInfo],
     ),
     shared_lib_deps = attr.label_list(
         doc = """
@@ -403,12 +397,6 @@ def _ebuild_impl(ctx):
         action_wrapper_executable = ctx.executable._action_wrapper,
     )
 
-    # Compute provider data.
-    direct_runtime_deps = [
-        target[BinaryPackageInfo]
-        for target in ctx.attr.runtime_deps
-    ]
-
     if not ctx.attr.has_hooks:
         package_info = BinaryPackageInfo(
             file = output_binary_package_file,
@@ -416,7 +404,7 @@ def _ebuild_impl(ctx):
             package_name = ctx.attr.package_name,
             slot = ctx.attr.slot,
             version = ctx.attr.version,
-            direct_runtime_deps = [],
+            direct_runtime_deps = tuple(),
             layer = None,
         )
         install_layers = install_deps(
@@ -442,6 +430,7 @@ def _ebuild_impl(ctx):
     else:
         install_layer = None
 
+    # Compute provider data.
     package_info = BinaryPackageInfo(
         file = output_binary_package_file,
         contents = contents,
@@ -449,11 +438,21 @@ def _ebuild_impl(ctx):
         package_name = ctx.attr.package_name,
         version = ctx.attr.version,
         slot = ctx.attr.slot,
-        direct_runtime_deps = direct_runtime_deps,
+        direct_runtime_deps = tuple([
+            target[BinaryPackageInfo]
+            for target in ctx.attr.runtime_deps
+        ]),
         layer = install_layer,
     )
 
-    package_set_info = single_binary_package_set_info(package_info)
+    package_set_info = single_binary_package_set_info(
+        package_info,
+        [
+            target[BinaryPackageSetInfo]
+            for target in ctx.attr.runtime_deps
+        ],
+    )
+
     return [
         DefaultInfo(files = depset(
             [output_binary_package_file, output_log_file] +

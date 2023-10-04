@@ -17,7 +17,6 @@ def _package_set_impl(ctx):
             target[BinaryPackageSetInfo].files
             for target in ctx.attr.deps
         ],
-        order = "postorder",
     )
 
     return [
