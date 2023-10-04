@@ -29,40 +29,29 @@ fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
     }
 }
 
-pub fn dump_package_main(
-    host: Option<&TargetData>,
-    target: Option<&TargetData>,
-    args: Args,
-) -> Result<()> {
+pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: Args) -> Result<()> {
     let atoms = args
         .packages
         .iter()
         .map(|raw| raw.parse::<PackageAtom>())
         .collect::<Result<Vec<_>>>()?;
 
-    let resolver = target
-        .or(host)
-        .map(|data| &data.resolver)
-        .context("Expected a target or host resolver")?;
+    let resolver = &target.unwrap_or(host).resolver;
 
-    let cross_compile = if let Some(host) = host {
-        if let Some(target) = target {
-            let cbuild = host
-                .config
-                .env()
-                .get("CHOST")
-                .context("host is missing CHOST")?;
-            let chost = target
-                .config
-                .env()
-                .get("CHOST")
-                .context("target is missing CHOST")?;
-            cbuild != chost
-        } else {
-            false
-        }
+    let cross_compile = if let Some(target) = target {
+        let cbuild = host
+            .config
+            .env()
+            .get("CHOST")
+            .context("host is missing CHOST")?;
+        let chost = target
+            .config
+            .env()
+            .get("CHOST")
+            .context("target is missing CHOST")?;
+        cbuild != chost
     } else {
-        true
+        false
     };
 
     for atom in atoms {
@@ -107,12 +96,8 @@ pub fn dump_package_main(
                     .join(" ")
             );
 
-            let deps = analyze_dependencies(
-                &details,
-                cross_compile,
-                host.map(|data| &data.resolver),
-                resolver,
-            )?;
+            let deps =
+                analyze_dependencies(&details, cross_compile, Some(&host.resolver), resolver)?;
             dump_deps("BDEPEND", &deps.build_host_deps);
             dump_deps("IDEPEND", &deps.install_host_deps);
             dump_deps("DEPEND", &deps.build_deps);

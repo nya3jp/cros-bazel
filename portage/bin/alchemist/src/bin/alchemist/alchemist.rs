@@ -387,7 +387,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     match args.command {
         Commands::DumpPackage { args: local_args } => {
-            dump_package_main(Some(&host), target.as_ref(), local_args)?;
+            dump_package_main(&host, target.as_ref(), local_args)?;
         }
         Commands::GenerateRepo {
             output_dir,
