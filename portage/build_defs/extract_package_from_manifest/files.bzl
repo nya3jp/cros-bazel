@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-visibility("private")
+visibility("//bazel/portage/build_defs")
 
 ExtractedFileInfo = provider(
     fields = dict(
@@ -11,6 +11,12 @@ ExtractedFileInfo = provider(
         runfiles = "depset[File]: The files required to run this target",
         file_type = "Union[UnknownInfo, SymlinkInfo, HeaderFileInfo, SharedLibraryInfo, ElfBinaryInfo]: A provider version of package::FileType",
         file_type_name = "str: One of the constants below for the file type.",
+    ),
+)
+
+ExtractedFilegroupInfo = provider(
+    fields = dict(
+        files = "dict[str, ExtractedFileInfo]: Mapping from file.path to file",
     ),
 )
 

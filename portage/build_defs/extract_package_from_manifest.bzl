@@ -4,9 +4,20 @@
 
 load("//bazel/build_defs:always_fail.bzl", "always_fail")
 load("//bazel/portage/build_defs/extract_package_from_manifest:extract.bzl", "extract")
+load("//bazel/portage/build_defs/extract_package_from_manifest:files.bzl", "HEADER", "SHARED_LIBRARY")
+load("//bazel/portage/build_defs/extract_package_from_manifest:filter.bzl", "filter_file_type", _filter_package = "filter_package", _filter_paths = "filter_paths")
 load("//bazel/portage/build_defs/extract_package_from_manifest:update_manifest.bzl", "update_manifest")
 
 visibility("public")
+
+filter_package = _filter_package
+filter_paths = _filter_paths
+
+def filter_header_files(**kwargs):
+    filter_file_type(file_type = HEADER, **kwargs)
+
+def filter_shared_libraries(**kwargs):
+    filter_file_type(file_type = SHARED_LIBRARY, **kwargs)
 
 def extract_package(name, pkg, manifest_file, ld_library_path_regexes = [], header_file_dir_regexes = [], manifest_content = None, **kwargs):
     """Extracts files from a tbz2 file to one usable by bazel.

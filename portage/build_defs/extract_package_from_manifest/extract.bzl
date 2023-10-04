@@ -5,7 +5,7 @@
 load("//bazel/build_defs:rule_helpers.bzl", "get_output_dir")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo")
 load(":common.bzl", "EXTRACT_COMMON_ATTRS")
-load(":files.bzl", "SHARED_LIBRARY", "filter_files")
+load(":files.bzl", "ExtractedFilegroupInfo", "SHARED_LIBRARY", "filter_files")
 load(":package.bzl", "ExtractedBinaryPackageDirectInfo", "ExtractedBinaryPackageInfo", "ExtractedBinaryPackageSetInfo", "generate_packages", "manifest_uid")
 
 visibility("//bazel/portage/build_defs")
@@ -48,12 +48,16 @@ def _extract_impl(ctx):
         fail = _requires_update,
     )
 
+    all_files = {}
     for uid, info in packages.items():
         uid_pretty = "%s_slot_%s" % uid
         direct_info = info.pkg
 
         # Avoid creating actions for virtual packages.
-        if direct_info.files.to_list():
+        pkg_files = direct_info.files.to_list()
+        if pkg_files:
+            for file in pkg_files:
+                all_files[file.path] = file
             outputs.append(direct_info.runfiles)
 
             pkg_args = ctx.actions.args()
@@ -98,6 +102,7 @@ def _extract_impl(ctx):
         ExtractedBinaryPackageSetInfo(packages = packages),
         root_package.pkg,
         root_package,
+        ExtractedFilegroupInfo(files = all_files),
     ]
 
 extract = rule(
@@ -110,5 +115,10 @@ extract = rule(
             cfg = "exec",
         ),
     ),
-    provides = [ExtractedBinaryPackageSetInfo, ExtractedBinaryPackageInfo, ExtractedBinaryPackageDirectInfo],
+    provides = [
+        ExtractedBinaryPackageSetInfo,
+        ExtractedBinaryPackageInfo,
+        ExtractedBinaryPackageDirectInfo,
+        ExtractedFilegroupInfo,
+    ],
 )

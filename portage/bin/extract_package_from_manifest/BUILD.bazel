@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@@//bazel/portage/common/testdata:sysroot.bzl", "SYSROOT_MANIFEST_CONTENT")
-load("//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_package")
+load("//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_package", "filter_header_files", "filter_package", "filter_paths", "filter_shared_libraries")
 
 # A demo of how you can extract a whole tarball.
 extract_package(
@@ -16,4 +16,42 @@ extract_package(
     manifest_content = SYSROOT_MANIFEST_CONTENT,
     manifest_file = "//bazel/portage/common/testdata:sysroot.bzl",
     pkg = "//bazel/portage/common/testdata:sysroot",
+)
+
+# All of the following filters support having the interface as an
+# extract_package rule, or any of the other filter_* rules.
+
+filter_package(
+    name = "shared_libs",
+    package_name = "demo/shared_libs",
+    interface = ":sysroot",
+)
+
+filter_header_files(
+    name = "headers",
+    include_symlinks = True,
+    interface = ":sysroot",
+)
+
+filter_shared_libraries(
+    name = "shared_lib_libs",
+    include_symlinks = True,
+    interface = ":shared_libs",
+)
+
+# This will be empty, since it contains no headers.
+filter_header_files(
+    name = "shared_lib_headers",
+    include_symlinks = True,
+    interface = ":shared_libs",
+)
+
+# This will filter down to the specified paths, plus the target of the symlink.
+filter_paths(
+    name = "symlink",
+    interface = ":sysroot",
+    paths = [
+        "/symlinks/absolute_symlink.txt",
+        "/symlinks/relative_symlink.txt",
+    ],
 )
