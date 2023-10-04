@@ -1,0 +1,76 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@//bazel/portage/build_defs:overlay.bzl", "overlay")
+load("@//bazel/portage/build_defs:patterns.bzl", "OVERLAY_ANALYSIS_FILE_PATTERN", "OVERLAY_EXCLUDE", "OVERLAY_USE_FILE_PATTERN")
+
+pkg_files(
+    name = "files",
+    srcs = ["metadata/layout.conf"] + glob(
+        [
+            "licenses/**",
+            "make.conf",
+        ],
+        exclude = OVERLAY_EXCLUDE,
+    ) + select({
+        "@//bazel/portage:alchemist-use-flags": glob(
+            ["profiles/**"],
+            exclude = OVERLAY_EXCLUDE +
+                      OVERLAY_ANALYSIS_FILE_PATTERN +
+                      OVERLAY_USE_FILE_PATTERN,
+        ),
+        "@//bazel/portage:portage-use-flags": glob(
+            ["profiles/**"],
+            exclude = OVERLAY_EXCLUDE +
+                      OVERLAY_ANALYSIS_FILE_PATTERN,
+        ),
+    }),
+    prefix = "mnt/host/source/src/overlays/overlay-amd64-host",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "layer",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":files"],
+    visibility = ["//visibility:private"],
+)
+
+overlay(
+    name = "amd64-host",
+    path = "/mnt/host/source/src/overlays/overlay-amd64-host",
+    layer = ":layer",
+    visibility = ["@//bazel:internal"],
+)
+
+pkg_files(
+    name = "files-full",
+    srcs = glob(OVERLAY_ANALYSIS_FILE_PATTERN),
+    prefix = "mnt/host/source/src/overlays/overlay-amd64-host",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//visibility:private"],
+)
+
+pkg_tar(
+    name = "layer-full",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    srcs = [":files-full"],
+    visibility = ["//visibility:private"],
+)
+
+overlay(
+    name = "full",
+    path = "/mnt/host/source/src/overlays/overlay-amd64-host",
+    layer = ":layer-full",
+    visibility = ["@//bazel:internal"],
+)

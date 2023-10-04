@@ -1,0 +1,72 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_glibc", "sdk_install_deps")
+
+# We use the toolchain name as the target name, so toolchain SDK layers don't
+# get clobbered when building boards with different toolchains.
+sdk_install_deps(
+    name = "x86_64-cros-linux-gnu",
+    base = "//internal/sdk/stage2",
+    overlays = "//internal/overlays:amd64-generic",
+    target_deps = [
+            "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027",
+            "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/binutils:2.39",
+            "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/gcc:10.2.0",
+            "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/go:1.20.5",
+    ],
+    install_strategy = select({
+        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+# The legacy setup_bord flow relied on manually copying glibc into the board's
+# SYSROOT instead of compiling glibc for the host. In order to not deviate
+# we need to do the same thing.
+# TODO(b/266979761): Make legacy flow compile glibc as a normal package.
+sdk_install_glibc(
+    name = "glibc",
+    base = ":x86_64-cros-linux-gnu",
+    board = "amd64-generic",
+    glibc = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r20",
+    visibility = ["@//bazel:internal"],
+)
+
+sdk_extend(
+    name = "base",
+    base = ":glibc",
+    extra_tarballs = [
+        # TODO(b/278728702): Stop using the stage1 board_extra_tarball and
+        # generate it here instead. Or figure out a better place to put it
+        # so it can be shared between the stages.
+        "//internal/sdk/stage1/target/board:board_extra_tarball",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+sdk_install_deps(
+    name = "board",
+    base = ":base",
+    board = "amd64-generic",
+    overlays = "//internal/overlays:amd64-generic",
+    target_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14",
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/gcc-libs:10.2.0",
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    install_strategy = select({
+        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
+    }),
+    visibility = ["@//bazel:internal"],
+)

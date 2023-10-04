@@ -1,0 +1,196 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+string_flag(
+    name = "17.0_pre498229-r9_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "17.0_pre498229-r9_host_deps",
+    actual = "//internal/sdk/stage2/host",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "17.0_pre498229-r9_deps",
+    actual = "17.0_pre498229-r9_host_deps",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "17.0_pre498229-r9_test_deps",
+    actual = "17.0_pre498229-r9_host_deps",
+    visibility = ["//visibility:private"],
+)
+ebuild(
+    name = "17.0_pre498229-r9",
+    ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-libs",
+    package_name = "compiler-rt",
+    version = "17.0_pre498229-r9",
+    slot = "0/0",
+
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":17.0_pre498229-r9_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    prebuilt = ":17.0_pre498229-r9_prebuilt",has_hooks = False,
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "17.0_pre498229-r9_including_provided",
+    binpkg = ":17.0_pre498229-r9",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+
+ebuild(
+    name = "17.0_pre498229-r9_hermetic_test_package",
+    ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-libs",
+    package_name = "compiler-rt",
+    version = "17.0_pre498229-r9",
+    slot = "0/0",
+suffix = "_hermetic_test_package",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":17.0_pre498229-r9_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    prebuilt = ":17.0_pre498229-r9_prebuilt",has_hooks = False,
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "17.0_pre498229-r9_hermetic_test_package_including_provided",
+    binpkg = ":17.0_pre498229-r9",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "17.0_pre498229-r9_debug",
+    ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-libs",
+    package_name = "compiler-rt",
+    version = "17.0_pre498229-r9",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":17.0_pre498229-r9_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_test(
+    name = "17.0_pre498229-r9_test",
+    ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-libs",
+    package_name = "compiler-rt",
+    version = "17.0_pre498229-r9",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":17.0_pre498229-r9_test_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "17.0_pre498229-r9_hermetic_test",
+    packages = [
+        ":17.0_pre498229-r9",
+        ":17.0_pre498229-r9_hermetic_test_package",
+    ],
+    size="small",
+)
+
+test_suite(
+    name = "17.0_pre498229-r9_package_set_hermetic_test",
+    tests = [
+        "//internal/packages/stage2/host/chromiumos/sys-libs/compiler-rt:17.0_pre498229-r9_hermetic_test",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+package_set(
+    name = "17.0_pre498229-r9_package_set",
+    deps = [
+        "//internal/packages/stage2/host/chromiumos/sys-libs/compiler-rt:17.0_pre498229-r9",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+

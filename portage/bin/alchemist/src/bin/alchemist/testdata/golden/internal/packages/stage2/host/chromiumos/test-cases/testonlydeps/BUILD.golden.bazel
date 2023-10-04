@@ -1,0 +1,210 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+string_flag(
+    name = "1.0_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+sdk_install_deps(
+    name = "1.0_host_deps",
+    out = "testonlydeps-1.0_host_deps",
+    base = "//internal/sdk/stage2/host",
+    overlays = "//internal/overlays:amd64-host",
+    target_deps = [
+        "//internal/packages/stage2/host/chromiumos/simple/aaa:1.0",
+    ],
+    install_strategy = select({
+        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg-cache-naive": "naive",
+        "//conditions:default": "slow",
+    }),
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1.0_deps",
+    actual = "1.0_host_deps",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1.0_test_deps",
+    actual = "1.0_host_deps",
+    visibility = ["//visibility:private"],
+)
+ebuild(
+    name = "1.0",
+    ebuild = "testonlydeps-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "testonlydeps",
+    version = "1.0",
+    slot = "0/0",
+
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "-test",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    prebuilt = ":1.0_prebuilt",has_hooks = False,
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "1.0_including_provided",
+    binpkg = ":1.0",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+
+ebuild(
+    name = "1.0_hermetic_test_package",
+    ebuild = "testonlydeps-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "testonlydeps",
+    version = "1.0",
+    slot = "0/0",
+suffix = "_hermetic_test_package",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "-test",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    prebuilt = ":1.0_prebuilt",has_hooks = False,
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "1.0_hermetic_test_package_including_provided",
+    binpkg = ":1.0",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "1.0_debug",
+    ebuild = "testonlydeps-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "testonlydeps",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "-test",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_test(
+    name = "1.0_test",
+    ebuild = "testonlydeps-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "testonlydeps",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "-test",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":1.0_test_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "1.0_hermetic_test",
+    packages = [
+        ":1.0",
+        ":1.0_hermetic_test_package",
+    ],
+    size="small",
+)
+
+test_suite(
+    name = "1.0_package_set_hermetic_test",
+    tests = [
+        "//internal/packages/stage2/host/chromiumos/test-cases/testonlydeps:1.0_hermetic_test",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+package_set(
+    name = "1.0_package_set",
+    deps = [
+        "//internal/packages/stage2/host/chromiumos/test-cases/testonlydeps:1.0",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+
