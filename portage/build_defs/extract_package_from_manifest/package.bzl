@@ -85,7 +85,7 @@ def match_packages(binpkgs, manifest_pkgs, fail = fail):
     matches = []
     for package in binpkgs:
         uid = _binpkg_uid(package)
-        manifest_entry = manifest_pkgs.pop(uid)
+        manifest_entry = manifest_pkgs.pop(uid, None)
         if manifest_entry == None:
             fail("%s (slot %s) was produced by the package unexpectedly" % uid)
         matches.append((uid, package, manifest_entry))

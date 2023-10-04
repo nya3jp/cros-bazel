@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@@//bazel/portage/bin/extract_package_from_manifest:nano.bzl", "NANO_MANIFEST_CONTENT")
 load("@@//bazel/portage/common/testdata:sysroot.bzl", "SYSROOT_MANIFEST_CONTENT")
 load("//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_package", "filter_header_files", "filter_package", "filter_paths", "filter_shared_libraries")
 
@@ -54,4 +55,23 @@ filter_paths(
         "/symlinks/absolute_symlink.txt",
         "/symlinks/relative_symlink.txt",
     ],
+)
+
+extract_package(
+    name = "nano",
+    header_file_dir_regexes = ["/usr/include"],
+    ld_library_path_regexes = [
+        "/lib64",
+        "/lib32",
+    ],
+    manifest_content = NANO_MANIFEST_CONTENT,
+    manifest_file = ":nano.bzl",
+    pkg = "@files//:testdata_nano_alias",
+)
+
+# This filters it down to the binary, and any shared libraries it depends on.
+filter_paths(
+    name = "nano_binary",
+    interface = ":nano",
+    paths = ["/bin/nano"],
 )
