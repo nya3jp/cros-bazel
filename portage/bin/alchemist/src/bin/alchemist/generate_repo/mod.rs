@@ -539,6 +539,26 @@ pub fn generate_stages(
     if let Some(target) = target {
         let (target_packages, target_failures) = load_packages(Some(host), target, src_dir)?;
 
+        generate_stage1_sdk("stage1/target/board", target, translator, output_dir)?;
+
+        generate_internal_packages(
+            // The same comment applies here as the stage1/target/host packages.
+            // We don't know what packages are installed in the Stage 1 SDK,
+            // so we can't support BDEPENDs.
+            &PackageType::CrossRoot {
+                host: None,
+                target: PackageTargetConfig {
+                    board: &target.board,
+                    prefix: "stage1/target/board",
+                    repo_set: &target.repos,
+                },
+            },
+            translator,
+            &target_packages,
+            &target_failures,
+            output_dir,
+        )?;
+
         // Generate the stage 2 target board SDK. This will be used to build
         // all the target's packages.
         generate_target_sdk(
@@ -579,44 +599,6 @@ pub fn generate_stages(
             output_dir,
         )?;
 
-        // TODO: Generate the Stage 3 target packages if we decide to build
-        // targets against the stage 3 SDK.
-
-        all_packages.extend(target_packages);
-    }
-
-    Ok(all_packages)
-}
-
-pub fn generate_legacy_targets(
-    target: Option<&TargetData>,
-    translator: &PathTranslator,
-    src_dir: &Path,
-    output_dir: &Path,
-) -> Result<Vec<Package>> {
-    if let Some(target) = target {
-        let (target_packages, target_failures) = load_packages(None, target, src_dir)?;
-
-        generate_stage1_sdk("stage1/target/board", target, translator, output_dir)?;
-
-        generate_internal_packages(
-            // The same comment applies here as the stage1/target/host packages.
-            // We don't know what packages are installed in the Stage 1 SDK,
-            // so we can't support BDEPENDs.
-            &PackageType::CrossRoot {
-                host: None,
-                target: PackageTargetConfig {
-                    board: &target.board,
-                    prefix: "stage1/target/board",
-                    repo_set: &target.repos,
-                },
-            },
-            translator,
-            &target_packages,
-            &target_failures,
-            output_dir,
-        )?;
-
         // TODO:
         // * Make this generate host packages when the target is not specified.
         // * Make this point to the Stage 2 packages.
@@ -630,10 +612,13 @@ pub fn generate_legacy_targets(
         // TODO: Generate the build_image targets so we can delete this.
         generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
 
-        return Ok(target_packages);
+        // TODO: Generate the Stage 3 target packages if we decide to build
+        // targets against the stage 3 SDK.
+
+        all_packages.extend(target_packages);
     }
 
-    Ok(vec![])
+    Ok(all_packages)
 }
 
 /// The entry point of "generate-repo" subcommand.
@@ -663,10 +648,6 @@ pub fn generate_repo_main(
 
     eprintln!("Generating @portage...");
 
-    // This will be used to collect all the packages that we loaded so we can
-    // generate the deps and srcs.
-    let mut all_packages = vec![];
-
     generate_internal_overlays(
         translator,
         [Some(host), target]
@@ -677,15 +658,7 @@ pub fn generate_repo_main(
         output_dir,
     )?;
 
-    all_packages.extend(generate_stages(
-        host, target, translator, src_dir, output_dir,
-    )?);
-
-    // This is the legacy board, it will be deleted once we can successfully
-    // build host tools.
-    all_packages.extend(generate_legacy_targets(
-        target, translator, src_dir, output_dir,
-    )?);
+    let all_packages = generate_stages(host, target, translator, src_dir, output_dir)?;
 
     generate_deps_file(&all_packages, &deps_file)?;
 
