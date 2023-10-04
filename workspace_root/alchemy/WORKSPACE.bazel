@@ -4,3 +4,10 @@
 
 # Since we use bzlmod, we don't use WORKSPACE.bazel. Don't add new entries here.
 # Instead, modify src/MODULE.bazel and src/bazel/module_extensions/...
+# Preflight checks are the only exception because we want to run them eagerly.
+
+load("//bazel/repo_defs:preflight_checks.bzl", "preflight_checks")
+
+preflight_checks(name = "preflight_checks")
+
+load("@preflight_checks//:ok.bzl", "ok")  # @unused

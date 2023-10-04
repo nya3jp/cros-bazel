@@ -1,0 +1,14 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This file is symlinked to the workspace root by repo to make sure bazel can
+# always find the workspace root even if the user happens to run bazel without
+# setting up symlinks. Once symlinks are properly set up, this file is shadowed
+# by WORKSPACE.bazel.
+
+load("//bazel/repo_defs:preflight_checks.bzl", "symlinks_unavailable")
+
+symlinks_unavailable(name = "preflight_checks")
+
+load("@preflight_checks//:ok.bzl", "ok")  # @unused
