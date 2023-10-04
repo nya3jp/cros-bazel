@@ -16,19 +16,19 @@ null = None
 SYSROOT_MANIFEST_CONTENT = {
     "root_package": {
         "name": "demo/shared_libs",
-        "slot": "0/0",
+        "slot": "0",
     },
     "packages": [
         {
             "name": "demo/executable",
-            "slot": "0/0",
+            "slot": "0",
             "content": {
                 "/usr/bin/hello_world.sh": {},
             },
         },
         {
             "name": "demo/shared_libs",
-            "slot": "0/0",
+            "slot": "0",
             "content": {
                 "/lib32/libbaz.so.1.2.3": {
                     "type": "SharedLibrary",
@@ -48,7 +48,7 @@ SYSROOT_MANIFEST_CONTENT = {
         },
         {
             "name": "demo/symlinks",
-            "slot": "0/0",
+            "slot": "0",
             "content": {
                 "/path/to/hello.txt": {},
                 "/symlinks/absolute_symlink.txt": {
@@ -63,12 +63,12 @@ SYSROOT_MANIFEST_CONTENT = {
         },
         {
             "name": "demo/sysroot",
-            "slot": "0/0",
+            "slot": "0",
             "content": {},
         },
         {
             "name": "demo/system_headers",
-            "slot": "0/0",
+            "slot": "0",
             "content": {
                 "/usr/include/foo.h": {
                     "type": "HeaderFile",

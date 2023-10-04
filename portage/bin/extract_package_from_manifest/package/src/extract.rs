@@ -51,7 +51,7 @@ pub(crate) fn extract_binpkg(binpkg_path: &Path, out_dir: &Path) -> Result<Extra
     Ok(ExtractedPackage {
         uid: PackageUid {
             name: name.to_string(),
-            slot: binpkg.slot().to_string(),
+            slot: binpkg.slot().main.to_string(),
         },
         content: tarball_content,
     })

@@ -44,13 +44,13 @@ _PACKAGES = [
     },
     {
         "name": "sys-libs/ncurses",
-        "slot": "0/6",
+        "slot": "0",
         "content": _NCURSES_CONTENT,
     },
 ]
 
 _GLIBC_UID = ("sys-libs/glibc", "2.2")
-_NCURSES_UID = ("sys-libs/ncurses", "0/6")
+_NCURSES_UID = ("sys-libs/ncurses", "0")
 _NANO_UID = ("app-editors/nano", "0")
 
 def _test_package_impl(ctx):

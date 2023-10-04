@@ -62,7 +62,7 @@ def manifest_uid(pkg):
     return (pkg["name"], pkg["slot"])
 
 def _binpkg_uid(pkg):
-    return ("%s/%s" % (pkg.category, pkg.package_name), pkg.slot)
+    return ("%s/%s" % (pkg.category, pkg.package_name), pkg.slot.split("/")[0])
 
 def match_packages(binpkgs, manifest_pkgs, fail = fail):
     """Matches expected packages against the actual packages built.

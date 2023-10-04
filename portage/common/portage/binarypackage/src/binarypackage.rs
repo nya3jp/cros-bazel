@@ -29,6 +29,11 @@ pub struct BinaryPackage {
     slot: String,
 }
 
+pub struct Slot {
+    pub main: String,
+    pub sub: String,
+}
+
 impl BinaryPackage {
     /// Opens a Portage binary package file.
     pub fn open(path: &Path) -> Result<Self> {
@@ -92,8 +97,17 @@ impl BinaryPackage {
     }
 
     /// Returns the value of SLOT.
-    pub fn slot(&self) -> &str {
-        &self.slot
+    pub fn slot(&self) -> Slot {
+        match self.slot.split_once("/") {
+            Some((main, sub)) => Slot {
+                main: main.to_string(),
+                sub: sub.to_string(),
+            },
+            None => Slot {
+                main: self.slot.to_string(),
+                sub: self.slot.to_string(),
+            },
+        }
     }
 
     /// Returns the string combining CATEGORY and PF, e.g. "sys-apps/attr-2.5.1".

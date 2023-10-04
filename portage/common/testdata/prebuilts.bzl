@@ -16,7 +16,7 @@ def portage_testdata_prebuilts(prebuilt_binpkg):
         name = "testdata_glibc",
         url = "gs://chromeos-prebuilt/host/amd64/amd64-host/chroot-2023.09.12.050023/packages/sys-libs/glibc-2.35-r22.tbz2",
         runtime_deps = [],
-        slot = "2.2",
+        slot = "2.2/2.2",
     )
 
     prebuilt_binpkg(
@@ -26,5 +26,5 @@ def portage_testdata_prebuilts(prebuilt_binpkg):
             "@files//:testdata_glibc_alias",
             "@files//:testdata_ncurses_alias",
         ],
-        slot = "0",
+        slot = "0/0",
     )
