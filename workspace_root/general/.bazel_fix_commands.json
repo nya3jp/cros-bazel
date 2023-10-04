@@ -1,0 +1,10 @@
+[
+  {
+    "args": [
+      "run",
+      "$1"
+    ],
+    "command": "bazel",
+    "regex": "^Interface for binary has changed. Please run 'bazel run (.*)'$"
+  }
+]
