@@ -394,7 +394,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             output_repos_json,
         } => {
             generate_repo_main(
-                Some(&host),
+                &host,
                 target.as_ref(),
                 &translator,
                 &src_dir,

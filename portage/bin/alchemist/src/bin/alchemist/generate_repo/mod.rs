@@ -400,7 +400,7 @@ fn get_bootstrap_sdk_package<'a>(
 
 /// Generates the stage1, stage2, etc packages and SDKs.
 pub fn generate_stages(
-    host: Option<&TargetData>,
+    host: &TargetData,
     target: Option<&TargetData>,
     translator: &PathTranslator,
     src_dir: &Path,
@@ -408,183 +408,181 @@ pub fn generate_stages(
 ) -> Result<Vec<Package>> {
     let mut all_packages = vec![];
 
-    if let Some(host) = host {
-        let (host_packages, host_failures) = load_packages(Some(host), host, src_dir)?;
+    let (host_packages, host_failures) = load_packages(Some(host), host, src_dir)?;
 
-        // When we install a set of packages into an SDK layer, any ebuilds that
-        // use that SDK layer now have those packages provided for them, and they
-        // no longer need to install them. Unfortunately we can't filter out these
-        // "SDK layer packages" from the ebuild's dependency graph during bazel's
-        // analysis phase because bazel doesn't like it when there are cycles in the
-        // dependency graph. This means we need to filter out the dependencies
-        // when we generate the BUILD files.
-        let bootstrap_package = get_bootstrap_sdk_package(&host_packages, &host.resolver)?;
-        let sdk_packages = bootstrap_package
-            .map(|package| {
-                package
-                    .install_set
-                    .iter()
-                    .map(|p| ProvidedPackage {
-                        package_name: p.package_name.clone(),
-                        version: p.version.clone(),
-                    })
-                    .collect_vec()
-            })
-            // TODO: Make this fail once all patches land
-            .unwrap_or_else(Vec::new);
+    // When we install a set of packages into an SDK layer, any ebuilds that
+    // use that SDK layer now have those packages provided for them, and they
+    // no longer need to install them. Unfortunately we can't filter out these
+    // "SDK layer packages" from the ebuild's dependency graph during bazel's
+    // analysis phase because bazel doesn't like it when there are cycles in the
+    // dependency graph. This means we need to filter out the dependencies
+    // when we generate the BUILD files.
+    let bootstrap_package = get_bootstrap_sdk_package(&host_packages, &host.resolver)?;
+    let sdk_packages = bootstrap_package
+        .map(|package| {
+            package
+                .install_set
+                .iter()
+                .map(|p| ProvidedPackage {
+                    package_name: p.package_name.clone(),
+                    version: p.version.clone(),
+                })
+                .collect_vec()
+        })
+        // TODO: Make this fail once all patches land
+        .unwrap_or_else(Vec::new);
 
-        // Generate the SDK used by the stage1/target/host packages.
-        generate_stage1_sdk("stage1/target/host", host, translator, output_dir)?;
+    // Generate the SDK used by the stage1/target/host packages.
+    generate_stage1_sdk("stage1/target/host", host, translator, output_dir)?;
 
-        // Generate the packages that will be built using the Stage 1 SDK.
-        // These packages will be used to generate the Stage 2 SDK.
-        //
-        // i.e., An unknown version of LLVM will be used to cross-root build
-        // the latest version of LLVM.
-        //
-        // We assume that the Stage 1 SDK contains all the BDEPENDs required
-        // to build all the packages required to build the Stage 2 SDK.
-        generate_internal_packages(
-            // We don't know which packages are installed in the Stage 1 SDK
-            // (downloaded SDK tarball), so we can't specify a host. In order
-            // to build an SDK with known versions, we need to cross-root
-            // compile a new SDK with the latest config and packages. This
-            // guarantees that we can correctly track all the dependencies so
-            // we can ensure proper package rebuilds.
-            &PackageType::CrossRoot {
-                host: None,
-                target: PackageTargetConfig {
-                    board: &host.board,
-                    prefix: "stage1/target/host",
-                    repo_set: &host.repos,
-                },
-            },
-            translator,
-            // TODO: Do we want to pass in sdk_packages? This would mean we
-            // can't manually build other host packages using the Stage 1 SDK,
-            // but it saves us on generating symlinks for packages we probably
-            // won't use.
-            &host_packages,
-            &host_failures,
-            output_dir,
-        )?;
-
-        // Generate the stage 2 SDK
-        //
-        // This SDK will be used as the base for the host and target SDKs.
-        // TODO: Make missing bootstrap_package fatal.
-        if let Some(bootstrap_package) = bootstrap_package {
-            generate_base_sdk(
-                &SdkBaseConfig {
-                    name: "stage2",
-                    source_package_prefix: "stage1/target/host",
-                    // We use the `host:base` target because the stage1 SDK
-                    // `host` target lists all the primordial packages for the
-                    // target, and we don't want those pre-installed.
-                    source_sdk: "stage1/target/host:base",
-                    source_repo_set: &host.repos,
-                    bootstrap_package,
-                },
-                output_dir,
-            )?;
-        }
-
-        // Generate the stage 2 host SDK. This will be used to build all the
-        // host packages.
-        generate_host_sdk(
-            &SdkHostConfig {
-                base: "stage2",
-                name: "stage2/host",
+    // Generate the packages that will be built using the Stage 1 SDK.
+    // These packages will be used to generate the Stage 2 SDK.
+    //
+    // i.e., An unknown version of LLVM will be used to cross-root build
+    // the latest version of LLVM.
+    //
+    // We assume that the Stage 1 SDK contains all the BDEPENDs required
+    // to build all the packages required to build the Stage 2 SDK.
+    generate_internal_packages(
+        // We don't know which packages are installed in the Stage 1 SDK
+        // (downloaded SDK tarball), so we can't specify a host. In order
+        // to build an SDK with known versions, we need to cross-root
+        // compile a new SDK with the latest config and packages. This
+        // guarantees that we can correctly track all the dependencies so
+        // we can ensure proper package rebuilds.
+        &PackageType::CrossRoot {
+            host: None,
+            target: PackageTargetConfig {
+                board: &host.board,
+                prefix: "stage1/target/host",
                 repo_set: &host.repos,
-                profile: &host.profile,
+            },
+        },
+        translator,
+        // TODO: Do we want to pass in sdk_packages? This would mean we
+        // can't manually build other host packages using the Stage 1 SDK,
+        // but it saves us on generating symlinks for packages we probably
+        // won't use.
+        &host_packages,
+        &host_failures,
+        output_dir,
+    )?;
+
+    // Generate the stage 2 SDK
+    //
+    // This SDK will be used as the base for the host and target SDKs.
+    // TODO: Make missing bootstrap_package fatal.
+    if let Some(bootstrap_package) = bootstrap_package {
+        generate_base_sdk(
+            &SdkBaseConfig {
+                name: "stage2",
+                source_package_prefix: "stage1/target/host",
+                // We use the `host:base` target because the stage1 SDK
+                // `host` target lists all the primordial packages for the
+                // target, and we don't want those pre-installed.
+                source_sdk: "stage1/target/host:base",
+                source_repo_set: &host.repos,
+                bootstrap_package,
+            },
+            output_dir,
+        )?;
+    }
+
+    // Generate the stage 2 host SDK. This will be used to build all the
+    // host packages.
+    generate_host_sdk(
+        &SdkHostConfig {
+            base: "stage2",
+            name: "stage2/host",
+            repo_set: &host.repos,
+            profile: &host.profile,
+        },
+        output_dir,
+    )?;
+
+    // Generate the host packages that will be built using the Stage 2 SDK.
+    let stage2_host = PackageHostConfig {
+        repo_set: &host.repos,
+        prefix: "stage2/host",
+        sdk_provided_packages: &sdk_packages,
+    };
+    generate_internal_packages(
+        // We no longer need to cross-root build since we know exactly what
+        // is contained in the Stage 2 SDK. This means we can properly
+        // support BDEPENDs. All the packages listed in `sdk_packages` are
+        // considered implicit system dependencies for any of these
+        // packages.
+        &PackageType::Host(stage2_host),
+        translator,
+        &host_packages,
+        &host_failures,
+        output_dir,
+    )?;
+
+    // Generate the Stage 3 host SDK
+    //
+    // The stage 2 SDK is composed of packages built using the Stage 1 SDK.
+    // The stage 3 SDK will be composed of packages built using the Stage 2
+    // SDK. This means we can verify that the latest toolchain can bootstrap
+    // itself.
+    // i.e., Latest LLVM can build Latest LLVM.
+    // TODO: Add call to generate stage3 sdk
+    // TODO: Also support building a "bootstrap" SDK target that is composed
+    // of ALL BDEPEND + RDEPEND + DEPEND of the
+    // virtual/target-chromium-os-sdk-bootstrap package.
+
+    // TODO: Add stage3/host package if we decide we want to build targets
+    // against the stage 3 SDK.
+
+    all_packages.extend(host_packages);
+
+    if let Some(target) = target {
+        let (target_packages, target_failures) = load_packages(Some(host), target, src_dir)?;
+
+        // Generate the stage 2 target board SDK. This will be used to build
+        // all the target's packages.
+        generate_target_sdk(
+            &SdkTargetConfig {
+                base: "stage2",
+                host_prefix: "stage2/host",
+                host_resolver: &host.resolver,
+                name: "stage2/target/board",
+                board: &target.board,
+                target_repo_set: &target.repos,
+                target_resolver: &target.resolver,
+                target_primary_toolchain: Some(
+                    target
+                        .toolchains
+                        .primary()
+                        .context("Target is missing primary toolchain")?,
+                ),
             },
             output_dir,
         )?;
 
-        // Generate the host packages that will be built using the Stage 2 SDK.
-        let stage2_host = PackageHostConfig {
-            repo_set: &host.repos,
-            prefix: "stage2/host",
-            sdk_provided_packages: &sdk_packages,
-        };
+        // Generate the target packages that will be cross-root /
+        // cross-compiled using the Stage 2 SDK.
         generate_internal_packages(
-            // We no longer need to cross-root build since we know exactly what
-            // is contained in the Stage 2 SDK. This means we can properly
-            // support BDEPENDs. All the packages listed in `sdk_packages` are
-            // considered implicit system dependencies for any of these
-            // packages.
-            &PackageType::Host(stage2_host),
+            &PackageType::CrossRoot {
+                // We want to use the stage2/host packages to satisfy
+                // our BDEPEND/IDEPEND dependencies.
+                host: Some(stage2_host),
+                target: PackageTargetConfig {
+                    board: &target.board,
+                    prefix: "stage2/target/board",
+                    repo_set: &target.repos,
+                },
+            },
             translator,
-            &host_packages,
-            &host_failures,
+            &target_packages,
+            &target_failures,
             output_dir,
         )?;
 
-        // Generate the Stage 3 host SDK
-        //
-        // The stage 2 SDK is composed of packages built using the Stage 1 SDK.
-        // The stage 3 SDK will be composed of packages built using the Stage 2
-        // SDK. This means we can verify that the latest toolchain can bootstrap
-        // itself.
-        // i.e., Latest LLVM can build Latest LLVM.
-        // TODO: Add call to generate stage3 sdk
-        // TODO: Also support building a "bootstrap" SDK target that is composed
-        // of ALL BDEPEND + RDEPEND + DEPEND of the
-        // virtual/target-chromium-os-sdk-bootstrap package.
+        // TODO: Generate the Stage 3 target packages if we decide to build
+        // targets against the stage 3 SDK.
 
-        // TODO: Add stage3/host package if we decide we want to build targets
-        // against the stage 3 SDK.
-
-        all_packages.extend(host_packages);
-
-        if let Some(target) = target {
-            let (target_packages, target_failures) = load_packages(Some(host), target, src_dir)?;
-
-            // Generate the stage 2 target board SDK. This will be used to build
-            // all the target's packages.
-            generate_target_sdk(
-                &SdkTargetConfig {
-                    base: "stage2",
-                    host_prefix: "stage2/host",
-                    host_resolver: &host.resolver,
-                    name: "stage2/target/board",
-                    board: &target.board,
-                    target_repo_set: &target.repos,
-                    target_resolver: &target.resolver,
-                    target_primary_toolchain: Some(
-                        target
-                            .toolchains
-                            .primary()
-                            .context("Target is missing primary toolchain")?,
-                    ),
-                },
-                output_dir,
-            )?;
-
-            // Generate the target packages that will be cross-root /
-            // cross-compiled using the Stage 2 SDK.
-            generate_internal_packages(
-                &PackageType::CrossRoot {
-                    // We want to use the stage2/host packages to satisfy
-                    // our BDEPEND/IDEPEND dependencies.
-                    host: Some(stage2_host),
-                    target: PackageTargetConfig {
-                        board: &target.board,
-                        prefix: "stage2/target/board",
-                        repo_set: &target.repos,
-                    },
-                },
-                translator,
-                &target_packages,
-                &target_failures,
-                output_dir,
-            )?;
-
-            // TODO: Generate the Stage 3 target packages if we decide to build
-            // targets against the stage 3 SDK.
-
-            all_packages.extend(target_packages);
-        }
+        all_packages.extend(target_packages);
     }
 
     Ok(all_packages)
@@ -640,7 +638,7 @@ pub fn generate_legacy_targets(
 
 /// The entry point of "generate-repo" subcommand.
 pub fn generate_repo_main(
-    host: Option<&TargetData>,
+    host: &TargetData,
     target: Option<&TargetData>,
     translator: &PathTranslator,
     src_dir: &Path,
@@ -671,7 +669,7 @@ pub fn generate_repo_main(
 
     generate_internal_overlays(
         translator,
-        [host, target]
+        [Some(host), target]
             .iter()
             .filter_map(|x| x.map(|data| data.repos.as_ref()))
             .collect_vec()
