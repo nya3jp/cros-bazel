@@ -47,12 +47,16 @@ def download_gs_file(repository_ctx):
     if not filename:
         filename = url.split("/")[-1]
 
-    repository_ctx.execute([
+    cmd = [
         repository_ctx.attr._gsutil,
         "cp",
         url,
         "file/" + filename,
-    ])
+    ]
+    st = repository_ctx.execute(cmd)
+    if st.return_code:
+        fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
+
     repository_ctx.file(
         "file/BUILD.bazel",
         _BUILD_TEMPLATE.format(file = filename),
