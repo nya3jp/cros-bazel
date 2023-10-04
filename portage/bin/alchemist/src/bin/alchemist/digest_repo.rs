@@ -17,13 +17,9 @@ pub struct Args {
 }
 
 /// The entry point of "digest-repo" subcommand.
-pub fn digest_repo_main(
-    host: Option<&TargetData>,
-    target: Option<&TargetData>,
-    args: Args,
-) -> Result<()> {
+pub fn digest_repo_main(host: &TargetData, target: Option<&TargetData>, args: Args) -> Result<()> {
     let repos: UnorderedRepositorySet = [
-        host.map_or(vec![], |data| data.repos.get_repos()),
+        host.repos.get_repos(),
         target.map_or(vec![], |data| data.repos.get_repos()),
     ]
     .into_iter()
@@ -32,7 +28,7 @@ pub fn digest_repo_main(
     .collect();
 
     let sources = [
-        host.map_or(vec![], |data| data.config.sources()),
+        host.config.sources(),
         target.map_or(vec![], |data| data.config.sources()),
     ]
     .into_iter()

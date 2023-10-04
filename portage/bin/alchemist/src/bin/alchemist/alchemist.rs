@@ -376,25 +376,25 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     #[allow(clippy::match_single_binding)]
     let host = match host_data {
-        (root_dir, repos, host_target) => Some(load_board(
+        (root_dir, repos, host_target) => load_board(
             repos,
             &evaluator,
             host_target.board,
             host_target.profile,
             &root_dir,
-        )?),
+        )?,
     };
 
     match args.command {
         Commands::DumpPackage { args: local_args } => {
-            dump_package_main(host.as_ref(), target.as_ref(), local_args)?;
+            dump_package_main(Some(&host), target.as_ref(), local_args)?;
         }
         Commands::GenerateRepo {
             output_dir,
             output_repos_json,
         } => {
             generate_repo_main(
-                host.as_ref(),
+                Some(&host),
                 target.as_ref(),
                 &translator,
                 &src_dir,
@@ -403,7 +403,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             )?;
         }
         Commands::DigestRepo { args: local_args } => {
-            digest_repo_main(host.as_ref(), target.as_ref(), local_args)?;
+            digest_repo_main(&host, target.as_ref(), local_args)?;
         }
     }
 
