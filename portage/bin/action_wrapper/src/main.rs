@@ -243,13 +243,14 @@ fn main() -> ExitCode {
     // action_wrapper itself, but the wrapped program should soon print one with
     // `cli_main`.
     let status = do_main(args);
-    let exit_code = handle_top_level_result(status.as_ref().map(status_to_exit_code));
-    match status {
-        Ok(status) if status.code() == Some(0) => {}
-        _ => {
-            if let Some(redirector) = redirector {
-                redirector.flush_to_real_stderr().unwrap()
-            }
+    let mut success = false;
+    let exit_code = handle_top_level_result(status.map(|s| {
+        success = s.code() == Some(0);
+        status_to_exit_code(&s)
+    }));
+    if !success {
+        if let Some(redirector) = redirector {
+            redirector.flush_to_real_stderr().unwrap()
         }
     }
 

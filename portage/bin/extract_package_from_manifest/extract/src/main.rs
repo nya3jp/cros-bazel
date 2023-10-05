@@ -44,7 +44,7 @@ struct Cli {
 }
 
 fn do_main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
 
     let mut package_set = PackageSet::create(&args.out_dir, &[args.binpkg.as_path()])?;
     package_set.fill_headers(&args.header_file_dir_regex)?;

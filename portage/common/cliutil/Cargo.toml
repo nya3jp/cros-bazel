@@ -10,6 +10,7 @@ tracing-chrome-trace = { path = "../tracing-chrome-trace" }
 fileutil = { path = "../fileutil" }
 
 anyhow.workspace = true
+clap.workspace = true
 itertools.workspace = true
 nix.workspace = true
 shell-escape.workspace = true

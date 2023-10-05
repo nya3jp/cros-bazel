@@ -235,6 +235,7 @@ name = "cliutil"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "clap",
  "fileutil",
  "itertools",
  "nix",

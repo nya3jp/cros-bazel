@@ -7,7 +7,6 @@
 use itertools::Itertools;
 use std::{
     ffi::OsStr,
-    fmt::Debug,
     process::{ExitCode, Termination},
 };
 
@@ -27,11 +26,10 @@ pub use crate::stdio_redirector::{RedirectorConfig, StdioRedirector};
 /// Exceptions include:
 /// - Programs that want to stay single-threaded (e.g. run_in_container that
 ///   calls unshare(2)).
-pub fn cli_main<F, T, E>(main: F, config: Config) -> ExitCode
+pub fn cli_main<F, T>(main: F, config: Config) -> ExitCode
 where
-    F: FnOnce() -> Result<T, E>,
+    F: FnOnce() -> Result<T, anyhow::Error>,
     T: Termination,
-    E: Debug,
 {
     let _log_guard = config.logging.setup().unwrap();
     if config.log_command_line {
@@ -65,11 +63,21 @@ pub fn log_current_command_line() {
 /// Handles the top-level [`Result`] and returns [`ExitCode`] to be returned.
 ///
 /// You don't need this function if you use [`cli_main`].
-pub fn handle_top_level_result<T: Termination, E: Debug>(result: Result<T, E>) -> ExitCode {
+pub fn handle_top_level_result<T: Termination>(result: Result<T, anyhow::Error>) -> ExitCode {
     match result {
         Err(error) => {
-            eprintln!("FATAL: {}: {:?}", get_current_process_name(), error);
-            ExitCode::FAILURE
+            if let Some(error) = error.downcast_ref::<clap::Error>() {
+                let _ = error.print();
+                // TODO: Switch to the following line once we upgrade clap. The newer clap version
+                // requires a new version of rust, which is a nontrivial upgrade.
+                // ExitCode::from(error.exit_code() as u8)
+                // This is what clap's error.exit_code() will return.
+                // https://github.com/clap-rs/clap/blob/29f22c193c484031f1444cca4b0ed41315db82a1/clap_builder/src/util/mod.rs#L30
+                ExitCode::from(2)
+            } else {
+                eprintln!("FATAL: {}: {:?}", get_current_process_name(), error);
+                ExitCode::FAILURE
+            }
         }
         Ok(value) => value.report(),
     }
