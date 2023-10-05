@@ -4,7 +4,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 alias(
     name = "16.0_pre484197",
     actual = select({
