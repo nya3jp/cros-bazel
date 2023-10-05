@@ -306,6 +306,22 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     let target_data = if let Some(board_target) = board_target {
         let root_dir = Path::new("/build").join(board_target.board);
+        if is_inside_chroot()? && !root_dir.try_exists()? {
+            bail!(
+                "\n\
+                *****\n\
+                \t\tYou are running inside the CrOS SDK and `{}` doesn't exist.\n\
+                \n\
+                \t\tPlease run the following command to create the board's sysroot and try again:\n\
+                \t\t$ setup_board --board {} --profile {} --skip-chroot-upgrade --skip-toolchain-update\n\
+                \n\
+                *****",
+                root_dir.display(),
+                board_target.board,
+                board_target.profile,
+            );
+        }
+
         let repos = RepositorySet::load(&root_dir)?;
 
         Some((root_dir, repos, board_target))
