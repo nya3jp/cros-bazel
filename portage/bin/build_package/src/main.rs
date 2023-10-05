@@ -7,7 +7,7 @@ use clap::{command, Parser};
 use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     fs::File,
     io::BufReader,
     os::unix::process::ExitStatusExt,
@@ -177,7 +177,7 @@ fn write_use_flags(
 #[derive(serde::Deserialize)]
 struct GomaInfo {
     use_goma: bool,
-    gce_service_account: Option<String>,
+    envs: HashMap<String, String>,
     luci_context: Option<PathBuf>,
     oauth2_config_file: Option<PathBuf>,
 }
@@ -268,6 +268,10 @@ fn do_main() -> Result<()> {
                 rw: false,
             });
 
+            for (key, value) in goma_info.envs {
+                goma_envs.push((key, value));
+            }
+
             if let Some(oauth2_config_file) = goma_info.oauth2_config_file {
                 settings.push_bind_mount(BindMount {
                     source: oauth2_config_file.clone(),
@@ -278,10 +282,6 @@ fn do_main() -> Result<()> {
                     "GOMA_OAUTH2_CONFIG_FILE".to_string(),
                     oauth2_config_file.to_string_lossy().to_string(),
                 ));
-            }
-
-            if let Some(gce_service_account) = goma_info.gce_service_account {
-                goma_envs.push(("GOMA_GCE_SERVICE_ACCOUNT".to_string(), gce_service_account));
             }
 
             if let Some(luci_context) = goma_info.luci_context {

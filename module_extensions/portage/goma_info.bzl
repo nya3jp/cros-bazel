@@ -6,12 +6,27 @@ _GOMA_INFO_REPO_BUILD_FILE = """
 exports_files(["goma_info"])
 """
 
+_ENVIRON = [
+    "GOMA_ARBITRARY_TOOLCHAIN_SUPPORT",
+    "GOMA_BACKEND_SOFT_STICKINESS",
+    "GOMA_GCE_SERVICE_ACCOUNT",
+    "GOMA_MAX_COMPILER_DISABLED_TASKS",
+    "GOMA_RPC_EXTRA_PARAMS",
+    "GOMA_SERVER_HOST",
+]
+
 def _goma_info_repository_impl(repo_ctx):
     """Repository rule to generate info needed to use goma."""
 
     goma_info_dict = {
         "use_goma": repo_ctx.os.environ.get("USE_GOMA") == "true",
+        "envs": {},
     }
+
+    for env in _ENVIRON:
+        var = repo_ctx.os.environ.get(env)
+        if var:
+            goma_info_dict["envs"][env] = var
 
     # Use GOMA_OAUTH2_CONFIG_FILE as the oauth2 config file path if specified.
     # Otherwise, use "$HOME/.goma_client_oauth2_config" if exists.
@@ -25,27 +40,23 @@ def _goma_info_repository_impl(repo_ctx):
     if oauth2_config_file:
         goma_info_dict["oauth2_config_file"] = oauth2_config_file
 
-    gce_service_account = repo_ctx.os.environ.get("GOMA_GCE_SERVICE_ACCOUNT")
-    if gce_service_account:
-        goma_info_dict["gce_service_account"] = gce_service_account
-
     luci_context = repo_ctx.os.environ.get("LUCI_CONTEXT")
     if luci_context:
         goma_info_dict["luci_context"] = luci_context
 
     # TODO(b/300218625): Remove this to make this failure fatal when this becomes stable.
     if goma_info_dict["use_goma"] and not (
-        goma_info_dict.get("gce_service_account") or goma_info_dict.get("luci_context") or
-        goma_info_dict.get("oauth2_config_file")
+        goma_info_dict["envs"].get("GOMA_GCE_SERVICE_ACCOUNT") or
+        goma_info_dict.get("luci_context") or goma_info_dict.get("oauth2_config_file")
     ):
         print("USE_GOMA is set to true, but no valid auth is provided. Force-disabling goma.")
         goma_info_dict["use_goma"] = False
 
     if goma_info_dict["use_goma"]:
         print("Goma is enabled. Going to use goma to build chromeos-chrome.")
-        print("gce_service_account=" + str(goma_info_dict.get("gce_service_account")))
         print("luci_context=" + str(goma_info_dict.get("luci_context")))
         print("oauth2_config_file=" + str(goma_info_dict.get("oauth2_config_file")))
+        print("envs=" + str(goma_info_dict.get("envs")))
 
     goma_info = json.encode(goma_info_dict)
 
@@ -54,8 +65,7 @@ def _goma_info_repository_impl(repo_ctx):
 
 goma_info = repository_rule(
     implementation = _goma_info_repository_impl,
-    environ = [
-        "GOMA_GCE_SERVICE_ACCOUNT",
+    environ = _ENVIRON + [
         "GOMA_OAUTH2_CONFIG_FILE",
         "HOME",
         "LUCI_CONTEXT",
