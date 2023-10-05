@@ -315,26 +315,32 @@ pub fn alchemist_main(args: Args) -> Result<()> {
 
     let host_data = {
         let root_dir = Path::new("/build").join(host_target.board);
-        match RepositorySet::load(&root_dir) {
-            Ok(repos) => Some((root_dir, repos, host_target)),
-            Err(e) => {
-                // TODO: We need to eventually make this fatal.
-                eprintln!(
-                    "Failed to load {} repos, skipping host tools: {}",
-                    host_target.board, e
-                );
-                None
-            }
+        if is_inside_chroot()? && !root_dir.try_exists()? {
+            bail!(
+                "\n\
+                *****\n\
+                \t\tYou are running inside the CrOS SDK and `{}` doesn't exist.\n\
+                \n\
+                \t\tPlease run the following command to create the host sysroot and try again:\n\
+                \t\t$ ~/chromiumos/src/scripts/create_sdk_board_root --board {} --profile {}\n\
+                \n\
+                *****",
+                root_dir.display(),
+                host_target.board,
+                host_target.profile,
+            );
         }
+        let repos = RepositorySet::load(&root_dir)?;
+        (root_dir, repos, host_target)
     };
 
     // We share an evaluator between both config ROOTS so we only have to parse
     // the ebuilds once.
     let evaluator = Arc::new(CachedEBuildEvaluator::new(
-        [&target_data, &host_data]
+        [target_data.as_ref().map(|x| &x.1), Some(&host_data.1)]
             .into_iter()
-            .filter_map(|x| x.as_ref())
-            .flat_map(|x| x.1.get_repos())
+            .flatten()
+            .flat_map(|x| x.get_repos())
             .cloned()
             .collect(),
         tools_dir.path(),
@@ -352,22 +358,16 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         None
     };
 
-    let host = host_data.and_then(|(root_dir, repos, host_target)| {
-        match load_board(
+    #[allow(clippy::match_single_binding)]
+    let host = match host_data {
+        (root_dir, repos, host_target) => Some(load_board(
             repos,
             &evaluator,
             host_target.board,
             host_target.profile,
             &root_dir,
-        ) {
-            Ok(data) => Some(data),
-            Err(e) => {
-                // TODO: We need to eventually make this fatal.
-                eprintln!("Failed to load {} config: {}", host_target.board, e);
-                None
-            }
-        }
-    });
+        )?),
+    };
 
     match args.command {
         Commands::DumpPackage { args: local_args } => {
