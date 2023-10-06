@@ -15,6 +15,7 @@ def _exec(ctx, cmd, msg = None, **kwargs):
     st = ctx.execute(cmd, timeout = 3600, environment = env)
     if st.return_code:
         fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
+    print("Finished running command %s" % cmd)
     return st.stdout
 
 def _git(ctx, repo, *args):
@@ -23,6 +24,8 @@ def _git(ctx, repo, *args):
 
 def _cros_chrome_repository_impl(ctx):
     """Repository rule that downloads the Chromium/Chrome source."""
+
+    print("Started fetching Chromium source.")
 
     tar = ctx.which("tar")
     if not tar:
