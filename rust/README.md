@@ -16,6 +16,7 @@ If the crate doesn't exist, or if the version needs to be updated, then:
 
 ##### @alchemy-crates
 Modify the `//bazel/rust/alchemy_crates/Cargo.toml`, then cd to the directory that contains it and run `cargo update --workspace` to update the lockfile.
+You also need to do the same thing with `//bazel/Cargo.toml`.
 
 
 ##### @crates

@@ -4,3 +4,4 @@
 
 /bazel-*
 /.mypy_cache
+/target/

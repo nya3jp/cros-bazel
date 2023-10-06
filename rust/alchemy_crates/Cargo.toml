@@ -8,6 +8,7 @@ edition = "2021"
 # Ensure that it doesn't get pulled into another cargo workspace.
 [workspace]
 
+# This list must be kept in sync with //bazel/Cargo.toml.
 [dependencies]
 anyhow = { version = "1.0.66", features = ["backtrace"] }
 base64 = "0.20.0"
