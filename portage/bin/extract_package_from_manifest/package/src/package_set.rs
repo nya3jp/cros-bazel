@@ -260,7 +260,7 @@ mod tests {
                 &packages,
                 &PackageUid {
                     name: "sys-libs/ncurses".into(),
-                    slot: "0/6".into(),
+                    slot: "0".into(),
                 },
             )?;
 

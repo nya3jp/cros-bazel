@@ -82,7 +82,7 @@ mod tests {
                 ExtractedPackage {
                     uid: PackageUid {
                         name: "demo/shared_libs".into(),
-                        slot: "0/0".into(),
+                        slot: "0".into(),
                     },
                     content: TarballContent {
                         files: BTreeSet::from([
@@ -100,7 +100,7 @@ mod tests {
                 ExtractedPackage {
                     uid: PackageUid {
                         name: "demo/system_headers".into(),
-                        slot: "0/0".into(),
+                        slot: "0".into(),
                     },
                     content: TarballContent {
                         files: BTreeSet::from([
