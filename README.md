@@ -173,6 +173,19 @@ Optionally, you can skip running some tests by specifying some of the following
 environment variables when running `run_tests.sh`: `SKIP_CARGO_TESTS=1`,
 `SKIP_BAZEL_TESTS=1`, `SKIP_PORTAGE_TESTS=1`.
 
+## Troubleshooting
+
+### Bad cache results when non-hermetic inputs change
+Bazel is able to correctly reuse content from the cache when all inputs are
+identified to it so it can detect when they change. Since our toolchain and our
+host tools (e.g. gsutil) are not yet fully hermetic, it's possible that you'll
+run into problems when tools not yet tracked by Bazel are updated. In these
+situations we've found it useful to run `bazel clean --expunge` to clear cached
+artifacts that seem not to be cleared without the `--expunge` flag.
+
+If you find you need the `--expunge` flag, please file a bug to let the
+Bazelification team know about the non-hermeticity so we can fix the problem.
+
 ## Directory structure
 
 * `portage/` ... for building Portage packages (aka Alchemy)
