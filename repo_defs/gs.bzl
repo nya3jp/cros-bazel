@@ -51,9 +51,12 @@ def download_gs_file(repository_ctx):
         repository_ctx.attr._gsutil,
         "cp",
         url,
-        "file/" + filename,
+        repository_ctx.path("file/" + filename),
     ]
-    st = repository_ctx.execute(cmd)
+    st = repository_ctx.execute(
+        cmd,
+        working_directory = str(repository_ctx.workspace_root),
+    )
     if st.return_code:
         fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
 
