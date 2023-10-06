@@ -6,6 +6,9 @@
 # Option 2) All bazel chromiumos projects: $HOME/.chromiumos.bazelrc
 # Option 3) This specific chromiumos checkoput: src/workspace.bazelrc
 
+# Show timestamps for easier performance analysis.
+common --show_timestamps
+
 # Bzlmod is the new dependency management system in bazel.
 common --experimental_enable_bzlmod
 # TODO(b/274698330): In the long term, we'll want to replace this with a GoB
