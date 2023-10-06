@@ -1,0 +1,34 @@
+[package]
+name = "rust-bazel-examples"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cliutil = { path = "../../portage/common/cliutil" }
+
+anyhow.workspace = true
+env_logger.workspace = true
+log.workspace = true
+runfiles.workspace = true
+
+[lib]
+name = "local_crate"
+path = "local_crate.rs"
+
+[[bin]]
+name = "hello_world"
+path = "hello_world.rs"
+
+[[bin]]
+name = "logging"
+path = "logging.rs"
+
+[[bin]]
+name = "use_local_crate"
+path = "use_local_crate.rs"
+
+[[bin]]
+name = "use_third_party_crate"
+path = "use_third_party_crate.rs"

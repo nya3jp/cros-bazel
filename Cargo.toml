@@ -36,6 +36,8 @@ members = [
     "portage/common/run_in_container_lib",
     "portage/common/testutil",
     "portage/common/tracing-chrome-trace",
+    "rust/examples",
+    "rust/ide_support",
 ]
 
 # This list must be kept in sync with rust/alchemy_crates/Cargo.toml
@@ -44,9 +46,11 @@ members = [
 anyhow = { version = "1.0.66", features = ["backtrace"] }
 base64 = "0.20.0"
 bytes = "0.4.12"
+by_address = "1.1.0"
 bzip2 = "0.4.4"
 clap = { version = "4.0.29", features = ["derive"] }
-chrono = { version = "0.4.26", features = ["clock"], default_features = false }
+# chrono: cargo-bazel doesn't support `default_features = false`
+chrono = { version = "0.4.26", features = ["clock"] }
 colored = "2.0.0"
 env_logger = "0.9.3"
 flate2 = "1.0"

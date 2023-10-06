@@ -24,19 +24,6 @@
       ]
     }
   ],
-  "xmas-elf": [
-    {
-      "patch_args": [
-        "-p1"
-      ],
-      "patch_tool": "patch",
-      "patches": [
-        "@@//bazel/rust/alchemy_crates/patches:xmas-elf/0001-Run-rustfmt.patch",
-        "@@//bazel/rust/alchemy_crates/patches:xmas-elf/0002-Add-missing-tags-for-relative-relocations.patch"
-      ],
-      "version": "*"
-    }
-  ],
   "zstd-sys": [
     {
       "build_script_env": {

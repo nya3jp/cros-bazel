@@ -15,9 +15,7 @@ Add a dep on `@crates//:<crate name>` (for chromeos) or `@alchemy-crates//:<crat
 If the crate doesn't exist, or if the version needs to be updated, then:
 
 ##### @alchemy-crates
-Modify the `//bazel/rust/alchemy_crates/Cargo.toml`, then cd to the directory that contains it and run `cargo update --workspace` to update the lockfile.
-You also need to do the same thing with `//bazel/Cargo.toml`.
-
+Modify the `//bazel/Cargo.toml`, then cd to the directory that contains it and run `cargo update --workspace` to update the lockfile.
 
 ##### @crates
 Modify `//third_party/rust_crates/projects/.../Cargo.toml`, then run `third_party/rust_crates/vendor.py`.
