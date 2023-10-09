@@ -312,7 +312,6 @@ def generate_ebuild_validation_action(ctx, binpkg):
         validation_file,
         "--package",
         binpkg,
-        "--report-only",
     ])
     args.add_joined("--use-flags", ctx.rule.attr.use_flags, join_with = ",", omit_if_empty = False)
 
