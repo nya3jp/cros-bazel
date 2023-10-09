@@ -5,6 +5,7 @@
 mod alchemist;
 mod digest_repo;
 mod dump_package;
+mod dump_profile;
 mod generate_repo;
 mod ver_rs;
 mod ver_test;

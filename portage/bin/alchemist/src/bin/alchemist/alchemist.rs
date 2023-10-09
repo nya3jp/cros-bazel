@@ -10,6 +10,7 @@ use std::{env::current_dir, path::PathBuf};
 
 use crate::digest_repo::digest_repo_main;
 use crate::dump_package::dump_package_main;
+use crate::dump_profile::dump_profile_main;
 use crate::generate_repo::generate_repo_main;
 
 use alchemist::common::is_inside_chroot;
@@ -75,6 +76,11 @@ pub enum Commands {
     DumpPackage {
         #[command(flatten)]
         args: crate::dump_package::Args,
+    },
+    /// Dumps profile information.
+    DumpProfile {
+        #[command(flatten)]
+        args: crate::dump_profile::Args,
     },
     /// Generates a Bazel repository containing overlays and packages.
     GenerateRepo {
@@ -388,6 +394,9 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     match args.command {
         Commands::DumpPackage { args: local_args } => {
             dump_package_main(&host, target.as_ref(), local_args)?;
+        }
+        Commands::DumpProfile { args: local_args } => {
+            dump_profile_main(&target.unwrap_or(host), local_args)?;
         }
         Commands::GenerateRepo {
             output_dir,

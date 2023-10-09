@@ -18,6 +18,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/bin/alchemist/alchemist.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/digest_repo.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/dump_package.rs",
+    "//bazel/portage/bin/alchemist:src/bin/alchemist/dump_profile.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/common.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/deps.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/internal/mod.rs",
