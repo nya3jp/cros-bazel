@@ -67,7 +67,7 @@ def main():
         ]
         + chrome_prebuilt_configs
         + [
-            "@portage//%s:%s" % (package_name, target_type)
+            "@portage//target/%s:%s" % (package_name, target_type)
             for target_type in ["package_set", "install_list"]
             for package_name in args.package_names
         ],
@@ -92,7 +92,7 @@ def main():
                 ]
                 + chrome_prebuilt_configs
                 + [
-                    "@portage//%s:install_list" % package_name,
+                    "@portage//target/%s:install_list" % package_name,
                 ],
                 encoding="utf-8",
             ).strip(),
