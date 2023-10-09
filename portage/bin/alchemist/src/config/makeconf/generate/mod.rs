@@ -74,11 +74,13 @@ fn generate_make_conf_board(
         }
     }
 
-    let vars: Vec<MakeVar> = vec![MakeVar::from((
-        "USE",
+    let vars: Vec<MakeVar> = if repos.get_repo_by_name("chromeos").is_err() {
         // TODO(b/265433399): Fix the profiles so we can remove this hack
-        "$USE -ondevice_speech",
-    ))];
+        // ondevice_speech binaries are only available for internal builds.
+        vec![MakeVar::from(("USE", "$USE -ondevice_speech"))]
+    } else {
+        vec![]
+    };
 
     let context = MakeConfContext { sources, vars };
 
