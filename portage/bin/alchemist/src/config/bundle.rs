@@ -44,6 +44,15 @@ const BUILTIN_INCREMENTAL_VARIABLES: &[BuiltinIncrementalVariable] = &[
         name: "CONFIG_PROTECT_MASK",
         defaults: "",
     },
+    // Portage treats this as an incremental variable. We can't do that because
+    // we don't want to copy the default that portage uses. Instead we treat
+    // this one special in `compute_general_incremental_variable` and just do
+    // a simple concatenation so that portage can compute the real value using
+    // its defaults.
+    BuiltinIncrementalVariable {
+        name: "FEATURES",
+        defaults: "",
+    },
     BuiltinIncrementalVariable {
         name: "IUSE_IMPLICIT",
         defaults: "",
@@ -585,18 +594,22 @@ impl ConfigBundle {
         nodes: &'a [ConfigNode],
         name: &'a str,
         defaults: &'a str,
-    ) -> impl Iterator<Item = &'a str> {
+    ) -> Box<dyn Iterator<Item = &'a str> + 'a> {
         if name == "USE" || name == "ACCEPT_KEYWORDS" {
             panic!("USE_EXPAND/USE_EXPAND_UNPREFIXED must not contain {}", name);
         }
-        merge_incremental_tokens(
-            iter::once(defaults)
-                .chain(nodes.iter().filter_map(move |node| match &node.value {
-                    ConfigNodeValue::Vars(vars) => vars.get(name).map(|value| &**value),
-                    _ => None,
-                }))
-                .flat_map(|s| s.split_ascii_whitespace()),
-        )
+        let tokens = iter::once(defaults)
+            .chain(nodes.iter().filter_map(move |node| match &node.value {
+                ConfigNodeValue::Vars(vars) => vars.get(name).map(|value| &**value),
+                _ => None,
+            }))
+            .flat_map(|s| s.split_ascii_whitespace());
+
+        if name == "FEATURES" {
+            Box::new(tokens)
+        } else {
+            Box::new(merge_incremental_tokens(tokens))
+        }
     }
 }
 
@@ -973,6 +986,35 @@ mod tests {
                 "video_cards_vesa".to_string(),
                 "video_cards_vmware".to_string()
             ]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_features() -> Result<()> {
+        let bundle = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![
+            ConfigNode {
+                sources: vec![PathBuf::from("make.defaults")],
+                value: ConfigNodeValue::Vars(HashMap::from([(
+                    "FEATURES".to_owned(),
+                    "buildpkg clean-logs -collision-protect".to_owned(),
+                )])),
+            },
+            ConfigNode {
+                sources: vec![PathBuf::from("make.defaults")],
+                value: ConfigNodeValue::Vars(HashMap::from([(
+                    "FEATURES".to_owned(),
+                    "collision-protect -news".to_owned(),
+                )])),
+            },
+        ])]);
+
+        let features = bundle.env().get("FEATURES").unwrap();
+
+        assert_eq!(
+            features,
+            "buildpkg clean-logs -collision-protect collision-protect -news",
         );
 
         Ok(())
