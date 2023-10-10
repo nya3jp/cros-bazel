@@ -183,7 +183,7 @@ struct GomaInfo {
 }
 
 fn do_main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
 
     let mut settings = ContainerSettings::new();
     settings.apply_common_args(&args.common)?;

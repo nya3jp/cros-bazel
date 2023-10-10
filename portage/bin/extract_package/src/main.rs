@@ -164,7 +164,7 @@ fn merge_directories(source_root: &Path, target_root: &Path) -> Result<()> {
 }
 
 fn do_main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
 
     let image_dir = args.output_directory.join(&args.image_prefix);
     std::fs::create_dir_all(&image_dir)?;

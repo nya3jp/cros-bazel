@@ -28,7 +28,7 @@ struct Cli {
 fn do_main() -> Result<()> {
     let r = Runfiles::create()?;
 
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
 
     std::fs::create_dir_all(&args.output)?;
 

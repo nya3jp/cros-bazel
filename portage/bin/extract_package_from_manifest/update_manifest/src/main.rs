@@ -240,7 +240,7 @@ fn update_local_manifest(
 }
 
 fn do_main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
 
     let binpkgs: Vec<BinaryPackageInfo> =
         serde_json::from_reader(File::open(args.binary_package_infos)?)?;

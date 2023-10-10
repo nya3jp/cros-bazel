@@ -92,7 +92,7 @@ fn extract_files(
 }
 
 fn do_main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
     extract_files(&args.binpkg, &args.xpak, &args.output_file)
 }
 

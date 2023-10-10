@@ -50,7 +50,7 @@ struct Cli {
 
 /// Usage: cat foo.tar | gen_tbz2 <clap args>
 fn main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
     let version = Version::try_new(&args.version)?;
     let revision = version.revision().to_string();
     let p = format!("{}-{}", args.package_name, version.without_revision());

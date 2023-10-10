@@ -34,7 +34,7 @@ struct Cli {
 }
 
 fn do_main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
 
     let mutable_base_dir = SafeTempDirBuilder::new().base_dir(&args.output).build()?;
 

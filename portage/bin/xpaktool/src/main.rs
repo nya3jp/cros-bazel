@@ -46,7 +46,7 @@ struct ExtractXpakArgs {
 }
 
 fn do_main() -> Result<()> {
-    let cli = Cli::parse();
+    let cli = Cli::try_parse()?;
     match cli.commands {
         Commands::ExtractXpak(args) => do_extract_xpak(args),
         Commands::ComparePackages(args) => do_compare_packages(args),

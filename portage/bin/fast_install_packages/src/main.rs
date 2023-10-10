@@ -458,7 +458,7 @@ struct Args {
 }
 
 fn do_main() -> Result<()> {
-    let args = Args::parse();
+    let args = Args::try_parse()?;
 
     // Mount a tmpfs and use it as the mutable base directory.
     //

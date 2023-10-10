@@ -18,7 +18,7 @@ struct Cli {
 }
 
 pub fn main() -> Result<()> {
-    let args = Cli::parse();
+    let args = Cli::try_parse()?;
     let r = runfiles::Runfiles::create()?;
     env_logger::init();
     Manifest::create(&r.rlocation(args.manifest))?.install_local(&args.install_dir)
