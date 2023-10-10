@@ -96,13 +96,18 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
                     .join(" ")
             );
 
-            let deps =
-                analyze_dependencies(&details, cross_compile, Some(&host.resolver), resolver)?;
-            dump_deps("BDEPEND", &deps.build_host_deps);
-            dump_deps("IDEPEND", &deps.install_host_deps);
-            dump_deps("DEPEND", &deps.build_deps);
-            dump_deps("RDEPEND", &deps.runtime_deps);
-            dump_deps("PDEPEND", &deps.post_deps);
+            match analyze_dependencies(&details, cross_compile, Some(&host.resolver), resolver) {
+                Ok(deps) => {
+                    dump_deps("BDEPEND", &deps.build_host_deps);
+                    dump_deps("IDEPEND", &deps.install_host_deps);
+                    dump_deps("DEPEND", &deps.build_deps);
+                    dump_deps("RDEPEND", &deps.runtime_deps);
+                    dump_deps("PDEPEND", &deps.post_deps);
+                }
+                Err(err) => {
+                    println!("WARNING: Failed to analyze dependencies: {:#}", err);
+                }
+            }
 
             if args.env {
                 println!("Env: ");
