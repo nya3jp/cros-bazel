@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "bash_rlocation", "generate_bash_script")
+load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "bash_rlocation", "generate_bash_script", "runfiles_path")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo")
 load(":common.bzl", "EXTRACT_COMMON_ATTRS")
 
@@ -37,9 +37,23 @@ def _update_manifest_impl(ctx):
         var_name,
     ]
 
-    binpkgs = ctx.attr.pkg[BinaryPackageSetInfo].files.to_list()
+    binpkgs = ctx.attr.pkg[BinaryPackageSetInfo].packages.to_list()
+    providers = []
+    providers_file = ctx.actions.declare_file(ctx.label.name + "_providers.json")
+    files = [ctx.file.manifest_file, providers_file]
+
     for binpkg in binpkgs:
-        args.extend(["--binpkg", bash_rlocation(ctx, binpkg)])
+        files.append(binpkg.file)
+        providers.append(dict(
+            category = binpkg.category,
+            package_name = binpkg.package_name,
+            slot = binpkg.slot.split("/")[0],
+            version = binpkg.version,
+            uri = binpkg.file.short_path,
+            direct_runtime_deps = [dep.file.short_path for dep in binpkg.direct_runtime_deps],
+        ))
+    ctx.actions.write(providers_file, json.encode(providers))
+    args.extend(["--binary-package-infos", bash_rlocation(ctx, providers_file)])
 
     for regex in ctx.attr.ld_library_path_regexes:
         args.extend(["--ld-library-path-regex", regex.replace("\\", "\\\\")])
@@ -58,7 +72,7 @@ def _update_manifest_impl(ctx):
             manifest = bash_rlocation(ctx, ctx.file.manifest_file),
         ),
         runfiles = ctx.runfiles(
-            files = binpkgs + [ctx.file.manifest_file],
+            files = [binpkg.file for binpkg in binpkgs] + [ctx.file.manifest_file, providers_file],
             transitive_files = ctx.attr._buildozer[DefaultInfo].files,
         ),
         data = [ctx.attr._update_manifest],

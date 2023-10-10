@@ -10,7 +10,7 @@ use extract_package_from_manifest_package::package::{Package, PackageUid};
 use extract_package_from_manifest_package::package_set::PackageSet;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, io::Write, path::PathBuf, process::ExitCode};
+use std::{collections::BTreeSet, fs::File, io::Write, path::PathBuf, process::ExitCode};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
@@ -18,8 +18,11 @@ struct Cli {
     #[arg(long, help = "The command to execute to regenerate the manifest")]
     regenerate_command: String,
 
-    #[arg(long, required=true, num_args=1.., help="The binary packages to unpack")]
-    binpkg: Vec<PathBuf>,
+    #[arg(
+        long,
+        help = "The path to a json file containing Vec<BinaryPackageInfo>"
+    )]
+    binary_package_infos: PathBuf,
 
     #[arg(
         long,
@@ -56,11 +59,31 @@ struct Manifest {
     ld_library_path: Vec<PathBuf>,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
+struct BinaryPackageInfo {
+    category: String,
+    package_name: String,
+    version: String,
+    slot: String,
+    uri: String,
+    // Each entry in here is the URI of the dep.
+    direct_runtime_deps: Vec<String>,
+}
+
 fn do_main() -> Result<()> {
     let args = Cli::parse();
 
+    let binpkgs: Vec<BinaryPackageInfo> =
+        serde_json::from_reader(File::open(args.binary_package_infos)?)?;
+
     let out = fileutil::SafeTempDir::new()?;
-    let mut package_set = PackageSet::create(out.path(), &args.binpkg)?;
+    let mut package_set = PackageSet::create(
+        &out.path().join("extracted"),
+        &binpkgs
+            .iter()
+            .map(|pkg| PathBuf::from(&pkg.uri))
+            .collect::<Vec<_>>(),
+    )?;
 
     let header_file_dirs = package_set.fill_headers(&args.header_file_dir_regex)?;
 
