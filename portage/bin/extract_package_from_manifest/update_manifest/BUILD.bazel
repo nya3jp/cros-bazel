@@ -14,12 +14,17 @@ rust_binary(
         "//bazel/portage/bin/extract_package_from_manifest/package",
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/fileutil",
+        "//bazel/portage/common/processes",
+        "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:chrono",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:hex",
+        "@alchemy_crates//:log",
         "@alchemy_crates//:regex",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:sha2",
     ],
 )
 
