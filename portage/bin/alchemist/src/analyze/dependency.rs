@@ -344,20 +344,15 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         ("net-nds/openldap", DependencyKind::BuildHost { .. }) => "sys-apps/groff",
 
         /*
-         * Our fake sudo package uses dataclasses which is a python 3.8 feature.
-         * We need to add the dep when a target package uses sudo :/
-         *
          * We need gcc because chrome uses a bundled ninja that is built against libstdc++.
          *
          * /home/root/chrome_root/src/third_party/ninja/ninja: error while loading shared libraries: libstdc++.so.6: cannot open shared object file: No such file or directory
          *
          * We need lsof for chromeos-chrome to use goma.
          */
-        ("chromeos-base/chrome-icu", DependencyKind::BuildHost { .. }) => {
-            "dev-python/dataclasses sys-devel/gcc"
-        }
+        ("chromeos-base/chrome-icu", DependencyKind::BuildHost { .. }) => "sys-devel/gcc",
         ("chromeos-base/chromeos-chrome", DependencyKind::BuildHost { .. }) => {
-            "dev-python/dataclasses sys-devel/gcc sys-process/lsof"
+            "sys-devel/gcc sys-process/lsof"
         }
 
         /*
@@ -474,13 +469,6 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
 
         /* We need to upgrade distutils-r1 to latest from upstream */
         ("dev-util/meson", DependencyKind::Run) => "dev-python/setuptools",
-
-        /*
-         * ModuleNotFoundError: No module named 'dataclasses'
-         *
-         * This can be dropped once we migrate to python 3.8.
-         */
-        ("app-emulation/qemu", DependencyKind::BuildHost { .. }) => "dev-python/dataclasses",
 
         /*
          * checking for curl-config... no
