@@ -14,7 +14,7 @@ def _preflight_check_fail(reason):
     """Reports a preflight check failure."""
     _prominent_fail(
         reason +
-        "\nPlease read the following guide to set up your environment " +
+        "\n\nPlease read the following guide to set up your environment " +
         "properly:\n" +
         "https://chromium.googlesource.com/chromiumos/bazel/+/HEAD/README.md",
     )
@@ -23,6 +23,13 @@ def _preflight_checks_impl(repo_ctx):
     """Performs preflight checks."""
     if repo_ctx.os.environ.get("CHROMITE_BAZEL_WRAPPER") != "1":
         _preflight_check_fail("Bazel was run without the proper wrapper.")
+
+    llvm_path = repo_ctx.workspace_root.get_child("third_party/llvm-project")
+    if not llvm_path.exists:
+        _preflight_check_fail(
+            "third_party/llvm-project is not checked out.\n" +
+            "Did you run `repo init` with `-g default,bazel`?",
+        )
 
     # Create an empty repository.
     repo_ctx.file("BUILD.bazel", "")
