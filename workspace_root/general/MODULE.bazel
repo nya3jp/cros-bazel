@@ -172,3 +172,20 @@ use_repo(portage, "alchemist", "goma_info", "portage", "portage_digest")
 
 portage_deps = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage_deps")
 use_repo(portage_deps, "portage_deps")
+
+prebuilt_sdk = use_extension("//bazel/module_extensions/prebuilt_sdk:extension.bzl", "prebuilt_sdk")
+
+prebuilt_sdk_tarballs = use_extension("//bazel/module_extensions/prebuilt_sdk:extension.bzl", "prebuilt_sdk_tarballs")
+
+prebuilt_sdk.from_url(
+    name = "prebuilt_sdk_demo",
+    url = "gs://chromeos-bazel-prebuilt-test/manifests/638f9e12ed1db50aa6cbb4c7046b0d9ad2eb246588928d856e6b443ac9062312.json",
+)
+
+prebuilt_sdk_tarballs.from_manifests(
+    manifests = ["@prebuilt_sdk_demo//file:manifest.json"],
+)
+
+use_repo(prebuilt_sdk, "prebuilt_sdk_demo")
+
+use_repo(prebuilt_sdk_tarballs, "prebuilt_sdk_tarballs")
