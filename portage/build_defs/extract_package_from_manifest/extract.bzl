@@ -89,7 +89,7 @@ def _extract_impl(ctx):
             inputs.extend(shared_libs.to_list())
 
             ctx.actions.run(
-                executable = ctx.executable._extract_interface,
+                executable = ctx.executable.extractor,
                 outputs = direct_info.owned_runfiles,
                 inputs = inputs,
                 arguments = [args, pkg_args],
@@ -109,7 +109,7 @@ extract = rule(
     implementation = _extract_impl,
     attrs = EXTRACT_COMMON_ATTRS | dict(
         manifest_content = attr.string(mandatory = True),
-        _extract_interface = attr.label(
+        extractor = attr.label(
             executable = True,
             default = "//bazel/portage/bin/extract_package_from_manifest/extract",
             cfg = "exec",

@@ -37,6 +37,7 @@ def _prebuilt_sdk_tarballs_impl(module_ctx):
                 manifest = json.decode(module_ctx.read(repo))
                 for provider in manifest["providers"]:
                     uris[provider["uri"]] = None
+                uris[manifest["extractor"]] = None
 
     for uri in uris:
         hub.gs_file.alias_only(

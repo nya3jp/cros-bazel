@@ -37,6 +37,7 @@ filter_package(
 """
 
 _ROOT_BUILD_FILE = _HEADER + """
+load("@@//bazel/build_defs:packed_binary.bzl", "unpack_binary")
 load("@@//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_package")
 load(":manifest.bzl", "FILE_MANIFEST_CONTENT")
 
@@ -45,11 +46,17 @@ alias(
     actual = {root_package},
 )
 
+unpack_binary(
+    name = "extractor",
+    src = {extractor},
+)
+
 extract_package(
     name = "extracted_sysroot",
     # This is only used for regeneration, which can't happen in an already
     # generated repo rule.
     header_file_dir_regexes = [],
+    extractor = ":extractor",
     # This is only used for regeneration, which can't happen in an already
     # generated repo rule.
     ld_library_path_regexes = [],
@@ -88,13 +95,17 @@ def _prebuilt_sdk_repo_impl(repo_ctx):
     )
 
     pkgs = remote_manifest["providers"]
+    extractor_repo = repo_name(remote_manifest["extractor"])
 
     # Packages must be in valid installation order. This implies that the root
     # package must be the final one.
     root_label = "//%s:binpkg" % _package_name(pkgs[-1]["uri"])
     repo_ctx.file(
         "BUILD.bazel",
-        _ROOT_BUILD_FILE.format(root_package = repr(root_label)),
+        _ROOT_BUILD_FILE.format(
+            root_package = repr(root_label),
+            extractor = repr("@prebuilt_sdk_tarballs//:%s" % extractor_repo),
+        ),
     )
 
     for pkg in pkgs:

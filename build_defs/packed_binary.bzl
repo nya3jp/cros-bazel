@@ -47,3 +47,30 @@ def pack_binary(name, binary, path, **kwargs):
         path = path,
         **kwargs
     )
+
+def _unpack_binary(ctx):
+    main = ctx.actions.declare_file(ctx.label.name)
+    runfiles = ctx.actions.declare_directory(ctx.label.name + "_runfiles")
+
+    args = ctx.actions.args()
+    args.add_all([ctx.file.src, main])
+    ctx.actions.run(
+        executable = ctx.executable._unpack_prebuilt_binary,
+        inputs = [ctx.file.src],
+        outputs = [main, runfiles],
+        arguments = [args],
+    )
+
+    return DefaultInfo(
+        files = depset([main, runfiles]),
+        executable = main,
+    )
+
+unpack_binary = rule(
+    implementation = _unpack_binary,
+    attrs = dict(
+        src = attr.label(allow_single_file = [".tar.gz"]),
+        _unpack_prebuilt_binary = attr.label(cfg = "exec", executable = True, default = "//bazel/build_defs/packed_binary:unpack_binary"),
+    ),
+    executable = True,
+)

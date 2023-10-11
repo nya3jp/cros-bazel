@@ -179,7 +179,7 @@ prebuilt_sdk_tarballs = use_extension("//bazel/module_extensions/prebuilt_sdk:ex
 
 prebuilt_sdk.from_url(
     name = "prebuilt_sdk_demo",
-    url = "gs://chromeos-bazel-prebuilt-test/manifests/9443e33a2aae4dc529a0ebd5b45cbb65d1e1400e7e407ca2a152381077980ec0.json",
+    url = "gs://chromeos-bazel-prebuilt-test/manifests/1391f724a014d15eb77e6ea792993c725192c5c8c40687ccba40ca6e746a8347.json",
 )
 
 prebuilt_sdk_tarballs.from_manifests(

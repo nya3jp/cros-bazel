@@ -8,3 +8,9 @@ exports_files(
     ["pack_binary.sh"],
     visibility = ["//visibility:public"],
 )
+
+sh_runfiles_binary(
+    name = "unpack_binary",
+    src = "unpack_binary.sh",
+    visibility = ["//visibility:public"],
+)
