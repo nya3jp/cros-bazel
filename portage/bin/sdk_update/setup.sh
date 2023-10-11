@@ -38,12 +38,9 @@ do
   #       *.patch
 
   if ! patch --forward -d "/" -p 1 < <(
+        find /usr/src/portage -iname '*.patch' | sort | xargs \
         sed -e "s/PYTHON_VERSION/${PYTHON_VERSION}/g" \
-            -e "s/PYTHON_LIBDIR/${PYTHON_LIBDIR}/g" \
-          /usr/src/portage/0001-bin-Add-binpkg-hermetic-feature.patch \
-          /usr/src/portage/0002-bin-phase-functions-Move-du-stats-into-subshell.patch \
-          /usr/src/portage/0003-config-Don-t-directly-modify-FEATURES.patch \
-          /usr/src/portage/0004-CHROMIUM-Disable-pretend-phase-when-invoking-ebuild.patch
+            -e "s/PYTHON_LIBDIR/${PYTHON_LIBDIR}/g"
       ) && RC="$?"; then
     # Exit code 1 means some hunks failed to apply. They were either already applied, or
     # had a merge conflict. Not ideal that we can't differentiate between the two.
