@@ -10,9 +10,10 @@ cliutil = { path = "../../common/cliutil" }
 binarypackage = { path = "../../common/portage/binarypackage" }
 
 anyhow.workspace = true
+bzip2.workspace = true
 clap.workspace = true
 itertools.workspace = true
+tempfile.workspace = true
 
 [dev-dependencies]
 runfiles.workspace = true
-tempfile.workspace = true

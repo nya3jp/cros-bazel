@@ -14,8 +14,10 @@ rust_binary(
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/portage/binarypackage",
         "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:bzip2",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:itertools",
+        "@alchemy_crates//:tempfile",
     ],
 )
 

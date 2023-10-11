@@ -4,6 +4,7 @@
 
 use anyhow::{bail, Context, Result};
 use binarypackage::BinaryPackage;
+use bzip2::read::BzDecoder;
 use clap::Parser;
 use itertools::Itertools;
 use std::collections::HashSet;
@@ -12,6 +13,8 @@ use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
+use tempfile::TempDir;
 
 /// Compares two packages.
 #[derive(Parser, Debug)]
@@ -54,6 +57,37 @@ fn reader_contents_equal(reader_a: &mut impl Read, reader_b: &mut impl Read) -> 
     }
 }
 
+fn diff_environment(a: &Vec<u8>, b: &Vec<u8>) -> Result<()> {
+    let (_temp, base) = if let Some(outputs) = std::env::var_os("TEST_UNDECLARED_OUTPUTS_DIR") {
+        (None, PathBuf::from(outputs))
+    } else {
+        let temp = TempDir::new()?;
+        let path = temp.path().to_path_buf();
+
+        (Some(temp), path)
+    };
+
+    let path_a = base.join("environment.a");
+    let path_b = base.join("environment.b");
+
+    let mut file_a = File::create(&path_a)?;
+    let mut file_b = File::create(&path_b)?;
+
+    std::io::copy(&mut BzDecoder::new(a.as_slice()), &mut file_a)?;
+    std::io::copy(&mut BzDecoder::new(b.as_slice()), &mut file_b)?;
+
+    drop(file_a);
+    drop(file_b);
+
+    Command::new("diff")
+        .current_dir(base)
+        .arg("-u")
+        .arg(&path_a)
+        .arg(&path_b)
+        .status()?;
+    Ok(())
+}
+
 fn diff_xpak_contents(pkg_a: &BinaryPackage, pkg_b: &BinaryPackage) -> Result<()> {
     let keys_a: HashSet<&String> = pkg_a.xpak_order().iter().collect();
     let keys_b: HashSet<&String> = pkg_b.xpak_order().iter().collect();
@@ -89,7 +123,12 @@ fn diff_xpak_contents(pkg_a: &BinaryPackage, pkg_b: &BinaryPackage) -> Result<()
             continue;
         }
 
-        println!("  * XPAK key '{:?}' has a value mismatch:", key);
+        println!("  * XPAK key '{}' has a value mismatch:", key);
+        if *key == "environment.bz2" {
+            diff_environment(value_a, value_b)?;
+            continue;
+        }
+
         if let Ok(value_a) = std::str::from_utf8(value_a) {
             println!("    * A: {:?}", value_a);
         } else {
@@ -108,6 +147,9 @@ fn diff_xpak_contents(pkg_a: &BinaryPackage, pkg_b: &BinaryPackage) -> Result<()
 }
 
 fn packages_equal(path_a: &Path, path_b: &Path) -> Result<bool> {
+    println!("Package A: {:?}", path_a);
+    println!("Package B: {:?}", path_b);
+
     if files_size_equal(path_a, path_b)? {
         println!("File size equal - ✅");
         if files_contents_equal(path_a, path_b)? {

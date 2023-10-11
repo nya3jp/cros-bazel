@@ -2001,6 +2001,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "binarypackage",
+ "bzip2",
  "clap",
  "cliutil",
  "itertools",
