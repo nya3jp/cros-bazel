@@ -15,6 +15,7 @@ pack_binary(
 rust_binary(
     name = "update_manifest",
     srcs = glob(["src/*.rs"]),
+    data = [":extractor"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//visibility:public"],
     deps = [

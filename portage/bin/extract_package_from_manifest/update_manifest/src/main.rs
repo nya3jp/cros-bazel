@@ -23,6 +23,8 @@ use std::{
 
 // TODO(b/304662445): Update this to one with more secure configuration.
 static GS_PREFIX: &str = "gs://chromeos-bazel-prebuilt-test";
+static EXTRACTOR: &str =
+    "cros/bazel/portage/bin/extract_package_from_manifest/update_manifest/extractor.tar.gz";
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
@@ -93,6 +95,8 @@ struct BinaryPackageInfo {
 struct RemoteManifest {
     manifest: Manifest,
     providers: Vec<BinaryPackageInfo>,
+    /// A URI to a tarball containing a binary.
+    extractor: String,
 }
 
 /// Updates the url in MODULE.bazel for the repo `name` to `url`.
@@ -169,6 +173,12 @@ fn update_remote_manifest(
         })
         .collect::<Result<_>>()?;
 
+    let r = runfiles::Runfiles::create()?;
+    let extractor = r.rlocation(EXTRACTOR).canonicalize()?;
+    std::fs::create_dir_all(out.join("extractor"))?;
+    let extractor_dst = format!("extractor/{}.tar.gz", checksum(&extractor)?);
+    std::os::unix::fs::symlink(extractor, out.join(&extractor_dst))?;
+
     let remote_manifest = RemoteManifest {
         manifest,
         providers: binpkgs
@@ -183,6 +193,7 @@ fn update_remote_manifest(
                 ..binpkg
             })
             .collect(),
+        extractor: format!("{GS_PREFIX}/{extractor_dst}"),
     };
 
     let manifest_path = out.join("manifest.json");
