@@ -393,7 +393,6 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/golden/test-cases/inherit/BUILD.golden.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/golden/test-cases/testonlydeps/BUILD.golden.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/golden/virtual/os-headers/BUILD.golden.bazel",
-    "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/input/chromite/.git/README.md",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/input/chromite/__pycache__/README.md",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/input/chromite/main.py",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/input/src/overlays/overlay-amd64-generic/make.conf",
