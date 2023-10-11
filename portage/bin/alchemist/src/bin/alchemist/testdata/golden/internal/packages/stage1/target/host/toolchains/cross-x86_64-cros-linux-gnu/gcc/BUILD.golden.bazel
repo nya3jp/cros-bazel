@@ -10,12 +10,6 @@ load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-string_flag(
-    name = "10.2.0_prebuilt",
-    build_setting_default = "",
-    visibility = ["@//bazel:internal"],
-)
-
 alias(
     name = "10.2.0_host_deps",
     actual = "//internal/sdk/stage1/target/host",
@@ -33,6 +27,12 @@ alias(
     actual = "10.2.0_host_deps",
     visibility = ["//visibility:private"],
 )
+string_flag(
+    name = "10.2.0_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild(
     name = "10.2.0",
     ebuild = "gcc-10.2.0.ebuild",
@@ -101,6 +101,12 @@ ebuild_debug(
     visibility = ["@//bazel:internal"],
 )
 
+string_flag(
+    name = "10.2.0_hermetic_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild(
     name = "10.2.0_hermetic_test_package",
     ebuild = "gcc-10.2.0.ebuild",
@@ -128,7 +134,7 @@ suffix = "_hermetic_test_package",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    prebuilt = ":10.2.0_prebuilt",has_hooks = False,
+    prebuilt = ":10.2.0_hermetic_test_package_prebuilt",has_hooks = False,
     visibility = ["@//bazel:internal"],
 )
 

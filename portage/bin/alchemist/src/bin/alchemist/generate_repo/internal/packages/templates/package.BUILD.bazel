@@ -48,12 +48,6 @@ add_runtime_deps(
 )
 
 {% else -%}
-string_flag(
-    name = "{{ ebuild.version }}_prebuilt",
-    build_setting_default = "",
-    visibility = ["@//bazel:internal"],
-)
-
 {% if ebuild.host_build_deps -%}
 sdk_install_deps(
     name = "{{ ebuild.version }}_host_deps",
@@ -145,6 +139,12 @@ alias(
 {%- endif %}
 
 {%- for suffix in ["","_hermetic_test_package"] %}
+string_flag(
+    name = "{{ ebuild.version }}{{ suffix }}_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild(
     name = "{{ ebuild.version }}{{ suffix }}",
     ebuild = "{{ ebuild.ebuild_name }}",
@@ -219,7 +219,7 @@ ebuild(
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
     {%- endif %}
-    prebuilt = ":{{ ebuild.version }}_prebuilt",
+    prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
     {%- if ebuild.has_hooks %}
     has_hooks = True,
     {% else -%}

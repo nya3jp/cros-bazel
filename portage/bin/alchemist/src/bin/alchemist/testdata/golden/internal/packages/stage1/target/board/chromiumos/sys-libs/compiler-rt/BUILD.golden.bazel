@@ -10,12 +10,6 @@ load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-string_flag(
-    name = "17.0_pre498229-r9_prebuilt",
-    build_setting_default = "",
-    visibility = ["@//bazel:internal"],
-)
-
 alias(
     name = "17.0_pre498229-r9_host_deps",
     actual = "//internal/sdk/stage1/target/board",
@@ -33,6 +27,12 @@ alias(
     actual = "17.0_pre498229-r9_host_deps",
     visibility = ["//visibility:private"],
 )
+string_flag(
+    name = "17.0_pre498229-r9_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild(
     name = "17.0_pre498229-r9",
     ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
@@ -101,6 +101,12 @@ ebuild_debug(
     visibility = ["@//bazel:internal"],
 )
 
+string_flag(
+    name = "17.0_pre498229-r9_hermetic_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild(
     name = "17.0_pre498229-r9_hermetic_test_package",
     ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
@@ -128,7 +134,7 @@ suffix = "_hermetic_test_package",
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
-    prebuilt = ":17.0_pre498229-r9_prebuilt",has_hooks = False,
+    prebuilt = ":17.0_pre498229-r9_hermetic_test_package_prebuilt",has_hooks = False,
     visibility = ["@//bazel:internal"],
 )
 
