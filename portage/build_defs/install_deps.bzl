@@ -4,6 +4,29 @@
 
 load("install_groups.bzl", "calculate_install_groups", "map_install_group")
 
+def _compute_slot_key(package):
+    """
+    Computes a slot key from BinaryPackageInfo.
+
+    A slot key is a string that uniquely describes a package slot occuppied by a
+    package, in the form "<category>/<package-name>:<main-slot>@<sysroot>".
+    Two packages with the same slot key can't be installed at the same time on
+    a system.
+
+    Args:
+        package: BinaryPackageInfo: Describes a package.
+
+    Returns:
+        A slot key.
+    """
+    main_slot = package.slot.split("/")[0]
+    return "%s/%s:%s@%s" % (
+        package.category,
+        package.package_name,
+        main_slot,
+        package.contents.sysroot,
+    )
+
 def _fast_install_packages(
         ctx,
         output_prefix,
@@ -16,15 +39,43 @@ def _fast_install_packages(
         progress_message):
     sysroot = "/build/%s" % board if board else "/"
 
-    # Skip already installed packages.
-    installed = {}
+    slot_key_to_package = {}  # dict[str, BinaryPackageInfo]
+
+    # Inspect already installed packages.
     for package in sdk.packages.to_list():
-        installed[package.file] = True
-    install_list = [
-        package
-        for package in install_set.to_list()
-        if not installed.get(package.file, False)
-    ]
+        slot_key = _compute_slot_key(package)
+        conflicting_package = slot_key_to_package.get(slot_key)
+        if conflicting_package:
+            fail(
+                ("Slot conflict: cannot install %s when %s has been already " +
+                 "installed with the same slot key %s") % (
+                    package.file.path,
+                    conflicting_package.file.path,
+                    slot_key,
+                ),
+            )
+        else:
+            slot_key_to_package[slot_key] = package
+
+    # Create a list of packages to install.
+    install_list = []
+    for package in install_set.to_list():
+        slot_key = _compute_slot_key(package)
+        conflicting_package = slot_key_to_package.get(slot_key)
+        if conflicting_package:
+            # Skip identical packages.
+            if package.file.path != conflicting_package.file.path:
+                fail(
+                    ("Slot conflict: cannot install %s and %s that have " +
+                     "the same slot key %s") % (
+                        package.file.path,
+                        conflicting_package.file.path,
+                        slot_key,
+                    ),
+                )
+        else:
+            install_list.append(package)
+            slot_key_to_package[slot_key] = package
 
     output_log_file = ctx.actions.declare_file("%s.log" % output_prefix)
     output_profile_file = ctx.actions.declare_file(
