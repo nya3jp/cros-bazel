@@ -27,3 +27,18 @@ stderr: \n--""",
     visibility = ["@//bazel:internal"],
 )
 
+alias(
+    name = "1.0_hermetic_test_package",
+    actual = "1.0",
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "1.0_hermetic_test",
+    packages = [
+        ":1.0",
+        ":1.0_hermetic_test_package",
+    ],
+    size="small",
+)
+

@@ -452,4 +452,19 @@ always_fail(
               """{{ failure.error }}\n--""",
     visibility = ["@//bazel:internal"],
 )
+
+alias(
+    name = "{{ failure.version }}_hermetic_test_package",
+    actual = "{{ failure.version }}",
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "{{ failure.version }}_hermetic_test",
+    packages = [
+        ":{{ failure.version }}",
+        ":{{ failure.version }}_hermetic_test_package",
+    ],
+    size="small",
+)
 {% endfor %}
