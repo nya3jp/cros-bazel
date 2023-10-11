@@ -47,7 +47,7 @@ def _update_manifest_impl(ctx):
         providers.append(dict(
             category = binpkg.category,
             package_name = binpkg.package_name,
-            slot = binpkg.slot.split("/")[0],
+            slot = binpkg.slot,
             version = binpkg.version,
             uri = binpkg.file.short_path,
             direct_runtime_deps = [dep.short_path for dep in binpkg.direct_runtime_deps],
