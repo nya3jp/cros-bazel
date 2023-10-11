@@ -438,7 +438,7 @@ def _ebuild_impl(ctx):
         version = ctx.attr.version,
         slot = ctx.attr.slot,
         direct_runtime_deps = tuple([
-            target[BinaryPackageInfo]
+            target[BinaryPackageInfo].file
             for target in ctx.attr.runtime_deps
         ]),
         layer = install_layer,
@@ -672,18 +672,29 @@ ebuild_install, ebuild_install_primordial = maybe_primordial_rule(
 def _ebuild_install_list_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
 
+    path_to_info = {
+        package[BinaryPackageInfo].file.path: package[BinaryPackageInfo]
+        for package in ctx.attr.packages
+    }
+
     packages = []
     for package in ctx.attr.packages:
         info = package[BinaryPackageInfo]
         name = "%s/%s" % (info.category, info.file.basename)
         path = info.file.path
-        deps = ["%s/%s" % (dep.category, dep.file.basename) for dep in info.direct_runtime_deps]
+
+        dep_names = []
+        for dep_file in info.direct_runtime_deps:
+            dep = path_to_info[dep_file.path]
+            if not dep:
+                fail("ebuild_install_list: packages are not exhaustive")
+            dep_names.append("%s/%s" % (dep.category, dep.file.basename))
 
         packages.append("""{
             "name": "%s",
             "path": "%s",
             "deps": [%s]
-        }""" % (name, path, ",".join(["\"%s\"" % dep for dep in deps])))
+        }""" % (name, path, ",".join(["\"%s\"" % dep for dep in dep_names])))
 
     contents = "[%s]" % ",".join(packages)
 
@@ -723,7 +734,7 @@ ebuild_install_list, ebuild_install_list_primordial = maybe_primordial_rule(
             """,
         ),
         packages = attr.label_list(
-            providers = [BinaryPackageInfo],
+            providers = [BinaryPackageInfo, BinaryPackageSetInfo],
         ),
     ),
 )

@@ -29,7 +29,7 @@ def _binary_package_impl(ctx):
         version = ctx.attr.version,
         slot = slot,
         direct_runtime_deps = tuple([
-            target[BinaryPackageInfo]
+            target[BinaryPackageInfo].file
             for target in ctx.attr.runtime_deps
         ]),
         layer = None,
@@ -86,10 +86,10 @@ def _add_runtime_deps(ctx):
         package_name = original_package_info.package_name,
         version = original_package_info.version,
         slot = original_package_info.slot,
-        direct_runtime_deps = [
-            dep[BinaryPackageInfo]
+        direct_runtime_deps = tuple([
+            dep[BinaryPackageInfo].file
             for dep in ctx.attr.runtime_deps
-        ] + list(original_package_info.direct_runtime_deps),
+        ] + list(original_package_info.direct_runtime_deps)),
     )
     package_set_info = BinaryPackageSetInfo(
         packages = depset(

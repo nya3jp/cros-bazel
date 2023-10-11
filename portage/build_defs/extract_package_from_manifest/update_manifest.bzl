@@ -50,7 +50,7 @@ def _update_manifest_impl(ctx):
             slot = binpkg.slot.split("/")[0],
             version = binpkg.version,
             uri = binpkg.file.short_path,
-            direct_runtime_deps = [dep.file.short_path for dep in binpkg.direct_runtime_deps],
+            direct_runtime_deps = [dep.short_path for dep in binpkg.direct_runtime_deps],
         ))
     ctx.actions.write(providers_file, json.encode(providers))
     args.extend(["--binary-package-infos", bash_rlocation(ctx, providers_file)])

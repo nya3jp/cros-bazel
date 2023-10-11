@@ -110,6 +110,7 @@ def generate_packages(ctx, binpkgs, manifest_pkgs, fail = fail):
         fail = fail,
     )
 
+    packages_by_path = {binpkg.file.path: binpkg for binpkg in binpkgs}
     packages_by_uid = {}
     all_files = {}
     for uid, binpkg, manifest_pkg in matches:
@@ -117,7 +118,7 @@ def generate_packages(ctx, binpkgs, manifest_pkgs, fail = fail):
         files, owned_runfiles = get_extracted_files(ctx, all_files, content)
 
         direct_deps = [
-            packages_by_uid[_binpkg_uid(dep)]
+            packages_by_uid[_binpkg_uid(packages_by_path[dep.path])]
             for dep in binpkg.direct_runtime_deps
         ]
 

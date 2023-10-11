@@ -56,9 +56,9 @@ BinaryPackageInfo, _new_binary_package_info = provider(
             e.g. "0/1.2.3".
         """,
         "direct_runtime_deps": """
-            tuple[BinaryPackageInfo]: Direct runtime dependencies of the
-            package. See the provider description for why this field is a tuple,
-            not a list.
+            tuple[File]: Direct runtime dependencies of the package.
+            See the provider description for why this field is a tuple, not a
+            list.
         """,
     },
     init = _binary_package_info_init,

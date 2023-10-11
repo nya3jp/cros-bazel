@@ -67,7 +67,7 @@ def calculate_install_groups(install_list, provided_packages, use_layers):
         for package in remaining_packages:
             all_seen = True
             for dep in package.direct_runtime_deps:
-                if dep.file.path not in seen:
+                if dep.path not in seen:
                     all_seen = False
                     break
 
