@@ -72,6 +72,34 @@ add_runtime_deps(
     visibility = ["@//bazel:internal"],
 )
 
+ebuild_debug(
+    name = "20211027_debug",
+    ebuild = "crossdev-20211027.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "crossdev",
+    version = "20211027",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":20211027_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
 
 ebuild(
     name = "20211027_hermetic_test_package",
@@ -113,7 +141,8 @@ add_runtime_deps(
 )
 
 ebuild_debug(
-    name = "20211027_debug",
+    name = "20211027_hermetic_test_package_debug",
+    suffix = "_hermetic_test_package",
     ebuild = "crossdev-20211027.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-devel",

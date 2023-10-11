@@ -239,10 +239,11 @@ add_runtime_deps(
     visibility = ["@//bazel:internal"],
 )
 
-{% endfor -%}
-
 ebuild_debug(
-    name = "{{ ebuild.version }}_debug",
+    name = "{{ ebuild.version }}{{ suffix }}_debug",
+    {%- if suffix %}
+    suffix = "{{ suffix }}",
+    {%- endif %}
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
@@ -307,6 +308,7 @@ ebuild_debug(
     {%- endif %}
     visibility = ["@//bazel:internal"],
 )
+{% endfor -%}
 {% endif -%}
 
 {% if target_board -%}

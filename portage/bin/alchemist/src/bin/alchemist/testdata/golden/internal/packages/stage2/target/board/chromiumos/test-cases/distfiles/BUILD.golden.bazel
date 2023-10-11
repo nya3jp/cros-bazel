@@ -73,6 +73,35 @@ add_runtime_deps(
     visibility = ["@//bazel:internal"],
 )
 
+ebuild_debug(
+    name = "1.0_debug",
+    ebuild = "distfiles-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "distfiles",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = {
+        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
 
 ebuild(
     name = "1.0_hermetic_test_package",
@@ -115,7 +144,8 @@ add_runtime_deps(
 )
 
 ebuild_debug(
-    name = "1.0_debug",
+    name = "1.0_hermetic_test_package_debug",
+    suffix = "_hermetic_test_package",
     ebuild = "distfiles-1.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "test-cases",

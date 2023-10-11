@@ -540,7 +540,7 @@ unset RUNFILES_MANIFEST_FILE
 """
 
 def _ebuild_debug_impl(ctx):
-    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
+    src_basename = _get_basename(ctx)
 
     # Declare outputs.
     output_debug_script = ctx.actions.declare_file(src_basename + "_debug.sh")
@@ -571,6 +571,11 @@ ebuild_debug, ebuild_debug_primordial = maybe_primordial_rule(
     doc = "Enters the ephemeral chroot to build a Portage binary package in.",
     attrs = dict(
         _bash_runfiles = BASH_RUNFILES_ATTR,
+        suffix = attr.string(
+            doc = """
+            Suffix to add to the output file. i.e., libcxx-17.0-r15<suffix>_debug.sh
+            """,
+        ),
         **_EBUILD_COMMON_ATTRS
     ),
 )

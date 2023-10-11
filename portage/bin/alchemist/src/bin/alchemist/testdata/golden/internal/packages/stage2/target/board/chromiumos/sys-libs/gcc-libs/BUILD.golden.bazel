@@ -72,6 +72,34 @@ add_runtime_deps(
     visibility = ["@//bazel:internal"],
 )
 
+ebuild_debug(
+    name = "10.2.0_debug",
+    ebuild = "gcc-libs-10.2.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-libs",
+    package_name = "gcc-libs",
+    version = "10.2.0",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":10.2.0_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
 
 ebuild(
     name = "10.2.0_hermetic_test_package",
@@ -113,7 +141,8 @@ add_runtime_deps(
 )
 
 ebuild_debug(
-    name = "10.2.0_debug",
+    name = "10.2.0_hermetic_test_package_debug",
+    suffix = "_hermetic_test_package",
     ebuild = "gcc-libs-10.2.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
