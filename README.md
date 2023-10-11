@@ -126,7 +126,8 @@ minutes, but there are several known heavy packages, such as
 `chromeos-base/chromeos-chrome` that takes 2-3 hours. You can inject prebuilt
 binary packages to bypass building those packages.
 See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
-for more details.
+for more details. To make `chromeos-base/chromeos-chrome` build faster, you can
+also use [Goma](#using-goma-to-build-chrome).
 
 After building an image, you can use `cros_vm` command available in CrOS SDK
 to run a VM locally. Make sure to copy an image out from `bazel-bin` as it's not
@@ -219,6 +220,33 @@ an interactive console:
 - `--login=before`: before building the package
 - `--login=after`: after building the package (default)
 - `--login=after-fail`: after failing to build the package
+
+### Using Goma to build Chrome
+
+Building `chromeos-base/chromeos-chrome` takes 2-3 hours, but you can use Goma
+to make it as fast as less than 1 hour.
+
+To use Goma, please follow [Goma for Chromium contributors] (or
+[go/chrome-linux-build](http://go/chrome-linux-build) if you're a Googler) and
+run `goma_auth login` for authentication. Please make sure that you perform
+authentication inside the chroot if you're going to run `bazel build` inside
+the chroot, and do that outside the chroot if you're going to run it outside the
+chroot.
+
+[Goma for Chromium contributors]: https://chromium.googlesource.com/infra/goma/client/+/HEAD/doc/early-access-guide.md
+
+After authentication, you can just run `bazel build` with `USE_GOMA=true` to
+enable Goma.
+
+```
+$ USE_GOMA=true BOARD=amd64-generic bazel build @portage//chromeos-base/chromeos-chrome
+```
+
+You can also run `build_packages` with `--run-goma` to run it with Goma.
+
+```
+$ build_packages --bazel --board=amd64-generic --run-goma
+```
 
 ### Injecting prebuilt binary packages
 
