@@ -8,7 +8,7 @@ use bzip2::read::BzDecoder;
 use clap::Parser;
 use itertools::Itertools;
 use std::collections::HashSet;
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
@@ -84,6 +84,31 @@ fn diff_environment(a: &Vec<u8>, b: &Vec<u8>) -> Result<()> {
         .arg("-u")
         .arg(&path_a)
         .arg(&path_b)
+        .status()?;
+    Ok(())
+}
+
+fn diff_tarball_contents(pkg_a: &mut BinaryPackage, pkg_b: &mut BinaryPackage) -> Result<()> {
+    // We don't use TEST_UNDECLARED_OUTPUTS_DIR because it's VERY slow when
+    // there are a lot of files.
+    let temp = TempDir::new()?;
+    let base = temp.path().to_path_buf();
+
+    let path_a = base.join("a");
+    let path_b = base.join("b");
+
+    create_dir_all(&path_a)?;
+    create_dir_all(&path_b)?;
+
+    pkg_a.extract_image(&path_a, false)?;
+    pkg_b.extract_image(&path_b, false)?;
+
+    Command::new("diff")
+        .current_dir(base)
+        .arg("-ur")
+        .arg("--no-dereference")
+        .arg("a")
+        .arg("b")
         .status()?;
     Ok(())
 }
@@ -172,7 +197,7 @@ fn packages_equal(path_a: &Path, path_b: &Path) -> Result<bool> {
         println!("Tarball contents equal - ✅");
     } else {
         println!("Tarball contents equal - ❌");
-        // TODO: compare tarball contents
+        diff_tarball_contents(&mut pkg_a, &mut pkg_b)?;
     }
 
     if reader_contents_equal(&mut pkg_a.new_xpak_reader()?, &mut pkg_b.new_xpak_reader()?)? {

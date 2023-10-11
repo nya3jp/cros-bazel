@@ -136,18 +136,30 @@ impl BinaryPackage {
 
     /// Extracts the contents of the archive to the specified directory.
     /// It uses fakefs to apply ownership information.
-    pub fn extract_image(&mut self, output_dir: &Path) -> Result<()> {
+    pub fn extract_image(&mut self, output_dir: &Path, use_fakefs: bool) -> Result<()> {
         let runfiles = Runfiles::create()?;
         let fakefs_path = runfiles.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
         let zstd_path = runfiles.rlocation("zstd/zstd");
 
         let mut tarball = self.new_tarball_reader()?;
 
-        let mut child = Command::new(fakefs_path)
-            .arg(locate_system_binary("tar")?)
-            .arg("-x")
-            .arg("--same-permissions")
-            .arg("--same-owner")
+        let mut command = if use_fakefs {
+            let mut command = Command::new(fakefs_path);
+            command
+                .arg(locate_system_binary("tar")?)
+                .arg("-x")
+                .arg("--same-permissions")
+                .arg("--same-owner");
+
+            command
+        } else {
+            let mut command = Command::new(locate_system_binary("tar")?);
+            command.arg("-x");
+
+            command
+        };
+
+        let mut child = command
             .arg("-I")
             .arg(&zstd_path)
             .arg("-C")
@@ -332,7 +344,7 @@ mod tests {
         let temp_dir = SafeTempDir::new()?;
         let temp_dir = temp_dir.path();
 
-        bp.extract_image(temp_dir)?;
+        bp.extract_image(temp_dir, true)?;
 
         let hello_path = temp_dir.join("usr/bin/hello");
         assert!(hello_path.try_exists()?);
@@ -349,6 +361,21 @@ mod tests {
         assert!(output.status.success(), "stat failed: {:?}", output.status);
         let stdout = String::from_utf8(output.stdout)?;
         assert_eq!(stdout.trim(), "123:234");
+
+        Ok(())
+    }
+
+    #[test]
+    fn extract_image_without_fakefs() -> Result<()> {
+        let mut bp = binary_package()?;
+
+        let temp_dir = SafeTempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        bp.extract_image(temp_dir, false)?;
+
+        let hello_path = temp_dir.join("usr/bin/hello");
+        assert!(hello_path.try_exists()?);
 
         Ok(())
     }

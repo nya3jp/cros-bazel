@@ -170,7 +170,7 @@ fn do_main() -> Result<()> {
     std::fs::create_dir_all(&image_dir)?;
 
     let mut binary_package = BinaryPackage::open(&args.input_binary_package)?;
-    binary_package.extract_image(&image_dir)?;
+    binary_package.extract_image(&image_dir, true)?;
 
     let mut contents: Vec<u8> = Vec::new();
     generate_vdb_contents(&mut contents, &image_dir)?;

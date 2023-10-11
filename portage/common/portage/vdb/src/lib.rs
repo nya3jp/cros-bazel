@@ -126,7 +126,7 @@ mod tests {
 
         let image_dir = TempDir::new()?;
         let image_dir = image_dir.path();
-        package.extract_image(image_dir)?;
+        package.extract_image(image_dir, true)?;
 
         let mut contents: Vec<u8> = Vec::new();
         generate_vdb_contents(&mut contents, image_dir)?;
