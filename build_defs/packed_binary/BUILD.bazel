@@ -1,0 +1,10 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("//bazel/bash:defs.bzl", "sh_runfiles_binary")
+
+exports_files(
+    ["pack_binary.sh"],
+    visibility = ["//visibility:public"],
+)

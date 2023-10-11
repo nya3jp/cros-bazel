@@ -3,7 +3,14 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/build_defs:packed_binary.bzl", "pack_binary")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+
+pack_binary(
+    name = "extractor",
+    binary = "//bazel/portage/bin/extract_package_from_manifest/extract",
+    path = "_main/bazel/portage/bin/extract_package_from_manifest/extract/extract",
+)
 
 rust_binary(
     name = "update_manifest",
