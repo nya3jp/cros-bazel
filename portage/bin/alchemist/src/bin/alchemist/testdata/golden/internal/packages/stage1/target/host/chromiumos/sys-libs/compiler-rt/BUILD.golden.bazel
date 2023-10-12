@@ -60,6 +60,10 @@ ebuild(
     eclasses = [
     ],
     prebuilt = ":17.0_pre498229-r9_prebuilt",
+    portage_profile_test_package = select({
+        "@//bazel/portage:portage-config-validator-enabled": ":17.0_pre498229-r9_portage_profile_test_package",
+        "@//bazel/portage:portage-config-validator-disabled": None,
+    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -166,6 +170,75 @@ ebuild_debug(
         "@//bazel/portage:alchemist-use-flags": True,
         "@//bazel/portage:portage-use-flags": False,
     }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":17.0_pre498229-r9_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+string_flag(
+    name = "17.0_pre498229-r9_portage_profile_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild(
+    name = "17.0_pre498229-r9_portage_profile_test_package",
+    suffix = "_portage_profile_test_package",
+    ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-libs",
+    package_name = "compiler-rt",
+    version = "17.0_pre498229-r9",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = False,
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":17.0_pre498229-r9_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    prebuilt = ":17.0_pre498229-r9_portage_profile_test_package_prebuilt",
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "17.0_pre498229-r9_portage_profile_test_package_including_provided",
+    binpkg = ":17.0_pre498229-r9",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "17.0_pre498229-r9_portage_profile_test_package_debug",
+    suffix = "_portage_profile_test_package",
+    ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-libs",
+    package_name = "compiler-rt",
+    version = "17.0_pre498229-r9",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":17.0_pre498229-r9_deps",
