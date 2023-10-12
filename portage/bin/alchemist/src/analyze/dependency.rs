@@ -154,7 +154,7 @@ fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'s
         // without it.
         ("app-text/poppler", DependencyKind::Build) => "dev-libs/boost",
         // m2crypt fails to build for missing Python.h.
-        ("dev-python/m2crypto", DependencyKind::Build) => "dev-lang/python:3.6",
+        ("dev-python/m2crypto", DependencyKind::Build) => "dev-lang/python:3.8",
         // xau.pc contains "Requires: xproto", so it should be listed as RDEPEND.
         ("x11-libs/libXau", DependencyKind::Run) => "x11-base/xorg-proto",
 
