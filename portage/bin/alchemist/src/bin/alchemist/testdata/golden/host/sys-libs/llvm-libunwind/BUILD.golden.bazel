@@ -1,0 +1,106 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+alias(
+    name = "16.0_pre484197",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "16.0_pre484197_debug",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_debug",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_debug",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "16.0_pre484197_package_set",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_package_set",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_package_set",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "16.0_pre484197_install",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "16.0_pre484197_install_list",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install_list",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_install_list",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "llvm-libunwind",
+    actual = ":16.0_pre484197",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "debug",
+    actual = ":16.0_pre484197_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "llvm-libunwind_debug",
+    actual = ":16.0_pre484197_debug",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "package_set",
+    actual = ":16.0_pre484197_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "llvm-libunwind_package_set",
+    actual = ":16.0_pre484197_package_set",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "install",
+    actual = ":16.0_pre484197_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "llvm-libunwind_install",
+    actual = ":16.0_pre484197_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "install_list",
+    actual = ":16.0_pre484197_install_list",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "llvm-libunwind_install_list",
+    actual = ":16.0_pre484197_install_list",
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "16.0_pre484197_test",
+    tests = [ "//internal/packages/stage2/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "test",
+    tests = [ ":16.0_pre484197_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "llvm-libunwind_test",
+    tests = [ ":16.0_pre484197_test" ],
+    visibility = ["@//bazel:internal"],
+)
