@@ -63,6 +63,7 @@ extract_package(
     ld_library_path_regexes = [
         "/lib64",
         "/lib32",
+        "/usr/lib64",
     ],
     manifest_content = NANO_MANIFEST_CONTENT,
     manifest_file = ":nano.bzl",

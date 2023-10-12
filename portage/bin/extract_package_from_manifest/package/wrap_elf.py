@@ -14,7 +14,20 @@ from chromite.third_party import lddtree
 
 # Make lddtree use an actual logging library instead of just printing.
 lddtree.warn = logging.warning
-lddtree.dbg = logging.debug
+
+
+# lddtree has custom logic to interpret absolute symlinks as being relative to
+# the sysroot.
+# In bazel, we don't generate absolute symlinks, so we don't need that logic,
+# but bazel itself does, and those are currently misinterpreted.
+# Eg. bazel-out/.../lib64/libc.so.6 -> <execroot>/bazel-out/.../lib64/libc.so.6.
+# Without this monkey-patch, this would be interpreted as:
+# bazel-out/.../<execroot>/bazel-out/.../lib64/libc.so.6
+def readlink(path, root, prefixed=False):
+    return os.path.realpath(path)
+
+
+lddtree.readlink = readlink
 
 
 def main():

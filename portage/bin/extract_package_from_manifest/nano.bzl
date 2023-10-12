@@ -2292,7 +2292,9 @@ NANO_MANIFEST_CONTENT = {
                     "target": "/lib64/libanl.so.1",
                 },
                 "/usr/lib64/libc.a": {},
-                "/usr/lib64/libc.so": {},
+                "/usr/lib64/libc.so": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libc_malloc_debug.so": {
                     "type": "Symlink",
                     "target": "/lib64/libc_malloc_debug.so.0",
@@ -2301,7 +2303,9 @@ NANO_MANIFEST_CONTENT = {
                 "/usr/lib64/libdl.a": {},
                 "/usr/lib64/libg.a": {},
                 "/usr/lib64/libm.a": {},
-                "/usr/lib64/libm.so": {},
+                "/usr/lib64/libm.so": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libmcheck.a": {},
                 "/usr/lib64/libmvec.a": {},
                 "/usr/lib64/libmvec.so": {
@@ -3383,7 +3387,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libform.so.6.3",
                 },
-                "/usr/lib64/libform.so.6.3": {},
+                "/usr/lib64/libform.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libformt.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libformt.so.6.3",
@@ -3392,7 +3398,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libformt.so.6.3",
                 },
-                "/usr/lib64/libformt.so.6.3": {},
+                "/usr/lib64/libformt.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libformtw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libformtw.so.6.3",
@@ -3401,7 +3409,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libformtw.so.6.3",
                 },
-                "/usr/lib64/libformtw.so.6.3": {},
+                "/usr/lib64/libformtw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libformw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libformw.so.6.3",
@@ -3410,7 +3420,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libformw.so.6.3",
                 },
-                "/usr/lib64/libformw.so.6.3": {},
+                "/usr/lib64/libformw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libmenu.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenu.so.6.3",
@@ -3419,7 +3431,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenu.so.6.3",
                 },
-                "/usr/lib64/libmenu.so.6.3": {},
+                "/usr/lib64/libmenu.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libmenut.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenut.so.6.3",
@@ -3428,7 +3442,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenut.so.6.3",
                 },
-                "/usr/lib64/libmenut.so.6.3": {},
+                "/usr/lib64/libmenut.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libmenutw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenutw.so.6.3",
@@ -3437,7 +3453,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenutw.so.6.3",
                 },
-                "/usr/lib64/libmenutw.so.6.3": {},
+                "/usr/lib64/libmenutw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libmenuw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenuw.so.6.3",
@@ -3446,7 +3464,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libmenuw.so.6.3",
                 },
-                "/usr/lib64/libmenuw.so.6.3": {},
+                "/usr/lib64/libmenuw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncurses++.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++.so.6.3",
@@ -3455,7 +3475,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++.so.6.3",
                 },
-                "/usr/lib64/libncurses++.so.6.3": {},
+                "/usr/lib64/libncurses++.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncurses++t.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++t.so.6.3",
@@ -3464,7 +3486,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++t.so.6.3",
                 },
-                "/usr/lib64/libncurses++t.so.6.3": {},
+                "/usr/lib64/libncurses++t.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncurses++tw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++tw.so.6.3",
@@ -3473,7 +3497,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++tw.so.6.3",
                 },
-                "/usr/lib64/libncurses++tw.so.6.3": {},
+                "/usr/lib64/libncurses++tw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncurses++w.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++w.so.6.3",
@@ -3482,7 +3508,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses++w.so.6.3",
                 },
-                "/usr/lib64/libncurses++w.so.6.3": {},
+                "/usr/lib64/libncurses++w.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncurses.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses.so.6.3",
@@ -3491,7 +3519,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncurses.so.6.3",
                 },
-                "/usr/lib64/libncurses.so.6.3": {},
+                "/usr/lib64/libncurses.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncursest.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncursest.so.6.3",
@@ -3500,7 +3530,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncursest.so.6.3",
                 },
-                "/usr/lib64/libncursest.so.6.3": {},
+                "/usr/lib64/libncursest.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncursestw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncursestw.so.6.3",
@@ -3509,7 +3541,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncursestw.so.6.3",
                 },
-                "/usr/lib64/libncursestw.so.6.3": {},
+                "/usr/lib64/libncursestw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libncursesw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncursesw.so.6.3",
@@ -3518,7 +3552,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libncursesw.so.6.3",
                 },
-                "/usr/lib64/libncursesw.so.6.3": {},
+                "/usr/lib64/libncursesw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libpanel.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpanel.so.6.3",
@@ -3527,7 +3563,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpanel.so.6.3",
                 },
-                "/usr/lib64/libpanel.so.6.3": {},
+                "/usr/lib64/libpanel.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libpanelt.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpanelt.so.6.3",
@@ -3536,7 +3574,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpanelt.so.6.3",
                 },
-                "/usr/lib64/libpanelt.so.6.3": {},
+                "/usr/lib64/libpanelt.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libpaneltw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpaneltw.so.6.3",
@@ -3545,7 +3585,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpaneltw.so.6.3",
                 },
-                "/usr/lib64/libpaneltw.so.6.3": {},
+                "/usr/lib64/libpaneltw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libpanelw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpanelw.so.6.3",
@@ -3554,7 +3596,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libpanelw.so.6.3",
                 },
-                "/usr/lib64/libpanelw.so.6.3": {},
+                "/usr/lib64/libpanelw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libtinfo.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfo.so.6.3",
@@ -3563,7 +3607,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfo.so.6.3",
                 },
-                "/usr/lib64/libtinfo.so.6.3": {},
+                "/usr/lib64/libtinfo.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libtinfot.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfot.so.6.3",
@@ -3572,7 +3618,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfot.so.6.3",
                 },
-                "/usr/lib64/libtinfot.so.6.3": {},
+                "/usr/lib64/libtinfot.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libtinfotw.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfotw.so.6.3",
@@ -3581,7 +3629,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfotw.so.6.3",
                 },
-                "/usr/lib64/libtinfotw.so.6.3": {},
+                "/usr/lib64/libtinfotw.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/libtinfow.so": {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfow.so.6.3",
@@ -3590,7 +3640,9 @@ NANO_MANIFEST_CONTENT = {
                     "type": "Symlink",
                     "target": "/usr/lib64/libtinfow.so.6.3",
                 },
-                "/usr/lib64/libtinfow.so.6.3": {},
+                "/usr/lib64/libtinfow.so.6.3": {
+                    "type": "SharedLibrary",
+                },
                 "/usr/lib64/pkgconfig/form.pc": {},
                 "/usr/lib64/pkgconfig/formt.pc": {},
                 "/usr/lib64/pkgconfig/formtw.pc": {},
@@ -6826,5 +6878,6 @@ NANO_MANIFEST_CONTENT = {
     "ld_library_path": [
         "/lib64",
         "/lib32",
+        "/usr/lib64",
     ],
 }
