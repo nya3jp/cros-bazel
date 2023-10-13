@@ -5,11 +5,12 @@
 load("//bazel/build_defs:always_fail.bzl", "always_fail")
 load("//bazel/portage/build_defs/extract_package_from_manifest:extract.bzl", "extract")
 load("//bazel/portage/build_defs/extract_package_from_manifest:files.bzl", "HEADER", "SHARED_LIBRARY")
-load("//bazel/portage/build_defs/extract_package_from_manifest:filter.bzl", "filter_file_type", _filter_package = "filter_package", _filter_paths = "filter_paths")
+load("//bazel/portage/build_defs/extract_package_from_manifest:filter.bzl", "filter_file_type", _filter_executable = "filter_executable", _filter_package = "filter_package", _filter_paths = "filter_paths")
 load("//bazel/portage/build_defs/extract_package_from_manifest:update_manifest.bzl", "update_manifest")
 
 visibility("public")
 
+filter_executable = _filter_executable
 filter_package = _filter_package
 filter_paths = _filter_paths
 

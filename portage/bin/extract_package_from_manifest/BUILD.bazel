@@ -4,7 +4,7 @@
 
 load("@@//bazel/portage/bin/extract_package_from_manifest:nano.bzl", "NANO_MANIFEST_CONTENT")
 load("@@//bazel/portage/common/testdata:sysroot.bzl", "SYSROOT_MANIFEST_CONTENT")
-load("//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_package", "filter_header_files", "filter_package", "filter_paths", "filter_shared_libraries")
+load("//bazel/portage/build_defs:extract_package_from_manifest.bzl", "extract_package", "filter_executable", "filter_header_files", "filter_package", "filter_paths", "filter_shared_libraries")
 
 # A demo of how you can extract a whole tarball.
 extract_package(
@@ -71,8 +71,8 @@ extract_package(
 )
 
 # This filters it down to the binary, and any shared libraries it depends on.
-filter_paths(
+filter_executable(
     name = "nano_binary",
+    executable = "/bin/nano",
     interface = ":nano",
-    paths = ["/bin/nano"],
 )

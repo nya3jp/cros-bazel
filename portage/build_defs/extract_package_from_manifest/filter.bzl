@@ -85,16 +85,32 @@ filter_file_type = rule(
     provides = [ExtractedFilegroupInfo],
 )
 
-def _filter_paths_impl(ctx):
+def _filter_paths_impl(ctx, exe_path = None):
     files = ctx.attr.interface[ExtractedFilegroupInfo].files
     filtered = []
-    for path in ctx.attr.paths:
+    for path in ctx.attr.paths + ([] if exe_path == None else [exe_path]):
         if path not in files:
             fail("%s was not present in %s" % (path, ctx.attr.interface))
         filtered.append(files[path])
 
+    if exe_path == None:
+        exe = None
+    else:
+        exe = ctx.actions.declare_file(ctx.label.name)
+        ctx.actions.symlink(
+            output = exe,
+            target_file = files[exe_path].file,
+            is_executable = True,
+        )
+
     return [
-        DefaultInfo(files = depset(transitive = [f.runfiles for f in filtered])),
+        DefaultInfo(
+            files = depset(
+                [] if exe == None else [exe],
+                transitive = [f.runfiles for f in filtered],
+            ),
+            executable = exe,
+        ),
         ExtractedFilegroupInfo(files = {file.path: file for file in filtered}),
     ]
 
@@ -105,4 +121,17 @@ filter_paths = rule(
         paths = attr.string_list(mandatory = True),
     ),
     provides = [ExtractedFilegroupInfo],
+)
+
+def _filter_executable_impl(ctx):
+    return _filter_paths_impl(ctx, exe_path = ctx.attr.executable)
+
+filter_executable = rule(
+    implementation = _filter_executable_impl,
+    attrs = dict(
+        interface = attr.label(mandatory = True, providers = [ExtractedFilegroupInfo]),
+        paths = attr.string_list(default = []),
+        executable = attr.string(mandatory = True),
+    ),
+    executable = True,
 )
