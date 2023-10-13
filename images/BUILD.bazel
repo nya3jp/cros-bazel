@@ -3,12 +3,14 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/build_defs:build_image.bzl", "build_image")
+load("//bazel/portage/build_defs:helper.bzl", "if_board_is_set")
 load("@portage//:settings.bzl", "BOARD")
 
 # Builds a very minimal image that contains Linux kernel and basic files only.
 # The generated image doesn't boot of course, but this target can be useful to
 # test the functionality to build images.
-build_image(
+if_board_is_set(
+    build_image,  # buildifier: disable=positional-args
     name = "chromiumos_minimal_image",
     board = BOARD,
     files = [
@@ -35,7 +37,8 @@ build_image(
 )
 
 # Builds the base image.
-build_image(
+if_board_is_set(
+    build_image,  # buildifier: disable=positional-args
     name = "chromiumos_base_image",
     board = BOARD,
     files = [
@@ -57,7 +60,8 @@ build_image(
 )
 
 # Builds the dev image.
-build_image(
+if_board_is_set(
+    build_image,  # buildifier: disable=positional-args
     name = "chromiumos_dev_image",
     board = BOARD,
     files = [
@@ -80,7 +84,8 @@ build_image(
 )
 
 # Builds the test image.
-build_image(
+if_board_is_set(
+    build_image,  # buildifier: disable=positional-args
     name = "chromiumos_test_image",
     board = BOARD,
     files = [
