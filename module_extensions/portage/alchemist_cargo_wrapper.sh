@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 # Copyright 2023 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
@@ -9,6 +9,9 @@
 
 # This overrides cargo, so we don't get told the real cargo. Work it out for
 # ourselves.
+
+set -eu -o pipefail
+
 RUSTC="${RUSTC:-}"
 if [[ -z  "${RUSTC}" ]]; then
   echo "RUSTC must be set to use the alchemist cargo wrapper" >&2
@@ -31,27 +34,19 @@ get_index() {
 
 # The target directory, by default, is set to be contained within the repo rule.
 # This means that we can't do incremental builds. We solve this problem by just
-# setting the target directory to the same one rust always uses, which is
-# $(dirname Cargo.toml)/target.
-manifest_path="${ARGS[$(get_index "--manifest-path")]}"
-new_target_dir="$(dirname "${manifest_path}")/target"
-
+# setting the target directory to a sibling directory.
 target_dir_index=$(get_index "--target-dir")
 old_target_dir="${ARGS[${target_dir_index}]}"
+new_target_dir="${old_target_dir}.cache"
 
 ARGS["${target_dir_index}"]="${new_target_dir}"
 
-set +e
-"${CARGO}" "${ARGS[@]}"
-EXIT_STATUS="$?"
+EXIT_STATUS=0
+"${CARGO}" "${ARGS[@]}" || EXIT_STATUS="$?"
 
-# The repo rule reads profile/alchemist (eg. release/alchemist).
+# The repo rule reads <profile>/alchemist (eg. release/alchemist).
 # But it's expecting it to be within the old target directory.
-for f in "${new_target_dir}"/*; do
-  name="$(basename "${f}")"
-  rm -f "${old_target_dir}/${name}"
-  ln -s "${f}" "${old_target_dir}/${name}"
-done
-
+find "${new_target_dir}" -mindepth 1 -maxdepth 1 -type d \
+  -exec ln -s '{}' "${old_target_dir}/" \;
 
 exit "${EXIT_STATUS}"
