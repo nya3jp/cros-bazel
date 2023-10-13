@@ -637,6 +637,16 @@ mod tests {
         Ok(())
     }
 
+    /// Creates a temporary directory suitable for a directory layer.
+    fn create_layer_dir() -> Result<SafeTempDir> {
+        let dir = SafeTempDir::new()?;
+        std::fs::write(
+            dir.path().join("hello.txt"),
+            "This file is from the directory layer.\n",
+        )?;
+        Ok(dir)
+    }
+
     /// Asserts the content of a file in the container.
     fn assert_content(container: &mut PreparedContainer, path: &Path, content: &str) -> Result<()> {
         let script = format!(
@@ -830,6 +840,9 @@ mod tests {
         let mut settings = ContainerSettings::new();
         bind_mount_bash(&mut settings)?;
 
+        // Create a directory for a directory layer.
+        let layer_dir = create_layer_dir()?;
+
         // Create a durable tree at run time.
         let durable_tree_dir = SafeTempDir::new()?;
         let durable_tree_dir = durable_tree_dir.path();
@@ -844,9 +857,7 @@ mod tests {
         let runfiles = runfiles::Runfiles::create()?;
 
         // Push the directory layer.
-        settings.push_layer(&resolve_symlink_forest(
-            &runfiles.rlocation("cros/bazel/portage/common/container/testdata/layer-dir"),
-        )?)?;
+        settings.push_layer(layer_dir.path())?;
         assert_content(
             &mut settings.prepare()?,
             hello_path,
@@ -910,6 +921,9 @@ mod tests {
         let mut settings = ContainerSettings::new();
         bind_mount_bash(&mut settings)?;
 
+        // Create a directory for a directory layer.
+        let layer_dir = create_layer_dir()?;
+
         let runfiles = runfiles::Runfiles::create()?;
 
         // Push an archive layer, a directory layer, and another archive layer.
@@ -918,9 +932,7 @@ mod tests {
             &runfiles
                 .rlocation("cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"),
         )?;
-        settings.push_layer(&resolve_symlink_forest(
-            &runfiles.rlocation("cros/bazel/portage/common/container/testdata/layer-dir"),
-        )?)?;
+        settings.push_layer(layer_dir.path())?;
         settings.push_layer(
             &runfiles
                 .rlocation("cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"),
@@ -957,10 +969,11 @@ mod tests {
         let mut settings = ContainerSettings::new();
         bind_mount_bash(&mut settings)?;
 
+        // Create a directory for a directory layer.
+        let layer_dir = create_layer_dir()?;
+
         settings.apply_common_args(&CommonArgs {
-            layer: vec![PathBuf::from(
-                "bazel/portage/common/container/testdata/layer-dir",
-            )],
+            layer: vec![layer_dir.path().to_path_buf()],
             interactive: false,
             login: LoginMode::Never,
             keep_host_mount: false,
