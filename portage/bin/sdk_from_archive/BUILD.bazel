@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_binary(
     name = "sdk_from_archive",
@@ -12,7 +12,10 @@ rust_binary(
         "//bazel/portage/repo_defs/zstd",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    visibility = ["//bazel:internal"],
+    visibility = [
+        "//bazel/portage:__subpackages__",
+        "@portage//:all_packages",
+    ],
     deps = [
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/durabletree",

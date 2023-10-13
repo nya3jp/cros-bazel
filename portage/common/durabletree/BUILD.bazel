@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_library(
     name = "durabletree",
     srcs = glob(["src/**/*.rs"]),
     crate_name = "durabletree",
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    visibility = ["//bazel:internal"],
+    visibility = ["//bazel/portage:__subpackages__"],
     deps = [
         "//bazel/portage/common/fileutil",
         "//bazel/portage/common/testutil",

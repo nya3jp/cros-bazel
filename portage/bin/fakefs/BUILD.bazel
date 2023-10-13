@@ -20,7 +20,7 @@ go_library(
 go_binary(
     name = "fakefs",
     embed = [":fakefs_lib"],
-    visibility = ["//bazel:internal"],
+    visibility = ["//bazel/portage:__subpackages__"],
 )
 
 go_test(
@@ -40,5 +40,5 @@ go_test(
 alias(
     name = "fakefs_preload",
     actual = "//bazel/portage/bin/fakefs/preload:fakefs_preload",
-    visibility = ["//bazel:internal"],
+    visibility = ["//bazel/portage:__subpackages__"],
 )

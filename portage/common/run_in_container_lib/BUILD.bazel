@@ -2,14 +2,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_library(
     name = "run_in_container_lib",
     srcs = glob(["src/*.rs"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    visibility = ["//bazel:internal"],
+    visibility = [
+        "//bazel/portage/bin/run_in_container:__pkg__",
+        "//bazel/portage/common/container:__pkg__",
+    ],
     deps = [
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:serde",

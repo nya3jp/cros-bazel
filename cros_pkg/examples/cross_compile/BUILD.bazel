@@ -10,8 +10,8 @@ alias(
     name = "raw_file",
     actual = select({
         "//bazel/platforms/cpu:amd64": ":amd64.txt",
-        "//bazel/platforms/cpu:arm64": ":arm64.txt",
         "//bazel/platforms/cpu:arm32": ":arm32.txt",
+        "//bazel/platforms/cpu:arm64": ":arm64.txt",
         "//conditions:default": "@platforms//:incompatible",
     }),
 )
@@ -30,7 +30,7 @@ cros_pkg_filegroup(
             srcs = ["//bazel/cc/examples:hello_world"],
         ),
     ],
-    visibility = ["//bazel:internal"],
+    visibility = ["@portage//:all_packages"],
 )
 
 # Unfortunately, selects are limited in capabilities, so it's not possible to
@@ -68,5 +68,5 @@ alias(
 cros_pkg_filegroup(
     name = "different_location",
     include = [":filegroup_per_arch"],
-    visibility = ["//bazel:internal"],
+    visibility = ["@portage//:all_packages"],
 )

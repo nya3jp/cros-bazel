@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_update")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_tar(
@@ -16,7 +15,7 @@ pkg_tar(
         "//bazel/portage/sdk/usr/src",
     ],
     extension = "tar.gz",
-    visibility = ["//bazel:internal"],
+    visibility = ["@portage//:all_packages"],
 )
 
 sdk_from_archive(
@@ -25,7 +24,6 @@ sdk_from_archive(
     progress_message = "Extracting bootstrap SDK tarball",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
-    visibility = ["//bazel:internal"],
 )
 
 # The stage1 bootstrap SDK.

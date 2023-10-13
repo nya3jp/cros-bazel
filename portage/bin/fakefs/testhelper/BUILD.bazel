@@ -19,5 +19,5 @@ go_library(
 go_binary(
     name = "testhelper",
     embed = [":testhelper_lib"],
-    visibility = ["//bazel:internal"],
+    visibility = ["//bazel/portage:__subpackages__"],
 )

@@ -8,7 +8,7 @@ rust_binary(
     name = "build_sdk",
     srcs = glob(["src/*.rs"]),
     data = [":build_sdk.sh"],
-    visibility = ["//bazel:internal"],
+    visibility = ["@portage//:all_packages"],
     deps = [
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/container",

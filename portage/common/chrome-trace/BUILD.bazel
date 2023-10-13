@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 filegroup(
     name = "srcs",
@@ -19,7 +19,7 @@ rust_library(
     srcs = glob(["src/*.rs"]),
     crate_name = "chrome_trace",
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    visibility = ["//bazel:internal"],
+    visibility = ["//bazel/portage:__subpackages__"],
     deps = [
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",

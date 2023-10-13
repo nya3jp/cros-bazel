@@ -35,7 +35,7 @@ pkg_tar(
     compressor = "//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     extension = "tar.zst",
-    visibility = ["//bazel:internal"],
+    visibility = ["//bazel/images:__pkg__"],
 )
 
 alias(
