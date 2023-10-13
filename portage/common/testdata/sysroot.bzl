@@ -62,11 +62,6 @@ SYSROOT_MANIFEST_CONTENT = {
             },
         },
         {
-            "name": "demo/sysroot",
-            "slot": "0",
-            "content": {},
-        },
-        {
             "name": "demo/system_headers",
             "slot": "0",
             "content": {
@@ -77,6 +72,11 @@ SYSROOT_MANIFEST_CONTENT = {
                     "type": "HeaderFile",
                 },
             },
+        },
+        {
+            "name": "virtual/sysroot",
+            "slot": "0",
+            "content": {},
         },
     ],
     "header_file_dirs": [

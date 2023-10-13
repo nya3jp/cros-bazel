@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup", "pkg", "strip_prefix")
-load("//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild", "direct_ebuild_virtual_package")
 load("//bazel/portage/build_defs:binary_package.bzl", "binary_package")
 
 package(default_visibility = ["//bazel/portage:__subpackages__"])
@@ -30,10 +30,8 @@ cros_pkg_filegroup(
 
 direct_ebuild(
     name = "executable",
-    package_name = "executable",
     category = "demo",
     package = ":executable_file",
-    version = "1",
     runtime_deps = [":shared_libs"],
 )
 
@@ -59,10 +57,8 @@ cros_pkg_filegroup(
 
 direct_ebuild(
     name = "shared_libs",
-    package_name = "shared_libs",
     category = "demo",
     package = ":shared_libs_files",
-    version = "1",
     runtime_deps = [],
 )
 
@@ -87,10 +83,8 @@ cros_pkg_filegroup(
 
 direct_ebuild(
     name = "symlinks",
-    package_name = "symlinks",
     category = "demo",
     package = ":symlink_files",
-    version = "1",
     runtime_deps = [],
 )
 
@@ -110,24 +104,13 @@ cros_pkg_filegroup(
 
 direct_ebuild(
     name = "system_headers",
-    package_name = "system_headers",
     category = "demo",
     package = ":system_headers_files",
-    version = "1",
     runtime_deps = [],
 )
 
-cros_pkg_filegroup(
-    name = "sysroot_files",
-    srcs = [],
-)
-
-direct_ebuild(
+direct_ebuild_virtual_package(
     name = "sysroot",
-    package_name = "sysroot",
-    category = "demo",
-    package = ":sysroot_files",
-    version = "1",
     runtime_deps = [
         ":executable",
         ":symlinks",

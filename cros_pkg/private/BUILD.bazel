@@ -6,7 +6,15 @@ load("@pip//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_test")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/bash:defs.bzl", "sh_runfiles_test")
+load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup")
 load(":direct_ebuild.bzl", "direct_ebuild")
+
+# Don't use directly. Use with direct_ebuild_virtual_package.
+cros_pkg_filegroup(
+    name = "empty_package",
+    srcs = [],
+    visibility = ["//visibility:public"],
+)
 
 rust_binary(
     name = "deploy_local",

@@ -11,11 +11,13 @@ def direct_ebuild(
         name,
         package,
         category,
-        package_name,
-        version,
+        package_name = None,
+        version = "1",
         slot = "0/0",
         runtime_deps = [],
         visibility = None):
+    """Defines an ebuild for a package containing files built with bazel"""
+    package_name = package_name or name
     tar_name = "_%s_tbz2" % name
     pkg_tar(
         name = tar_name,
@@ -41,4 +43,13 @@ def direct_ebuild(
         src = tar_name,
         runtime_deps = runtime_deps,
         visibility = visibility,
+    )
+
+def direct_ebuild_virtual_package(*, runtime_deps, **kwargs):
+    """Defines an ebuild for a virtual package."""
+    direct_ebuild(
+        package = "//bazel/cros_pkg/private:empty_package",
+        category = "virtual",
+        runtime_deps = runtime_deps,
+        **kwargs
     )
