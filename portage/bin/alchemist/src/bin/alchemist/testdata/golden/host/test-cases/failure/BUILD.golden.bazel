@@ -8,8 +8,8 @@ load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 alias(
     name = "1.0",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/test-cases/failure:1.0",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/test-cases/failure:1.0",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/test-cases/failure:1.0_including_provided",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/test-cases/failure:1.0_including_provided",
     }),
     visibility = ["@//bazel:internal"],
 )

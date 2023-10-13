@@ -7,8 +7,8 @@
 alias(
     name = "4.14",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_including_provided",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14_including_provided",
     }),
     visibility = ["@//bazel:internal"],
 )

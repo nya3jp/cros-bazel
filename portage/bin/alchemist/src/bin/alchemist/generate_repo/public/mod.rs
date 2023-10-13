@@ -110,7 +110,13 @@ fn generate_public_package(
     let mut test_suites = Vec::new();
 
     for (version, maybe_package) in version_to_maybe_package.iter() {
-        for suffix in ["", "_debug", "_package_set", "_install", "_install_list"] {
+        for (suffix, target_suffix) in [
+            ("", "_including_provided"),
+            ("_debug", ""),
+            ("_package_set", ""),
+            ("_install", ""),
+            ("_install_list", ""),
+        ] {
             aliases.push(AliasEntry {
                 name: Cow::from(format!("{}{}", version, suffix)),
                 actual: SelectValue::Select(
@@ -120,12 +126,13 @@ fn generate_public_package(
                             (
                                 Cow::from(format!("@//bazel/portage:{}", target.config)),
                                 Cow::from(format!(
-                                    "//internal/packages/{}/{}/{}:{}{}",
+                                    "//internal/packages/{}/{}/{}:{}{}{}",
                                     target.prefix,
                                     maybe_package.repo_name(),
                                     maybe_package.package_name(),
                                     version,
                                     suffix,
+                                    target_suffix,
                                 )),
                             )
                         })

@@ -7,8 +7,8 @@
 alias(
     name = "2.39",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_including_provided",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39_including_provided",
     }),
     visibility = ["@//bazel:internal"],
 )
