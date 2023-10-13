@@ -62,12 +62,12 @@ func TestChownRelative(t *testing.T) {
 
 	owner := runBash(t, dir, `
 		touch foo
-		chown nobody foo
-		stat -c %U foo
+		chown 123 foo
+		stat -c %u foo
 		`)
 
-	if owner != "nobody" {
-		t.Fatalf("Expected owner '%s', got '%s'", "nobody", owner)
+	if owner != "123" {
+		t.Fatalf("Expected owner %s, got %s", "123", owner)
 	}
 }
 
@@ -76,12 +76,12 @@ func TestChownAbsolute(t *testing.T) {
 
 	owner := runBash(t, dir, `
 		touch foo
-		chown nobody "$(realpath foo)"
-		stat -c %U foo
+		chown 123 "$(realpath foo)"
+		stat -c %u foo
 		`)
 
-	if owner != "nobody" {
-		t.Fatalf("Expected owner '%s', got '%s'", "nobody", owner)
+	if owner != "123" {
+		t.Fatalf("Expected owner %s, got %s", "123", owner)
 	}
 }
 
@@ -90,12 +90,12 @@ func TestChgrpRelative(t *testing.T) {
 
 	owner := runBash(t, dir, `
 		touch foo
-		chgrp nobody foo
-		stat -c %G foo
+		chgrp 234 foo
+		stat -c %g foo
 		`)
 
-	if owner != "nobody" {
-		t.Fatalf("Expected owner '%s', got '%s'", "nobody", owner)
+	if owner != "234" {
+		t.Fatalf("Expected owner %s, got %s", "234", owner)
 	}
 }
 
@@ -104,12 +104,12 @@ func TestChgrpAbsolute(t *testing.T) {
 
 	owner := runBash(t, dir, `
 		touch foo
-		chgrp nobody "$(realpath foo)"
-		stat -c %G foo
+		chgrp 234 "$(realpath foo)"
+		stat -c %g foo
 		`)
 
-	if owner != "nobody" {
-		t.Fatalf("Expected owner '%s', got '%s'", "nobody", owner)
+	if owner != "234" {
+		t.Fatalf("Expected owner %s, got %s", "234", owner)
 	}
 }
 
