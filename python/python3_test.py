@@ -8,7 +8,7 @@ import sys
 import unittest
 
 
-PYTHON_VERSION = "3.11.4"
+PYTHON_VERSION = "3.11.6"
 
 
 class Py3Test(unittest.TestCase):
