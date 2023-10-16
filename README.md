@@ -202,6 +202,15 @@ Bazelification team know about the non-hermeticity so we can fix the problem.
 
 ## Misc Memo
 
+### Bazel remote caching with RBE
+
+You can speed up the build by enabling remote Bazel caching with RBE.
+To do this, follow [this instruction](https://chromium.googlesource.com/chromiumos/docs/+/HEAD/developer_guide.md#authenticate-for-remote-bazel-caching-with-rbe_if-applicable)
+to authenticate.
+
+After authentication, make sure that you restart the Bazel instance by running
+`bazel shutdown`.
+
 ### Debugging a failing package
 
 Sometimes you want to enter an ephemeral CrOS chroot where a package build is
