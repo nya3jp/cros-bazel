@@ -141,7 +141,7 @@ prebuilt_sdk_tarballs.from_manifests(
 
 fn checksum(p: &Path) -> Result<String> {
     let mut hasher = Sha256::new();
-    std::io::copy(&mut std::fs::File::open(&p)?, &mut hasher)?;
+    std::io::copy(&mut std::fs::File::open(p)?, &mut hasher)?;
     Ok(hex::encode(hasher.finalize()))
 }
 
@@ -154,7 +154,7 @@ fn update_remote_manifest(
     let uri_mapping: HashMap<String, String> = binpkgs
         .iter()
         .map(|binpkg| {
-            let main_slot = match binpkg.slot.split_once("/") {
+            let main_slot = match binpkg.slot.split_once('/') {
                 Some((main, _)) => main,
                 None => &binpkg.slot,
             };
@@ -163,7 +163,7 @@ fn update_remote_manifest(
                 "prebuilts/{}/{}/slot_{}/{}.tbz2",
                 binpkg.category,
                 binpkg.package_name,
-                main_slot.to_string(),
+                main_slot,
                 checksum(&orig)?
             );
             let abs_dst = out.join(&dst);
@@ -206,7 +206,7 @@ fn update_remote_manifest(
     cmd.args(["-m", "rsync", "-r"]).arg(out).arg(GS_PREFIX);
     log::info!("Running {cmd:?}");
     processes::run_and_check(&mut cmd)?;
-    update_module(&remote_prebuilt_name, &format!("{GS_PREFIX}/{dst}"))?;
+    update_module(remote_prebuilt_name, &format!("{GS_PREFIX}/{dst}"))?;
     Ok(())
 }
 
@@ -216,7 +216,7 @@ fn update_local_manifest(
     regenerate_command: &str,
     manifest_variable: &str,
 ) -> Result<()> {
-    let mut f = std::fs::File::create(&out)
+    let mut f = std::fs::File::create(out)
         .with_context(|| format!("Error while trying to open {out:?} for writing"))?;
     let year = chrono::Utc::now().date_naive().year();
     f.write_fmt(format_args!(
@@ -246,7 +246,7 @@ fn update_local_manifest(
     // For example, Option::None serializes to 'null', but we want 'None'. To solve this, we use
     // #[serde(rename = "args", skip_serializing_if = "Option::is_none")]
     manifest.serialize(&mut ser).unwrap();
-    f.write(b"\n")?;
+    f.write_all(b"\n")?;
     Ok(())
 }
 

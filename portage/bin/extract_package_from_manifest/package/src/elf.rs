@@ -79,7 +79,7 @@ pub(crate) fn wrap_elf_files<'a>(
 ) -> Result<BTreeMap<PathBuf, ElfFileMetadata>> {
     let mut elf_binaries = files
         .map(|p| root.join(p.strip_prefix("/").unwrap()))
-        .filter(|p| is_elf_binary(&p).unwrap())
+        .filter(|p| is_elf_binary(p).unwrap())
         .peekable();
 
     if elf_binaries.peek().is_none() {
@@ -101,6 +101,5 @@ pub(crate) fn wrap_elf_files<'a>(
     }
     // Print any warnings from the child process regardless of whether it was a failure or success.
     eprint!("{}", stderr);
-    Ok(serde_json::from_str(stdout)
-        .with_context(|| format!("Failed to parse json from {stdout:?}"))?)
+    serde_json::from_str(stdout).with_context(|| format!("Failed to parse json from {stdout:?}"))
 }

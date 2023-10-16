@@ -18,7 +18,7 @@ pub(crate) struct ExtractedPackage {
 
 /// Extracts the binpkg to out_dir.
 pub(crate) fn extract_binpkg(binpkg_path: &Path, out_dir: &Path) -> Result<ExtractedPackage> {
-    let mut binpkg = BinaryPackage::open(&binpkg_path)
+    let mut binpkg = BinaryPackage::open(binpkg_path)
         .with_context(|| format!("Failed to open {binpkg_path:?}"))?;
 
     let tarball_content = extract_tarball(&mut binpkg.archive()?, out_dir, |path| {

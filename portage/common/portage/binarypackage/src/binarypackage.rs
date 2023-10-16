@@ -98,7 +98,7 @@ impl BinaryPackage {
 
     /// Returns the value of SLOT.
     pub fn slot(&self) -> Slot {
-        match self.slot.split_once("/") {
+        match self.slot.split_once('/') {
             Some((main, sub)) => Slot {
                 main: main.to_string(),
                 sub: sub.to_string(),

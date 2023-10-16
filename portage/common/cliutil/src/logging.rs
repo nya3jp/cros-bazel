@@ -116,7 +116,7 @@ impl LoggingConfig {
         let mut layers = Vec::new();
 
         let flush_guard = if let Some(trace_file) = &self.trace_file {
-            let (chrome_layer, flush_guard) = ChromeTraceLayer::new(&trace_file)
+            let (chrome_layer, flush_guard) = ChromeTraceLayer::new(trace_file)
                 .with_context(|| format!("Failed to set up tracing to {trace_file:?}"))?;
             layers.push(chrome_layer.boxed());
             Some(flush_guard)

@@ -65,7 +65,7 @@ impl PackageSet {
     pub fn create<P: AsRef<Path>>(dir: &Path, packages: &[P]) -> Result<Self> {
         let packages = packages
             .iter()
-            .map(|tbz2| extract_binpkg(tbz2.as_ref(), &dir))
+            .map(|tbz2| extract_binpkg(tbz2.as_ref(), dir))
             .collect::<Result<Vec<ExtractedPackage>>>()?;
 
         validate_unique_packages(&packages)?;

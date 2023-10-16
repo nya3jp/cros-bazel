@@ -26,8 +26,8 @@ fn filter_shared_lib_filenames<'a>(paths: &[&'a Path]) -> Vec<&'a Path> {
 /// we don't know exactly what the filename is.
 /// Thus, we use a set of known paths to approximate it.
 /// Eg. `generate_ld_library_path(["/clang/16/libfoo.so"], ["/clang/\d+"]) -> ["/clang/16"])`
-pub(crate) fn generate_ld_library_path<'a>(
-    paths: &[&'a Path],
+pub(crate) fn generate_ld_library_path(
+    paths: &[&Path],
     directory_regexes: &[Regex],
 ) -> Result<Vec<PathBuf>> {
     let paths = filter_shared_lib_filenames(paths);
@@ -41,7 +41,7 @@ pub(crate) fn generate_ld_library_path<'a>(
         for (idx, matcher) in directory_regexes.iter().enumerate() {
             if let Some(m) = matcher.find(&dir_str) {
                 // Verify that we matched the whole directory, not just the first part.
-                if m.as_str() == &dir_str {
+                if m.as_str() == dir_str {
                     if let Some(old_dir) = library_paths.insert(idx, dir.to_path_buf()) {
                         bail!(
                             "{:?} matched both {dir:?} and {old_dir:?}. \
@@ -71,7 +71,7 @@ fn choose_library<'a>(files: &[&'a Path], ld_library_path: &[PathBuf]) -> Option
             let got_dir = path.parent().unwrap();
             let priority = ld_library_path
                 .iter()
-                .position(|want_dir| want_dir == &got_dir);
+                .position(|want_dir| want_dir == got_dir);
             priority.map(|priority| (priority, path))
         })
         .min()
@@ -111,7 +111,7 @@ pub(crate) fn calculate_shared_libraries<'a>(
     }
     Ok(name_to_paths
         .values()
-        .flat_map(|files| choose_library(&files, &ld_library_path))
+        .flat_map(|files| choose_library(files, ld_library_path))
         .collect())
 }
 

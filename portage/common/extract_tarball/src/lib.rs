@@ -27,7 +27,7 @@ pub struct TarballContent {
 /// Resolves a symlink transitively until it reaches a non-symlink.
 fn resolve_symlink<'a>(symlinks: &'a HashMap<PathBuf, PathBuf>, dest: &'a Path) -> &'a Path {
     match symlinks.get(dest) {
-        Some(ref transitive_dest) => resolve_symlink(symlinks, &transitive_dest),
+        Some(transitive_dest) => resolve_symlink(symlinks, transitive_dest),
         None => dest,
     }
 }
@@ -57,7 +57,7 @@ pub fn extract_tarball(
             path_mapping.insert(Path::new("/").join(&path), absolute_path.clone());
             let out_path = out_dir.join(&relative_path);
             let dir = out_path.parent().context("Path must have parent")?;
-            std::fs::create_dir_all(&dir).with_context(|| "Failed to create {dir:?}")?;
+            std::fs::create_dir_all(dir).with_context(|| "Failed to create {dir:?}")?;
             match header.entry_type() {
                 EntryType::Directory => {
                     // Directories can't be extracted in a meaningful manner, because bazel

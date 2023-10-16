@@ -696,7 +696,7 @@ pub fn generate_repo_main(
 
     let all_packages = generate_stages(host, target, translator, src_dir, output_dir)?;
 
-    generate_deps_file(&all_packages, &deps_file)?;
+    generate_deps_file(&all_packages, deps_file)?;
 
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;

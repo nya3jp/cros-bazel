@@ -549,7 +549,7 @@ fn join_by_package_dir<'p>(
 
     for failure in failures.iter() {
         packages_by_dir
-            .entry(Path::new(&failure.repo_name()).join(&failure.package_name()))
+            .entry(Path::new(&failure.repo_name()).join(failure.package_name()))
             .or_insert_with(new_default)
             .failed_packages
             .push(failure);

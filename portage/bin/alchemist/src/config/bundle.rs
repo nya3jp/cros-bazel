@@ -186,7 +186,7 @@ impl ConfigBundle {
 
     /// Computes ACCEPT_KEYWORDS of a package.
     fn compute_accept_keywords(
-        nodes: &Vec<ConfigNode>,
+        nodes: &[ConfigNode],
         default_for_empty_config_line: &str,
         package: &ThinPackageRef,
     ) -> Vec<String> {
@@ -228,7 +228,7 @@ impl ConfigBundle {
             }
             // Visit each keyword.
             for keyword in keywords.iter().map(|x| x.as_ref()) {
-                if keyword.starts_with("-") {
+                if keyword.starts_with('-') {
                     // Ignore broken keywords.
                     continue;
                 }
@@ -237,13 +237,13 @@ impl ConfigBundle {
                     return true;
                 } else if keyword == "~*" {
                     // "~*" as a keyword matches with any accepted keyword starting with "~".
-                    if accept.starts_with("~") {
+                    if accept.starts_with('~') {
                         return true;
                     }
                 } else if keyword == accept {
                     // Exact match.
                     return true;
-                } else if keyword.starts_with("~") {
+                } else if keyword.starts_with('~') {
                     // A keyword starting with "~" matches with "~*" as an accepted keyword.
                     if accept == "~*" {
                         return true;
@@ -256,7 +256,7 @@ impl ConfigBundle {
                 }
             }
         }
-        return false;
+        false
     }
 
     /// Returns if a package is accepted by checking KEYWORDS and ACCEPT_KEYWORDS.
@@ -286,7 +286,7 @@ impl ConfigBundle {
         let modified_keywords = keywords
             .into_iter()
             .map(|keyword| {
-                if keyword.starts_with("~") {
+                if keyword.starts_with('~') {
                     keyword.to_owned()
                 } else {
                     format!("~{keyword}")
@@ -327,7 +327,7 @@ impl ConfigBundle {
             .compute_use_masks(package, stable, UseUpdateKind::Force)
             .collect();
 
-        UseMap::from_iter(effective_iuse_map.iter().map(|(name, _)| {
+        UseMap::from_iter(effective_iuse_map.keys().map(|name| {
             let mut value = all_use_set.contains(name.as_str());
 
             // Apply mask/force. If both are applied, the mask takes precedence.

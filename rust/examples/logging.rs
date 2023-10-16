@@ -11,7 +11,7 @@ fn do_main() -> Result<()> {
     log::debug!("logging at level debug");
     log::trace!("logging at level trace");
 
-    if let Some(msg) = std::env::var("LOG_FAIL_MSG").ok() {
+    if let Ok(msg) = std::env::var("LOG_FAIL_MSG") {
         bail!("Failed: {msg}")
     }
     Ok(())

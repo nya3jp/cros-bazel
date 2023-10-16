@@ -93,10 +93,10 @@ fn main() -> Result<()> {
             .context("gen_rust_project must be run via 'bazel run'")?,
     );
     cmd.arg("--execution-root");
-    cmd.arg(&execroot);
+    cmd.arg(execroot);
     cmd.arg("--output-base");
     cmd.arg(
-        &execroot
+        execroot
             .parent()
             .context("The execroot must have a parent directory")?,
     );
@@ -115,7 +115,7 @@ fn main() -> Result<()> {
             "starlark",
             "--starlark:file",
             &cquery_path,
-            &pkg,
+            pkg,
         ])
         .current_dir(&workspace_dir)
         .stdout(process::Stdio::piped());

@@ -23,7 +23,7 @@ fn rename_bazel_special_files(dir: &Path) -> std::io::Result<()> {
         let entry = entry?;
         let path = entry.path();
         if path.is_file() && path.file_name() == Some(std::ffi::OsStr::new("BUILD.bazel")) {
-            std::fs::rename(&path, path.with_file_name("BUILD.golden.bazel"))?;
+            std::fs::rename(path, path.with_file_name("BUILD.golden.bazel"))?;
         }
     }
     Ok(())

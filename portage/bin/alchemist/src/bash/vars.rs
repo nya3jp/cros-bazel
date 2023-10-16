@@ -59,7 +59,7 @@ impl BashVars {
     /// returns an empty string. If the value is not a scalar value, it returns
     /// an error.
     pub fn get_scalar_or_default(&self, name: &str) -> Result<&str> {
-        Ok(self.maybe_get_scalar(&name)?.unwrap_or_default())
+        Ok(self.maybe_get_scalar(name)?.unwrap_or_default())
     }
 
     /// Gets a value with the specified name. If the value is missing, or it is

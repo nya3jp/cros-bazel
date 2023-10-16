@@ -9,14 +9,15 @@ edition = "2021"
 extract_package_from_manifest_package = { path = "../package" }
 cliutil = { path = "../../../common/cliutil" }
 fileutil = { path = "../../../common/fileutil" }
+processes = { path = "../../../common/processes" }
 
 anyhow.workspace = true
 chrono.workspace = true
 clap.workspace = true
+hex.workspace = true
+log.workspace = true
 regex.workspace = true
+runfiles.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-
-[dev-dependencies]
-fileutil = { path = "../../../common/fileutil" }
-runfiles.workspace = true
+sha2.workspace = true

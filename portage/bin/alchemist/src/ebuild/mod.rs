@@ -178,10 +178,9 @@ impl PackageLoader {
             .collect();
 
         let raw_inherit_paths = vars.get_indexed_array("INHERIT_PATHS")?;
-        let inherit_paths: Vec<PathBuf> =
-            raw_inherit_paths.into_iter().map(PathBuf::from).collect();
+        let inherit_paths: Vec<PathBuf> = raw_inherit_paths.iter().map(PathBuf::from).collect();
 
-        let (accepted, stable) = match self.config.is_package_accepted(&vars, &package)? {
+        let (accepted, stable) = match self.config.is_package_accepted(vars, &package)? {
             IsPackageAcceptedResult::Unaccepted => {
                 if self.force_accept_9999_ebuilds {
                     let accepted = inherited.contains("cros-workon")
@@ -198,7 +197,7 @@ impl PackageLoader {
             IsPackageAcceptedResult::Accepted(stable) => (true, stable),
         };
 
-        let iuse_map = parse_iuse_map(&vars)?;
+        let iuse_map = parse_iuse_map(vars)?;
         let use_map = self.config.compute_use_map(
             &package_name,
             &metadata.path_info.version,
@@ -215,7 +214,7 @@ impl PackageLoader {
             || required_use.matches(&use_map) == Some(false);
 
         let direct_build_target = vars.maybe_get_scalar("METALLURGY_TARGET")?.map(|s| {
-            if s.starts_with("@") {
+            if s.starts_with('@') {
                 s.to_string()
             } else {
                 // eg. //bazel:foo -> @@//bazel:foo

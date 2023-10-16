@@ -32,11 +32,13 @@ enum Repository {
         integrity: String,
         urls: Vec<String>,
     },
+    #[allow(clippy::enum_variant_names)]
     RepoRepository {
         name: String,
         project: String,
         tree: String,
     },
+    #[allow(clippy::enum_variant_names)]
     CrosChromeRepository {
         name: String,
         tag: String,

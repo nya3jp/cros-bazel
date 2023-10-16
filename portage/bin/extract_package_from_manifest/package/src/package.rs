@@ -57,7 +57,7 @@ pub struct Package {
 
 impl PartialOrd for Package {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(&other))
+        Some(self.cmp(other))
     }
 }
 

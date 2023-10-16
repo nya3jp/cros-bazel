@@ -71,7 +71,7 @@ const BAZEL_SPECIAL_FILE_NAMES: &[&str] = &["BUILD.bazel", "BUILD", "WORKSPACE.b
 
 /// Checks if a file name needs renaming.
 fn file_path_needs_renaming(path: &Path) -> bool {
-    if !is_valid_target_name(&*path.to_string_lossy()) {
+    if !is_valid_target_name(&path.to_string_lossy()) {
         return true;
     }
 
@@ -469,7 +469,7 @@ fn generate_general_symlinks(package: &SourcePackage) -> Result<()> {
     for rename in package.renames.iter() {
         // rename.source_path points to a regular file, so skip the first entry.
         for rel_path in rename.source_path.ancestors().skip(1usize) {
-            if is_valid_target_name(&*rel_path.to_string_lossy()) {
+            if is_valid_target_name(&rel_path.to_string_lossy()) {
                 create_dir_all(package.output_dir.join(rel_path))?;
                 break;
             }
@@ -522,7 +522,7 @@ fn generate_general_symlinks(package: &SourcePackage) -> Result<()> {
 
             // Skip file paths invalid as Bazel target names. They are processed
             // in generate_renaming_symlinks.
-            if !is_valid_target_name(&*file_rel_path.to_string_lossy()) {
+            if !is_valid_target_name(&file_rel_path.to_string_lossy()) {
                 continue;
             }
 

@@ -159,7 +159,7 @@ pub enum PackageError {
     PackageAnalysisError(PackageAnalysisError),
 }
 
-impl<'a> PackageError {
+impl PackageError {
     pub fn repo_name(&self) -> &str {
         match self {
             Self::PackageMetadataError(p) => &p.repo_name,

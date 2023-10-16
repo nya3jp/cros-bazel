@@ -69,7 +69,7 @@ struct SourceFile<'a> {
     files: Vec<&'a RustcOutputFile>,
 }
 
-impl<'a> SourceFile<'_> {
+impl SourceFile<'_> {
     /// Outputs the rustc output file for the specified source file.
     /// We may have multiple output files generated (eg. both hello_world and
     /// hello_world_test depend on hello_world.rs). In this case, if we output
@@ -108,7 +108,7 @@ pub fn start_watcher(src_to_rustc_output: &HashMap<PathBuf, HashSet<PathBuf>>) -
                 path: src.clone(),
                 files: rustc_output_paths
                     .iter()
-                    .map(|path| Ok(rustc_output_files.get(path).context("File missing")?))
+                    .map(|path| rustc_output_files.get(path).context("File missing"))
                     .collect::<Result<Vec<_>>>()?,
             })
         })
@@ -134,8 +134,7 @@ pub fn start_watcher(src_to_rustc_output: &HashMap<PathBuf, HashSet<PathBuf>>) -
             // iteration of the loop is no longer valid.
             let printed_files = srcs
                 .iter()
-                .map(SourceFile::rustc_output)
-                .flatten()
+                .filter_map(SourceFile::rustc_output)
                 // Use ByAddress to hash by pointer to avoid comparing the file contents.
                 .map(ByAddress)
                 .collect::<BTreeSet<ByAddress<&RustcOutputFile>>>();

@@ -80,19 +80,19 @@ impl MaybePackage<'_> {
     fn repo_name(&self) -> &str {
         match self {
             Self::Package(p) => &p.details.repo_name,
-            Self::PackageError(p) => &p.repo_name(),
+            Self::PackageError(p) => p.repo_name(),
         }
     }
     fn package_name(&self) -> &str {
         match self {
             Self::Package(p) => &p.details.package_name,
-            Self::PackageError(p) => &p.package_name(),
+            Self::PackageError(p) => p.package_name(),
         }
     }
     fn version(&self) -> &Version {
         match self {
             Self::Package(p) => &p.details.version,
-            Self::PackageError(p) => &p.version(),
+            Self::PackageError(p) => p.version(),
         }
     }
 }

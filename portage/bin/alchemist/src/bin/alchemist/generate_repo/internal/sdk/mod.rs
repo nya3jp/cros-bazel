@@ -401,7 +401,7 @@ pub fn generate_host_sdk(config: &SdkHostConfig, out: &Path) -> Result<()> {
             .context("Cannot compute name")?,
         base: &format!("//internal/sdk/{}", config.base),
         overlay_set: &repository_set_to_target_path(config.repo_set),
-        profile_path: &profile_path(&config.repo_set, &config.profile),
+        profile_path: &profile_path(config.repo_set, config.profile),
     };
 
     let mut file = File::create(out.join("BUILD.bazel"))?;

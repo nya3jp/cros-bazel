@@ -276,8 +276,8 @@ pub fn generate_internal_overlays(
 
             generate_overlay_build_file(repo, &output_dir.join("BUILD.bazel"))?;
 
-            generate_eclass_build_file(&repo.base_dir, &output_dir)
-                .with_context(|| format!("Failed to generate eclass build file"))?;
+            generate_eclass_build_file(repo.base_dir, &output_dir)
+                .context("Failed to generate eclass build file")?;
 
             Ok(())
         })?;
