@@ -7,12 +7,13 @@ export ROOT="/${BOARD:+build/${BOARD}/}"
 export SYSROOT="${ROOT}"
 export PORTAGE_CONFIGROOT="${ROOT}"
 
-# cros_sdk will bind mount depot_tools to /mnt/host/depot_tools. This is only
-# needed for chrome and chrome-icu. Since chromium includes depot_tools, we can
-# just use that.
+# cros_sdk bind-mounts depot_tools to /mnt/host/source/src/chromium/depot_tools
+# This is only needed for chrome and chrome-icu. Since chromium includes
+# depot_tools, we can just use that.
 if [[ -d /home/root/chrome_root/src/third_party/depot_tools ]]; then
-  mkdir -p /mnt/host
-  ln -s /home/root/chrome_root/src/third_party/depot_tools /mnt/host/depot_tools
+  mkdir -p /mnt/host/source/src/chromium/
+  ln -s /home/root/chrome_root/src/third_party/depot_tools \
+      /mnt/host/source/src/chromium/depot_tools
   # The src tarball has already had the hooks ran, so no need to run it in the
   # ebuild. It also won't run in the ebuild since the hooks need to access
   # the network.
@@ -30,6 +31,12 @@ if [[ -n "${USE_GOMA}" && "${USE_GOMA}" == "true" ]]; then
 
   "${GOMA_DIR}/goma_ctl.py" start
 fi
+
+# cros_sdk creates this directory.
+# This is needed for stage1 build because otherwise it fails trying to create
+# /var/cache/distfiles/ccache/tmp
+# TODO(b/277646771): Disable ccache to see if this can be removed.
+mkdir -p /var/cache/chromeos-cache/distfiles
 
 export FEATURES="${FEATURES} fakeroot"
 

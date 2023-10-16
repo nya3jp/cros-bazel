@@ -20,7 +20,7 @@ pkg_tar(
 
 sdk_from_archive(
     name = "sdk_from_archive",
-    src = "@files//:cros-sdk-2023.09.08.050046",
+    src = "@files//:cros-sdk",
     progress_message = "Extracting bootstrap SDK tarball",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],

@@ -14,7 +14,7 @@ fi
 VERSION="$1"
 
 if [[ ! -v WORK_DIR ]]; then
-	WORK_DIR="$(mktemp -d)"
+	WORK_DIR="$(mktemp -d --tmpdir sdk_repos.XXXXXXXXXX)"
 fi
 
 PACKAGES=(
@@ -60,23 +60,22 @@ for PACKAGE in "${PACKAGES[@]}"; do
 	mkdir -p "${PACKAGE_DIR}"
 
 	gsutil cp -n \
-		"gs://chromeos-prebuilt/host/amd64/amd64-host/chroot-${VERSION}/packages/${PACKAGE}-*" \
+		"gs://chromeos-prebuilt/host/amd64/amd64-host/chroot-${VERSION}/packages/${PACKAGE}-[0-9]*" \
 		"${PACKAGE_DIR}/"
 done
 
 
 while read -r FULL_PATH
 do
-	PACKAGE="$(dirname "${FULL_PATH}")"
 	FILE_NAME="$(basename "${FULL_PATH}")"
 
-	WITHOUT_EXT="${FILE_NAME%.*}"
-	CATEGORY="${PACKAGE%\/**}"
+	PACKAGE_NAME="$(basename "$(dirname "${FULL_PATH}")")"
+	CATEGORY="$(basename "$(dirname "$(dirname "${FULL_PATH}")")")"
 
-	echo "http_file(
-	name = \"amd64_host_${VERSION//./_}_${CATEGORY//[-\/]/_}_${WITHOUT_EXT//[.-]/_}\",
-	downloaded_file_path = \"${FILE_NAME}\",
-	sha256 = \"$(sha256sum "${WORK_DIR}/${FULL_PATH}" | cut -d' ' -f 1)\",
-	urls = [\"https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-${VERSION}/packages/${CATEGORY}/${FILE_NAME}\"],
-)"
+	echo "    http_file(
+        name = \"amd64_host_${CATEGORY//[-\/]/_}_${PACKAGE_NAME//[.-]/_}\",
+        downloaded_file_path = \"${FILE_NAME}\",
+        sha256 = \"$(sha256sum "${WORK_DIR}/${FULL_PATH}" | cut -d' ' -f 1)\",
+        urls = [\"https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-${VERSION}/packages/${CATEGORY}/${FILE_NAME}\"],
+	)"
 done < <(find "${WORK_DIR}/" -mindepth 1 -type f -name "*.tbz2" -printf "%P\n" | sort)

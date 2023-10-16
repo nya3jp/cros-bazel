@@ -19,6 +19,10 @@ if [[ "$(portageq envvar SYMLINK_LIB)" == "yes" ]]; then
   ln -s lib64 "${ROOT}/usr/lib"
 fi
 
+# Create symlinks to do the same thing as src/scripts/build_sdk_board.
+mkdir -p "${ROOT}/mnt/host"
+ln -s /mnt/host/source/src/chromium/depot_tools "${ROOT}/mnt/host/depot_tools"
+
 # Needed to tell chromite's cros_build_lib that we are running inside the
 # SDK. We don't use a real version number since there is no such thing in the
 # bazel world.
