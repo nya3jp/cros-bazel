@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "SDKInfo")
-load("//bazel/portage/build_defs:ebuild.bzl", "generate_ebuild_validation_action")
 
 HashTracerInfo = provider(
     """
@@ -136,33 +135,23 @@ def _hash_tracer_impl(target, ctx):
         "cc_library",
         "py_library",
     ]:
-        if ctx.attr.hash_tracer_enabled:
-            direct_outputs.append(_generate_hash_action(ctx, target.files))
+        direct_outputs.append(_generate_hash_action(ctx, target.files))
 
     elif ctx.rule.kind in ["build_sdk", "sdk_update", "sdk_install_deps", "sdk_from_archive"]:
         layers = target[SDKInfo].layers
 
         # We only want to hash the layer that the rule created.
+        # TODO: Refactor rules to return only newly created layers in their
+        # DefaultInfo provider.
         last_layer = layers[-1]
 
-        if ctx.attr.hash_tracer_enabled:
-            direct_outputs.append(_generate_hash_action(ctx, [last_layer]))
+        direct_outputs.append(_generate_hash_action(ctx, [last_layer]))
         transitive_outputs.extend(_processes_rule(ctx.rule))
 
     elif ctx.rule.kind in ["ebuild"]:
-        binpkg = target[BinaryPackageInfo].file
+        files = [target[BinaryPackageInfo].file]
 
-        files = [binpkg]
-
-        # Only one rule or aspect can currently generate the _validation output group.
-        # So we have this very ebuild specific validator defined here.
-        # See https://github.com/bazelbuild/bazel/issues/19624
-        # Once this bug is fixed, we can move the validator back to ebuild.bzl.
-        direct_outputs.append(generate_ebuild_validation_action(ctx, binpkg))
-
-        if ctx.attr.hash_tracer_enabled:
-            direct_outputs.append(_generate_hash_action(ctx, files))
-
+        direct_outputs.append(_generate_hash_action(ctx, files))
         transitive_outputs.extend(_processes_rule(ctx.rule))
     else:
         # For all the intermediary nodes we just propagate the dependencies.
@@ -174,15 +163,6 @@ hash_tracer = aspect(
     implementation = _hash_tracer_impl,
     doc = "Prints out the sha256 of all dependent tar, go_binary, and rust_binary targets, etc.",
     attr_aspects = ["*"],
-    attrs = {
-        "hash_tracer_enabled": attr.bool(
-            doc = """
-            Enables the hash tracer. The `ebuild` validation action will run
-            regardless of this flag.
-            """,
-            default = False,
-        ),
-    },
 )
 
 def _hash_tracer_validator_impl(target, ctx):

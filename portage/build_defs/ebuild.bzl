@@ -300,8 +300,8 @@ def _get_basename(ctx):
 
     return src_basename
 
-def generate_ebuild_validation_action(ctx, binpkg):
-    src_basename = _get_basename(ctx.rule)
+def _generate_ebuild_validation_action(ctx, binpkg):
+    src_basename = _get_basename(ctx)
 
     validation_file = ctx.actions.declare_file(src_basename + ".validation")
 
@@ -313,12 +313,12 @@ def generate_ebuild_validation_action(ctx, binpkg):
         "--package",
         binpkg,
     ])
-    args.add_joined("--use-flags", ctx.rule.attr.use_flags, join_with = ",", omit_if_empty = False)
+    args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",", omit_if_empty = False)
 
     ctx.actions.run(
         inputs = depset([binpkg]),
         outputs = [validation_file],
-        executable = ctx.rule.executable._xpaktool,
+        executable = ctx.executable._xpaktool,
         arguments = [args],
         mnemonic = "EbuildValidation",
         progress_message = "Building %{label}",
@@ -452,11 +452,18 @@ def _ebuild_impl(ctx):
         ],
     )
 
+    validation_files = [
+        _generate_ebuild_validation_action(ctx, output_binary_package_file),
+    ]
+
     return [
         DefaultInfo(files = depset(
             [output_binary_package_file, output_log_file] +
             interface_library_outputs,
         )),
+        OutputGroupInfo(
+            _validation = depset(validation_files),
+        ),
         package_info,
         package_set_info,
     ] + interface_library_providers
