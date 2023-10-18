@@ -11,6 +11,78 @@ load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 
+{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps") -%}
+    ebuild = "{{ ebuild.ebuild_name }}",
+    overlay = "{{ ebuild.overlay }}",
+    category = "{{ebuild.category}}",
+    package_name = "{{ ebuild.package_name }}",
+    version = "{{ ebuild.version }}",
+    slot = "{{ ebuild.slot }}",
+    distfiles = {
+        {%- for dist in ebuild.dists %}
+        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
+        {%- endfor %}
+    },
+    {%- if ebuild.sources %}
+    srcs = [
+        {%- for source in ebuild.sources %}
+        "{{ source }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.git_trees %}
+    git_trees = [
+        {%- for git_tree in ebuild.git_trees %}
+        "{{ git_tree }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
+    runtime_deps = [
+        {%- if ebuild.provided_runtime_deps %}
+        # The following packages are provided by the SDK:
+            {%- for dep in ebuild.provided_runtime_deps %}
+        # * {{ dep }}
+            {%- endfor %}
+        {%- endif %}
+        {%- for dep in ebuild.runtime_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.host_install_deps %}
+    install_deps = [
+        {%- for dep in ebuild.host_install_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    use_flags = [
+        {%- for flag in ebuild.uses %}
+        "{{ flag }}",
+        {%- endfor %}
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:alchemist-use-flags": True,
+        "@//bazel/portage:portage-use-flags": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    {%- if target_board %}
+    board = "{{ target_board }}",
+    {%- endif %}
+    sdk = ":{{ ebuild.version }}{{ sdk_suffix }}",
+    overlays = "{{ target_overlay_set }}",
+    eclasses = [
+        {%- for eclass in ebuild.eclasses %}
+        "{{ eclass }}",
+        {%- endfor %}
+    ],
+    {%- if ebuild.allow_network_access %}
+    # This ebuild declares RESTRICT="network-sandbox".
+    allow_network_access = True,
+    {%- endif %}
+{%- endmacro -%}
+
 {%- for ebuild in ebuilds %}
 {% if ebuild.direct_build_target -%}
 direct_ebuild(
@@ -150,75 +222,7 @@ ebuild(
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    ebuild = "{{ ebuild.ebuild_name }}",
-    overlay = "{{ ebuild.overlay }}",
-    category = "{{ebuild.category}}",
-    package_name = "{{ ebuild.package_name }}",
-    version = "{{ ebuild.version }}",
-    slot = "{{ ebuild.slot }}",
-    distfiles = {
-        {%- for dist in ebuild.dists %}
-        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
-        {%- endfor %}
-    },
-    {%- if ebuild.sources %}
-    srcs = [
-        {%- for source in ebuild.sources %}
-        "{{ source }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    {%- if ebuild.git_trees %}
-    git_trees = [
-        {%- for git_tree in ebuild.git_trees %}
-        "{{ git_tree }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
-    runtime_deps = [
-        {%- if ebuild.provided_runtime_deps %}
-        # The following packages are provided by the SDK:
-            {%- for dep in ebuild.provided_runtime_deps %}
-        # * {{ dep }}
-            {%- endfor %}
-        {%- endif %}
-        {%- for dep in ebuild.runtime_deps %}
-        "{{ dep }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    {%- if ebuild.host_install_deps %}
-    install_deps = [
-        {%- for dep in ebuild.host_install_deps %}
-        "{{ dep }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    use_flags = [
-        {%- for flag in ebuild.uses %}
-        "{{ flag }}",
-        {%- endfor %}
-    ],
-    inject_use_flags = select({
-        "@//bazel/portage:alchemist-use-flags": True,
-        "@//bazel/portage:portage-use-flags": False,
-    }),
-    files = glob(["files/**", "*.bashrc"]),
-    {%- if target_board %}
-    board = "{{ target_board }}",
-    {%- endif %}
-    sdk = ":{{ ebuild.version }}_deps",
-    overlays = "{{ target_overlay_set }}",
-    eclasses = [
-        {%- for eclass in ebuild.eclasses %}
-        "{{ eclass }}",
-        {%- endfor %}
-    ],
-    {%- if ebuild.allow_network_access %}
-    # This ebuild declares RESTRICT="network-sandbox".
-    allow_network_access = True,
-    {%- endif %}
+    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix) }}
     prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
     {%- if ebuild.has_hooks %}
     has_hooks = True,
@@ -244,68 +248,7 @@ ebuild_debug(
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    ebuild = "{{ ebuild.ebuild_name }}",
-    overlay = "{{ ebuild.overlay }}",
-    category = "{{ebuild.category}}",
-    package_name = "{{ ebuild.package_name }}",
-    version = "{{ ebuild.version }}",
-    slot = "{{ ebuild.slot }}",
-    distfiles = {
-        {%- for dist in ebuild.dists %}
-        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
-        {%- endfor %}
-    },
-    {%- if ebuild.sources %}
-    srcs = [
-        {%- for source in ebuild.sources %}
-        "{{ source }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    {%- if ebuild.git_trees %}
-    git_trees = [
-        {%- for git_tree in ebuild.git_trees %}
-        "{{ git_tree }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
-    runtime_deps = [
-        {%- if ebuild.provided_runtime_deps %}
-        # The following packages are provided by the SDK:
-            {%- for dep in ebuild.provided_runtime_deps %}
-        # * {{ dep }}
-            {%- endfor %}
-        {%- endif %}
-        {%- for dep in ebuild.runtime_deps %}
-        "{{ dep }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    use_flags = [
-        {%- for flag in ebuild.uses %}
-        "{{ flag }}",
-        {%- endfor %}
-    ],
-    inject_use_flags = select({
-        "@//bazel/portage:alchemist-use-flags": True,
-        "@//bazel/portage:portage-use-flags": False,
-    }),
-    files = glob(["files/**", "*.bashrc"]),
-    {%- if target_board %}
-    board = "{{ target_board }}",
-    {%- endif %}
-    sdk = ":{{ ebuild.version }}_deps",
-    overlays = "{{ target_overlay_set }}",
-    eclasses = [
-        {%- for eclass in ebuild.eclasses %}
-        "{{ eclass }}",
-        {%- endfor %}
-    ],
-    {%- if ebuild.allow_network_access %}
-    # This ebuild declares RESTRICT="network-sandbox".
-    allow_network_access = True,
-    {%- endif %}
+    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix) }}
     visibility = ["@//bazel:internal"],
 )
 {% endfor -%}
@@ -343,68 +286,7 @@ ebuild_install_list(
 
 ebuild_test(
     name = "{{ ebuild.version }}_test",
-    ebuild = "{{ ebuild.ebuild_name }}",
-    overlay = "{{ ebuild.overlay }}",
-    category = "{{ebuild.category}}",
-    package_name = "{{ ebuild.package_name }}",
-    version = "{{ ebuild.version }}",
-    slot = "{{ ebuild.slot }}",
-    distfiles = {
-        {%- for dist in ebuild.dists %}
-        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
-        {%- endfor %}
-    },
-    {%- if ebuild.sources %}
-    srcs = [
-        {%- for source in ebuild.sources %}
-        "{{ source }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    {%- if ebuild.git_trees %}
-    git_trees = [
-        {%- for git_tree in ebuild.git_trees %}
-        "{{ git_tree }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
-    runtime_deps = [
-        {%- if ebuild.provided_runtime_deps %}
-        # The following packages are provided by the SDK:
-            {%- for dep in ebuild.provided_runtime_deps %}
-        # * {{ dep }}
-            {%- endfor %}
-        {%- endif %}
-        {%- for dep in ebuild.runtime_deps %}
-        "{{ dep }}",
-        {%- endfor %}
-    ],
-    {%- endif %}
-    use_flags = [
-        {%- for flag in ebuild.uses %}
-        "{{ flag }}",
-        {%- endfor %}
-    ],
-    inject_use_flags = select({
-        "@//bazel/portage:alchemist-use-flags": True,
-        "@//bazel/portage:portage-use-flags": False,
-    }),
-    files = glob(["files/**", "*.bashrc"]),
-    {%- if target_board %}
-    board = "{{ target_board }}",
-    {%- endif %}
-    sdk = ":{{ ebuild.version }}_test_deps",
-    overlays = "{{ target_overlay_set }}",
-    eclasses = [
-        {%- for eclass in ebuild.eclasses %}
-        "{{ eclass }}",
-        {%- endfor %}
-    ],
-    {%- if ebuild.allow_network_access %}
-    # This ebuild declares RESTRICT="network-sandbox".
-    allow_network_access = True,
-    {%- endif %}
+    {{ self::ebuild_args(ebuild=ebuild, sdk_suffix="_test_deps") }}
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
     visibility = ["@//bazel:internal"],
