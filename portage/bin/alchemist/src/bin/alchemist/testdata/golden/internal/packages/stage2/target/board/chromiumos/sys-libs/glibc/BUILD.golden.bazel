@@ -41,7 +41,6 @@ ebuild(
     package_name = "glibc",
     version = "2.35-r20",
     slot = "0/0",
-
     distfiles = {
     },
     srcs = [
@@ -109,13 +108,13 @@ string_flag(
 
 ebuild(
     name = "2.35-r20_hermetic_test_package",
+    suffix = "_hermetic_test_package",
     ebuild = "glibc-2.35-r20.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "sys-libs",
     package_name = "glibc",
     version = "2.35-r20",
     slot = "0/0",
-suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [

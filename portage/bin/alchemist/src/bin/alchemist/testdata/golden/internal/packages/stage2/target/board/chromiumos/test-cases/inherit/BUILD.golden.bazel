@@ -41,7 +41,6 @@ ebuild(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-
     distfiles = {
     },
     srcs = [
@@ -113,13 +112,13 @@ string_flag(
 
 ebuild(
     name = "1.0_hermetic_test_package",
+    suffix = "_hermetic_test_package",
     ebuild = "inherit-1.0.ebuild",
     overlay = "//internal/overlays/chromiumos",
     category = "test-cases",
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [

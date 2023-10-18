@@ -41,7 +41,6 @@ ebuild(
     package_name = "os-headers",
     version = "0-r2",
     slot = "0/0",
-
     distfiles = {
     },
     srcs = [
@@ -107,13 +106,13 @@ string_flag(
 
 ebuild(
     name = "0-r2_hermetic_test_package",
+    suffix = "_hermetic_test_package",
     ebuild = "os-headers-0-r2.ebuild",
     overlay = "//internal/overlays/portage-stable",
     category = "virtual",
     package_name = "os-headers",
     version = "0-r2",
     slot = "0/0",
-suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [

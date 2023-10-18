@@ -41,7 +41,6 @@ ebuild(
     package_name = "go",
     version = "1.20.5",
     slot = "0/0",
-
     distfiles = {
     },
     srcs = [
@@ -107,13 +106,13 @@ string_flag(
 
 ebuild(
     name = "1.20.5_hermetic_test_package",
+    suffix = "_hermetic_test_package",
     ebuild = "go-1.20.5.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "go",
     version = "1.20.5",
     slot = "0/0",
-suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [

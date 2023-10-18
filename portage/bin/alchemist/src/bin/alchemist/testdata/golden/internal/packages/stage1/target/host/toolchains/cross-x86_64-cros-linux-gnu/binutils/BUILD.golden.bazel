@@ -41,7 +41,6 @@ ebuild(
     package_name = "binutils",
     version = "2.39",
     slot = "0/0",
-
     distfiles = {
     },
     srcs = [
@@ -109,13 +108,13 @@ string_flag(
 
 ebuild(
     name = "2.39_hermetic_test_package",
+    suffix = "_hermetic_test_package",
     ebuild = "binutils-2.39.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "binutils",
     version = "2.39",
     slot = "0/0",
-suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [

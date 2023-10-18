@@ -147,15 +147,15 @@ string_flag(
 
 ebuild(
     name = "{{ ebuild.version }}{{ suffix }}",
+    {%- if suffix %}
+    suffix = "{{ suffix }}",
+    {%- endif %}
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
     package_name = "{{ ebuild.package_name }}",
     version = "{{ ebuild.version }}",
     slot = "{{ ebuild.slot }}",
-{% if suffix -%}
-    suffix = "{{ suffix }}",
-{%- endif %}
     distfiles = {
         {%- for dist in ebuild.dists %}
         "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",

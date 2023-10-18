@@ -41,7 +41,6 @@ ebuild(
     package_name = "libxcrypt",
     version = "4.4.28",
     slot = "0/0",
-
     distfiles = {
     },
     srcs = [
@@ -107,13 +106,13 @@ string_flag(
 
 ebuild(
     name = "4.4.28_hermetic_test_package",
+    suffix = "_hermetic_test_package",
     ebuild = "libxcrypt-4.4.28.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "libxcrypt",
     version = "4.4.28",
     slot = "0/0",
-suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [

@@ -41,7 +41,6 @@ ebuild(
     package_name = "compiler-rt",
     version = "17.0_pre498229-r9",
     slot = "0/0",
-
     distfiles = {
     },
     srcs = [
@@ -107,13 +106,13 @@ string_flag(
 
 ebuild(
     name = "17.0_pre498229-r9_hermetic_test_package",
+    suffix = "_hermetic_test_package",
     ebuild = "compiler-rt-17.0_pre498229-r9.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "compiler-rt",
     version = "17.0_pre498229-r9",
     slot = "0/0",
-suffix = "_hermetic_test_package",
     distfiles = {
     },
     srcs = [
