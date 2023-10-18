@@ -11,7 +11,6 @@ rust_binary(
     data = [":install_deps.sh"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = [
-        "//bazel/images:__pkg__",
         "@portage//:all_packages",
     ],
     deps = [

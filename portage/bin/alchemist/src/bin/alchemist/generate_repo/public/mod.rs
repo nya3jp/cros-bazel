@@ -27,6 +27,11 @@ lazy_static! {
     static ref TEMPLATES: Tera = {
         let mut tera: Tera = Default::default();
         tera.add_raw_template(
+            "images.BUILD.bazel",
+            include_str!("templates/images.BUILD.bazel"),
+        )
+        .unwrap();
+        tera.add_raw_template(
             "package.BUILD.bazel",
             include_str!("templates/package.BUILD.bazel"),
         )
@@ -282,7 +287,7 @@ pub struct TargetConfig<'a> {
     pub prefix: &'a str,
 }
 
-/// Generates the public aliases
+/// Generates the public aliases for packages.
 ///
 /// # Arguments
 ///
@@ -313,6 +318,28 @@ pub fn generate_public_packages(
                 &package_output_dir,
             )
         })
+}
+
+#[derive(Serialize)]
+struct ImagesTemplateContext<'a> {
+    board: &'a str,
+}
+
+/// Generates the public targets for images.
+#[instrument(skip_all)]
+pub fn generate_public_images(board: &str, output_dir: &Path) -> Result<()> {
+    create_dir_all(output_dir)?;
+
+    let context = ImagesTemplateContext { board };
+
+    let mut file = File::create(output_dir.join("BUILD.bazel"))?;
+    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
+    TEMPLATES.render_to(
+        "images.BUILD.bazel",
+        &tera::Context::from_serialize(context)?,
+        file,
+    )?;
+    Ok(())
 }
 
 #[cfg(test)]

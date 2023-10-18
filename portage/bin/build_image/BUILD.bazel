@@ -11,7 +11,7 @@ rust_binary(
     crate_name = "build_image",
     data = glob(["container_files/*"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    visibility = ["//bazel/images:__pkg__"],
+    visibility = ["@portage//images:__pkg__"],
     deps = [
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/container",

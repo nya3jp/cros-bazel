@@ -6,7 +6,6 @@ pub(self) mod common;
 pub(self) mod deps;
 pub mod internal;
 pub(self) mod public;
-pub(self) mod settings;
 
 use std::{
     collections::HashMap,
@@ -50,8 +49,7 @@ use self::{
         },
         sources::generate_internal_sources,
     },
-    public::generate_public_packages,
-    settings::generate_settings_bzl,
+    public::{generate_public_images, generate_public_packages},
 };
 
 #[instrument(skip_all)]
@@ -654,8 +652,7 @@ pub fn generate_stages(
             &output_dir.join("target"),
         )?;
 
-        // TODO: Generate the build_image targets so we can delete this.
-        generate_settings_bzl(&target.board, &output_dir.join("settings.bzl"))?;
+        generate_public_images(&target.board, &output_dir.join("images"))?;
 
         // TODO: Generate the Stage 3 target packages if we decide to build
         // targets against the stage 3 SDK.

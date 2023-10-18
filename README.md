@@ -106,11 +106,11 @@ chroot.
 
 We have the following targets to build images:
 
-- `//bazel/images:chromiumos_minimal_image`: Minimal image that contains
+- `@portage//images:chromiumos_minimal_image`: Minimal image that contains
   `sys-apps/baselayout` and `sys-kernel/chromeos-kernel` only.
-- `//bazel/images:chromiumos_base_image`: Base image.
-- `//bazel/images:chromiumos_dev_image`: Dev image.
-- `//bazel/images:chromiumos_test_image`: Test image.
+- `@portage//images:chromiumos_base_image`: Base image.
+- `@portage//images:chromiumos_dev_image`: Dev image.
+- `@portage//images:chromiumos_test_image`: Test image.
 
 *** note
 For historical reasons, the output file name of the dev image is
@@ -134,7 +134,7 @@ to run a VM locally. Make sure to copy an image out from `bazel-bin` as it's not
 writable by default.
 
 ```sh
-$ cp bazel-bin/bazel/images/chromiumos_base_image.bin /tmp/
+$ cp bazel-bin/external/_main~portage~portage/images/chromiumos_base_image.bin /tmp/
 $ chmod +w /tmp/chromiumos_base_image.bin
 $ chromite/bin/cros_vm --start --board=amd64-generic --image-path /tmp/chromiumos_base_image.bin
 ```
@@ -197,7 +197,6 @@ Bazelification team know about the non-hermeticity so we can fix the problem.
         * `prebuilts/` ... defines prebuilt binaries
     * `sdk/` ... defines the base SDK
     * `tools/` ... misc small tools for development
-* `images/` ... defines ChromeOS image targets
 * `workspace_root/` ... contains various files to be symlinked to the workspace root, including `WORKSPACE.bazel` and `BUILD.bazel`
 
 ## Misc Memo

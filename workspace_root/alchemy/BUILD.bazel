@@ -35,32 +35,7 @@ pkg_tar(
     compressor = "//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     extension = "tar.zst",
-    visibility = ["//bazel/images:__pkg__"],
-)
-
-alias(
-    name = "all_target_packages",
-    actual = "@portage//virtual/target-os:package_set",
-)
-
-alias(
-    name = "chromiumos_minimal_image",
-    actual = "//bazel/images:chromiumos_minimal_image",
-)
-
-alias(
-    name = "chromiumos_base_image",
-    actual = "//bazel/images:chromiumos_base_image",
-)
-
-alias(
-    name = "chromiumos_dev_image",
-    actual = "//bazel/images:chromiumos_dev_image",
-)
-
-alias(
-    name = "chromiumos_test_image",
-    actual = "//bazel/images:chromiumos_test_image",
+    visibility = ["@portage//images:__pkg__"],
 )
 
 # A convenient alias to run alchemist.

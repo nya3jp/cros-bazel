@@ -1,0 +1,102 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/portage/build_defs:build_image.bzl", "build_image")
+
+# Builds a very minimal image that contains Linux kernel and basic files only.
+# The generated image doesn't boot of course, but this target can be useful to
+# test the functionality to build images.
+build_image(
+    name = "chromiumos_minimal_image",
+    board = "amd64-generic",
+    files = [
+        "@//:scripts_src",
+        "@chromite//:src",
+    ],
+    host_packages = [
+        "@portage//internal/sdk/stage1/target/board:cross-packages",
+    ],
+    image_file_name = "chromiumos_base_image",
+    image_to_build = "base",
+    output_image_file_name = "chromiumos_minimal_image",
+    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    override_base_packages = [
+        "sys-apps/baselayout",
+        "sys-kernel/chromeos-kernel-5_15",
+    ],
+    sdk = "@portage//internal/sdk/stage1/target/board",
+    target_packages = [
+        "@portage//target/sys-apps/baselayout",
+        "@portage//target/sys-kernel/chromeos-kernel-5_15",
+    ],
+    visibility = ["//:__pkg__"],  # for alias
+)
+
+# Builds the base image.
+build_image(
+    name = "chromiumos_base_image",
+    board = "amd64-generic",
+    files = [
+        "@//:scripts_src",
+        "@chromite//:src",
+    ],
+    host_packages = [
+        "@portage//internal/sdk/stage1/target/board:cross-packages",
+    ],
+    image_file_name = "chromiumos_base_image",
+    image_to_build = "base",
+    output_image_file_name = "chromiumos_base_image",
+    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    sdk = "@portage//internal/sdk/stage1/target/board",
+    target_packages = [
+        "@portage//target/virtual/target-os:package_set",
+    ],
+)
+
+# Builds the dev image.
+build_image(
+    name = "chromiumos_dev_image",
+    board = "amd64-generic",
+    files = [
+        "@//:scripts_src",
+        "@chromite//:src",
+    ],
+    host_packages = [
+        "@portage//internal/sdk/stage1/target/board:cross-packages",
+    ],
+    image_file_name = "chromiumos_image",
+    image_to_build = "dev",
+    output_image_file_name = "chromiumos_image",
+    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    sdk = "@portage//internal/sdk/stage1/target/board",
+    target_packages = [
+        "@portage//target/virtual/target-os:package_set",
+        "@portage//target/virtual/target-os-dev:package_set",
+    ],
+)
+
+# Builds the test image.
+build_image(
+    name = "chromiumos_test_image",
+    board = "amd64-generic",
+    files = [
+        "@//:scripts_src",
+        "@chromite//:src",
+    ],
+    host_packages = [
+        "@portage//internal/sdk/stage1/target/board:cross-packages",
+    ],
+    image_file_name = "chromiumos_test_image",
+    image_to_build = "test",
+    output_image_file_name = "chromiumos_test_image",
+    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    sdk = "@portage//internal/sdk/stage1/target/board",
+    target_packages = [
+        "@portage//target/virtual/target-os:package_set",
+        "@portage//target/virtual/target-os-dev:package_set",
+        "@portage//target/virtual/target-os-test:package_set",
+    ],
+)
