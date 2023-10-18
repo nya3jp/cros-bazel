@@ -11,9 +11,7 @@ common --show_timestamps
 
 # Bzlmod is the new dependency management system in bazel.
 common --experimental_enable_bzlmod
-# TODO(b/274698330): In the long term, we'll want to replace this with a GoB
-# mirror of the BCR.
-common --registry=https://bcr.bazel.build
+common --registry=file:../bazel_deps/bazel-central-registry
 # TODO(b/274698330): In the long term, we'll want to replace this with a
 # GoB repo containing all bazel modules used throughout google. This shouldn't
 # be ChromeOS specific.
