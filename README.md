@@ -63,6 +63,12 @@ To build a package for the `host` , use the `host` prefix:
 $ BOARD=amd64-generic bazel build @portage//host/app-shells/bash
 ```
 
+To build all packages included in the ChromeOS test image:
+
+```sh
+$ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set @portage//target/virtual/target-os-dev:package_set @portage//target/virtual/target-os-test:package_set
+```
+
 When building packages outside the chroot, the `9999` version of packages (if they exist and are
 not marked as `CROS_WORKON_MANUAL_UPREV`) will be chosen by default. This means you can edit
 your source code and feel confident that the correct packages are getting rebuilt.
