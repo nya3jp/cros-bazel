@@ -144,7 +144,7 @@ impl PackageLoader {
         // Compute additional information needed to fill in PackageDetails.
         let package_name = format!(
             "{}/{}",
-            metadata.path_info.category_name, metadata.path_info.package_short_name,
+            metadata.path_info.category_name, metadata.path_info.short_package_name,
         );
 
         let vars = match &metadata.vars {

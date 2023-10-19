@@ -121,7 +121,7 @@ pub struct EBuildMetadata {
 
 #[derive(Debug)]
 pub struct EBuildPathInfo {
-    pub package_short_name: String,
+    pub short_package_name: String,
     pub category_name: String,
     pub version: Version,
 }
@@ -134,15 +134,15 @@ impl EBuildPathInfo {
                     "P",
                     format!(
                         "{}-{}",
-                        &self.package_short_name,
+                        &self.short_package_name,
                         self.version.without_revision()
                     ),
                 ),
                 (
                     "PF",
-                    format!("{}-{}", &self.package_short_name, self.version),
+                    format!("{}-{}", &self.short_package_name, self.version),
                 ),
-                ("PN", self.package_short_name.to_owned()),
+                ("PN", self.short_package_name.to_owned()),
                 ("CATEGORY", self.category_name.to_owned()),
                 ("PV", self.version.without_revision().to_string()),
                 ("PR", format!("r{}", self.version.revision())),
@@ -163,10 +163,10 @@ impl TryFrom<&Path> for EBuildPathInfo {
         }
 
         let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
-        let (package_short_name, version) = Version::from_str_suffix(file_stem.as_ref())
+        let (short_package_name, version) = Version::from_str_suffix(file_stem.as_ref())
             .with_context(|| format!("{} has corrupted file name", path.to_string_lossy()))?;
 
-        let (package_short_name_from_dir, category_name) = path
+        let (short_package_name_from_dir, category_name) = path
             .components()
             .rev()
             .skip(1)
@@ -178,7 +178,7 @@ impl TryFrom<&Path> for EBuildPathInfo {
                 )
             })?;
 
-        if package_short_name != package_short_name_from_dir.as_os_str().to_string_lossy() {
+        if short_package_name != short_package_name_from_dir.as_os_str().to_string_lossy() {
             bail!(
                 "{} has inconsistent package names in directory name and file name",
                 path.to_string_lossy()
@@ -186,7 +186,7 @@ impl TryFrom<&Path> for EBuildPathInfo {
         }
 
         Ok(Self {
-            package_short_name: package_short_name.to_owned(),
+            short_package_name: short_package_name.to_owned(),
             category_name: category_name.as_os_str().to_string_lossy().to_string(),
             version,
         })
