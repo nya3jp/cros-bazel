@@ -97,28 +97,34 @@ impl EBuildEvaluator {
         &self,
         ebuild_path: &Path,
         repo: &Repository,
-    ) -> Result<EBuildMetadata> {
+    ) -> Result<MaybeEBuildMetadata> {
         // We don't need to provide profile variables to the ebuild environment
         // because PMS requires ebuild metadata to be defined independently of
         // profiles.
         // https://projects.gentoo.org/pms/8/pms.html#x1-600007.1
         let path_info = EBuildPathInfo::try_from(ebuild_path)?;
         let env = path_info.to_vars();
-        let vars = run_ebuild(ebuild_path, &env, repo.eclass_dirs(), &self.tools_dir);
-        Ok(EBuildMetadata {
-            basic_data: EBuildBasicData {
-                repo_name: repo.name().to_string(),
-                ebuild_path: ebuild_path.to_path_buf(),
-                package_name: format!(
-                    "{}/{}",
-                    &path_info.category_name, &path_info.short_package_name
-                ),
-                short_package_name: path_info.short_package_name,
-                category_name: path_info.category_name,
-                version: path_info.version,
-            },
-            vars,
-        })
+        let basic_data = EBuildBasicData {
+            repo_name: repo.name().to_string(),
+            ebuild_path: ebuild_path.to_path_buf(),
+            package_name: format!(
+                "{}/{}",
+                &path_info.category_name, &path_info.short_package_name
+            ),
+            short_package_name: path_info.short_package_name,
+            category_name: path_info.category_name,
+            version: path_info.version,
+        };
+        match run_ebuild(ebuild_path, &env, repo.eclass_dirs(), &self.tools_dir) {
+            Ok(vars) => Ok(MaybeEBuildMetadata::Ok(Arc::new(EBuildMetadata {
+                basic_data,
+                vars,
+            }))),
+            Err(err) => Ok(MaybeEBuildMetadata::Err(Arc::new(EBuildEvaluationError {
+                basic_data,
+                error: err.to_string(),
+            }))),
+        }
     }
 }
 
@@ -137,10 +143,11 @@ pub struct EBuildBasicData {
     pub version: Version,
 }
 
+/// Describes metadata of an ebuild.
 #[derive(Debug)]
 pub struct EBuildMetadata {
     pub basic_data: EBuildBasicData,
-    pub vars: Result<BashVars>,
+    pub vars: BashVars,
 }
 
 impl Deref for EBuildMetadata {
@@ -148,6 +155,45 @@ impl Deref for EBuildMetadata {
 
     fn deref(&self) -> &Self::Target {
         &self.basic_data
+    }
+}
+
+/// Describes an error on evaluating an ebuild.
+#[derive(Debug)]
+pub struct EBuildEvaluationError {
+    pub basic_data: EBuildBasicData,
+    pub error: String,
+}
+
+impl Deref for EBuildEvaluationError {
+    type Target = EBuildBasicData;
+
+    fn deref(&self) -> &Self::Target {
+        &self.basic_data
+    }
+}
+
+/// Represents an ebuild, covering both successfully evaluated ones and failed ones.
+///
+/// Since this enum is very lightweight (contains [`Arc`] only), you should not wrap it within
+/// reference-counting smart pointers like [`Arc`], but you can just clone it.
+///
+/// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
+/// to implement a few convenient methods.
+#[derive(Clone, Debug)]
+pub enum MaybeEBuildMetadata {
+    Ok(Arc<EBuildMetadata>),
+    Err(Arc<EBuildEvaluationError>),
+}
+
+impl Deref for MaybeEBuildMetadata {
+    type Target = EBuildBasicData;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            MaybeEBuildMetadata::Ok(metadata) => &metadata.basic_data,
+            MaybeEBuildMetadata::Err(error) => &error.basic_data,
+        }
     }
 }
 
@@ -232,7 +278,7 @@ impl TryFrom<&Path> for EBuildPathInfo {
 pub struct CachedEBuildEvaluator {
     repos: UnorderedRepositorySet,
     evaluator: EBuildEvaluator,
-    cache: Mutex<HashMap<PathBuf, Arc<OnceCell<Arc<EBuildMetadata>>>>>,
+    cache: Mutex<HashMap<PathBuf, Arc<OnceCell<MaybeEBuildMetadata>>>>,
 }
 
 impl CachedEBuildEvaluator {
@@ -246,15 +292,7 @@ impl CachedEBuildEvaluator {
         }
     }
 
-    fn do_eval(&self, ebuild_path: &Path) -> Result<Arc<EBuildMetadata>> {
-        let repo = self.repos.get_repo_by_path(ebuild_path)?;
-
-        self.evaluator
-            .evaluate_metadata(ebuild_path, repo)
-            .map(Arc::new)
-    }
-
-    pub fn evaluate_metadata(&self, ebuild_path: &Path) -> Result<Arc<EBuildMetadata>> {
+    pub fn evaluate_metadata(&self, ebuild_path: &Path) -> Result<MaybeEBuildMetadata> {
         let once_cell = {
             let mut cache_guard = self.cache.lock().unwrap();
             cache_guard
@@ -262,7 +300,10 @@ impl CachedEBuildEvaluator {
                 .or_default()
                 .clone()
         };
-        let details = once_cell.get_or_try_init(|| self.do_eval(ebuild_path))?;
-        Ok(Arc::clone(details))
+        let details = once_cell.get_or_try_init(|| {
+            let repo = self.repos.get_repo_by_path(ebuild_path)?;
+            self.evaluator.evaluate_metadata(ebuild_path, repo)
+        })?;
+        Ok(details.clone())
     }
 }

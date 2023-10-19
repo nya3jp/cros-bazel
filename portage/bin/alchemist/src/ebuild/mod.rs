@@ -24,7 +24,7 @@ use crate::{
     },
 };
 
-use self::metadata::CachedEBuildEvaluator;
+use self::metadata::{CachedEBuildEvaluator, MaybeEBuildMetadata};
 
 /// Parses IUSE defined by ebuild/eclasses and returns as an [IUseMap].
 fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
@@ -144,20 +144,20 @@ impl PackageLoader {
         // Compute additional information needed to fill in PackageDetails.
         let package_name = format!("{}/{}", metadata.category_name, metadata.short_package_name);
 
-        let vars = match &metadata.vars {
-            Ok(vars) => vars,
-            Err(e) => {
+        let metadata = match metadata {
+            MaybeEBuildMetadata::Ok(metadata) => metadata,
+            MaybeEBuildMetadata::Err(error) => {
                 return Ok(PackageResult::Err(PackageMetadataError {
-                    repo_name: metadata.repo_name.clone(),
+                    repo_name: error.repo_name.clone(),
                     package_name,
                     ebuild: ebuild_path.to_owned(),
-                    version: metadata.version.clone(),
-                    error: e.to_string(),
+                    version: error.version.clone(),
+                    error: error.error.clone(),
                 }))
             }
         };
 
-        let slot = Slot::<String>::new(vars.get_scalar("SLOT")?);
+        let slot = Slot::<String>::new(metadata.vars.get_scalar("SLOT")?);
 
         let package = ThinPackageRef {
             package_name: package_name.as_str(),
@@ -168,21 +168,21 @@ impl PackageLoader {
             },
         };
 
-        let raw_inherited = vars.get_scalar_or_default("INHERITED")?;
+        let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;
         let inherited: HashSet<String> = raw_inherited
             .split_ascii_whitespace()
             .map(|s| s.to_owned())
             .collect();
 
-        let raw_inherit_paths = vars.get_indexed_array("INHERIT_PATHS")?;
+        let raw_inherit_paths = metadata.vars.get_indexed_array("INHERIT_PATHS")?;
         let inherit_paths: Vec<PathBuf> = raw_inherit_paths.iter().map(PathBuf::from).collect();
 
-        let (accepted, stable) = match self.config.is_package_accepted(vars, &package)? {
+        let (accepted, stable) = match self.config.is_package_accepted(&metadata.vars, &package)? {
             IsPackageAcceptedResult::Unaccepted => {
                 if self.force_accept_9999_ebuilds {
                     let accepted = inherited.contains("cros-workon")
                         && metadata.version == self.version_9999
-                        && match vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
+                        && match metadata.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
                             Ok(value) => value != "1",
                             Err(_) => false,
                         };
@@ -194,32 +194,37 @@ impl PackageLoader {
             IsPackageAcceptedResult::Accepted(stable) => (true, stable),
         };
 
-        let iuse_map = parse_iuse_map(vars)?;
+        let iuse_map = parse_iuse_map(&metadata.vars)?;
         let use_map =
             self.config
                 .compute_use_map(&package_name, &metadata.version, stable, &slot, &iuse_map);
 
-        let required_use: RequiredUseDependency =
-            vars.get_scalar_or_default("REQUIRED_USE")?.parse()?;
+        let required_use: RequiredUseDependency = metadata
+            .vars
+            .get_scalar_or_default("REQUIRED_USE")?
+            .parse()?;
 
         let masked = !accepted
             || self.config.is_package_masked(&package)
             || required_use.matches(&use_map) == Some(false);
 
-        let direct_build_target = vars.maybe_get_scalar("METALLURGY_TARGET")?.map(|s| {
-            if s.starts_with('@') {
-                s.to_string()
-            } else {
-                // eg. //bazel:foo -> @@//bazel:foo
-                format!("@@{s}")
-            }
-        });
+        let direct_build_target = metadata
+            .vars
+            .maybe_get_scalar("METALLURGY_TARGET")?
+            .map(|s| {
+                if s.starts_with('@') {
+                    s.to_string()
+                } else {
+                    // eg. //bazel:foo -> @@//bazel:foo
+                    format!("@@{s}")
+                }
+            });
 
         Ok(PackageResult::Ok(PackageDetails {
             repo_name: metadata.repo_name.clone(),
             package_name,
             version: metadata.version.clone(),
-            vars: vars.clone(),
+            vars: metadata.vars.clone(),
             slot,
             use_map,
             accepted,
