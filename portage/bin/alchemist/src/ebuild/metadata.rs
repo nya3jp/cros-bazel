@@ -8,6 +8,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::{
@@ -105,20 +106,52 @@ impl EBuildEvaluator {
         let env = path_info.to_vars();
         let vars = run_ebuild(ebuild_path, &env, repo.eclass_dirs(), &self.tools_dir);
         Ok(EBuildMetadata {
-            repo_name: repo.name().to_string(),
-            path_info,
+            basic_data: EBuildBasicData {
+                repo_name: repo.name().to_string(),
+                ebuild_path: ebuild_path.to_path_buf(),
+                package_name: format!(
+                    "{}/{}",
+                    &path_info.category_name, &path_info.short_package_name
+                ),
+                short_package_name: path_info.short_package_name,
+                category_name: path_info.category_name,
+                version: path_info.version,
+            },
             vars,
         })
     }
 }
 
+/// Contains basic information about an ebuild.
+///
+/// This information is available as long as an ebuild file exists with a correct file name format.
+/// All package-representing types containing [`EBuildBasicData`] directly or indirectly should
+/// implement [`Deref`] to provide easy access to [`EBuildBasicData`] fields.
+#[derive(Debug)]
+pub struct EBuildBasicData {
+    pub repo_name: String,
+    pub ebuild_path: PathBuf,
+    pub package_name: String,
+    pub short_package_name: String,
+    pub category_name: String,
+    pub version: Version,
+}
+
 #[derive(Debug)]
 pub struct EBuildMetadata {
-    pub repo_name: String,
-    pub path_info: EBuildPathInfo,
+    pub basic_data: EBuildBasicData,
     pub vars: Result<BashVars>,
 }
 
+impl Deref for EBuildMetadata {
+    type Target = EBuildBasicData;
+
+    fn deref(&self) -> &Self::Target {
+        &self.basic_data
+    }
+}
+
+/// A bundle of information that can be extracted from an ebuild file path.
 #[derive(Debug)]
 pub struct EBuildPathInfo {
     pub short_package_name: String,
@@ -127,6 +160,7 @@ pub struct EBuildPathInfo {
 }
 
 impl EBuildPathInfo {
+    /// Computes an initial ebuild environment derived from an ebuild file path.
     fn to_vars(&self) -> Vars {
         Vars::from_iter(
             [

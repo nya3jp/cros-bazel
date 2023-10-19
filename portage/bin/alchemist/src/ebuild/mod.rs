@@ -142,10 +142,7 @@ impl PackageLoader {
         let metadata = self.evaluator.evaluate_metadata(ebuild_path)?;
 
         // Compute additional information needed to fill in PackageDetails.
-        let package_name = format!(
-            "{}/{}",
-            metadata.path_info.category_name, metadata.path_info.short_package_name,
-        );
+        let package_name = format!("{}/{}", metadata.category_name, metadata.short_package_name);
 
         let vars = match &metadata.vars {
             Ok(vars) => vars,
@@ -154,7 +151,7 @@ impl PackageLoader {
                     repo_name: metadata.repo_name.clone(),
                     package_name,
                     ebuild: ebuild_path.to_owned(),
-                    version: metadata.path_info.version.clone(),
+                    version: metadata.version.clone(),
                     error: e.to_string(),
                 }))
             }
@@ -164,7 +161,7 @@ impl PackageLoader {
 
         let package = ThinPackageRef {
             package_name: package_name.as_str(),
-            version: &metadata.path_info.version,
+            version: &metadata.version,
             slot: Slot {
                 main: &slot.main,
                 sub: &slot.sub,
@@ -184,7 +181,7 @@ impl PackageLoader {
             IsPackageAcceptedResult::Unaccepted => {
                 if self.force_accept_9999_ebuilds {
                     let accepted = inherited.contains("cros-workon")
-                        && metadata.path_info.version == self.version_9999
+                        && metadata.version == self.version_9999
                         && match vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
                             Ok(value) => value != "1",
                             Err(_) => false,
@@ -198,13 +195,9 @@ impl PackageLoader {
         };
 
         let iuse_map = parse_iuse_map(vars)?;
-        let use_map = self.config.compute_use_map(
-            &package_name,
-            &metadata.path_info.version,
-            stable,
-            &slot,
-            &iuse_map,
-        );
+        let use_map =
+            self.config
+                .compute_use_map(&package_name, &metadata.version, stable, &slot, &iuse_map);
 
         let required_use: RequiredUseDependency =
             vars.get_scalar_or_default("REQUIRED_USE")?.parse()?;
@@ -225,7 +218,7 @@ impl PackageLoader {
         Ok(PackageResult::Ok(PackageDetails {
             repo_name: metadata.repo_name.clone(),
             package_name,
-            version: metadata.path_info.version.clone(),
+            version: metadata.version.clone(),
             vars: vars.clone(),
             slot,
             use_map,
