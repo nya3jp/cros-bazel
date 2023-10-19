@@ -23,7 +23,7 @@ use alchemist::{
     },
     config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtom, Predicate},
-    ebuild::{CachedPackageLoader, PackageDetails, PackageError},
+    ebuild::{CachedPackageLoader, PackageDetails, PackageMetadataError},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -36,7 +36,7 @@ use tracing::instrument;
 use crate::alchemist::TargetData;
 
 use self::{
-    common::Package,
+    common::{Package, PackageAnalysisError, PackageError},
     deps::generate_deps_file,
     internal::overlays::generate_internal_overlays,
     internal::packages::{
@@ -56,7 +56,7 @@ use self::{
 fn evaluate_all_packages(
     repos: &RepositorySet,
     loader: &CachedPackageLoader,
-) -> Result<(Vec<Arc<PackageDetails>>, Vec<Arc<PackageError>>)> {
+) -> Result<(Vec<Arc<PackageDetails>>, Vec<Arc<PackageMetadataError>>)> {
     let ebuild_paths = repos.find_all_ebuilds()?;
 
     // Evaluate packages in parallel.
@@ -181,9 +181,9 @@ fn analyze_packages(
     src_dir: &Path,
     host_resolver: Option<&PackageResolver>,
     target_resolver: &PackageResolver,
-) -> (Vec<Package>, Vec<PackageError>) {
+) -> (Vec<Package>, Vec<PackageAnalysisError>) {
     // Analyze packages in parallel.
-    let (all_partials, failures): (Vec<PackagePartial>, Vec<PackageError>) =
+    let (all_partials, failures): (Vec<PackagePartial>, Vec<PackageAnalysisError>) =
         all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
                 if details.masked {
@@ -204,18 +204,8 @@ fn analyze_packages(
             })();
             match result {
                 Ok(package) => Either::Left(package),
-                Err(err) => Either::Right(PackageError {
-                    repo_name: details.repo_name.clone(),
-                    package_name: details.package_name.clone(),
-                    ebuild: details.ebuild_path.clone(),
-                    ebuild_name: details
-                        .ebuild_path
-                        .file_name()
-                        .unwrap()
-                        .to_string_lossy()
-                        .to_string(),
-                    version: details.version.clone(),
-                    masked: Some(details.masked),
+                Err(err) => Either::Right(PackageAnalysisError {
+                    details: details.clone(),
                     error: format!("{err:#}"),
                 }),
             }
@@ -348,10 +338,14 @@ fn load_packages(
         &target.resolver,
     );
 
-    let errors = metadata_errors
+    let metadata_errors_packed = metadata_errors
         .into_iter()
-        .map(|e| (*e).clone())
-        .chain(analysis_errors.into_iter())
+        .map(|e| PackageError::PackageMetadataError((*e).clone()));
+    let analysis_errors_packed = analysis_errors
+        .into_iter()
+        .map(|e| PackageError::PackageAnalysisError(e.clone()));
+    let errors = metadata_errors_packed
+        .chain(analysis_errors_packed)
         .collect();
 
     Ok((packages, errors))

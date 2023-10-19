@@ -15,7 +15,7 @@ use alchemist::{
     analyze::{restrict::analyze_restricts, source::PackageLocalSource},
     config::ProvidedPackage,
     dependency::restrict::RestrictAtom,
-    ebuild::{PackageDetails, PackageError},
+    ebuild::PackageDetails,
     fakechroot::PathTranslator,
     repository::RepositorySet,
 };
@@ -29,7 +29,7 @@ use tracing::instrument;
 
 use crate::generate_repo::common::{
     package_details_to_target_path, repository_set_to_target_path, DistFileEntry, Package,
-    AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    PackageError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {
@@ -170,15 +170,17 @@ fn format_dependencies<'a>(
     Ok(targets.into_iter().sorted().dedup().collect())
 }
 
+fn get_ebuild_name_from_path(ebuild_path: &Path) -> Result<String> {
+    Ok(ebuild_path
+        .file_name()
+        .ok_or_else(|| anyhow!("Failed to extract file name from ebuild path {ebuild_path:?}"))?
+        .to_string_lossy()
+        .to_string())
+}
+
 impl EBuildEntry {
     pub fn try_new(target: &PackageType, package: &Package) -> Result<Self> {
-        let ebuild_name = package
-            .details
-            .ebuild_path
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
+        let ebuild_name = get_ebuild_name_from_path(&package.details.ebuild_path).unwrap();
         let basename = ebuild_name
             .rsplit_once('.')
             .ok_or_else(|| anyhow!("No file extension"))?
@@ -425,9 +427,9 @@ pub struct EBuildFailure {
 impl EBuildFailure {
     pub fn new(failure: &PackageError) -> Self {
         EBuildFailure {
-            ebuild_name: failure.ebuild_name.clone(),
-            version: failure.version.to_string(),
-            error: failure.error.to_string(),
+            ebuild_name: get_ebuild_name_from_path(failure.ebuild()).unwrap(),
+            version: failure.version().to_string(),
+            error: failure.error().to_string(),
         }
     }
 }
@@ -504,8 +506,8 @@ fn generate_package(
     let ebuilds = packages_in_dir
         .packages
         .iter()
-        .map(|p| &p.details.ebuild_path)
-        .chain(packages_in_dir.failed_packages.iter().map(|f| &f.ebuild));
+        .map(|p| &*p.details.ebuild_path)
+        .chain(packages_in_dir.failed_packages.iter().map(|f| f.ebuild()));
 
     // Create `*.ebuild` symlinks.
     for (i, ebuild) in ebuilds.enumerate() {
@@ -549,7 +551,7 @@ fn join_by_package_dir<'p>(
 
     for failure in failures.iter() {
         packages_by_dir
-            .entry(Path::new(&failure.repo_name).join(&failure.package_name))
+            .entry(Path::new(&failure.repo_name()).join(&failure.package_name()))
             .or_insert_with(new_default)
             .failed_packages
             .push(failure);

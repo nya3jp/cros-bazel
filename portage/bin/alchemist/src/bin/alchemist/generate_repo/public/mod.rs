@@ -12,16 +12,15 @@ use std::{
 };
 use tracing::instrument;
 
-use alchemist::ebuild::PackageError;
 use alchemist::resolver::PackageResolver;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use serde::Serialize;
 use tera::Tera;
 use version::Version;
 
-use super::common::{Package, AUTOGENERATE_NOTICE};
+use super::common::{Package, PackageError, AUTOGENERATE_NOTICE};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -81,21 +80,29 @@ impl MaybePackage<'_> {
     fn repo_name(&self) -> &str {
         match self {
             Self::Package(p) => &p.details.repo_name,
-            Self::PackageError(p) => &p.repo_name,
+            Self::PackageError(p) => &p.repo_name(),
         }
     }
     fn package_name(&self) -> &str {
         match self {
             Self::Package(p) => &p.details.package_name,
-            Self::PackageError(p) => &p.package_name,
+            Self::PackageError(p) => &p.package_name(),
         }
     }
     fn version(&self) -> &Version {
         match self {
             Self::Package(p) => &p.details.version,
-            Self::PackageError(p) => &p.version,
+            Self::PackageError(p) => &p.version(),
         }
     }
+}
+
+fn get_ebuild_name_from_path(ebuild_path: &Path) -> Result<String> {
+    Ok(ebuild_path
+        .file_name()
+        .ok_or_else(|| anyhow!("Failed to extract file name from ebuild path {ebuild_path:?}"))?
+        .to_string_lossy()
+        .to_string())
 }
 
 fn generate_public_package(
@@ -170,8 +177,8 @@ fn generate_public_package(
     let non_masked_failures = maybe_packages
         .iter()
         .filter_map(|maybe_package| match maybe_package {
-            MaybePackage::PackageError(p) => match p.masked {
-                Some(true) => None,
+            MaybePackage::PackageError(p) => match p {
+                PackageError::PackageAnalysisError(e) if e.details.masked => None,
                 _ => Some(*p),
             },
             _ => None,
@@ -235,8 +242,8 @@ fn generate_public_package(
     let ebuild_failures = non_masked_failures
         .iter()
         .map(|failed_package| EbuildFailureEntry {
-            name: Cow::from(&failed_package.ebuild_name),
-            error: Cow::from(&failed_package.error),
+            name: Cow::from(get_ebuild_name_from_path(failed_package.ebuild()).unwrap()),
+            error: Cow::from(failed_package.error()),
         })
         .collect();
 

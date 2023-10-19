@@ -2,19 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::sync::Arc;
+use std::{path::Path, sync::Arc};
 
 use alchemist::{
     analyze::{
         dependency::PackageDependencies,
         source::{PackageDistSource, PackageSources},
     },
-    ebuild::PackageDetails,
+    ebuild::{PackageDetails, PackageMetadataError},
     repository::RepositorySet,
 };
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
+use version::Version;
 
 pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n";
 
@@ -142,6 +143,53 @@ pub struct Package {
     /// Could add the concept of an IDEPEND to bazel, but it would make the
     /// `sdk_install_deps` rule very complicated and harder to understand.
     pub build_host_deps: Vec<Arc<PackageDetails>>,
+}
+
+/// Holds information for packages whose metadata was loaded successfully, but
+/// the analysis failed.
+#[derive(Clone, Debug)]
+pub struct PackageAnalysisError {
+    pub details: Arc<PackageDetails>,
+    pub error: String,
+}
+
+#[derive(Clone, Debug)]
+pub enum PackageError {
+    PackageMetadataError(PackageMetadataError),
+    PackageAnalysisError(PackageAnalysisError),
+}
+
+impl<'a> PackageError {
+    pub fn repo_name(&self) -> &str {
+        match self {
+            Self::PackageMetadataError(p) => &p.repo_name,
+            Self::PackageAnalysisError(p) => &p.details.repo_name,
+        }
+    }
+    pub fn package_name(&self) -> &str {
+        match self {
+            Self::PackageMetadataError(p) => &p.package_name,
+            Self::PackageAnalysisError(p) => &p.details.package_name,
+        }
+    }
+    pub fn ebuild(&self) -> &Path {
+        match self {
+            Self::PackageMetadataError(p) => &p.ebuild,
+            Self::PackageAnalysisError(p) => &p.details.ebuild_path,
+        }
+    }
+    pub fn version(&self) -> &Version {
+        match self {
+            Self::PackageMetadataError(p) => &p.version,
+            Self::PackageAnalysisError(p) => &p.details.version,
+        }
+    }
+    pub fn error(&self) -> &str {
+        match self {
+            Self::PackageMetadataError(p) => &p.error,
+            Self::PackageAnalysisError(p) => &p.error,
+        }
+    }
 }
 
 #[derive(Serialize)]
