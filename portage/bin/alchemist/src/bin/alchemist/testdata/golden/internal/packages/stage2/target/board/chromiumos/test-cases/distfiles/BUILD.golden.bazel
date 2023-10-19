@@ -5,7 +5,7 @@
 # found in the LICENSE file.
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
-load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:binary_package.bzl", "replace_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
@@ -64,7 +64,7 @@ ebuild(
     visibility = ["@//bazel:internal"],
 )
 
-add_runtime_deps(
+replace_runtime_deps(
     name = "1.0_including_provided",
     binpkg = ":1.0",
     runtime_deps = [
@@ -140,7 +140,7 @@ ebuild(
     visibility = ["@//bazel:internal"],
 )
 
-add_runtime_deps(
+replace_runtime_deps(
     name = "1.0_hermetic_test_package_including_provided",
     binpkg = ":1.0",
     runtime_deps = [
