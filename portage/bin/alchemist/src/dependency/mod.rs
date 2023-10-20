@@ -5,6 +5,7 @@
 pub mod algorithm;
 pub mod package;
 pub(self) mod parser;
+pub mod requse;
 pub mod restrict;
 pub mod uri;
 

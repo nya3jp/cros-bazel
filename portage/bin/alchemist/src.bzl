@@ -503,6 +503,8 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/dependency/package/mod.rs",
     "//bazel/portage/bin/alchemist:src/dependency/package/parser.rs",
     "//bazel/portage/bin/alchemist:src/dependency/parser.rs",
+    "//bazel/portage/bin/alchemist:src/dependency/requse/mod.rs",
+    "//bazel/portage/bin/alchemist:src/dependency/requse/parser.rs",
     "//bazel/portage/bin/alchemist:src/dependency/restrict/mod.rs",
     "//bazel/portage/bin/alchemist:src/dependency/restrict/parser.rs",
     "//bazel/portage/bin/alchemist:src/dependency/uri/mod.rs",
