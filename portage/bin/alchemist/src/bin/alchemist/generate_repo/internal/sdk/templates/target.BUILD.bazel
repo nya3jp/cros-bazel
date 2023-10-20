@@ -19,7 +19,6 @@ sdk_install_deps(
     ],
     install_strategy = select({
         "@//bazel/portage:binpkg-cache-fast": "fast",
-        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["@//bazel:internal"],
@@ -63,7 +62,6 @@ sdk_install_deps(
     ],
     install_strategy = select({
         "@//bazel/portage:binpkg-cache-fast": "fast",
-        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["@//bazel:internal"],

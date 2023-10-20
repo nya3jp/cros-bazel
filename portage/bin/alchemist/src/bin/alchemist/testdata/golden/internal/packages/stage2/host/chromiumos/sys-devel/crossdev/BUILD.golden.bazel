@@ -58,7 +58,7 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    prebuilt = ":20211027_prebuilt",has_hooks = False,
+    prebuilt = ":20211027_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 
@@ -130,7 +130,7 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    prebuilt = ":20211027_hermetic_test_package_prebuilt",has_hooks = False,
+    prebuilt = ":20211027_hermetic_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 

@@ -142,7 +142,6 @@ sdk_install_deps(
     ],
     install_strategy = select({
         "@//bazel/portage:binpkg-cache-fast": "fast",
-        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -171,7 +170,6 @@ sdk_install_deps(
     ],
     install_strategy = select({
         "@//bazel/portage:binpkg-cache-fast": "fast",
-        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -200,7 +198,6 @@ sdk_install_deps(
     ],
     install_strategy = select({
         "@//bazel/portage:binpkg-cache-fast": "fast",
-        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -227,11 +224,6 @@ ebuild(
     {%- endif %}
     {{ self::ebuild_args(ebuild=ebuild, suffix=suffix) }}
     prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
-    {%- if ebuild.has_hooks %}
-    has_hooks = True,
-    {% else -%}
-    has_hooks = False,
-    {%- endif %}
     visibility = ["@//bazel:internal"],
 )
 

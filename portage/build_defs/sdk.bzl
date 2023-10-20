@@ -221,7 +221,7 @@ sdk_install_deps = rule(
             If the message contains `{dep_count}' it will be replaced with the
             total number of dependencies that need to be installed.
             """,
-            default = "Installing {dep_count} packages ({cached_count} cached) into %{label}",
+            default = "Installing {dep_count} packages into %{label}",
         ),
         "target_deps": attr.label_list(
             doc = """
@@ -234,13 +234,11 @@ sdk_install_deps = rule(
             Specifies the strategy to install packages. Valid values are:
                 "fast": Uses installed contents layers to fully avoid copying
                     package contents.
-                "naive": Similar to "fast" but uses installed contents layers
-                    only for packages without install hooks.
                 "slow": Simply uses emerge to install packages into a single
                     layer.
             """,
             mandatory = True,
-            values = ["fast", "naive", "slow"],
+            values = ["fast", "slow"],
         ),
         "_action_wrapper": attr.label(
             executable = True,

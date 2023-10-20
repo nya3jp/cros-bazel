@@ -59,7 +59,7 @@ ebuild(
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
-    prebuilt = ":1.20.5_prebuilt",has_hooks = False,
+    prebuilt = ":1.20.5_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 
@@ -133,7 +133,7 @@ ebuild(
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
-    prebuilt = ":1.20.5_hermetic_test_package_prebuilt",has_hooks = False,
+    prebuilt = ":1.20.5_hermetic_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 

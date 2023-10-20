@@ -69,7 +69,6 @@ pub struct EBuildEntry {
     uses: Vec<String>,
     sdk: String,
     direct_build_target: Option<String>,
-    has_hooks: bool,
 }
 
 /// Specifies the config used to generate host packages.
@@ -412,7 +411,6 @@ impl EBuildEntry {
             uses,
             sdk,
             direct_build_target: package.details.direct_build_target.clone(),
-            has_hooks: package.details.has_hooks(),
         })
     }
 }

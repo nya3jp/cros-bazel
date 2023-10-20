@@ -395,39 +395,6 @@ def _ebuild_impl(ctx):
         action_wrapper_executable = ctx.executable._action_wrapper,
     )
 
-    if not ctx.attr.has_hooks:
-        package_info = BinaryPackageInfo(
-            file = output_binary_package_file,
-            category = ctx.attr.category,
-            package_name = ctx.attr.package_name,
-            slot = ctx.attr.slot,
-            version = ctx.attr.version,
-            direct_runtime_deps = tuple(),
-            layer = None,
-        )
-        install_layers = install_deps(
-            ctx = ctx,
-            output_prefix = "%s_layer" % (ctx.attr.name),
-            board = ctx.attr.board,
-            sdk = ctx.attr.sdk[SDKInfo],
-            overlays = ctx.attr.overlays[OverlaySetInfo],
-            install_set = depset([package_info]),
-            strategy = "slow",
-            executable_action_wrapper = ctx.executable._action_wrapper,
-            executable_install_deps = ctx.executable._install_deps,
-            # Pass an invalid value as this code path is incompatible with
-            # fast_install_packages.
-            executable_fast_install_packages = None,
-            progress_message = "Creating layer for %{label}",
-        )
-
-        if len(install_layers) != 1:
-            fail("Expected only one layer")
-
-        install_layer = install_layers[0]
-    else:
-        install_layer = None
-
     # Compute provider data.
     package_info = BinaryPackageInfo(
         file = output_binary_package_file,
@@ -440,7 +407,6 @@ def _ebuild_impl(ctx):
             target[BinaryPackageInfo].file
             for target in ctx.attr.runtime_deps
         ]),
-        layer = install_layer,
     )
 
     package_set_info = single_binary_package_set_info(
@@ -505,12 +471,6 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             """,
         ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
-        has_hooks = attr.bool(
-            doc = """
-            If true, the package uses the preinst and postinst hooks to modify
-            ROOT or /.
-            """,
-        ),
         _extract_package = attr.label(
             executable = True,
             cfg = "exec",
@@ -623,7 +583,6 @@ def _ebuild_install_impl(ctx):
     install_groups = calculate_install_groups(
         [package[BinaryPackageInfo] for package in ctx.attr.packages],
         provided_packages = depset(),
-        use_layers = False,
     )
     for install_group in install_groups:
         atoms = [

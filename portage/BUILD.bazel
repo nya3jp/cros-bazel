@@ -9,7 +9,6 @@ string_flag(
     build_setting_default = "fast",
     values = [
         "fast",
-        "naive",
         "slow",
     ],
 )
@@ -18,13 +17,6 @@ config_setting(
     name = "binpkg-cache-fast",
     flag_values = {
         ":binpkg-cache-strategy": "fast",
-    },
-)
-
-config_setting(
-    name = "binpkg-cache-naive",
-    flag_values = {
-        ":binpkg-cache-strategy": "naive",
     },
 )
 

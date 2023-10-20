@@ -25,12 +25,6 @@ BinaryPackageInfo, _new_binary_package_info = provider(
         "file": """
             File: A binary package file (.tbz2) of this package.
         """,
-        "layer": """
-            File: The layer that contains the installed package. This
-            will only be set if the package doesn't require any pre/post install
-            hooks. This layer can be used directly instead of having to install
-            the package manually.
-        """,
         "contents": """
             ContentsLayersInfo: Locates installed/staged contents layers that
             are used to implement fast package installation.

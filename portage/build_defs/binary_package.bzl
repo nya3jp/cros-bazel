@@ -32,7 +32,6 @@ def _binary_package_impl(ctx):
             target[BinaryPackageInfo].file
             for target in ctx.attr.runtime_deps
         ]),
-        layer = None,
     )
     package_set_info = single_binary_package_set_info(
         package_info,
@@ -80,7 +79,6 @@ def _replace_runtime_deps(ctx):
 
     package_info = BinaryPackageInfo(
         file = original_package_info.file,
-        layer = original_package_info.layer,
         contents = original_package_info.contents,
         category = original_package_info.category,
         package_name = original_package_info.package_name,

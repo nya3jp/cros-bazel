@@ -144,9 +144,6 @@ def _fast_install_packages(
     actual_progress_message = progress_message.replace(
         "{dep_count}",
         str(len(install_list)),
-    ).replace(
-        "{cached_count}",
-        str(len(install_list)),
     )
 
     ctx.actions.run(
@@ -204,8 +201,6 @@ def install_deps(
             are:
                 "fast": Uses installed contents layers to fully avoid copying
                     package contents.
-                "naive": Similar to "fast" but uses installed contents layers
-                    only for packages without install hooks.
                 "slow": Simply uses emerge to install packages into a single
                     layer.
         executable_action_wrapper: File: An executable file of action_wrapper.
@@ -236,8 +231,6 @@ def install_deps(
         output_prefix + ".profile.json",
     )
 
-    use_layers = strategy == "naive"
-
     args = ctx.actions.args()
     args.add_all([
         "--log=" + output_log_file.path,
@@ -250,16 +243,10 @@ def install_deps(
 
     install_list = install_set.to_list()
 
-    install_tuple = calculate_install_groups(
+    install_groups = calculate_install_groups(
         install_list,
         provided_packages = sdk.packages,
-        use_layers = use_layers,
     )
-
-    if use_layers:
-        install_groups, install_layers = install_tuple
-    else:
-        install_groups, install_layers = install_tuple, []
 
     args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
 
@@ -268,18 +255,13 @@ def install_deps(
         for package in group:
             direct_inputs.append(package.file)
 
-    layer_inputs = sdk.layers + overlays.layers + install_layers
+    layer_inputs = sdk.layers + overlays.layers
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(layer_inputs)
 
     progress_message = progress_message.replace(
         "{dep_count}",
         str(len(install_list)),
-    )
-
-    progress_message = progress_message.replace(
-        "{cached_count}",
-        str(len(install_layers)),
     )
 
     ctx.actions.run(
@@ -299,4 +281,4 @@ def install_deps(
         progress_message = progress_message,
     )
 
-    return install_layers + [output_root]
+    return [output_root]

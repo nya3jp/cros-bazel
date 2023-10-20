@@ -20,7 +20,6 @@ sdk_install_deps(
     ],
     install_strategy = select({
         "@//bazel/portage:binpkg-cache-fast": "fast",
-        "@//bazel/portage:binpkg-cache-naive": "naive",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -69,7 +68,7 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    prebuilt = ":1.0_prebuilt",has_hooks = False,
+    prebuilt = ":1.0_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 
@@ -143,7 +142,7 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    prebuilt = ":1.0_hermetic_test_package_prebuilt",has_hooks = False,
+    prebuilt = ":1.0_hermetic_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 

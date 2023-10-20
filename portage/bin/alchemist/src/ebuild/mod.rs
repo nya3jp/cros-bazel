@@ -113,34 +113,6 @@ impl PackageDetails {
 
         eapi >= 7
     }
-
-    /// Returns true if the package modifies ROOT or / using pkg hooks when
-    /// installed. i.e., does it have pkg_preinst or pkg_postinst defined.
-    ///
-    /// See https://projects.gentoo.org/pms/8/pms.html#x1-11500011.3
-    ///
-    /// TODO: It's possible for `pkg_setup` to both modify ROOT and /, but
-    /// in practice most `pkg_setup` functions don't. Instead they just setup
-    /// the environment for the ebuidl to execute. Ideally a `src_setup`
-    /// function could be used instead. The one case we have today that modifies
-    /// ROOT and / is user/group creation. These packages need to be migrated to
-    /// use the acct-{user,group} packages. Omitting `pkg_setup` from this list
-    /// hasn't caused any problems yet.
-    ///
-    /// TODO: We also don't check for the cros .bashrc hooks. We don't have
-    /// consume these at analysis time, so we don't actually know if they are
-    /// present. The .bashrc files also apply cross-repo which makes things
-    /// complicated. After auditing the scripts, it looks like imagemagick
-    /// might cause problems. We can add an exclude list into this function
-    /// if necessary while we clean up the hooks.
-    pub fn has_hooks(&self) -> bool {
-        let phases = self
-            .vars
-            .get_indexed_array("__xbuild_defined_phases")
-            .expect("__xbuild_defined_phases to exist");
-
-        phases.iter().any(|x| x == "preinst" || x == "postinst") || self.inherited.contains("user")
-    }
 }
 
 #[derive(Debug)]
