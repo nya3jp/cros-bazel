@@ -50,10 +50,6 @@ static PACKAGE_NAME_WITH_VERSION_RE: Lazy<Regex> = Lazy::new(|| {
 pub struct PackageDependencyParser {}
 
 impl<'i> DependencyParserCommon<'i, PackageDependencyMeta> for PackageDependencyParser {
-    fn new_all_of(children: Vec<PackageDependency>) -> PackageDependency {
-        Dependency::new_composite(CompositeDependency::AllOf { children })
-    }
-
     fn expression(input: &str) -> IResult<&str, PackageDependency> {
         let (input, _) = multispace0(input)?;
         alt((
@@ -266,7 +262,10 @@ impl PackageDependencyParser {
         let (input, children) = Self::expression_list(input)?;
         let (input, _) = multispace0(input)?;
         let (input, _) = eof(input)?;
-        Ok((input, Self::new_all_of(children)))
+        Ok((
+            input,
+            Dependency::new_composite(CompositeDependency::AllOf { children }),
+        ))
     }
 
     pub fn parse_atom(input: &str) -> Result<PackageDependencyAtom> {

@@ -25,10 +25,6 @@ use super::UriDependencyMeta;
 pub struct UriDependencyParser {}
 
 impl<'i> DependencyParserCommon<'i, UriDependencyMeta> for UriDependencyParser {
-    fn new_all_of(children: Vec<UriDependency>) -> UriDependency {
-        Dependency::new_composite(CompositeDependency::AllOf { children })
-    }
-
     fn expression(input: &str) -> IResult<&str, UriDependency> {
         let (input, _) = multispace0(input)?;
         alt((
@@ -66,7 +62,10 @@ impl UriDependencyParser {
         let (input, children) = Self::expression_list(input)?;
         let (input, _) = multispace0(input)?;
         let (input, _) = eof(input)?;
-        Ok((input, Self::new_all_of(children)))
+        Ok((
+            input,
+            Dependency::new_composite(CompositeDependency::AllOf { children }),
+        ))
     }
 }
 
@@ -136,11 +135,9 @@ mod tests {
                         CompositeDependency::UseConditional {
                             name: "foo".to_owned(),
                             expect: true,
-                            child: UriDependency::new_composite(CompositeDependency::AllOf {
-                                children: vec![UriDependency::Leaf(UriAtomDependency::Filename(
-                                    "bar".to_owned()
-                                ))],
-                            }),
+                            children: vec![UriDependency::Leaf(UriAtomDependency::Filename(
+                                "bar".to_owned()
+                            ))],
                         }
                     ),],
                 }),],

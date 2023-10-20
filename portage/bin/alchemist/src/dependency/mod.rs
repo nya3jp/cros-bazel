@@ -76,12 +76,13 @@ pub enum CompositeDependency<D> {
     /// If an any-of dependency has no child, it is considered constant false,
     /// but prefer `Constant` because it can also carry a debug message.
     AnyOf { children: Vec<D> },
-    /// USE conditional dependencies: the child dependency is evaluated only
+    /// USE conditional dependencies: the child dependencies are evaluated only
     /// when a certain USE flag has an expected value.
     UseConditional {
         name: String,
         expect: bool,
-        child: D,
+        /// Child dependencies are interpreted in the same way as all-of.
+        children: Vec<D>,
     },
     /// The constant value with a reason for debugging. This is preferred over
     /// `AllOf`/`AnyOf` with no children for better debuggability.
@@ -169,16 +170,15 @@ impl<M: DependencyMeta> Dependency<M> {
                 CompositeDependency::UseConditional {
                     name,
                     expect,
-                    child,
-                } => match child.try_flat_map_tree_impl(f)? {
-                    None => {
-                        return Ok(None);
-                    }
-                    Some(child) => CompositeDependency::UseConditional {
-                        name,
-                        expect,
-                        child,
-                    },
+                    children,
+                } => CompositeDependency::UseConditional {
+                    name,
+                    expect,
+                    children: children
+                        .into_iter()
+                        .map(|child| child.try_flat_map_tree_impl(f))
+                        .flatten_ok()
+                        .collect::<Result<Vec<_>, E>>()?,
                 },
                 constant @ CompositeDependency::Constant { .. } => constant,
             }),
@@ -225,11 +225,14 @@ where
                 CompositeDependency::UseConditional {
                     name,
                     expect,
-                    child,
+                    children,
                 } => CompositeDependency::UseConditional {
                     name,
                     expect,
-                    child: child.try_map_tree_par_impl(f)?,
+                    children: children
+                        .into_par_iter()
+                        .map(|child| child.try_map_tree_par_impl(f))
+                        .collect::<Result<Vec<_>, E>>()?,
                 },
                 constant @ CompositeDependency::Constant { .. } => constant,
             }),
@@ -270,12 +273,16 @@ where
                 CompositeDependency::UseConditional {
                     name,
                     expect,
-                    child,
+                    children,
                 } => {
                     if !expect {
                         write!(f, "!")?;
                     }
-                    write!(f, "{}? {}", name, child)
+                    write!(f, "{}? (", name)?;
+                    for child in children.iter() {
+                        write!(f, " {}", child)?;
+                    }
+                    write!(f, " )")
                 }
                 CompositeDependency::Constant { value, .. } => {
                     if *value {
@@ -311,7 +318,7 @@ where
                     CompositeDependency::UseConditional {
                         name,
                         expect,
-                        child,
+                        children,
                     } => {
                         let use_map = target.as_ref();
                         let value = use_map.get(name);
@@ -320,7 +327,11 @@ where
                         if value != *expect {
                             None
                         } else {
-                            child.matches(target)
+                            Some(
+                                children
+                                    .iter()
+                                    .all(|child| child.matches(target) != Some(false)),
+                            )
                         }
                     }
                     CompositeDependency::Constant { value, .. } => Some(*value),

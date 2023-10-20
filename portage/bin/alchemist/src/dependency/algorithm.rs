@@ -24,13 +24,15 @@ pub fn elide_use_conditions<M: DependencyMeta>(
                     CompositeDependency::UseConditional {
                         name,
                         expect,
-                        child,
+                        children,
                     } => {
                         // Assume that a USE flag is unset when it is not declared in IUSE.
                         // TODO: Check if this is a right behavior.
                         let value = *use_map.get(&name).unwrap_or(&false);
                         if value == expect {
-                            Some(child)
+                            Some(Dependency::new_composite(CompositeDependency::AllOf {
+                                children,
+                            }))
                         } else {
                             None
                         }

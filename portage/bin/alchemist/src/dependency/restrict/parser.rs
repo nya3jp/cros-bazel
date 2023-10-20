@@ -25,10 +25,6 @@ use super::RestrictDependencyMeta;
 pub struct RestrictDependencyParser {}
 
 impl<'i> DependencyParserCommon<'i, RestrictDependencyMeta> for RestrictDependencyParser {
-    fn new_all_of(children: Vec<RestrictDependency>) -> RestrictDependency {
-        Dependency::new_composite(CompositeDependency::AllOf { children })
-    }
-
     fn expression(input: &str) -> IResult<&str, RestrictDependency> {
         let (input, _) = multispace0(input)?;
         alt((
@@ -62,7 +58,10 @@ impl RestrictDependencyParser {
         let (input, children) = Self::expression_list(input)?;
         let (input, _) = multispace0(input)?;
         let (input, _) = eof(input)?;
-        Ok((input, Self::new_all_of(children)))
+        Ok((
+            input,
+            Dependency::new_composite(CompositeDependency::AllOf { children }),
+        ))
     }
 }
 
@@ -135,9 +134,7 @@ mod tests {
                     CompositeDependency::UseConditional {
                         name: "test".to_owned(),
                         expect: false,
-                        child: RestrictDependency::new_composite(CompositeDependency::AllOf {
-                            children: vec![RestrictDependency::Leaf(RestrictAtom::Test)],
-                        }),
+                        children: vec![RestrictDependency::Leaf(RestrictAtom::Test)],
                     }
                 ),],
             }),

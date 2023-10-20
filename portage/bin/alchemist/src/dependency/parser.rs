@@ -31,7 +31,6 @@ pub trait DependencyParser {
 
 /// Provides the common implementation of dependency expression parser.
 pub trait DependencyParserCommon<'i, M: DependencyMeta> {
-    fn new_all_of(children: Vec<Dependency<M>>) -> Dependency<M>;
     fn expression(input: &'i str) -> IResult<&'i str, Dependency<M>>;
 
     fn all_of(input: &'i str) -> IResult<&'i str, Dependency<M>> {
@@ -76,7 +75,7 @@ pub trait DependencyParserCommon<'i, M: DependencyMeta> {
             Dependency::new_composite(CompositeDependency::UseConditional {
                 name: name.to_owned(),
                 expect,
-                child: Self::new_all_of(children),
+                children,
             }),
         ))
     }
