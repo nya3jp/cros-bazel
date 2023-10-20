@@ -131,7 +131,7 @@ mod tests {
             source::{PackageDistSource, PackageSources},
         },
         bash::vars::BashVars,
-        data::Slot,
+        data::{Slot, UseMap},
         ebuild::PackageDetails,
     };
     use pretty_assertions::assert_eq;
@@ -196,7 +196,7 @@ mod tests {
             version: Version::try_new("1.0").unwrap(),
             vars: BashVars::new(HashMap::new()),
             slot: Slot::new("0"),
-            use_map: HashMap::new(),
+            use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
