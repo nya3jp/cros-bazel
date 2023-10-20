@@ -19,10 +19,12 @@ use crate::dependency::{
     CompositeDependency, Dependency,
 };
 
+use super::RestrictDependencyMeta;
+
 /// Implements the RESTRICT dependency expression parser.
 pub struct RestrictDependencyParser {}
 
-impl<'i> DependencyParserCommon<'i, RestrictAtom> for RestrictDependencyParser {
+impl<'i> DependencyParserCommon<'i, RestrictDependencyMeta> for RestrictDependencyParser {
     fn new_all_of(children: Vec<RestrictDependency>) -> RestrictDependency {
         Dependency::new_composite(CompositeDependency::AllOf { children })
     }

@@ -19,10 +19,12 @@ use crate::dependency::{
     CompositeDependency, Dependency,
 };
 
+use super::UriDependencyMeta;
+
 /// Implements the URI dependency expression parser.
 pub struct UriDependencyParser {}
 
-impl<'i> DependencyParserCommon<'i, UriAtomDependency> for UriDependencyParser {
+impl<'i> DependencyParserCommon<'i, UriDependencyMeta> for UriDependencyParser {
     fn new_all_of(children: Vec<UriDependency>) -> UriDependency {
         Dependency::new_composite(CompositeDependency::AllOf { children })
     }

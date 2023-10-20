@@ -5,12 +5,20 @@
 use self::parser::RestrictDependencyParser;
 
 use super::Dependency;
-use super::DependencyParserType;
+use super::DependencyMeta;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RestrictDependencyMeta;
+
+impl DependencyMeta for RestrictDependencyMeta {
+    type Leaf = RestrictAtom;
+    type Parser = RestrictDependencyParser;
+}
 
 mod parser;
 
 /// Alias of Dependency specialized to package RESTRICT options.
-pub type RestrictDependency = Dependency<RestrictAtom>;
+pub type RestrictDependency = Dependency<RestrictDependencyMeta>;
 
 /// See man 5 ebuild
 #[derive(
@@ -78,8 +86,4 @@ pub enum RestrictAtom {
     /// Disables userpriv for specific packages.
     #[strum(serialize = "userpriv")]
     UserPriv,
-}
-
-impl DependencyParserType<RestrictAtom> for RestrictAtom {
-    type Parser = RestrictDependencyParser;
 }

@@ -9,11 +9,14 @@ use itertools::Itertools;
 
 use crate::data::UseMap;
 
-use super::{CompositeDependency, Dependency};
+use super::{CompositeDependency, Dependency, DependencyMeta};
 
 /// Elides USE conditions (`foo? ( ... )`) from a dependency expression by
 /// assigning USE flag values.
-pub fn elide_use_conditions<L>(deps: Dependency<L>, use_map: &UseMap) -> Option<Dependency<L>> {
+pub fn elide_use_conditions<M: DependencyMeta>(
+    deps: Dependency<M>,
+    use_map: &UseMap,
+) -> Option<Dependency<M>> {
     deps.flat_map_tree(|d| {
         match d {
             Dependency::Composite(composite) => {
@@ -44,7 +47,7 @@ pub fn elide_use_conditions<L>(deps: Dependency<L>, use_map: &UseMap) -> Option<
 ///
 /// For example, if an any-of expression contains a constant true as a child,
 /// it is simplified to a constant true.
-pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
+pub fn simplify<M: DependencyMeta>(deps: Dependency<M>) -> Dependency<M> {
     deps.map_tree(|d| {
         match d {
             Dependency::Composite(composite) => {
@@ -118,9 +121,10 @@ pub fn simplify<L>(deps: Dependency<L>) -> Dependency<L> {
 
 /// Converts a dependency expression to a list of leaf dependencies if it is
 /// a leaf dependency or an "all-of" of leaf dependencies.
-pub fn parse_simplified_dependency<L: Clone + Display + Eq + Ord>(
-    deps: Dependency<L>,
-) -> Result<Vec<L>> {
+pub fn parse_simplified_dependency<M: DependencyMeta>(deps: Dependency<M>) -> Result<Vec<M::Leaf>>
+where
+    M::Leaf: Clone + Display + Eq + Ord,
+{
     match deps {
         Dependency::Leaf(atom) => Ok(vec![atom]),
         Dependency::Composite(composite) => match *composite {

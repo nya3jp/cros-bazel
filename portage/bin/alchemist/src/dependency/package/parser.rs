@@ -26,7 +26,7 @@ use crate::dependency::{
     CompositeDependency, Dependency,
 };
 
-use super::PackageUseDependencyOp;
+use super::{PackageDependencyMeta, PackageUseDependencyOp};
 
 /// Raw regular expression string matching a valid package name.
 pub const PACKAGE_NAME_RE_RAW: &str = r"[A-Za-z0-9_][A-Za-z0-9+_.-]*/[A-Za-z0-9_][A-Za-z0-9+_-]*";
@@ -49,7 +49,7 @@ static PACKAGE_NAME_WITH_VERSION_RE: Lazy<Regex> = Lazy::new(|| {
 /// Implements the package dependency expression parser.
 pub struct PackageDependencyParser {}
 
-impl<'i> DependencyParserCommon<'i, PackageDependencyAtom> for PackageDependencyParser {
+impl<'i> DependencyParserCommon<'i, PackageDependencyMeta> for PackageDependencyParser {
     fn new_all_of(children: Vec<PackageDependency>) -> PackageDependency {
         Dependency::new_composite(CompositeDependency::AllOf { children })
     }

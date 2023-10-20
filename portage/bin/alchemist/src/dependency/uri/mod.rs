@@ -7,21 +7,25 @@ use url::Url;
 
 use self::parser::UriDependencyParser;
 
-use super::{parser::DependencyParserType, Dependency};
+use super::{Dependency, DependencyMeta};
 
 mod parser;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UriDependencyMeta;
+
+impl DependencyMeta for UriDependencyMeta {
+    type Leaf = UriAtomDependency;
+    type Parser = UriDependencyParser;
+}
+
 /// Alias of Dependency specialized to URI dependencies.
-pub type UriDependency = Dependency<UriAtomDependency>;
+pub type UriDependency = Dependency<UriDependencyMeta>;
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum UriAtomDependency {
     Uri(Url, Option<String>),
     Filename(String),
-}
-
-impl DependencyParserType<UriAtomDependency> for UriAtomDependency {
-    type Parser = UriDependencyParser;
 }
 
 impl Display for UriAtomDependency {

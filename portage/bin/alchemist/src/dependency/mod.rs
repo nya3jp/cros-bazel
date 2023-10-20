@@ -15,7 +15,7 @@ use rayon::prelude::*;
 
 use crate::data::UseMap;
 
-use self::parser::{DependencyParser, DependencyParserType};
+use self::parser::DependencyParser;
 
 /// General-purpose predicate with two-valued logic.
 ///
@@ -40,51 +40,56 @@ pub trait ThreeValuedPredicate<T: ?Sized> {
     fn matches(&self, target: &T) -> Option<bool>;
 }
 
+/// A bundle of types needed to instantiate [`Dependency`].
+pub trait DependencyMeta: Clone + std::fmt::Debug + Eq {
+    /// The type of leaf elements of the dependency type.
+    type Leaf: Clone + std::fmt::Debug + Eq;
+
+    /// The type of the parser producing the dependency type.
+    type Parser;
+}
+
 /// Generic dependency expression.
-///
-/// The generic type argument `L` stands for the "leaf" type, with which you
-/// can reuse the type for different dependency types, such as package
-/// dependencies and URI dependencies.
 ///
 /// See the following section in the PMS for the detailed specification:
 /// https://projects.gentoo.org/pms/8/pms.html#x1-730008.2
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Dependency<L> {
+pub enum Dependency<M: DependencyMeta> {
     /// Leaf dependency that is specific to the actual dependency type.
-    Leaf(L),
+    Leaf(M::Leaf),
     /// Dependency compositing zero or more dependencies recursively, such as
     /// all-of and any-of.
-    Composite(Box<CompositeDependency<L>>),
+    Composite(Box<CompositeDependency<M>>),
 }
 
 /// Composite dependency expression that contains zero or more dependencies
 /// recursively.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum CompositeDependency<L> {
+pub enum CompositeDependency<M: DependencyMeta> {
     /// All-of dependencies: satisfied when all of child dependencies are
     /// satisfied.
     /// If an all-of dependency has no child, it is considered constant true,
     /// but prefer `Constant` because it can also carry a debug message.
-    AllOf { children: Vec<Dependency<L>> },
+    AllOf { children: Vec<Dependency<M>> },
     /// Any-of dependencies: satisfied when any one of child dependencies are
     /// satisfied.
     /// If an any-of dependency has no child, it is considered constant false,
     /// but prefer `Constant` because it can also carry a debug message.
-    AnyOf { children: Vec<Dependency<L>> },
+    AnyOf { children: Vec<Dependency<M>> },
     /// USE conditional dependencies: the child dependency is evaluated only
     /// when a certain USE flag has an expected value.
     UseConditional {
         name: String,
         expect: bool,
-        child: Dependency<L>,
+        child: Dependency<M>,
     },
     /// The constant value with a reason for debugging. This is preferred over
     /// `AllOf`/`AnyOf` with no children for better debuggability.
     Constant { value: bool, reason: String },
 }
 
-impl<L> Dependency<L> {
-    pub fn new_composite(composite: CompositeDependency<L>) -> Self {
+impl<M: DependencyMeta> Dependency<M> {
+    pub fn new_composite(composite: CompositeDependency<M>) -> Self {
         Self::Composite(Box::new(composite))
     }
 
@@ -117,7 +122,7 @@ impl<L> Dependency<L> {
     }
 }
 
-impl<L> Dependency<L> {
+impl<M: DependencyMeta> Dependency<M> {
     pub fn map_tree(self, mut f: impl FnMut(Self) -> Self) -> Self {
         self.try_map_tree(move |d| Result::<Self, Infallible>::Ok(f(d)))
             .unwrap()
@@ -183,7 +188,10 @@ impl<L> Dependency<L> {
     }
 }
 
-impl<L: Send> Dependency<L> {
+impl<M: DependencyMeta> Dependency<M>
+where
+    M::Leaf: Send,
+{
     pub fn map_tree_par(self, f: impl Fn(Self) -> Self + Send + Sync) -> Self {
         self.try_map_tree_par(move |d| Result::<Self, Infallible>::Ok(f(d)))
             .unwrap()
@@ -230,14 +238,17 @@ impl<L: Send> Dependency<L> {
     }
 }
 
-impl<L> Default for Dependency<L> {
+impl<M: DependencyMeta> Default for Dependency<M> {
     /// The default value of [`Dependency`] is the constant true.
     fn default() -> Self {
         Self::new_constant(true, "No dependency")
     }
 }
 
-impl<L: Display> Display for Dependency<L> {
+impl<M: DependencyMeta> Display for Dependency<M>
+where
+    M::Leaf: Display,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Leaf(leaf) => leaf.fmt(f),
@@ -278,7 +289,10 @@ impl<L: Display> Display for Dependency<L> {
     }
 }
 
-impl<T: AsRef<UseMap>, L: Predicate<T>> ThreeValuedPredicate<T> for Dependency<L> {
+impl<M: DependencyMeta, T: AsRef<UseMap>> ThreeValuedPredicate<T> for Dependency<M>
+where
+    M::Leaf: Predicate<T>,
+{
     fn matches(&self, target: &T) -> Option<bool> {
         match self {
             Self::Leaf(leaf) => Some(leaf.matches(target)),
@@ -316,10 +330,13 @@ impl<T: AsRef<UseMap>, L: Predicate<T>> ThreeValuedPredicate<T> for Dependency<L
     }
 }
 
-impl<L: DependencyParserType<L>> FromStr for Dependency<L> {
-    type Err = <<L as DependencyParserType<L>>::Parser as DependencyParser<Dependency<L>>>::Err;
+impl<M: DependencyMeta> FromStr for Dependency<M>
+where
+    M::Parser: DependencyParser<Self>,
+{
+    type Err = <M::Parser as DependencyParser<Self>>::Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        L::Parser::parse(s)
+        M::Parser::parse(s)
     }
 }

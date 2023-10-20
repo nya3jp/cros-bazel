@@ -15,23 +15,15 @@ use nom_regex::str::re_find;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-use super::{CompositeDependency, Dependency};
+use super::{CompositeDependency, Dependency, DependencyMeta};
 
 /// Regular expression matching a valid USE flag name.
 static USE_NAME_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[A-Za-z0-9][A-Za-z0-9+_@-]*").unwrap());
 
-/// Trait to be implemented by leaf types of [`Dependency`] to look up the
-/// type implementing the [`DependencyParser`] trait.
-///
-/// `Dependency::from_str` uses this trait to locate the right parser function.
-pub trait DependencyParserType<L> {
-    type Parser: DependencyParser<Dependency<L>>;
-}
-
 /// Provides a dependency expression parser for the type `D`.
 ///
-/// `D` is typically `Dependency<L>` where `L` is a dependency leaf type.
+/// `D` is typically `Dependency<M>`.
 pub trait DependencyParser<D> {
     type Err;
 
@@ -39,11 +31,11 @@ pub trait DependencyParser<D> {
 }
 
 /// Provides the common implementation of dependency expression parser.
-pub trait DependencyParserCommon<'i, L> {
-    fn new_all_of(children: Vec<Dependency<L>>) -> Dependency<L>;
-    fn expression(input: &'i str) -> IResult<&'i str, Dependency<L>>;
+pub trait DependencyParserCommon<'i, M: DependencyMeta> {
+    fn new_all_of(children: Vec<Dependency<M>>) -> Dependency<M>;
+    fn expression(input: &'i str) -> IResult<&'i str, Dependency<M>>;
 
-    fn all_of(input: &'i str) -> IResult<&'i str, Dependency<L>> {
+    fn all_of(input: &'i str) -> IResult<&'i str, Dependency<M>> {
         let (input, children) = delimited(
             pair(tag("("), multispace1),
             |input| Self::expression_list(input),
@@ -55,7 +47,7 @@ pub trait DependencyParserCommon<'i, L> {
         ))
     }
 
-    fn any_of(input: &'i str) -> IResult<&'i str, Dependency<L>> {
+    fn any_of(input: &'i str) -> IResult<&'i str, Dependency<M>> {
         let (input, _) = tag("||")(input)?;
         let (input, _) = multispace1(input)?;
         let (input, children) = delimited(
@@ -69,7 +61,7 @@ pub trait DependencyParserCommon<'i, L> {
         ))
     }
 
-    fn use_conditional(input: &'i str) -> IResult<&'i str, Dependency<L>> {
+    fn use_conditional(input: &'i str) -> IResult<&'i str, Dependency<M>> {
         let (input, negate) = opt(tag("!"))(input)?;
         let expect = negate.is_none();
         let (input, name) = Self::use_name(input)?;
@@ -90,7 +82,7 @@ pub trait DependencyParserCommon<'i, L> {
         ))
     }
 
-    fn expression_list(input: &'i str) -> IResult<&'i str, Vec<Dependency<L>>> {
+    fn expression_list(input: &'i str) -> IResult<&'i str, Vec<Dependency<M>>> {
         let (input, exprs) = preceded(
             multispace0,
             separated_list0(multispace1, |input| Self::expression(input)),

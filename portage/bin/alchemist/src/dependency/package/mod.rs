@@ -14,11 +14,19 @@ use crate::{
     data::{Slot, UseMap},
 };
 
-use super::{parser::DependencyParserType, Dependency, Predicate};
+use super::{Dependency, DependencyMeta, Predicate};
 use parser::PackageDependencyParser;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PackageDependencyMeta;
+
+impl DependencyMeta for PackageDependencyMeta {
+    type Leaf = PackageDependencyAtom;
+    type Parser = PackageDependencyParser;
+}
+
 /// Alias of Dependency specialized to package dependencies.
-pub type PackageDependency = Dependency<PackageDependencyAtom>;
+pub type PackageDependency = Dependency<PackageDependencyMeta>;
 
 /// A borrowed subset of package data to be passed to package-related predicates.
 #[derive(Clone, Copy, Debug)]
@@ -347,10 +355,6 @@ impl FromStr for PackageDependencyAtom {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         PackageDependencyParser::parse_atom(s)
     }
-}
-
-impl DependencyParserType<PackageDependencyAtom> for PackageDependencyAtom {
-    type Parser = PackageDependencyParser;
 }
 
 impl Display for PackageDependencyAtom {
