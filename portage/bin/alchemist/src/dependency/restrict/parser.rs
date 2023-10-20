@@ -14,11 +14,10 @@ use nom::{
 };
 
 use crate::dependency::{
+    parser::{DependencyParser, DependencyParserCommon},
     restrict::{RestrictAtom, RestrictDependency},
     CompositeDependency, Dependency,
 };
-
-use super::{DependencyParser, DependencyParserCommon};
 
 /// Implements the RESTRICT dependency expression parser.
 pub struct RestrictDependencyParser {}

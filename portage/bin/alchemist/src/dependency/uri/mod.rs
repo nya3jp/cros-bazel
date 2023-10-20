@@ -5,10 +5,11 @@
 use std::fmt::Display;
 use url::Url;
 
-use super::{
-    parser::{uri::UriDependencyParser, DependencyParserType},
-    Dependency,
-};
+use self::parser::UriDependencyParser;
+
+use super::{parser::DependencyParserType, Dependency};
+
+mod parser;
 
 /// Alias of Dependency specialized to URI dependencies.
 pub type UriDependency = Dependency<UriAtomDependency>;

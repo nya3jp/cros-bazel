@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use super::parser::restrict::RestrictDependencyParser;
+use self::parser::RestrictDependencyParser;
+
 use super::Dependency;
 use super::DependencyParserType;
+
+mod parser;
 
 /// Alias of Dependency specialized to package RESTRICT options.
 pub type RestrictDependency = Dependency<RestrictAtom>;

@@ -14,11 +14,10 @@ use nom::{
 use url::Url;
 
 use crate::dependency::{
+    parser::{DependencyParser, DependencyParserCommon},
     uri::{UriAtomDependency, UriDependency},
     CompositeDependency, Dependency,
 };
-
-use super::{DependencyParser, DependencyParserCommon};
 
 /// Implements the URI dependency expression parser.
 pub struct UriDependencyParser {}

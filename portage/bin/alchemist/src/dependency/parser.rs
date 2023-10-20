@@ -17,9 +17,6 @@ use regex::Regex;
 
 use super::{CompositeDependency, Dependency};
 
-pub mod restrict;
-pub mod uri;
-
 /// Regular expression matching a valid USE flag name.
 static USE_NAME_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[A-Za-z0-9][A-Za-z0-9+_@-]*").unwrap());
