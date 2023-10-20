@@ -4,9 +4,10 @@
 
 use itertools::Itertools;
 use nom::{
+    branch::alt,
     bytes::complete::tag,
     character::complete::{multispace0, multispace1},
-    combinator::opt,
+    combinator::{map, opt},
     multi::separated_list0,
     sequence::{delimited, pair, preceded},
     IResult,
@@ -15,7 +16,7 @@ use nom_regex::str::re_find;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-use super::{CompositeDependency, Dependency, DependencyMeta};
+use super::CompositeDependency;
 
 /// Regular expression matching a valid USE flag name.
 static USE_NAME_RE: Lazy<Regex> =
@@ -29,67 +30,106 @@ pub trait DependencyParser {
     fn parse(input: &str) -> Result<Self::Output, Self::Err>;
 }
 
-/// Provides the common implementation of dependency expression parser.
-pub trait DependencyParserCommon<'i, M: DependencyMeta> {
-    fn expression(input: &'i str) -> IResult<&'i str, Dependency<M>>;
+/// Implements the partial parser of dependency expressions.
+///
+/// This type is required when you call common parsing functions defined in this module.
+pub trait PartialExpressionParser {
+    type Output;
 
-    fn all_of(input: &'i str) -> IResult<&'i str, Dependency<M>> {
-        let (input, children) = delimited(
-            pair(tag("("), multispace1),
-            |input| Self::expression_list(input),
-            pair(multispace1, tag(")")),
-        )(input)?;
-        Ok((
-            input,
-            Dependency::new_composite(CompositeDependency::AllOf { children }),
-        ))
-    }
+    /// Consumes an expression found on the beginning of the input.
+    fn parse_expression(input: &str) -> IResult<&str, Self::Output>;
+}
 
-    fn any_of(input: &'i str) -> IResult<&'i str, Dependency<M>> {
-        let (input, _) = tag("||")(input)?;
+/// Consumes zero or more expressions found on the beginning of the input.
+pub fn parse_expression_list<P: PartialExpressionParser>(
+    input: &str,
+) -> IResult<&str, Vec<P::Output>> {
+    let (input, exprs) = preceded(
+        multispace0,
+        separated_list0(multispace1, |input| P::parse_expression(input)),
+    )(input)?;
+    let exprs = exprs.into_iter().collect_vec();
+    Ok((input, exprs))
+}
+
+/// Consumes a group expression found on the beginning of the input.
+///
+/// A group expression is generalization of composite expressions, such as
+/// all-of and any-of.
+fn parse_group<'i, P: PartialExpressionParser>(
+    input: &'i str,
+    marker: Option<&str>,
+) -> IResult<&'i str, Vec<P::Output>> {
+    let input = if let Some(marker) = marker {
+        let (input, _) = tag(marker)(input)?;
         let (input, _) = multispace1(input)?;
-        let (input, children) = delimited(
-            pair(tag("("), multispace1),
-            |input| Self::expression_list(input),
-            pair(multispace1, tag(")")),
-        )(input)?;
-        Ok((
-            input,
-            Dependency::new_composite(CompositeDependency::AnyOf { children }),
-        ))
-    }
+        input
+    } else {
+        input
+    };
+    let (input, children) = delimited(
+        pair(tag("("), multispace1),
+        |input| parse_expression_list::<P>(input),
+        pair(multispace1, tag(")")),
+    )(input)?;
+    Ok((input, children))
+}
 
-    fn use_conditional(input: &'i str) -> IResult<&'i str, Dependency<M>> {
-        let (input, negate) = opt(tag("!"))(input)?;
-        let expect = negate.is_none();
-        let (input, name) = Self::use_name(input)?;
-        let (input, _) = tag("?")(input)?;
-        let (input, _) = multispace1(input)?;
-        let (input, children) = delimited(
-            pair(tag("("), multispace1),
-            |input| Self::expression_list(input),
-            pair(multispace1, tag(")")),
-        )(input)?;
-        Ok((
-            input,
-            Dependency::new_composite(CompositeDependency::UseConditional {
-                name: name.to_owned(),
-                expect,
-                children,
-            }),
-        ))
-    }
+/// Consumes a USE flag name found on the beginning of the input.
+pub fn parse_use_name(input: &str) -> IResult<&str, &str> {
+    re_find(USE_NAME_RE.clone())(input)
+}
 
-    fn expression_list(input: &'i str) -> IResult<&'i str, Vec<Dependency<M>>> {
-        let (input, exprs) = preceded(
-            multispace0,
-            separated_list0(multispace1, |input| Self::expression(input)),
-        )(input)?;
-        let exprs = exprs.into_iter().collect_vec();
-        Ok((input, exprs))
-    }
+/// Result of [`parse_use_conditional`].
+struct ParsedUseConditional<'i, D> {
+    name: &'i str,
+    expect: bool,
+    children: Vec<D>,
+}
 
-    fn use_name(input: &'i str) -> IResult<&'i str, &'i str> {
-        re_find(USE_NAME_RE.clone())(input)
-    }
+/// Consumes a USE conditional expression found on the beginning of the input.
+fn parse_use_conditional<P: PartialExpressionParser>(
+    input: &str,
+) -> IResult<&str, ParsedUseConditional<P::Output>> {
+    let (input, negate) = opt(tag("!"))(input)?;
+    let expect = negate.is_none();
+    let (input, name) = parse_use_name(input)?;
+    let (input, _) = tag("?")(input)?;
+    let (input, _) = multispace1(input)?;
+    let (input, children) = delimited(
+        pair(tag("("), multispace1),
+        |input| parse_expression_list::<P>(input),
+        pair(multispace1, tag(")")),
+    )(input)?;
+    Ok((
+        input,
+        ParsedUseConditional {
+            name,
+            expect,
+            children,
+        },
+    ))
+}
+
+/// Consumes a composite expression found on the beginning of the input.
+pub fn parse_composite<P: PartialExpressionParser>(
+    input: &str,
+) -> IResult<&str, CompositeDependency<P::Output>> {
+    alt((
+        map(
+            |input| parse_group::<P>(input, None),
+            |children| CompositeDependency::AllOf { children },
+        ),
+        map(
+            |input| parse_group::<P>(input, Some("||")),
+            |children| CompositeDependency::AnyOf { children },
+        ),
+        map(parse_use_conditional::<P>, |parsed| {
+            CompositeDependency::UseConditional {
+                name: parsed.name.to_string(),
+                expect: parsed.expect,
+                children: parsed.children,
+            }
+        }),
+    ))(input)
 }

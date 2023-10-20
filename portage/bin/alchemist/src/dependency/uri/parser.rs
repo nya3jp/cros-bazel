@@ -14,25 +14,23 @@ use nom::{
 use url::Url;
 
 use crate::dependency::{
-    parser::{DependencyParser, DependencyParserCommon},
+    parser::{parse_composite, parse_expression_list, DependencyParser, PartialExpressionParser},
     uri::{UriAtomDependency, UriDependency},
     CompositeDependency, Dependency,
 };
 
-use super::UriDependencyMeta;
-
 /// Implements the URI dependency expression parser.
-pub struct UriDependencyParser {}
+pub struct UriDependencyParser;
 
-impl<'i> DependencyParserCommon<'i, UriDependencyMeta> for UriDependencyParser {
-    fn expression(input: &str) -> IResult<&str, UriDependency> {
+impl PartialExpressionParser for UriDependencyParser {
+    type Output = UriDependency;
+
+    fn parse_expression(input: &str) -> IResult<&str, Self::Output> {
         let (input, _) = multispace0(input)?;
         alt((
             // Prefer matches with composite dependencies since URIs/filenames
             // consist of arbitrary characters.
-            Self::all_of,
-            Self::any_of,
-            Self::use_conditional,
+            map(parse_composite::<Self>, Dependency::new_composite),
             map(Self::uri, |(url, filename)| {
                 Dependency::Leaf(UriAtomDependency::Uri(url, filename.map(|s| s.to_owned())))
             }),
@@ -59,7 +57,7 @@ impl UriDependencyParser {
     }
 
     fn full(input: &str) -> IResult<&str, UriDependency> {
-        let (input, children) = Self::expression_list(input)?;
+        let (input, children) = parse_expression_list::<Self>(input)?;
         let (input, _) = multispace0(input)?;
         let (input, _) = eof(input)?;
         Ok((

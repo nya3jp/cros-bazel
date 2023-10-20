@@ -22,11 +22,14 @@ use crate::dependency::{
         PackageBlock, PackageDependency, PackageDependencyAtom, PackageSlotDependency,
         PackageUseDependency, PackageVersionDependency, PackageVersionOp,
     },
-    parser::{DependencyParser, DependencyParserCommon},
+    parser::{
+        parse_composite, parse_expression_list, parse_use_name, DependencyParser,
+        PartialExpressionParser,
+    },
     CompositeDependency, Dependency,
 };
 
-use super::{PackageDependencyMeta, PackageUseDependencyOp};
+use super::PackageUseDependencyOp;
 
 /// Raw regular expression string matching a valid package name.
 pub const PACKAGE_NAME_RE_RAW: &str = r"[A-Za-z0-9_][A-Za-z0-9+_.-]*/[A-Za-z0-9_][A-Za-z0-9+_-]*";
@@ -47,16 +50,16 @@ static PACKAGE_NAME_WITH_VERSION_RE: Lazy<Regex> = Lazy::new(|| {
 });
 
 /// Implements the package dependency expression parser.
-pub struct PackageDependencyParser {}
+pub struct PackageDependencyParser;
 
-impl<'i> DependencyParserCommon<'i, PackageDependencyMeta> for PackageDependencyParser {
-    fn expression(input: &str) -> IResult<&str, PackageDependency> {
+impl PartialExpressionParser for PackageDependencyParser {
+    type Output = PackageDependency;
+
+    fn parse_expression(input: &str) -> IResult<&str, Self::Output> {
         let (input, _) = multispace0(input)?;
         alt((
+            map(parse_composite::<Self>, Dependency::new_composite),
             map(Self::atom, Dependency::Leaf),
-            Self::all_of,
-            Self::any_of,
-            Self::use_conditional,
         ))(input)
     }
 }
@@ -167,7 +170,7 @@ impl PackageDependencyParser {
         let (input, negate) = opt(tag("-"))(input)?;
         if negate.is_some() {
             let (input, (flag, missing_default)) =
-                pair(Self::use_name, opt(Self::use_item_default))(input)?;
+                pair(parse_use_name, opt(Self::use_item_default))(input)?;
 
             return Ok((
                 input,
@@ -183,7 +186,7 @@ impl PackageDependencyParser {
         let (input, not_op) = opt(tag("!"))(input)?;
         if not_op.is_some() {
             let (input, (flag, missing_default)) =
-                pair(Self::use_name, opt(Self::use_item_default))(input)?;
+                pair(parse_use_name, opt(Self::use_item_default))(input)?;
 
             let (input, op) = alt((
                 value(PackageUseDependencyOp::Synchronized, tag("=")),
@@ -202,7 +205,7 @@ impl PackageDependencyParser {
         }
 
         let (input, (flag, missing_default)) =
-            pair(Self::use_name, opt(Self::use_item_default))(input)?;
+            pair(parse_use_name, opt(Self::use_item_default))(input)?;
 
         let (input, op) = opt(alt((
             value(PackageUseDependencyOp::Synchronized, tag("=")),
@@ -259,7 +262,7 @@ impl PackageDependencyParser {
     }
 
     fn full(input: &str) -> IResult<&str, PackageDependency> {
-        let (input, children) = Self::expression_list(input)?;
+        let (input, children) = parse_expression_list::<Self>(input)?;
         let (input, _) = multispace0(input)?;
         let (input, _) = eof(input)?;
         Ok((
@@ -288,10 +291,7 @@ impl DependencyParser for PackageDependencyParser {
 mod tests {
     use std::{collections::HashMap, str::FromStr};
 
-    use anyhow::Result;
     use nom::sequence::terminated;
-
-    use crate::dependency::package::PackageUseDependencyOp;
 
     use super::*;
 

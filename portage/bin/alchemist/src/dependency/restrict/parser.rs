@@ -9,28 +9,26 @@ use nom::{
     branch::alt,
     bytes::complete::take_while1,
     character::complete::multispace0,
-    combinator::{eof, map_res},
+    combinator::{eof, map, map_res},
     IResult,
 };
 
 use crate::dependency::{
-    parser::{DependencyParser, DependencyParserCommon},
+    parser::{parse_composite, parse_expression_list, DependencyParser, PartialExpressionParser},
     restrict::{RestrictAtom, RestrictDependency},
     CompositeDependency, Dependency,
 };
 
-use super::RestrictDependencyMeta;
-
 /// Implements the RESTRICT dependency expression parser.
-pub struct RestrictDependencyParser {}
+pub struct RestrictDependencyParser;
 
-impl<'i> DependencyParserCommon<'i, RestrictDependencyMeta> for RestrictDependencyParser {
-    fn expression(input: &str) -> IResult<&str, RestrictDependency> {
+impl PartialExpressionParser for RestrictDependencyParser {
+    type Output = RestrictDependency;
+
+    fn parse_expression(input: &str) -> IResult<&str, Self::Output> {
         let (input, _) = multispace0(input)?;
         alt((
-            Self::all_of,
-            Self::any_of,
-            Self::use_conditional,
+            map(parse_composite::<Self>, Dependency::new_composite),
             Self::restrict,
         ))(input)
     }
@@ -55,7 +53,7 @@ impl RestrictDependencyParser {
     }
 
     fn full(input: &str) -> IResult<&str, RestrictDependency> {
-        let (input, children) = Self::expression_list(input)?;
+        let (input, children) = parse_expression_list::<Self>(input)?;
         let (input, _) = multispace0(input)?;
         let (input, _) = eof(input)?;
         Ok((
