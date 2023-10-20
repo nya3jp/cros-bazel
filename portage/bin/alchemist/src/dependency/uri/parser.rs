@@ -70,10 +70,11 @@ impl UriDependencyParser {
     }
 }
 
-impl DependencyParser<UriDependency> for UriDependencyParser {
+impl DependencyParser for UriDependencyParser {
+    type Output = UriDependency;
     type Err = Error;
 
-    fn parse(input: &str) -> Result<UriDependency> {
+    fn parse(input: &str) -> Result<Self::Output> {
         let (_, deps) = UriDependencyParser::full(input).map_err(|err| err.to_owned())?;
         Ok(deps)
     }

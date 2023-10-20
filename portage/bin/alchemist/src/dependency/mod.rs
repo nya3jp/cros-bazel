@@ -46,7 +46,7 @@ pub trait DependencyMeta: Clone + std::fmt::Debug + Eq {
     type Leaf: Clone + std::fmt::Debug + Eq;
 
     /// The type of the parser producing the dependency type.
-    type Parser;
+    type Parser: DependencyParser;
 }
 
 /// Generic dependency expression.
@@ -332,9 +332,9 @@ where
 
 impl<M: DependencyMeta> FromStr for Dependency<M>
 where
-    M::Parser: DependencyParser<Self>,
+    M::Parser: DependencyParser<Output = Self>,
 {
-    type Err = <M::Parser as DependencyParser<Self>>::Err;
+    type Err = <M::Parser as DependencyParser>::Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         M::Parser::parse(s)

@@ -275,10 +275,11 @@ impl PackageDependencyParser {
     }
 }
 
-impl DependencyParser<PackageDependency> for PackageDependencyParser {
+impl DependencyParser for PackageDependencyParser {
+    type Output = PackageDependency;
     type Err = Error;
 
-    fn parse(input: &str) -> Result<PackageDependency> {
+    fn parse(input: &str) -> Result<Self::Output> {
         let (_, deps) = Self::full(input).map_err(|err| err.to_owned())?;
         Ok(deps)
     }

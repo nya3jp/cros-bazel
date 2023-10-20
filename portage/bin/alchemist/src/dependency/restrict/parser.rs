@@ -66,10 +66,11 @@ impl RestrictDependencyParser {
     }
 }
 
-impl DependencyParser<RestrictDependency> for RestrictDependencyParser {
+impl DependencyParser for RestrictDependencyParser {
+    type Output = RestrictDependency;
     type Err = Error;
 
-    fn parse(input: &str) -> Result<RestrictDependency> {
+    fn parse(input: &str) -> Result<Self::Output> {
         let (_, deps) = RestrictDependencyParser::full(input).map_err(|err| err.to_owned())?;
         Ok(deps)
     }

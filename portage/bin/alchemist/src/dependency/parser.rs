@@ -21,13 +21,12 @@ use super::{CompositeDependency, Dependency, DependencyMeta};
 static USE_NAME_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^[A-Za-z0-9][A-Za-z0-9+_@-]*").unwrap());
 
-/// Provides a dependency expression parser for the type `D`.
-///
-/// `D` is typically `Dependency<M>`.
-pub trait DependencyParser<D> {
+/// Provides a dependency expression parser.
+pub trait DependencyParser {
+    type Output;
     type Err;
 
-    fn parse(input: &str) -> Result<D, Self::Err>;
+    fn parse(input: &str) -> Result<Self::Output, Self::Err>;
 }
 
 /// Provides the common implementation of dependency expression parser.
