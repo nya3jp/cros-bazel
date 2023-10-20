@@ -17,7 +17,11 @@ use crate::{
     bash::vars::BashVars,
     config::bundle::{ConfigBundle, IsPackageAcceptedResult},
     data::{IUseMap, Slot, UseMap},
-    dependency::package::{PackageRef, ThinPackageRef},
+    dependency::{
+        package::{PackageRef, ThinPackageRef},
+        requse::RequiredUseDependency,
+        ThreeValuedPredicate,
+    },
 };
 
 use self::metadata::CachedEBuildEvaluator;
@@ -231,7 +235,12 @@ impl PackageLoader {
             &iuse_map,
         );
 
-        let masked = !accepted || self.config.is_package_masked(&package);
+        let required_use: RequiredUseDependency =
+            vars.get_scalar_or_default("REQUIRED_USE")?.parse()?;
+
+        let masked = !accepted
+            || self.config.is_package_masked(&package)
+            || required_use.matches(&use_map) == Some(false);
 
         let direct_build_target = vars.maybe_get_scalar("METALLURGY_TARGET")?.map(|s| {
             if s.starts_with("@") {
