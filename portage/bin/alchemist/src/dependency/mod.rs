@@ -59,29 +59,29 @@ pub enum Dependency<M: DependencyMeta> {
     Leaf(M::Leaf),
     /// Dependency compositing zero or more dependencies recursively, such as
     /// all-of and any-of.
-    Composite(Box<CompositeDependency<M>>),
+    Composite(Box<CompositeDependency<Self>>),
 }
 
 /// Composite dependency expression that contains zero or more dependencies
 /// recursively.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum CompositeDependency<M: DependencyMeta> {
+pub enum CompositeDependency<D> {
     /// All-of dependencies: satisfied when all of child dependencies are
     /// satisfied.
     /// If an all-of dependency has no child, it is considered constant true,
     /// but prefer `Constant` because it can also carry a debug message.
-    AllOf { children: Vec<Dependency<M>> },
+    AllOf { children: Vec<D> },
     /// Any-of dependencies: satisfied when any one of child dependencies are
     /// satisfied.
     /// If an any-of dependency has no child, it is considered constant false,
     /// but prefer `Constant` because it can also carry a debug message.
-    AnyOf { children: Vec<Dependency<M>> },
+    AnyOf { children: Vec<D> },
     /// USE conditional dependencies: the child dependency is evaluated only
     /// when a certain USE flag has an expected value.
     UseConditional {
         name: String,
         expect: bool,
-        child: Dependency<M>,
+        child: D,
     },
     /// The constant value with a reason for debugging. This is preferred over
     /// `AllOf`/`AnyOf` with no children for better debuggability.
@@ -89,7 +89,7 @@ pub enum CompositeDependency<M: DependencyMeta> {
 }
 
 impl<M: DependencyMeta> Dependency<M> {
-    pub fn new_composite(composite: CompositeDependency<M>) -> Self {
+    pub fn new_composite(composite: CompositeDependency<Self>) -> Self {
         Self::Composite(Box::new(composite))
     }
 
