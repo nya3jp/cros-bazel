@@ -351,3 +351,178 @@ where
         M::Parser::parse(s)
     }
 }
+
+/// Generic dependency expression.
+///
+/// This is similar to [`Dependency`], but it supports additional composite
+/// dependencies, such as exactly-one-of and at-most-one-of.
+///
+/// See the following section in the PMS for the detailed specification:
+/// https://projects.gentoo.org/pms/8/pms.html#x1-730008.2
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ComplexDependency<M: DependencyMeta> {
+    /// Leaf dependency that is specific to the actual dependency type.
+    Leaf(M::Leaf),
+    /// Dependency compositing zero or more dependencies recursively, such as
+    /// all-of and any-of.
+    Composite(Box<ComplexCompositeDependency<Self>>),
+}
+
+impl<M: DependencyMeta> ComplexDependency<M> {
+    pub fn new_composite(composite: ComplexCompositeDependency<Self>) -> Self {
+        Self::Composite(Box::new(composite))
+    }
+}
+
+impl<M: DependencyMeta> Display for ComplexDependency<M>
+where
+    M::Leaf: Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Leaf(leaf) => leaf.fmt(f),
+            Self::Composite(composite) => match &**composite {
+                ComplexCompositeDependency::AllOf { children } => {
+                    write!(f, "(")?;
+                    for child in children.iter() {
+                        write!(f, " {}", child)?;
+                    }
+                    write!(f, " )")
+                }
+                ComplexCompositeDependency::AnyOf { children } => {
+                    write!(f, "|| (")?;
+                    for child in children.iter() {
+                        write!(f, " {}", child)?;
+                    }
+                    write!(f, " )")
+                }
+                ComplexCompositeDependency::ExactlyOneOf { children } => {
+                    write!(f, "^^ (")?;
+                    for child in children.iter() {
+                        write!(f, " {}", child)?;
+                    }
+                    write!(f, " )")
+                }
+                ComplexCompositeDependency::AtMostOneOf { children } => {
+                    write!(f, "?? (")?;
+                    for child in children.iter() {
+                        write!(f, " {}", child)?;
+                    }
+                    write!(f, " )")
+                }
+                ComplexCompositeDependency::UseConditional {
+                    name,
+                    expect,
+                    children,
+                } => {
+                    if !expect {
+                        write!(f, "!")?;
+                    }
+                    write!(f, "{}? (", name)?;
+                    for child in children.iter() {
+                        write!(f, " {}", child)?;
+                    }
+                    write!(f, " )")
+                }
+            },
+        }
+    }
+}
+
+/// Composite dependency expression that contains zero or more dependencies
+/// recursively.
+///
+/// This is similar to [`CompositeDependency`], but it supports additional
+/// composite dependencies, such as exactly-one-of and at-most-one-of.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ComplexCompositeDependency<D> {
+    /// All-of dependencies: satisfied when all of child dependencies are
+    /// satisfied.
+    AllOf { children: Vec<D> },
+    /// Any-of dependencies: satisfied when any one of child dependencies are
+    /// satisfied.
+    AnyOf { children: Vec<D> },
+    /// Exactly-one-of dependencies: satisfied when exactly one of child
+    /// dependencies is satisfied.
+    ExactlyOneOf { children: Vec<D> },
+    /// At-most-one-of dependencies: satisfied when at most one of child
+    /// dependencies are satisfied.
+    AtMostOneOf { children: Vec<D> },
+    /// USE conditional dependencies: the child dependencies are evaluated only
+    /// when a certain USE flag has an expected value.
+    UseConditional {
+        name: String,
+        expect: bool,
+        /// Child dependencies are interpreted in the same way as all-of.
+        children: Vec<D>,
+    },
+}
+
+impl<M: DependencyMeta, T: AsRef<UseMap>> ThreeValuedPredicate<T> for ComplexDependency<M>
+where
+    M::Leaf: Predicate<T>,
+{
+    fn matches(&self, target: &T) -> Option<bool> {
+        match self {
+            Self::Leaf(leaf) => Some(leaf.matches(target)),
+            Self::Composite(composite) => {
+                match &**composite {
+                    ComplexCompositeDependency::AllOf { children } => Some(
+                        children
+                            .iter()
+                            .all(|child| child.matches(target) != Some(false)),
+                    ),
+                    ComplexCompositeDependency::AnyOf { children } => Some(
+                        children
+                            .iter()
+                            .any(|child| child.matches(target) == Some(true)),
+                    ),
+                    ComplexCompositeDependency::ExactlyOneOf { children } => Some(
+                        children
+                            .iter()
+                            .filter(|child| child.matches(target) == Some(true))
+                            .count()
+                            == 1,
+                    ),
+                    ComplexCompositeDependency::AtMostOneOf { children } => Some(
+                        children
+                            .iter()
+                            .filter(|child| child.matches(target) == Some(true))
+                            .count()
+                            <= 1,
+                    ),
+                    ComplexCompositeDependency::UseConditional {
+                        name,
+                        expect,
+                        children,
+                    } => {
+                        let use_map = target.as_ref();
+                        let value = use_map.get(name);
+                        // Assume that a USE flag is unset when it is not declared in IUSE.
+                        let value = *value.unwrap_or(&false);
+                        if value != *expect {
+                            None
+                        } else {
+                            Some(
+                                children
+                                    .iter()
+                                    .all(|child| child.matches(target) != Some(false)),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl<M: DependencyMeta> FromStr for ComplexDependency<M>
+where
+    M::Parser: DependencyParser<Output = Self>,
+{
+    type Err = <M::Parser as DependencyParser>::Err;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        M::Parser::parse(s)
+    }
+}

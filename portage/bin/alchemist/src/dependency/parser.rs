@@ -16,7 +16,7 @@ use nom_regex::str::re_find;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-use super::CompositeDependency;
+use super::{ComplexCompositeDependency, CompositeDependency};
 
 /// Regular expression matching a valid USE flag name.
 static USE_NAME_RE: Lazy<Regex> =
@@ -111,7 +111,8 @@ fn parse_use_conditional<P: PartialExpressionParser>(
     ))
 }
 
-/// Consumes a composite expression found on the beginning of the input.
+/// Consumes a composite expression found on the beginning of the input and
+/// returns [`CompositeDependency`].
 pub fn parse_composite<P: PartialExpressionParser>(
     input: &str,
 ) -> IResult<&str, CompositeDependency<P::Output>> {
@@ -126,6 +127,38 @@ pub fn parse_composite<P: PartialExpressionParser>(
         ),
         map(parse_use_conditional::<P>, |parsed| {
             CompositeDependency::UseConditional {
+                name: parsed.name.to_string(),
+                expect: parsed.expect,
+                children: parsed.children,
+            }
+        }),
+    ))(input)
+}
+
+/// Consumes a complex composite expression found on the beginning of the input
+/// and returns [`ComplexCompositeDependency`].
+pub fn parse_complex_composite<P: PartialExpressionParser>(
+    input: &str,
+) -> IResult<&str, ComplexCompositeDependency<P::Output>> {
+    alt((
+        map(
+            |input| parse_group::<P>(input, None),
+            |children| ComplexCompositeDependency::AllOf { children },
+        ),
+        map(
+            |input| parse_group::<P>(input, Some("||")),
+            |children| ComplexCompositeDependency::AnyOf { children },
+        ),
+        map(
+            |input| parse_group::<P>(input, Some("^^")),
+            |children| ComplexCompositeDependency::ExactlyOneOf { children },
+        ),
+        map(
+            |input| parse_group::<P>(input, Some("??")),
+            |children| ComplexCompositeDependency::AtMostOneOf { children },
+        ),
+        map(parse_use_conditional::<P>, |parsed| {
+            ComplexCompositeDependency::UseConditional {
                 name: parsed.name.to_string(),
                 expect: parsed.expect,
                 children: parsed.children,
