@@ -37,12 +37,6 @@ pub struct PackageRef<'a> {
     pub use_map: &'a UseMap,
 }
 
-impl AsRef<UseMap> for PackageRef<'_> {
-    fn as_ref(&self) -> &UseMap {
-        self.use_map
-    }
-}
-
 /// Similar to [`PackageRef`], but it contains an even smaller subset of fields
 /// that are available before computing package USE flags.
 ///
