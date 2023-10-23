@@ -14,7 +14,7 @@ use crate::{
     data::{Slot, UseMap},
 };
 
-use super::{Dependency, DependencyMeta};
+use super::{Dependency, DependencyMeta, Predicate};
 use parser::PackageDependencyParser;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -376,12 +376,8 @@ impl Display for PackageDependencyAtom {
     }
 }
 
-impl PackageDependencyAtom {
-    pub fn package_matches(
-        &self,
-        source_use_map: &UseMap,
-        package: &PackageRef<'_>,
-    ) -> Result<bool> {
+impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
+    fn matches(&self, source_use_map: &UseMap, package: &PackageRef) -> Result<bool> {
         if self.block != PackageBlock::None {
             // TODO: This should probably be an error.
             return Ok(false);
@@ -963,7 +959,7 @@ mod tests {
                 use_map: &UseMap::from([("udev".to_string(), true), ("boot".to_string(), false)]),
             };
 
-            assert!(atom.package_matches(&UseMap::new(), &package)?);
+            assert!(atom.matches(&UseMap::new(), &package)?);
         }
 
         {
@@ -977,7 +973,7 @@ mod tests {
                 use_map: &UseMap::from([("udev".to_string(), true), ("boot".to_string(), true)]),
             };
 
-            assert!(!atom.package_matches(&UseMap::new(), &package)?);
+            assert!(!atom.matches(&UseMap::new(), &package)?);
         }
 
         Ok(())

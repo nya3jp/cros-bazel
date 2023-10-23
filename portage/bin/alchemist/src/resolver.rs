@@ -11,7 +11,10 @@ use version::Version;
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
     data::UseMap,
-    dependency::package::{PackageAtom, PackageDependencyAtom},
+    dependency::{
+        package::{PackageAtom, PackageDependencyAtom},
+        Predicate,
+    },
     ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails},
     repository::RepositorySet,
 };
@@ -100,7 +103,7 @@ impl PackageResolver {
                 // We ignore packages that had metadata evaluation errors.
                 MaybePackageDetails::Err(_) => continue,
             };
-            match atom.package_matches(use_map, &details.as_package_ref()) {
+            match atom.matches(use_map, &details.as_package_ref()) {
                 Ok(result) => {
                     if result {
                         matches.push(details);
