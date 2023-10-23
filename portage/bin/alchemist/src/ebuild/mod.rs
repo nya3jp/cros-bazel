@@ -276,7 +276,7 @@ impl PackageLoader {
             PackageReadiness::Masked {
                 reason: "Masked by configs".into(),
             }
-        } else if required_use.matches(&use_map) == Some(false) {
+        } else if required_use.matches(&use_map, &()) == Some(false) {
             PackageReadiness::Masked {
                 reason: format!("REQUIRED_USE not satisfied: {}", raw_required_use),
             }

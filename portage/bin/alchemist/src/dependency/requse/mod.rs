@@ -40,9 +40,9 @@ impl Display for RequiredUseAtom {
     }
 }
 
-impl Predicate<UseMap> for RequiredUseAtom {
-    fn matches(&self, target: &UseMap) -> bool {
-        *target.get(&self.name).unwrap_or(&false) == self.expect
+impl Predicate<()> for RequiredUseAtom {
+    fn matches(&self, source_use_map: &UseMap, _target: &()) -> bool {
+        *source_use_map.get(&self.name).unwrap_or(&false) == self.expect
     }
 }
 
@@ -58,7 +58,7 @@ mod tests {
     fn test_empty() {
         let deps = RequiredUseDependency::from_str("").unwrap();
         assert_eq!(
-            deps.matches(&UseMap::from_iter([("xxx".into(), false)])),
+            deps.matches(&UseMap::from_iter([("xxx".into(), false)]), &()),
             Some(true)
         );
     }
@@ -67,31 +67,31 @@ mod tests {
     fn test_all_of() {
         let deps = RequiredUseDependency::from_str("aaa !bbb").unwrap();
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), true),
-                ("bbb".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), false)]),
+                &()
+            ),
             Some(true)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), false)]),
+                &()
+            ),
             Some(false)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), true),
-                ("bbb".into(), true),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), true)]),
+                &()
+            ),
             Some(false)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), true),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), true)]),
+                &()
+            ),
             Some(false)
         );
     }
@@ -100,31 +100,31 @@ mod tests {
     fn test_any_of() {
         let deps = RequiredUseDependency::from_str("|| ( aaa !bbb )").unwrap();
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), true),
-                ("bbb".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), false)]),
+                &()
+            ),
             Some(true)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), false)]),
+                &()
+            ),
             Some(true)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), true),
-                ("bbb".into(), true),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), true)]),
+                &()
+            ),
             Some(true)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), true),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), true)]),
+                &()
+            ),
             Some(false)
         );
     }
@@ -133,35 +133,47 @@ mod tests {
     fn test_exactly_one_of() {
         let deps = RequiredUseDependency::from_str("^^ ( aaa !bbb ccc )").unwrap();
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), false),
-                ("ccc".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), false),
+                    ("bbb".into(), false),
+                    ("ccc".into(), false),
+                ]),
+                &()
+            ),
             Some(true)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), true),
-                ("bbb".into(), false),
-                ("ccc".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), true),
+                    ("bbb".into(), false),
+                    ("ccc".into(), false),
+                ]),
+                &()
+            ),
             Some(false)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), true),
-                ("ccc".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), false),
+                    ("bbb".into(), true),
+                    ("ccc".into(), false),
+                ]),
+                &()
+            ),
             Some(false)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), false),
-                ("ccc".into(), true),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), false),
+                    ("bbb".into(), false),
+                    ("ccc".into(), true),
+                ]),
+                &()
+            ),
             Some(false)
         );
     }
@@ -170,35 +182,47 @@ mod tests {
     fn test_at_most_one_of() {
         let deps = RequiredUseDependency::from_str("?? ( aaa !bbb ccc )").unwrap();
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), false),
-                ("ccc".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), false),
+                    ("bbb".into(), false),
+                    ("ccc".into(), false),
+                ]),
+                &()
+            ),
             Some(true)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), true),
-                ("bbb".into(), false),
-                ("ccc".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), true),
+                    ("bbb".into(), false),
+                    ("ccc".into(), false),
+                ]),
+                &()
+            ),
             Some(false)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), true),
-                ("ccc".into(), false),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), false),
+                    ("bbb".into(), true),
+                    ("ccc".into(), false),
+                ]),
+                &()
+            ),
             Some(true)
         );
         assert_eq!(
-            deps.matches(&UseMap::from_iter([
-                ("aaa".into(), false),
-                ("bbb".into(), false),
-                ("ccc".into(), true),
-            ])),
+            deps.matches(
+                &UseMap::from_iter([
+                    ("aaa".into(), false),
+                    ("bbb".into(), false),
+                    ("ccc".into(), true),
+                ]),
+                &()
+            ),
             Some(false)
         );
     }
