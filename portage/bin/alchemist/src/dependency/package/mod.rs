@@ -6,7 +6,7 @@ pub mod parser;
 
 use anyhow::{bail, ensure, Context, Error, Result};
 use itertools::Itertools;
-use std::{fmt::Display, str::FromStr};
+use std::{collections::BTreeMap, fmt::Display, str::FromStr};
 use version::Version;
 
 use crate::{
@@ -35,6 +35,35 @@ pub struct PackageRef<'a> {
     pub version: &'a Version,
     pub slot: Slot<&'a str>,
     pub use_map: &'a UseMap,
+}
+
+/// Holds a set of [`PackageRef`].
+#[derive(Debug)]
+pub struct PackageRefSet<'a> {
+    // Keys are package names.
+    packages: BTreeMap<&'a str, Vec<PackageRef<'a>>>,
+}
+
+impl<'a> PackageRefSet<'a> {
+    pub fn get(&self, package_name: &str) -> &[PackageRef<'a>] {
+        self.packages
+            .get(package_name)
+            .map(|v| v.as_slice())
+            .unwrap_or_default()
+    }
+}
+
+impl<'a> FromIterator<PackageRef<'a>> for PackageRefSet<'a> {
+    fn from_iter<T: IntoIterator<Item = PackageRef<'a>>>(iter: T) -> Self {
+        let mut packages: BTreeMap<&str, Vec<PackageRef>> = BTreeMap::new();
+        for package in iter {
+            packages
+                .entry(package.package_name)
+                .or_default()
+                .push(package);
+        }
+        Self { packages }
+    }
 }
 
 /// Similar to [`PackageRef`], but it contains an even smaller subset of fields
@@ -370,13 +399,12 @@ impl Display for PackageDependencyAtom {
     }
 }
 
-impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
-    fn matches(&self, source_use_map: &UseMap, package: &PackageRef) -> Result<bool> {
-        if self.block != PackageBlock::None {
-            // TODO: This should probably be an error.
-            return Ok(false);
-        }
-
+impl PackageDependencyAtom {
+    fn matches_ignoring_block(
+        &self,
+        source_use_map: &UseMap,
+        package: &PackageRef,
+    ) -> Result<bool> {
         if package.package_name != self.package_name {
             return Ok(false);
         }
@@ -398,6 +426,31 @@ impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
         }
 
         Ok(true)
+    }
+}
+
+impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
+    fn matches(&self, source_use_map: &UseMap, package: &PackageRef) -> Result<bool> {
+        if self.block != PackageBlock::None {
+            // TODO: This should probably be an error.
+            return Ok(false);
+        }
+        self.matches_ignoring_block(source_use_map, package)
+    }
+}
+
+impl Predicate<PackageRefSet<'_>> for PackageDependencyAtom {
+    fn matches(&self, source_use_map: &UseMap, packages: &PackageRefSet) -> Result<bool> {
+        let mut any_match = false;
+        for package in packages.get(&self.package_name) {
+            if self.matches_ignoring_block(source_use_map, package)? {
+                any_match = true;
+            }
+        }
+
+        // If the atom is not a blocker, it's considered satisfied iff any package matches it.
+        // If the atom is a blocker, it's considered satisfied iff no package matches it.
+        Ok(any_match == (self.block == PackageBlock::None))
     }
 }
 
@@ -556,7 +609,52 @@ mod tests {
 
     use anyhow::{anyhow, Result};
 
+    use crate::dependency::ThreeValuedPredicate;
+
     use super::*;
+
+    #[test]
+    fn test_package_dependency_matches() -> Result<()> {
+        let empty_use_map = UseMap::new();
+        let default_version = Version::try_new("1.0").unwrap();
+        let package_set = PackageRefSet::from_iter([
+            PackageRef {
+                package_name: "pkg/aaa",
+                version: &default_version,
+                slot: Slot::new("0"),
+                use_map: &empty_use_map,
+            },
+            PackageRef {
+                package_name: "pkg/bbb",
+                version: &default_version,
+                slot: Slot::new("0"),
+                use_map: &empty_use_map,
+            },
+        ]);
+
+        let test_cases = [
+            ("", true),
+            ("pkg/aaa", true),
+            ("pkg/aaa pkg/bbb", true),
+            ("pkg/aaa pkg/xxx", false),
+            ("pkg/aaa || ( pkg/xxx pkg/bbb )", true),
+            ("pkg/aaa !pkg/bbb", false),
+            ("|| ( pkg/aaa !pkg/bbb )", true),
+            ("|| ( !pkg/aaa !pkg/bbb )", false),
+        ];
+
+        for (raw_deps, want) in test_cases {
+            let deps = PackageDependency::from_str(raw_deps)?;
+            assert_eq!(
+                deps.matches(&empty_use_map, &package_set)?,
+                Some(want),
+                "matches({:?})",
+                raw_deps
+            );
+        }
+
+        Ok(())
+    }
 
     #[test]
     fn test_parse_package_atom() -> Result<()> {
