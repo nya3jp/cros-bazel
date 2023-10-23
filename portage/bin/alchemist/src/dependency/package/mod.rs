@@ -14,7 +14,7 @@ use crate::{
     data::{Slot, UseMap},
 };
 
-use super::{Dependency, DependencyMeta, Predicate};
+use super::{Dependency, DependencyMeta};
 use parser::PackageDependencyParser;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -77,10 +77,8 @@ impl PackageSlotDependency {
             rebuild_on_slot_change,
         }
     }
-}
 
-impl Predicate<Slot<&'_ str>> for PackageSlotDependency {
-    fn matches(&self, slot: &Slot<&'_ str>) -> bool {
+    pub fn matches(&self, slot: &Slot<&str>) -> bool {
         match &self.slot {
             None => true,
             Some((main, sub)) => {
@@ -266,10 +264,8 @@ impl PackageVersionDependency {
     pub(super) fn new(op: PackageVersionOp, version: Version) -> Self {
         Self { op, version }
     }
-}
 
-impl Predicate<Version> for PackageVersionDependency {
-    fn matches(&self, version: &Version) -> bool {
+    pub fn matches(&self, version: &Version) -> bool {
         match self.op {
             PackageVersionOp::Equal { wildcard } => {
                 if wildcard {
@@ -415,8 +411,8 @@ impl PackageDependencyAtom {
     }
 }
 
-impl Predicate<&ProvidedPackage> for PackageDependencyAtom {
-    /// Checks is the [`ProvidedPackage`] matches the `atom`.
+impl PackageDependencyAtom {
+    /// Checks if the [`ProvidedPackage`] matches the `atom`.
     ///
     /// A ProvidedPackage only contains a package_name and a version. This
     /// unfortunately means we can't match against `slot` or `USE` dependencies.
@@ -424,7 +420,7 @@ impl Predicate<&ProvidedPackage> for PackageDependencyAtom {
     ///
     /// Due to these limitations, the EAPI7 has deprecated and strongly
     /// discourages the use of package.provided.
-    fn matches(&self, package: &&ProvidedPackage) -> bool {
+    pub fn matches_provided(&self, package: &ProvidedPackage) -> bool {
         let match_except_block = (|| {
             if package.package_name != self.package_name {
                 return false;
@@ -539,8 +535,8 @@ impl Display for PackageAtom {
     }
 }
 
-impl Predicate<ThinPackageRef<'_>> for PackageAtom {
-    fn matches(&self, package: &ThinPackageRef<'_>) -> bool {
+impl PackageAtom {
+    pub fn matches(&self, package: &ThinPackageRef) -> bool {
         if package.package_name != self.package_name {
             return false;
         }

@@ -16,7 +16,7 @@ use version::Version;
 use crate::{
     bash::vars::BashVars,
     data::{IUseMap, Slot, UseMap, Vars},
-    dependency::{package::ThinPackageRef, Predicate},
+    dependency::package::ThinPackageRef,
 };
 
 use super::{

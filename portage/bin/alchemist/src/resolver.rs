@@ -11,10 +11,7 @@ use version::Version;
 use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
     data::UseMap,
-    dependency::{
-        package::{PackageAtom, PackageDependencyAtom},
-        Predicate,
-    },
+    dependency::package::{PackageAtom, PackageDependencyAtom},
     ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails},
     repository::RepositorySet,
 };
@@ -158,7 +155,7 @@ impl PackageResolver {
         self.config
             .provided_packages()
             .iter()
-            .filter(|provided| atom.matches(provided))
+            .filter(|provided| atom.matches_provided(provided))
     }
 
     /// Checks if the package is provided.

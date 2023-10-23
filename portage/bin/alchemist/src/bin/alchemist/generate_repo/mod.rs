@@ -23,7 +23,7 @@ use alchemist::{
         source::{analyze_sources, PackageSources},
     },
     config::{bundle::ConfigBundle, ProvidedPackage},
-    dependency::{package::PackageAtom, Predicate},
+    dependency::package::PackageAtom,
     ebuild::{metadata::EBuildBasicData, CachedPackageLoader, MaybePackageDetails, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
