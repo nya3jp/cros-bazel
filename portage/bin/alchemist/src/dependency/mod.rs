@@ -11,6 +11,7 @@ pub mod uri;
 
 use std::{convert::Infallible, fmt::Display, str::FromStr};
 
+use anyhow::Result;
 use itertools::Itertools;
 use rayon::prelude::*;
 
@@ -23,7 +24,7 @@ use self::parser::DependencyParser;
 /// Leaf dependencies should implement this logic so that they can be used with
 /// [`Dependency`].
 pub trait Predicate<T: ?Sized> {
-    fn matches(&self, source_use_map: &UseMap, target: &T) -> bool;
+    fn matches(&self, source_use_map: &UseMap, target: &T) -> Result<bool>;
 }
 
 /// Similar to [`Predicate`], but uses three-valued logic.
@@ -38,7 +39,7 @@ pub trait Predicate<T: ?Sized> {
 /// For example, `|| ( foo? ( a/b ) )` should be considered unsatisfiable
 /// when `foo` is unset.
 pub trait ThreeValuedPredicate<T: ?Sized> {
-    fn matches(&self, source_use_map: &UseMap, target: &T) -> Option<bool>;
+    fn matches(&self, source_use_map: &UseMap, target: &T) -> Result<Option<bool>>;
 }
 
 /// A bundle of types needed to instantiate [`Dependency`].
@@ -301,21 +302,27 @@ impl<M: DependencyMeta, T> ThreeValuedPredicate<T> for Dependency<M>
 where
     M::Leaf: Predicate<T>,
 {
-    fn matches(&self, source_use_map: &UseMap, target: &T) -> Option<bool> {
+    fn matches(&self, source_use_map: &UseMap, target: &T) -> Result<Option<bool>> {
         match self {
-            Self::Leaf(leaf) => Some(leaf.matches(source_use_map, target)),
+            Self::Leaf(leaf) => Ok(Some(leaf.matches(source_use_map, target)?)),
             Self::Composite(composite) => {
                 match &**composite {
-                    CompositeDependency::AllOf { children } => Some(
+                    CompositeDependency::AllOf { children } => Ok(Some(
                         children
                             .iter()
-                            .all(|child| child.matches(source_use_map, target) != Some(false)),
-                    ),
-                    CompositeDependency::AnyOf { children } => Some(
+                            .map(|child| child.matches(source_use_map, target))
+                            .collect::<Result<Vec<_>>>()?
+                            .into_iter()
+                            .all(|b| b != Some(false)),
+                    )),
+                    CompositeDependency::AnyOf { children } => Ok(Some(
                         children
                             .iter()
-                            .any(|child| child.matches(source_use_map, target) == Some(true)),
-                    ),
+                            .map(|child| child.matches(source_use_map, target))
+                            .collect::<Result<Vec<_>>>()?
+                            .into_iter()
+                            .any(|b| b == Some(true)),
+                    )),
                     CompositeDependency::UseConditional {
                         name,
                         expect,
@@ -325,16 +332,19 @@ where
                         // Assume that a USE flag is unset when it is not declared in IUSE.
                         let value = *value.unwrap_or(&false);
                         if value != *expect {
-                            None
+                            Ok(None)
                         } else {
-                            Some(
-                                children.iter().all(|child| {
-                                    child.matches(source_use_map, target) != Some(false)
-                                }),
-                            )
+                            Ok(Some(
+                                children
+                                    .iter()
+                                    .map(|child| child.matches(source_use_map, target))
+                                    .collect::<Result<Vec<_>>>()?
+                                    .into_iter()
+                                    .all(|b| b != Some(false)),
+                            ))
                         }
                     }
-                    CompositeDependency::Constant { value, .. } => Some(*value),
+                    CompositeDependency::Constant { value, .. } => Ok(Some(*value)),
                 }
             }
         }
@@ -462,35 +472,47 @@ impl<M: DependencyMeta, T> ThreeValuedPredicate<T> for ComplexDependency<M>
 where
     M::Leaf: Predicate<T>,
 {
-    fn matches(&self, source_use_map: &UseMap, target: &T) -> Option<bool> {
+    fn matches(&self, source_use_map: &UseMap, target: &T) -> Result<Option<bool>> {
         match self {
-            Self::Leaf(leaf) => Some(leaf.matches(source_use_map, target)),
+            Self::Leaf(leaf) => Ok(Some(leaf.matches(source_use_map, target)?)),
             Self::Composite(composite) => {
                 match &**composite {
-                    ComplexCompositeDependency::AllOf { children } => Some(
+                    ComplexCompositeDependency::AllOf { children } => Ok(Some(
                         children
                             .iter()
-                            .all(|child| child.matches(source_use_map, target) != Some(false)),
-                    ),
-                    ComplexCompositeDependency::AnyOf { children } => Some(
+                            .map(|child| child.matches(source_use_map, target))
+                            .collect::<Result<Vec<_>>>()?
+                            .into_iter()
+                            .all(|b| b != Some(false)),
+                    )),
+                    ComplexCompositeDependency::AnyOf { children } => Ok(Some(
                         children
                             .iter()
-                            .any(|child| child.matches(source_use_map, target) == Some(true)),
-                    ),
-                    ComplexCompositeDependency::ExactlyOneOf { children } => Some(
+                            .map(|child| child.matches(source_use_map, target))
+                            .collect::<Result<Vec<_>>>()?
+                            .into_iter()
+                            .any(|b| b == Some(true)),
+                    )),
+                    ComplexCompositeDependency::ExactlyOneOf { children } => Ok(Some(
                         children
                             .iter()
-                            .filter(|child| child.matches(source_use_map, target) == Some(true))
+                            .map(|child| child.matches(source_use_map, target))
+                            .collect::<Result<Vec<_>>>()?
+                            .into_iter()
+                            .filter(|b| *b == Some(true))
                             .count()
                             == 1,
-                    ),
-                    ComplexCompositeDependency::AtMostOneOf { children } => Some(
+                    )),
+                    ComplexCompositeDependency::AtMostOneOf { children } => Ok(Some(
                         children
                             .iter()
-                            .filter(|child| child.matches(source_use_map, target) == Some(true))
+                            .map(|child| child.matches(source_use_map, target))
+                            .collect::<Result<Vec<_>>>()?
+                            .into_iter()
+                            .filter(|b| *b == Some(true))
                             .count()
                             <= 1,
-                    ),
+                    )),
                     ComplexCompositeDependency::UseConditional {
                         name,
                         expect,
@@ -500,13 +522,16 @@ where
                         // Assume that a USE flag is unset when it is not declared in IUSE.
                         let value = *value.unwrap_or(&false);
                         if value != *expect {
-                            None
+                            Ok(None)
                         } else {
-                            Some(
-                                children.iter().all(|child| {
-                                    child.matches(source_use_map, target) != Some(false)
-                                }),
-                            )
+                            Ok(Some(
+                                children
+                                    .iter()
+                                    .map(|child| child.matches(source_use_map, target))
+                                    .collect::<Result<Vec<_>>>()?
+                                    .into_iter()
+                                    .all(|b| b != Some(false)),
+                            ))
                         }
                     }
                 }

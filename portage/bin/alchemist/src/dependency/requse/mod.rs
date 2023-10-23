@@ -4,6 +4,8 @@
 
 use std::fmt::Display;
 
+use anyhow::Result;
+
 use crate::data::UseMap;
 
 use self::parser::RequiredUseDependencyParser;
@@ -41,8 +43,8 @@ impl Display for RequiredUseAtom {
 }
 
 impl Predicate<()> for RequiredUseAtom {
-    fn matches(&self, source_use_map: &UseMap, _target: &()) -> bool {
-        *source_use_map.get(&self.name).unwrap_or(&false) == self.expect
+    fn matches(&self, source_use_map: &UseMap, _target: &()) -> Result<bool> {
+        Ok(*source_use_map.get(&self.name).unwrap_or(&false) == self.expect)
     }
 }
 
@@ -58,7 +60,8 @@ mod tests {
     fn test_empty() {
         let deps = RequiredUseDependency::from_str("").unwrap();
         assert_eq!(
-            deps.matches(&UseMap::from_iter([("xxx".into(), false)]), &()),
+            deps.matches(&UseMap::from_iter([("xxx".into(), false)]), &())
+                .unwrap(),
             Some(true)
         );
     }
@@ -70,28 +73,32 @@ mod tests {
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), false)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(true)
         );
         assert_eq!(
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), false)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
         assert_eq!(
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), true)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
         assert_eq!(
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), true)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
     }
@@ -103,28 +110,32 @@ mod tests {
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), false)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(true)
         );
         assert_eq!(
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), false)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(true)
         );
         assert_eq!(
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), true), ("bbb".into(), true)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(true)
         );
         assert_eq!(
             deps.matches(
                 &UseMap::from_iter([("aaa".into(), false), ("bbb".into(), true)]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
     }
@@ -140,7 +151,8 @@ mod tests {
                     ("ccc".into(), false),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(true)
         );
         assert_eq!(
@@ -151,7 +163,8 @@ mod tests {
                     ("ccc".into(), false),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
         assert_eq!(
@@ -162,7 +175,8 @@ mod tests {
                     ("ccc".into(), false),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
         assert_eq!(
@@ -173,7 +187,8 @@ mod tests {
                     ("ccc".into(), true),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
     }
@@ -189,7 +204,8 @@ mod tests {
                     ("ccc".into(), false),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(true)
         );
         assert_eq!(
@@ -200,7 +216,8 @@ mod tests {
                     ("ccc".into(), false),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
         assert_eq!(
@@ -211,7 +228,8 @@ mod tests {
                     ("ccc".into(), false),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(true)
         );
         assert_eq!(
@@ -222,7 +240,8 @@ mod tests {
                     ("ccc".into(), true),
                 ]),
                 &()
-            ),
+            )
+            .unwrap(),
             Some(false)
         );
     }
