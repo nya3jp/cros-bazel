@@ -18,4 +18,6 @@ def alchemist(name):
         cargo_toml = "//bazel/portage/bin/alchemist:Cargo.toml",
         rust_toolchain_cargo_template = "@@//bazel/module_extensions/portage:alchemist_cargo_wrapper.sh",
         rust_toolchain_rustc_template = _TOOL_TEMPLATE,
+        # TODO(b/307348075) Remove once the Alchemist build is faster
+        timeout = 1200,
     )
