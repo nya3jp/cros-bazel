@@ -62,6 +62,10 @@ def main():
             _BAZEL_PATH,
             "build",
             "--profile=/tmp/allpackages_command.profile.gz",
+            # --keep_going to keep building packages even after a failure to
+            # detect as many failure as possible on the CI builders.
+            # We may need to delete this after launching Alchemy.
+            "--keep_going",
             # "--execution_log_binary_file=/tmp/allpackages_exec.log",
             # "--noexecution_log_sort",
         ]
