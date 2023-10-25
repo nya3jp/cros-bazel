@@ -23,7 +23,7 @@ use alchemist::{
     },
     config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtom, Predicate},
-    ebuild::{CachedPackageLoader, PackageDetails, PackageMetadataError},
+    ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails, PackageLoadError},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -56,7 +56,7 @@ use self::{
 fn evaluate_all_packages(
     repos: &RepositorySet,
     loader: &CachedPackageLoader,
-) -> Result<(Vec<Arc<PackageDetails>>, Vec<Arc<PackageMetadataError>>)> {
+) -> Result<(Vec<Arc<PackageDetails>>, Vec<Arc<PackageLoadError>>)> {
     let ebuild_paths = repos.find_all_ebuilds()?;
 
     // Evaluate packages in parallel.
@@ -67,8 +67,8 @@ fn evaluate_all_packages(
     eprintln!("Loaded {} ebuilds", results.len());
 
     Ok(results.into_iter().partition_map(|eval| match eval {
-        Ok(details) => Either::Left(details),
-        Err(err) => Either::Right(err),
+        MaybePackageDetails::Ok(details) => Either::Left(details),
+        MaybePackageDetails::Err(err) => Either::Right(err),
     }))
 }
 

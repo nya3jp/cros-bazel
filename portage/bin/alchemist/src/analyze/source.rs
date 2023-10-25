@@ -598,8 +598,10 @@ mod tests {
     use crate::bash::vars::BashVars;
     use crate::config::{ConfigNode, ConfigNodeValue, SimpleConfigSource};
     use crate::data::{Slot, Vars};
+    use crate::ebuild::metadata::{EBuildBasicData, EBuildMetadata};
     use crate::testutils::write_files;
     use std::collections::HashSet;
+    use std::sync::Arc;
 
     use tempfile::TempDir;
     use version::Version;
@@ -621,21 +623,27 @@ mod tests {
         )?;
 
         let package = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "sys-libs/foo".to_owned(),
-            version: Version::try_new("0.1.0").unwrap(),
-            vars: BashVars::new(HashMap::from([
-                ("SRC_URI".to_owned(),
-                    BashValue::Scalar("https://example/f00-0.1.0.tar.gz -> foo-0.1.0.tar.gz extra? ( gs://chromeos-localmirror/foo-extra.tar.gz )".to_owned())),
-                ("RESTRICT".to_owned(),
-                    BashValue::Scalar("extra? ( mirror )".to_owned())),
-                ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: tmp.path().join("foo-0.1.0.ebuild"),
+                    package_name: "sys-libs/foo".to_owned(),
+                    short_package_name: "foo".to_owned(),
+                    category_name: "sys-libs".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    ("SRC_URI".to_owned(),
+                        BashValue::Scalar("https://example/f00-0.1.0.tar.gz -> foo-0.1.0.tar.gz extra? ( gs://chromeos-localmirror/foo-extra.tar.gz )".to_owned())),
+                    ("RESTRICT".to_owned(),
+                        BashValue::Scalar("extra? ( mirror )".to_owned())),
+                    ])),
+            }),
             slot: Slot::new("0"),
             use_map,
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: tmp.path().join("foo-0.1.0.ebuild"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
@@ -736,60 +744,67 @@ mod tests {
     #[test]
     fn cros_workon_pinned_package_with_subtree() -> Result<()> {
         let package = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "sys-boot/libpayload".to_owned(),
-            version: Version::try_new("0.1.0")?,
-            vars: BashVars::new(HashMap::from([
-                (
-                    "CROS_WORKON_PROJECT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "chromiumos/third_party/coreboot".to_owned(),
-                        "chromiumos/platform/vboot_reference".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_LOCALNAME".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "coreboot".to_owned(),
-                        "../platform/vboot_reference".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_SUBTREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "payloads/libpayload src/commonlib util/kconfig util/xcompile".to_owned(),
-                        "Makefile firmware".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_COMMIT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
-                        "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_TREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
-                        "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
-                        "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
-                        "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
-                        "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
-                        "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
-                    BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
-                ),
-            ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/dev/null"),
+                    package_name: "sys-boot/libpayload".to_owned(),
+                    short_package_name: "libpayload".to_owned(),
+                    category_name: "sys-boot".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    (
+                        "CROS_WORKON_PROJECT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "chromiumos/third_party/coreboot".to_owned(),
+                            "chromiumos/platform/vboot_reference".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_LOCALNAME".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "coreboot".to_owned(),
+                            "../platform/vboot_reference".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_SUBTREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "payloads/libpayload src/commonlib util/kconfig util/xcompile"
+                                .to_owned(),
+                            "Makefile firmware".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_COMMIT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
+                            "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_TREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
+                            "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
+                            "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
+                            "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
+                            "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
+                            "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                        BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
+                    ),
+                ])),
+            }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
@@ -852,61 +867,67 @@ mod tests {
     #[test]
     fn cros_workon_pinned_package_without_subtree() -> Result<()> {
         let package = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "sys-boot/depthcharge".to_owned(),
-            version: Version::try_new("0.1.0")?,
-            vars: BashVars::new(HashMap::from([
-                (
-                    "CROS_WORKON_PROJECT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "chromiumos/platform/depthcharge".to_owned(),
-                        "chromiumos/platform/vboot_reference".to_owned(),
-                        "chromiumos/third_party/coreboot".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_LOCALNAME".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "../platform/depthcharge".to_owned(),
-                        "../platform/vboot_reference".to_owned(),
-                        "../third_party/coreboot".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_COMMIT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "7e1e4037a9e46a9cbf502b2b20cdc9db1a84cf94".to_owned(),
-                        "52f28a4b68aa018fff3cc575610bc9c1c04a030f".to_owned(),
-                        "d5929971f3efe2e8a398c385309ca4aad110dc02".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_TREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "63534c063f7717bd89631830e076229c41829c17".to_owned(),
-                        "b7ba676717ca1fa2a26b1f3107afdce3be979a78".to_owned(),
-                        "5478a5900ed6376f77b84efb27677c105fc253d6".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_SUBTREE".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "".to_owned(),
-                        "".to_owned(),
-                        "".to_owned(),
-                    ])),
-                ),
-            ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/dev/null"),
+                    package_name: "sys-boot/depthcharge".to_owned(),
+                    short_package_name: "depthcharge".to_owned(),
+                    category_name: "sys-boot".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    (
+                        "CROS_WORKON_PROJECT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "chromiumos/platform/depthcharge".to_owned(),
+                            "chromiumos/platform/vboot_reference".to_owned(),
+                            "chromiumos/third_party/coreboot".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_LOCALNAME".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "../platform/depthcharge".to_owned(),
+                            "../platform/vboot_reference".to_owned(),
+                            "../third_party/coreboot".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_COMMIT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "7e1e4037a9e46a9cbf502b2b20cdc9db1a84cf94".to_owned(),
+                            "52f28a4b68aa018fff3cc575610bc9c1c04a030f".to_owned(),
+                            "d5929971f3efe2e8a398c385309ca4aad110dc02".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_TREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "63534c063f7717bd89631830e076229c41829c17".to_owned(),
+                            "b7ba676717ca1fa2a26b1f3107afdce3be979a78".to_owned(),
+                            "5478a5900ed6376f77b84efb27677c105fc253d6".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_SUBTREE".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "".to_owned(),
+                            "".to_owned(),
+                            "".to_owned(),
+                        ])),
+                    ),
+                ])),
+            }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
@@ -949,59 +970,65 @@ mod tests {
     #[test]
     fn cros_workon_pinned_package_with_chromite_subtree() -> Result<()> {
         let package = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "chromeos-base/hwid_extractor".to_owned(),
-            version: Version::try_new("0.1.0")?,
-            vars: BashVars::new(HashMap::from([
-                (
-                    "CROS_WORKON_PROJECT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "chromiumos/platform/factory".to_owned(),
-                        "chromiumos/chromite".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_LOCALNAME".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "platform/factory".to_owned(),
-                        "../chromite".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_SUBTREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "py".to_owned(),
-                        "lib bin scripts PRESUBMIT.cfg".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_COMMIT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
-                        "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_TREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
-                        "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
-                        "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
-                        "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
-                        "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
-                    BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
-                ),
-            ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/dev/null"),
+                    package_name: "chromeos-base/hwid_extractor".to_owned(),
+                    short_package_name: "hwid_extractor".to_owned(),
+                    category_name: "chromeos-base".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    (
+                        "CROS_WORKON_PROJECT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "chromiumos/platform/factory".to_owned(),
+                            "chromiumos/chromite".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_LOCALNAME".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "platform/factory".to_owned(),
+                            "../chromite".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_SUBTREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "py".to_owned(),
+                            "lib bin scripts PRESUBMIT.cfg".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_COMMIT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
+                            "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_TREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
+                            "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
+                            "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
+                            "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
+                            "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                        BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
+                    ),
+                ])),
+            }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
@@ -1077,50 +1104,56 @@ mod tests {
         )?;
 
         let package = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "chromeos-base/hwid_extractor".to_owned(),
-            version: Version::try_new("0.1.0")?,
-            vars: BashVars::new(HashMap::from([
-                (
-                    "CROS_WORKON_PROJECT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "chromiumos/platform/factory".to_owned(),
-                        "chromiumos/chromite".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_LOCALNAME".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "platform/factory".to_owned(),
-                        "../chromite".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_SUBTREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "py".to_owned(),
-                        "lib bin scripts PRESUBMIT.cfg".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_COMMIT".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_TREE".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
-                    BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
-                ),
-            ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/dev/null"),
+                    package_name: "chromeos-base/hwid_extractor".to_owned(),
+                    short_package_name: "hwid_extractor".to_owned(),
+                    category_name: "chromeos-base".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    (
+                        "CROS_WORKON_PROJECT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "chromiumos/platform/factory".to_owned(),
+                            "chromiumos/chromite".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_LOCALNAME".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "platform/factory".to_owned(),
+                            "../chromite".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_SUBTREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "py".to_owned(),
+                            "lib bin scripts PRESUBMIT.cfg".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_COMMIT".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_TREE".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                        BashValue::IndexedArray(Vec::from(["".to_owned(), "".to_owned()])),
+                    ),
+                ])),
+            }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
@@ -1158,49 +1191,55 @@ mod tests {
         )?;
 
         let package = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "sys-boot/coreboot".to_owned(),
-            version: Version::try_new("0.1.0")?,
-            vars: BashVars::new(HashMap::from([
-                (
-                    "CROS_WORKON_PROJECT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "chromiumos/third_party/coreboot".to_owned(),
-                        "chromiumos/platform/vboot_reference".to_owned(),
-                        "chromiumos/chromite".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_LOCALNAME".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "coreboot".to_owned(),
-                        "../platform/vboot_reference".to_owned(),
-                        "../../chromite".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_SUBTREE".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_COMMIT".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_TREE".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-            ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/dev/null"),
+                    package_name: "sys-boot/coreboot".to_owned(),
+                    short_package_name: "coreboot".to_owned(),
+                    category_name: "sys-boot".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    (
+                        "CROS_WORKON_PROJECT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "chromiumos/third_party/coreboot".to_owned(),
+                            "chromiumos/platform/vboot_reference".to_owned(),
+                            "chromiumos/chromite".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_LOCALNAME".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "coreboot".to_owned(),
+                            "../platform/vboot_reference".to_owned(),
+                            "../../chromite".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_SUBTREE".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_COMMIT".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_TREE".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                ])),
+            }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
@@ -1223,60 +1262,70 @@ mod tests {
 
     fn create_optional_subtree_package(use_map: UseMap) -> PackageDetails {
         PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "sys-boot/libpayload".to_owned(),
-            version: Version::try_new("0.1.0").unwrap(),
-            vars: BashVars::new(HashMap::from([
-                (
-                    "CROS_WORKON_PROJECT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "chromiumos/third_party/coreboot".to_owned(),
-                        "chromiumos/platform/vboot_reference".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_LOCALNAME".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "coreboot".to_owned(),
-                        "../platform/vboot_reference".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_SUBTREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "payloads/libpayload src/commonlib util/kconfig util/xcompile".to_owned(),
-                        "Makefile firmware".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_COMMIT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
-                        "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_TREE".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
-                        "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
-                        "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
-                        "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
-                        "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
-                        "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
-                    BashValue::IndexedArray(Vec::from(["use coreboot".to_owned(), "".to_owned()])),
-                ),
-            ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/dev/null"),
+                    package_name: "sys-boot/libpayload".to_owned(),
+                    short_package_name: "libpayload".to_owned(),
+                    category_name: "sys-boot".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    (
+                        "CROS_WORKON_PROJECT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "chromiumos/third_party/coreboot".to_owned(),
+                            "chromiumos/platform/vboot_reference".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_LOCALNAME".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "coreboot".to_owned(),
+                            "../platform/vboot_reference".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_SUBTREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "payloads/libpayload src/commonlib util/kconfig util/xcompile"
+                                .to_owned(),
+                            "Makefile firmware".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_COMMIT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "e71dd376a369e2351265e79e19e926594f92e604".to_owned(),
+                            "49820c727819ca566c65efa0525a8022f07cc27e".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_TREE".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "6f11773570dfaaade362374b0d0392c28cf17206".to_owned(),
+                            "5e822365b04b4690729ca6ec32935a177db97ed2".to_owned(),
+                            "514603540da793957fa87fa22df81b288fb39d0f".to_owned(),
+                            "b2307ed1e70bf1a5718afaa81217ec9504854005".to_owned(),
+                            "bc55f0377f73029f50c4c74d5936e4d7bde877c6".to_owned(),
+                            "e70ebd7c76b9f9ad44b59e3002a5c57be5b9dc12".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "use coreboot".to_owned(),
+                            "".to_owned(),
+                        ])),
+                    ),
+                ])),
+            }),
             slot: Slot::new("0"),
             use_map,
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
@@ -1390,53 +1439,59 @@ mod tests {
         )?;
 
         let package = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "sys-boot/depthcharge".to_owned(),
-            version: Version::try_new("9999")?,
-            vars: BashVars::new(HashMap::from([
-                (
-                    "CROS_WORKON_PROJECT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "chromiumos/platform/depthcharge".to_owned(),
-                        "chromiumos/platform/vboot_reference".to_owned(),
-                        "chromiumos/third_party/coreboot".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_LOCALNAME".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "../platform/depthcharge".to_owned(),
-                        "../platform/vboot_reference".to_owned(),
-                        "../third_party/coreboot".to_owned(),
-                    ])),
-                ),
-                (
-                    "CROS_WORKON_COMMIT".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_TREE".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_SUBTREE".to_owned(),
-                    BashValue::Scalar("".to_owned()),
-                ),
-                (
-                    "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
-                    BashValue::IndexedArray(Vec::from([
-                        "".to_owned(),
-                        "".to_owned(),
-                        "".to_owned(),
-                    ])),
-                ),
-            ])),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/dev/null"),
+                    package_name: "sys-boot/depthcharge".to_owned(),
+                    short_package_name: "depthcharge".to_owned(),
+                    category_name: "sys-boot".to_owned(),
+                    version: Version::try_new("0.1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::from([
+                    (
+                        "CROS_WORKON_PROJECT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "chromiumos/platform/depthcharge".to_owned(),
+                            "chromiumos/platform/vboot_reference".to_owned(),
+                            "chromiumos/third_party/coreboot".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_LOCALNAME".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "../platform/depthcharge".to_owned(),
+                            "../platform/vboot_reference".to_owned(),
+                            "../third_party/coreboot".to_owned(),
+                        ])),
+                    ),
+                    (
+                        "CROS_WORKON_COMMIT".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_TREE".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_SUBTREE".to_owned(),
+                        BashValue::Scalar("".to_owned()),
+                    ),
+                    (
+                        "CROS_WORKON_OPTIONAL_CHECKOUT".to_owned(),
+                        BashValue::IndexedArray(Vec::from([
+                            "".to_owned(),
+                            "".to_owned(),
+                            "".to_owned(),
+                        ])),
+                    ),
+                ])),
+            }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/dev/null"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,

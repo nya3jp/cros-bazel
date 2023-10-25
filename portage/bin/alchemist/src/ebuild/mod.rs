@@ -8,6 +8,7 @@ use anyhow::{Context, Result};
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
+    ops::Deref,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
@@ -24,7 +25,7 @@ use crate::{
     },
 };
 
-use self::metadata::{CachedEBuildEvaluator, MaybeEBuildMetadata};
+use self::metadata::{CachedEBuildEvaluator, EBuildBasicData, EBuildMetadata, MaybeEBuildMetadata};
 
 /// Parses IUSE defined by ebuild/eclasses and returns as an [IUseMap].
 fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
@@ -44,30 +45,14 @@ fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
         .collect())
 }
 
-type PackageResult = Result<PackageDetails, PackageMetadataError>;
-
-/// Holds the error that occurred when processing the ebuild.
-#[derive(Clone, Debug)]
-pub struct PackageMetadataError {
-    pub repo_name: String,
-    pub package_name: String,
-    pub ebuild: PathBuf,
-    pub version: Version,
-    pub error: String,
-}
-
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct PackageDetails {
-    pub repo_name: String,
-    pub package_name: String,
-    pub version: Version,
-    pub vars: BashVars,
+    pub metadata: Arc<EBuildMetadata>,
     pub slot: Slot,
     pub use_map: UseMap,
     pub accepted: bool,
     pub stable: bool,
     pub masked: bool,
-    pub ebuild_path: PathBuf,
     pub inherited: HashSet<String>,
     pub inherit_paths: Vec<PathBuf>,
     pub direct_build_target: Option<String>,
@@ -115,6 +100,53 @@ impl PackageDetails {
     }
 }
 
+impl Deref for PackageDetails {
+    type Target = EBuildMetadata;
+
+    fn deref(&self) -> &Self::Target {
+        &self.metadata
+    }
+}
+
+/// Represents an error that occurred when loading an ebuild.
+#[derive(Clone, Debug)]
+pub struct PackageLoadError {
+    pub metadata: MaybeEBuildMetadata,
+    pub error: String,
+}
+
+impl Deref for PackageLoadError {
+    type Target = MaybeEBuildMetadata;
+
+    fn deref(&self) -> &Self::Target {
+        &self.metadata
+    }
+}
+
+/// Represents a package, covering both successfully loaded ones and failed ones.
+///
+/// Since this enum is very lightweight (contains [`Arc`] only), you should not wrap it within
+/// reference-counting smart pointers like [`Arc`], but you can just clone it.
+///
+/// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
+/// to implement a few convenient methods.
+#[derive(Clone, Debug)]
+pub enum MaybePackageDetails {
+    Ok(Arc<PackageDetails>),
+    Err(Arc<PackageLoadError>),
+}
+
+impl Deref for MaybePackageDetails {
+    type Target = EBuildBasicData;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            MaybePackageDetails::Ok(details) => details,
+            MaybePackageDetails::Err(error) => error,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct PackageLoader {
     evaluator: Arc<CachedEBuildEvaluator>,
@@ -137,7 +169,7 @@ impl PackageLoader {
         }
     }
 
-    pub fn load_package(&self, ebuild_path: &Path) -> Result<PackageResult> {
+    pub fn load_package(&self, ebuild_path: &Path) -> Result<MaybePackageDetails> {
         // Drive the ebuild to read its metadata.
         let metadata = self.evaluator.evaluate_metadata(ebuild_path)?;
 
@@ -147,13 +179,10 @@ impl PackageLoader {
         let metadata = match metadata {
             MaybeEBuildMetadata::Ok(metadata) => metadata,
             MaybeEBuildMetadata::Err(error) => {
-                return Ok(PackageResult::Err(PackageMetadataError {
-                    repo_name: error.repo_name.clone(),
-                    package_name,
-                    ebuild: ebuild_path.to_owned(),
-                    version: error.version.clone(),
+                return Ok(MaybePackageDetails::Err(Arc::new(PackageLoadError {
                     error: error.error.clone(),
-                }))
+                    metadata: MaybeEBuildMetadata::Err(error),
+                })))
             }
         };
 
@@ -220,11 +249,8 @@ impl PackageLoader {
                 }
             });
 
-        Ok(PackageResult::Ok(PackageDetails {
-            repo_name: metadata.repo_name.clone(),
-            package_name,
-            version: metadata.version.clone(),
-            vars: metadata.vars.clone(),
+        Ok(MaybePackageDetails::Ok(Arc::new(PackageDetails {
+            metadata,
             slot,
             use_map,
             accepted,
@@ -232,19 +258,16 @@ impl PackageLoader {
             masked,
             inherited,
             inherit_paths,
-            ebuild_path: ebuild_path.to_owned(),
             direct_build_target,
-        }))
+        })))
     }
 }
-
-type CachedPackageResult = std::result::Result<Arc<PackageDetails>, Arc<PackageMetadataError>>;
 
 /// Wraps PackageLoader to cache results.
 #[derive(Debug)]
 pub struct CachedPackageLoader {
     loader: PackageLoader,
-    cache: Mutex<HashMap<PathBuf, Arc<OnceCell<CachedPackageResult>>>>,
+    cache: Mutex<HashMap<PathBuf, Arc<OnceCell<MaybePackageDetails>>>>,
 }
 
 impl CachedPackageLoader {
@@ -255,7 +278,7 @@ impl CachedPackageLoader {
         }
     }
 
-    pub fn load_package(&self, ebuild_path: &Path) -> Result<CachedPackageResult> {
+    pub fn load_package(&self, ebuild_path: &Path) -> Result<MaybePackageDetails> {
         let once_cell = {
             let mut cache_guard = self.cache.lock().unwrap();
             cache_guard
@@ -263,14 +286,7 @@ impl CachedPackageLoader {
                 .or_default()
                 .clone()
         };
-        let details = once_cell.get_or_try_init(|| -> Result<CachedPackageResult> {
-            match self.loader.load_package(ebuild_path)? {
-                PackageResult::Ok(details) => {
-                    Result::Ok(CachedPackageResult::Ok(Arc::new(details)))
-                }
-                PackageResult::Err(err) => Result::Ok(CachedPackageResult::Err(Arc::new(err))),
-            }
-        })?;
+        let details = once_cell.get_or_try_init(|| self.loader.load_package(ebuild_path))?;
         Ok(details.clone())
     }
 }

@@ -32,11 +32,13 @@ mod tests {
     use std::{
         collections::{HashMap, HashSet},
         path::PathBuf,
+        sync::Arc,
     };
 
     use crate::{
         bash::vars::{BashValue, BashVars},
         data::Slot,
+        ebuild::metadata::{EBuildBasicData, EBuildMetadata},
     };
 
     use super::*;
@@ -47,16 +49,22 @@ mod tests {
             vars.insert("RESTRICT".to_owned(), value);
         }
         PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "foo/bar".to_owned(),
-            version: "1.0".parse().unwrap(),
-            vars: BashVars::new(vars),
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from("/path/to/some.ebuild"),
+                    package_name: "foo/bar".to_owned(),
+                    short_package_name: "bar".to_owned(),
+                    category_name: "foo".to_owned(),
+                    version: "1.0".parse().unwrap(),
+                },
+                vars: BashVars::new(vars),
+            }),
             slot: Slot::new("0"),
             use_map,
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: PathBuf::from("/path/to/some.ebuild"),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,

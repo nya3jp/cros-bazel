@@ -15,7 +15,7 @@ use crate::{
         package::{PackageAtom, PackageDependencyAtom},
         Predicate,
     },
-    ebuild::{CachedPackageLoader, PackageDetails},
+    ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails},
     repository::RepositorySet,
 };
 
@@ -53,9 +53,9 @@ impl PackageResolver {
             .map(|ebuild_path| self.loader.load_package(&ebuild_path))
             .filter_map(|result| match result {
                 Ok(eval) => match eval {
-                    Ok(details) => Some(Ok(details)),
+                    MaybePackageDetails::Ok(details) => Some(Ok(details)),
                     // We ignore packages that had metadata evaluation errors.
-                    Err(_) => None,
+                    MaybePackageDetails::Err(_) => None,
                 },
                 Err(e) => Some(Err(e)),
             })
@@ -99,9 +99,9 @@ impl PackageResolver {
         let mut matches = Vec::with_capacity(packages.len());
         for eval in packages {
             let details = match eval {
-                Ok(details) => details,
+                MaybePackageDetails::Ok(details) => details,
                 // We ignore packages that had metadata evaluation errors.
-                Err(_) => continue,
+                MaybePackageDetails::Err(_) => continue,
             };
             match atom.package_matches(use_map, &details.as_package_ref()) {
                 Ok(result) => {

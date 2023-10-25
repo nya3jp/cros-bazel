@@ -125,7 +125,11 @@ fn generate_deps(packages: &[Package]) -> Result<Vec<Repository>> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, HashSet};
+    use std::{
+        collections::{HashMap, HashSet},
+        path::PathBuf,
+        sync::Arc,
+    };
 
     use alchemist::{
         analyze::{
@@ -134,7 +138,10 @@ mod tests {
         },
         bash::vars::BashVars,
         data::{Slot, UseMap},
-        ebuild::PackageDetails,
+        ebuild::{
+            metadata::{EBuildBasicData, EBuildMetadata},
+            PackageDetails,
+        },
     };
     use pretty_assertions::assert_eq;
     use url::Url;
@@ -192,33 +199,33 @@ mod tests {
             install_host_deps: vec![],
         };
 
-        let details_prototype = PackageDetails {
-            repo_name: "baz".to_owned(),
-            package_name: "prototype".to_owned(),
-            version: Version::try_new("1.0").unwrap(),
-            vars: BashVars::new(HashMap::new()),
+        let make_details = |short_package_name: &str| PackageDetails {
+            metadata: Arc::new(EBuildMetadata {
+                basic_data: EBuildBasicData {
+                    repo_name: "baz".to_owned(),
+                    ebuild_path: PathBuf::from(format!(
+                        "/somewhere/sys-apps/{short_package_name}-1.0.ebuild"
+                    )),
+                    package_name: format!("sys-apps/{short_package_name}"),
+                    short_package_name: short_package_name.to_owned(),
+                    category_name: "sys-apps".to_owned(),
+                    version: Version::try_new("1.0").unwrap(),
+                },
+                vars: BashVars::new(HashMap::new()),
+            }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
             accepted: true,
             stable: true,
             masked: false,
-            ebuild_path: "/somewhere/sys-apps/prototype-1.0.ebuild".into(),
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
         };
 
-        let mut details1 = details_prototype.clone();
-        details1.package_name = "sys-apps/p1".to_owned();
-        details1.ebuild_path = "/somewhere/sys-apps/p1-1.0.ebuild".into();
-
-        let mut details2 = details_prototype.clone();
-        details2.package_name = "sys-apps/p2".to_owned();
-        details2.ebuild_path = "/somewhere/sys-apps/p2-1.0.ebuild".into();
-
-        let mut details3 = details_prototype.clone();
-        details3.package_name = "sys-apps/p3".to_owned();
-        details3.ebuild_path = "/somewhere/sys-apps/p3-1.0.ebuild".into();
+        let details1 = make_details("p1");
+        let details2 = make_details("p2");
+        let details3 = make_details("p3");
 
         let packages = vec![
             Package {

@@ -9,7 +9,7 @@ use alchemist::{
         dependency::PackageDependencies,
         source::{PackageDistSource, PackageSources},
     },
-    ebuild::{PackageDetails, PackageMetadataError},
+    ebuild::{PackageDetails, PackageLoadError},
     repository::RepositorySet,
 };
 use anyhow::Result;
@@ -155,7 +155,7 @@ pub struct PackageAnalysisError {
 
 #[derive(Clone, Debug)]
 pub enum PackageError {
-    PackageMetadataError(PackageMetadataError),
+    PackageMetadataError(PackageLoadError),
     PackageAnalysisError(PackageAnalysisError),
 }
 
@@ -174,7 +174,7 @@ impl PackageError {
     }
     pub fn ebuild(&self) -> &Path {
         match self {
-            Self::PackageMetadataError(p) => &p.ebuild,
+            Self::PackageMetadataError(p) => &p.ebuild_path,
             Self::PackageAnalysisError(p) => &p.details.ebuild_path,
         }
     }
