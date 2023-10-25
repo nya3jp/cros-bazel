@@ -10,37 +10,113 @@ with a few additional repositories.
 ```sh
 $ mkdir ~/chromiumos
 $ cd ~/chromiumos
+# If you have access to the internal manifests:
 $ repo init -u https://chrome-internal.googlesource.com/chromeos/manifest-internal -g default,bazel -b snapshot
+# Otherwise:
+$ repo init -u https://chromium.googlesource.com/chromiumos/manifest -g default,bazel -b snapshot
 $ repo sync -c -j 16
 $ cd src
 ```
 
-We use the `snapshot` branch rather than `main` because Bazel's caching logic
-requires all inputs to match exactly, so you're better off working from the
-`snapshot` branch that was already built by the Snapshot/CQ builders rather
-than working from `main` and picking up whatever commit happened to be at ToT
-at the time you ran `repo sync`. You'll be at most 40 minutes behind ToT, and
-you'll have the best chance of getting cache hits to speed your builds. It's
-safe to run the `repo init` command atop an existing checkout, which will
-switch you to the `snapshot` branch.
+- `-g default,bazel` is important to check out some additional repositories
+  needed to build with Bazel.
+- We use the `snapshot` branch rather than `main` because Bazel's caching logic
+  requires all inputs to match exactly, so you're better off working from the
+  `snapshot` branch that was already built by the Snapshot/CQ builders rather
+  than working from `main` and picking up whatever commit happened to be at ToT
+  at the time you ran `repo sync`. You'll be at most 40 minutes behind ToT, and
+  you'll have the best chance of getting cache hits to speed your builds.
+- It's safe to run the `repo init` command atop an existing checkout.
 
 Unless otherwise specified, examples in this doc assume that your current
 directory is `~/chromiumos/src`.
 
 ## Building packages
 
-Before you start building a package you need to ensure that `which bazel` prints a path under
-your [depot_tools] checkout. The wrapper script provided by `depot_tools` performs additional
-tasks besides running the real `bazel` executable.
+We support two configurations to build ChromeOS with Bazel:
 
-The syntax for specifying a `portage` package is:
+1. Run Bazel inside the CrOS SDK chroot (**recommended**).
+2. Run Bazel outside the CrOS SDK chroot.
+
+### Run Bazel inside the CrOS SDK chroot
+
+*** promo
+This is the current recommended way. It is mostly compatible with the current
+Portage-based build: Bazel honors Portage's site-specific configurations in
+`/etc/portage` in the chroot, including `cros workon` states of packages.
+Also, this is the only way you're going to get remote cache hits right now.
+On the other hand, you still need to set up a CrOS SDK chroot.
+***
+
+First, enter the CrOS SDK chroot with `cros_sdk` command, which will create a
+new one if you haven't already. Then run the following command to create the
+`amd64-host` sysroot.
+
+```sh
+(cr) $ /mnt/host/source/src/scripts/create_sdk_board_root --board amd64-host --profile sdk/bootstrap
+```
+
+This will create `/build/amd64-host`. This sysroot contains the Portage
+configuration that is used when building host tool packages. i.e., [CBUILD].
+
+You can then proceed to create the target board's sysroot:
+
+```sh
+(cr) $ setup_board --board amd64-generic --skip-chroot-upgrade --skip-toolchain-update
+```
+
+Now that you have configured your chroot, you can invoke a build with the
+standard `cros build-packages` command, except that you need to pass the extra
+option `--bazel` to build with Bazel.
+
+To build a single Portage package, e.g. `sys-apps/attr`:
+
+```sh
+$ cros build-packages --board=amd64-generic --bazel sys-apps/attr
+```
+
+To build all packages included in the ChromeOS test image:
+
+```sh
+$ cros build-packages --board=amd64-generic --bazel
+```
+
+Upon successful completion, packages are installed to the sysroot inside the
+CrOS SDK chroot.
+
+*** aside
+Alternatively, you can run Bazel directly inside the CrOS SDK chroot to build
+specific targets, except that you need to use
+`/mnt/host/source/chromite/bin/bazel` instead of `/usr/bin/bazel`. Read the
+following section to see how to specify build targets.
+***
+
+### Run Bazel outside the CrOS SDK chroot
+
+*** promo
+This is an experimental way. It works without setting up the CrOS SDK chroot.
+`cros workon` states in the CrOS SDK chroot are ignored even if they exist, and
+the live (9999) version of packages (if they exist and are not marked as
+`CROS_WORKON_MANUAL_UPREV`) will be chosen by default. This means you can edit
+your source code and feel confident that the correct packages are getting
+rebuilt, though it might cause some build issues when live ebuilds are not
+prepared for Bazel builds. Note that you'll get no remote cache hits from CI
+builds today.
+***
+
+Before you start building a package you need to ensure that `which bazel` prints
+a path under your [depot_tools] checkout. The wrapper script provided by
+`depot_tools` performs additional tasks besides running the real `bazel`
+executable.
+
+The syntax for specifying a Portage package is:
 
 ```
 @portage//<host|target>/<category>/<package>`.
 ```
 
-`host` means the build host ([CBUILD]), and `target` means the cross-compiled target ([CHOST])
-specified by the `BOARD` environment variable.
+`host` means the build host ([CBUILD]), and `target` means the cross-compiled
+target ([CHOST]) specified by the `BOARD` environment variable.
 
 Now you're ready to start building. To build a single Portage package, e.g.
 `sys-apps/attr`:
@@ -57,7 +133,7 @@ $ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set
 
 A `package_set` is a special target that also includes the target's [PDEPEND]s.
 
-To build a package for the `host` , use the `host` prefix:
+To build a package for the host, use the `host` prefix:
 
 ```sh
 $ BOARD=amd64-generic bazel build @portage//host/app-shells/bash
@@ -69,46 +145,23 @@ To build all packages included in the ChromeOS test image:
 $ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set @portage//target/virtual/target-os-dev:package_set @portage//target/virtual/target-os-test:package_set
 ```
 
-When building packages outside the chroot, the `9999` version of packages (if they exist and are
-not marked as `CROS_WORKON_MANUAL_UPREV`) will be chosen by default. This means you can edit
-your source code and feel confident that the correct packages are getting rebuilt.
-
 [depot_tools]: https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
-[PDEPEND]: https://devmanual.gentoo.org/general-concepts/dependencies/#post-dependencies
 [CBUILD]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
 [CHOST]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
-
-### Inside CrOS SDK chroot
-
-Inside CrOS SDK chroot (i.e. the build environment you enter with `cros_sdk` command), you should be able to run the same command except that you need to use `/mnt/host/source/chromite/bin/bazel` instead of `bazel`.
-
-Before you do anything, ensure you have created the `amd64-host` `sysroot`.
-
-```sh
-(cr) $ /mnt/host/source/src/scripts/create_sdk_board_root --board amd64-host --profile sdk/bootstrap
-```
-
-This will create `/build/amd64-host`. This `sysroot` contains the portage configuration that is
-used when building `host` tool packages. i.e., [CBUILD].
-
-You can then proceed to create the board's `sysroot`:
-
-```sh
-(cr) $ setup_board --board amd64-generic --skip-chroot-upgrade --skip-toolchain-update
-```
-
-Now that you have configured your chroot, you can invoke a build:
-
-```sh
-(cr) $ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/sys-apps/attr
-```
-
-You can also run `build_packages --bazel --board=$BOARD` to run `build_packages` with Bazel.
-
-`cros-workon-$BOARD start <pkg>` is required to work on a `9999` package when working inside the
-chroot.
+[PDEPEND]: https://devmanual.gentoo.org/general-concepts/dependencies/#post-dependencies
 
 ## Building images
+
+When you run Bazel inside the CrOS SDK chroot, you can simply use the standard
+`cros build-image` command to build ChromeOS images.
+
+The rest of the section describes the **very experimental** way to build
+ChromeOS images under Bazel outside the CrOS SDK chroot.
+
+*** note
+As of Oct 2023, we don't actively test building ChromeOS images under Bazel
+due to priority reasons. You can try the following instruction, but it may fail.
+***
 
 We have the following targets to build images:
 
@@ -122,10 +175,6 @@ We have the following targets to build images:
 For historical reasons, the output file name of the dev image is
 chromiumos_image.bin, not chromiumos_dev_image.bin.
 ***
-
-As of June 2023, we primarily test our builds for amd64-generic and
-arm64-generic. Please file bugs if images don't build for these two boards.
-Other boards may or may not work (yet).
 
 Building a ChromeOS image takes several hours. Most packages build in a few
 minutes, but there are several known heavy packages, such as
@@ -155,7 +204,9 @@ You can also use `cros_vm` command to stop the VM.
 $ chromite/bin/cros_vm --stop
 ```
 
-## Enabling @portage tab completion
+## Advanced information
+
+### Enabling @portage tab completion
 
 By default you can't tab complete the `@portage//` repository. This is because
 bazel doesn't provide support for tab completing external repositories. By
@@ -168,7 +219,7 @@ generate analysis errors. This is why this flag is not enabled by default.
 The `@portage` symlink has another added benefit, you can easily browse the
 generated `BUILD.bazel` files.
 
-## Testing your change
+### Testing your change
 
 The `run_tests.sh` script runs currently available tests:
 
@@ -180,9 +231,9 @@ Optionally, you can skip running some tests by specifying some of the following
 environment variables when running `run_tests.sh`: `SKIP_CARGO_TESTS=1`,
 `SKIP_BAZEL_TESTS=1`, `SKIP_PORTAGE_TESTS=1`.
 
-## Troubleshooting
+### Troubleshooting
 
-### Bad cache results when non-hermetic inputs change
+#### Bad cache results when non-hermetic inputs change
 Bazel is able to correctly reuse content from the cache when all inputs are
 identified to it so it can detect when they change. Since our toolchain and our
 host tools (e.g. gsutil) are not yet fully hermetic, it's possible that you'll
@@ -193,7 +244,7 @@ artifacts that seem not to be cleared without the `--expunge` flag.
 If you find you need the `--expunge` flag, please file a bug to let the
 Bazelification team know about the non-hermeticity so we can fix the problem.
 
-## Directory structure
+### Directory structure
 
 * `portage/` ... for building Portage packages (aka Alchemy)
     * `bin/` ... executables
@@ -205,9 +256,9 @@ Bazelification team know about the non-hermeticity so we can fix the problem.
     * `tools/` ... misc small tools for development
 * `workspace_root/` ... contains various files to be symlinked to the workspace root, including `WORKSPACE.bazel` and `BUILD.bazel`
 
-## Misc Memo
+### Misc Memo
 
-### Bazel remote caching with RBE
+#### Bazel remote caching with RBE
 
 You can speed up the build by enabling remote Bazel caching with RBE.
 To do this, follow [this instruction](https://chromium.googlesource.com/chromiumos/docs/+/HEAD/developer_guide.md#authenticate-for-remote-bazel-caching-with-rbe_if-applicable)
@@ -216,7 +267,7 @@ to authenticate.
 After authentication, make sure that you restart the Bazel instance by running
 `bazel shutdown`.
 
-### Debugging a failing package
+#### Debugging a failing package
 
 Sometimes you want to enter an ephemeral CrOS chroot where a package build is
 failing to inspect the environment interactively.
@@ -235,7 +286,7 @@ an interactive console:
 - `--login=after`: after building the package (default)
 - `--login=after-fail`: after failing to build the package
 
-### Using Goma to build Chrome
+#### Using Goma to build Chrome
 
 Building `chromeos-base/chromeos-chrome` takes 2-3 hours, but you can use Goma
 to make it as fast as less than 1 hour.
@@ -262,7 +313,7 @@ You can also run `build_packages` with `--run-goma` to run it with Goma.
 $ build_packages --bazel --board=amd64-generic --run-goma
 ```
 
-### Injecting prebuilt binary packages
+#### Injecting prebuilt binary packages
 
 In the case your work is blocked by some package build failures, you can
 workaround them by injecting prebuilt binary packages via command line flags.
@@ -313,7 +364,7 @@ $ BOARD=amd64-generic bazel build --config=prebuilts/stage2-board-sdk @portage//
 [generate_chrome_prebuilt_config.py]: ./portage/tools/generate_chrome_prebuilt_config.py
 [generate-stage2-prebuilts]: ./portage/tools/generate-stage2-prebuilts
 
-### Extracting binary packages
+#### Extracting binary packages
 
 In case you need to extract the contents of a binary package so you can easily
 inspect it, you can use the `xpak split` CLI.
@@ -322,7 +373,7 @@ inspect it, you can use the `xpak split` CLI.
 bazel run //bazel/portage/bin/xpak:xpak -- split --extract libffi-3.1-r8.tbz2 libusb-0-r2.tbz2
 ```
 
-### Running tests on every local commit
+#### Running tests on every local commit
 
 If you'd like to run the tests every time you commit, add the following. You can
 skip it with `git commit --no-verify`.
