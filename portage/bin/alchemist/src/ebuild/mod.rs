@@ -109,7 +109,7 @@ impl Deref for PackageDetails {
 }
 
 /// Represents an error that occurred when loading an ebuild.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct PackageLoadError {
     pub metadata: MaybeEBuildMetadata,
     pub error: String,

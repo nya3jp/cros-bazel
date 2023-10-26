@@ -36,7 +36,7 @@ use tracing::instrument;
 use crate::alchemist::TargetData;
 
 use self::{
-    common::{Package, PackageAnalysisError, PackageError},
+    common::{Package, PackageAnalysisError},
     deps::generate_deps_file,
     internal::overlays::generate_internal_overlays,
     internal::packages::{
@@ -181,9 +181,9 @@ fn analyze_packages(
     src_dir: &Path,
     host_resolver: Option<&PackageResolver>,
     target_resolver: &PackageResolver,
-) -> (Vec<Package>, Vec<PackageAnalysisError>) {
+) -> (Vec<Arc<Package>>, Vec<Arc<PackageAnalysisError>>) {
     // Analyze packages in parallel.
-    let (all_partials, failures): (Vec<PackagePartial>, Vec<PackageAnalysisError>) =
+    let (all_partials, failures): (Vec<PackagePartial>, Vec<Arc<PackageAnalysisError>>) =
         all_details.par_iter().partition_map(|details| {
             let result = (|| -> Result<PackagePartial> {
                 if details.masked {
@@ -204,10 +204,10 @@ fn analyze_packages(
             })();
             match result {
                 Ok(package) => Either::Left(package),
-                Err(err) => Either::Right(PackageAnalysisError {
-                    details: details.clone(),
+                Err(err) => Either::Right(Arc::new(PackageAnalysisError {
+                    details: MaybePackageDetails::Ok(details.clone()),
                     error: format!("{err:#}"),
-                }),
+                })),
             }
         });
 
@@ -286,13 +286,13 @@ fn analyze_packages(
             let build_host_deps = build_host_deps_by_path
                 .remove(partial.details.ebuild_path.as_path())
                 .unwrap();
-            Package {
+            Arc::new(Package {
                 details: partial.details,
                 dependencies: partial.dependencies,
                 install_set,
                 sources: partial.sources,
                 build_host_deps,
-            }
+            })
         })
         .collect();
 
@@ -303,7 +303,7 @@ fn load_packages(
     host: Option<&TargetData>,
     target: &TargetData,
     src_dir: &Path,
-) -> Result<(Vec<Package>, Vec<PackageError>)> {
+) -> Result<(Vec<Arc<Package>>, Vec<Arc<PackageAnalysisError>>)> {
     eprintln!(
         "Loading packages for {}:{}...",
         target.board, target.profile
@@ -338,12 +338,13 @@ fn load_packages(
         &target.resolver,
     );
 
-    let metadata_errors_packed = metadata_errors
-        .into_iter()
-        .map(|e| PackageError::PackageMetadataError((*e).clone()));
-    let analysis_errors_packed = analysis_errors
-        .into_iter()
-        .map(|e| PackageError::PackageAnalysisError(e.clone()));
+    let metadata_errors_packed = metadata_errors.into_iter().map(|e| {
+        Arc::new(PackageAnalysisError {
+            error: e.error.clone(),
+            details: MaybePackageDetails::Err(e),
+        })
+    });
+    let analysis_errors_packed = analysis_errors.into_iter();
     let errors = metadata_errors_packed
         .chain(analysis_errors_packed)
         .collect();
@@ -352,11 +353,11 @@ fn load_packages(
 }
 
 // Searches the `Package`s for the `atom` with the best version.
-fn find_best_package_in<'a>(
+fn find_best_package_in(
     atom: &PackageAtom,
-    packages: &'a [Package],
-    resolver: &'a PackageResolver,
-) -> Result<Option<&'a Package>> {
+    packages: &[Arc<Package>],
+    resolver: &PackageResolver,
+) -> Result<Option<Arc<Package>>> {
     let sdk_packages = packages
         .iter()
         .filter(|package| atom.matches(&package.details.as_thin_package_ref()))
@@ -377,13 +378,14 @@ fn find_best_package_in<'a>(
 
     Ok(sdk_packages
         .into_iter()
-        .find(|p| p.details.version == best_sdk_package_details.version))
+        .find(|p| p.details.version == best_sdk_package_details.version)
+        .map(|p| p.clone()))
 }
 
-fn get_bootstrap_sdk_package<'a>(
-    host_packages: &'a [Package],
-    host_resolver: &'a PackageResolver,
-) -> Result<Option<&'a Package>> {
+fn get_bootstrap_sdk_package(
+    host_packages: &[Arc<Package>],
+    host_resolver: &PackageResolver,
+) -> Result<Option<Arc<Package>>> {
     // TODO: Add a parameter to pass this along
     let sdk_atom = PackageAtom::from_str("virtual/target-chromium-os-sdk-bootstrap")?;
 
@@ -397,7 +399,7 @@ pub fn generate_stages(
     translator: &PathTranslator,
     src_dir: &Path,
     output_dir: &Path,
-) -> Result<Vec<Package>> {
+) -> Result<Vec<Arc<Package>>> {
     let mut all_packages = vec![];
 
     let (host_packages, host_failures) = load_packages(Some(host), host, src_dir)?;
@@ -411,6 +413,7 @@ pub fn generate_stages(
     // when we generate the BUILD files.
     let bootstrap_package = get_bootstrap_sdk_package(&host_packages, &host.resolver)?;
     let sdk_packages = bootstrap_package
+        .as_ref()
         .map(|package| {
             package
                 .install_set
@@ -474,7 +477,7 @@ pub fn generate_stages(
                 // target, and we don't want those pre-installed.
                 source_sdk: "stage1/target/host:base",
                 source_repo_set: &host.repos,
-                bootstrap_package,
+                bootstrap_package: bootstrap_package.as_ref(),
             },
             output_dir,
         )?;

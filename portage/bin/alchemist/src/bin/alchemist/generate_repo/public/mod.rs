@@ -9,10 +9,11 @@ use std::{
     fs::{create_dir_all, File},
     io::Write,
     path::Path,
+    sync::Arc,
 };
 use tracing::instrument;
 
-use alchemist::resolver::PackageResolver;
+use alchemist::{ebuild::MaybePackageDetails, resolver::PackageResolver};
 use anyhow::{anyhow, Context, Result};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -20,7 +21,7 @@ use serde::Serialize;
 use tera::Tera;
 use version::Version;
 
-use super::common::{Package, PackageError, AUTOGENERATE_NOTICE};
+use super::common::{MaybePackage, Package, PackageAnalysisError, AUTOGENERATE_NOTICE};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -71,32 +72,6 @@ struct BuildTemplateContext<'a> {
     ebuild_failures: Vec<EbuildFailureEntry<'a>>,
 }
 
-enum MaybePackage<'a> {
-    Package(&'a Package),
-    PackageError(&'a PackageError),
-}
-
-impl MaybePackage<'_> {
-    fn repo_name(&self) -> &str {
-        match self {
-            Self::Package(p) => &p.details.repo_name,
-            Self::PackageError(p) => p.repo_name(),
-        }
-    }
-    fn package_name(&self) -> &str {
-        match self {
-            Self::Package(p) => &p.details.package_name,
-            Self::PackageError(p) => p.package_name(),
-        }
-    }
-    fn version(&self) -> &Version {
-        match self {
-            Self::Package(p) => &p.details.version,
-            Self::PackageError(p) => p.version(),
-        }
-    }
-}
-
 fn get_ebuild_name_from_path(ebuild_path: &Path) -> Result<String> {
     Ok(ebuild_path
         .file_name()
@@ -116,7 +91,7 @@ fn generate_public_package(
 
     // Deduplicate versions.
     let version_to_maybe_package: BTreeMap<&Version, &MaybePackage> =
-        maybe_packages.iter().map(|p| (p.version(), p)).collect();
+        maybe_packages.iter().map(|p| (&p.version, p)).collect();
 
     let mut aliases = Vec::new();
     let mut test_suites = Vec::new();
@@ -140,8 +115,8 @@ fn generate_public_package(
                                 Cow::from(format!(
                                     "//internal/packages/{}/{}/{}:{}{}{}",
                                     target.prefix,
-                                    maybe_package.repo_name(),
-                                    maybe_package.package_name(),
+                                    maybe_package.repo_name,
+                                    maybe_package.package_name,
                                     version,
                                     suffix,
                                     target_suffix,
@@ -159,10 +134,7 @@ fn generate_public_package(
             name: Cow::from(format!("{}_test", version)),
             test_name: Cow::from(format!(
                 "//internal/packages/{}/{}/{}:{}_test",
-                test_prefix,
-                maybe_package.repo_name(),
-                maybe_package.package_name(),
-                version,
+                test_prefix, maybe_package.repo_name, maybe_package.package_name, version,
             )),
         });
     }
@@ -170,16 +142,16 @@ fn generate_public_package(
     let package_details = maybe_packages
         .iter()
         .filter_map(|maybe_package| match maybe_package {
-            MaybePackage::Package(p) => Some(p.details.clone()),
+            MaybePackage::Ok(package) => Some(package.details.clone()),
             _ => None,
         })
         .collect_vec();
     let non_masked_failures = maybe_packages
         .iter()
         .filter_map(|maybe_package| match maybe_package {
-            MaybePackage::PackageError(p) => match p {
-                PackageError::PackageAnalysisError(e) if e.details.masked => None,
-                _ => Some(*p),
+            MaybePackage::Err(error) => match &error.details {
+                MaybePackageDetails::Ok(details) if details.masked => None,
+                _ => Some(error.as_ref()),
             },
             _ => None,
         })
@@ -242,8 +214,8 @@ fn generate_public_package(
     let ebuild_failures = non_masked_failures
         .iter()
         .map(|failed_package| EbuildFailureEntry {
-            name: Cow::from(get_ebuild_name_from_path(failed_package.ebuild()).unwrap()),
-            error: Cow::from(failed_package.error()),
+            name: Cow::from(get_ebuild_name_from_path(&failed_package.ebuild_path).unwrap()),
+            error: Cow::from(&failed_package.error),
         })
         .collect();
 
@@ -264,23 +236,23 @@ fn generate_public_package(
     Ok(())
 }
 
-fn join_by_package_name<'a>(
-    all_packages: &'a [Package],
-    failed_packages: &'a [PackageError],
-) -> HashMap<String, Vec<MaybePackage<'a>>> {
+fn join_by_package_name(
+    all_packages: &[Arc<Package>],
+    failed_packages: &[Arc<PackageAnalysisError>],
+) -> HashMap<String, Vec<MaybePackage>> {
     let mut packages_by_name = HashMap::new();
 
-    let converted_all = all_packages.iter().map(MaybePackage::Package);
-    let converted_failed = failed_packages.iter().map(MaybePackage::PackageError);
+    let converted_all = all_packages.iter().cloned().map(MaybePackage::Ok);
+    let converted_failed = failed_packages.iter().cloned().map(MaybePackage::Err);
     for package in converted_all.chain(converted_failed) {
         packages_by_name
-            .entry(package.package_name().to_string())
+            .entry(package.package_name.clone())
             .or_insert_with(Vec::new)
             .push(package);
     }
 
     for packages in packages_by_name.values_mut() {
-        packages.sort_by(|a, b| a.version().cmp(b.version()));
+        packages.sort_by(|a, b| a.version.cmp(&b.version));
     }
 
     packages_by_name
@@ -303,8 +275,8 @@ pub struct TargetConfig<'a> {
 ///   to run tests for.
 #[instrument(skip_all)]
 pub fn generate_public_packages(
-    all_packages: &[Package],
-    failed_packages: &[PackageError],
+    all_packages: &[Arc<Package>],
+    failed_packages: &[Arc<PackageAnalysisError>],
     resolver: &PackageResolver,
     targets: &[TargetConfig],
     test_prefix: &str,

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{fs::File, path::Path};
+use std::{fs::File, path::Path, sync::Arc};
 
 use alchemist::analyze::source::PackageLocalSource;
 use anyhow::Result;
@@ -46,7 +46,7 @@ enum Repository {
     },
 }
 
-pub fn generate_deps_file(packages: &[Package], out: &Path) -> Result<()> {
+pub fn generate_deps_file(packages: &[Arc<Package>], out: &Path) -> Result<()> {
     let repos = generate_deps(packages)?;
     let mut file = File::create(out)?;
     serde_json::to_writer(&mut file, &repos)?;
@@ -54,7 +54,7 @@ pub fn generate_deps_file(packages: &[Package], out: &Path) -> Result<()> {
 }
 
 #[instrument(skip_all)]
-fn generate_deps(packages: &[Package]) -> Result<Vec<Repository>> {
+fn generate_deps(packages: &[Arc<Package>]) -> Result<Vec<Repository>> {
     let joined_dists: Vec<DistFileEntry> = packages
         .iter()
         .flat_map(|package| {
@@ -228,27 +228,27 @@ mod tests {
         let details3 = make_details("p3");
 
         let packages = vec![
-            Package {
+            Arc::new(Package {
                 details: details1.into(),
                 dependencies: dependencies.clone(),
                 sources: cipd_sources,
                 install_set: vec![],
                 build_host_deps: vec![],
-            },
-            Package {
+            }),
+            Arc::new(Package {
                 details: details2.into(),
                 dependencies: dependencies.clone(),
                 sources: gs_sources,
                 install_set: vec![],
                 build_host_deps: vec![],
-            },
-            Package {
+            }),
+            Arc::new(Package {
                 details: details3.into(),
                 dependencies: dependencies.clone(),
                 sources: https_sources,
                 install_set: vec![],
                 build_host_deps: vec![],
-            },
+            }),
         ];
 
         let repos = generate_deps(&packages)?;

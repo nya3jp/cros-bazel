@@ -2,20 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{path::Path, sync::Arc};
+use std::{ops::Deref, sync::Arc};
 
 use alchemist::{
     analyze::{
         dependency::PackageDependencies,
         source::{PackageDistSource, PackageSources},
     },
-    ebuild::{PackageDetails, PackageLoadError},
+    ebuild::{metadata::EBuildBasicData, MaybePackageDetails, PackageDetails},
     repository::RepositorySet,
 };
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
-use version::Version;
 
 pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n";
 
@@ -145,49 +144,49 @@ pub struct Package {
     pub build_host_deps: Vec<Arc<PackageDetails>>,
 }
 
-/// Holds information for packages whose metadata was loaded successfully, but
-/// the analysis failed.
-#[derive(Clone, Debug)]
+impl Deref for Package {
+    type Target = PackageDetails;
+
+    fn deref(&self) -> &Self::Target {
+        &self.details
+    }
+}
+
+/// Holds information for packages that we failed to analyze.
+#[derive(Debug)]
 pub struct PackageAnalysisError {
-    pub details: Arc<PackageDetails>,
+    pub details: MaybePackageDetails,
     pub error: String,
 }
 
-#[derive(Clone, Debug)]
-pub enum PackageError {
-    PackageMetadataError(PackageLoadError),
-    PackageAnalysisError(PackageAnalysisError),
+impl Deref for PackageAnalysisError {
+    type Target = MaybePackageDetails;
+
+    fn deref(&self) -> &Self::Target {
+        &self.details
+    }
 }
 
-impl PackageError {
-    pub fn repo_name(&self) -> &str {
+/// Represents a package, covering both successfully analyzed ones and failed ones.
+///
+/// Since this enum is very lightweight (contains [`Arc`] only), you should not wrap it within
+/// reference-counting smart pointers like [`Arc`], but you can just clone it.
+///
+/// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
+/// to implement a few convenient methods.
+#[derive(Clone)]
+pub enum MaybePackage {
+    Ok(Arc<Package>),
+    Err(Arc<PackageAnalysisError>),
+}
+
+impl Deref for MaybePackage {
+    type Target = EBuildBasicData;
+
+    fn deref(&self) -> &Self::Target {
         match self {
-            Self::PackageMetadataError(p) => &p.repo_name,
-            Self::PackageAnalysisError(p) => &p.details.repo_name,
-        }
-    }
-    pub fn package_name(&self) -> &str {
-        match self {
-            Self::PackageMetadataError(p) => &p.package_name,
-            Self::PackageAnalysisError(p) => &p.details.package_name,
-        }
-    }
-    pub fn ebuild(&self) -> &Path {
-        match self {
-            Self::PackageMetadataError(p) => &p.ebuild_path,
-            Self::PackageAnalysisError(p) => &p.details.ebuild_path,
-        }
-    }
-    pub fn version(&self) -> &Version {
-        match self {
-            Self::PackageMetadataError(p) => &p.version,
-            Self::PackageAnalysisError(p) => &p.details.version,
-        }
-    }
-    pub fn error(&self) -> &str {
-        match self {
-            Self::PackageMetadataError(p) => &p.error,
-            Self::PackageAnalysisError(p) => &p.error,
+            MaybePackage::Ok(package) => package,
+            MaybePackage::Err(error) => error,
         }
     }
 }

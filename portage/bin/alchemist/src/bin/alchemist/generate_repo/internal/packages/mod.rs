@@ -29,7 +29,7 @@ use tracing::instrument;
 
 use crate::generate_repo::common::{
     package_details_to_target_path, repository_set_to_target_path, DistFileEntry, Package,
-    PackageError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    PackageAnalysisError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {
@@ -423,11 +423,11 @@ pub struct EBuildFailure {
 }
 
 impl EBuildFailure {
-    pub fn new(failure: &PackageError) -> Self {
+    pub fn new(failure: &PackageAnalysisError) -> Self {
         EBuildFailure {
-            ebuild_name: get_ebuild_name_from_path(failure.ebuild()).unwrap(),
-            version: failure.version().to_string(),
-            error: failure.error().to_string(),
+            ebuild_name: get_ebuild_name_from_path(&failure.ebuild_path).unwrap(),
+            version: failure.version.to_string(),
+            error: failure.error.clone(),
         }
     }
 }
@@ -443,7 +443,7 @@ struct BuildTemplateContext<'a> {
 
 struct PackagesInDir<'a> {
     packages: Vec<&'a Package>,
-    failed_packages: Vec<&'a PackageError>,
+    failed_packages: Vec<&'a PackageAnalysisError>,
 }
 
 fn generate_package_build_file(
@@ -504,8 +504,13 @@ fn generate_package(
     let ebuilds = packages_in_dir
         .packages
         .iter()
-        .map(|p| &*p.details.ebuild_path)
-        .chain(packages_in_dir.failed_packages.iter().map(|f| f.ebuild()));
+        .map(|p| &p.ebuild_path)
+        .chain(
+            packages_in_dir
+                .failed_packages
+                .iter()
+                .map(|f| &f.ebuild_path),
+        );
 
     // Create `*.ebuild` symlinks.
     for (i, ebuild) in ebuilds.enumerate() {
@@ -529,8 +534,8 @@ fn generate_package(
 
 /// Groups ebuilds into `<repo_name>/<category>/<package>` groups.
 fn join_by_package_dir<'p>(
-    all_packages: &'p [Package],
-    failures: &'p [PackageError],
+    all_packages: &'p [Arc<Package>],
+    failures: &'p [Arc<PackageAnalysisError>],
 ) -> HashMap<PathBuf, PackagesInDir<'p>> {
     let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
 
@@ -549,7 +554,7 @@ fn join_by_package_dir<'p>(
 
     for failure in failures.iter() {
         packages_by_dir
-            .entry(Path::new(&failure.repo_name()).join(failure.package_name()))
+            .entry(Path::new(&failure.repo_name).join(&failure.package_name))
             .or_insert_with(new_default)
             .failed_packages
             .push(failure);
@@ -562,8 +567,8 @@ fn join_by_package_dir<'p>(
 pub fn generate_internal_packages(
     target: &PackageType,
     translator: &PathTranslator,
-    all_packages: &[Package],
-    failures: &[PackageError],
+    all_packages: &[Arc<Package>],
+    failures: &[Arc<PackageAnalysisError>],
     output_dir: &Path,
 ) -> Result<()> {
     let output_packages_dir = output_dir.join("internal/packages").join(match &target {
