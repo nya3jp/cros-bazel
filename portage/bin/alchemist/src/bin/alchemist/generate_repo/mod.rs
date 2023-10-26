@@ -23,7 +23,7 @@ use alchemist::{
     },
     config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtom, Predicate},
-    ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails, PackageLoadError},
+    ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -36,7 +36,7 @@ use tracing::instrument;
 use crate::alchemist::TargetData;
 
 use self::{
-    common::{Package, PackageAnalysisError},
+    common::{MaybePackage, Package, PackageAnalysisError},
     deps::generate_deps_file,
     internal::overlays::generate_internal_overlays,
     internal::packages::{
@@ -56,7 +56,7 @@ use self::{
 fn evaluate_all_packages(
     repos: &RepositorySet,
     loader: &CachedPackageLoader,
-) -> Result<(Vec<Arc<PackageDetails>>, Vec<Arc<PackageLoadError>>)> {
+) -> Result<Vec<MaybePackageDetails>> {
     let ebuild_paths = repos.find_all_ebuilds()?;
 
     // Evaluate packages in parallel.
@@ -66,10 +66,7 @@ fn evaluate_all_packages(
         .collect::<Result<Vec<_>>>()?;
     eprintln!("Loaded {} ebuilds", results.len());
 
-    Ok(results.into_iter().partition_map(|eval| match eval {
-        MaybePackageDetails::Ok(details) => Either::Left(details),
-        MaybePackageDetails::Err(err) => Either::Right(err),
-    }))
+    Ok(results)
 }
 
 /// Similar to [`Package`], but an install set is not resolved yet.
@@ -177,14 +174,23 @@ fn compute_host_build_deps<'a>(
 fn analyze_packages(
     config: &ConfigBundle,
     cross_compile: bool,
-    all_details: Vec<Arc<PackageDetails>>,
+    all_details: Vec<MaybePackageDetails>,
     src_dir: &Path,
     host_resolver: Option<&PackageResolver>,
     target_resolver: &PackageResolver,
-) -> (Vec<Arc<Package>>, Vec<Arc<PackageAnalysisError>>) {
+) -> Vec<MaybePackage> {
     // Analyze packages in parallel.
-    let (all_partials, failures): (Vec<PackagePartial>, Vec<Arc<PackageAnalysisError>>) =
-        all_details.par_iter().partition_map(|details| {
+    let (all_partials, errors): (Vec<PackagePartial>, Vec<Arc<PackageAnalysisError>>) =
+        all_details.into_par_iter().partition_map(|details| {
+            let details = match details {
+                MaybePackageDetails::Ok(details) => details,
+                MaybePackageDetails::Err(error) => {
+                    return Either::Right(Arc::new(PackageAnalysisError {
+                        error: error.error.clone(),
+                        details: MaybePackageDetails::Err(error),
+                    }));
+                }
+            };
             let result = (|| -> Result<PackagePartial> {
                 if details.masked {
                     // We do not support building masked packages because of
@@ -194,8 +200,8 @@ fn analyze_packages(
                     bail!("The package is masked");
                 }
                 let dependencies =
-                    analyze_dependencies(details, cross_compile, host_resolver, target_resolver)?;
-                let sources = analyze_sources(config, details, src_dir)?;
+                    analyze_dependencies(&details, cross_compile, host_resolver, target_resolver)?;
+                let sources = analyze_sources(config, &details, src_dir)?;
                 Ok(PackagePartial {
                     details: details.clone(),
                     dependencies,
@@ -205,14 +211,14 @@ fn analyze_packages(
             match result {
                 Ok(package) => Either::Left(package),
                 Err(err) => Either::Right(Arc::new(PackageAnalysisError {
-                    details: MaybePackageDetails::Ok(details.clone()),
+                    details: MaybePackageDetails::Ok(details),
                     error: format!("{err:#}"),
                 })),
             }
         });
 
-    if !failures.is_empty() {
-        eprintln!("WARNING: Analysis failed for {} packages", failures.len());
+    if !errors.is_empty() {
+        eprintln!("WARNING: Analysis failed for {} packages", errors.len());
     }
 
     // Compute install sets.
@@ -277,39 +283,37 @@ fn analyze_packages(
         })
         .collect();
 
-    let packages = all_partials
-        .into_iter()
-        .map(|partial| {
-            let install_set = install_set_by_path
-                .remove(partial.details.ebuild_path.as_path())
-                .unwrap();
-            let build_host_deps = build_host_deps_by_path
-                .remove(partial.details.ebuild_path.as_path())
-                .unwrap();
-            Arc::new(Package {
-                details: partial.details,
-                dependencies: partial.dependencies,
-                install_set,
-                sources: partial.sources,
-                build_host_deps,
-            })
-        })
-        .collect();
+    let ok_packages = all_partials.into_iter().map(|partial| {
+        let install_set = install_set_by_path
+            .remove(partial.details.ebuild_path.as_path())
+            .unwrap();
+        let build_host_deps = build_host_deps_by_path
+            .remove(partial.details.ebuild_path.as_path())
+            .unwrap();
+        MaybePackage::Ok(Arc::new(Package {
+            details: partial.details,
+            dependencies: partial.dependencies,
+            install_set,
+            sources: partial.sources,
+            build_host_deps,
+        }))
+    });
+    let error_packages = errors.into_iter().map(MaybePackage::Err);
 
-    (packages, failures)
+    ok_packages.chain(error_packages).collect()
 }
 
 fn load_packages(
     host: Option<&TargetData>,
     target: &TargetData,
     src_dir: &Path,
-) -> Result<(Vec<Arc<Package>>, Vec<Arc<PackageAnalysisError>>)> {
+) -> Result<Vec<MaybePackage>> {
     eprintln!(
         "Loading packages for {}:{}...",
         target.board, target.profile
     );
 
-    let (details, metadata_errors) = evaluate_all_packages(&target.repos, &target.loader)?;
+    let details = evaluate_all_packages(&target.repos, &target.loader)?;
 
     eprintln!("Analyzing packages...");
 
@@ -329,7 +333,7 @@ fn load_packages(
         true
     };
 
-    let (packages, analysis_errors) = analyze_packages(
+    let packages = analyze_packages(
         &target.config,
         cross_compile,
         details,
@@ -338,28 +342,26 @@ fn load_packages(
         &target.resolver,
     );
 
-    let metadata_errors_packed = metadata_errors.into_iter().map(|e| {
-        Arc::new(PackageAnalysisError {
-            error: e.error.clone(),
-            details: MaybePackageDetails::Err(e),
-        })
-    });
-    let analysis_errors_packed = analysis_errors.into_iter();
-    let errors = metadata_errors_packed
-        .chain(analysis_errors_packed)
-        .collect();
-
-    Ok((packages, errors))
+    Ok(packages)
 }
 
 // Searches the `Package`s for the `atom` with the best version.
 fn find_best_package_in(
     atom: &PackageAtom,
-    packages: &[Arc<Package>],
+    packages: &[MaybePackage],
     resolver: &PackageResolver,
 ) -> Result<Option<Arc<Package>>> {
-    let sdk_packages = packages
+    // TODO(b/303400631): Consider `PackageAnalysisFailure`.
+    let packages = packages
         .iter()
+        .flat_map(|package| match package {
+            MaybePackage::Ok(package) => Some(package),
+            _ => None,
+        })
+        .collect_vec();
+
+    let sdk_packages = packages
+        .into_iter()
         .filter(|package| atom.matches(&package.details.as_thin_package_ref()))
         .collect_vec();
 
@@ -379,11 +381,11 @@ fn find_best_package_in(
     Ok(sdk_packages
         .into_iter()
         .find(|p| p.details.version == best_sdk_package_details.version)
-        .map(|p| p.clone()))
+        .cloned())
 }
 
 fn get_bootstrap_sdk_package(
-    host_packages: &[Arc<Package>],
+    host_packages: &[MaybePackage],
     host_resolver: &PackageResolver,
 ) -> Result<Option<Arc<Package>>> {
     // TODO: Add a parameter to pass this along
@@ -399,10 +401,10 @@ pub fn generate_stages(
     translator: &PathTranslator,
     src_dir: &Path,
     output_dir: &Path,
-) -> Result<Vec<Arc<Package>>> {
+) -> Result<Vec<MaybePackage>> {
     let mut all_packages = vec![];
 
-    let (host_packages, host_failures) = load_packages(Some(host), host, src_dir)?;
+    let host_packages = load_packages(Some(host), host, src_dir)?;
 
     // When we install a set of packages into an SDK layer, any ebuilds that
     // use that SDK layer now have those packages provided for them, and they
@@ -459,7 +461,6 @@ pub fn generate_stages(
         // but it saves us on generating symlinks for packages we probably
         // won't use.
         &host_packages,
-        &host_failures,
         output_dir,
     )?;
 
@@ -510,7 +511,6 @@ pub fn generate_stages(
         &PackageType::Host(stage2_host),
         translator,
         &host_packages,
-        &host_failures,
         output_dir,
     )?;
 
@@ -531,7 +531,6 @@ pub fn generate_stages(
 
     generate_public_packages(
         &host_packages,
-        &host_failures,
         &host.resolver,
         &[
             public::TargetConfig {
@@ -550,7 +549,7 @@ pub fn generate_stages(
     all_packages.extend(host_packages);
 
     if let Some(target) = target {
-        let (target_packages, target_failures) = load_packages(Some(host), target, src_dir)?;
+        let target_packages = load_packages(Some(host), target, src_dir)?;
 
         generate_stage1_sdk("stage1/target/board", target, translator, output_dir)?;
 
@@ -568,7 +567,6 @@ pub fn generate_stages(
             },
             translator,
             &target_packages,
-            &target_failures,
             output_dir,
         )?;
 
@@ -608,14 +606,12 @@ pub fn generate_stages(
             },
             translator,
             &target_packages,
-            &target_failures,
             output_dir,
         )?;
 
         // TODO(b/303136802): Delete this once we migrate the CQ builders.
         generate_public_packages(
             &target_packages,
-            &target_failures,
             &target.resolver,
             &[
                 public::TargetConfig {
@@ -633,7 +629,6 @@ pub fn generate_stages(
 
         generate_public_packages(
             &target_packages,
-            &target_failures,
             &target.resolver,
             &[
                 public::TargetConfig {
@@ -699,7 +694,16 @@ pub fn generate_repo_main(
 
     let all_packages = generate_stages(host, target, translator, src_dir, output_dir)?;
 
-    generate_deps_file(&all_packages, deps_file)?;
+    generate_deps_file(
+        &all_packages
+            .iter()
+            .flat_map(|package| match package {
+                MaybePackage::Ok(package) => Some(package.as_ref()),
+                _ => None,
+            })
+            .collect_vec(),
+        deps_file,
+    )?;
 
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;
@@ -707,9 +711,10 @@ pub fn generate_repo_main(
 
     eprintln!("Generating sources...");
     generate_internal_sources(
-        all_packages
-            .iter()
-            .flat_map(|package| &package.sources.local_sources),
+        all_packages.iter().flat_map(|package| match package {
+            MaybePackage::Ok(package) => package.sources.local_sources.as_slice(),
+            _ => &[],
+        }),
         src_dir
             .parent()
             .expect("src_dir '{src_dir:?} to have a parent"),

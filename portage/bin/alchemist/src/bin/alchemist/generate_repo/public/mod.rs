@@ -9,7 +9,6 @@ use std::{
     fs::{create_dir_all, File},
     io::Write,
     path::Path,
-    sync::Arc,
 };
 use tracing::instrument;
 
@@ -21,7 +20,7 @@ use serde::Serialize;
 use tera::Tera;
 use version::Version;
 
-use super::common::{MaybePackage, Package, PackageAnalysisError, AUTOGENERATE_NOTICE};
+use super::common::{MaybePackage, AUTOGENERATE_NOTICE};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -81,7 +80,7 @@ fn get_ebuild_name_from_path(ebuild_path: &Path) -> Result<String> {
 }
 
 fn generate_public_package(
-    maybe_packages: Vec<MaybePackage>,
+    maybe_packages: &[&MaybePackage],
     resolver: &PackageResolver,
     targets: &[TargetConfig],
     test_prefix: &str,
@@ -91,7 +90,7 @@ fn generate_public_package(
 
     // Deduplicate versions.
     let version_to_maybe_package: BTreeMap<&Version, &MaybePackage> =
-        maybe_packages.iter().map(|p| (&p.version, p)).collect();
+        maybe_packages.iter().map(|p| (&p.version, *p)).collect();
 
     let mut aliases = Vec::new();
     let mut test_suites = Vec::new();
@@ -236,25 +235,14 @@ fn generate_public_package(
     Ok(())
 }
 
-fn join_by_package_name(
-    all_packages: &[Arc<Package>],
-    failed_packages: &[Arc<PackageAnalysisError>],
-) -> HashMap<String, Vec<MaybePackage>> {
-    let mut packages_by_name = HashMap::new();
-
-    let converted_all = all_packages.iter().cloned().map(MaybePackage::Ok);
-    let converted_failed = failed_packages.iter().cloned().map(MaybePackage::Err);
-    for package in converted_all.chain(converted_failed) {
+fn join_by_package_name(all_packages: &[MaybePackage]) -> HashMap<String, Vec<&MaybePackage>> {
+    let mut packages_by_name: HashMap<String, Vec<&MaybePackage>> = HashMap::new();
+    for package in all_packages {
         packages_by_name
             .entry(package.package_name.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(package);
     }
-
-    for packages in packages_by_name.values_mut() {
-        packages.sort_by(|a, b| a.version.cmp(&b.version));
-    }
-
     packages_by_name
 }
 
@@ -275,14 +263,13 @@ pub struct TargetConfig<'a> {
 ///   to run tests for.
 #[instrument(skip_all)]
 pub fn generate_public_packages(
-    all_packages: &[Arc<Package>],
-    failed_packages: &[Arc<PackageAnalysisError>],
+    all_packages: &[MaybePackage],
     resolver: &PackageResolver,
     targets: &[TargetConfig],
     test_prefix: &str,
     output_dir: &Path,
 ) -> Result<()> {
-    let packages_by_name = join_by_package_name(all_packages, failed_packages);
+    let packages_by_name = join_by_package_name(all_packages);
 
     // Generate packages in parallel.
     packages_by_name
@@ -290,7 +277,7 @@ pub fn generate_public_packages(
         .try_for_each(|(package_name, maybe_packages)| {
             let package_output_dir = output_dir.join(package_name);
             generate_public_package(
-                maybe_packages,
+                &maybe_packages,
                 resolver,
                 targets,
                 test_prefix,

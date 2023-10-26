@@ -28,8 +28,8 @@ use tera::Tera;
 use tracing::instrument;
 
 use crate::generate_repo::common::{
-    package_details_to_target_path, repository_set_to_target_path, DistFileEntry, Package,
-    PackageAnalysisError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    package_details_to_target_path, repository_set_to_target_path, DistFileEntry, MaybePackage,
+    Package, PackageAnalysisError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {
@@ -441,14 +441,9 @@ struct BuildTemplateContext<'a> {
     failures: Vec<EBuildFailure>,
 }
 
-struct PackagesInDir<'a> {
-    packages: Vec<&'a Package>,
-    failed_packages: Vec<&'a PackageAnalysisError>,
-}
-
 fn generate_package_build_file(
     target: &PackageType,
-    packages_in_dir: &PackagesInDir,
+    packages_in_dir: &[&MaybePackage],
     out: &Path,
 ) -> Result<()> {
     let target_board = match target {
@@ -472,14 +467,20 @@ fn generate_package_build_file(
         host_overlay_set,
         target_overlay_set,
         ebuilds: packages_in_dir
-            .packages
             .iter()
+            .flat_map(|package| match package {
+                MaybePackage::Ok(package) => Some(package),
+                _ => None,
+            })
             .map(|package| EBuildEntry::try_new(target, package))
             .collect::<Result<_>>()?,
         failures: packages_in_dir
-            .failed_packages
             .iter()
-            .map(|failure| EBuildFailure::new(failure))
+            .flat_map(|package| match package {
+                MaybePackage::Err(error) => Some(error),
+                _ => None,
+            })
+            .map(|error| EBuildFailure::new(error))
             .collect(),
     };
 
@@ -496,21 +497,12 @@ fn generate_package_build_file(
 fn generate_package(
     target: &PackageType,
     translator: &PathTranslator,
-    packages_in_dir: &PackagesInDir,
+    packages_in_dir: &[&MaybePackage],
     output_dir: &Path,
 ) -> Result<()> {
     create_dir_all(output_dir)?;
 
-    let ebuilds = packages_in_dir
-        .packages
-        .iter()
-        .map(|p| &p.ebuild_path)
-        .chain(
-            packages_in_dir
-                .failed_packages
-                .iter()
-                .map(|f| &f.ebuild_path),
-        );
+    let ebuilds = packages_in_dir.iter().map(|p| &p.ebuild_path);
 
     // Create `*.ebuild` symlinks.
     for (i, ebuild) in ebuilds.enumerate() {
@@ -533,31 +525,14 @@ fn generate_package(
 }
 
 /// Groups ebuilds into `<repo_name>/<category>/<package>` groups.
-fn join_by_package_dir<'p>(
-    all_packages: &'p [Arc<Package>],
-    failures: &'p [Arc<PackageAnalysisError>],
-) -> HashMap<PathBuf, PackagesInDir<'p>> {
-    let mut packages_by_dir = HashMap::<PathBuf, PackagesInDir>::new();
-
-    let new_default = || PackagesInDir {
-        packages: Vec::new(),
-        failed_packages: Vec::new(),
-    };
+fn join_by_package_dir(all_packages: &[MaybePackage]) -> HashMap<PathBuf, Vec<&MaybePackage>> {
+    let mut packages_by_dir = HashMap::<PathBuf, Vec<&MaybePackage>>::new();
 
     for package in all_packages.iter() {
         packages_by_dir
-            .entry(Path::new(&package.details.repo_name).join(&package.details.package_name))
-            .or_insert_with(new_default)
-            .packages
+            .entry(Path::new(&package.repo_name).join(&package.package_name))
+            .or_default()
             .push(package);
-    }
-
-    for failure in failures.iter() {
-        packages_by_dir
-            .entry(Path::new(&failure.repo_name).join(&failure.package_name))
-            .or_insert_with(new_default)
-            .failed_packages
-            .push(failure);
     }
 
     packages_by_dir
@@ -567,8 +542,7 @@ fn join_by_package_dir<'p>(
 pub fn generate_internal_packages(
     target: &PackageType,
     translator: &PathTranslator,
-    all_packages: &[Arc<Package>],
-    failures: &[Arc<PackageAnalysisError>],
+    all_packages: &[MaybePackage],
     output_dir: &Path,
 ) -> Result<()> {
     let output_packages_dir = output_dir.join("internal/packages").join(match &target {
@@ -577,7 +551,7 @@ pub fn generate_internal_packages(
     });
 
     // Generate packages in parallel.
-    let packages_by_dir = join_by_package_dir(all_packages, failures);
+    let packages_by_dir = join_by_package_dir(all_packages);
     packages_by_dir
         .into_par_iter()
         .try_for_each(|(relative_package_dir, packages_in_dir)| {
