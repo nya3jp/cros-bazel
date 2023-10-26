@@ -4,7 +4,7 @@
 
 pub mod metadata;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -169,20 +169,28 @@ impl PackageLoader {
         }
     }
 
+    /// Loads a package information from a specified ebuild path.
     pub fn load_package(&self, ebuild_path: &Path) -> Result<MaybePackageDetails> {
-        // Drive the ebuild to read its metadata.
         let metadata = self.evaluator.evaluate_metadata(ebuild_path)?;
 
-        // Compute additional information needed to fill in PackageDetails.
+        // Don't abort on package parse failures.
+        match self.parse_package(metadata.clone()) {
+            Ok(details) => Ok(MaybePackageDetails::Ok(Arc::new(details))),
+            Err(error) => Ok(MaybePackageDetails::Err(Arc::new(PackageLoadError {
+                metadata,
+                error: error.to_string(),
+            }))),
+        }
+    }
+
+    /// Parses [`MaybeEBuildMetadata`] into [`PackageDetails`].
+    fn parse_package(&self, metadata: MaybeEBuildMetadata) -> Result<PackageDetails> {
         let package_name = format!("{}/{}", metadata.category_name, metadata.short_package_name);
 
         let metadata = match metadata {
             MaybeEBuildMetadata::Ok(metadata) => metadata,
             MaybeEBuildMetadata::Err(error) => {
-                return Ok(MaybePackageDetails::Err(Arc::new(PackageLoadError {
-                    error: error.error.clone(),
-                    metadata: MaybeEBuildMetadata::Err(error),
-                })))
+                bail!("{}", error.error);
             }
         };
 
@@ -249,7 +257,7 @@ impl PackageLoader {
                 }
             });
 
-        Ok(MaybePackageDetails::Ok(Arc::new(PackageDetails {
+        Ok(PackageDetails {
             metadata,
             slot,
             use_map,
@@ -259,7 +267,7 @@ impl PackageLoader {
             inherited,
             inherit_paths,
             direct_build_target,
-        })))
+        })
     }
 }
 
@@ -422,5 +430,19 @@ KEYWORDS="*"
 "#,
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_load_parse_error() {
+        let maybe_details = do_load_package(
+            "sys-apps/hello/hello-1.ebuild",
+            r#"
+EAPI=7
+SLOT=("0" "0")  # SLOT is an array!
+KEYWORDS="*"
+"#,
+        )
+        .expect("load_package should return success despite the parse error");
+        matches!(maybe_details, MaybePackageDetails::Err(_));
     }
 }
