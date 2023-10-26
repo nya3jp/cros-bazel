@@ -62,8 +62,14 @@ configuration that is used when building host tool packages. i.e., [CBUILD].
 You can then proceed to create the target board's sysroot:
 
 ```sh
-(cr) $ setup_board --board amd64-generic --skip-chroot-upgrade --skip-toolchain-update
+(cr) $ setup_board --board amd64-generic --public --skip-chroot-upgrade --skip-toolchain-update
 ```
+
+If you're attempting to build a public image while using an internal manifest,
+the `--public` flag allows you to do that, which is useful when attempting to
+recreate a CQ/Snapshot failure for build targets that use public manifests on
+the CI bots, such as amd64-generic. Omit the flag if you do want to build
+internal packages.
 
 Now that you have configured your chroot, you can invoke a build with the
 standard `cros build-packages` command, except that you need to pass the extra

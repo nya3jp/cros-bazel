@@ -320,6 +320,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 \n\
                 \t\tPlease run the following command to create the board's sysroot and try again:\n\
                 \t\t$ setup_board --board {} --profile {} --skip-chroot-upgrade --skip-toolchain-update\n\
+                \t\tWhen building public artifacts from an internal manifest, add --public.\n\
                 \n\
                 *****",
                 root_dir.display(),
