@@ -133,7 +133,7 @@ impl EBuildEvaluator {
 /// This information is available as long as an ebuild file exists with a correct file name format.
 /// All package-representing types containing [`EBuildBasicData`] directly or indirectly should
 /// implement [`Deref`] to provide easy access to [`EBuildBasicData`] fields.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct EBuildBasicData {
     pub repo_name: String,
     pub ebuild_path: PathBuf,
@@ -144,7 +144,7 @@ pub struct EBuildBasicData {
 }
 
 /// Describes metadata of an ebuild.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct EBuildMetadata {
     pub basic_data: EBuildBasicData,
     pub vars: BashVars,
@@ -159,7 +159,7 @@ impl Deref for EBuildMetadata {
 }
 
 /// Describes an error on evaluating an ebuild.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct EBuildEvaluationError {
     pub basic_data: EBuildBasicData,
     pub error: String,
@@ -180,7 +180,7 @@ impl Deref for EBuildEvaluationError {
 ///
 /// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
 /// to implement a few convenient methods.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum MaybeEBuildMetadata {
     Ok(Arc<EBuildMetadata>),
     Err(Arc<EBuildEvaluationError>),
@@ -305,5 +305,185 @@ impl CachedEBuildEvaluator {
             self.evaluator.evaluate_metadata(ebuild_path, repo)
         })?;
         Ok(details.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::TempDir;
+
+    use super::*;
+
+    /// Ensures [`EBuildEvaluator`] successfully evaluates variables of a minimal ebuild.
+    #[test]
+    fn test_evaluate_vars() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        let ebuild_path = temp_dir.join("sys-apps/hello/hello-1.2.3.ebuild");
+        std::fs::create_dir_all(ebuild_path.parent().unwrap())?;
+        std::fs::write(
+            &ebuild_path,
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+
+WORLD="world"
+
+SCALAR="hello, ${WORLD}!"
+ARRAY=(hello, "${WORLD}!")
+"#,
+        )?;
+
+        let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
+        let repo = Repository::new_for_testing("test", temp_dir);
+
+        let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
+
+        let metadata = match metadata {
+            MaybeEBuildMetadata::Ok(metadata) => metadata,
+            MaybeEBuildMetadata::Err(error) => panic!("Failed to evaluate metadata: {error:?}"),
+        };
+
+        // Verify basic data.
+        assert_eq!(
+            metadata.basic_data,
+            EBuildBasicData {
+                repo_name: "test".into(),
+                ebuild_path,
+                package_name: "sys-apps/hello".into(),
+                short_package_name: "hello".into(),
+                category_name: "sys-apps".into(),
+                version: Version::try_new("1.2.3").unwrap(),
+            }
+        );
+
+        // Vars may contain many unrelated variables, so inspect partially.
+        let vars = &metadata.vars;
+        assert_eq!(vars.get_scalar("EAPI").unwrap(), "7");
+        assert_eq!(vars.get_scalar("SLOT").unwrap(), "0");
+        assert_eq!(vars.get_scalar("KEYWORDS").unwrap(), "*");
+        assert_eq!(vars.get_scalar("SCALAR").unwrap(), "hello, world!");
+        assert_eq!(
+            vars.get_indexed_array("ARRAY").unwrap(),
+            ["hello,", "world!"]
+        );
+
+        Ok(())
+    }
+
+    /// Ensures [`EBuildEvaluator`] correctly handles evaluation errors.
+    #[test]
+    fn test_evaluate_die() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        let ebuild_path = temp_dir.join("sys-apps/hello/hello-1.2.3.ebuild");
+        std::fs::create_dir_all(ebuild_path.parent().unwrap())?;
+        std::fs::write(
+            &ebuild_path,
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+
+die "failed failed failed"
+"#,
+        )?;
+
+        let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
+        let repo = Repository::new_for_testing("test", temp_dir);
+
+        // evaluate_metadata should return success even with evaluation errors.
+        let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
+
+        match &metadata {
+            MaybeEBuildMetadata::Err(error) if error.error.contains("failed failed failed") => {}
+            _ => panic!(
+                "Unexpected return value from evaluate_metadata: {:?}",
+                metadata
+            ),
+        }
+
+        Ok(())
+    }
+
+    /// Ensures [`EBuildEvaluator`] correctly sets up the ebuild environment.
+    #[test]
+    fn test_evaluate_ebuild_env() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        let ebuild_path = temp_dir.join("sys-apps/hello/hello-1.2.3-r99.ebuild");
+        std::fs::create_dir_all(ebuild_path.parent().unwrap())?;
+        std::fs::write(
+            &ebuild_path,
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+
+assert_var() {
+    local name="$1"
+    local got="${!name}"
+    local want="$2"
+    if [[ "${got}" != "${want}" ]]; then
+        die "\$$name = ${got@Q}; want ${want@Q}"
+    fi
+}
+
+assert_var P "hello-1.2.3"
+assert_var PF "hello-1.2.3-r99"
+assert_var PN "hello"
+assert_var CATEGORY "sys-apps"
+assert_var PV "1.2.3"
+assert_var PR "r99"
+assert_var PVR "1.2.3-r99"
+"#,
+        )?;
+
+        let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
+        let repo = Repository::new_for_testing("test", temp_dir);
+
+        let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
+        assert!(
+            matches!(metadata, MaybeEBuildMetadata::Ok(_)),
+            "metadata = {:?}",
+            metadata
+        );
+
+        Ok(())
+    }
+
+    /// Ensures [`EBuildEvaluator`] returns a fatal error if a specified ebuild path does not follow
+    /// the naming convention.
+    #[test]
+    fn test_evaluate_wrong_ebuild_path() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
+        let repo = Repository::new_for_testing("test", temp_dir);
+
+        let try_evaluate_metadata = |relative_path: &str| {
+            let ebuild_path = temp_dir.join(relative_path);
+            std::fs::create_dir_all(ebuild_path.parent().unwrap())?;
+            std::fs::write(&ebuild_path, "EAPI=7\nSLOT=0\nKEYWORDS='*'\n")?;
+            evaluator.evaluate_metadata(&ebuild_path, &repo)
+        };
+
+        try_evaluate_metadata("sys-apps/hello/hello-1.2.3.ebuild").expect("Must succeed");
+        // Wrong extension.
+        try_evaluate_metadata("sys-apps/hello/hello-1.2.3.eclass")
+            .expect_err("Must fail for wrong extension");
+        // Wrong version number.
+        try_evaluate_metadata("sys-apps/hello/hello-1.2.3_foobar.ebuild")
+            .expect_err("Must fail for wrong version number");
+        // The directory name and the ebuild name does not match.
+        try_evaluate_metadata("sys-apps/hello/world-1.2.3.ebuild")
+            .expect_err("Must fail for inconsistent file names");
+
+        Ok(())
     }
 }
