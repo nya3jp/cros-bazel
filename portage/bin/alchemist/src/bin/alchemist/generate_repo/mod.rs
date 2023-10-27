@@ -11,6 +11,7 @@ use std::{
     collections::HashMap,
     fs::{create_dir_all, remove_dir_all, File},
     io::{ErrorKind, Write},
+    ops::Deref,
     path::{Path, PathBuf},
     str::FromStr,
     sync::Arc,
@@ -23,13 +24,13 @@ use alchemist::{
     },
     config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::{package::PackageAtom, Predicate},
-    ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails},
+    ebuild::{metadata::EBuildBasicData, CachedPackageLoader, MaybePackageDetails, PackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
 };
 use anyhow::{bail, Context, Result};
-use itertools::{Either, Itertools};
+use itertools::Itertools;
 use rayon::prelude::*;
 use tracing::instrument;
 
@@ -74,6 +75,34 @@ struct PackagePartial {
     pub details: Arc<PackageDetails>,
     pub dependencies: PackageDependencies,
     pub sources: PackageSources,
+}
+
+impl Deref for PackagePartial {
+    type Target = PackageDetails;
+
+    fn deref(&self) -> &Self::Target {
+        &self.details
+    }
+}
+
+/// Represents a partially analyzed package, covering both successful ones and failed ones.
+///
+/// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
+/// to implement a few convenient methods.
+enum MaybePackagePartial {
+    Ok(Box<PackagePartial>),
+    Err(Arc<PackageAnalysisError>),
+}
+
+impl Deref for MaybePackagePartial {
+    type Target = EBuildBasicData;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            MaybePackagePartial::Ok(package) => package,
+            MaybePackagePartial::Err(error) => error,
+        }
+    }
 }
 
 /// Performs DFS on the dependency graph presented by `partial_by_path` and
@@ -180,12 +209,13 @@ fn analyze_packages(
     target_resolver: &PackageResolver,
 ) -> Vec<MaybePackage> {
     // Analyze packages in parallel.
-    let (all_partials, errors): (Vec<PackagePartial>, Vec<Arc<PackageAnalysisError>>) =
-        all_details.into_par_iter().partition_map(|details| {
+    let all_partials: Vec<MaybePackagePartial> = all_details
+        .into_par_iter()
+        .map(|details| {
             let details = match details {
                 MaybePackageDetails::Ok(details) => details,
                 MaybePackageDetails::Err(error) => {
-                    return Either::Right(Arc::new(PackageAnalysisError {
+                    return MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
                         error: error.error.clone(),
                         details: MaybePackageDetails::Err(error),
                     }));
@@ -209,16 +239,21 @@ fn analyze_packages(
                 })
             })();
             match result {
-                Ok(package) => Either::Left(package),
-                Err(err) => Either::Right(Arc::new(PackageAnalysisError {
+                Ok(package) => MaybePackagePartial::Ok(Box::new(package)),
+                Err(err) => MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
                     details: MaybePackageDetails::Ok(details),
                     error: format!("{err:#}"),
                 })),
             }
-        });
+        })
+        .collect();
 
-    if !errors.is_empty() {
-        eprintln!("WARNING: Analysis failed for {} packages", errors.len());
+    let errors = all_partials
+        .iter()
+        .filter(|p| matches!(p, MaybePackagePartial::Err(_)))
+        .count();
+    if errors > 0 {
+        eprintln!("WARNING: Analysis failed for {} packages", errors);
     }
 
     // Compute install sets.
@@ -251,7 +286,11 @@ fn analyze_packages(
 
     let partial_by_path: HashMap<&Path, &PackagePartial> = all_partials
         .iter()
-        .map(|partial| (partial.details.ebuild_path.as_path(), partial))
+        .flat_map(|partial| match partial {
+            MaybePackagePartial::Ok(partial) => Some(partial.as_ref()),
+            _ => None,
+        })
+        .map(|partial| (partial.ebuild_path.as_path(), partial))
         .collect();
 
     let mut install_set_by_path: HashMap<PathBuf, Vec<Arc<PackageDetails>>> = partial_by_path
@@ -283,24 +322,29 @@ fn analyze_packages(
         })
         .collect();
 
-    let ok_packages = all_partials.into_iter().map(|partial| {
-        let install_set = install_set_by_path
-            .remove(partial.details.ebuild_path.as_path())
-            .unwrap();
-        let build_host_deps = build_host_deps_by_path
-            .remove(partial.details.ebuild_path.as_path())
-            .unwrap();
-        MaybePackage::Ok(Arc::new(Package {
-            details: partial.details,
-            dependencies: partial.dependencies,
-            install_set,
-            sources: partial.sources,
-            build_host_deps,
-        }))
-    });
-    let error_packages = errors.into_iter().map(MaybePackage::Err);
+    let packages: Vec<MaybePackage> = all_partials
+        .into_iter()
+        .map(|partial| match partial {
+            MaybePackagePartial::Ok(partial) => {
+                let install_set = install_set_by_path
+                    .remove(partial.details.ebuild_path.as_path())
+                    .unwrap();
+                let build_host_deps = build_host_deps_by_path
+                    .remove(partial.details.ebuild_path.as_path())
+                    .unwrap();
+                MaybePackage::Ok(Arc::new(Package {
+                    details: partial.details,
+                    dependencies: partial.dependencies,
+                    install_set,
+                    sources: partial.sources,
+                    build_host_deps,
+                }))
+            }
+            MaybePackagePartial::Err(err) => MaybePackage::Err(err),
+        })
+        .collect();
 
-    ok_packages.chain(error_packages).collect()
+    packages
 }
 
 fn load_packages(
