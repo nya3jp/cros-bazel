@@ -642,7 +642,7 @@ mod tests {
         // The default case. Just returns the current arch.
         assert_eq!(
             ConfigBundle::compute_accept_keywords(
-                &vec![ConfigNode {
+                &[ConfigNode {
                     sources: vec![PathBuf::from("a")],
                     value: ConfigNodeValue::Vars(HashMap::from([(
                         "ACCEPT_KEYWORDS".to_owned(),
@@ -658,7 +658,7 @@ mod tests {
         // After cros_workon start.
         assert_eq!(
             ConfigBundle::compute_accept_keywords(
-                &vec![
+                &[
                     ConfigNode {
                         sources: vec![PathBuf::from("a")],
                         value: ConfigNodeValue::Vars(HashMap::from([(
@@ -683,7 +683,7 @@ mod tests {
         // After cros_workon start, but for a different package.
         assert_eq!(
             ConfigBundle::compute_accept_keywords(
-                &vec![
+                &[
                     ConfigNode {
                         sources: vec![PathBuf::from("a")],
                         value: ConfigNodeValue::Vars(HashMap::from([(
@@ -708,7 +708,7 @@ mod tests {
         // Non-empty accept_keywords value.
         assert_eq!(
             ConfigBundle::compute_accept_keywords(
-                &vec![
+                &[
                     ConfigNode {
                         sources: vec![PathBuf::from("a")],
                         value: ConfigNodeValue::Vars(HashMap::from([(
