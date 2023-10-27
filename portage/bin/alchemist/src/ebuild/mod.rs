@@ -290,3 +290,137 @@ impl CachedPackageLoader {
         Ok(details.clone())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::bool_assert_comparison)]
+
+    use tempfile::TempDir;
+
+    use crate::repository::{Repository, RepositorySet};
+
+    use super::*;
+
+    fn do_load_package(
+        ebuild_relative_path: &str,
+        ebuild_content: &str,
+    ) -> Result<MaybePackageDetails> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        let ebuild_path = temp_dir.join(ebuild_relative_path);
+        std::fs::create_dir_all(ebuild_path.parent().unwrap())?;
+        std::fs::write(&ebuild_path, ebuild_content)?;
+
+        let repo = Repository::new_for_testing("test", temp_dir);
+        let repo_set = RepositorySet::new_for_testing(&[repo]);
+
+        let evaluator = CachedEBuildEvaluator::new(
+            repo_set.get_repos().into_iter().cloned().collect(),
+            &temp_dir.join("tools"),
+        );
+
+        let config = ConfigBundle::new_empty_for_testing();
+        let loader = PackageLoader::new(Arc::new(evaluator), Arc::new(config), false);
+
+        loader.load_package(&ebuild_path)
+    }
+
+    fn do_load_package_and_unwrap(
+        ebuild_relative_path: &str,
+        ebuild_content: &str,
+    ) -> Arc<PackageDetails> {
+        let maybe_details = do_load_package(ebuild_relative_path, ebuild_content).unwrap();
+
+        match maybe_details {
+            MaybePackageDetails::Ok(details) => details,
+            MaybePackageDetails::Err(error) => panic!("Failed to load package: {error:?}"),
+        }
+    }
+
+    #[test]
+    fn test_load_success() {
+        let details = do_load_package_and_unwrap(
+            "sys-apps/hello/hello-1.ebuild",
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+"#,
+        );
+
+        // Verify `PackageDetails` fields, except `metadata` that is tested by
+        // unit tests in `metadata.rs`.
+        assert_eq!(details.slot, Slot::new("0"));
+        assert_eq!(details.use_map, UseMap::new());
+        assert_eq!(details.accepted, true);
+        assert_eq!(details.stable, true);
+        assert_eq!(details.masked, false);
+        assert_eq!(details.inherited, HashSet::new());
+        assert_eq!(details.inherit_paths, Vec::<PathBuf>::new());
+        assert_eq!(details.direct_build_target, None);
+    }
+
+    #[test]
+    fn test_load_iuse() {
+        let details = do_load_package_and_unwrap(
+            "sys-apps/hello/hello-1.ebuild",
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+IUSE="foo +bar"
+"#,
+        );
+        assert_eq!(
+            details.use_map,
+            UseMap::from_iter([("foo".into(), false), ("bar".into(), true)])
+        );
+    }
+
+    #[test]
+    fn test_load_keywords() {
+        let details = do_load_package_and_unwrap(
+            "sys-apps/hello/hello-1.ebuild",
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="-*"
+"#,
+        );
+        assert_eq!(details.accepted, false);
+        assert_eq!(details.stable, false);
+        assert_eq!(details.masked, true);
+    }
+
+    #[test]
+    fn test_load_required_use() {
+        let details = do_load_package_and_unwrap(
+            "sys-apps/hello/hello-1.ebuild",
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+IUSE="foo +bar"
+REQUIRED_USE="|| ( foo !bar )"
+"#,
+        );
+        assert_eq!(details.accepted, true);
+        assert_eq!(details.stable, true);
+        assert_eq!(details.masked, true);
+    }
+
+    #[test]
+    fn test_load_fatal_error() {
+        let result = do_load_package(
+            // Invalid file name.
+            "sys-apps/hello/hello-1.eclass",
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+"#,
+        );
+        assert!(result.is_err());
+    }
+}

@@ -2,7 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{collections::HashMap, collections::HashSet, iter, path::Path};
+use std::{
+    collections::HashMap,
+    collections::HashSet,
+    iter,
+    path::{Path, PathBuf},
+};
 
 use anyhow::Result;
 use itertools::Itertools;
@@ -15,7 +20,8 @@ use crate::{
 };
 
 use super::{
-    ConfigNode, ConfigNodeValue, ConfigSource, PackageMaskKind, ProvidedPackage, UseUpdateKind,
+    ConfigNode, ConfigNodeValue, ConfigSource, PackageMaskKind, ProvidedPackage,
+    SimpleConfigSource, UseUpdateKind,
 };
 
 struct BuiltinIncrementalVariable {
@@ -115,6 +121,7 @@ pub struct ConfigBundle {
 }
 
 impl ConfigBundle {
+    /// Creates [`ConfigBundle`] from underlying [`ConfigSource`]s.
     pub fn from_sources<S: ConfigSource, I: IntoIterator<Item = S>>(sources: I) -> Self {
         let mut env = Vars::new();
         let nodes = sources
@@ -168,6 +175,19 @@ impl ConfigBundle {
             use_expand_values,
             provided_packages,
         }
+    }
+
+    /// Creates an empty [`ConfigBundle`] suitable for unit testing.
+    pub fn new_empty_for_testing() -> Self {
+        const FAKE_ARCH: &str = "riscv";
+
+        Self::from_sources([SimpleConfigSource::new(vec![ConfigNode {
+            sources: vec![PathBuf::from("<fake>")],
+            value: ConfigNodeValue::Vars(HashMap::from_iter([
+                ("ARCH".into(), FAKE_ARCH.into()),
+                ("ACCEPT_KEYWORDS".into(), FAKE_ARCH.into()),
+            ])),
+        }])])
     }
 
     /// Returns variables defined by underlying sources.

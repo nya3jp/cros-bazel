@@ -23,7 +23,7 @@ pub type Vars = HashMap<String, String>;
 /// https://doc.rust-lang.org/std/convert/trait.AsRef.html#reflexivity.
 /// We though try to make it behave like a plain [`HashMap`] by implementing
 /// [`Deref`] and [`DerefMut`].
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct UseMap(HashMap<String, bool>);
 
 impl UseMap {
