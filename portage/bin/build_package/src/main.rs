@@ -71,6 +71,9 @@ struct Cli {
     #[arg(long, help = "Goma-related info encoded as JSON.")]
     goma_info: PathBuf,
 
+    #[arg(long, help = "Vpython-related info encoded as JSON.")]
+    vpython_info: PathBuf,
+
     #[arg(long)]
     test: bool,
 }
@@ -180,6 +183,11 @@ struct GomaInfo {
     envs: HashMap<String, String>,
     luci_context: Option<PathBuf>,
     oauth2_config_file: Option<PathBuf>,
+}
+
+#[derive(serde::Deserialize)]
+struct VpythonInfo {
+    virtualenv_root: Option<PathBuf>,
 }
 
 fn do_main() -> Result<()> {
@@ -303,6 +311,20 @@ fn do_main() -> Result<()> {
     } else {
         Vec::new()
     };
+
+    let vpython_info: VpythonInfo =
+        serde_json::from_reader(BufReader::new(File::open(args.vpython_info)?))?;
+    if let Some(virtualenv_root) = vpython_info.virtualenv_root {
+        settings.push_bind_mount(BindMount {
+            source: virtualenv_root.clone(),
+            mount_path: virtualenv_root.clone(),
+            rw: false,
+        });
+        envs.push((
+            "VPYTHON_VIRTUALENV_ROOT".to_string(),
+            virtualenv_root.to_string_lossy().to_string(),
+        ));
+    }
 
     if let Some(jobserver) = args.jobserver {
         // TODO(b/303061227): Should we check if we can open the FIFO?
