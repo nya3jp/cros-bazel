@@ -21,7 +21,7 @@ always_fail(
     name = "1.0",
     message = "\n--\nError analyzing ebuild!\ntarget: @" + repository_name() +
               "/" + package_name() + "\nebuild: hostonly-1.0.ebuild\n\n" +
-              """The package is masked\n--""",
+              """The package is masked: REQUIRED_USE not satisfied: ^^ ( cros-host )\n--""",
     visibility = ["@//bazel:internal"],
 )
 

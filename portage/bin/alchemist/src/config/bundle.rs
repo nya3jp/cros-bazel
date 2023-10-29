@@ -104,9 +104,9 @@ fn merge_incremental_tokens<'s, I: IntoIterator<Item = &'s str>>(
 /// Represents a result of ConfigBundle::is_package_accepted().
 pub enum IsPackageAcceptedResult {
     /// The package is not accepted.
-    Unaccepted,
+    Unaccepted { reason: String },
     /// The package is accepted. The boolean value is true if the package is considered stable.
-    Accepted(bool),
+    Accepted { stable: bool },
 }
 
 /// A collection of [`ConfigNode`]s, providing access to the configurations
@@ -297,7 +297,13 @@ impl ConfigBundle {
             .collect_vec();
 
         if !Self::is_keyword_accepted(&keywords, &accept_keywords) {
-            return Ok(IsPackageAcceptedResult::Unaccepted);
+            return Ok(IsPackageAcceptedResult::Unaccepted {
+                reason: format!(
+                    "KEYWORDS ({}) is not accepted by ACCEPT_KEYWORDS ({})",
+                    keywords.join(" "),
+                    accept_keywords.join(" ")
+                ),
+            });
         }
 
         // A package is considered stable if adding "~" to all stable keywords results in not
@@ -314,7 +320,7 @@ impl ConfigBundle {
             })
             .collect_vec();
         let stable = !Self::is_keyword_accepted(&modified_keywords, &accept_keywords);
-        Ok(IsPackageAcceptedResult::Accepted(stable))
+        Ok(IsPackageAcceptedResult::Accepted { stable })
     }
 
     /// Computes USE flags of a package.

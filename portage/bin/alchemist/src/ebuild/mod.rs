@@ -44,14 +44,32 @@ fn parse_iuse_map(vars: &BashVars) -> Result<IUseMap> {
         .collect())
 }
 
+/// Represents a package's readiness for installation.
+#[derive(Debug, Eq, PartialEq)]
+pub enum PackageReadiness {
+    /// The package can be installed.
+    Ok,
+    /// The package is masked and cannot be installed.
+    Masked { reason: String },
+}
+
+impl PackageReadiness {
+    pub fn ok(&self) -> bool {
+        matches!(self, PackageReadiness::Ok)
+    }
+
+    pub fn masked(&self) -> bool {
+        matches!(self, PackageReadiness::Masked { .. })
+    }
+}
+
 #[derive(Debug)]
 pub struct PackageDetails {
     pub metadata: Arc<EBuildMetadata>,
     pub slot: Slot,
     pub use_map: UseMap,
-    pub accepted: bool,
     pub stable: bool,
-    pub masked: bool,
+    pub readiness: PackageReadiness,
     pub inherited: HashSet<String>,
     pub inherit_paths: Vec<PathBuf>,
     pub direct_build_target: Option<String>,
@@ -215,21 +233,28 @@ impl PackageLoader {
         let raw_inherit_paths = metadata.vars.get_indexed_array("INHERIT_PATHS")?;
         let inherit_paths: Vec<PathBuf> = raw_inherit_paths.iter().map(PathBuf::from).collect();
 
-        let (accepted, stable) = match self.config.is_package_accepted(&metadata.vars, &package)? {
-            IsPackageAcceptedResult::Unaccepted => {
-                if self.force_accept_9999_ebuilds {
-                    let accepted = inherited.contains("cros-workon")
-                        && metadata.basic_data.version == self.version_9999
-                        && match metadata.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
-                            Ok(value) => value != "1",
-                            Err(_) => false,
-                        };
-                    (accepted, false)
-                } else {
-                    (false, false)
+        let accepted_result = self.config.is_package_accepted(&metadata.vars, &package)?;
+        let accepted_result = (|| {
+            if matches!(&accepted_result, IsPackageAcceptedResult::Unaccepted { .. })
+                && self.force_accept_9999_ebuilds
+            {
+                let auto_uprev = match metadata.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
+                    Ok(value) => value != "1",
+                    Err(_) => false,
+                };
+                if inherited.contains("cros-workon")
+                    && metadata.basic_data.version == self.version_9999
+                    && auto_uprev
+                {
+                    return IsPackageAcceptedResult::Accepted { stable: false };
                 }
             }
-            IsPackageAcceptedResult::Accepted(stable) => (true, stable),
+            accepted_result
+        })();
+
+        let stable = match &accepted_result {
+            IsPackageAcceptedResult::Unaccepted { .. } => false,
+            IsPackageAcceptedResult::Accepted { stable } => *stable,
         };
 
         let iuse_map = parse_iuse_map(&metadata.vars)?;
@@ -241,14 +266,23 @@ impl PackageLoader {
             &iuse_map,
         );
 
-        let required_use: RequiredUseDependency = metadata
-            .vars
-            .get_scalar_or_default("REQUIRED_USE")?
-            .parse()?;
+        let raw_required_use = metadata.vars.get_scalar_or_default("REQUIRED_USE")?;
+        let required_use: RequiredUseDependency = raw_required_use.parse()?;
 
-        let masked = !accepted
-            || self.config.is_package_masked(&package)
-            || required_use.matches(&use_map) == Some(false);
+        let readiness = if let IsPackageAcceptedResult::Unaccepted { reason } = accepted_result {
+            PackageReadiness::Masked { reason }
+        } else if self.config.is_package_masked(&package) {
+            // TODO: Give a better explanation.
+            PackageReadiness::Masked {
+                reason: "Masked by configs".into(),
+            }
+        } else if required_use.matches(&use_map) == Some(false) {
+            PackageReadiness::Masked {
+                reason: format!("REQUIRED_USE not satisfied: {}", raw_required_use),
+            }
+        } else {
+            PackageReadiness::Ok
+        };
 
         let direct_build_target = metadata
             .vars
@@ -266,9 +300,8 @@ impl PackageLoader {
             metadata,
             slot,
             use_map,
-            accepted,
             stable,
-            masked,
+            readiness,
             inherited,
             inherit_paths,
             direct_build_target,
@@ -366,9 +399,8 @@ KEYWORDS="*"
         // unit tests in `metadata.rs`.
         assert_eq!(details.slot, Slot::new("0"));
         assert_eq!(details.use_map, UseMap::new());
-        assert_eq!(details.accepted, true);
         assert_eq!(details.stable, true);
-        assert_eq!(details.masked, false);
+        assert_eq!(details.readiness, PackageReadiness::Ok);
         assert_eq!(details.inherited, HashSet::new());
         assert_eq!(details.inherit_paths, Vec::<PathBuf>::new());
         assert_eq!(details.direct_build_target, None);
@@ -401,9 +433,13 @@ SLOT=0
 KEYWORDS="-*"
 "#,
         );
-        assert_eq!(details.accepted, false);
         assert_eq!(details.stable, false);
-        assert_eq!(details.masked, true);
+        assert_eq!(
+            details.readiness,
+            PackageReadiness::Masked {
+                reason: "KEYWORDS (-*) is not accepted by ACCEPT_KEYWORDS (riscv)".into()
+            }
+        );
     }
 
     #[test]
@@ -418,9 +454,13 @@ IUSE="foo +bar"
 REQUIRED_USE="|| ( foo !bar )"
 "#,
         );
-        assert_eq!(details.accepted, true);
         assert_eq!(details.stable, true);
-        assert_eq!(details.masked, true);
+        assert_eq!(
+            details.readiness,
+            PackageReadiness::Masked {
+                reason: "REQUIRED_USE not satisfied: || ( foo !bar )".into()
+            }
+        );
     }
 
     #[test]

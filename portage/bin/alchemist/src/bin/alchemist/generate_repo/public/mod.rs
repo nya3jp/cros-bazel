@@ -154,7 +154,7 @@ fn generate_public_package(
         .iter()
         .filter_map(|maybe_package| match maybe_package {
             MaybePackage::Err(error) => match &error.details {
-                MaybePackageDetails::Ok(details) if details.masked => None,
+                MaybePackageDetails::Ok(details) if details.readiness.masked() => None,
                 _ => Some(error.as_ref()),
             },
             _ => None,

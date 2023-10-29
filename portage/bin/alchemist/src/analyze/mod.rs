@@ -17,7 +17,7 @@ use crate::{
     config::bundle::ConfigBundle,
     ebuild::{
         metadata::{EBuildBasicData, EBuildMetadata},
-        MaybePackageDetails, PackageDetails,
+        MaybePackageDetails, PackageDetails, PackageReadiness,
     },
     resolver::PackageResolver,
 };
@@ -266,12 +266,12 @@ pub fn analyze_packages(
                 }
             };
             let result = (|| -> Result<PackagePartial> {
-                if details.masked {
+                if let PackageReadiness::Masked { reason } = &details.readiness {
                     // We do not support building masked packages because of
                     // edge cases: e.g., if one masked package depends on
                     // another masked one, this'd be treated as an unsatisfied
                     // dependency error.
-                    bail!("The package is masked");
+                    bail!("The package is masked: {}", reason);
                 }
                 let dependencies =
                     analyze_dependencies(&details, cross_compile, host_resolver, target_resolver)?;

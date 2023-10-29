@@ -140,7 +140,7 @@ mod tests {
         data::{Slot, UseMap},
         ebuild::{
             metadata::{EBuildBasicData, EBuildMetadata},
-            PackageDetails,
+            PackageDetails, PackageReadiness,
         },
     };
     use pretty_assertions::assert_eq;
@@ -215,9 +215,8 @@ mod tests {
             }),
             slot: Slot::new("0"),
             use_map: UseMap::new(),
-            accepted: true,
             stable: true,
-            masked: false,
+            readiness: PackageReadiness::Ok,
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,

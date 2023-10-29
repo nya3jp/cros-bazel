@@ -130,7 +130,7 @@ impl PackageResolver {
         // Filter masked packages.
         let packages = packages
             .iter()
-            .filter(|details| !details.masked)
+            .filter(|details| details.readiness.ok())
             .collect_vec();
 
         // Find the latest version.

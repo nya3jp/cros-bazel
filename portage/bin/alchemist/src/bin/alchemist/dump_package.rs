@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use alchemist::dependency::package::PackageAtom;
-use alchemist::ebuild::PackageDetails;
+use alchemist::ebuild::{PackageDetails, PackageReadiness};
 use alchemist::{analyze::dependency::analyze_dependencies, bash::vars::BashValue};
 use anyhow::{Context, Result};
 use colored::Colorize;
@@ -90,9 +90,15 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
                 if is_default { " (Default)" } else { "" }
             );
             println!("Slot:\t\t{}", &details.slot);
-            println!("Accepted:\t{:?}", details.accepted);
             println!("Stable:\t\t{:?}", details.stable);
-            println!("Masked:\t\t{}", details.masked);
+            match &details.readiness {
+                PackageReadiness::Ok => {
+                    println!("Readiness:\t\tOK (not masked)");
+                }
+                PackageReadiness::Masked { reason } => {
+                    println!("Readiness:\t\tMasked ({})", reason);
+                }
+            }
             println!(
                 "USE:\t\t{}",
                 details

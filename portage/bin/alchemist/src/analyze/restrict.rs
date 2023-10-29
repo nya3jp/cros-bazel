@@ -38,7 +38,10 @@ mod tests {
     use crate::{
         bash::vars::{BashValue, BashVars},
         data::Slot,
-        ebuild::metadata::{EBuildBasicData, EBuildMetadata},
+        ebuild::{
+            metadata::{EBuildBasicData, EBuildMetadata},
+            PackageReadiness,
+        },
     };
 
     use super::*;
@@ -62,9 +65,8 @@ mod tests {
             }),
             slot: Slot::new("0"),
             use_map,
-            accepted: true,
             stable: true,
-            masked: false,
+            readiness: PackageReadiness::Ok,
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
