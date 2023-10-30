@@ -218,19 +218,19 @@ __xbuild_source_eclass() {
   fi
   INHERITED="${INHERITED} ${name}"
 
-  __xbuild_eclass_IUSE="${__xbuild_eclass_IUSE} ${IUSE}"
+  __xbuild_eclass_IUSE="${__xbuild_eclass_IUSE:+${__xbuild_eclass_IUSE}}${IUSE}"
   IUSE="${saved_IUSE}"
-  __xbuild_eclass_REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE} ${REQUIRED_USE}"
+  __xbuild_eclass_REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE:+${__xbuild_eclass_REQUIRED_USE} }${REQUIRED_USE}"
   REQUIRED_USE="${saved_REQUIRED_USE}"
-  __xbuild_eclass_DEPEND="${__xbuild_eclass_DEPEND} ${DEPEND}"
+  __xbuild_eclass_DEPEND="${__xbuild_eclass_DEPEND:+${__xbuild_eclass_DEPEND} }${DEPEND}"
   DEPEND="${saved_DEPEND}"
-  __xbuild_eclass_BDEPEND="${__xbuild_eclass_BDEPEND} ${BDEPEND}"
+  __xbuild_eclass_BDEPEND="${__xbuild_eclass_BDEPEND:+${__xbuild_eclass_BDEPEND} }${BDEPEND}"
   BDEPEND="${saved_BDEPEND}"
-  __xbuild_eclass_RDEPEND="${__xbuild_eclass_RDEPEND} ${RDEPEND}"
+  __xbuild_eclass_RDEPEND="${__xbuild_eclass_RDEPEND:+${__xbuild_eclass_RDEPEND} }${RDEPEND}"
   RDEPEND="${saved_RDEPEND}"
-  __xbuild_eclass_PDEPEND="${__xbuild_eclass_PDEPEND} ${PDEPEND}"
+  __xbuild_eclass_PDEPEND="${__xbuild_eclass_PDEPEND:+${__xbuild_eclass_PDEPEND} }${PDEPEND}"
   PDEPEND="${saved_PDEPEND}"
-  __xbuild_eclass_IDEPEND="${__xbuild_eclass_IDEPEND} ${IDEPEND}"
+  __xbuild_eclass_IDEPEND="${__xbuild_eclass_IDEPEND:+${__xbuild_eclass_IDEPEND} }${IDEPEND}"
   IDEPEND="${saved_IDEPEND}"
 }
 
@@ -251,13 +251,13 @@ esac
 
 # Collect accumulated metadata keys in eclasses.
 # https://projects.gentoo.org/pms/8/pms.html#x1-10600010.2
-IUSE="${__xbuild_eclass_IUSE} ${IUSE}"
-REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE} ${REQUIRED_USE}"
-DEPEND="${__xbuild_eclass_DEPEND} ${DEPEND}"
-BDEPEND="${__xbuild_eclass_BDEPEND} ${BDEPEND}"
-RDEPEND="${__xbuild_eclass_RDEPEND} ${RDEPEND}"
-PDEPEND="${__xbuild_eclass_PDEPEND} ${PDEPEND}"
-IDEPEND="${__xbuild_eclass_IDEPEND} ${IDEPEND}"
+IUSE="${__xbuild_eclass_IUSE:+${__xbuild_eclass_IUSE} }${IUSE}"
+REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE:+${__xbuild_eclass_REQUIRED_USE} }${REQUIRED_USE}"
+DEPEND="${__xbuild_eclass_DEPEND:+${__xbuild_eclass_DEPEND} }${DEPEND}"
+BDEPEND="${__xbuild_eclass_BDEPEND:+${__xbuild_eclass_BDEPEND} }${BDEPEND}"
+RDEPEND="${__xbuild_eclass_RDEPEND:+${__xbuild_eclass_RDEPEND} }${RDEPEND}"
+PDEPEND="${__xbuild_eclass_PDEPEND:+${__xbuild_eclass_PDEPEND} }${PDEPEND}"
+IDEPEND="${__xbuild_eclass_IDEPEND:+${__xbuild_eclass_IDEPEND} }${IDEPEND}"
 
 INHERIT_PATHS=("${!__xbuild_eclass_paths[@]}")
 

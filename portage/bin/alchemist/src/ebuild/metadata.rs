@@ -322,6 +322,8 @@ EAPI=7
 SLOT=0
 KEYWORDS="*"
 
+DEPEND="sys-apps/world"
+
 WORLD="world"
 
 SCALAR="hello, ${WORLD}!"
@@ -357,6 +359,7 @@ ARRAY=(hello, "${WORLD}!")
         assert_eq!(vars.get_scalar("EAPI").unwrap(), "7");
         assert_eq!(vars.get_scalar("SLOT").unwrap(), "0");
         assert_eq!(vars.get_scalar("KEYWORDS").unwrap(), "*");
+        assert_eq!(vars.get_scalar("DEPEND").unwrap(), "sys-apps/world");
         assert_eq!(vars.get_scalar("SCALAR").unwrap(), "hello, world!");
         assert_eq!(
             vars.get_indexed_array("ARRAY").unwrap(),
