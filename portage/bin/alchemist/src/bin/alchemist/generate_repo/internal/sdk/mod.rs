@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 use alchemist::{
-    dependency::package::PackageAtom, ebuild::PackageDetails, repository::RepositorySet,
-    toolchain::Toolchain,
+    analyze::Package, dependency::package::PackageAtom, ebuild::PackageDetails,
+    repository::RepositorySet, toolchain::Toolchain,
 };
 use itertools::Itertools;
 use std::{
@@ -30,7 +30,7 @@ use crate::{
     alchemist::TargetData,
     generate_repo::common::{
         package_details_to_package_set_target_path, package_details_to_target_path,
-        repository_set_to_target_path, Package, PRIMORDIAL_PACKAGES, TOOLCHAIN_PACKAGE_NAMES,
+        repository_set_to_target_path, PRIMORDIAL_PACKAGES, TOOLCHAIN_PACKAGE_NAMES,
     },
 };
 

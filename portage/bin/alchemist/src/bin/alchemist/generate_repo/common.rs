@@ -2,18 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::sync::Arc;
-
 use alchemist::{
-    analyze::{
-        dependency::PackageDependencies,
-        source::{PackageDistSource, PackageSources},
-    },
-    ebuild::{
-        metadata::{EBuildBasicData, EBuildMetadata},
-        MaybePackageDetails, PackageDetails,
-    },
-    repository::RepositorySet,
+    analyze::source::PackageDistSource, ebuild::PackageDetails, repository::RepositorySet,
 };
 use anyhow::Result;
 use itertools::Itertools;
@@ -121,83 +111,6 @@ pub fn package_details_to_package_set_target_path(
         "{}_package_set",
         package_details_to_target_path(details, prefix)
     )
-}
-
-/// Holds rich information about a package.
-pub struct Package {
-    /// Package information extracted by [`PackageResolver`].
-    pub details: Arc<PackageDetails>,
-
-    /// Dependency information computed from the package metadata.
-    pub dependencies: PackageDependencies,
-
-    /// Locates source code needed to build this package.
-    pub sources: PackageSources,
-
-    /// A list of packages needed to install together with this package.
-    /// Specifically, it is a transitive closure of dependencies introduced by
-    /// RDEPEND and PDEPEND. Alchemist needs to compute it, instead of letting
-    /// Bazel compute it, because there can be circular dependencies.
-    pub install_set: Vec<Arc<PackageDetails>>,
-
-    /// The BDEPENDs declared by this package and all the IDEPENDs specified
-    /// by the package's DEPENDs and their transitive RDEPENDs.
-    ///
-    /// When building the `build_deps` SDK layer, we need to ensure that all
-    /// the IDEPENDs are installed into the `build_host_deps` SDK layer. We
-    /// Could add the concept of an IDEPEND to bazel, but it would make the
-    /// `sdk_install_deps` rule very complicated and harder to understand.
-    pub build_host_deps: Vec<Arc<PackageDetails>>,
-}
-
-#[allow(dead_code)]
-impl Package {
-    pub fn as_basic_data(&self) -> &EBuildBasicData {
-        &self.details.metadata.basic_data
-    }
-
-    pub fn as_metadata(&self) -> &EBuildMetadata {
-        &self.details.metadata
-    }
-
-    pub fn as_details(&self) -> &PackageDetails {
-        &self.details
-    }
-}
-
-/// Holds information for packages that we failed to analyze.
-#[derive(Debug)]
-pub struct PackageAnalysisError {
-    pub details: MaybePackageDetails,
-    pub error: String,
-}
-
-impl PackageAnalysisError {
-    pub fn as_basic_data(&self) -> &EBuildBasicData {
-        self.details.as_basic_data()
-    }
-}
-
-/// Represents a package, covering both successfully analyzed ones and failed ones.
-///
-/// Since this enum is very lightweight (contains [`Arc`] only), you should not wrap it within
-/// reference-counting smart pointers like [`Arc`], but you can just clone it.
-///
-/// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
-/// to implement a few convenient methods.
-#[derive(Clone)]
-pub enum MaybePackage {
-    Ok(Arc<Package>),
-    Err(Arc<PackageAnalysisError>),
-}
-
-impl MaybePackage {
-    pub fn as_basic_data(&self) -> &EBuildBasicData {
-        match self {
-            MaybePackage::Ok(package) => package.as_basic_data(),
-            MaybePackage::Err(error) => error.as_basic_data(),
-        }
-    }
 }
 
 #[derive(Serialize)]

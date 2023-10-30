@@ -12,7 +12,7 @@ use std::{
 };
 use tracing::instrument;
 
-use alchemist::{ebuild::MaybePackageDetails, resolver::PackageResolver};
+use alchemist::{analyze::MaybePackage, ebuild::MaybePackageDetails, resolver::PackageResolver};
 use anyhow::{anyhow, Context, Result};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -20,7 +20,7 @@ use serde::Serialize;
 use tera::Tera;
 use version::Version;
 
-use super::common::{MaybePackage, AUTOGENERATE_NOTICE};
+use super::common::AUTOGENERATE_NOTICE;
 
 lazy_static! {
     static ref TEMPLATES: Tera = {

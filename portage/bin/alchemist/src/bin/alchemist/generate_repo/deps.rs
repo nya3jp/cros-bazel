@@ -4,13 +4,13 @@
 
 use std::{fs::File, path::Path};
 
-use alchemist::analyze::source::PackageLocalSource;
+use alchemist::analyze::{source::PackageLocalSource, Package};
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
 use tracing::instrument;
 
-use super::common::{DistFileEntry, Package};
+use super::common::DistFileEntry;
 
 // Each entry here corresponds to a repository rule, and the fields in the
 // struct must correspond to the parameters to that repository rule.

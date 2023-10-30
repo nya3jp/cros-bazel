@@ -12,7 +12,10 @@ use std::{
 };
 
 use alchemist::{
-    analyze::{restrict::analyze_restricts, source::PackageLocalSource},
+    analyze::{
+        restrict::analyze_restricts, source::PackageLocalSource, MaybePackage, Package,
+        PackageAnalysisError,
+    },
     config::ProvidedPackage,
     dependency::restrict::RestrictAtom,
     ebuild::PackageDetails,
@@ -28,8 +31,8 @@ use tera::Tera;
 use tracing::instrument;
 
 use crate::generate_repo::common::{
-    package_details_to_target_path, repository_set_to_target_path, DistFileEntry, MaybePackage,
-    Package, PackageAnalysisError, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    package_details_to_target_path, repository_set_to_target_path, DistFileEntry,
+    AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {
