@@ -122,8 +122,9 @@ def _cros_chrome_repository_impl(ctx):
         "--transform=flags=rSh;s,^,/home/root/chrome_root/,",
     ]
 
-    # Remove CIPD cache files to make this hermetic.
-    ctx.delete("src/third_party/depot_tools/.cipd_bin/.cipd")
+    # Remove .cipd-cache/instances/state.db as there is no guarantee about its
+    # contents. CIPD will regenerate it if needed.
+    ctx.delete(".cipd-cache/instances/state.db")
 
     # We use zstd since it's way faster than gzip and should be installed by
     # default on most distributions. Hopefully the compression algorithm doesn't
@@ -142,14 +143,12 @@ def _cros_chrome_repository_impl(ctx):
             # Hashes of all the dependencies. Useful since we don't include the
             # .git directories.
             ".gclient_entries",
+            # cipd lookup cache
+            ".cipd-cache",
             # We don't include the .vpython-root since it contains absolute
             # symlinks which we can't use inside the chroot. Since we have the
             # cache and pkgs we can recreate it in the chroot without network
             # access.
-
-            # We don't include the .cipd-cache because it's not hermetic.
-            # TODO(b/304441605): Consider including it to avoid performing
-            # network IO when building chrome.
         ],
         ZSTD_NBTHREADS = "0",
         msg = "Tarring up Chromium src",
