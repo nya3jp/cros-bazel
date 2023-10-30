@@ -8,7 +8,6 @@ use anyhow::{bail, Context, Result};
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
-    ops::Deref,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
@@ -63,8 +62,8 @@ impl PackageDetails {
     /// dependency predicates.
     pub fn as_package_ref(&self) -> PackageRef {
         PackageRef {
-            package_name: &self.package_name,
-            version: &self.version,
+            package_name: &self.as_basic_data().package_name,
+            version: &self.as_basic_data().version,
             slot: Slot {
                 main: self.slot.main.as_str(),
                 sub: self.slot.sub.as_str(),
@@ -75,8 +74,8 @@ impl PackageDetails {
 
     pub fn as_thin_package_ref(&self) -> ThinPackageRef {
         ThinPackageRef {
-            package_name: &self.package_name,
-            version: &self.version,
+            package_name: &self.as_basic_data().package_name,
+            version: &self.as_basic_data().version,
             slot: Slot {
                 main: self.slot.main.as_str(),
                 sub: self.slot.sub.as_str(),
@@ -86,7 +85,7 @@ impl PackageDetails {
 
     /// EAPI is technically a string, but working with an integer is easier.
     fn eapi(&self) -> Result<i32> {
-        let eapi = self.vars.get_scalar("EAPI")?;
+        let eapi = self.metadata.vars.get_scalar("EAPI")?;
         eapi.parse::<i32>().with_context(|| format!("EAPI: {eapi}"))
     }
 
@@ -100,10 +99,12 @@ impl PackageDetails {
     }
 }
 
-impl Deref for PackageDetails {
-    type Target = EBuildMetadata;
+impl PackageDetails {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
+        &self.metadata.basic_data
+    }
 
-    fn deref(&self) -> &Self::Target {
+    pub fn as_metadata(&self) -> &EBuildMetadata {
         &self.metadata
     }
 }
@@ -115,11 +116,9 @@ pub struct PackageLoadError {
     pub error: String,
 }
 
-impl Deref for PackageLoadError {
-    type Target = MaybeEBuildMetadata;
-
-    fn deref(&self) -> &Self::Target {
-        &self.metadata
+impl PackageLoadError {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
+        self.metadata.as_basic_data()
     }
 }
 
@@ -136,13 +135,11 @@ pub enum MaybePackageDetails {
     Err(Arc<PackageLoadError>),
 }
 
-impl Deref for MaybePackageDetails {
-    type Target = EBuildBasicData;
-
-    fn deref(&self) -> &Self::Target {
+impl MaybePackageDetails {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
         match self {
-            MaybePackageDetails::Ok(details) => details,
-            MaybePackageDetails::Err(error) => error,
+            MaybePackageDetails::Ok(details) => details.as_basic_data(),
+            MaybePackageDetails::Err(error) => error.as_basic_data(),
         }
     }
 }
@@ -185,7 +182,11 @@ impl PackageLoader {
 
     /// Parses [`MaybeEBuildMetadata`] into [`PackageDetails`].
     fn parse_package(&self, metadata: MaybeEBuildMetadata) -> Result<PackageDetails> {
-        let package_name = format!("{}/{}", metadata.category_name, metadata.short_package_name);
+        let package_name = format!(
+            "{}/{}",
+            metadata.as_basic_data().category_name,
+            metadata.as_basic_data().short_package_name
+        );
 
         let metadata = match metadata {
             MaybeEBuildMetadata::Ok(metadata) => metadata,
@@ -198,7 +199,7 @@ impl PackageLoader {
 
         let package = ThinPackageRef {
             package_name: package_name.as_str(),
-            version: &metadata.version,
+            version: &metadata.basic_data.version,
             slot: Slot {
                 main: &slot.main,
                 sub: &slot.sub,
@@ -218,7 +219,7 @@ impl PackageLoader {
             IsPackageAcceptedResult::Unaccepted => {
                 if self.force_accept_9999_ebuilds {
                     let accepted = inherited.contains("cros-workon")
-                        && metadata.version == self.version_9999
+                        && metadata.basic_data.version == self.version_9999
                         && match metadata.vars.get_scalar("CROS_WORKON_MANUAL_UPREV") {
                             Ok(value) => value != "1",
                             Err(_) => false,
@@ -232,9 +233,13 @@ impl PackageLoader {
         };
 
         let iuse_map = parse_iuse_map(&metadata.vars)?;
-        let use_map =
-            self.config
-                .compute_use_map(&package_name, &metadata.version, stable, &slot, &iuse_map);
+        let use_map = self.config.compute_use_map(
+            &package_name,
+            &metadata.basic_data.version,
+            stable,
+            &slot,
+            &iuse_map,
+        );
 
         let required_use: RequiredUseDependency = metadata
             .vars

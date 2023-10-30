@@ -2,14 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{ops::Deref, sync::Arc};
+use std::sync::Arc;
 
 use alchemist::{
     analyze::{
         dependency::PackageDependencies,
         source::{PackageDistSource, PackageSources},
     },
-    ebuild::{metadata::EBuildBasicData, MaybePackageDetails, PackageDetails},
+    ebuild::{
+        metadata::{EBuildBasicData, EBuildMetadata},
+        MaybePackageDetails, PackageDetails,
+    },
     repository::RepositorySet,
 };
 use anyhow::Result;
@@ -103,7 +106,10 @@ pub fn repository_set_to_target_path(repo_set: &RepositorySet) -> String {
 pub fn package_details_to_target_path(details: &PackageDetails, prefix: &str) -> String {
     format!(
         "//internal/packages/{}/{}/{}:{}",
-        prefix, details.repo_name, details.package_name, details.version
+        prefix,
+        details.as_basic_data().repo_name,
+        details.as_basic_data().package_name,
+        details.as_basic_data().version
     )
 }
 
@@ -144,10 +150,17 @@ pub struct Package {
     pub build_host_deps: Vec<Arc<PackageDetails>>,
 }
 
-impl Deref for Package {
-    type Target = PackageDetails;
+#[allow(dead_code)]
+impl Package {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
+        &self.details.metadata.basic_data
+    }
 
-    fn deref(&self) -> &Self::Target {
+    pub fn as_metadata(&self) -> &EBuildMetadata {
+        &self.details.metadata
+    }
+
+    pub fn as_details(&self) -> &PackageDetails {
         &self.details
     }
 }
@@ -159,11 +172,9 @@ pub struct PackageAnalysisError {
     pub error: String,
 }
 
-impl Deref for PackageAnalysisError {
-    type Target = MaybePackageDetails;
-
-    fn deref(&self) -> &Self::Target {
-        &self.details
+impl PackageAnalysisError {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
+        self.details.as_basic_data()
     }
 }
 
@@ -180,13 +191,11 @@ pub enum MaybePackage {
     Err(Arc<PackageAnalysisError>),
 }
 
-impl Deref for MaybePackage {
-    type Target = EBuildBasicData;
-
-    fn deref(&self) -> &Self::Target {
+impl MaybePackage {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
         match self {
-            MaybePackage::Ok(package) => package,
-            MaybePackage::Err(error) => error,
+            MaybePackage::Ok(package) => package.as_basic_data(),
+            MaybePackage::Err(error) => error.as_basic_data(),
         }
     }
 }

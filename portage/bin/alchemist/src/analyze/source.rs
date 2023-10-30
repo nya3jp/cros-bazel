@@ -110,7 +110,7 @@ fn get_cros_workon_array_variable(
     name: &str,
     projects: usize,
 ) -> Result<Vec<String>> {
-    let raw_values = match details.vars.hash_map().get(name) {
+    let raw_values = match details.metadata.vars.hash_map().get(name) {
         None => {
             bail!("{} not defined", name);
         }
@@ -140,7 +140,7 @@ fn get_cros_workon_array_variable(
 }
 
 fn get_cros_workon_tree(details: &PackageDetails) -> Result<Vec<String>> {
-    match details.vars.hash_map().get("CROS_WORKON_TREE") {
+    match details.metadata.vars.hash_map().get("CROS_WORKON_TREE") {
         None => {
             bail!("CROS_WORKON_TREE not defined");
         }
@@ -162,7 +162,7 @@ fn extract_cros_workon_sources(
     details: &PackageDetails,
     src_dir: &Path,
 ) -> Result<(Vec<PackageLocalSource>, Vec<PackageRepoSource>)> {
-    let projects = match details.vars.hash_map().get("CROS_WORKON_PROJECT") {
+    let projects = match details.metadata.vars.hash_map().get("CROS_WORKON_PROJECT") {
         None => {
             // This is not a cros-workon package.
             return Ok((Vec::new(), Vec::new()));
@@ -181,7 +181,10 @@ fn extract_cros_workon_sources(
         get_cros_workon_array_variable(details, "CROS_WORKON_OPTIONAL_CHECKOUT", projects.len())?;
     let trees = get_cros_workon_tree(details)?;
 
-    let is_chromeos_base = details.package_name.starts_with("chromeos-base/");
+    let is_chromeos_base = details
+        .as_basic_data()
+        .package_name
+        .starts_with("chromeos-base/");
 
     let mut source_paths = Vec::<PathBuf>::new();
     let mut repo_sources = Vec::<PackageRepoSource>::new();
@@ -330,12 +333,13 @@ fn apply_local_sources_workarounds(
     // run all the repo hooks to generate a self contained tarball.
     if details.inherited.contains("chromium-source")
         && details
+            .as_basic_data()
             .version
             .main()
             .first()
             .map_or(false, |main| main != "9999")
     {
-        let version = details.version.main().join(".");
+        let version = details.as_basic_data().version.main().join(".");
         // TODO: We need USE flags to add src-internal.
         local_sources.push(PackageLocalSource::Chrome(version));
     }
@@ -349,12 +353,12 @@ fn apply_local_sources_workarounds(
     if details.inherited.contains("platform")
         || details.inherited.contains("meson")
         // TODO(b/295064725): Migrate chromeos-fonts to cros-workon
-        || details.package_name == "chromeos-base/chromeos-fonts"
+        || details.as_basic_data().package_name == "chromeos-base/chromeos-fonts"
         // b/299597288: cros-rust calls platform2_test.py
         // TODO(b/299597288): Add this only for tests.
         || details.inherited.contains("cros-rust")
         // Cups needs `platform2_test.py` to run its tests.
-        || details.package_name == "net-print/cups"
+        || details.as_basic_data().package_name == "net-print/cups"
     {
         let common_mk = PackageLocalSource::Src("src/platform2/common-mk".into());
         local_sources.push(common_mk);
@@ -372,7 +376,7 @@ fn apply_local_sources_workarounds(
     // unnecessary uprevs (see the comment in its ebuild).
     // See b/301352675.
     // TODO: Remove this workaround when b/301526906 is fixed.
-    if details.package_name == "dev-rust/third-party-crates-src" {
+    if details.as_basic_data().package_name == "dev-rust/third-party-crates-src" {
         local_sources.push(PackageLocalSource::Src(
             "src/third_party/rust_crates/projects".into(),
         ));
@@ -483,7 +487,7 @@ fn extract_remote_sources(
     };
 
     // Collect URIs from SRC_URI.
-    let src_uri = details.vars.get_scalar_or_default("SRC_URI")?;
+    let src_uri = details.metadata.vars.get_scalar_or_default("SRC_URI")?;
     let source_deps = src_uri.parse::<UriDependency>()?;
     let source_atoms = parse_uri_dependencies(source_deps, &details.use_map)?;
 
@@ -517,7 +521,7 @@ fn extract_remote_sources(
         return Ok(Vec::new());
     }
 
-    let manifest = load_package_manifest(details.ebuild_path.parent().unwrap())?;
+    let manifest = load_package_manifest(details.as_basic_data().ebuild_path.parent().unwrap())?;
 
     let mut dist_map: HashMap<String, DistEntry> = manifest
         .dists

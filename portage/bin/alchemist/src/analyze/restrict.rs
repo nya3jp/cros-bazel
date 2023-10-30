@@ -22,7 +22,7 @@ fn parse_restricts(deps: RestrictDependency, use_map: &UseMap) -> Result<Vec<Res
 /// Analyzes ebuild variables and returns [`RestrictAtom`]s declared in the
 /// ebuild.
 pub fn analyze_restricts(details: &PackageDetails) -> Result<Vec<RestrictAtom>> {
-    let restrict = details.vars.get_scalar_or_default("RESTRICT")?;
+    let restrict = details.metadata.vars.get_scalar_or_default("RESTRICT")?;
     let deps = restrict.parse::<RestrictDependency>()?;
     parse_restricts(deps, &details.use_map)
 }

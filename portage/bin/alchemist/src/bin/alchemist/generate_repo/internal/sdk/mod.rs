@@ -172,7 +172,10 @@ fn get_primordial_packages(resolver: &PackageResolver) -> Result<Vec<Arc<Package
             .find_best_package(&atom)?
             .with_context(|| format!("Failed to find {}", package_name))?;
 
-        if !resolver.is_provided(&best.package_name, &best.version) {
+        if !resolver.is_provided(
+            &best.as_basic_data().package_name,
+            &best.as_basic_data().version,
+        ) {
             packages.push(best);
         }
     }
@@ -263,7 +266,10 @@ fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<(
             .map(|p| {
                 format!(
                     "//internal/packages/{}/{}/{}:{}",
-                    prefix, p.repo_name, p.package_name, p.version
+                    prefix,
+                    p.as_basic_data().repo_name,
+                    p.as_basic_data().package_name,
+                    p.as_basic_data().version
                 )
             })
             .collect(),

@@ -8,7 +8,6 @@ use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::{
@@ -132,7 +131,7 @@ impl EBuildEvaluator {
 ///
 /// This information is available as long as an ebuild file exists with a correct file name format.
 /// All package-representing types containing [`EBuildBasicData`] directly or indirectly should
-/// implement [`Deref`] to provide easy access to [`EBuildBasicData`] fields.
+/// provide `as_basic_data()` to provide easy access to [`EBuildBasicData`] fields.
 #[derive(Debug, Eq, PartialEq)]
 pub struct EBuildBasicData {
     pub repo_name: String,
@@ -150,10 +149,8 @@ pub struct EBuildMetadata {
     pub vars: BashVars,
 }
 
-impl Deref for EBuildMetadata {
-    type Target = EBuildBasicData;
-
-    fn deref(&self) -> &Self::Target {
+impl EBuildMetadata {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
         &self.basic_data
     }
 }
@@ -165,10 +162,8 @@ pub struct EBuildEvaluationError {
     pub error: String,
 }
 
-impl Deref for EBuildEvaluationError {
-    type Target = EBuildBasicData;
-
-    fn deref(&self) -> &Self::Target {
+impl EBuildEvaluationError {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
         &self.basic_data
     }
 }
@@ -186,10 +181,8 @@ pub enum MaybeEBuildMetadata {
     Err(Arc<EBuildEvaluationError>),
 }
 
-impl Deref for MaybeEBuildMetadata {
-    type Target = EBuildBasicData;
-
-    fn deref(&self) -> &Self::Target {
+impl MaybeEBuildMetadata {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
         match self {
             MaybeEBuildMetadata::Ok(metadata) => &metadata.basic_data,
             MaybeEBuildMetadata::Err(error) => &error.basic_data,

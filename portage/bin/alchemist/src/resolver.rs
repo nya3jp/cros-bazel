@@ -110,8 +110,8 @@ impl PackageResolver {
                 // the error.
                 Err(err) => bail!(
                     "target: {}-{}: {}",
-                    details.package_name,
-                    details.version,
+                    details.as_basic_data().package_name,
+                    details.as_basic_data().version,
                     err
                 ),
             }
@@ -140,7 +140,7 @@ impl PackageResolver {
         // priority packages come first and higher priority packages come last.
         Ok(packages
             .into_iter()
-            .max_by(|a, b| a.version.cmp(&b.version))
+            .max_by(|a, b| a.as_basic_data().version.cmp(&b.as_basic_data().version))
             .cloned())
     }
 

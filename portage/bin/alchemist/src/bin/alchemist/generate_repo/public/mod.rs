@@ -89,8 +89,10 @@ fn generate_public_package(
     create_dir_all(package_output_dir)?;
 
     // Deduplicate versions.
-    let version_to_maybe_package: BTreeMap<&Version, &MaybePackage> =
-        maybe_packages.iter().map(|p| (&p.version, *p)).collect();
+    let version_to_maybe_package: BTreeMap<&Version, &MaybePackage> = maybe_packages
+        .iter()
+        .map(|p| (&p.as_basic_data().version, *p))
+        .collect();
 
     let mut aliases = Vec::new();
     let mut test_suites = Vec::new();
@@ -114,8 +116,8 @@ fn generate_public_package(
                                 Cow::from(format!(
                                     "//internal/packages/{}/{}/{}:{}{}{}",
                                     target.prefix,
-                                    maybe_package.repo_name,
-                                    maybe_package.package_name,
+                                    maybe_package.as_basic_data().repo_name,
+                                    maybe_package.as_basic_data().package_name,
                                     version,
                                     suffix,
                                     target_suffix,
@@ -133,7 +135,10 @@ fn generate_public_package(
             name: Cow::from(format!("{}_test", version)),
             test_name: Cow::from(format!(
                 "//internal/packages/{}/{}/{}:{}_test",
-                test_prefix, maybe_package.repo_name, maybe_package.package_name, version,
+                test_prefix,
+                maybe_package.as_basic_data().repo_name,
+                maybe_package.as_basic_data().package_name,
+                version,
             )),
         });
     }
@@ -165,7 +170,7 @@ fn generate_public_package(
         .find_best_package_in(&package_details)
         .with_context(|| format!("Package {:?}", package_details.first()))?
     {
-        Some(best_package.version.clone())
+        Some(best_package.as_basic_data().version.clone())
     } else {
         // All packages are masked.
         // TODO(emaxx): Generate ":failure" target with this explanation message.
@@ -213,7 +218,9 @@ fn generate_public_package(
     let ebuild_failures = non_masked_failures
         .iter()
         .map(|failed_package| EbuildFailureEntry {
-            name: Cow::from(get_ebuild_name_from_path(&failed_package.ebuild_path).unwrap()),
+            name: Cow::from(
+                get_ebuild_name_from_path(&failed_package.as_basic_data().ebuild_path).unwrap(),
+            ),
             error: Cow::from(&failed_package.error),
         })
         .collect();
@@ -239,7 +246,7 @@ fn join_by_package_name(all_packages: &[MaybePackage]) -> HashMap<String, Vec<&M
     let mut packages_by_name: HashMap<String, Vec<&MaybePackage>> = HashMap::new();
     for package in all_packages {
         packages_by_name
-            .entry(package.package_name.clone())
+            .entry(package.as_basic_data().package_name.clone())
             .or_default()
             .push(package);
     }

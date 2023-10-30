@@ -11,7 +11,6 @@ use std::{
     collections::HashMap,
     fs::{create_dir_all, remove_dir_all, File},
     io::{ErrorKind, Write},
-    ops::Deref,
     path::{Path, PathBuf},
     str::FromStr,
     sync::Arc,
@@ -24,7 +23,10 @@ use alchemist::{
     },
     config::{bundle::ConfigBundle, ProvidedPackage},
     dependency::package::PackageAtom,
-    ebuild::{metadata::EBuildBasicData, CachedPackageLoader, MaybePackageDetails, PackageDetails},
+    ebuild::{
+        metadata::{EBuildBasicData, EBuildMetadata},
+        CachedPackageLoader, MaybePackageDetails, PackageDetails,
+    },
     fakechroot::PathTranslator,
     repository::RepositorySet,
     resolver::PackageResolver,
@@ -77,10 +79,17 @@ struct PackagePartial {
     pub sources: PackageSources,
 }
 
-impl Deref for PackagePartial {
-    type Target = PackageDetails;
+#[allow(dead_code)]
+impl PackagePartial {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
+        &self.details.metadata.basic_data
+    }
 
-    fn deref(&self) -> &Self::Target {
+    pub fn as_metadata(&self) -> &EBuildMetadata {
+        &self.details.metadata
+    }
+
+    pub fn as_details(&self) -> &PackageDetails {
         &self.details
     }
 }
@@ -94,13 +103,12 @@ enum MaybePackagePartial {
     Err(Arc<PackageAnalysisError>),
 }
 
-impl Deref for MaybePackagePartial {
-    type Target = EBuildBasicData;
-
-    fn deref(&self) -> &Self::Target {
+#[allow(dead_code)]
+impl MaybePackagePartial {
+    pub fn as_basic_data(&self) -> &EBuildBasicData {
         match self {
-            MaybePackagePartial::Ok(package) => package,
-            MaybePackagePartial::Err(error) => error,
+            MaybePackagePartial::Ok(package) => package.as_basic_data(),
+            MaybePackagePartial::Err(error) => error.as_basic_data(),
         }
     }
 }
@@ -115,7 +123,7 @@ fn find_install_map<'a>(
     install_map: &mut HashMap<&'a Path, Arc<PackageDetails>>,
 ) {
     use std::collections::hash_map::Entry::*;
-    match install_map.entry(current.ebuild_path.as_path()) {
+    match install_map.entry(current.as_basic_data().ebuild_path.as_path()) {
         Occupied(_) => {
             return;
         }
@@ -127,7 +135,7 @@ fn find_install_map<'a>(
     // PackagePartial can be unavailable when analysis failed for the package
     // (e.g. failed to flatten RDEPEND). We can just skip traversing the graph
     // in this case.
-    let current_partial = match partial_by_path.get(current.ebuild_path.as_path()) {
+    let current_partial = match partial_by_path.get(current.as_basic_data().ebuild_path.as_path()) {
         Some(partial) => partial,
         None => {
             return;
@@ -148,7 +156,7 @@ fn collect_runtime_deps<'a>(
     runtime_deps: &mut HashMap<&'a Path, Arc<PackageDetails>>,
 ) {
     use std::collections::hash_map::Entry::*;
-    match runtime_deps.entry(current.ebuild_path.as_path()) {
+    match runtime_deps.entry(current.as_basic_data().ebuild_path.as_path()) {
         Occupied(_) => {
             return;
         }
@@ -160,7 +168,7 @@ fn collect_runtime_deps<'a>(
     // PackagePartial can be unavailable when analysis failed for the package
     // (e.g. failed to flatten RDEPEND). We can just skip traversing the graph
     // in this case.
-    let current_partial = match partial_by_path.get(current.ebuild_path.as_path()) {
+    let current_partial = match partial_by_path.get(current.as_basic_data().ebuild_path.as_path()) {
         Some(partial) => partial,
         None => {
             return;
@@ -190,11 +198,11 @@ fn compute_host_build_deps<'a>(
 
     build_dep_runtime_deps
         .into_values()
-        .filter_map(|details| partial_by_path.get(details.ebuild_path.as_path()))
+        .filter_map(|details| partial_by_path.get(details.as_basic_data().ebuild_path.as_path()))
         .flat_map(|partial| &partial.dependencies.install_host_deps)
         .chain(&current.dependencies.build_host_deps)
-        .sorted_by_key(|details| &details.ebuild_path)
-        .unique_by(|details| &details.ebuild_path)
+        .sorted_by_key(|details| &details.as_basic_data().ebuild_path)
+        .unique_by(|details| &details.as_basic_data().ebuild_path)
         .cloned()
         .collect()
 }
@@ -290,7 +298,7 @@ fn analyze_packages(
             MaybePackagePartial::Ok(partial) => Some(partial.as_ref()),
             _ => None,
         })
-        .map(|partial| (partial.ebuild_path.as_path(), partial))
+        .map(|partial| (partial.as_basic_data().ebuild_path.as_path(), partial))
         .collect();
 
     let mut install_set_by_path: HashMap<PathBuf, Vec<Arc<PackageDetails>>> = partial_by_path
@@ -302,9 +310,10 @@ fn analyze_packages(
             let install_set = install_map
                 .into_values()
                 .sorted_by(|a, b| {
-                    a.package_name
-                        .cmp(&b.package_name)
-                        .then_with(|| a.version.cmp(&b.version))
+                    a.as_basic_data()
+                        .package_name
+                        .cmp(&b.as_basic_data().package_name)
+                        .then_with(|| a.as_basic_data().version.cmp(&b.as_basic_data().version))
                 })
                 .collect();
 
@@ -327,10 +336,10 @@ fn analyze_packages(
         .map(|partial| match partial {
             MaybePackagePartial::Ok(partial) => {
                 let install_set = install_set_by_path
-                    .remove(partial.details.ebuild_path.as_path())
+                    .remove(partial.details.as_basic_data().ebuild_path.as_path())
                     .unwrap();
                 let build_host_deps = build_host_deps_by_path
-                    .remove(partial.details.ebuild_path.as_path())
+                    .remove(partial.details.as_basic_data().ebuild_path.as_path())
                     .unwrap();
                 MaybePackage::Ok(Arc::new(Package {
                     details: partial.details,
@@ -424,7 +433,9 @@ fn find_best_package_in(
 
     Ok(sdk_packages
         .into_iter()
-        .find(|p| p.details.version == best_sdk_package_details.version)
+        .find(|p| {
+            p.details.as_basic_data().version == best_sdk_package_details.as_basic_data().version
+        })
         .cloned())
 }
 
@@ -465,8 +476,8 @@ pub fn generate_stages(
                 .install_set
                 .iter()
                 .map(|p| ProvidedPackage {
-                    package_name: p.package_name.clone(),
-                    version: p.version.clone(),
+                    package_name: p.as_basic_data().package_name.clone(),
+                    version: p.as_basic_data().version.clone(),
                 })
                 .collect_vec()
         })

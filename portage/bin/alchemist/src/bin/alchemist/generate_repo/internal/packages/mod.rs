@@ -150,7 +150,8 @@ fn partition_provided<'a>(
     let (build_host_deps, provided_host_deps): (Vec<_>, Vec<_>) =
         packages.into_iter().partition(|package| {
             !provided.iter().any(|provided| {
-                provided.package_name == package.package_name && provided.version == package.version
+                provided.package_name == package.as_basic_data().package_name
+                    && provided.version == package.as_basic_data().version
             })
         });
 
@@ -180,7 +181,8 @@ fn get_ebuild_name_from_path(ebuild_path: &Path) -> Result<String> {
 
 impl EBuildEntry {
     pub fn try_new(target: &PackageType, package: &Package) -> Result<Self> {
-        let ebuild_name = get_ebuild_name_from_path(&package.details.ebuild_path).unwrap();
+        let ebuild_name =
+            get_ebuild_name_from_path(&package.details.as_basic_data().ebuild_path).unwrap();
         let basename = ebuild_name
             .rsplit_once('.')
             .ok_or_else(|| anyhow!("No file extension"))?
@@ -188,11 +190,12 @@ impl EBuildEntry {
             .to_owned();
         let (category, package_name) = package
             .details
+            .as_basic_data()
             .package_name
             .split_once('/')
             .expect("Package name must contain a /");
 
-        let version = package.details.version.to_string();
+        let version = package.details.as_basic_data().version.to_string();
 
         let mut sources: Vec<String> = package
             .sources
@@ -287,7 +290,7 @@ impl EBuildEntry {
                         .build_host_deps
                         .iter()
                         .chain(package.dependencies.build_deps.iter())
-                        .unique_by(|details| &details.ebuild_path),
+                        .unique_by(|details| &details.as_basic_data().ebuild_path),
                     host.sdk_provided_packages,
                 );
 
@@ -321,7 +324,13 @@ impl EBuildEntry {
         // documentation in case someone is debugging a dependency problem.
         let provided_host_build_deps = provided_host_build_deps
             .into_iter()
-            .map(|details| format!("{}-{}", details.package_name, details.version))
+            .map(|details| {
+                format!(
+                    "{}-{}",
+                    details.as_basic_data().package_name,
+                    details.as_basic_data().version
+                )
+            })
             .sorted()
             .collect();
 
@@ -391,7 +400,7 @@ impl EBuildEntry {
         // Host SDK has all the packages already built in.
         let sdk = if PRIMORDIAL_PACKAGES
             .iter()
-            .any(|package_name| package_name == &package.details.package_name)
+            .any(|package_name| package_name == &package.details.as_basic_data().package_name)
             && matches!(target, PackageType::CrossRoot { .. })
         {
             format!("//internal/sdk/{}:base", target_prefix)
@@ -399,7 +408,10 @@ impl EBuildEntry {
             format!("//internal/sdk/{}", target_prefix)
         };
 
-        let overlay = format!("//internal/overlays/{}", package.details.repo_name);
+        let overlay = format!(
+            "//internal/overlays/{}",
+            package.details.as_basic_data().repo_name
+        );
 
         Ok(Self {
             ebuild_name,
@@ -440,8 +452,8 @@ pub struct EBuildFailure {
 impl EBuildFailure {
     pub fn new(failure: &PackageAnalysisError) -> Self {
         EBuildFailure {
-            ebuild_name: get_ebuild_name_from_path(&failure.ebuild_path).unwrap(),
-            version: failure.version.to_string(),
+            ebuild_name: get_ebuild_name_from_path(&failure.as_basic_data().ebuild_path).unwrap(),
+            version: failure.as_basic_data().version.to_string(),
             error: failure.error.clone(),
         }
     }
@@ -517,7 +529,9 @@ fn generate_package(
 ) -> Result<()> {
     create_dir_all(output_dir)?;
 
-    let ebuilds = packages_in_dir.iter().map(|p| &p.ebuild_path);
+    let ebuilds = packages_in_dir
+        .iter()
+        .map(|p| &p.as_basic_data().ebuild_path);
 
     // Create `*.ebuild` symlinks.
     for (i, ebuild) in ebuilds.enumerate() {
@@ -545,7 +559,10 @@ fn join_by_package_dir(all_packages: &[MaybePackage]) -> HashMap<PathBuf, Vec<&M
 
     for package in all_packages.iter() {
         packages_by_dir
-            .entry(Path::new(&package.repo_name).join(&package.package_name))
+            .entry(
+                Path::new(&package.as_basic_data().repo_name)
+                    .join(&package.as_basic_data().package_name),
+            )
             .or_default()
             .push(package);
     }

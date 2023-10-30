@@ -25,7 +25,12 @@ pub struct Args {
 fn dump_deps(dep_type: &str, deps: &Vec<Arc<PackageDetails>>) {
     println!("{dep_type}:");
     for dep in deps {
-        println!("  {}-{}::{}", dep.package_name, dep.version, dep.repo_name);
+        println!(
+            "  {}-{}::{}",
+            dep.as_basic_data().package_name,
+            dep.as_basic_data().version,
+            dep.as_basic_data().repo_name
+        );
     }
 }
 
@@ -58,7 +63,7 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
         let mut packages = resolver.find_packages(&atom)?;
         let default = resolver.find_best_package_in(&packages)?;
 
-        packages.sort_by(|a, b| a.version.cmp(&b.version));
+        packages.sort_by(|a, b| a.as_basic_data().version.cmp(&b.as_basic_data().version));
         packages.reverse();
 
         println!("=======\t{}", atom);
@@ -69,14 +74,19 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
             }
 
             let is_default = match &default {
-                Some(default) => default.ebuild_path == details.ebuild_path,
+                Some(default) => {
+                    default.as_basic_data().ebuild_path == details.as_basic_data().ebuild_path
+                }
                 None => false,
             };
-            println!("Path:\t\t{}", &details.ebuild_path.to_string_lossy());
-            println!("Package:\t{}", &details.package_name);
+            println!(
+                "Path:\t\t{}",
+                &details.as_basic_data().ebuild_path.to_string_lossy()
+            );
+            println!("Package:\t{}", &details.as_basic_data().package_name);
             println!(
                 "Version:\t{}{}",
-                &details.version,
+                &details.as_basic_data().version,
                 if is_default { " (Default)" } else { "" }
             );
             println!("Slot:\t\t{}", &details.slot);
@@ -111,7 +121,7 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
 
             if args.env {
                 println!("Env: ");
-                let map = details.vars.hash_map();
+                let map = details.metadata.vars.hash_map();
                 for key in map.keys().sorted() {
                     println!(
                         "  \"{}\": {}",

@@ -149,7 +149,7 @@ fn parse_dependencies(
 
 // TODO: Remove this hack.
 fn get_extra_dependencies(details: &PackageDetails, kind: DependencyKind) -> &'static str {
-    match (details.package_name.as_str(), kind) {
+    match (details.as_basic_data().package_name.as_str(), kind) {
         // poppler seems to support building without Boost, but the build fails
         // without it.
         ("app-text/poppler", DependencyKind::Build) => "dev-libs/boost",
@@ -526,7 +526,7 @@ fn extract_dependencies_use(
         DependencyKind::InstallHost { .. } => "IDEPEND",
     };
 
-    let raw_deps = details.vars.get_scalar_or_default(var_name)?;
+    let raw_deps = details.metadata.vars.get_scalar_or_default(var_name)?;
 
     let raw_extra_deps = get_extra_dependencies(details, kind);
 
@@ -541,7 +541,7 @@ fn is_rust_source_package(details: &PackageDetails) -> bool {
     let is_rust_package = details.inherited.contains("cros-rust");
     let is_cros_workon_package = details.inherited.contains("cros-workon");
     let has_src_compile = matches!(
-        details.vars.hash_map().get("HAS_SRC_COMPILE"),
+        details.metadata.vars.hash_map().get("HAS_SRC_COMPILE"),
         Some(BashValue::Scalar(s)) if s == "1");
 
     is_rust_package && !is_cros_workon_package && !has_src_compile
@@ -589,7 +589,8 @@ pub fn analyze_dependencies(
         .with_context(|| {
             format!(
                 "Resolving build-time dependencies for {}-{}",
-                &details.package_name, &details.version
+                &details.as_basic_data().package_name,
+                &details.as_basic_data().version
             )
         })?;
 
@@ -621,7 +622,8 @@ pub fn analyze_dependencies(
         .with_context(|| {
             format!(
                 "Resolving runtime dependencies for {}-{}",
-                &details.package_name, &details.version
+                &details.as_basic_data().package_name,
+                &details.as_basic_data().version
             )
         })?;
 
@@ -638,7 +640,8 @@ pub fn analyze_dependencies(
         .with_context(|| {
             format!(
                 "Resolving build-time host dependencies for {}-{}",
-                &details.package_name, &details.version
+                &details.as_basic_data().package_name,
+                &details.as_basic_data().version
             )
         })?;
 
@@ -656,15 +659,15 @@ pub fn analyze_dependencies(
             .with_context(|| {
                 format!(
                     "Resolving build-time dependencies as host dependencies for {}-{}",
-                    &details.package_name, &details.version
+                    &details.as_basic_data().package_name,
+                    &details.as_basic_data().version
                 )
             })?;
 
             for package_details in build_deps_for_host {
-                if !build_host_deps
-                    .iter()
-                    .any(|a| a.ebuild_path == package_details.ebuild_path)
-                {
+                if !build_host_deps.iter().any(|a| {
+                    a.as_basic_data().ebuild_path == package_details.as_basic_data().ebuild_path
+                }) {
                     build_host_deps.push(package_details);
                 }
             }
@@ -685,7 +688,8 @@ pub fn analyze_dependencies(
         .with_context(|| {
             format!(
                 "Resolving install-time host dependencies for {}-{}",
-                &details.package_name, &details.version
+                &details.as_basic_data().package_name,
+                &details.as_basic_data().version
             )
         })?
     } else {
@@ -701,11 +705,15 @@ pub fn analyze_dependencies(
             .into_iter()
             .chain(build_deps.clone().into_iter())
             .sorted_by(|a, b| {
-                a.package_name
-                    .cmp(&b.package_name)
-                    .then(a.version.cmp(&b.version))
+                a.as_basic_data()
+                    .package_name
+                    .cmp(&b.as_basic_data().package_name)
+                    .then(a.as_basic_data().version.cmp(&b.as_basic_data().version))
             })
-            .dedup_by(|a, b| a.package_name == b.package_name && a.version == b.version)
+            .dedup_by(|a, b| {
+                a.as_basic_data().package_name == b.as_basic_data().package_name
+                    && a.as_basic_data().version == b.as_basic_data().version
+            })
             .collect()
     } else {
         runtime_deps
@@ -715,7 +723,8 @@ pub fn analyze_dependencies(
         .with_context(|| {
             format!(
                 "Resolving post-time dependencies for {}-{}",
-                &details.package_name, &details.version
+                &details.as_basic_data().package_name,
+                &details.as_basic_data().version
             )
         })?;
 
