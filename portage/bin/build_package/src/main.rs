@@ -56,6 +56,9 @@ struct Cli {
     )]
     jobserver: Option<PathBuf>,
 
+    #[arg(long, help = "Directory to store incremental ebuild artifacts")]
+    incremental_cache_dir: Option<PathBuf>,
+
     #[arg(long)]
     output: Option<PathBuf>,
 
@@ -240,16 +243,35 @@ fn do_main() -> Result<()> {
 
     settings.set_allow_network_access(args.allow_network_access);
 
-    let (portage_tmp_dir, portage_pkg_dir) = match &args.board {
+    let (portage_tmp_dir, portage_pkg_dir, portage_cache_dir) = match &args.board {
         Some(board) => {
             let root_dir = Path::new("/build").join(board);
-            (root_dir.join("tmp/portage"), root_dir.join("packages"))
+            (
+                root_dir.join("tmp/portage"),
+                root_dir.join("packages"),
+                root_dir.join("var/cache/portage"),
+            )
         }
         None => (
             PathBuf::from("/var/tmp/portage"),
             PathBuf::from("/var/lib/portage/pkgs"),
+            PathBuf::from("/var/cache/portage"),
         ),
     };
+
+    if let Some(dir) = args.incremental_cache_dir {
+        std::fs::create_dir_all(&dir).with_context(|| {
+            format!(
+                "cannot create incremental cache directory {}",
+                dir.display()
+            )
+        })?;
+        settings.push_bind_mount(BindMount {
+            mount_path: portage_cache_dir,
+            source: dir,
+            rw: true,
+        });
+    }
 
     let mut envs = if args.ebuild.category == "chromeos-base"
         && args.ebuild.package_name == "chromeos-chrome"
