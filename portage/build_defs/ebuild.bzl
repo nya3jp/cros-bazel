@@ -149,10 +149,6 @@ _EBUILD_COMMON_ATTRS = dict(
         allow_single_file = True,
         default = Label("@goma_info//:goma_info"),
     ),
-    _vpython_info = attr.label(
-        allow_single_file = True,
-        default = Label("@vpython_info//:vpython_info"),
-    ),
 )
 
 # TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
@@ -256,10 +252,6 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # --goma-info
     # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
     args.add("--goma-info=%s" % ctx.file._goma_info.path)
-
-    # --vpython-info
-    # NOTE: We're not adding this file to transitive_inputs because the contents of vpython_info shouldn't affect the build output.
-    args.add("--vpython-info=%s" % ctx.file._vpython_info.path)
 
     # Consume interface libraries.
     interface_library_inputs = add_interface_library_args(

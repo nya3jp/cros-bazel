@@ -6,7 +6,6 @@ load("//bazel/module_extensions/portage:alchemist.bzl", "alchemist")
 load("//bazel/module_extensions/portage:goma_info.bzl", "goma_info")
 load("//bazel/module_extensions/portage:portage.bzl", _portage = "portage")
 load("//bazel/module_extensions/portage:portage_digest.bzl", "portage_digest")
-load("//bazel/module_extensions/portage:vpython_info.bzl", "vpython_info")
 load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
 load("//bazel/portage/repo_defs/chrome:cros_chrome_repository.bzl", _cros_chrome_repository = "cros_chrome_repository")
 load("//bazel/repo_defs:repo_repository.bzl", _repo_repository = "repo_repository")
@@ -26,9 +25,6 @@ def _portage_impl(module_ctx):
     portage_digest(
         name = "portage_digest",
         alchemist = "@alchemist//:alchemist",
-    )
-    vpython_info(
-        name = "vpython_info",
     )
 
     _portage(
