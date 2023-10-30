@@ -76,6 +76,10 @@ _EBUILD_COMMON_ATTRS = dict(
         doc = "src files used by the ebuild",
         allow_files = True,
     ),
+    cache_srcs = attr.label_list(
+        doc = "Cache files used by the ebuild",
+        allow_files = True,
+    ),
     git_trees = attr.label_list(
         doc = """
         The git tree objects listed in the CROS_WORKON_TREE variable.
@@ -236,6 +240,11 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     for file in ctx.files.srcs:
         args.add("--layer=%s" % compute_input_file_path(file, use_runfiles))
         direct_inputs.append(file)
+
+    # --layer for cache files
+    # NOTE: We're not adding this file to transitive_inputs because the contents of cache files shouldn't affect the build output.
+    for file in ctx.files.cache_srcs:
+        args.add("--layer=%s" % compute_input_file_path(file, use_runfiles))
 
     # --git-tree
     args.add_all(ctx.files.git_trees, map_each = format_git_tree_arg, allow_closure = True)

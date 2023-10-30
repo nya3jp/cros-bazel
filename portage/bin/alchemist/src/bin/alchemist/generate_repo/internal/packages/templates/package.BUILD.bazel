@@ -30,6 +30,13 @@ load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
         {%- endfor %}
     ],
     {%- endif %}
+    {%- if ebuild.cache_sources %}
+    cache_srcs = [
+        {%- for source in ebuild.cache_sources %}
+        "{{ source }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
     {%- if ebuild.git_trees %}
     git_trees = [
         {%- for git_tree in ebuild.git_trees %}

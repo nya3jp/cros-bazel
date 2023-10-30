@@ -54,6 +54,7 @@ pub struct EBuildEntry {
     version: String,
     slot: String,
     sources: Vec<String>,
+    cache_sources: Vec<String>,
     git_trees: Vec<String>,
     dists: Vec<DistFileEntry>,
     eclasses: Vec<String>,
@@ -233,6 +234,19 @@ impl EBuildEntry {
         sources.extend(file_sources);
         sources.sort();
 
+        let cache_sources: Vec<String> = package
+            .sources
+            .local_sources
+            .iter()
+            .filter_map(|source| match source {
+                // Add cipd-cache as a cache source when the package depends on chrome source.
+                PackageLocalSource::Chrome(version) => {
+                    Some(format!("@portage_deps//:chrome-{version}_cipd-cache"))
+                }
+                _ => None,
+            })
+            .collect();
+
         let git_trees = package
             .sources
             .repo_sources
@@ -396,6 +410,7 @@ impl EBuildEntry {
             version,
             slot: package.details.slot.to_string(),
             sources,
+            cache_sources,
             git_trees,
             dists,
             eclasses,
