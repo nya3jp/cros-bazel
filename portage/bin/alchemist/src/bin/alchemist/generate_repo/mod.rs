@@ -38,6 +38,7 @@ use self::{
         generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
     },
     internal::{
+        portage_config::generate_portage_config,
         sdk::{
             generate_base_sdk, generate_host_sdk, generate_stage1_sdk, generate_target_sdk,
             SdkBaseConfig, SdkHostConfig, SdkTargetConfig,
@@ -253,8 +254,6 @@ pub fn generate_stages(
         &SdkHostConfig {
             base: "stage2",
             name: "stage2/host",
-            repo_set: &host.repos,
-            profile: &host.profile,
         },
         output_dir,
     )?;
@@ -467,6 +466,8 @@ pub fn generate_repo_main(
             .collect_vec(),
         deps_file,
     )?;
+
+    generate_portage_config(host, target, output_dir)?;
 
     File::create(output_dir.join("BUILD.bazel"))?
         .write_all(include_bytes!("templates/root.BUILD.bazel"))?;

@@ -207,26 +207,8 @@ fn hide_directories(dirs_to_hide: &[&Path]) -> Result<()> {
     Ok(())
 }
 
-/// Generates the portage config for the host SDK.
-///
-/// Instead of depending on an extracted SDK tarball, we hard code the config
-/// here. The host config is relatively simple, so it shouldn't be changing
-/// that often.
-fn generate_host_configs() -> Result<()> {
-    let ops = vec![
-        // Host specific files
-        FileOps::symlink(
-            "/etc/ld.so.cache",
-            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.cache"),
-        ),
-        FileOps::symlink(
-            "/etc/ld.so.conf",
-            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.conf"),
-        ),
-        FileOps::symlink(
-            "/etc/ld.so.conf.d",
-            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.conf.d"),
-        ),
+pub fn host_config_file_ops(profile: Option<&Path>) -> Vec<FileOps> {
+    vec![
         FileOps::symlink(
             "/etc/make.conf",
             "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
@@ -248,9 +230,35 @@ PORTDIR_OVERLAY="/mnt/host/source/src/overlays/overlay-amd64-host"
         FileOps::plainfile("/etc/make.conf.user", ""),
         FileOps::symlink(
             "/etc/portage/make.profile",
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk",
+            profile.unwrap_or(
+                Path::new("/mnt/host/source/src/third_party/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk")),
+        ),
+    ]
+}
+
+/// Generates the portage config for the host SDK.
+///
+/// Instead of depending on an extracted SDK tarball, we hard code the config
+/// here. The host config is relatively simple, so it shouldn't be changing
+/// that often.
+fn generate_host_configs() -> Result<()> {
+    let mut ops = vec![
+        // Host specific files
+        FileOps::symlink(
+            "/etc/ld.so.cache",
+            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.cache"),
+        ),
+        FileOps::symlink(
+            "/etc/ld.so.conf",
+            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.conf"),
+        ),
+        FileOps::symlink(
+            "/etc/ld.so.conf.d",
+            Path::new("/").join(OLD_ROOT_NAME).join("etc/ld.so.conf.d"),
         ),
     ];
+
+    ops.extend(host_config_file_ops(None));
 
     execute_file_ops(&ops, Path::new("/"))
 }
