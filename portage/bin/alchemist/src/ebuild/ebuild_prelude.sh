@@ -218,7 +218,7 @@ __xbuild_source_eclass() {
   fi
   INHERITED="${INHERITED} ${name}"
 
-  __xbuild_eclass_IUSE="${__xbuild_eclass_IUSE:+${__xbuild_eclass_IUSE}}${IUSE}"
+  __xbuild_eclass_IUSE="${__xbuild_eclass_IUSE:+${__xbuild_eclass_IUSE} }${IUSE}"
   IUSE="${saved_IUSE}"
   __xbuild_eclass_REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE:+${__xbuild_eclass_REQUIRED_USE} }${REQUIRED_USE}"
   REQUIRED_USE="${saved_REQUIRED_USE}"
