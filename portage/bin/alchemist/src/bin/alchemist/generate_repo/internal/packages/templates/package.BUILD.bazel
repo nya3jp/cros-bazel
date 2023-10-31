@@ -9,9 +9,10 @@ load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps") -%}
+{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False) -%}
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
@@ -87,6 +88,12 @@ load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
+    {%- endif %}
+    {%- if allow_incremental %}
+    incremental_cache_marker = select({
+        ":{{ ebuild.version }}{{ suffix }}_incremental_enabled": ":{{ ebuild.version }}{{ suffix }}_cache_marker",
+        "//conditions:default": None,
+    }),
     {%- endif %}
 {%- endmacro -%}
 
@@ -219,12 +226,27 @@ string_flag(
     visibility = ["@//bazel:internal"],
 )
 
+bool_flag(
+    name = "{{ ebuild.version }}{{ suffix }}_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "{{ ebuild.version }}{{ suffix }}_incremental_enabled",
+    flag_values = {":{{ ebuild.version }}{{ suffix }}_incremental": "true"},
+)
+
+write_file(
+    name = "{{ ebuild.version }}{{ suffix }}_cache_marker",
+    out = "{{ ebuild.version }}{{ suffix }}_incremental/MARKER",
+)
+
 ebuild(
     name = "{{ ebuild.version }}{{ suffix }}",
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix) }}
+    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True) }}
     prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
     visibility = ["@//bazel:internal"],
 )
@@ -245,7 +267,7 @@ ebuild_debug(
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix) }}
+    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True) }}
     visibility = ["@//bazel:internal"],
 )
 {% endfor -%}
@@ -283,7 +305,9 @@ ebuild_install_list(
 
 ebuild_test(
     name = "{{ ebuild.version }}_test",
-    {{ self::ebuild_args(ebuild=ebuild, sdk_suffix="_test_deps") }}
+    {#- TODO(b/308409815): Allow ebuild_test to share the incremental build cache
+        after resolving https://crrev.com/c/4989046/comment/912a976e_f3774cea/ #}
+    {{ self::ebuild_args(ebuild=ebuild, sdk_suffix="_test_deps", allow_incremental=False) }}
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
     visibility = ["@//bazel:internal"],

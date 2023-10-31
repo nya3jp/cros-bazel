@@ -9,7 +9,8 @@ load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 alias(
     name = "10.2.0_host_deps",
     actual = "//internal/sdk/stage2/target/board",
@@ -31,6 +32,21 @@ string_flag(
     name = "10.2.0_prebuilt",
     build_setting_default = "",
     visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "10.2.0_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "10.2.0_incremental_enabled",
+    flag_values = {":10.2.0_incremental": "true"},
+)
+
+write_file(
+    name = "10.2.0_cache_marker",
+    out = "10.2.0_incremental/MARKER",
 )
 
 ebuild(
@@ -59,6 +75,10 @@ ebuild(
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
+    incremental_cache_marker = select({
+        ":10.2.0_incremental_enabled": ":10.2.0_cache_marker",
+        "//conditions:default": None,
+    }),
     prebuilt = ":10.2.0_prebuilt",
     visibility = ["@//bazel:internal"],
 )
@@ -97,6 +117,10 @@ ebuild_debug(
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
+    incremental_cache_marker = select({
+        ":10.2.0_incremental_enabled": ":10.2.0_cache_marker",
+        "//conditions:default": None,
+    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -104,6 +128,21 @@ string_flag(
     name = "10.2.0_hermetic_test_package_prebuilt",
     build_setting_default = "",
     visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "10.2.0_hermetic_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "10.2.0_hermetic_test_package_incremental_enabled",
+    flag_values = {":10.2.0_hermetic_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "10.2.0_hermetic_test_package_cache_marker",
+    out = "10.2.0_hermetic_test_package_incremental/MARKER",
 )
 
 ebuild(
@@ -133,6 +172,10 @@ ebuild(
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
+    incremental_cache_marker = select({
+        ":10.2.0_hermetic_test_package_incremental_enabled": ":10.2.0_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
     prebuilt = ":10.2.0_hermetic_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
 )
@@ -172,6 +215,10 @@ ebuild_debug(
     overlays = "//internal/overlays:amd64-generic",
     eclasses = [
     ],
+    incremental_cache_marker = select({
+        ":10.2.0_hermetic_test_package_incremental_enabled": ":10.2.0_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
     visibility = ["@//bazel:internal"],
 )
 ebuild_install(

@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
@@ -125,6 +126,20 @@ _EBUILD_COMMON_ATTRS = dict(
         doc = """
         The target board name to build the package for. If unset, then the host
         will be targeted.
+        """,
+    ),
+    incremental_cache_marker = attr.label(
+        allow_single_file = True,
+        doc = """
+        Marker file for the directory for incremental build caches.
+        Cache directories are created as siblings of the marker file.
+
+        If set, mounts a persistent directory for the ebuild to reuse
+        build artifacts across multiple Bazel orchestrated ebuilds invocations.
+        This allows incremental builds for the internal build system
+        such as make, ninja, etc.
+
+        If unset, no cache is persisted between ebuild invocations.
         """,
     ),
     sdk = attr.label(
@@ -254,6 +269,17 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # --allow-network-access
     if ctx.attr.allow_network_access:
         args.add("--allow-network-access")
+
+    # --incremental-cache-dir
+    if ctx.file.incremental_cache_marker:
+        # Use the cache marker file to resolve the cache directory.
+        # The caches are not exposed to Bazel as inputs as they are
+        # volatile and are not supposed to use as action cache keys.
+        # NOTE: build_package assumes the directory is writable.
+        # TODO(b/308409815): Make this more robust.
+        # See https://crrev.com/c/4989046/comment/196dbd8c_c044dfc0/.
+        caches_dir = paths.dirname(compute_input_file_path(ctx.file.incremental_cache_marker, use_runfiles))
+        args.add("--incremental-cache-dir=%s/portage" % caches_dir)
 
     # --use-flags
     if ctx.attr.inject_use_flags:
