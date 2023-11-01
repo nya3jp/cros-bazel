@@ -13,7 +13,7 @@ ALCHEMIST="bazel/portage/bin/alchemist"
 
 get_src() {
   # Remove entries with spaces because bazel can't handle spaces.
-  (cd "$1" && find Cargo.toml src -type f | grep -v ' ')
+  (cd "$1" && find Cargo.toml src -type f ! -path '*/chromite/.git/*' | grep -v ' ')
 }
 
 get_labels() {
