@@ -369,6 +369,108 @@ ARRAY=(hello, "${WORLD}!")
         Ok(())
     }
 
+    /// Ensures [`EBuildEvaluator`] successfully evaluates incremental variables.
+    #[test]
+    fn test_evaluate_incremental_vars() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        let ebuild_path = temp_dir.join("sys-apps/hello/hello-1.2.3.ebuild");
+        std::fs::create_dir_all(ebuild_path.parent().unwrap())?;
+        std::fs::write(
+            &ebuild_path,
+            r#"
+EAPI=7
+SLOT=0
+KEYWORDS="*"
+
+inherit aaa
+
+IUSE="iuse0"
+REQUIRED_USE="requse0"
+DEPEND="depend0"
+BDEPEND="bdepend0"
+RDEPEND="rdepend0"
+PDEPEND="pdepend0"
+IDEPEND="idepend0"
+NOT_INCREMENTAL="not_incremental0"
+"#,
+        )?;
+        let eclass_dir = temp_dir.join("eclass");
+        std::fs::create_dir_all(&eclass_dir)?;
+        std::fs::write(
+            eclass_dir.join("aaa.eclass"),
+            r#"
+inherit bbb
+
+IUSE="iuse1"
+REQUIRED_USE="requse1"
+DEPEND="depend1"
+BDEPEND="bdepend1"
+RDEPEND="rdepend1"
+PDEPEND="pdepend1"
+IDEPEND="idepend1"
+NOT_INCREMENTAL="not_incremental1"
+"#,
+        )?;
+        std::fs::write(
+            eclass_dir.join("bbb.eclass"),
+            r#"
+IUSE="iuse2"
+REQUIRED_USE="requse2"
+DEPEND="depend2"
+BDEPEND="bdepend2"
+RDEPEND="rdepend2"
+PDEPEND="pdepend2"
+IDEPEND="idepend2"
+NOT_INCREMENTAL="not_incremental2"
+"#,
+        )?;
+
+        let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
+        let repo = Repository::new_for_testing("test", temp_dir);
+
+        let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
+
+        let metadata = match metadata {
+            MaybeEBuildMetadata::Ok(metadata) => metadata,
+            MaybeEBuildMetadata::Err(error) => panic!("Failed to evaluate metadata: {error:?}"),
+        };
+
+        let vars = &metadata.vars;
+        assert_eq!(vars.get_scalar("IUSE").unwrap(), "iuse2 iuse1 iuse0");
+        assert_eq!(
+            vars.get_scalar("REQUIRED_USE").unwrap(),
+            "requse2 requse1 requse0"
+        );
+        assert_eq!(
+            vars.get_scalar("DEPEND").unwrap(),
+            "depend2 depend1 depend0"
+        );
+        assert_eq!(
+            vars.get_scalar("BDEPEND").unwrap(),
+            "bdepend2 bdepend1 bdepend0"
+        );
+        assert_eq!(
+            vars.get_scalar("RDEPEND").unwrap(),
+            "rdepend2 rdepend1 rdepend0"
+        );
+        assert_eq!(
+            vars.get_scalar("PDEPEND").unwrap(),
+            "pdepend2 pdepend1 pdepend0"
+        );
+        assert_eq!(
+            vars.get_scalar("IDEPEND").unwrap(),
+            "idepend2 idepend1 idepend0"
+        );
+        assert_eq!(
+            vars.get_scalar("NOT_INCREMENTAL").unwrap(),
+            "not_incremental0"
+        );
+
+        Ok(())
+    }
+
     /// Ensures [`EBuildEvaluator`] correctly handles evaluation errors.
     #[test]
     fn test_evaluate_die() -> Result<()> {
