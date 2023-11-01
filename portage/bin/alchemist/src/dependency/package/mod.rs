@@ -431,9 +431,10 @@ impl PackageDependencyAtom {
 
 impl Predicate<PackageRef<'_>> for PackageDependencyAtom {
     fn matches(&self, source_use_map: &UseMap, package: &PackageRef) -> Result<bool> {
+        // TODO: Introduce a type that is similar to `PackageDependencyAtom` but guaranteed to
+        // contain no block, and move this method to the type so that we can avoid this error.
         if self.block != PackageBlock::None {
-            // TODO: This should probably be an error.
-            return Ok(false);
+            bail!("BUG: Blocking package dependency can't be matched with a single package atom");
         }
         self.matches_ignoring_block(source_use_map, package)
     }
@@ -464,20 +465,22 @@ impl PackageDependencyAtom {
     /// Due to these limitations, the EAPI7 has deprecated and strongly
     /// discourages the use of package.provided.
     pub fn matches_provided(&self, package: &ProvidedPackage) -> bool {
-        let match_except_block = (|| {
-            if package.package_name != self.package_name {
+        // TODO: Introduce a type that is similar to `PackageDependencyAtom` but guaranteed to
+        // contain no block, and move this method to the type so that we can avoid this panic.
+        if self.block != PackageBlock::None {
+            panic!("BUG: Blocking package dependency can't be matched with package.provided");
+        }
+
+        if package.package_name != self.package_name {
+            return false;
+        }
+
+        if let Some(p) = &self.version {
+            if !p.matches(&package.version) {
                 return false;
             }
-
-            if let Some(p) = &self.version {
-                if !p.matches(&package.version) {
-                    return false;
-                }
-            }
-            true
-        })();
-
-        match_except_block == (self.block == PackageBlock::None)
+        }
+        true
     }
 }
 
@@ -1067,6 +1070,22 @@ mod tests {
 
             assert!(!atom.matches(&UseMap::new(), &package)?);
         }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_package_dependency_atom_match_block() -> Result<()> {
+        let package = PackageRef {
+            package_name: "sys-apps/attr",
+            version: &Version::try_new("9999")?,
+            slot: Slot::new("0"),
+            use_map: &UseMap::new(),
+        };
+
+        let atom = PackageDependencyAtom::from_str("!sys-apps/acl")?;
+        atom.matches(&UseMap::new(), &package)
+            .expect_err("Must fail for block dependencies");
 
         Ok(())
     }
