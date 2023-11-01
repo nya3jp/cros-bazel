@@ -7,8 +7,8 @@
 alias(
     name = "17.0_pre498229-r9",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_including_provided",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_including_provided",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9",
     }),
     visibility = ["@//bazel:internal"],
 )
