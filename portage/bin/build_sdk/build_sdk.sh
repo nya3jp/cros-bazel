@@ -56,9 +56,6 @@ install_deps() {
 
 install_deps
 
-# Revert PKGDIR back to /var/lib/portage/pkgs
-sed -i -E --e '/^PKGDIR=/d' "${ROOT}etc/make.conf.host_setup"
-
 # We duplicate the cleanup.rs functionality here because we need to
 # run in the context of the container so we can have access to all the layer.
 # If we try and create a tarball from the build_sdk command, we have lost the
@@ -101,5 +98,8 @@ time fakeroot tar \
   --exclude "./build" \
   --exclude "./usr/share/doc/*" \
   --exclude "./usr/share/man/*" \
+  --exclude="./etc/make.conf" \
+  --exclude="./etc/make.conf.*" \
+  --exclude="./etc/portage" \
   . | \
   zstd -3 --long -T0 --force -o "/mnt/host/.build_sdk/output.tar.zst"

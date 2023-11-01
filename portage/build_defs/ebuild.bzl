@@ -150,6 +150,14 @@ _EBUILD_COMMON_ATTRS = dict(
         providers = [OverlaySetInfo],
         mandatory = True,
     ),
+    portage_config = attr.label_list(
+        providers = [PackageArtifactInfo],
+        doc = """
+        The portage config for the host and optionally the target board. This
+        should at minimum contain a make.conf file.
+        """,
+        mandatory = True,
+    ),
     _action_wrapper = attr.label(
         executable = True,
         cfg = "exec",
@@ -246,9 +254,12 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # --layer for SDK, overlays and eclasses
     sdk = ctx.attr.sdk[SDKInfo]
     overlays = ctx.attr.overlays[OverlaySetInfo]
-    layer_inputs = sdk.layers + overlays.layers
-    for eclass in ctx.attr.eclasses:
-        layer_inputs.extend(eclass.files.to_list())
+    layer_inputs = (
+        sdk.layers +
+        overlays.layers +
+        ctx.files.eclasses +
+        ctx.files.portage_config
+    )
     args.add_all(layer_inputs, map_each = format_layer_arg, expand_directories = False, allow_closure = True)
     direct_inputs.extend(layer_inputs)
 

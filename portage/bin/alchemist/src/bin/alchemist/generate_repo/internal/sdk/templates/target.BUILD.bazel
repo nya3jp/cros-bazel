@@ -12,6 +12,9 @@ sdk_install_deps(
     name = "{{ cross_compiler.primary_triple }}",
     base = "{{ base }}",
     overlays = "{{ target_overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:full",
+    ],
     target_deps = [
         {%- for package in cross_compiler.toolchain_deps %}
             "{{ package }}",
@@ -55,6 +58,9 @@ sdk_install_deps(
     base = ":base",
     board = "{{ board }}",
     overlays = "{{ target_overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = [
     {%- for package in primordial_deps %}
         "{{ package }}",

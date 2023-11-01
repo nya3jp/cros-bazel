@@ -5,6 +5,7 @@
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load(":common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load(":install_deps.bzl", "install_deps")
+load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 
 def _sdk_from_archive_impl(ctx):
     output_prefix = ctx.attr.out or ctx.attr.name
@@ -175,6 +176,7 @@ def _sdk_install_deps_impl(ctx):
         board = ctx.attr.board,
         sdk = sdk,
         overlays = ctx.attr.overlays[OverlaySetInfo],
+        portage_configs = ctx.files.portage_config,
         install_set = install_set,
         strategy = ctx.attr.install_strategy,
         executable_action_wrapper = ctx.executable._action_wrapper,
@@ -213,6 +215,14 @@ sdk_install_deps = rule(
         ),
         "overlays": attr.label(
             providers = [OverlaySetInfo],
+            mandatory = True,
+        ),
+        "portage_config": attr.label_list(
+            providers = [PackageArtifactInfo],
+            doc = """
+            The portage config for the host and optionally the target. This should
+            at minimum contain a make.conf file.
+            """,
             mandatory = True,
         ),
         "progress_message": attr.string(

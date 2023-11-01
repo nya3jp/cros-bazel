@@ -13,6 +13,9 @@ sdk_install_deps(
     name = "x86_64-cros-linux-gnu",
     base = "//internal/sdk/stage2",
     overlays = "//internal/overlays:amd64-generic",
+    portage_config = [
+        "//internal/portage-config/host:full",
+    ],
     target_deps = [
             "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027",
             "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/binutils:2.39",
@@ -55,6 +58,9 @@ sdk_install_deps(
     base = ":base",
     board = "amd64-generic",
     overlays = "//internal/overlays:amd64-generic",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-kernel/linux-headers:4.14",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/gcc-libs:10.2.0",

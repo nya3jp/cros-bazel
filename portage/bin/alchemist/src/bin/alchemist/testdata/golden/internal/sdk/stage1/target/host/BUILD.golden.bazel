@@ -157,6 +157,9 @@ sdk_install_deps(
     base = ":base",
     board = "amd64-host",
     overlays = "//internal/overlays:amd64-host",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = [
         "//internal/packages/stage1/target/host/chromiumos/sys-kernel/linux-headers:4.14",
         "//internal/packages/stage1/target/host/chromiumos/sys-libs/gcc-libs:10.2.0",

@@ -33,6 +33,7 @@ def _fast_install_packages(
         board,
         sdk,
         overlays,
+        portage_configs,
         install_set,
         executable_action_wrapper,
         executable_fast_install_packages,
@@ -91,7 +92,7 @@ def _fast_install_packages(
     ])
     args.add("--root-dir=%s" % sysroot)
 
-    input_layers = sdk.layers + overlays.layers
+    input_layers = sdk.layers + overlays.layers + portage_configs
     args.add_all(
         input_layers,
         format_each = "--layer=%s",
@@ -171,6 +172,7 @@ def install_deps(
         board,
         sdk,
         overlays,
+        portage_configs,
         install_set,
         strategy,
         executable_action_wrapper,
@@ -190,6 +192,7 @@ def install_deps(
             installed to the host (ROOT="/").
         sdk: SDKInfo: The provider describing the base file system layers.
         overlays: OverlaySetInfo: Overlays providing packages.
+        portage_configs: list[File]: Tarballs containing portage config.
         install_set: Depset[BinaryPackageInfo]: Binary package targets to
             install. This depset must be closed over transitive runtime
             dependencies; that is, if the depset contains a package X, it must
@@ -219,6 +222,7 @@ def install_deps(
             board = board,
             sdk = sdk,
             overlays = overlays,
+            portage_configs = portage_configs,
             install_set = install_set,
             executable_action_wrapper = executable_action_wrapper,
             executable_fast_install_packages = executable_fast_install_packages,
@@ -255,7 +259,7 @@ def install_deps(
         for package in group:
             direct_inputs.append(package.file)
 
-    layer_inputs = sdk.layers + overlays.layers
+    layer_inputs = sdk.layers + overlays.layers + portage_configs
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(layer_inputs)
 

@@ -77,6 +77,9 @@ ebuild(
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
     ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
         "//conditions:default": None,
@@ -124,6 +127,9 @@ ebuild_debug(
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
     ],
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
@@ -182,6 +188,9 @@ ebuild(
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
     ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -226,6 +235,9 @@ ebuild_debug(
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
     ],
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
@@ -281,6 +293,9 @@ ebuild(
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
     ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     incremental_cache_marker = select({
         ":1.0_portage_profile_test_package_incremental_enabled": ":1.0_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
@@ -322,6 +337,9 @@ ebuild_debug(
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
     ],
     incremental_cache_marker = select({
         ":1.0_portage_profile_test_package_incremental_enabled": ":1.0_portage_profile_test_package_cache_marker",
@@ -376,6 +394,9 @@ ebuild_test(
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
     ],
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],

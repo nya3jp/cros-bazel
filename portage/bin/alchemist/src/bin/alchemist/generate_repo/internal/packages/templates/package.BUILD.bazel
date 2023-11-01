@@ -89,6 +89,13 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         "{{ eclass }}",
         {%- endfor %}
     ],
+    portage_config = [
+        {% if target_board -%}
+        "//internal/portage-config/host:orig",
+        {%- else -%}
+        "//internal/portage-config/host:full",
+        {%- endif %}
+    ],
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,
@@ -144,6 +151,9 @@ sdk_install_deps(
     out = "{{ ebuild.basename }}_host_deps",
     base = "{{ ebuild.sdk }}",
     overlays = "{{ host_overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:full",
+    ],
     target_deps = [
         {%- if ebuild.provided_host_build_deps %}
         # The following packages are provided by the SDK:
@@ -176,6 +186,9 @@ sdk_install_deps(
     base = "{{ ebuild.version }}_host_deps",
     board = "{{ target_board }}",
     overlays = "{{ target_overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = [
         {%- for dep in ebuild.target_build_deps %}
         "{{ dep }}",
@@ -204,6 +217,9 @@ sdk_install_deps(
     board = "{{ target_board }}",
     {%- endif %}
     overlays = "{{ target_overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = [
         {%- for dep in ebuild.target_test_deps %}
         "{{ dep }}",

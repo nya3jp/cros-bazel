@@ -34,6 +34,7 @@ def _build_image_impl(ctx):
         board = ctx.attr.board,
         sdk = sdk,
         overlays = overlays,
+        portage_configs = ctx.files.portage_config,
         install_set = install_set,
         strategy = "slow",
         executable_action_wrapper = ctx.executable._action_wrapper,
@@ -176,6 +177,14 @@ build_image = rule(
         ),
         overlays = attr.label(
             providers = [OverlaySetInfo],
+            mandatory = True,
+        ),
+        portage_config = attr.label_list(
+            providers = [PackageArtifactInfo],
+            doc = """
+            The portage config for the host and the target. This should
+            at minimum contain a make.conf file.
+            """,
             mandatory = True,
         ),
         _action_wrapper = attr.label(

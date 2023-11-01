@@ -50,6 +50,9 @@ fn do_main() -> Result<()> {
     command.args([
         "-xf",
         &args.input.to_string_lossy(),
+        "--exclude=./etc/make.conf",
+        "--exclude=./etc/make.conf.*",
+        "--exclude=./etc/portage",
         "-C",
         &args.output.to_string_lossy(),
     ]);

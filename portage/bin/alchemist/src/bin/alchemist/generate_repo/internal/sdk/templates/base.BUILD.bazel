@@ -9,6 +9,9 @@ build_sdk(
     name = "tarball",
     board = "amd64-host", # TODO: Delete this since we don't really need it.
     overlays = "{{ overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = ["{{ target}}"],
     sdk = "{{ sdk }}",
     visibility = ["@//bazel:internal"],

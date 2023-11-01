@@ -74,6 +74,9 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
+    portage_config = [
+        "//internal/portage-config/host:full",
+    ],
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_incremental_enabled": ":17.0_pre498229-r9_cache_marker",
         "//conditions:default": None,
@@ -118,6 +121,9 @@ ebuild_debug(
     sdk = ":17.0_pre498229-r9_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:full",
     ],
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_incremental_enabled": ":17.0_pre498229-r9_cache_marker",
@@ -173,6 +179,9 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
+    portage_config = [
+        "//internal/portage-config/host:full",
+    ],
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_hermetic_test_package_incremental_enabled": ":17.0_pre498229-r9_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -214,6 +223,9 @@ ebuild_debug(
     sdk = ":17.0_pre498229-r9_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:full",
     ],
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_hermetic_test_package_incremental_enabled": ":17.0_pre498229-r9_hermetic_test_package_cache_marker",
@@ -266,6 +278,9 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
+    portage_config = [
+        "//internal/portage-config/host:full",
+    ],
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_portage_profile_test_package_incremental_enabled": ":17.0_pre498229-r9_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
@@ -305,6 +320,9 @@ ebuild_debug(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
+    portage_config = [
+        "//internal/portage-config/host:full",
+    ],
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_portage_profile_test_package_incremental_enabled": ":17.0_pre498229-r9_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
@@ -335,6 +353,9 @@ ebuild_test(
     sdk = ":17.0_pre498229-r9_test_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:full",
     ],
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],

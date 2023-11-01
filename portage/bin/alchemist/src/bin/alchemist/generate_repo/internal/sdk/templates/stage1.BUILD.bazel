@@ -146,6 +146,9 @@ sdk_install_deps(
     name = "additional-host-tools",
     base = "@//bazel/portage/sdk:stage1",
     overlays = "{{ overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = [
         ":cross-packages",
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-embedded:coreboot-sdk",
@@ -196,6 +199,9 @@ sdk_install_deps(
     base = ":base",
     board = "{{ board }}",
     overlays = "{{ overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host:orig",
+    ],
     target_deps = [
         {%- for package in target_deps %}
         "{{ package }}",
