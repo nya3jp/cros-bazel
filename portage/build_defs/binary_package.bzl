@@ -73,7 +73,7 @@ binary_package = rule(
     },
 )
 
-def _replace_runtime_deps(ctx):
+def _add_runtime_deps(ctx):
     original_package_info = ctx.attr.binpkg[BinaryPackageInfo]
     original_package_set_info = ctx.attr.binpkg[BinaryPackageSetInfo]
 
@@ -87,14 +87,22 @@ def _replace_runtime_deps(ctx):
         direct_runtime_deps = tuple([
             dep[BinaryPackageInfo].file
             for dep in ctx.attr.runtime_deps
-        ]),
+        ] + list(original_package_info.direct_runtime_deps)),
     )
-    package_set_info = single_binary_package_set_info(
-        package_info,
-        [
-            target[BinaryPackageSetInfo]
-            for target in ctx.attr.runtime_deps
-        ],
+    package_set_info = BinaryPackageSetInfo(
+        packages = depset(
+            transitive = [
+                dep[BinaryPackageSetInfo].packages
+                for dep in ctx.attr.runtime_deps
+            ] + [original_package_set_info.packages],
+            order = "postorder",
+        ),
+        files = depset(
+            transitive = [
+                dep[BinaryPackageSetInfo].files
+                for dep in ctx.attr.runtime_deps
+            ] + [original_package_set_info.files],
+        ),
     )
     return [
         DefaultInfo(
@@ -105,16 +113,16 @@ def _replace_runtime_deps(ctx):
         package_set_info,
     ]
 
-replace_runtime_deps = rule(
-    implementation = _replace_runtime_deps,
+add_runtime_deps = rule(
+    implementation = _add_runtime_deps,
     attrs = dict(
         binpkg = attr.label(providers = [BinaryPackageInfo, BinaryPackageSetInfo]),
         runtime_deps = attr.label_list(providers = [BinaryPackageInfo, BinaryPackageSetInfo]),
     ),
     provides = [BinaryPackageInfo, BinaryPackageSetInfo],
     doc = """
-    Replaces runtime dependencies to a binary package.
-    Useful to substitute "provided" dependencies to a package (ones that are
+    Adds runtime dependencies to a binary package.
+    Useful to add "provided" dependencies to a package (ones that are
     preinstalled in the SDK), so it can be used without the SDK.
     """,
 )

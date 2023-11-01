@@ -5,7 +5,7 @@
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 {%- endif %}
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
-load("@//bazel/portage/build_defs:binary_package.bzl", "replace_runtime_deps")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
@@ -115,13 +115,10 @@ direct_ebuild(
     visibility = ["@//bazel:internal"],
 )
 
-replace_runtime_deps(
+add_runtime_deps(
     name = "{{ ebuild.version }}_including_provided",
     binpkg = ":{{ ebuild.version }}",
     runtime_deps = [
-        {%- for dep in ebuild.runtime_deps %}
-        "{{ dep }}_including_provided",
-        {%- endfor %}
         {%- for dep in ebuild.provided_runtime_deps %}
         "{{ dep }}_including_provided",
         {%- endfor %}
@@ -234,13 +231,10 @@ ebuild(
     visibility = ["@//bazel:internal"],
 )
 
-replace_runtime_deps(
+add_runtime_deps(
     name = "{{ ebuild.version }}{{ suffix }}_including_provided",
     binpkg = ":{{ ebuild.version }}",
     runtime_deps = [
-        {%- for dep in ebuild.runtime_deps %}
-        "{{ dep }}_including_provided",
-        {%- endfor %}
         {%- for dep in ebuild.provided_runtime_deps %}
         "{{ dep }}_including_provided",
         {%- endfor %}
