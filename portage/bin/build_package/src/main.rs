@@ -7,7 +7,9 @@ use clap::{command, Parser};
 use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use std::{
+    borrow::Cow,
     collections::{HashMap, HashSet},
+    ffi::{OsStr, OsString},
     fs::File,
     io::BufReader,
     os::unix::process::ExitStatusExt,
@@ -273,17 +275,20 @@ fn do_main() -> Result<()> {
         });
     }
 
-    let mut envs = if args.ebuild.category == "chromeos-base"
-        && args.ebuild.package_name == "chromeos-chrome"
-    {
+    let mut envs: Vec<(Cow<OsStr>, Cow<OsStr>)> = Vec::new();
+
+    if args.ebuild.category == "chromeos-base" && args.ebuild.package_name == "chromeos-chrome" {
         let goma_info: GomaInfo =
             serde_json::from_reader(BufReader::new(File::open(args.goma_info)?))?;
         if goma_info.use_goma {
             // TODO(b/300218625): Also set GLOG_log_dir to support uploading build logs.
-            let mut goma_envs = vec![
-                ("USE_GOMA".to_string(), "true".to_string()),
-                ("GOMA_TMP_DIR".to_string(), "/tmp/goma".to_string()),
-            ];
+            envs.extend([
+                (OsStr::new("USE_GOMA").into(), OsStr::new("true").into()),
+                (
+                    OsStr::new("GOMA_TMP_DIR").into(),
+                    OsStr::new("/tmp/goma").into(),
+                ),
+            ]);
             settings.push_bind_mount(BindMount {
                 source: runfiles.rlocation("files/goma-chromeos-modified-for-alchemy.tgz"),
                 mount_path: PathBuf::from("/mnt/host/goma.tgz"),
@@ -291,7 +296,7 @@ fn do_main() -> Result<()> {
             });
 
             for (key, value) in goma_info.envs {
-                goma_envs.push((key, value));
+                envs.push((OsString::from(key).into(), OsString::from(value).into()));
             }
 
             if let Some(oauth2_config_file) = goma_info.oauth2_config_file {
@@ -300,9 +305,9 @@ fn do_main() -> Result<()> {
                     mount_path: oauth2_config_file.clone(),
                     rw: false,
                 });
-                goma_envs.push((
-                    "GOMA_OAUTH2_CONFIG_FILE".to_string(),
-                    oauth2_config_file.to_string_lossy().to_string(),
+                envs.push((
+                    OsStr::new("GOMA_OAUTH2_CONFIG_FILE").into(),
+                    oauth2_config_file.into_os_string().into(),
                 ));
             }
 
@@ -312,19 +317,13 @@ fn do_main() -> Result<()> {
                     mount_path: luci_context.clone(),
                     rw: false,
                 });
-                goma_envs.push((
-                    "LUCI_CONTEXT".to_string(),
-                    luci_context.to_string_lossy().to_string(),
+                envs.push((
+                    OsStr::new("LUCI_CONTEXT").into(),
+                    luci_context.into_os_string().into(),
                 ));
             }
-
-            goma_envs
-        } else {
-            Vec::new()
         }
-    } else {
-        Vec::new()
-    };
+    }
 
     if let Some(jobserver) = args.jobserver {
         // TODO(b/303061227): Should we check if we can open the FIFO?
@@ -336,8 +335,8 @@ fn do_main() -> Result<()> {
         });
 
         envs.push((
-            "MAKEFLAGS".to_string(),
-            format!("--jobserver-auth=fifo:{}", JOB_SERVER),
+            OsStr::new("MAKEFLAGS").into(),
+            OsString::from(format!("--jobserver-auth=fifo:{}", JOB_SERVER)).into(),
         ));
     }
 
