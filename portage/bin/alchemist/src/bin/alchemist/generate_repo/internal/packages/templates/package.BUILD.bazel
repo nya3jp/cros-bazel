@@ -163,9 +163,7 @@ sdk_install_deps(
     name = "{{ ebuild.version }}_deps",
     out = "{{ ebuild.basename }}_deps",
     base = "{{ ebuild.version }}_host_deps",
-    {%- if target_board %}
     board = "{{ target_board }}",
-    {%- endif %}
     overlays = "{{ target_overlay_set }}",
     target_deps = [
         {%- for dep in ebuild.target_build_deps %}
