@@ -62,7 +62,7 @@ configuration that is used when building host tool packages. i.e., [CBUILD].
 You can then proceed to create the target board's sysroot:
 
 ```sh
-(cr) $ setup_board --board amd64-generic --public --skip-chroot-upgrade --skip-toolchain-update
+(cr) $ setup_board --board amd64-generic --public
 ```
 
 If you're attempting to build a public image while using an internal manifest,
