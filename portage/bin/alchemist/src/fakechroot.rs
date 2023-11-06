@@ -264,15 +264,14 @@ fn generate_host_configs() -> Result<()> {
 }
 
 /// Generates the portage configuration for the board.
-fn generate_board_configs(
+pub fn target_config_file_ops(
     board: &str,
     profile: &str,
     repos: &RepositorySet,
     toolchains: &ToolchainConfig,
-) -> Result<()> {
-    let board_root = Path::new("/build").join(board);
-
-    let files = vec![
+    include_provided: bool,
+) -> Result<Vec<FileOps>> {
+    let mut files = vec![
         FileOps::symlink (
             "/etc/make.conf",
             "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.generic-target",
@@ -285,17 +284,39 @@ fn generate_board_configs(
             "/etc/portage/make.profile",
             repos.primary().base_dir().join("profiles").join(profile),
         ),
-        // TODO(b/266979761): Remove the need for this list
-        FileOps::plainfile("/etc/portage/profile/package.provided", r#"
+    ];
+
+    if include_provided {
+        files.push(
+            // TODO(b/266979761): Remove the need for this list
+            FileOps::plainfile(
+                "/etc/portage/profile/package.provided",
+                r#"
 sys-devel/gcc-10.2.0-r30
 sys-libs/glibc-2.35-r20
 dev-lang/go-1.20.2-r2
-"#),
-    ];
-    execute_file_ops(&files, &board_root)?;
+"#,
+            ),
+        );
+    }
 
-    let board_etc = board_root.join("etc");
-    generate_make_conf_for_board(board, repos, toolchains, &board_etc)?;
+    files.extend(generate_make_conf_for_board(board, repos, toolchains)?);
+
+    Ok(files)
+}
+
+fn generate_board_configs(
+    board: &str,
+    profile: &str,
+    repos: &RepositorySet,
+    toolchains: &ToolchainConfig,
+) -> Result<()> {
+    let board_root = Path::new("/build").join(board);
+
+    execute_file_ops(
+        &target_config_file_ops(board, profile, repos, toolchains, true)?,
+        &board_root,
+    )?;
 
     Ok(())
 }
@@ -305,15 +326,13 @@ dev-lang/go-1.20.2-r2
 /// 1) No need to generate a package.provided since we want the compilers
 /// 2) The make.conf target is different.
 /// 3) We need to generate a make.conf.host_setup instead of a make.conf.board.
-fn generate_sdk_board_configs(
+pub fn target_host_config_file_ops(
     board: &str,
     profile: &str,
     repos: &RepositorySet,
     toolchains: &ToolchainConfig,
-) -> Result<()> {
-    let board_root = Path::new("/build").join(board);
-
-    let files = vec![
+) -> Result<Vec<FileOps>> {
+    let mut files = vec![
         FileOps::symlink (
             "/etc/make.conf",
             "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
@@ -327,10 +346,24 @@ fn generate_sdk_board_configs(
             repos.primary().base_dir().join("profiles").join(profile),
         ),
     ];
-    execute_file_ops(&files, &board_root)?;
 
-    let board_etc = board_root.join("etc");
-    generate_make_conf_for_board(board, repos, toolchains, &board_etc)?;
+    files.extend(generate_make_conf_for_board(board, repos, toolchains)?);
+
+    Ok(files)
+}
+
+fn generate_sdk_board_configs(
+    board: &str,
+    profile: &str,
+    repos: &RepositorySet,
+    toolchains: &ToolchainConfig,
+) -> Result<()> {
+    let board_root = Path::new("/build").join(board);
+
+    execute_file_ops(
+        &target_host_config_file_ops(board, profile, repos, toolchains)?,
+        &board_root,
+    )?;
 
     Ok(())
 }

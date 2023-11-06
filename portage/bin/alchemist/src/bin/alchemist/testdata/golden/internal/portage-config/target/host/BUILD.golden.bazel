@@ -1,0 +1,25 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@//bazel/portage/build_defs:overlay.bzl", "overlay", "overlay_set")
+pkg_tar(
+    name = "full",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    files = {
+        "full.make.conf.board_setup": "/build/amd64-host/etc/make.conf.board_setup",
+        "full.make.conf.host_setup": "/build/amd64-host/etc/make.conf.host_setup",
+    },
+    symlinks = {
+            "/build/amd64-host/etc/make.conf": "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
+            "/build/amd64-host/etc/make.conf.user": "/etc/make.conf.user",
+            "/build/amd64-host/etc/portage/make.profile": "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap",
+    },
+    visibility = ["@//bazel:internal"],
+)

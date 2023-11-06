@@ -3,8 +3,12 @@
 // found in the LICENSE file.
 
 use alchemist::{
-    analyze::Package, dependency::package::PackageAtom, ebuild::PackageDetails,
-    repository::RepositorySet, toolchain::Toolchain,
+    analyze::Package,
+    dependency::package::PackageAtom,
+    ebuild::PackageDetails,
+    fileops::{execute_file_ops, FileOps},
+    repository::RepositorySet,
+    toolchain::Toolchain,
 };
 use itertools::Itertools;
 use std::{
@@ -15,7 +19,7 @@ use std::{
 };
 use std::{str::FromStr, sync::Arc};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 
 use alchemist::{
     config::makeconf::generate::generate_make_conf_for_board, resolver::PackageResolver,
@@ -296,7 +300,20 @@ pub fn generate_stage1_sdk(prefix: &str, target: &TargetData, out: &Path) -> Res
     if let Some(toolchain) = target.toolchains.primary() {
         generate_wrappers(&target.board, &toolchain.name, &out)?;
     }
-    generate_make_conf_for_board(&target.board, &target.repos, &target.toolchains, &out)?;
+
+    // TODO: Remove all this once we decouple the profile from the SDK.
+    let mut ops = generate_make_conf_for_board(&target.board, &target.repos, &target.toolchains)?;
+
+    for op in &mut ops {
+        match op {
+            FileOps::PlainFile { ref mut path, .. } => {
+                *path = Path::new("/").join(path.strip_prefix("/etc")?)
+            }
+            _ => bail!("Unexpected op"),
+        }
+    }
+
+    execute_file_ops(&ops, &out)?;
 
     Ok(())
 }

@@ -2,15 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{fs::File, path::Path};
-
 use anyhow::{Context, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::{repository::RepositorySet, toolchain::ToolchainConfig};
+use crate::{fileops::FileOps, repository::RepositorySet, toolchain::ToolchainConfig};
 
 pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
 
@@ -55,7 +53,7 @@ struct MakeConfContext {
     vars: Vec<MakeVar>,
 }
 
-fn generate_make_conf_board(repos: &RepositorySet, output_dir: &Path) -> Result<()> {
+fn generate_make_conf_board(repos: &RepositorySet) -> Result<FileOps> {
     let mut sources: Vec<String> = Vec::new();
     for repo in repos.get_repos() {
         let make_conf = repo.base_dir().join("make.conf");
@@ -79,18 +77,17 @@ fn generate_make_conf_board(repos: &RepositorySet, output_dir: &Path) -> Result<
 
     let context = MakeConfContext { sources, vars };
 
-    let file = File::create(output_dir.join("make.conf.board"))?;
-    TEMPLATES.render_to("make.conf", &tera::Context::from_serialize(context)?, file)?;
-
-    Ok(())
+    Ok(FileOps::plainfile(
+        "/etc/make.conf.board",
+        TEMPLATES.render("make.conf", &tera::Context::from_serialize(context)?)?,
+    ))
 }
 
 fn generate_make_conf_board_setup(
     board: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
-    output_dir: &Path,
-) -> Result<()> {
+) -> Result<FileOps> {
     let overlays = repos.get_repos().iter().map(|r| r.base_dir()).collect_vec();
 
     let vars: Vec<MakeVar> = vec![
@@ -148,13 +145,13 @@ fn generate_make_conf_board_setup(
         vars,
     };
 
-    let file = File::create(output_dir.join("make.conf.board_setup"))?;
-    TEMPLATES.render_to("make.conf", &tera::Context::from_serialize(context)?, file)?;
-
-    Ok(())
+    Ok(FileOps::plainfile(
+        "/etc/make.conf.board_setup",
+        TEMPLATES.render("make.conf", &tera::Context::from_serialize(context)?)?,
+    ))
 }
 
-fn generate_make_conf_host_setup(output_dir: &Path) -> Result<()> {
+fn generate_make_conf_host_setup() -> Result<FileOps> {
     let vars: Vec<MakeVar> = vec![
         // We need to override the PKGDIR, PORTAGE_TMPDIR, and PORT_LOGDIR
         // that are defined in make.conf.amd64-host because they are pointing
@@ -181,24 +178,25 @@ fn generate_make_conf_host_setup(output_dir: &Path) -> Result<()> {
         vars,
     };
 
-    let file = File::create(output_dir.join("make.conf.host_setup"))?;
-    TEMPLATES.render_to("make.conf", &tera::Context::from_serialize(context)?, file)?;
-
-    Ok(())
+    Ok(FileOps::plainfile(
+        "/etc/make.conf.host_setup",
+        TEMPLATES.render("make.conf", &tera::Context::from_serialize(context)?)?,
+    ))
 }
 
 pub fn generate_make_conf_for_board(
     board: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
-    output_dir: &Path,
-) -> Result<()> {
-    generate_make_conf_board_setup(board, repos, toolchain_config, output_dir)?;
+) -> Result<Vec<FileOps>> {
+    let ops = vec![
+        generate_make_conf_board_setup(board, repos, toolchain_config)?,
+        if board == "amd64-host" {
+            generate_make_conf_host_setup()?
+        } else {
+            generate_make_conf_board(repos)?
+        },
+    ];
 
-    if board == "amd64-host" {
-        generate_make_conf_host_setup(output_dir)?;
-    } else {
-        generate_make_conf_board(repos, output_dir)?;
-    }
-    Ok(())
+    Ok(ops)
 }

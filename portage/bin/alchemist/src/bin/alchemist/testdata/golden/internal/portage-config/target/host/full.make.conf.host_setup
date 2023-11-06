@@ -1,0 +1,4 @@
+PKGDIR="$ROOT/packages/"
+PORTAGE_TMPDIR="$ROOT/tmp/"
+PORT_LOGDIR="$ROOT/tmp/portage/logs/"
+

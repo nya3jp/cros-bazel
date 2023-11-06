@@ -3,7 +3,9 @@
 // found in the LICENSE file.
 
 use crate::generate_repo::TargetData;
-use alchemist::fakechroot::host_config_file_ops;
+use alchemist::fakechroot::{
+    host_config_file_ops, target_config_file_ops, target_host_config_file_ops,
+};
 use alchemist::path::join_absolute;
 
 use std::fs::File;
@@ -149,6 +151,48 @@ pub fn generate_host_portage_config(host: &TargetData, out: &Path) -> Result<()>
     generate_build_file(configs, &out)
 }
 
+/// Generates the cross-root (/build/amd64-host) config for the host board.
+pub fn generate_target_host_portage_config(host: &TargetData, out: &Path) -> Result<()> {
+    let out = out.join("target/host");
+
+    create_dir_all(&out).with_context(|| format!("mkdir -p {out:?}"))?;
+
+    let sysroot = Path::new("/build").join(&host.board);
+
+    let configs = vec![file_ops_to_context(
+        "full",
+        &sysroot,
+        target_host_config_file_ops(&host.board, &host.profile, &host.repos, &host.toolchains)?,
+        &out,
+    )?];
+
+    generate_build_file(configs, &out)
+}
+
+/// Generates the cross-root config for the target.
+pub fn generate_target_portage_config(target: &TargetData, prefix: &str, out: &Path) -> Result<()> {
+    let out = out.join(prefix);
+
+    create_dir_all(&out).with_context(|| format!("mkdir -p {out:?}"))?;
+
+    let sysroot = Path::new("/build").join(&target.board);
+
+    let configs = vec![file_ops_to_context(
+        "full",
+        &sysroot,
+        target_config_file_ops(
+            &target.board,
+            &target.profile,
+            &target.repos,
+            &target.toolchains,
+            false,
+        )?,
+        &out,
+    )?];
+
+    generate_build_file(configs, &out)
+}
+
 /// Generates the portage config (i.e., man 5 portage).
 ///
 /// This will generate the following folder structure:
@@ -159,12 +203,16 @@ pub fn generate_host_portage_config(host: &TargetData, out: &Path) -> Result<()>
 ///           * host
 pub fn generate_portage_config(
     host: &TargetData,
-    _target: Option<&TargetData>,
+    target: Option<&TargetData>,
     out: &Path,
 ) -> Result<()> {
     let out = out.join("internal/portage-config");
 
     generate_host_portage_config(host, &out)?;
+    generate_target_host_portage_config(host, &out)?;
+    if let Some(target) = target {
+        generate_target_portage_config(target, "target/board", &out)?;
+    }
 
     Ok(())
 }
