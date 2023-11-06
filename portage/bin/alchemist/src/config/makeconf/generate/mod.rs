@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use std::borrow::Cow;
+
 use anyhow::{Context, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -24,33 +26,33 @@ lazy_static! {
 // TinyTemplate doesn't support hash maps so we make our own K/V pair
 // We also want the output sorted correctly.
 #[derive(Serialize, Debug)]
-struct MakeVar {
-    key: String,
-    value: String,
+struct MakeVar<'a> {
+    key: Cow<'a, str>,
+    value: Cow<'a, str>,
 }
 
-impl From<(&str, &str)> for MakeVar {
-    fn from(tuple: (&str, &str)) -> Self {
+impl<'a> From<(&'a str, &'a str)> for MakeVar<'a> {
+    fn from(tuple: (&'a str, &'a str)) -> Self {
         MakeVar {
-            key: tuple.0.to_owned(),
-            value: tuple.1.to_owned(),
+            key: tuple.0.into(),
+            value: tuple.1.into(),
         }
     }
 }
 
-impl From<(&str, String)> for MakeVar {
-    fn from(tuple: (&str, String)) -> Self {
+impl<'a> From<(&'a str, String)> for MakeVar<'a> {
+    fn from(tuple: (&'a str, String)) -> Self {
         MakeVar {
-            key: tuple.0.to_owned(),
-            value: tuple.1,
+            key: tuple.0.into(),
+            value: tuple.1.into(),
         }
     }
 }
 
 #[derive(Serialize, Debug)]
-struct MakeConfContext {
+struct MakeConfContext<'a> {
     sources: Vec<String>,
-    vars: Vec<MakeVar>,
+    vars: Vec<MakeVar<'a>>,
 }
 
 fn generate_make_conf_board(repos: &RepositorySet) -> Result<FileOps> {
