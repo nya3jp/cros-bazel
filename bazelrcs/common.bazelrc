@@ -17,6 +17,22 @@ common --registry=file:../bazel_deps/bazel-central-registry
 # be ChromeOS specific.
 common --registry=https://raw.githubusercontent.com/matts1/bazel-central-registry/main
 
+
+import %workspace%/bazel/bazelrcs/aspect/bazel6.bazelrc
+import %workspace%/bazel/bazelrcs/aspect/correctness.bazelrc
+# Adds support for "--config=debug"
+import %workspace%/bazel/bazelrcs/aspect/debug.bazelrc
+import %workspace%/bazel/bazelrcs/aspect/javascript.bazelrc
+import %workspace%/bazel/bazelrcs/aspect/performance.bazelrc
+
+# Undo some flags that were set by aspect that don't work for us.
+# We disable this for ChromeOS because it throws errors along the lines of
+# "Infinite symlink chain detected".
+startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=0
+common --noincompatible_disallow_empty_glob
+# Until we can distinguish between CI and non-CI builds, this should be set for all builds.
+build --remote_upload_local_results
+
 # Enable the use of RBE remote caching if the appropriate config is selected.
 import %workspace%/bazel/bazelrcs/remote_build_artifacts.bazelrc
 
@@ -48,12 +64,6 @@ query --noexperimental_guard_against_concurrent_changes
 # Consider --experimental_remote_merkle_tree_cache_size as well
 build --experimental_remote_merkle_tree_cache
 query --experimental_remote_merkle_tree_cache
-# Note: The noexperimental_check_external_repository_files flag requires Bazel 6
-build --noexperimental_check_output_files --noexperimental_check_external_repository_files
-fetch --noexperimental_check_output_files --noexperimental_check_external_repository_files
-query --noexperimental_check_output_files --noexperimental_check_external_repository_files
-# Observed to speed up an Angular build from 7.5min to 5min
-build --experimental_reuse_sandbox_directories
 # Improve remote cache hit rate
 build --nostamp
 # Minimize remote cache downloads
@@ -62,18 +72,6 @@ build --remote_download_toplevel
 ###
 # Correctness guarantees
 ###
-# We disable this for ChromeOS because it throws errors along the lines of
-# "Infinite symlink chain detected".
-# startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
-build --sandbox_default_allow_network=false
-test --incompatible_exclusive_test_sandboxed
-build --incompatible_strict_action_env
-build --nolegacy_external_runfiles
-build --incompatible_remote_results_ignore_disk
-build --incompatible_default_to_explicit_init_py
-build --incompatible_allow_tags_propagation
-fetch --incompatible_allow_tags_propagation
-query --incompatible_allow_tags_propagation
 
 # See github.com/bazelbuild/rules_python/issues/1059
 # Without this, packages installed to $HOME/.local/lib/python3.10/site-packages
@@ -98,7 +96,6 @@ build --incompatible_enable_cc_toolchain_resolution
 ###
 build --remote_local_fallback
 build --heap_dump_on_oom
-test --test_verbose_timeout_warnings
 
 # Run linters at build time.
 build:lint --config=clippy
