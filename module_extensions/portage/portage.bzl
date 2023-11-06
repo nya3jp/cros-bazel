@@ -40,36 +40,30 @@ def _portage_impl(repo_ctx):
     # --source-dir needs the repo root, not just the `src` directory
     root = repo_ctx.workspace_root.dirname
 
-    # If we don't have a BOARD defined, we need to clear out the repository
+    args = [
+        alchemist,
+        "--source-dir",
+        root,
+    ]
     if board:
-        args = [
-            alchemist,
-            "--board",
-            board,
-            "--source-dir",
-            root,
-        ]
-        if profile:
-            args += ["--profile", profile]
-
-        args += [
-            "generate-repo",
-            "--output-dir",
-            out,
-            "--output-repos-json",
-            repo_ctx.path("deps.json"),
-        ]
-
-        st = repo_ctx.execute(args, quiet = False)
-        if st.return_code:
-            fail("Error running command %s" % (args,))
-
+        args.extend(["--board", board])
     else:
-        # TODO: Consider running alchemist in this case as well. Then we don't
-        # need this special logic.
-        repo_ctx.file("deps.json", content = "{}")
-        repo_ctx.file(out.get_child("settings.bzl"), content = "BOARD = None")
-        repo_ctx.file(out.get_child("BUILD.bazel"), content = _EMPTY_PORTAGE_BUILD)
+        args.append("--host")
+        print("WARNING: the BOARD environment variable is not set. @portage//target/... will not be generated.")
+    if profile:
+        args.extend(["--profile", profile])
+
+    args.extend([
+        "generate-repo",
+        "--output-dir",
+        out,
+        "--output-repos-json",
+        repo_ctx.path("deps.json"),
+    ])
+
+    st = repo_ctx.execute(args, quiet = False)
+    if st.return_code:
+        fail("Error running command %s" % (args,))
 
     if repo_ctx.os.environ.get("ENABLE_PORTAGE_TAB_COMPLETION", "") == "1":
         _write_portage_symlink(repo_ctx, out)
