@@ -4,6 +4,7 @@
 
 use crate::generate_repo::TargetData;
 use alchemist::fakechroot::host_config_file_ops;
+use alchemist::path::join_absolute;
 
 use std::fs::File;
 use std::io::Write;
@@ -78,6 +79,7 @@ fn generate_build_file(
 
 fn file_ops_to_context<'a>(
     name: &'a str,
+    sysroot: &'a Path,
     ops: Vec<FileOps>,
     out: &'a Path,
 ) -> Result<PortageConfigTemplateContext<'a>> {
@@ -88,7 +90,7 @@ fn file_ops_to_context<'a>(
         match op {
             FileOps::Symlink { source, target } => symlinks.push(SymlinkContext {
                 source: source.into(),
-                target: target.into(),
+                target: join_absolute(sysroot, &target)?.into(),
             }),
             FileOps::PlainFile { path, content } => {
                 let file_name = PathBuf::from(format!(
@@ -110,7 +112,7 @@ fn file_ops_to_context<'a>(
 
                 files.push(FileContext {
                     src: file_name.into(),
-                    dest: path.into(),
+                    dest: join_absolute(sysroot, &path)?.into(),
                 })
             }
             alchemist::fileops::FileOps::Mkdir { .. } => bail!("mkdir is not supported"),
@@ -124,17 +126,21 @@ fn file_ops_to_context<'a>(
     })
 }
 
+/// Generates the native-root (/) config for the host board.
 pub fn generate_host_portage_config(host: &TargetData, out: &Path) -> Result<()> {
     let out = out.join("host");
 
     create_dir_all(&out).with_context(|| format!("mkdir -p {out:?}"))?;
 
+    let sysroot = Path::new("/");
+
     let configs = vec![
         // This is the original profile that will be replaced by a "lite" profile.
         // None of the settings are used when cross-root compiling.
-        file_ops_to_context("orig", host_config_file_ops(None), &out)?,
+        file_ops_to_context("orig", sysroot, host_config_file_ops(None), &out)?,
         file_ops_to_context(
             "full",
+            sysroot,
             host_config_file_ops(Some(profile_path(&host.repos, &host.profile).as_path())),
             &out,
         )?,
