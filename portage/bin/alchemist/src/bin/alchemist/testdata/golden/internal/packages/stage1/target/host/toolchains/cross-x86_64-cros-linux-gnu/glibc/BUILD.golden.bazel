@@ -12,50 +12,50 @@ load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 alias(
-    name = "2.35-r20_host_deps",
+    name = "2.35-r25_host_deps",
     actual = "//internal/sdk/stage1/target/host",
     visibility = ["//visibility:private"],
 )
 
 alias(
-    name = "2.35-r20_deps",
-    actual = "2.35-r20_host_deps",
+    name = "2.35-r25_deps",
+    actual = "2.35-r25_host_deps",
     visibility = ["//visibility:private"],
 )
 
 alias(
-    name = "2.35-r20_test_deps",
-    actual = "2.35-r20_host_deps",
+    name = "2.35-r25_test_deps",
+    actual = "2.35-r25_host_deps",
     visibility = ["//visibility:private"],
 )
 string_flag(
-    name = "2.35-r20_prebuilt",
+    name = "2.35-r25_prebuilt",
     build_setting_default = "",
     visibility = ["@//bazel:internal"],
 )
 
 bool_flag(
-    name = "2.35-r20_incremental",
+    name = "2.35-r25_incremental",
     build_setting_default = False,
 )
 
 config_setting(
-    name = "2.35-r20_incremental_enabled",
-    flag_values = {":2.35-r20_incremental": "true"},
+    name = "2.35-r25_incremental_enabled",
+    flag_values = {":2.35-r25_incremental": "true"},
 )
 
 write_file(
-    name = "2.35-r20_cache_marker",
-    out = "2.35-r20_incremental/MARKER",
+    name = "2.35-r25_cache_marker",
+    out = "2.35-r25_incremental/MARKER",
 )
 
 ebuild(
-    name = "2.35-r20",
-    ebuild = "glibc-2.35-r20.ebuild",
+    name = "2.35-r25",
+    ebuild = "glibc-2.35-r25.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "glibc",
-    version = "2.35-r20",
+    version = "2.35-r25",
     slot = "0/0",
     distfiles = {
     },
@@ -71,7 +71,7 @@ ebuild(
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":2.35-r20_deps",
+    sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
@@ -80,32 +80,32 @@ ebuild(
         "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
-        ":2.35-r20_incremental_enabled": ":2.35-r20_cache_marker",
+        ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
         "//conditions:default": None,
     }),
-    prebuilt = ":2.35-r20_prebuilt",
+    prebuilt = ":2.35-r25_prebuilt",
     portage_profile_test_package = select({
-        "@//bazel/portage:portage-config-validator-enabled": ":2.35-r20_portage_profile_test_package",
+        "@//bazel/portage:portage-config-validator-enabled": ":2.35-r25_portage_profile_test_package",
         "@//bazel/portage:portage-config-validator-disabled": None,
     }),
     visibility = ["@//bazel:internal"],
 )
 
 add_runtime_deps(
-    name = "2.35-r20_including_provided",
-    binpkg = ":2.35-r20",
+    name = "2.35-r25_including_provided",
+    binpkg = ":2.35-r25",
     runtime_deps = [
     ],
     visibility = ["@//bazel:internal"],
 )
 
 ebuild_debug(
-    name = "2.35-r20_debug",
-    ebuild = "glibc-2.35-r20.ebuild",
+    name = "2.35-r25_debug",
+    ebuild = "glibc-2.35-r25.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "glibc",
-    version = "2.35-r20",
+    version = "2.35-r25",
     slot = "0/0",
     distfiles = {
     },
@@ -121,7 +121,7 @@ ebuild_debug(
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":2.35-r20_deps",
+    sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
@@ -130,41 +130,41 @@ ebuild_debug(
         "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
-        ":2.35-r20_incremental_enabled": ":2.35-r20_cache_marker",
+        ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
         "//conditions:default": None,
     }),
     visibility = ["@//bazel:internal"],
 )
 
 string_flag(
-    name = "2.35-r20_hermetic_test_package_prebuilt",
+    name = "2.35-r25_hermetic_test_package_prebuilt",
     build_setting_default = "",
     visibility = ["@//bazel:internal"],
 )
 
 bool_flag(
-    name = "2.35-r20_hermetic_test_package_incremental",
+    name = "2.35-r25_hermetic_test_package_incremental",
     build_setting_default = False,
 )
 
 config_setting(
-    name = "2.35-r20_hermetic_test_package_incremental_enabled",
-    flag_values = {":2.35-r20_hermetic_test_package_incremental": "true"},
+    name = "2.35-r25_hermetic_test_package_incremental_enabled",
+    flag_values = {":2.35-r25_hermetic_test_package_incremental": "true"},
 )
 
 write_file(
-    name = "2.35-r20_hermetic_test_package_cache_marker",
-    out = "2.35-r20_hermetic_test_package_incremental/MARKER",
+    name = "2.35-r25_hermetic_test_package_cache_marker",
+    out = "2.35-r25_hermetic_test_package_incremental/MARKER",
 )
 
 ebuild(
-    name = "2.35-r20_hermetic_test_package",
+    name = "2.35-r25_hermetic_test_package",
     suffix = "_hermetic_test_package",
-    ebuild = "glibc-2.35-r20.ebuild",
+    ebuild = "glibc-2.35-r25.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "glibc",
-    version = "2.35-r20",
+    version = "2.35-r25",
     slot = "0/0",
     distfiles = {
     },
@@ -180,7 +180,7 @@ ebuild(
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":2.35-r20_deps",
+    sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
@@ -189,29 +189,29 @@ ebuild(
         "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
-        ":2.35-r20_hermetic_test_package_incremental_enabled": ":2.35-r20_hermetic_test_package_cache_marker",
+        ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
         "//conditions:default": None,
     }),
-    prebuilt = ":2.35-r20_hermetic_test_package_prebuilt",
+    prebuilt = ":2.35-r25_hermetic_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 
 add_runtime_deps(
-    name = "2.35-r20_hermetic_test_package_including_provided",
-    binpkg = ":2.35-r20",
+    name = "2.35-r25_hermetic_test_package_including_provided",
+    binpkg = ":2.35-r25",
     runtime_deps = [
     ],
     visibility = ["@//bazel:internal"],
 )
 
 ebuild_debug(
-    name = "2.35-r20_hermetic_test_package_debug",
+    name = "2.35-r25_hermetic_test_package_debug",
     suffix = "_hermetic_test_package",
-    ebuild = "glibc-2.35-r20.ebuild",
+    ebuild = "glibc-2.35-r25.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "glibc",
-    version = "2.35-r20",
+    version = "2.35-r25",
     slot = "0/0",
     distfiles = {
     },
@@ -227,7 +227,7 @@ ebuild_debug(
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":2.35-r20_deps",
+    sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
@@ -236,41 +236,41 @@ ebuild_debug(
         "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
-        ":2.35-r20_hermetic_test_package_incremental_enabled": ":2.35-r20_hermetic_test_package_cache_marker",
+        ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
         "//conditions:default": None,
     }),
     visibility = ["@//bazel:internal"],
 )
 
 string_flag(
-    name = "2.35-r20_portage_profile_test_package_prebuilt",
+    name = "2.35-r25_portage_profile_test_package_prebuilt",
     build_setting_default = "",
     visibility = ["@//bazel:internal"],
 )
 
 bool_flag(
-    name = "2.35-r20_portage_profile_test_package_incremental",
+    name = "2.35-r25_portage_profile_test_package_incremental",
     build_setting_default = False,
 )
 
 config_setting(
-    name = "2.35-r20_portage_profile_test_package_incremental_enabled",
-    flag_values = {":2.35-r20_portage_profile_test_package_incremental": "true"},
+    name = "2.35-r25_portage_profile_test_package_incremental_enabled",
+    flag_values = {":2.35-r25_portage_profile_test_package_incremental": "true"},
 )
 
 write_file(
-    name = "2.35-r20_portage_profile_test_package_cache_marker",
-    out = "2.35-r20_portage_profile_test_package_incremental/MARKER",
+    name = "2.35-r25_portage_profile_test_package_cache_marker",
+    out = "2.35-r25_portage_profile_test_package_incremental/MARKER",
 )
 
 ebuild(
-    name = "2.35-r20_portage_profile_test_package",
+    name = "2.35-r25_portage_profile_test_package",
     suffix = "_portage_profile_test_package",
-    ebuild = "glibc-2.35-r20.ebuild",
+    ebuild = "glibc-2.35-r25.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "glibc",
-    version = "2.35-r20",
+    version = "2.35-r25",
     slot = "0/0",
     distfiles = {
     },
@@ -283,7 +283,7 @@ ebuild(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":2.35-r20_deps",
+    sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
@@ -292,29 +292,29 @@ ebuild(
         "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
-        ":2.35-r20_portage_profile_test_package_incremental_enabled": ":2.35-r20_portage_profile_test_package_cache_marker",
+        ":2.35-r25_portage_profile_test_package_incremental_enabled": ":2.35-r25_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
     }),
-    prebuilt = ":2.35-r20_portage_profile_test_package_prebuilt",
+    prebuilt = ":2.35-r25_portage_profile_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
 )
 
 add_runtime_deps(
-    name = "2.35-r20_portage_profile_test_package_including_provided",
-    binpkg = ":2.35-r20",
+    name = "2.35-r25_portage_profile_test_package_including_provided",
+    binpkg = ":2.35-r25",
     runtime_deps = [
     ],
     visibility = ["@//bazel:internal"],
 )
 
 ebuild_debug(
-    name = "2.35-r20_portage_profile_test_package_debug",
+    name = "2.35-r25_portage_profile_test_package_debug",
     suffix = "_portage_profile_test_package",
-    ebuild = "glibc-2.35-r20.ebuild",
+    ebuild = "glibc-2.35-r25.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "glibc",
-    version = "2.35-r20",
+    version = "2.35-r25",
     slot = "0/0",
     distfiles = {
     },
@@ -327,7 +327,7 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":2.35-r20_deps",
+    sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
@@ -336,38 +336,38 @@ ebuild_debug(
         "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
-        ":2.35-r20_portage_profile_test_package_incremental_enabled": ":2.35-r20_portage_profile_test_package_cache_marker",
+        ":2.35-r25_portage_profile_test_package_incremental_enabled": ":2.35-r25_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
     }),
     visibility = ["@//bazel:internal"],
 )
 ebuild_install(
-    name = "2.35-r20_install",
-    ebuild = "glibc-2.35-r20.ebuild",
+    name = "2.35-r25_install",
+    ebuild = "glibc-2.35-r25.ebuild",
     category = "cross-x86_64-cros-linux-gnu",
     board = "amd64-host",
     packages = [
-        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r20",
+        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
     ],
     visibility = ["@//bazel:internal"],
 )
 ebuild_install_list(
-    name = "2.35-r20_install_list",
-    ebuild = "glibc-2.35-r20.ebuild",
+    name = "2.35-r25_install_list",
+    ebuild = "glibc-2.35-r25.ebuild",
     category = "cross-x86_64-cros-linux-gnu",
     board = "amd64-host",
     packages = [
-        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r20",
+        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
     ],
     visibility = ["@//bazel:internal"],
 )
 ebuild_test(
-    name = "2.35-r20_test",
-    ebuild = "glibc-2.35-r20.ebuild",
+    name = "2.35-r25_test",
+    ebuild = "glibc-2.35-r25.ebuild",
     overlay = "//internal/overlays/toolchains",
     category = "cross-x86_64-cros-linux-gnu",
     package_name = "glibc",
-    version = "2.35-r20",
+    version = "2.35-r25",
     slot = "0/0",
     distfiles = {
     },
@@ -383,7 +383,7 @@ ebuild_test(
     }),
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":2.35-r20_test_deps",
+    sdk = ":2.35-r25_test_deps",
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
@@ -397,26 +397,26 @@ ebuild_test(
 )
 
 ebuild_compare_package_test(
-    name = "2.35-r20_hermetic_test",
+    name = "2.35-r25_hermetic_test",
     packages = [
-        ":2.35-r20",
-        ":2.35-r20_hermetic_test_package",
+        ":2.35-r25",
+        ":2.35-r25_hermetic_test_package",
     ],
     size="small",
 )
 
 test_suite(
-    name = "2.35-r20_package_set_hermetic_test",
+    name = "2.35-r25_package_set_hermetic_test",
     tests = [
-        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r20_hermetic_test",
+        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25_hermetic_test",
     ],
     visibility = ["@//bazel:internal"],
 )
 
 package_set(
-    name = "2.35-r20_package_set",
+    name = "2.35-r25_package_set",
     deps = [
-        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r20",
+        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
     ],
     visibility = ["@//bazel:internal"],
 )

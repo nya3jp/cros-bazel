@@ -5,102 +5,102 @@
 # found in the LICENSE file.
 
 alias(
-    name = "2.35-r20",
+    name = "2.35-r25",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r20",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r20",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r25",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
-    name = "2.35-r20_debug",
+    name = "2.35-r25_debug",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r20_debug",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r20_debug",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r25_debug",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25_debug",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
-    name = "2.35-r20_package_set",
+    name = "2.35-r25_package_set",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r20_package_set",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r20_package_set",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r25_package_set",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25_package_set",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
-    name = "2.35-r20_install",
+    name = "2.35-r25_install",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r20_install",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r20_install",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r25_install",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25_install",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
-    name = "2.35-r20_install_list",
+    name = "2.35-r25_install_list",
     actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r20_install_list",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r20_install_list",
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r25_install_list",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25_install_list",
     }),
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "glibc",
-    actual = ":2.35-r20",
+    actual = ":2.35-r25",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "debug",
-    actual = ":2.35-r20_debug",
+    actual = ":2.35-r25_debug",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "glibc_debug",
-    actual = ":2.35-r20_debug",
+    actual = ":2.35-r25_debug",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "package_set",
-    actual = ":2.35-r20_package_set",
+    actual = ":2.35-r25_package_set",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "glibc_package_set",
-    actual = ":2.35-r20_package_set",
+    actual = ":2.35-r25_package_set",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "install",
-    actual = ":2.35-r20_install",
+    actual = ":2.35-r25_install",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "glibc_install",
-    actual = ":2.35-r20_install",
+    actual = ":2.35-r25_install",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "install_list",
-    actual = ":2.35-r20_install_list",
+    actual = ":2.35-r25_install_list",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "glibc_install_list",
-    actual = ":2.35-r20_install_list",
+    actual = ":2.35-r25_install_list",
     visibility = ["@//bazel:internal"],
 )
 test_suite(
-    name = "2.35-r20_test",
-    tests = [ "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r20_test" ],
+    name = "2.35-r25_test",
+    tests = [ "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25_test" ],
     visibility = ["@//bazel:internal"],
 )
 test_suite(
     name = "test",
-    tests = [ ":2.35-r20_test" ],
+    tests = [ ":2.35-r25_test" ],
     visibility = ["@//bazel:internal"],
 )
 test_suite(
     name = "glibc_test",
-    tests = [ ":2.35-r20_test" ],
+    tests = [ ":2.35-r25_test" ],
     visibility = ["@//bazel:internal"],
 )

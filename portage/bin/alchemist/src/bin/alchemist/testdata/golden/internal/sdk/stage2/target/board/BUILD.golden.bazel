@@ -37,7 +37,7 @@ sdk_install_glibc(
     name = "glibc",
     base = ":x86_64-cros-linux-gnu",
     board = "amd64-generic",
-    glibc = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r20",
+    glibc = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
     visibility = ["@//bazel:internal"],
 )
 
