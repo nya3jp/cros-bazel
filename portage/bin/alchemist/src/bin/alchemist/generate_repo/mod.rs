@@ -194,7 +194,7 @@ pub fn generate_stages(
         .unwrap_or_else(Vec::new);
 
     // Generate the SDK used by the stage1/target/host packages.
-    generate_stage1_sdk("stage1/target/host", host, translator, output_dir)?;
+    generate_stage1_sdk("stage1/target/host", host, output_dir)?;
 
     // Generate the packages that will be built using the Stage 1 SDK.
     // These packages will be used to generate the Stage 2 SDK.
@@ -313,7 +313,7 @@ pub fn generate_stages(
     if let Some(target) = target {
         let target_packages = load_packages(Some(host), target, src_dir)?;
 
-        generate_stage1_sdk("stage1/target/board", target, translator, output_dir)?;
+        generate_stage1_sdk("stage1/target/board", target, output_dir)?;
 
         generate_internal_packages(
             // The same comment applies here as the stage1/target/host packages.

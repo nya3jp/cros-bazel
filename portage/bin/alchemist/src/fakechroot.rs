@@ -269,7 +269,6 @@ fn generate_board_configs(
     profile: &str,
     repos: &RepositorySet,
     toolchains: &ToolchainConfig,
-    translator: &PathTranslator,
 ) -> Result<()> {
     let board_root = Path::new("/build").join(board);
 
@@ -284,7 +283,7 @@ fn generate_board_configs(
         ),
         FileOps::symlink(
             "/etc/portage/make.profile",
-            translator.to_inner(repos.primary().base_dir())?.join("profiles").join(profile),
+            repos.primary().base_dir().join("profiles").join(profile),
         ),
         // TODO(b/266979761): Remove the need for this list
         FileOps::plainfile("/etc/portage/profile/package.provided", r#"
@@ -296,7 +295,7 @@ dev-lang/go-1.20.2-r2
     execute_file_ops(&files, &board_root)?;
 
     let board_etc = board_root.join("etc");
-    generate_make_conf_for_board(board, repos, toolchains, translator, &board_etc)?;
+    generate_make_conf_for_board(board, repos, toolchains, &board_etc)?;
 
     Ok(())
 }
@@ -311,7 +310,6 @@ fn generate_sdk_board_configs(
     profile: &str,
     repos: &RepositorySet,
     toolchains: &ToolchainConfig,
-    translator: &PathTranslator,
 ) -> Result<()> {
     let board_root = Path::new("/build").join(board);
 
@@ -326,20 +324,20 @@ fn generate_sdk_board_configs(
         ),
         FileOps::symlink(
             "/etc/portage/make.profile",
-            translator.to_inner(repos.primary().base_dir())?.join("profiles").join(profile),
+            repos.primary().base_dir().join("profiles").join(profile),
         ),
     ];
     execute_file_ops(&files, &board_root)?;
 
     let board_etc = board_root.join("etc");
-    generate_make_conf_for_board(board, repos, toolchains, translator, &board_etc)?;
+    generate_make_conf_for_board(board, repos, toolchains, &board_etc)?;
 
     Ok(())
 }
 
 // Generates a /build/$BOARD directory for each target that contains the portage
 // config required to build packages.
-fn generate_target_configs(targets: &[&BoardTarget], translator: &PathTranslator) -> Result<()> {
+fn generate_target_configs(targets: &[&BoardTarget]) -> Result<()> {
     // We throw away the repos and toolchain after we generate the files
     // because we need to evaluate the PORTDIR and PORTDIR_OVERLAY variables
     // as they are defined in the make.conf files.
@@ -354,21 +352,9 @@ fn generate_target_configs(targets: &[&BoardTarget], translator: &PathTranslator
         let toolchains = load_toolchains(&repos)?;
 
         if target.board == "amd64-host" {
-            generate_sdk_board_configs(
-                target.board,
-                target.profile,
-                &repos,
-                &toolchains,
-                translator,
-            )?;
+            generate_sdk_board_configs(target.board, target.profile, &repos, &toolchains)?;
         } else {
-            generate_board_configs(
-                target.board,
-                target.profile,
-                &repos,
-                &toolchains,
-                translator,
-            )?;
+            generate_board_configs(target.board, target.profile, &repos, &toolchains)?;
         }
     }
 
@@ -433,7 +419,7 @@ pub fn enter_fake_chroot(
     // Generate configs.
     generate_host_configs()?;
 
-    generate_target_configs(targets, &translator)?;
+    generate_target_configs(targets)?;
 
     Ok(translator)
 }

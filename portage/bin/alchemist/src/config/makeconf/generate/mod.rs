@@ -10,7 +10,7 @@ use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::{fakechroot::PathTranslator, repository::RepositorySet, toolchain::ToolchainConfig};
+use crate::{repository::RepositorySet, toolchain::ToolchainConfig};
 
 pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
 
@@ -55,18 +55,13 @@ struct MakeConfContext {
     vars: Vec<MakeVar>,
 }
 
-fn generate_make_conf_board(
-    repos: &RepositorySet,
-    translator: &PathTranslator,
-    output_dir: &Path,
-) -> Result<()> {
+fn generate_make_conf_board(repos: &RepositorySet, output_dir: &Path) -> Result<()> {
     let mut sources: Vec<String> = Vec::new();
     for repo in repos.get_repos() {
         let make_conf = repo.base_dir().join("make.conf");
         if make_conf.try_exists()? {
             sources.push(
-                translator
-                    .to_inner(&make_conf)?
+                make_conf
                     .to_str()
                     .context("Invalid make.conf path")?
                     .to_owned(),
@@ -94,14 +89,9 @@ fn generate_make_conf_board_setup(
     board: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
-    translator: &PathTranslator,
     output_dir: &Path,
 ) -> Result<()> {
-    let overlays = repos
-        .get_repos()
-        .iter()
-        .map(|r| translator.to_inner(r.base_dir()))
-        .collect::<Result<Vec<_>>>()?;
+    let overlays = repos.get_repos().iter().map(|r| r.base_dir()).collect_vec();
 
     let vars: Vec<MakeVar> = vec![
         MakeVar::from((
@@ -201,15 +191,14 @@ pub fn generate_make_conf_for_board(
     board: &str,
     repos: &RepositorySet,
     toolchain_config: &ToolchainConfig,
-    translator: &PathTranslator,
     output_dir: &Path,
 ) -> Result<()> {
-    generate_make_conf_board_setup(board, repos, toolchain_config, translator, output_dir)?;
+    generate_make_conf_board_setup(board, repos, toolchain_config, output_dir)?;
 
     if board == "amd64-host" {
         generate_make_conf_host_setup(output_dir)?;
     } else {
-        generate_make_conf_board(repos, translator, output_dir)?;
+        generate_make_conf_board(repos, output_dir)?;
     }
     Ok(())
 }

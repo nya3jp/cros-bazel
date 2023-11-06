@@ -18,8 +18,7 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{Context, Result};
 
 use alchemist::{
-    config::makeconf::generate::generate_make_conf_for_board, fakechroot::PathTranslator,
-    resolver::PackageResolver,
+    config::makeconf::generate::generate_make_conf_for_board, resolver::PackageResolver,
 };
 use lazy_static::lazy_static;
 use serde::Serialize;
@@ -288,12 +287,7 @@ fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<(
 }
 
 #[instrument(skip_all)]
-pub fn generate_stage1_sdk(
-    prefix: &str,
-    target: &TargetData,
-    translator: &PathTranslator,
-    out: &Path,
-) -> Result<()> {
+pub fn generate_stage1_sdk(prefix: &str, target: &TargetData, out: &Path) -> Result<()> {
     let out = out.join("internal/sdk").join(prefix);
 
     create_dir_all(&out)?;
@@ -302,13 +296,7 @@ pub fn generate_stage1_sdk(
     if let Some(toolchain) = target.toolchains.primary() {
         generate_wrappers(&target.board, &toolchain.name, &out)?;
     }
-    generate_make_conf_for_board(
-        &target.board,
-        &target.repos,
-        &target.toolchains,
-        translator,
-        &out,
-    )?;
+    generate_make_conf_for_board(&target.board, &target.repos, &target.toolchains, &out)?;
 
     Ok(())
 }
