@@ -2,26 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::generate_repo::TargetData;
-use alchemist::fakechroot::{
-    host_config_file_ops, target_config_file_ops, target_host_config_file_ops,
+use alchemist::{
+    fakechroot::{host_config_file_ops, target_config_file_ops, target_host_config_file_ops},
+    fileops::FileOps,
+    path::join_absolute,
+    repository::RepositorySet,
 };
-use alchemist::path::join_absolute;
-
+use anyhow::{bail, ensure, Context, Result};
+use lazy_static::lazy_static;
+use serde::Serialize;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use std::{borrow::Cow, fs::create_dir_all, path::Path};
-
-use alchemist::fileops::FileOps;
-use anyhow::{bail, ensure, Context, Result};
-use lazy_static::lazy_static;
-use serde::Serialize;
 use tera::Tera;
 
-use crate::generate_repo::common::AUTOGENERATE_NOTICE;
-
-use super::sdk::profile_path;
+use crate::generate_repo::{common::AUTOGENERATE_NOTICE, TargetData};
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -77,6 +73,10 @@ fn generate_build_file(
     )?;
 
     Ok(())
+}
+
+fn profile_path(repos: &RepositorySet, profile: &str) -> PathBuf {
+    repos.primary().base_dir().join("profiles").join(profile)
 }
 
 fn file_ops_to_context<'a>(

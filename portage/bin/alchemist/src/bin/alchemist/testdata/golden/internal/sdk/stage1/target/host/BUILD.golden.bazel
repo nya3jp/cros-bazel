@@ -10,48 +10,17 @@ load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_glibc", "
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 
-pkg_files(
-    name = "make_conf_board",
-    srcs = [
-        "make.conf.host_setup",
-        "make.conf.board_setup",
-    ],
-    strip_prefix = strip_prefix.from_pkg(),
-)
-
-pkg_mklink(
-    name = "make_conf",
-    link_name = "make.conf",
-    target = "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
-)
-
-pkg_mklink(
-    name = "make_conf_user",
-    link_name = "make.conf.user",
-    target = "/etc/make.conf.user",
-)
-
 pkg_mklink(
     name = "portage_hooks",
     link_name = "portage/hooks",
     target = "/mnt/host/source/src/scripts/hooks",
 )
 
-pkg_mklink(
-    name = "portage_make_profile",
-    link_name = "portage/make.profile",
-    target = "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap",
-)
-
 pkg_filegroup(
     name = "etc",
     prefix = "build/amd64-host/etc",
     srcs = [
-        ":make_conf",
-        ":make_conf_board",
-        ":make_conf_user",
         ":portage_hooks",
-        ":portage_make_profile",
     ],
 )
 
@@ -159,6 +128,7 @@ sdk_install_deps(
     overlays = "//internal/overlays:amd64-host",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     target_deps = [
         "//internal/packages/stage1/target/host/chromiumos/sys-kernel/linux-headers:4.14",

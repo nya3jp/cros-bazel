@@ -25,6 +25,7 @@ sdk_install_deps(
     overlays = "//internal/overlays:amd64-host",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     target_deps = [
         "//internal/packages/stage1/target/host/chromiumos/simple/aaa:1.0",
@@ -44,6 +45,7 @@ sdk_install_deps(
     overlays = "//internal/overlays:amd64-host",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     target_deps = [
         "//internal/packages/stage1/target/host/chromiumos/simple/aaa:1.0",
@@ -105,6 +107,7 @@ ebuild(
     ],
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
@@ -155,6 +158,7 @@ ebuild_debug(
     ],
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
@@ -214,6 +218,7 @@ ebuild(
     ],
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
@@ -261,6 +266,7 @@ ebuild_debug(
     ],
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
@@ -317,6 +323,7 @@ ebuild(
     ],
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
         ":1.0_portage_profile_test_package_incremental_enabled": ":1.0_portage_profile_test_package_cache_marker",
@@ -361,6 +368,7 @@ ebuild_debug(
     ],
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     incremental_cache_marker = select({
         ":1.0_portage_profile_test_package_incremental_enabled": ":1.0_portage_profile_test_package_cache_marker",
@@ -417,6 +425,7 @@ ebuild_test(
     ],
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],

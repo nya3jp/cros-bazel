@@ -1,3 +1,0 @@
-source "/mnt/host/source/src/overlays/overlay-amd64-generic/make.conf"
-USE="$USE -ondevice_speech"
-

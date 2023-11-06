@@ -23,6 +23,7 @@ build_image(
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
     ],
     override_base_packages = [
         "sys-apps/baselayout",
@@ -53,6 +54,7 @@ build_image(
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
     ],
     sdk = "@portage//internal/sdk/stage1/target/board",
     target_packages = [
@@ -77,6 +79,7 @@ build_image(
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
     ],
     sdk = "@portage//internal/sdk/stage1/target/board",
     target_packages = [
@@ -102,6 +105,7 @@ build_image(
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
     ],
     sdk = "@portage//internal/sdk/stage1/target/board",
     target_packages = [

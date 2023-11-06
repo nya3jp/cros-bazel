@@ -3,29 +3,20 @@
 // found in the LICENSE file.
 
 use alchemist::{
-    analyze::Package,
-    dependency::package::PackageAtom,
-    ebuild::PackageDetails,
-    fileops::{execute_file_ops, FileOps},
-    repository::RepositorySet,
-    toolchain::Toolchain,
+    analyze::Package, dependency::package::PackageAtom, ebuild::PackageDetails,
+    repository::RepositorySet, resolver::PackageResolver, toolchain::Toolchain,
 };
+use anyhow::{Context, Result};
 use itertools::Itertools;
+use lazy_static::lazy_static;
+use serde::Serialize;
 use std::{
     ffi::OsStr,
     fs::{create_dir_all, File},
     io::Write,
-    path::{Path, PathBuf},
+    path::Path,
 };
 use std::{str::FromStr, sync::Arc};
-
-use anyhow::{bail, Context, Result};
-
-use alchemist::{
-    config::makeconf::generate::generate_make_conf_for_board, resolver::PackageResolver,
-};
-use lazy_static::lazy_static;
-use serde::Serialize;
 use tera::Tera;
 use tracing::instrument;
 
@@ -162,7 +153,6 @@ struct SdkTemplateContext<'a> {
     overlay_set: &'a str,
     primary_triple: Option<&'a str>,
     triples: Vec<&'a str>,
-    profile_path: PathBuf,
     wrappers: Vec<&'a str>,
     target_deps: Vec<String>,
 }
@@ -233,11 +223,6 @@ fn get_toolchain_packages(
         .collect::<Result<_>>()
 }
 
-// TODO: Move this into portage_config once it's no longer used here.
-pub fn profile_path(repos: &RepositorySet, profile: &str) -> PathBuf {
-    repos.primary().base_dir().join("profiles").join(profile)
-}
-
 fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<()> {
     let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();
 
@@ -263,7 +248,6 @@ fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<(
             })
             .map(|t| t.name.as_ref())
             .collect(),
-        profile_path: profile_path(&target.repos, &target.profile),
         wrappers,
         target_deps: get_primordial_packages(&target.resolver)?
             .iter()
@@ -300,20 +284,6 @@ pub fn generate_stage1_sdk(prefix: &str, target: &TargetData, out: &Path) -> Res
     if let Some(toolchain) = target.toolchains.primary() {
         generate_wrappers(&target.board, &toolchain.name, &out)?;
     }
-
-    // TODO: Remove all this once we decouple the profile from the SDK.
-    let mut ops = generate_make_conf_for_board(&target.board, &target.repos, &target.toolchains)?;
-
-    for op in &mut ops {
-        match op {
-            FileOps::PlainFile { ref mut path, .. } => {
-                *path = Path::new("/").join(path.strip_prefix("/etc")?)
-            }
-            _ => bail!("Unexpected op"),
-        }
-    }
-
-    execute_file_ops(&ops, &out)?;
 
     Ok(())
 }

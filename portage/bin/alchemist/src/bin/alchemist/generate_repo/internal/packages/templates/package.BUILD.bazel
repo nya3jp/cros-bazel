@@ -92,6 +92,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     portage_config = [
         {% if target_board -%}
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/{{ target_portage_config }}:full",
         {%- else -%}
         "//internal/portage-config/host:full",
         {%- endif %}
@@ -188,6 +189,7 @@ sdk_install_deps(
     overlays = "{{ target_overlay_set }}",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/{{ target_portage_config }}:full",
     ],
     target_deps = [
         {%- for dep in ebuild.target_build_deps %}
@@ -219,6 +221,7 @@ sdk_install_deps(
     overlays = "{{ target_overlay_set }}",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/{{ target_portage_config }}:full",
     ],
     target_deps = [
         {%- for dep in ebuild.target_test_deps %}

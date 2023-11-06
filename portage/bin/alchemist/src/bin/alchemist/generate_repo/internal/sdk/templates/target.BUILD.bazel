@@ -60,6 +60,7 @@ sdk_install_deps(
     overlays = "{{ target_overlay_set }}",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/{{ name }}:full",
     ],
     target_deps = [
     {%- for package in primordial_deps %}

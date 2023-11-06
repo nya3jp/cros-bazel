@@ -11,6 +11,7 @@ build_sdk(
     overlays = "{{ overlay_set }}",
     portage_config = [
         "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
     ],
     target_deps = ["{{ target}}"],
     sdk = "{{ sdk }}",

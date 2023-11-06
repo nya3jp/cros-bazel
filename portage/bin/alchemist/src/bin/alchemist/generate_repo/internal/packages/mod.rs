@@ -465,6 +465,7 @@ impl EBuildFailure {
 #[derive(Serialize)]
 struct BuildTemplateContext<'a> {
     target_board: Option<&'a str>,
+    target_portage_config: Option<&'a str>,
     host_overlay_set: Option<String>,
     target_overlay_set: String,
     ebuilds: Vec<EBuildEntry>,
@@ -476,9 +477,20 @@ fn generate_package_build_file(
     packages_in_dir: &[&MaybePackage],
     out: &Path,
 ) -> Result<()> {
-    let target_board = match target {
-        PackageType::Host { .. } => None,
-        PackageType::CrossRoot { target, .. } => Some(target.board),
+    let (target_board, target_portage_config) = match target {
+        PackageType::Host { .. } => (None, None),
+        PackageType::CrossRoot { target, .. } => (
+            Some(target.board),
+            Some(format!(
+                // TODO: Refactor this so it's passed in as a param.
+                "target/{}",
+                target
+                    .prefix
+                    .split("/")
+                    .last()
+                    .expect("valid target prefix")
+            )),
+        ),
     };
 
     let host_overlay_set = match target {
@@ -494,6 +506,7 @@ fn generate_package_build_file(
 
     let context = BuildTemplateContext {
         target_board,
+        target_portage_config: target_portage_config.as_deref(),
         host_overlay_set,
         target_overlay_set,
         ebuilds: packages_in_dir
@@ -604,6 +617,7 @@ mod tests {
     fn template_syntax_valid() -> Result<()> {
         let context = BuildTemplateContext {
             target_board: None,
+            target_portage_config: None,
             host_overlay_set: None,
             target_overlay_set: "target_overlay_set_for_testing".to_string(),
             ebuilds: Vec::new(),
