@@ -319,7 +319,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 \t\tYou are running inside the CrOS SDK and `{}` doesn't exist.\n\
                 \n\
                 \t\tPlease run the following command to create the board's sysroot and try again:\n\
-                \t\t$ setup_board --board {} --profile {} --skip-chroot-upgrade --skip-toolchain-update\n\
+                \t\t$ setup_board --board {} --profile {}\n\
                 \t\tWhen building public artifacts from an internal manifest, add --public.\n\
                 \n\
                 *****",
