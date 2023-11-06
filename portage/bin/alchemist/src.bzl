@@ -537,6 +537,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/fakechroot.rs",
     "//bazel/portage/bin/alchemist:src/fileops.rs",
     "//bazel/portage/bin/alchemist:src/lib.rs",
+    "//bazel/portage/bin/alchemist:src/path.rs",
     "//bazel/portage/bin/alchemist:src/repository.rs",
     "//bazel/portage/bin/alchemist:src/resolver.rs",
     "//bazel/portage/bin/alchemist:src/simpleversion.rs",

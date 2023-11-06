@@ -11,6 +11,7 @@ pub mod dependency;
 pub mod ebuild;
 pub mod fakechroot;
 pub mod fileops;
+pub mod path;
 pub mod repository;
 pub mod resolver;
 pub mod simpleversion;

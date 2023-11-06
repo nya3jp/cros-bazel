@@ -9,6 +9,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::path::join_absolute;
+
 pub enum FileOps {
     Symlink { target: PathBuf, source: PathBuf },
     PlainFile { path: PathBuf, content: String },
@@ -36,13 +38,6 @@ impl FileOps {
             path: path.as_ref().to_owned(),
         }
     }
-}
-
-fn join_absolute(root: &Path, path: &Path) -> Result<PathBuf> {
-    Ok(root.join(
-        path.strip_prefix("/")
-            .with_context(|| format!("path {} is not absolute", path.display()))?,
-    ))
 }
 
 fn make_parent_dir(path: &Path) -> Result<()> {
