@@ -18,7 +18,7 @@ import %workspace%/bazel/bazelrcs/include/remote_build_artifacts.bazelrc
 
 # Bzlmod is the new dependency management system in bazel.
 common --experimental_enable_bzlmod
-common --registry=file:../bazel_deps/bazel-central-registry
+common --registry=file:%workspace%/../bazel_deps/bazel-central-registry
 # TODO(b/274698330): In the long term, we'll want to replace this with a
 # GoB repo containing all bazel modules used throughout google. This shouldn't
 # be ChromeOS specific.
@@ -39,6 +39,9 @@ common --experimental_ui_max_stdouterr_bytes=-1
 
 # Publish the individual action traces and logs
 build --output_groups=+logs,+traces
+
+# TODO(b/309692900): Re-enable this once the bug is resolved.
+common --noincompatible_disallow_unsound_directory_outputs
 
 # Prevent writing to the remote cache if source files change during the build.
 # **DISABLED** Only useful when uploading artifacts from local builds, which we
@@ -94,6 +97,10 @@ build --host_platform=//bazel/platforms:host
 # Use platforms instead of crostool_top to resolve C++ toolchains.
 build --incompatible_enable_cc_toolchain_resolution
 
+# TODO(b/315062703): We probably want to enable this, but we'll do it separately
+# so we can distinguish breakages.
+build --noincompatible_sandbox_hermetic_tmp
+
 ###
 # Convenience
 ###
@@ -144,7 +151,7 @@ build:bes --bes_results_url=http://sponge2/
 build:bes --bes_backend=buildeventservice-pa.googleapis.com
 # Upload every file referenced by the BEP message, on top of crucial ones
 # like test logs. This is necessary to upload the package-local ebuild logs.
-build:bes --experimental_remote_build_event_upload=all
+build:bes --remote_build_event_upload=all
 # Enable BEP uploads to complete asynchronously.
 build:bes --bes_upload_mode=fully_async
 # Set a label for this invocation so it's easy to filter on the backend.
