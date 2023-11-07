@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use serde_json::value::Value;
 use std::borrow::Cow;
+use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use itertools::Itertools;
@@ -17,10 +19,20 @@ pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
 lazy_static! {
     static ref TEMPLATES: Tera = {
         let mut tera: Tera = Default::default();
+
+        tera.register_filter("escape", escape);
+
         tera.add_raw_template("make.conf", include_str!("templates/make.conf"))
             .unwrap();
         tera
     };
+}
+
+fn escape(val: &Value, _env: &HashMap<String, Value>) -> tera::Result<Value> {
+    match val {
+        Value::String(val) => Ok(val.replace('"', "\\\"").into()),
+        _ => Err("Unexpected type".into()),
+    }
 }
 
 // TinyTemplate doesn't support hash maps so we make our own K/V pair
@@ -201,4 +213,26 @@ pub fn generate_make_conf_for_board(
     ];
 
     Ok(ops)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_escape() -> Result<()> {
+        let context = MakeConfContext {
+            sources: vec!["Hello \"World\"".into()],
+            vars: vec![("KEY", "val\"ue\"").into()],
+        };
+
+        assert_eq!(
+            TEMPLATES.render("make.conf", &tera::Context::from_serialize(context)?)?,
+            r#"source "Hello \"World\""
+KEY="val\"ue\""
+"#
+        );
+
+        Ok(())
+    }
 }
