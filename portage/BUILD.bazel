@@ -40,21 +40,21 @@ config_setting(
 )
 
 bool_flag(
-    name = "compiled-use-flags",
+    name = "compiled-profiles",
     build_setting_default = False,
 )
 
 config_setting(
-    name = "alchemist-use-flags",
+    name = "compiled-profiles-enabled",
     flag_values = {
-        ":compiled-use-flags": "True",
+        ":compiled-profiles": "True",
     },
 )
 
 config_setting(
-    name = "portage-use-flags",
+    name = "compiled-profiles-disabled",
     flag_values = {
-        ":compiled-use-flags": "False",
+        ":compiled-profiles": "False",
     },
 )
 

@@ -74,8 +74,8 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     inject_use_flags = False,
     {%- else %}
     inject_use_flags = select({
-        "@//bazel/portage:alchemist-use-flags": True,
-        "@//bazel/portage:portage-use-flags": False,
+        "@//bazel/portage:compiled-profiles-enabled": True,
+        "@//bazel/portage:compiled-profiles-disabled": False,
     }),
     {%- endif %}
     files = glob(["files/**", "*.bashrc"]),
