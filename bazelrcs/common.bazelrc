@@ -6,8 +6,15 @@
 # Option 2) All bazel chromiumos projects: $HOME/.chromiumos.bazelrc
 # Option 3) This specific chromiumos checkoput: src/workspace.bazelrc
 
-# Show timestamps for easier performance analysis.
-common --show_timestamps
+import %workspace%/bazel/bazelrcs/aspect/bazel6.bazelrc
+import %workspace%/bazel/bazelrcs/aspect/correctness.bazelrc
+# Adds support for "--config=debug"
+import %workspace%/bazel/bazelrcs/aspect/debug.bazelrc
+import %workspace%/bazel/bazelrcs/aspect/javascript.bazelrc
+import %workspace%/bazel/bazelrcs/aspect/performance.bazelrc
+
+# Enable the use of RBE remote caching behind --config=rbe.
+import %workspace%/bazel/bazelrcs/include/remote_build_artifacts.bazelrc
 
 # Bzlmod is the new dependency management system in bazel.
 common --experimental_enable_bzlmod
@@ -17,14 +24,6 @@ common --registry=file:../bazel_deps/bazel-central-registry
 # be ChromeOS specific.
 common --registry=https://raw.githubusercontent.com/matts1/bazel-central-registry/main
 
-
-import %workspace%/bazel/bazelrcs/aspect/bazel6.bazelrc
-import %workspace%/bazel/bazelrcs/aspect/correctness.bazelrc
-# Adds support for "--config=debug"
-import %workspace%/bazel/bazelrcs/aspect/debug.bazelrc
-import %workspace%/bazel/bazelrcs/aspect/javascript.bazelrc
-import %workspace%/bazel/bazelrcs/aspect/performance.bazelrc
-
 # Undo some flags that were set by aspect that don't work for us.
 # We disable this for ChromeOS because it throws errors along the lines of
 # "Infinite symlink chain detected".
@@ -33,13 +32,10 @@ common --noincompatible_disallow_empty_glob
 # Until we can distinguish between CI and non-CI builds, this should be set for all builds.
 build --noremote_upload_local_results
 
-# Enable the use of RBE remote caching if the appropriate config is selected.
-import %workspace%/bazel/bazelrcs/remote_build_artifacts.bazelrc
-
-
+# Show timestamps for easier performance analysis.
+common --show_timestamps
 # Always show output from actions.
 common --experimental_ui_max_stdouterr_bytes=-1
-
 
 # Prevent writing to the remote cache if source files change during the build.
 # **DISABLED** Only useful when uploading artifacts from local builds, which we
