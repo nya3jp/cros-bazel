@@ -91,9 +91,14 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    portage_config = [
-        "//internal/portage-config/host:full",
-    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:full",
+        ],
+    }),
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_incremental_enabled": ":17.0_pre498229-r9_cache_marker",
         "//conditions:default": None,
@@ -156,9 +161,14 @@ ebuild_debug(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    portage_config = [
-        "//internal/portage-config/host:full",
-    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:full",
+        ],
+    }),
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_incremental_enabled": ":17.0_pre498229-r9_cache_marker",
         "//conditions:default": None,
@@ -230,9 +240,14 @@ ebuild(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    portage_config = [
-        "//internal/portage-config/host:full",
-    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:full",
+        ],
+    }),
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_hermetic_test_package_incremental_enabled": ":17.0_pre498229-r9_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -292,9 +307,14 @@ ebuild_debug(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    portage_config = [
-        "//internal/portage-config/host:full",
-    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:full",
+        ],
+    }),
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_hermetic_test_package_incremental_enabled": ":17.0_pre498229-r9_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -360,7 +380,7 @@ ebuild(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":17.0_pre498229-r9_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:amd64-host-full",
     eclasses = [
     ],
     portage_config = [
@@ -419,7 +439,7 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":17.0_pre498229-r9_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:amd64-host-full",
     eclasses = [
     ],
     portage_config = [
@@ -473,9 +493,14 @@ ebuild_test(
     overlays = "//internal/overlays:amd64-host",
     eclasses = [
     ],
-    portage_config = [
-        "//internal/portage-config/host:full",
-    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:full",
+        ],
+    }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
     visibility = ["@//bazel:internal"],

@@ -160,10 +160,16 @@ sdk_install_deps(
     base = ":base",
     board = "{{ board }}",
     overlays = "{{ overlay_set }}",
-    portage_config = [
-        "//internal/portage-config/host:orig",
-        "//internal/portage-config/target/{{ name }}:full",
-    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/{{ name }}",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/{{ name }}:full",
+        ],
+    }),
     target_deps = [
         {%- for package in target_deps %}
         "{{ package }}",
