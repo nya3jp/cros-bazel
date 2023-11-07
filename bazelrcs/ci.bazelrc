@@ -1,0 +1,7 @@
+# This file is an overlay of extra configurations on top of the regular ones.
+# To run in CI configuration, use:
+# bazel --bazelrc=bazel/bazelrcs/ci.bazelrc
+
+import %workspace%/bazel/bazelrcs/aspect/ci.bazelrc
+
+test --flaky_test_attempts=1
