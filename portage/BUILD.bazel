@@ -57,27 +57,3 @@ config_setting(
         ":compiled-use-flags": "False",
     },
 )
-
-# This flag is useful when you are comparing packages built using alchemist's
-# compiled profiles and packages built using portage profiles. When enabled
-# an additional target with the suffix `_portage_profile_test_package` will be
-# built and compared for each ebuild target. This happens as a validator
-# so it will also check all transitive dependencies as well.
-bool_flag(
-    name = "enable-portage-config-validator",
-    build_setting_default = False,
-)
-
-config_setting(
-    name = "portage-config-validator-enabled",
-    flag_values = {
-        ":enable-portage-config-validator": "True",
-    },
-)
-
-config_setting(
-    name = "portage-config-validator-disabled",
-    flag_values = {
-        ":enable-portage-config-validator": "False",
-    },
-)

@@ -59,10 +59,6 @@ ebuild(
     eclasses = [
     ],
     prebuilt = ":4.14_prebuilt",
-    portage_profile_test_package = select({
-        "@//bazel/portage:portage-config-validator-enabled": ":4.14_portage_profile_test_package",
-        "@//bazel/portage:portage-config-validator-disabled": None,
-    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -167,73 +163,6 @@ ebuild_debug(
         "@//bazel/portage:alchemist-use-flags": True,
         "@//bazel/portage:portage-use-flags": False,
     }),
-    files = glob(["files/**", "*.bashrc"]),
-    sdk = ":4.14_deps",
-    overlays = "//internal/overlays:amd64-host",
-    eclasses = [
-    ],
-    visibility = ["@//bazel:internal"],
-)
-
-string_flag(
-    name = "4.14_portage_profile_test_package_prebuilt",
-    build_setting_default = "",
-    visibility = ["@//bazel:internal"],
-)
-
-ebuild(
-    name = "4.14_portage_profile_test_package",
-    suffix = "_portage_profile_test_package",
-    ebuild = "linux-headers-4.14.ebuild",
-    overlay = "//internal/overlays/chromiumos",
-    category = "sys-kernel",
-    package_name = "linux-headers",
-    version = "4.14",
-    slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
-    use_flags = [
-    ],
-    inject_use_flags = False,
-    files = glob(["files/**", "*.bashrc"]),
-    sdk = ":4.14_deps",
-    overlays = "//internal/overlays:amd64-host",
-    eclasses = [
-    ],
-    prebuilt = ":4.14_portage_profile_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
-)
-
-add_runtime_deps(
-    name = "4.14_portage_profile_test_package_including_provided",
-    binpkg = ":4.14",
-    runtime_deps = [
-    ],
-    visibility = ["@//bazel:internal"],
-)
-
-ebuild_debug(
-    name = "4.14_portage_profile_test_package_debug",
-    suffix = "_portage_profile_test_package",
-    ebuild = "linux-headers-4.14.ebuild",
-    overlay = "//internal/overlays/chromiumos",
-    category = "sys-kernel",
-    package_name = "linux-headers",
-    version = "4.14",
-    slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
-    use_flags = [
-    ],
-    inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":4.14_deps",
     overlays = "//internal/overlays:amd64-host",

@@ -60,10 +60,6 @@ ebuild(
     eclasses = [
     ],
     prebuilt = ":0-r2_prebuilt",
-    portage_profile_test_package = select({
-        "@//bazel/portage:portage-config-validator-enabled": ":0-r2_portage_profile_test_package",
-        "@//bazel/portage:portage-config-validator-disabled": None,
-    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -170,75 +166,6 @@ ebuild_debug(
         "@//bazel/portage:alchemist-use-flags": True,
         "@//bazel/portage:portage-use-flags": False,
     }),
-    files = glob(["files/**", "*.bashrc"]),
-    board = "amd64-host",
-    sdk = ":0-r2_deps",
-    overlays = "//internal/overlays:amd64-host",
-    eclasses = [
-    ],
-    visibility = ["@//bazel:internal"],
-)
-
-string_flag(
-    name = "0-r2_portage_profile_test_package_prebuilt",
-    build_setting_default = "",
-    visibility = ["@//bazel:internal"],
-)
-
-ebuild(
-    name = "0-r2_portage_profile_test_package",
-    suffix = "_portage_profile_test_package",
-    ebuild = "os-headers-0-r2.ebuild",
-    overlay = "//internal/overlays/portage-stable",
-    category = "virtual",
-    package_name = "os-headers",
-    version = "0-r2",
-    slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
-    use_flags = [
-    ],
-    inject_use_flags = False,
-    files = glob(["files/**", "*.bashrc"]),
-    board = "amd64-host",
-    sdk = ":0-r2_deps",
-    overlays = "//internal/overlays:amd64-host",
-    eclasses = [
-    ],
-    prebuilt = ":0-r2_portage_profile_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
-)
-
-add_runtime_deps(
-    name = "0-r2_portage_profile_test_package_including_provided",
-    binpkg = ":0-r2",
-    runtime_deps = [
-    ],
-    visibility = ["@//bazel:internal"],
-)
-
-ebuild_debug(
-    name = "0-r2_portage_profile_test_package_debug",
-    suffix = "_portage_profile_test_package",
-    ebuild = "os-headers-0-r2.ebuild",
-    overlay = "//internal/overlays/portage-stable",
-    category = "virtual",
-    package_name = "os-headers",
-    version = "0-r2",
-    slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
-    use_flags = [
-    ],
-    inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":0-r2_deps",

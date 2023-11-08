@@ -335,31 +335,6 @@ def _generate_ebuild_validation_action(ctx, binpkg):
 
     return validation_file
 
-def _ebuild_compare_package(ctx, name, packages):
-    if len(packages) != 2:
-        fail("Expected two packages, got %d" % (len(packages)))
-
-    src_basename = _get_basename(ctx)
-
-    log_file = ctx.actions.declare_file("%s.%s.log" % (src_basename, name))
-
-    args = ctx.actions.args()
-    args.add("--log", log_file)
-    args.add(compute_input_file_path(ctx.executable._xpaktool, use_runfiles = False))
-    args.add("compare-packages")
-    args.add_all(packages)
-
-    ctx.actions.run(
-        inputs = packages,
-        outputs = [log_file],
-        executable = ctx.executable._action_wrapper,
-        tools = [ctx.executable._xpaktool],
-        arguments = [args],
-        mnemonic = "EbuildComparePackage",
-    )
-
-    return log_file
-
 def _ebuild_impl(ctx):
     src_basename = _get_basename(ctx)
 
@@ -456,18 +431,6 @@ def _ebuild_impl(ctx):
         _generate_ebuild_validation_action(ctx, output_binary_package_file),
     ]
 
-    if ctx.attr.portage_profile_test_package:
-        validation_files.append(
-            _ebuild_compare_package(
-                ctx,
-                "portage-profile-test",
-                [
-                    ctx.attr.portage_profile_test_package[BinaryPackageInfo].file,
-                    output_binary_package_file,
-                ],
-            ),
-        )
-
     return [
         DefaultInfo(files = depset(
             [output_binary_package_file, output_log_file] +
@@ -518,16 +481,6 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             """,
         ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
-        portage_profile_test_package = attr.label(
-            doc = """
-            A package built using the standard portage profile configuration.
-
-            Setting this field will add a validator that compares this package
-            to the one using standard portage profiles. This is useful to
-            validate that alchemist's compiled profiles are valid.
-            """,
-            providers = [BinaryPackageInfo],
-        ),
         _extract_package = attr.label(
             executable = True,
             cfg = "exec",
