@@ -4,9 +4,55 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_BAZEL_BIN_SRCS")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 filegroup(
     name = "srcs",
     srcs = ALCHEMIST_BAZEL_BIN_SRCS,
     visibility = ["//bazel/portage/bin/alchemist:__pkg__"],
 )
+
+rust_binary(
+    name = "alchemist",
+    srcs = glob(["**/*.rs"]),
+    compile_data = glob(
+        [
+            "**/*",
+        ],
+        exclude = ["**/*.rs"],
+    ),
+    deps = [
+        "//bazel/portage/bin/alchemist:alchemist_lib",
+        "//bazel/portage/common/cliutil",
+        "//bazel/portage/common/portage/version",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:colored",
+        "@alchemy_crates//:itertools",
+        "@alchemy_crates//:lazy_static",
+        "@alchemy_crates//:nom",
+        "@alchemy_crates//:rayon",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:tera",
+        "@alchemy_crates//:tracing",
+        "@alchemy_crates//:walkdir",
+    ],
+)
+
+# TODO(b/309534638): The following compiles but fails at runtime with the error:
+# "Golden path must be relative under Bazel!".
+# This will be fixed in a future CL.
+#rust_test(
+#    name = "alchemist_test",
+#    size = "small",
+#    crate = ":alchemist",
+#    rustc_flags = RUSTC_DEBUG_FLAGS,
+#    deps = [
+#        "//bazel/portage/common/testutil",
+#        "@alchemy_crates//:pretty_assertions",
+#        "@alchemy_crates//:proptest",
+#        "@alchemy_crates//:url",
+#    ],
+#)

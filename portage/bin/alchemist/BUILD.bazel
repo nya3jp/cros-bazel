@@ -2,7 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/bash:defs.bzl", "custom_args_binary", "custom_args_test", "sh_runfiles_binary")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load(":src.bzl", "ALCHEMIST_BAZEL_LIB_SRCS")
 
 exports_files(
@@ -16,6 +18,60 @@ exports_files(
 filegroup(
     name = "srcs",
     srcs = ALCHEMIST_BAZEL_LIB_SRCS + ["//bazel/portage/bin/alchemist/src/bin/alchemist:srcs"],
+)
+
+rust_library(
+    name = "alchemist_lib",
+    srcs = glob(
+        ["src/**/*.rs"],
+    ),
+    compile_data = glob(
+        ["src/**/*"],
+        exclude = [
+            "src/**/*.rs",
+        ],
+    ),
+    crate_name = "alchemist",
+    proc_macro_deps = [
+        "@alchemy_crates//:strum_macros",
+    ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//bazel/portage/common/portage/version",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:base64",
+        "@alchemy_crates//:hex",
+        "@alchemy_crates//:itertools",
+        "@alchemy_crates//:lazy_static",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:nom",
+        "@alchemy_crates//:nom-regex",
+        "@alchemy_crates//:nom_locate",
+        "@alchemy_crates//:once_cell",
+        "@alchemy_crates//:rayon",
+        "@alchemy_crates//:regex",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:sha2",
+        "@alchemy_crates//:strum",
+        "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:tera",
+        "@alchemy_crates//:tracing",
+        "@alchemy_crates//:url",
+        "@alchemy_crates//:walkdir",
+    ],
+)
+
+rust_test(
+    name = "alchemist_lib_test",
+    size = "small",
+    crate = ":alchemist_lib",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@alchemy_crates//:pretty_assertions",
+        "@alchemy_crates//:proptest",
+    ],
 )
 
 sh_runfiles_binary(
