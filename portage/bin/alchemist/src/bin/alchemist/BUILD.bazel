@@ -1,0 +1,12 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_BAZEL_BIN_SRCS")
+
+filegroup(
+    name = "srcs",
+    srcs = ALCHEMIST_BAZEL_BIN_SRCS,
+    visibility = ["//bazel/portage/bin/alchemist:__pkg__"],
+)

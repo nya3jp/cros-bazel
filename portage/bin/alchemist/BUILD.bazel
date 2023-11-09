@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("//bazel/bash:defs.bzl", "custom_args_binary", "custom_args_test", "sh_runfiles_binary")
-load(":src.bzl", "ALCHEMIST_BAZEL_SRCS")
+load(":src.bzl", "ALCHEMIST_BAZEL_LIB_SRCS")
 
 exports_files(
     ["Cargo.toml"],
@@ -15,7 +15,7 @@ exports_files(
 # write ":foo/BUILD.bazel".
 filegroup(
     name = "srcs",
-    srcs = ALCHEMIST_BAZEL_SRCS,
+    srcs = ALCHEMIST_BAZEL_LIB_SRCS + ["//bazel/portage/bin/alchemist/src/bin/alchemist:srcs"],
 )
 
 sh_runfiles_binary(

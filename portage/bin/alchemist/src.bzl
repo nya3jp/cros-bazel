@@ -15,6 +15,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/bash/expr/parser.rs",
     "//bazel/portage/bin/alchemist:src/bash/mod.rs",
     "//bazel/portage/bin/alchemist:src/bash/vars.rs",
+    "//bazel/portage/bin/alchemist:src/bin/alchemist/BUILD.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/alchemist.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/digest_repo.rs",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/dump_package.rs",
@@ -582,10 +583,18 @@ _DEV_SRCS = _DEV_SRCS_NO_LOCK + [_LOCK]
 
 _RELEASE_SRCS = [src for src in _DEV_SRCS if "/testdata/" not in src]
 
-ALCHEMIST_BAZEL_SRCS = [
-  Label(x) for x in _DEV_SRCS + SHARED_CRATES
+ALCHEMIST_BAZEL_LIB_SRCS = [
+    Label(x)
+    for x in _DEV_SRCS + SHARED_CRATES
+    if not x.startswith("//bazel/portage/bin/alchemist:src/bin/alchemist")
+]
+
+ALCHEMIST_BAZEL_BIN_SRCS = [
+    Label(x.replace(":src/bin/alchemist/", "/src/bin/alchemist:"))
+    for x in _DEV_SRCS + SHARED_CRATES
+    if x.startswith("//bazel/portage/bin/alchemist:src/bin/alchemist")
 ]
 
 ALCHEMIST_REPO_RULE_SRCS = [
-  Label(x) for x in _RELEASE_SRCS + _SHARED_CRATE_FILES
+    Label(x) for x in _RELEASE_SRCS + _SHARED_CRATE_FILES
 ]
