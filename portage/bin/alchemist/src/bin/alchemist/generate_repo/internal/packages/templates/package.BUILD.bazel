@@ -12,7 +12,7 @@ load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False) -%}
+{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False, full_config=False) -%}
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
@@ -70,10 +70,14 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         "{{ flag }}",
         {%- endfor %}
     ],
+    {%- if full_config %}
+    inject_use_flags = False,
+    {%- else %}
     inject_use_flags = select({
         "@//bazel/portage:alchemist-use-flags": True,
         "@//bazel/portage:portage-use-flags": False,
     }),
+    {%- endif %}
     files = glob(["files/**", "*.bashrc"]),
     {%- if target_board %}
     board = "{{ target_board }}",
@@ -219,7 +223,12 @@ alias(
 )
 {%- endif %}
 
-{%- for suffix in ["","_hermetic_test_package"] %}
+{%- for suffix in ["","_hermetic_test_package", "_portage_profile_test_package"] %}
+{%- if suffix == "_portage_profile_test_package" %}
+{%- set full_config = True -%}
+{% else %}
+{%- set full_config = False -%}
+{% endif %}
 string_flag(
     name = "{{ ebuild.version }}{{ suffix }}_prebuilt",
     build_setting_default = "",
@@ -246,8 +255,14 @@ ebuild(
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True) }}
+    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True, full_config=full_config) }}
     prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
+    {%- if suffix == "" %}
+    portage_profile_test_package = select({
+        "@//bazel/portage:portage-config-validator-enabled": ":{{ ebuild.version }}_portage_profile_test_package",
+        "@//bazel/portage:portage-config-validator-disabled": None,
+    }),
+    {%- endif %}
     visibility = ["@//bazel:internal"],
 )
 
@@ -267,7 +282,7 @@ ebuild_debug(
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True) }}
+    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True, full_config=full_config) }}
     visibility = ["@//bazel:internal"],
 )
 {% endfor -%}

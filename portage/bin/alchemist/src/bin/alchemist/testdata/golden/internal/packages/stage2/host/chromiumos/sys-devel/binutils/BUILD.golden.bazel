@@ -79,6 +79,10 @@ ebuild(
         "//conditions:default": None,
     }),
     prebuilt = ":2.39_prebuilt",
+    portage_profile_test_package = select({
+        "@//bazel/portage:portage-config-validator-enabled": ":2.39_portage_profile_test_package",
+        "@//bazel/portage:portage-config-validator-disabled": None,
+    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -213,6 +217,96 @@ ebuild_debug(
     ],
     incremental_cache_marker = select({
         ":2.39_hermetic_test_package_incremental_enabled": ":2.39_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+string_flag(
+    name = "2.39_portage_profile_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "2.39_portage_profile_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "2.39_portage_profile_test_package_incremental_enabled",
+    flag_values = {":2.39_portage_profile_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "2.39_portage_profile_test_package_cache_marker",
+    out = "2.39_portage_profile_test_package_incremental/MARKER",
+)
+
+ebuild(
+    name = "2.39_portage_profile_test_package",
+    suffix = "_portage_profile_test_package",
+    ebuild = "binutils-2.39.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "binutils",
+    version = "2.39",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = False,
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":2.39_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    incremental_cache_marker = select({
+        ":2.39_portage_profile_test_package_incremental_enabled": ":2.39_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    prebuilt = ":2.39_portage_profile_test_package_prebuilt",
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "2.39_portage_profile_test_package_including_provided",
+    binpkg = ":2.39",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "2.39_portage_profile_test_package_debug",
+    suffix = "_portage_profile_test_package",
+    ebuild = "binutils-2.39.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "binutils",
+    version = "2.39",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+    ],
+    inject_use_flags = False,
+    files = glob(["files/**", "*.bashrc"]),
+    sdk = ":2.39_deps",
+    overlays = "//internal/overlays:amd64-host",
+    eclasses = [
+    ],
+    incremental_cache_marker = select({
+        ":2.39_portage_profile_test_package_incremental_enabled": ":2.39_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
     }),
     visibility = ["@//bazel:internal"],
