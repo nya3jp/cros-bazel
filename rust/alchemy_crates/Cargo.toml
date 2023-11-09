@@ -1,0 +1,58 @@
+[package]
+name = "dummy"
+version = "0.1.0"
+
+# This is a dummy crate. Cargo only adds dependencies in the workspace if a
+# crate within that workspace uses it. This dummy crate depends on all workspace
+# entries.
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+by_address.workspace = true
+bytes.workspace = true
+bzip2.workspace = true
+chrono.workspace = true
+clap.workspace = true
+colored.workspace = true
+env_logger.workspace = true
+flate2.workspace = true
+hex.workspace = true
+itertools.workspace = true
+lazy_static.workspace = true
+libc.workspace = true
+log.workspace = true
+md-5.workspace = true
+nix.workspace = true
+nom.workspace = true
+nom-regex.workspace = true
+nom_locate.workspace = true
+once_cell.workspace = true
+path-absolutize.workspace = true
+pathdiff.workspace = true
+pretty_assertions.workspace = true
+proptest.workspace = true
+rayon.workspace = true
+regex.workspace = true
+rpds.workspace = true
+runfiles.workspace = true
+scopeguard.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+shell-escape.workspace = true
+signal-hook.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+tar.workspace = true
+tempfile.workspace = true
+tera.workspace = true
+thiserror.workspace = true
+tinytemplate.workspace = true
+tracing.workspace = true
+tracing-chrome.workspace = true
+tracing-subscriber.workspace = true
+url.workspace = true
+users.workspace = true
+walkdir.workspace = true
+xattr.workspace = true
+zstd.workspace = true
