@@ -16,16 +16,15 @@ install_deps() {
 
     read -ra atoms <<<"${!current_group_var}"
     if [[ "${#atoms[@]}" -gt 0 ]]; then
-      # We need to unmask the -9999 cros-workon ebuilds so we can install them
-      mkdir -p "${ROOT}/etc/portage/package.accept_keywords"
-      printf "%s\n" "${atoms[@]}" \
-        >> "${ROOT}/etc/portage/package.accept_keywords/cros-workon"
       # Use fakeroot on installing build dependencies since some files might
       # have non-root ownership or special permissions. Hopefully this does not
       # affect the result of building the package.
       # TODO: emerge is too slow! Find a way to speed up.
-      time fakeroot emerge --oneshot --usepkgonly --nodeps --noreplace --jobs \
-        "${atoms[@]}"
+      #
+      # We need to set ACCEPT_KEYWORDS to tell portage that 9999 packages are
+      # allowed to be installed.
+      time ACCEPT_KEYWORDS="~*" fakeroot emerge --oneshot --usepkgonly \
+        --nodeps --noreplace --jobs "${atoms[@]}"
     fi
     unset "${current_group_var}"
     idx+=1
