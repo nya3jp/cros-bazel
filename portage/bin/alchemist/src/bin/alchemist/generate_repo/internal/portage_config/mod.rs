@@ -137,7 +137,8 @@ pub fn generate_host_portage_config(host: &TargetData, out: &Path) -> Result<()>
 
     let sysroot = Path::new("/");
 
-    let compiler = ProfileCompiler::new(&host.profile, &host.repos, &host.config);
+    let compiler = ProfileCompiler::new(&host.profile, &host.repos, &host.config, &host.sysroot)
+        .strip_sysroot(true);
 
     let configs = vec![
         // This is the original profile that will be replaced by a "lite" profile.
@@ -149,6 +150,7 @@ pub fn generate_host_portage_config(host: &TargetData, out: &Path) -> Result<()>
             compiler.generate_lite_portage_config()?,
             &out,
         )?,
+        file_ops_to_context("host", sysroot, compiler.generate_portage_config()?, &out)?,
         file_ops_to_context(
             "full",
             sysroot,
@@ -168,7 +170,7 @@ pub fn generate_target_host_portage_config(host: &TargetData, out: &Path) -> Res
 
     let sysroot = Path::new("/build").join(&host.board);
 
-    let compiler = ProfileCompiler::new(&host.profile, &host.repos, &host.config);
+    let compiler = ProfileCompiler::new(&host.profile, &host.repos, &host.config, &host.sysroot);
 
     let configs = vec![
         file_ops_to_context(
@@ -193,7 +195,12 @@ pub fn generate_target_portage_config(target: &TargetData, prefix: &str, out: &P
 
     let sysroot = Path::new("/build").join(&target.board);
 
-    let compiler = ProfileCompiler::new(&target.profile, &target.repos, &target.config);
+    let compiler = ProfileCompiler::new(
+        &target.profile,
+        &target.repos,
+        &target.config,
+        &target.sysroot,
+    );
 
     let configs = vec![
         file_ops_to_context(

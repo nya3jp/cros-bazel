@@ -6,9 +6,9 @@ use crate::{
     config::bundle::ConfigBundle, config::makeconf::generate::render_make_conf, fileops::FileOps,
     repository::RepositorySet,
 };
-use anyhow::Result;
+use anyhow::{bail, Result};
 use itertools::Itertools;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{collections::HashSet, iter};
 
 #[derive(Debug)]
@@ -21,6 +21,11 @@ pub struct ProfileCompiler<'a> {
 
     /// Variables that can't be set from make.conf.
     profile_only_variables: HashSet<&'a str>,
+
+    sysroot: &'a Path,
+
+    /// If set, any variables starting with with sysroot will be omitted / rewritten.
+    strip_sysroot: bool,
 }
 
 const MAKE_DEFAULT_VARIABLES: &[&str; 2] = &["PROFILE_ONLY_VARIABLES", "USE_EXPAND"];
@@ -37,8 +42,24 @@ const IGNORED_VARIABLES: &[&str; 3] = &[
     // since we don't need them.
 ];
 
+// When generating a host (ROOT=/) profile from a target/host
+// (ROOT=/build/amd64-host) profile, we need to modify some of the variables.
+// A None means to omit the value, a Some means to use this value instead.
+const TARGET_HOST_TO_HOST_VARIABLES: &[(&str, Option<&str>); 5] = &[
+    ("PKG_CONFIG", None),
+    ("PKGDIR", None),
+    ("PORT_LOGDIR", None),
+    ("PORTAGE_TMPDIR", None),
+    ("ROOT", None),
+];
+
 impl<'a> ProfileCompiler<'a> {
-    pub fn new(profile: &str, repos: &RepositorySet, config: &'a ConfigBundle) -> Self {
+    pub fn new(
+        profile: &str,
+        repos: &RepositorySet,
+        config: &'a ConfigBundle,
+        sysroot: &'a Path,
+    ) -> Self {
         let env = config.env();
 
         let use_expand = env.get("USE_EXPAND").map(|s| s.as_str()).unwrap_or("");
@@ -67,6 +88,53 @@ impl<'a> ProfileCompiler<'a> {
             profile_path: repos.primary().profiles_dir().join(profile),
             use_expand_keys,
             profile_only_variables,
+            sysroot,
+            strip_sysroot: false,
+        }
+    }
+
+    /// Strips the specified `sysroot` from the generated config.
+    ///
+    /// This function is used when generating a "host" config bundle from a
+    /// "target/host" config bundle. The "target/host" config bundle
+    /// contains variables like `ROOT="/build/amd64-host"`,
+    /// `PKGDIR="/build/amd64-host//packages/"`, etc. These paths are invalid
+    /// when building for the "host", so we need to strip and/or modify them.
+    pub fn strip_sysroot(mut self, value: bool) -> Self {
+        self.strip_sysroot = value;
+
+        self
+    }
+
+    /// Applies the `TARGET_HOST_TO_HOST_VARIABLES` map to the specified`key`
+    /// and `value`.
+    fn map_sysroot_variable(&'a self, key: &'a str, value: &'a str) -> Option<(&'a str, &'a str)> {
+        for (k, v) in TARGET_HOST_TO_HOST_VARIABLES {
+            if key == *k {
+                return v.map(|v| (key, v));
+            }
+        }
+        Some((key, value))
+    }
+
+    /// Checks if the value starts with the sysroot.
+    fn is_sysroot_variable(&self, value: &str) -> bool {
+        Path::new(value).starts_with(self.sysroot)
+    }
+
+    /// Returns an error if the value matches the sysroot.
+    ///
+    /// This is used to guard against any sysroot specific variables from
+    /// leaking into the host config.
+    fn error_if_sysroot_variable(
+        &'a self,
+        key: &'a str,
+        value: &'a str,
+    ) -> Result<(&'a str, &'a str)> {
+        if self.is_sysroot_variable(value) {
+            bail!("Profile variables should be sysroot agnostic. Got {key}={value}")
+        } else {
+            Ok((key, value))
         }
     }
 
@@ -90,19 +158,19 @@ impl<'a> ProfileCompiler<'a> {
 
     /// Returns the env keys and values that make up the compiled profile's
     /// make.defaults.
-    fn make_default(&self) -> Vec<(&str, &str)> {
+    fn make_default(&self) -> Result<Vec<(&str, &str)>> {
         self.config
             .env()
             .iter()
             .filter(|(key, _val)| self.is_make_default_key(key))
             .sorted_by_key(|(key, _val)| *key)
-            .map(|(key, val)| (key.as_ref(), val.as_ref()))
+            .map(|(key, val)| self.error_if_sysroot_variable(key, val))
             .collect()
     }
 
     /// Returns the env keys and values that make up the compiled profile's
     /// make.conf.
-    fn make_conf(&self) -> Vec<(&str, &str)> {
+    fn make_conf(&self) -> Result<Vec<(&str, &str)>> {
         self.config
             .env()
             .iter()
@@ -112,8 +180,21 @@ impl<'a> ProfileCompiler<'a> {
             // with compiled profiles match packages built using portage
             // computed profiles.
             .filter(|(key, val)| key.as_str() != "ENV_UNSET" || !val.is_empty())
+            .filter_map(|(key, val)| {
+                if self.strip_sysroot {
+                    self.map_sysroot_variable(key, val)
+                } else {
+                    Some((key.as_str(), val.as_str()))
+                }
+            })
             .sorted_by_key(|(key, _val)| *key)
-            .map(|(key, val)| (key.as_ref(), val.as_ref()))
+            .map(|(key, val)| {
+                if self.strip_sysroot {
+                    self.error_if_sysroot_variable(key, val)
+                } else {
+                    Ok((key, val))
+                }
+            })
             .collect()
     }
 
@@ -122,11 +203,11 @@ impl<'a> ProfileCompiler<'a> {
         let files = vec![
             FileOps::plainfile(
                 "/etc/portage/make.conf",
-                render_make_conf(self.make_conf())?,
+                render_make_conf(self.make_conf()?)?,
             ),
             FileOps::plainfile(
                 "/etc/portage/profile/make.defaults",
-                render_make_conf(self.make_default())?,
+                render_make_conf(self.make_default()?)?,
             ),
             // TODO: We don't actually need to tell portage what the leaf
             // profile is. The only reason we need it right now is to handle
@@ -190,6 +271,8 @@ mod tests {
         let repo = Repository::new_for_testing("test", temp_dir);
         let repos = RepositorySet::new_for_testing(&[repo]);
 
+        let sysroot = "/build/amd64-host";
+
         let config = ConfigBundle::from_sources([SimpleConfigSource::new(vec![ConfigNode {
             sources: vec![PathBuf::from("<fake>")],
             value: ConfigNodeValue::Vars(HashMap::from_iter([
@@ -204,15 +287,17 @@ mod tests {
                 ("USE_EXPAND".into(), "ELIBC PYTHON_TARGETS".into()),
                 ("USE_EXPAND_VALUES_ARCH".into(), "alpha amd64 amd64-fbsd amd64-linux arm arm-linux arm64".into()),
                 ("USE_EXPAND_VALUES_ELIBC".into(), "FreeBSD glibc musl".into()),
+                ("ROOT".into(), sysroot.into()),
+                ("PKG_CONFIG".into(), format!("{sysroot}/build/bin/pkg-config")),
             ])),
         }])]);
 
         let profile = "base";
 
-        let compiler = ProfileCompiler::new(profile, &repos, &config);
+        let mut compiler = ProfileCompiler::new(profile, &repos, &config, Path::new(sysroot));
 
         assert_eq!(
-            compiler.make_default(),
+            compiler.make_default()?,
             vec![
                 ("ARCH", "amd64"),
                 ("ELIBC", "glibc"),
@@ -229,7 +314,45 @@ mod tests {
         );
 
         assert_eq!(
-            compiler.make_conf(),
+            compiler.make_conf()?,
+            vec![
+                ("ACCEPT_KEYWORDS", "amd64"),
+                ("CHOST", "x86_64-pc-linux-gnu"),
+                ("CONFIG_PROTECT", ""),
+                ("CONFIG_PROTECT_MASK", ""),
+                ("FEATURES", ""),
+                ("PKG_CONFIG", &format!("{sysroot}/build/bin/pkg-config")),
+                ("PORTDIR", &repos.primary().base_dir().to_string_lossy()),
+                ("ROOT", sysroot),
+            ]
+        );
+
+        assert_eq!(
+            compiler.make_conf_lite(),
+            vec![("ARCH", "amd64"), ("CHOST", "x86_64-pc-linux-gnu"),]
+        );
+
+        compiler = compiler.strip_sysroot(true);
+
+        assert_eq!(
+            compiler.make_default()?,
+            vec![
+                ("ARCH", "amd64"),
+                ("ELIBC", "glibc"),
+                ("IUSE_IMPLICIT", ""),
+                ("PROFILE_ONLY_VARIABLES", "ARCH ELIBC IUSE_IMPLICIT USE_EXPAND_IMPLICIT USE_EXPAND_UNPREFIXED USE_EXPAND_VALUES_ARCH USE_EXPAND_VALUES_ELIBC"),
+                ("PYTHON_TARGETS", "python3_6"),
+                ("USE_EXPAND", "ELIBC PYTHON_TARGETS"),
+                ("USE_EXPAND_HIDDEN", ""),
+                ("USE_EXPAND_IMPLICIT", "ARCH"),
+                ("USE_EXPAND_UNPREFIXED", "ARCH"),
+                ("USE_EXPAND_VALUES_ARCH", "alpha amd64 amd64-fbsd amd64-linux arm arm-linux arm64"),
+                ("USE_EXPAND_VALUES_ELIBC", "FreeBSD glibc musl")
+            ]
+        );
+
+        assert_eq!(
+            compiler.make_conf()?,
             vec![
                 ("ACCEPT_KEYWORDS", "amd64"),
                 ("CHOST", "x86_64-pc-linux-gnu"),
@@ -238,11 +361,6 @@ mod tests {
                 ("FEATURES", ""),
                 ("PORTDIR", &repos.primary().base_dir().to_string_lossy()),
             ]
-        );
-
-        assert_eq!(
-            compiler.make_conf_lite(),
-            vec![("ARCH", "amd64"), ("CHOST", "x86_64-pc-linux-gnu"),]
         );
 
         Ok(())

@@ -198,6 +198,7 @@ fn setup_tools() -> Result<TempDir> {
 
 /// Container that contains all the data structures for a specific board.
 pub struct TargetData {
+    pub sysroot: PathBuf,
     pub board: String,
     pub profile: String,
     pub repos: Arc<RepositorySet>,
@@ -245,6 +246,7 @@ fn load_board(
     let toolchains = load_toolchains(&repos)?;
 
     Ok(TargetData {
+        sysroot: root_dir.into(),
         board: board.to_string(),
         profile: profile_name.to_string(),
         repos,
