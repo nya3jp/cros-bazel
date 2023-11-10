@@ -24,6 +24,19 @@ pkg_tar(
     visibility = ["@//bazel:internal"],
 )
 pkg_tar(
+    name = "lite",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    files = {
+        "lite.make.conf": "/etc/portage/make.conf",
+        "lite.make.defaults": "/etc/portage/make.profile/make.defaults",
+    },
+    symlinks = {
+    },
+    visibility = ["@//bazel:internal"],
+)
+pkg_tar(
     name = "full",
     extension = "tar.zst",
     compressor = "@//bazel/portage/repo_defs/zstd",

@@ -140,6 +140,36 @@ impl<'a> ProfileCompiler<'a> {
 
         Ok(files)
     }
+
+    /// Returns the env keys and values that make up the compiled profile's
+    /// make.conf.
+    fn make_conf_lite(&self) -> Vec<(&str, &str)> {
+        let allowed_vars = HashSet::from(["ARCH", "CHOST"]);
+
+        self.config
+            .env()
+            .iter()
+            .filter(|(key, _val)| allowed_vars.contains(key.as_str()))
+            .sorted_by_key(|(key, _val)| *key)
+            .map(|(key, val)| (key.as_str(), val.as_str()))
+            .collect()
+    }
+
+    /// Generates a lite portage config.
+    ///
+    /// When doing a cross-root build, the host config doesn't actually come
+    /// into play, so we generate a very simple config to appease portage.
+    pub fn generate_lite_portage_config(&self) -> Result<Vec<FileOps>> {
+        let files = vec![
+            FileOps::plainfile(
+                "/etc/portage/make.conf",
+                render_make_conf(self.make_conf_lite())?,
+            ),
+            FileOps::plainfile("/etc/portage/make.profile/make.defaults", ""),
+        ];
+
+        Ok(files)
+    }
 }
 
 #[cfg(test)]
@@ -164,6 +194,7 @@ mod tests {
             sources: vec![PathBuf::from("<fake>")],
             value: ConfigNodeValue::Vars(HashMap::from_iter([
                 ("ARCH".into(), "amd64".into()),
+                ("CHOST".into(), "x86_64-pc-linux-gnu".into()),
                 ("ELIBC".into(), "glibc".into()),
                 ("PORTDIR".into(), repos.primary().base_dir().to_string_lossy().into()),
                 ("ACCEPT_KEYWORDS".into(), "amd64".into()),
@@ -201,11 +232,17 @@ mod tests {
             compiler.make_conf(),
             vec![
                 ("ACCEPT_KEYWORDS", "amd64"),
+                ("CHOST", "x86_64-pc-linux-gnu"),
                 ("CONFIG_PROTECT", ""),
                 ("CONFIG_PROTECT_MASK", ""),
                 ("FEATURES", ""),
                 ("PORTDIR", &repos.primary().base_dir().to_string_lossy()),
             ]
+        );
+
+        assert_eq!(
+            compiler.make_conf_lite(),
+            vec![("ARCH", "amd64"), ("CHOST", "x86_64-pc-linux-gnu"),]
         );
 
         Ok(())

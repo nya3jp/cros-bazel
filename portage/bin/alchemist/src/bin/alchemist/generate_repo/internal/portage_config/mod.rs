@@ -137,10 +137,18 @@ pub fn generate_host_portage_config(host: &TargetData, out: &Path) -> Result<()>
 
     let sysroot = Path::new("/");
 
+    let compiler = ProfileCompiler::new(&host.profile, &host.repos, &host.config);
+
     let configs = vec![
         // This is the original profile that will be replaced by a "lite" profile.
         // None of the settings are used when cross-root compiling.
         file_ops_to_context("orig", sysroot, host_config_file_ops(None), &out)?,
+        file_ops_to_context(
+            "lite",
+            sysroot,
+            compiler.generate_lite_portage_config()?,
+            &out,
+        )?,
         file_ops_to_context(
             "full",
             sysroot,
