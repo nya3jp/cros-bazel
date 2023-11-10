@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 pub mod bundle;
+pub mod compiler;
 pub mod makeconf;
 pub mod miscconf;
 pub mod profile;

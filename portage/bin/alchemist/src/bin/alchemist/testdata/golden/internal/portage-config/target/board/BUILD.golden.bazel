@@ -23,3 +23,17 @@ pkg_tar(
     },
     visibility = ["@//bazel:internal"],
 )
+pkg_tar(
+    name = "board",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    files = {
+        "board.make.conf": "/build/amd64-generic/etc/portage/make.conf",
+        "board.make.defaults": "/build/amd64-generic/etc/portage/profile/make.defaults",
+    },
+    symlinks = {
+            "/build/amd64-generic/etc/portage/make.profile": "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base",
+    },
+    visibility = ["@//bazel:internal"],
+)

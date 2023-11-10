@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use alchemist::{
+    config::compiler::ProfileCompiler,
     fakechroot::{host_config_file_ops, target_config_file_ops, target_host_config_file_ops},
     fileops::FileOps,
     path::join_absolute,
@@ -159,12 +160,17 @@ pub fn generate_target_host_portage_config(host: &TargetData, out: &Path) -> Res
 
     let sysroot = Path::new("/build").join(&host.board);
 
-    let configs = vec![file_ops_to_context(
-        "full",
-        &sysroot,
-        target_host_config_file_ops(&host.board, &host.profile, &host.repos, &host.toolchains)?,
-        &out,
-    )?];
+    let compiler = ProfileCompiler::new(&host.profile, &host.repos, &host.config);
+
+    let configs = vec![
+        file_ops_to_context(
+            "full",
+            &sysroot,
+            target_host_config_file_ops(&host.board, &host.profile, &host.repos, &host.toolchains)?,
+            &out,
+        )?,
+        file_ops_to_context("host", &sysroot, compiler.generate_portage_config()?, &out)?,
+    ];
 
     generate_build_file(configs, &out)
 }
@@ -173,22 +179,29 @@ pub fn generate_target_host_portage_config(host: &TargetData, out: &Path) -> Res
 pub fn generate_target_portage_config(target: &TargetData, prefix: &str, out: &Path) -> Result<()> {
     let out = out.join(prefix);
 
+    let name = prefix.split('/').last().expect("valid prefix");
+
     create_dir_all(&out).with_context(|| format!("mkdir -p {out:?}"))?;
 
     let sysroot = Path::new("/build").join(&target.board);
 
-    let configs = vec![file_ops_to_context(
-        "full",
-        &sysroot,
-        target_config_file_ops(
-            &target.board,
-            &target.profile,
-            &target.repos,
-            &target.toolchains,
-            false,
+    let compiler = ProfileCompiler::new(&target.profile, &target.repos, &target.config);
+
+    let configs = vec![
+        file_ops_to_context(
+            "full",
+            &sysroot,
+            target_config_file_ops(
+                &target.board,
+                &target.profile,
+                &target.repos,
+                &target.toolchains,
+                false,
+            )?,
+            &out,
         )?,
-        &out,
-    )?];
+        file_ops_to_context(name, &sysroot, compiler.generate_portage_config()?, &out)?,
+    ];
 
     generate_build_file(configs, &out)
 }

@@ -215,6 +215,19 @@ pub fn generate_make_conf_for_board(
     Ok(ops)
 }
 
+/// Renders a make.conf type file using the provided key/value pairs.
+pub fn render_make_conf<'a>(vars: impl IntoIterator<Item = (&'a str, &'a str)>) -> Result<String> {
+    let context = MakeConfContext {
+        sources: vec![],
+        vars: vars
+            .into_iter()
+            .map(|(k, v)| MakeVar::from((k, v)))
+            .collect(),
+    };
+
+    Ok(TEMPLATES.render("make.conf", &tera::Context::from_serialize(context)?)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
