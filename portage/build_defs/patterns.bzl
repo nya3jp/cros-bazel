@@ -6,10 +6,15 @@
 # these when building a package since alchemist has performed the analysis.
 OVERLAY_ANALYSIS_FILE_PATTERN = [
     "profiles/**/package.accept_keywords",
+    "profiles/**/package.accept_keywords/**",
     "profiles/**/package.keywords",
+    "profiles/**/package.keywords/**",
     "profiles/**/package.mask",
+    "profiles/**/package.mask/**",
     "profiles/**/package.provided",
+    "profiles/**/package.provided/**",
     "profiles/**/package.unmask",
+    "profiles/**/package.unmask/**",
 ]
 
 # Compliments the above OVERLAY_ANALYSIS_FILE_PATTERN and lists all additional
@@ -42,4 +47,5 @@ NON_BUILD_FILE_PATTERNS = [
 # These files don't serve a purpose inside the container.
 OVERLAY_EXCLUDE = NON_BUILD_FILE_PATTERNS + [
     "profiles/**/*.desc",
+    "profiles/**/package.use.mask.example",
 ]
