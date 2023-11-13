@@ -125,6 +125,14 @@ def _cros_chrome_repository_impl(ctx):
     # Remove CIPD cache files to make this hermetic.
     ctx.delete("src/third_party/depot_tools/.cipd_bin/.cipd")
 
+    # Remove depot_tools/metrics.cfg because its contents can be different for
+    # each user and it's unecessary.
+    ctx.delete("src/third_party/depot_tools/metrics.cfg")
+
+    # Remove reclient_cfgs/reproxy.cfg because its contents contains a full path
+    # and it's unnecessary.
+    ctx.delete("src/buildtools/reclient_cfgs/reproxy.cfg")
+
     # We use zstd since it's way faster than gzip and should be installed by
     # default on most distributions. Hopefully the compression algorithm doesn't
     # change between hosts, otherwise the output won't be hermetic.
