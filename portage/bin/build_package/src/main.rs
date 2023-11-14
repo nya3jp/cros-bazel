@@ -6,6 +6,8 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use clap::{command, Parser};
 use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
+use std::format;
+use std::io::Write;
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
@@ -51,6 +53,9 @@ struct Cli {
         value_delimiter = ','
     )]
     use_flags: Vec<String>,
+
+    #[arg(long, help = "The bashrc files to execute. The path must be absolute.")]
+    bashrc: Vec<PathBuf>,
 
     #[arg(
         long,
@@ -175,6 +180,32 @@ fn write_use_flags(
 
     std::fs::write(&package_use_path, content)
         .with_context(|| format!("Error creating {package_use_path:?}"))?;
+
+    Ok(())
+}
+
+/// Writes a profile.bashrc for the specific package. It uses `source` to
+/// execute the files so that when the script is executed `${BASH_SOURCE[0]}`
+/// reports the correct path.
+fn write_profile_bashrc(sysroot: &Path, bashrcs: &Vec<PathBuf>) -> Result<()> {
+    if bashrcs.is_empty() {
+        return Ok(());
+    }
+
+    let profile_path = sysroot.join("etc").join("portage").join("profile");
+    std::fs::create_dir_all(&profile_path)?;
+
+    let profile_bashrc = profile_path.join("profile.bashrc");
+    let mut out =
+        File::create(&profile_bashrc).with_context(|| format!("file {profile_bashrc:?}"))?;
+
+    for bashrc in bashrcs {
+        let bashrc = bashrc
+            .to_str()
+            .with_context(|| format!("Path conversion failed: {bashrc:?}"))?;
+
+        writeln!(out, "source '{}' || exit 1", bashrc.replace('\'', "'\\''"))?;
+    }
 
     Ok(())
 }
@@ -359,6 +390,7 @@ fn do_main() -> Result<()> {
     }
 
     write_use_flags(&sysroot, &args.ebuild, &args.use_flags)?;
+    write_profile_bashrc(&sysroot, &args.bashrc)?;
 
     let mut command = container.command(MAIN_SCRIPT);
     command

@@ -158,6 +158,11 @@ _EBUILD_COMMON_ATTRS = dict(
         """,
         mandatory = True,
     ),
+    bashrcs = attr.string_list(
+        doc = """
+        The bashrc files to execute for the package.
+        """,
+    ),
     _action_wrapper = attr.label(
         executable = True,
         cfg = "exec",
@@ -299,6 +304,8 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # --goma-info
     # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
     args.add("--goma-info=%s" % ctx.file._goma_info.path)
+
+    args.add_all(ctx.attr.bashrcs, before_each = "--bashrc")
 
     # Consume interface libraries.
     interface_library_inputs = add_interface_library_args(
