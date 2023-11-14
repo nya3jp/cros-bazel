@@ -403,6 +403,27 @@ impl ConfigBundle {
             .collect()
     }
 
+    /// Returns the bashrc files that need to be executed with the package.
+    pub fn package_bashrcs(&self, package: &ThinPackageRef) -> Vec<PathBuf> {
+        let mut paths = vec![];
+
+        for node in &self.nodes {
+            match &node.value {
+                ConfigNodeValue::ProfileBashrc(bashrcs) => paths.extend(bashrcs.iter().cloned()),
+                ConfigNodeValue::PackageBashrcs(bashrcs) => paths.extend(
+                    bashrcs
+                        .iter()
+                        .filter(|bashrc| bashrc.atom.matches(package))
+                        .flat_map(|bashrc| &bashrc.paths)
+                        .cloned(),
+                ),
+                _ => continue,
+            }
+        }
+
+        paths
+    }
+
     /// Computes the effective IUSE of a package, which includes IUSE explicitly
     /// defined in ebuild/eclass and profile-injected IUSE.
     ///
@@ -649,7 +670,9 @@ mod tests {
     use lazy_static::lazy_static;
 
     use crate::{
-        config::{AcceptKeywordsUpdate, SimpleConfigSource, UseUpdate, UseUpdateFilter},
+        config::{
+            AcceptKeywordsUpdate, PackageBashrc, SimpleConfigSource, UseUpdate, UseUpdateFilter,
+        },
         dependency::package::PackageAtom,
     };
 
@@ -1041,6 +1064,66 @@ mod tests {
         assert_eq!(
             features,
             "buildpkg clean-logs -collision-protect collision-protect -news",
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_bashrc() -> Result<()> {
+        let bundle = ConfigBundle::from_sources(vec![SimpleConfigSource::new(vec![
+            ConfigNode {
+                sources: vec![
+                    PathBuf::from("foo/profile.bashrc/a.sh"),
+                    PathBuf::from("foo/profile.bashrc/b.sh"),
+                ],
+                value: ConfigNodeValue::ProfileBashrc(vec![
+                    PathBuf::from("foo/profile.bashrc/a.sh"),
+                    PathBuf::from("foo/profile.bashrc/b.sh"),
+                ]),
+            },
+            ConfigNode {
+                sources: vec![PathBuf::from("foo/package.bashrc/bar")],
+                value: ConfigNodeValue::PackageBashrcs(vec![
+                    PackageBashrc {
+                        atom: ">=sys-lib/test-1".parse()?,
+                        paths: vec![
+                            PathBuf::from("foo/bashrc/test.sh"),
+                            PathBuf::from("foo/bashrc/another.sh"),
+                        ],
+                    },
+                    PackageBashrc {
+                        atom: "sys-lib/none".parse()?,
+                        paths: vec![PathBuf::from("foo/bashrc/other.sh")],
+                    },
+                ]),
+            },
+            ConfigNode {
+                sources: vec![PathBuf::from("bar/profile.bashrc/c.sh")],
+                value: ConfigNodeValue::ProfileBashrc(vec![PathBuf::from(
+                    "bar/profile.bashrc/c.sh",
+                )]),
+            },
+        ])]);
+
+        let bashrcs = bundle.package_bashrcs(&ThinPackageRef {
+            package_name: "sys-lib/test",
+            version: &"1".parse()?,
+            slot: Slot {
+                main: "0",
+                sub: "0",
+            },
+        });
+
+        assert_eq!(
+            bashrcs.iter().map(|a| a.as_path()).collect::<Vec<_>>(),
+            vec![
+                Path::new("foo/profile.bashrc/a.sh"),
+                Path::new("foo/profile.bashrc/b.sh"),
+                Path::new("foo/bashrc/test.sh"),
+                Path::new("foo/bashrc/another.sh"),
+                Path::new("bar/profile.bashrc/c.sh",),
+            ],
         );
 
         Ok(())

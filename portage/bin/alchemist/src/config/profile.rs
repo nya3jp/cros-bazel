@@ -10,8 +10,9 @@ use crate::{
     config::{
         makeconf::MakeConf,
         miscconf::{
-            accept_keywords::load_accept_keywords_configs, mask::load_package_configs,
-            provided::load_provided_packages_config, useflags::load_use_configs,
+            accept_keywords::load_accept_keywords_configs, bashrc::load_bashrc,
+            mask::load_package_configs, provided::load_provided_packages_config,
+            useflags::load_use_configs,
         },
         ConfigNode, ConfigSource,
     },
@@ -58,6 +59,7 @@ impl Profile {
             load_accept_keywords_configs(dir).with_context(context)?,
             load_use_configs(dir).with_context(context)?,
             load_provided_packages_config(dir).with_context(context)?,
+            load_bashrc(dir).with_context(context)?,
         ]
         .concat();
 

@@ -73,6 +73,7 @@ pub struct EBuildEntry {
     uses: Vec<String>,
     sdk: String,
     direct_build_target: Option<String>,
+    bashrcs: Vec<PathBuf>,
 }
 
 /// Specifies the config used to generate host packages.
@@ -416,6 +417,8 @@ impl EBuildEntry {
             package.details.as_basic_data().repo_name
         );
 
+        let bashrcs = package.bashrcs.to_vec();
+
         Ok(Self {
             ebuild_name,
             basename,
@@ -441,6 +444,7 @@ impl EBuildEntry {
             uses,
             sdk,
             direct_build_target: package.details.direct_build_target.clone(),
+            bashrcs,
         })
     }
 }

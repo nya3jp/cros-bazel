@@ -107,6 +107,13 @@ pub struct ProvidedPackage {
     pub version: Version,
 }
 
+/// Defines the bashrc file that needs to be executed for the matching atom.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PackageBashrc {
+    pub atom: PackageAtom,
+    pub paths: Vec<PathBuf>,
+}
+
 /// Configurations provided by a [`ConfigNode`].
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ConfigNodeValue {
@@ -122,6 +129,10 @@ pub enum ConfigNodeValue {
     PackageMasks(Vec<PackageMaskUpdate>),
     /// Updates provided packages.
     ProvidedPackages(Vec<ProvidedPackage>),
+    /// The profile.bashrc files.
+    ProfileBashrc(Vec<PathBuf>),
+    /// The bashrcs to execute for each package.
+    PackageBashrcs(Vec<PackageBashrc>),
 }
 
 /// Represents a node in Portage configurations.

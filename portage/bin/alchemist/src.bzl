@@ -534,6 +534,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/config/makeconf/mod.rs",
     "//bazel/portage/bin/alchemist:src/config/makeconf/parser.rs",
     "//bazel/portage/bin/alchemist:src/config/miscconf/accept_keywords.rs",
+    "//bazel/portage/bin/alchemist:src/config/miscconf/bashrc.rs",
     "//bazel/portage/bin/alchemist:src/config/miscconf/mask.rs",
     "//bazel/portage/bin/alchemist:src/config/miscconf/mod.rs",
     "//bazel/portage/bin/alchemist:src/config/miscconf/provided.rs",

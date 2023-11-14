@@ -56,6 +56,13 @@ pub struct Package {
     /// Could add the concept of an IDEPEND to bazel, but it would make the
     /// `sdk_install_deps` rule very complicated and harder to understand.
     pub build_host_deps: Vec<Arc<PackageDetails>>,
+
+    /// The bashrc files that need to be executed for the package.
+    ///
+    /// This list contains relevant profile.bashrc and the package specific
+    /// bashrc files defined by package.bashrc. They are ordered in the sequence
+    /// that they should be executed.
+    pub bashrcs: Vec<PathBuf>,
 }
 
 #[allow(dead_code)]
@@ -377,12 +384,15 @@ pub fn analyze_packages(
                 let build_host_deps = build_host_deps_by_path
                     .remove(partial.details.as_basic_data().ebuild_path.as_path())
                     .unwrap();
+                let bashrcs = config.package_bashrcs(&partial.details.as_thin_package_ref());
+
                 MaybePackage::Ok(Arc::new(Package {
                     details: partial.details,
                     dependencies: partial.dependencies,
                     install_set,
                     sources: partial.sources,
                     build_host_deps,
+                    bashrcs,
                 }))
             }
             MaybePackagePartial::Err(err) => MaybePackage::Err(err),

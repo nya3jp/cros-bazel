@@ -233,6 +233,7 @@ mod tests {
                 sources: cipd_sources,
                 install_set: vec![],
                 build_host_deps: vec![],
+                bashrcs: vec![],
             },
             Package {
                 details: details2.into(),
@@ -240,6 +241,7 @@ mod tests {
                 sources: gs_sources,
                 install_set: vec![],
                 build_host_deps: vec![],
+                bashrcs: vec![],
             },
             Package {
                 details: details3.into(),
@@ -247,6 +249,7 @@ mod tests {
                 sources: https_sources,
                 install_set: vec![],
                 build_host_deps: vec![],
+                bashrcs: vec![],
             },
         ];
 

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 pub mod accept_keywords;
+pub mod bashrc;
 pub mod mask;
 pub mod provided;
 pub mod useflags;
