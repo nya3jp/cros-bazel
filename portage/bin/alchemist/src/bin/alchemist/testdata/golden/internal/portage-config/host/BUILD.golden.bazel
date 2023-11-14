@@ -43,10 +43,9 @@ pkg_tar(
     compressor_args = "--threads=0",
     files = {
         "host.make.conf": "/etc/portage/make.conf",
-        "host.make.defaults": "/etc/portage/profile/make.defaults",
+        "host.make.defaults": "/etc/portage/make.profile/make.defaults",
     },
     symlinks = {
-            "/etc/portage/make.profile": "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap",
     },
     visibility = ["@//bazel:internal"],
 )

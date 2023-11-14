@@ -99,6 +99,14 @@ ebuild(
             "//internal/portage-config/host:full",
         ],
     }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
     incremental_cache_marker = select({
         ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
         "//conditions:default": None,
@@ -168,6 +176,14 @@ ebuild_debug(
         "@//bazel/portage:compiled-profiles-disabled": [
             "//internal/portage-config/host:full",
         ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
     }),
     incremental_cache_marker = select({
         ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
@@ -248,6 +264,14 @@ ebuild(
             "//internal/portage-config/host:full",
         ],
     }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
     incremental_cache_marker = select({
         ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -314,6 +338,14 @@ ebuild_debug(
         "@//bazel/portage:compiled-profiles-disabled": [
             "//internal/portage-config/host:full",
         ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
     }),
     incremental_cache_marker = select({
         ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
@@ -500,6 +532,14 @@ ebuild_test(
         "@//bazel/portage:compiled-profiles-disabled": [
             "//internal/portage-config/host:full",
         ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
     }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],

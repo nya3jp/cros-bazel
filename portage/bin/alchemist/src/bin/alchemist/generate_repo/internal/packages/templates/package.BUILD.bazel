@@ -119,6 +119,16 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         {%- endif %}
     }),
     {%- endif -%}
+    {%- if not full_config %}
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+        {%- for bashrc in ebuild.bashrcs %}
+            "{{ bashrc }}",
+        {%- endfor %}
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
+    {%- endif %}
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
     allow_network_access = True,

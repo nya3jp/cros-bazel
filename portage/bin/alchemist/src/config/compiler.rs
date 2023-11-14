@@ -4,17 +4,15 @@
 
 use crate::{
     config::bundle::ConfigBundle, config::makeconf::generate::render_make_conf, fileops::FileOps,
-    repository::RepositorySet,
 };
 use anyhow::{bail, Result};
 use itertools::Itertools;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::{collections::HashSet, iter};
 
 #[derive(Debug)]
 pub struct ProfileCompiler<'a> {
     config: &'a ConfigBundle,
-    profile_path: PathBuf,
 
     /// The names of all the USE_EXPAND variables. i.e. PYTHON_TARGETS
     use_expand_keys: HashSet<&'a str>,
@@ -54,12 +52,7 @@ const TARGET_HOST_TO_HOST_VARIABLES: &[(&str, Option<&str>); 5] = &[
 ];
 
 impl<'a> ProfileCompiler<'a> {
-    pub fn new(
-        profile: &str,
-        repos: &RepositorySet,
-        config: &'a ConfigBundle,
-        sysroot: &'a Path,
-    ) -> Self {
+    pub fn new(config: &'a ConfigBundle, sysroot: &'a Path) -> Self {
         let env = config.env();
 
         let use_expand = env.get("USE_EXPAND").map(|s| s.as_str()).unwrap_or("");
@@ -84,8 +77,6 @@ impl<'a> ProfileCompiler<'a> {
 
         ProfileCompiler {
             config,
-            // TODO: Refactor this so it's part of the ConfigBundle.
-            profile_path: repos.primary().profiles_dir().join(profile),
             use_expand_keys,
             profile_only_variables,
             sysroot,
@@ -206,17 +197,9 @@ impl<'a> ProfileCompiler<'a> {
                 render_make_conf(self.make_conf()?)?,
             ),
             FileOps::plainfile(
-                "/etc/portage/profile/make.defaults",
+                "/etc/portage/make.profile/make.defaults",
                 render_make_conf(self.make_default()?)?,
             ),
-            // TODO: We don't actually need to tell portage what the leaf
-            // profile is. The only reason we need it right now is to handle
-            // the profile.bashrc case. We could either search the parents, find
-            // the ones that contain profile.bashrc and generate a synthetic
-            // profile listing them as parents. Or we can just concatenate
-            // the profile.bashrc scripts and place them in
-            // /etc/portage/profile/profile.bashrc.
-            FileOps::symlink("/etc/portage/make.profile", &self.profile_path),
         ];
 
         Ok(files)
@@ -260,7 +243,9 @@ mod tests {
     use crate::config::ConfigNodeValue;
     use crate::config::SimpleConfigSource;
     use crate::repository::Repository;
+    use crate::repository::RepositorySet;
     use nom::lib::std::collections::HashMap;
+    use std::path::PathBuf;
     use tempfile::TempDir;
 
     #[test]
@@ -292,9 +277,7 @@ mod tests {
             ])),
         }])]);
 
-        let profile = "base";
-
-        let mut compiler = ProfileCompiler::new(profile, &repos, &config, Path::new(sysroot));
+        let mut compiler = ProfileCompiler::new(&config, Path::new(sysroot));
 
         assert_eq!(
             compiler.make_default()?,

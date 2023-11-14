@@ -103,6 +103,13 @@ ebuild(
             "//internal/portage-config/target/board:full",
         ],
     }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
         "//conditions:default": None,
@@ -176,6 +183,13 @@ ebuild_debug(
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/board:full",
         ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
     }),
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
@@ -260,6 +274,13 @@ ebuild(
             "//internal/portage-config/target/board:full",
         ],
     }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -330,6 +351,13 @@ ebuild_debug(
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/board:full",
         ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
     }),
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
@@ -546,6 +574,13 @@ ebuild_test(
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/board:full",
         ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
     }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
