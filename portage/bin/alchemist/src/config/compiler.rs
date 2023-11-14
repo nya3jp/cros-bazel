@@ -47,9 +47,9 @@ const IGNORED_VARIABLES: &[&str; 3] = &[
 // A None means to omit the value, a Some means to use this value instead.
 const TARGET_HOST_TO_HOST_VARIABLES: &[(&str, Option<&str>); 5] = &[
     ("PKG_CONFIG", None),
-    ("PKGDIR", None),
-    ("PORT_LOGDIR", None),
-    ("PORTAGE_TMPDIR", None),
+    ("PKGDIR", Some("/var/lib/portage/pkgs")),
+    ("PORT_LOGDIR", Some("/var/log/portage")),
+    ("PORTAGE_TMPDIR", Some("/var/tmp")),
     ("ROOT", None),
 ];
 
