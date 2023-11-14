@@ -95,10 +95,9 @@ fn clean_root(root_dir: &Path) -> Result<()> {
     // python interpreter will regenerate the bytecode cache. This bytecode file
     // has the timestamp of the source file embedded. Once we stop monkey patching
     // portage and get the changes bundled in the SDK we can delete the following.
-    for file in find_files(
-        &root_dir.join("usr/lib64/python3.6/site-packages"),
-        |file_name| file_name.ends_with(".pyc"),
-    )? {
+    for file in find_files(&root_dir.join("usr/lib64"), |file_name| {
+        file_name.ends_with(".pyc")
+    })? {
         fileutil::remove_file_with_chmod(&file)?;
     }
 
@@ -168,6 +167,7 @@ mod tests {
             "build/foo/stage",
             "build/foo/tmp",
             "build/foo/usr/lib64/python3.6/site-packages",
+            "build/foo/usr/lib64/python3.8/site-packages",
             "build/foo/var/cache",
             "build/foo/var/lib/portage/pkgs",
             "build/foo/var/log",
@@ -190,6 +190,7 @@ mod tests {
             "usr/bin",
             "var/lib/keep",
             "usr/lib64/python3.6/site-packages",
+            "usr/lib64/python3.8/site-packages",
             "var/mail",
         ] {
             std::fs::create_dir_all(output_dir.join(subdir))?;
@@ -216,6 +217,8 @@ mod tests {
                 PathBuf::from("build/foo/usr/lib64"),
                 PathBuf::from("build/foo/usr/lib64/python3.6"),
                 PathBuf::from("build/foo/usr/lib64/python3.6/site-packages"),
+                PathBuf::from("build/foo/usr/lib64/python3.8"),
+                PathBuf::from("build/foo/usr/lib64/python3.8/site-packages"),
                 PathBuf::from("build/foo/var"),
                 PathBuf::from("build/foo/var/mail"),
                 PathBuf::from("opt"),
@@ -225,6 +228,8 @@ mod tests {
                 PathBuf::from("usr/lib64"),
                 PathBuf::from("usr/lib64/python3.6"),
                 PathBuf::from("usr/lib64/python3.6/site-packages"),
+                PathBuf::from("usr/lib64/python3.8"),
+                PathBuf::from("usr/lib64/python3.8/site-packages"),
                 PathBuf::from("var"),
                 PathBuf::from("var/lib"),
                 PathBuf::from("var/lib/keep"),
