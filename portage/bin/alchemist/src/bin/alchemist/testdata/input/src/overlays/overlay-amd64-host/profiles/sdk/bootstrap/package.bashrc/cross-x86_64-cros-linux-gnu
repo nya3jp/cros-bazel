@@ -1,0 +1,3 @@
+# Copyright 2023 The ChromiumOS Authors
+
+cross-x86_64-cros-linux-gnu/glibc cross-x86_64-cros-linux-gnu/glibc.sh
