@@ -1,0 +1,5 @@
+import %workspace%/bazel/bazelrcs/ramdisk.bazelrc
+import %workspace%/bazel/bazelrcs/remote_build_artifacts.bazelrc
+
+test --test_output=all
+build --build_option
