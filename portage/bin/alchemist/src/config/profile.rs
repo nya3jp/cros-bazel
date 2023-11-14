@@ -16,6 +16,7 @@ use crate::{
         ConfigNode, ConfigSource,
     },
     data::Vars,
+    path::clean_path,
     repository::RepositorySet,
 };
 
@@ -42,7 +43,7 @@ impl Profile {
                     let parent_repo = repos.get_repo_by_name(repo_name)?;
                     parent_repo.profiles_dir().join(rel_path)
                 } else {
-                    dir.join(&parent_key)
+                    clean_path(&dir.join(&parent_key))?
                 };
                 let profile = Self::load(&parent_dir, repos)?;
                 Ok(profile)
