@@ -434,7 +434,7 @@ mod tests {
     #[link_section = ".init_array"]
     static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
 
-    const TESTDATA_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/src/bin/alchemist/testdata");
+    const TESTDATA_DIR: &str = "bazel/portage/bin/alchemist/src/bin/alchemist/testdata";
 
     #[test]
     fn main_test() -> Result<()> {
@@ -443,8 +443,10 @@ mod tests {
         let output_dir = temp.join("portage-repo");
         let deps_file = temp.join("output_repos.json");
 
-        let testdata_dir = Path::new(TESTDATA_DIR);
-        let input_dir = testdata_dir.join("input").to_str().unwrap().to_owned();
+        let input_dir = testutil::rename_bazel_input_testdata(
+            &testutil::runfiles_root()?.join(TESTDATA_DIR).join("input"),
+        )?;
+        let input_dir = input_dir.path().to_str().unwrap().to_owned();
 
         let args = Args {
             board: Some("amd64-generic".into()),
@@ -465,8 +467,7 @@ mod tests {
         // trace.json changes every time we run.
         remove_file(output_dir.join("trace.json"))?;
 
-        let golden_dir = testdata_dir.join("golden");
-        compare_with_golden_data(&output_dir, &golden_dir)?;
+        compare_with_golden_data(&output_dir, &Path::new(TESTDATA_DIR).join("golden"))?;
 
         Ok(())
     }

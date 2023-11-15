@@ -635,10 +635,8 @@ mod tests {
         )));
     }
 
-    const TESTDATA_DIR: &str = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/src/bin/alchemist/generate_repo/internal/sources/testdata"
-    );
+    const TESTDATA_DIR: &str =
+        "bazel/portage/bin/alchemist/src/bin/alchemist/generate_repo/internal/sources/testdata";
 
     /// Tests [`generate_internal_sources`] with scenarios found in `testdata`
     /// directory.
@@ -655,7 +653,7 @@ mod tests {
     /// `ALCHEMY_REGENERATE_GOLDEN=1 cargo test`
     #[test]
     fn test_generate_internal_sources_with_golden_data() -> Result<()> {
-        let testdata_dir = Path::new(TESTDATA_DIR);
+        let testdata_dir = testutil::runfiles_root()?.join(TESTDATA_DIR);
 
         for entry in testdata_dir.read_dir()? {
             let entry = entry?;
@@ -667,7 +665,10 @@ mod tests {
             let case_dir = entry.path();
             let case_input_path = case_dir.join("sources.json");
             let case_source_dir = testutil::rename_bazel_input_testdata(&case_dir.join("source"))?;
-            let case_golden_dir = case_dir.join("golden");
+            // compare_with_golden_data only accepts relative paths.
+            let case_golden_dir = Path::new(TESTDATA_DIR)
+                .join(&entry.file_name())
+                .join("golden");
 
             let local_sources: Vec<PackageLocalSource> = {
                 let file = File::open(&case_input_path)?;

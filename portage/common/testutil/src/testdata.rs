@@ -3,7 +3,44 @@
 // found in the LICENSE file.
 
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+#[cfg(feature = "bazel")]
+pub fn workspace_root() -> Result<PathBuf> {
+    use anyhow::Context;
+    let workspace_dir = PathBuf::from(
+        std::env::var_os("BUILD_WORKSPACE_DIRECTORY")
+            .context("BUILD_WORKSPACE_DIRECTORY is not set; run tests with \"bazel run\"")?,
+    );
+    Ok(workspace_dir)
+}
+
+#[cfg(not(feature = "bazel"))]
+pub fn workspace_root() -> Result<PathBuf> {
+    // The environment variable is $WORKSPACE_ROOT/bazel/portage/common/testutil.
+    let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap();
+    Ok(Path::new(workspace_root).to_path_buf())
+}
+
+#[cfg(feature = "bazel")]
+pub fn runfiles_root() -> Result<PathBuf> {
+    let r = runfiles::Runfiles::create()?;
+    Ok(r.rlocation("cros"))
+}
+
+#[cfg(not(feature = "bazel"))]
+pub fn runfiles_root() -> Result<PathBuf> {
+    // Since cargo doesn't sandbox, this isn't meaningful for cargo.
+    workspace_root()
+}
 
 /// Makes a copy of a directory, with certain files that aren't handled correctly by bazel renamed.
 /// The following translations are performed:

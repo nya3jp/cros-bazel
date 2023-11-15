@@ -45,18 +45,18 @@ rust_binary(
     ],
 )
 
-# TODO(b/309534638): The following compiles but fails at runtime with the error:
-# "Golden path must be relative under Bazel!".
-# This will be fixed in a future CL.
-#rust_test(
-#    name = "alchemist_test",
-#    size = "small",
-#    crate = ":alchemist",
-#    rustc_flags = RUSTC_DEBUG_FLAGS,
-#    deps = [
-#        "//bazel/portage/common/testutil",
-#        "@alchemy_crates//:pretty_assertions",
-#        "@alchemy_crates//:proptest",
-#        "@alchemy_crates//:url",
-#    ],
-#)
+rust_test(
+    name = "alchemist_test",
+    size = "small",
+    crate = ":alchemist",
+    data = glob([
+        "**/testdata/**",
+    ]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "//bazel/portage/common/testutil",
+        "@alchemy_crates//:pretty_assertions",
+        "@alchemy_crates//:proptest",
+        "@alchemy_crates//:url",
+    ],
+)

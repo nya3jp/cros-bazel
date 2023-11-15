@@ -17,6 +17,7 @@ filegroup(
 rust_library(
     name = "testutil",
     srcs = glob(["src/*.rs"]),
+    crate_features = ["bazel"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel/portage:__subpackages__"],
     deps = [
@@ -33,6 +34,7 @@ rust_test(
     name = "testutil_test",
     size = "small",
     crate = ":testutil",
+    crate_features = ["bazel"],
     data = glob(["testdata/**"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [

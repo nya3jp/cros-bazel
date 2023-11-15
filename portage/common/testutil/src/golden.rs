@@ -13,8 +13,8 @@ use anyhow::{bail, ensure, Context, Result};
 /// golden data.
 const REGENERATE_VAR_NAME: &str = "ALCHEMY_REGENERATE_GOLDEN";
 
-fn is_running_under_bazel() -> bool {
-    std::option_env!("CARGO_MAKEFLAGS").is_none()
+fn should_regenerate() -> bool {
+    std::env::var(REGENERATE_VAR_NAME).unwrap_or_default() != ""
 }
 
 // Renames output files as required to ensure that bazel doesn't interpret them as bazel packages.
@@ -29,24 +29,21 @@ fn rename_bazel_special_files(dir: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-fn compute_real_golden_path(golden: &Path, regenerate: bool) -> Result<PathBuf> {
-    if is_running_under_bazel() {
-        ensure!(
-            golden.is_relative(),
-            "Golden path must be relative under Bazel! \
-            See the description of compare_with_golden_data."
-        );
-        if regenerate {
-            // When regenerating under Bazel, we have to write to the real
-            // directory under the workspace tree.
-            let workspace_dir =
-                PathBuf::from(std::env::var_os("BUILD_WORKSPACE_DIRECTORY").context(
-                    "BUILD_WORKSPACE_DIRECTORY is not set; run tests with \"bazel run\"",
-                )?);
-            return Ok(workspace_dir.join(golden));
-        }
+fn compute_real_golden_path(golden: &Path) -> Result<PathBuf> {
+    ensure!(
+        golden.is_relative(),
+        "Golden path must be relative to the workspace root! \
+        See the description of compare_with_golden_data."
+    );
+    Ok(if should_regenerate() {
+        // When regenerating under Bazel, writing to the runfiles root would just write to the
+        // sandbox.
+        crate::workspace_root()
+            .context("Unable to write to the workspace from a test since it's in a sandbox.")?
+    } else {
+        crate::runfiles_root()?
     }
-    Ok(golden.to_owned())
+    .join(golden))
 }
 
 /// Compares contents of the two directories and returns an error if there is
@@ -78,14 +75,13 @@ fn compute_real_golden_path(golden: &Path, regenerate: bool) -> Result<PathBuf> 
 /// ALCHEMY_REGENERATE_GOLDEN=1 cargo test
 /// ```
 pub fn compare_with_golden_data(output: &Path, golden: &Path) -> Result<()> {
-    let regenerate = std::env::var(REGENERATE_VAR_NAME).unwrap_or_default() != "";
-    let real_golden = &compute_real_golden_path(golden, regenerate)?;
+    let real_golden = &compute_real_golden_path(golden)?;
 
     if output.is_dir() {
         rename_bazel_special_files(output)?;
     }
 
-    if regenerate {
+    if should_regenerate() {
         if real_golden.is_dir() {
             std::fs::remove_dir_all(real_golden)?;
         } else if real_golden.is_file() {
@@ -104,6 +100,16 @@ pub fn compare_with_golden_data(output: &Path, golden: &Path) -> Result<()> {
             status
         );
     } else {
+        let bazel_target = std::env::var("TEST_TARGET").ok();
+        if let Some(ref bazel_target) = bazel_target {
+            ensure!(
+                real_golden.try_exists()?,
+                "The golden directory {real_golden:?} doesn't exist. Maybe you had a typo, maybe \
+                you forgot to include it in the data attribute, or maybe you just need to \
+                regenerate the golden data.\n\
+                To regenerate them, run 'ALCHEMY_REGENERATE_GOLDEN=1 bazel run {bazel_target}'"
+            );
+        }
         let status = Command::new("diff")
             .args(["-Naru", "--"])
             .arg(output)
@@ -111,7 +117,7 @@ pub fn compare_with_golden_data(output: &Path, golden: &Path) -> Result<()> {
             .status()?;
         if !status.success() {
             // Print a friendly instruction if we're running under Bazel.
-            if let Ok(bazel_target) = std::env::var("TEST_TARGET") {
+            if let Some(bazel_target) = bazel_target {
                 bail!(
                     "Found mismatch with golden data; \
                     consider regenerating them with: ALCHEMY_REGENERATE_GOLDEN=1 bazel run {}",
