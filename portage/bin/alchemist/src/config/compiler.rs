@@ -193,7 +193,14 @@ impl<'a> ProfileCompiler<'a> {
     pub fn generate_portage_config(&self) -> Result<Vec<FileOps>> {
         let files = vec![
             FileOps::plainfile(
-                "/etc/portage/make.conf",
+                // Ideally this would be placed in /etc/portage/make.conf,
+                // but it turns out that chromite's sysroot_lib has
+                // /etc/make.conf hard coded. When generating licenses chromite
+                // will "source" the /etc/make.conf file to calculate the
+                // PORTDIR_OVERLAY. It then search for the license in each of
+                // those repositories. We should fix chromite to support
+                // /etc/portage/make.conf.
+                "/etc/make.conf",
                 render_make_conf(self.make_conf()?)?,
             ),
             FileOps::plainfile(

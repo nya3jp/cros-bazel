@@ -29,7 +29,7 @@ pkg_tar(
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     files = {
-        "host.make.conf": "/build/amd64-host/etc/portage/make.conf",
+        "host.make.conf": "/build/amd64-host/etc/make.conf",
         "host.make.defaults": "/build/amd64-host/etc/portage/make.profile/make.defaults",
     },
     symlinks = {
