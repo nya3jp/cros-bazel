@@ -1,2 +1,1 @@
 bazel/workspace_root
-bazel/portage/bin/alchemist/src/bin/alchemist/generate_repo/internal/sources/testdata

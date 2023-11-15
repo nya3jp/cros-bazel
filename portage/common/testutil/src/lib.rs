@@ -4,6 +4,8 @@
 
 mod golden;
 mod namespace;
+mod testdata;
 
 pub use golden::*;
 pub use namespace::*;
+pub use testdata::*;

@@ -1859,6 +1859,7 @@ name = "testutil"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "fileutil",
  "libc",
  "nix",
  "once_cell",

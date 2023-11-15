@@ -666,7 +666,7 @@ mod tests {
             eprintln!("Testing {:?}...", entry.file_name());
             let case_dir = entry.path();
             let case_input_path = case_dir.join("sources.json");
-            let case_source_dir = case_dir.join("source");
+            let case_source_dir = testutil::rename_bazel_input_testdata(&case_dir.join("source"))?;
             let case_golden_dir = case_dir.join("golden");
 
             let local_sources: Vec<PackageLocalSource> = {
@@ -677,7 +677,7 @@ mod tests {
             let temp_dir = tempdir()?;
             let output_dir = temp_dir.path();
 
-            generate_internal_sources(&local_sources, &case_source_dir, output_dir)?;
+            generate_internal_sources(&local_sources, &case_source_dir.path(), output_dir)?;
 
             let inner_output_dir = output_dir.join("internal/sources");
             compare_with_golden_data(&inner_output_dir, &case_golden_dir)?;
