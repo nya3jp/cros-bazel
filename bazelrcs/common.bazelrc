@@ -59,9 +59,6 @@ build --nostamp
 # Minimize remote cache downloads
 build --remote_download_toplevel
 
-# Avoid waiting on 'Waiting for build events upload: Build Event Service'
-build --bes_upload_mode=fully_async
-
 ###
 # Correctness guarantees
 ###
@@ -102,11 +99,6 @@ build --incompatible_enable_cc_toolchain_resolution
 build --remote_local_fallback
 build --heap_dump_on_oom
 test --test_verbose_timeout_warnings
-build --experimental_remote_build_event_upload=minimal
-
-# Allow user-specific overrides for this repository.
-# Should be at the end of this file so that users can override anything above.
-try-import %workspace%/workspace.bazelrc
 
 # Run linters at build time.
 build:lint --config=clippy
@@ -145,7 +137,19 @@ build --config=nohermetic_toolchains
 # Enable printing artifact hashes
 build:hash_tracer --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_tracer,//bazel/portage/build_defs:hash_tracer.bzl%hash_tracer_validator
 
-# Enable build event upload to a backend
-common:bes --bes_keywords=cros-non-release-production
+# Enable build event upload to a backend.
+#
+# Use --config=bes to opt-in results upload.
 common:bes --bes_results_url=http://sponge2/
 common:bes --bes_backend=buildeventservice-pa.googleapis.com
+# Don't upload every file referenced by the BEP message, except for crucial ones
+# like test logs. 'minimal' is the default anyway, but set it to be explicit.
+common:bes --experimental_remote_build_event_upload=minimal
+# Avoid waiting on 'Waiting for build events upload: Build Event Service'
+common:bes --bes_upload_mode=fully_async
+# Set a label for this invocation so it's easy to filter on the backend.
+common:bes --bes_keywords=cros-non-release-production
+
+# Allow user-specific overrides for this repository.
+# Should be at the end of this file so that users can override anything above.
+try-import %workspace%/workspace.bazelrc
