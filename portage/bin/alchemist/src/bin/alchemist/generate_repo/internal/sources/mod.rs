@@ -256,6 +256,12 @@ impl SourcePackage {
             .min_depth(1)
             .into_iter()
             .filter_entry(|entry| !child_paths.contains(entry.path()));
+
+        // HACK: Exclude the find missing deps hook
+        if layout.prefix == Path::new("src/scripts/hooks") {
+            excludes.push("install/find-missing-deps.sh".into())
+        }
+
         // We cannot use "for ... in" here because WalkDir::skip_current_dir
         // needs a mutable borrow.
         loop {

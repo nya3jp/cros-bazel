@@ -12,6 +12,7 @@ pkg_files(
     srcs = glob(
         ["**"],
         exclude = [
+            "install/find-missing-deps.sh",
             "BUILD.bazel",
             "BUILD",
             "WORKSPACE.bazel",
