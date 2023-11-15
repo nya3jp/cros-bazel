@@ -154,14 +154,17 @@ fn rval(input: Span) -> IResult<Span, RVal> {
 /// Parser to recognize a properly double-quoted [RVal].
 ///
 /// Spec reference:
-/// https://dev.gentoo.org/~ulm/pms/head/pms.html#x1-470005.2.4
-///
-/// Line continuations are not currently handled properly.
+/// https://projects.gentoo.org/pms/8/pms.html#x1-470005.2.4
 fn double_quoted_rval(input: Span) -> IResult<Span, RVal> {
     map(
         delimited(
             tag("\""),
-            many0(alt((double_quoted_literal, escaped_char, expansion))),
+            many0(alt((
+                double_quoted_literal,
+                escaped_newline,
+                escaped_char,
+                expansion,
+            ))),
             tag("\""),
         ),
         |vals| RVal { vals },
@@ -200,6 +203,11 @@ fn double_quoted_literal(input: Span<'_>) -> IResult<Span<'_>, Value<'_>> {
 /// Parser to recognize double-quoted escaped characters.
 fn escaped_char(input: Span<'_>) -> IResult<Span<'_>, Value<'_>> {
     map(preceded(tag("\\"), take(1usize)), Value::Literal)(input)
+}
+
+/// Parser to recognize escaped line continuations.
+fn escaped_newline(input: Span<'_>) -> IResult<Span<'_>, Value<'_>> {
+    map(preceded(tag("\\\n"), take(0usize)), Value::Literal)(input)
 }
 
 /// Parser to recognize variable names.
@@ -467,5 +475,31 @@ USE="${USE} bar"
             },)],
             file
         );
+    }
+
+    const MULTILINE_ESCAPE: &str = r#"
+COMMON_COMPILER_FLAGS="-Os -pipe \
+-g -ffunction-sections -fdata-sections"
+"#;
+
+    #[test]
+    fn test_multiline_escape() -> anyhow::Result<()> {
+        let span = null_span(MULTILINE_ESCAPE);
+        let file = full_parse(span, false)?;
+        assert_eq!(
+            vec![Statement::Assign(
+                span.slice(1usize..22usize),
+                RVal {
+                    vals: vec![
+                        Value::Literal(span.slice(24usize..34usize)),
+                        Value::Literal(span.slice(36usize..36usize)),
+                        Value::Literal(span.slice(36usize..74usize))
+                    ]
+                },
+            )],
+            file
+        );
+
+        Ok(())
     }
 }
