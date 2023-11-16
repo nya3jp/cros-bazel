@@ -19,7 +19,11 @@ rust_binary(
         [
             "**/*",
         ],
-        exclude = ["**/*.rs"],
+        exclude = [
+            "**/*.rs",
+            "**/testdata/**",
+            "BUILD.bazel",
+        ],
     ),
     deps = [
         "//bazel/portage/bin/alchemist:alchemist_lib",
