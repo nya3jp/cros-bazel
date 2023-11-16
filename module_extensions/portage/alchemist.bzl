@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//cargo:defs.bzl", "cargo_bootstrap_repository")
-load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_REPO_RULE_SRCS")
+load("//bazel/portage/bin/alchemist/src/bin/alchemist:src.bzl", "ALCHEMIST_REPO_RULE_SRCS")
 
 _BUILD_MODE = "release"
 _TOOL_TEMPLATE = "@rust_host_tools//:bin/{tool}"
