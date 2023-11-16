@@ -1,6 +1,9 @@
 # See go/cros-bazel-rbe-config
 
 build:rbe --remote_cache=grpcs://remotebuildexecution.googleapis.com
+# Move remote cache uploads to the background, and not blocking the completion
+# of an action spawn. This allows dependent actions to start immediately.
+build:rbe --experimental_remote_cache_async
 build:rbe --google_default_credentials=true
 build:rbe --remote_default_exec_properties='cache-silo-key=cros-bazel'
 build:rbe --remote_instance_name=projects/chromeos-bot/instances/cros-non-release-production
