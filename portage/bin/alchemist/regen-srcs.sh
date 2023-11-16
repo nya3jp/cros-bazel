@@ -73,4 +73,6 @@ EOF
 
 ) > bazel/portage/bin/alchemist/src.bzl
 
+bazel run "//bazel/portage/bin/alchemist/src/bin/alchemist:regen_repo_rule_srcs"
+
 echo Done

@@ -90,6 +90,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/public/templates/package.BUILD.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/generate_repo/templates/root.BUILD.bazel",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/main.rs",
+    "//bazel/portage/bin/alchemist:src/bin/alchemist/src.bzl",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/.presubmitignore",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/README.md",
     "//bazel/portage/bin/alchemist:src/bin/alchemist/testdata/golden/BUILD.golden.bazel",

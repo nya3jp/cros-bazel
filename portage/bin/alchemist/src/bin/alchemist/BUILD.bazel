@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("//bazel/module_extensions/helpers:regen_repo_rule_srcs.bzl", "regen_repo_rule_srcs")
 load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_BAZEL_BIN_SRCS")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
@@ -59,4 +60,19 @@ rust_test(
         "@alchemy_crates//:proptest",
         "@alchemy_crates//:url",
     ],
+)
+
+regen_repo_rule_srcs(
+    name = "regen_repo_rule_srcs",
+    # The version numbers are stored in this file as well, since the file
+    # contains entries such as:
+    # alias(name = "anyhow", actual = "@anyhow__<version>//:anyhow")
+    extra_deps = [
+        "@alchemy_crates//:BUILD.bazel",
+        "//bazel:Cargo.toml",
+        "//bazel:Cargo.lock",
+    ],
+    output = "bazel/portage/bin/alchemist/src/bin/alchemist/src.bzl",
+    target = "//bazel/portage/bin/alchemist/src/bin/alchemist",
+    variable = "ALCHEMIST_REPO_RULE_SRCS",
 )
