@@ -15,6 +15,7 @@ use alchemist::analyze::source::PackageLocalSource;
 use anyhow::{Context, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use serde::Serialize;
 use tera::Tera;
 use tracing::instrument;
@@ -571,7 +572,7 @@ pub fn generate_internal_sources<'a>(
     let source_layouts: Vec<SourcePackageLayout> = SourcePackageLayout::compute(all_local_sources)?;
 
     let source_packages: Vec<SourcePackage> = source_layouts
-        .into_iter()
+        .into_par_iter()
         .flat_map(|layout| {
             let prefix_string = layout.prefix.to_string_lossy().into_owned();
             match SourcePackage::try_new(layout, repo_dir, repository_output_dir) {
