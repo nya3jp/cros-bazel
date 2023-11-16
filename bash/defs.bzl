@@ -93,7 +93,7 @@ shift
 echo "$@" > ${dst}
 """
 
-def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles = None, data = []):
+def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles = None, data = [], executable = None):
     """Generates a binary that runs another binary with some arguments.
 
     Args:
@@ -103,18 +103,23 @@ def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles 
       content_prefix: (Optional[str]) Any code that should run before exec'ing.
       runfiles: (Optional[runfiles]) Any files required to run your binary.
       data: List[Target] Any deps you depend on.
+      executable: (Optional[File]) If provided, in the event that binary target
+        contains multiple binaries, this is used to disambiguate the entrypoint.
 
     Returns:
       A DefaultInfo that should be able to run the binary.
     """
     if type(binary) == "Target":
         binary_files = binary[DefaultInfo].files.to_list()
-        if len(binary_files) != 1:
-            fail("There must be exactly one executable (got %s)" % binary_files)
         exe_runfiles = binary[DefaultInfo].default_runfiles
         runfiles = exe_runfiles if runfiles == None else runfiles.merge(exe_runfiles)
     else:
         binary_files = [binary]
+    if executable == None:
+        if len(binary_files) != 1:
+            fail("There must be exactly one executable (got %s)" % binary_files)
+        executable = binary_files[0]
+
     if type(args) == "Args":
         # You can't read args in bazel rules. So instead we write the args to a
         # file and read from that file at runtime.
@@ -148,7 +153,7 @@ def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles 
         out,
         content = '{content_prefix}\n\nexec "{binary}" {args} "$@"'.format(
             content_prefix = content_prefix,
-            binary = bash_rlocation(ctx, binary_files[0]),
+            binary = bash_rlocation(ctx, executable),
             args = args,
         ),
         data = data,
@@ -163,6 +168,7 @@ def _custom_args_binary_impl(ctx):
         ctx,
         out = out,
         binary = ctx.attr.binary,
+        executable = ctx.executable.binary,
         args = ctx.attr.binary_args,
         data = ctx.attr.data,
     )
