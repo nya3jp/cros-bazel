@@ -141,11 +141,12 @@ fn find_best_package_in(
         .map(|p| (*p).clone()))
 }
 
-fn get_sdk_implicit_system_package(host_packages: &[MaybePackage]) -> Result<Option<Arc<Package>>> {
+fn get_sdk_implicit_system_package(host_packages: &[MaybePackage]) -> Result<Arc<Package>> {
     // TODO: Add a parameter to pass this along
     let sdk_atom = PackageAtom::from_str("virtual/target-sdk-implicit-system")?;
 
-    find_best_package_in(&sdk_atom, host_packages)
+    find_best_package_in(&sdk_atom, host_packages)?
+        .with_context(|| format!("Could not find {sdk_atom}"))
 }
 
 /// Generates the stage1, stage2, etc packages and SDKs.
@@ -169,19 +170,13 @@ pub fn generate_stages(
     // when we generate the BUILD files.
     let implicit_system_package = get_sdk_implicit_system_package(&host_packages)?;
     let implicit_system_packages = implicit_system_package
-        .as_ref()
-        .map(|package| {
-            package
-                .install_set
-                .iter()
-                .map(|p| ProvidedPackage {
-                    package_name: p.as_basic_data().package_name.clone(),
-                    version: p.as_basic_data().version.clone(),
-                })
-                .collect_vec()
+        .install_set
+        .iter()
+        .map(|p| ProvidedPackage {
+            package_name: p.as_basic_data().package_name.clone(),
+            version: p.as_basic_data().version.clone(),
         })
-        // TODO: Make this fail once all patches land
-        .unwrap_or_else(Vec::new);
+        .collect_vec();
 
     // Generate the SDK used by the stage1/target/host packages.
     generate_stage1_sdk("stage1/target/host", host, output_dir)?;
@@ -221,22 +216,19 @@ pub fn generate_stages(
     // Generate the stage 2 SDK
     //
     // This SDK will be used as the base for the host and target SDKs.
-    // TODO: Make missing bootstrap_package fatal.
-    if let Some(implicit_system_package) = implicit_system_package {
-        generate_base_sdk(
-            &SdkBaseConfig {
-                name: "stage2",
-                source_package_prefix: "stage1/target/host",
-                // We use the `host:base` target because the stage1 SDK
-                // `host` target lists all the primordial packages for the
-                // target, and we don't want those pre-installed.
-                source_sdk: "stage1/target/host:base",
-                source_repo_set: &host.repos,
-                implicit_system_package: implicit_system_package.as_ref(),
-            },
-            output_dir,
-        )?;
-    }
+    generate_base_sdk(
+        &SdkBaseConfig {
+            name: "stage2",
+            source_package_prefix: "stage1/target/host",
+            // We use the `host:base` target because the stage1 SDK
+            // `host` target lists all the primordial packages for the
+            // target, and we don't want those pre-installed.
+            source_sdk: "stage1/target/host:base",
+            source_repo_set: &host.repos,
+            implicit_system_package: &implicit_system_package,
+        },
+        output_dir,
+    )?;
 
     // Generate the stage 2 host SDK. This will be used to build all the
     // host packages.

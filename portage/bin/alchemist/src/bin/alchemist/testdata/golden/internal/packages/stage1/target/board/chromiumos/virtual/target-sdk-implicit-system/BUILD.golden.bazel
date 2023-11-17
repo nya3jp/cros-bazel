@@ -1,0 +1,666 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+alias(
+    name = "1-r4_host_deps",
+    actual = "//internal/sdk/stage1/target/board",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1-r4_deps",
+    actual = "1-r4_host_deps",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1-r4_test_deps",
+    actual = "1-r4_host_deps",
+    visibility = ["//visibility:private"],
+)
+string_flag(
+    name = "1-r4_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "1-r4_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1-r4_incremental_enabled",
+    flag_values = {":1-r4_incremental": "true"},
+)
+
+write_file(
+    name = "1-r4_cache_marker",
+    out = "1-r4_incremental/MARKER",
+)
+
+ebuild(
+    name = "1-r4",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "virtual",
+    package_name = "target-sdk-implicit-system",
+    version = "1-r4",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    runtime_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled-profiles-enabled": True,
+        "@//bazel/portage:compiled-profiles-disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1-r4_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/board",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/board:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":1-r4_incremental_enabled": ":1-r4_cache_marker",
+        "//conditions:default": None,
+    }),
+    prebuilt = ":1-r4_prebuilt",
+    portage_profile_test_package = select({
+        "@//bazel/portage:portage-config-validator-enabled": ":1-r4_portage_profile_test_package",
+        "@//bazel/portage:portage-config-validator-disabled": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "1-r4_including_provided",
+    binpkg = ":1-r4",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "1-r4_debug",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "virtual",
+    package_name = "target-sdk-implicit-system",
+    version = "1-r4",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    runtime_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled-profiles-enabled": True,
+        "@//bazel/portage:compiled-profiles-disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1-r4_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/board",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/board:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":1-r4_incremental_enabled": ":1-r4_cache_marker",
+        "//conditions:default": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+string_flag(
+    name = "1-r4_hermetic_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "1-r4_hermetic_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1-r4_hermetic_test_package_incremental_enabled",
+    flag_values = {":1-r4_hermetic_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "1-r4_hermetic_test_package_cache_marker",
+    out = "1-r4_hermetic_test_package_incremental/MARKER",
+)
+
+ebuild(
+    name = "1-r4_hermetic_test_package",
+    suffix = "_hermetic_test_package",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "virtual",
+    package_name = "target-sdk-implicit-system",
+    version = "1-r4",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    runtime_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled-profiles-enabled": True,
+        "@//bazel/portage:compiled-profiles-disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1-r4_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/board",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/board:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":1-r4_hermetic_test_package_incremental_enabled": ":1-r4_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    prebuilt = ":1-r4_hermetic_test_package_prebuilt",
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "1-r4_hermetic_test_package_including_provided",
+    binpkg = ":1-r4",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "1-r4_hermetic_test_package_debug",
+    suffix = "_hermetic_test_package",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "virtual",
+    package_name = "target-sdk-implicit-system",
+    version = "1-r4",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    runtime_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled-profiles-enabled": True,
+        "@//bazel/portage:compiled-profiles-disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1-r4_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/board",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/board:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":1-r4_hermetic_test_package_incremental_enabled": ":1-r4_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+string_flag(
+    name = "1-r4_portage_profile_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "1-r4_portage_profile_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1-r4_portage_profile_test_package_incremental_enabled",
+    flag_values = {":1-r4_portage_profile_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "1-r4_portage_profile_test_package_cache_marker",
+    out = "1-r4_portage_profile_test_package_incremental/MARKER",
+)
+
+ebuild(
+    name = "1-r4_portage_profile_test_package",
+    suffix = "_portage_profile_test_package",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "virtual",
+    package_name = "target-sdk-implicit-system",
+    version = "1-r4",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    runtime_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1-r4_deps",
+    overlays = "//internal/overlays:amd64-generic-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
+    ],
+    incremental_cache_marker = select({
+        ":1-r4_portage_profile_test_package_incremental_enabled": ":1-r4_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    prebuilt = ":1-r4_portage_profile_test_package_prebuilt",
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "1-r4_portage_profile_test_package_including_provided",
+    binpkg = ":1-r4",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "1-r4_portage_profile_test_package_debug",
+    suffix = "_portage_profile_test_package",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "virtual",
+    package_name = "target-sdk-implicit-system",
+    version = "1-r4",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    runtime_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1-r4_deps",
+    overlays = "//internal/overlays:amd64-generic-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
+    ],
+    incremental_cache_marker = select({
+        ":1-r4_portage_profile_test_package_incremental_enabled": ":1-r4_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+ebuild_install(
+    name = "1-r4_install",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    category = "virtual",
+    board = "amd64-generic",
+    packages = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_install_list(
+    name = "1-r4_install_list",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    category = "virtual",
+    board = "amd64-generic",
+    packages = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_test(
+    name = "1-r4_test",
+    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "virtual",
+    package_name = "target-sdk-implicit-system",
+    version = "1-r4",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    runtime_deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled-profiles-enabled": True,
+        "@//bazel/portage:compiled-profiles-disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1-r4_test_deps",
+    overlays = "//internal/overlays:amd64-generic",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/board",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/board:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled-profiles-enabled": [
+            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
+            "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
+        ],
+        "@//bazel/portage:compiled-profiles-disabled": [],
+    }),
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "1-r4_hermetic_test",
+    packages = [
+        ":1-r4",
+        ":1-r4_hermetic_test_package",
+    ],
+    size="small",
+)
+
+test_suite(
+    name = "1-r4_package_set_hermetic_test",
+    tests = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39_hermetic_test",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197_hermetic_test",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_hermetic_test",
+        "//internal/packages/stage1/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4_hermetic_test",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2_hermetic_test",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+package_set(
+    name = "1-r4_package_set",
+    deps = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage1/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4",
+        "//internal/packages/stage1/target/board/portage-stable/virtual/os-headers:0-r2",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+
