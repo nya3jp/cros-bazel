@@ -12,7 +12,7 @@ use crate::{
     config::{bundle::ConfigBundle, ProvidedPackage},
     data::UseMap,
     dependency::{
-        package::{PackageAtom, PackageDependencyAtom},
+        package::{AsPackageRef, PackageAtom, PackageDependencyAtom},
         Predicate,
     },
     ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails},

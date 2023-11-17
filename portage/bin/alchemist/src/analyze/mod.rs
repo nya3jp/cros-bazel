@@ -15,6 +15,7 @@ use tracing::instrument;
 
 use crate::{
     config::bundle::ConfigBundle,
+    dependency::package::{AsPackageRef, PackageRef},
     ebuild::{
         metadata::{EBuildBasicData, EBuildMetadata},
         MaybePackageDetails, PackageDetails, PackageReadiness,
@@ -80,6 +81,12 @@ impl Package {
     }
 }
 
+impl AsPackageRef for Package {
+    fn as_package_ref(&self) -> PackageRef {
+        self.details.as_package_ref()
+    }
+}
+
 /// Holds information for packages that we failed to analyze.
 #[derive(Debug)]
 pub struct PackageAnalysisError {
@@ -90,6 +97,12 @@ pub struct PackageAnalysisError {
 impl PackageAnalysisError {
     pub fn as_basic_data(&self) -> &EBuildBasicData {
         self.details.as_basic_data()
+    }
+}
+
+impl AsPackageRef for PackageAnalysisError {
+    fn as_package_ref(&self) -> PackageRef {
+        self.details.as_package_ref()
     }
 }
 
@@ -111,6 +124,15 @@ impl MaybePackage {
         match self {
             MaybePackage::Ok(package) => package.as_basic_data(),
             MaybePackage::Err(error) => error.as_basic_data(),
+        }
+    }
+}
+
+impl AsPackageRef for MaybePackage {
+    fn as_package_ref(&self) -> PackageRef {
+        match self {
+            MaybePackage::Ok(package) => package.as_package_ref(),
+            MaybePackage::Err(error) => error.as_package_ref(),
         }
     }
 }
@@ -137,6 +159,12 @@ impl PackagePartial {
     }
 }
 
+impl AsPackageRef for PackagePartial {
+    fn as_package_ref(&self) -> PackageRef {
+        self.details.as_package_ref()
+    }
+}
+
 /// Represents a partially analyzed package, covering both successful ones and failed ones.
 ///
 /// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
@@ -152,6 +180,15 @@ impl MaybePackagePartial {
         match self {
             MaybePackagePartial::Ok(package) => package.as_basic_data(),
             MaybePackagePartial::Err(error) => error.as_basic_data(),
+        }
+    }
+}
+
+impl AsPackageRef for MaybePackagePartial {
+    fn as_package_ref(&self) -> PackageRef {
+        match self {
+            MaybePackagePartial::Ok(package) => package.as_package_ref(),
+            MaybePackagePartial::Err(error) => error.as_package_ref(),
         }
     }
 }

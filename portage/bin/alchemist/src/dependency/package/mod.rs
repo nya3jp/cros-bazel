@@ -6,7 +6,7 @@ pub mod parser;
 
 use anyhow::{bail, ensure, Context, Error, Result};
 use itertools::Itertools;
-use std::{collections::BTreeMap, fmt::Display, str::FromStr};
+use std::{collections::BTreeMap, fmt::Display, str::FromStr, sync::Arc};
 use version::Version;
 
 use crate::{
@@ -38,6 +38,23 @@ pub struct PackageRef<'a> {
     // Remaining fields are optional. They're matched only when they're available.
     pub slot: Option<Slot<&'a str>>,
     pub use_map: Option<&'a UseMap>,
+}
+
+/// A trait to be implemented by types that can be converted to [`PackageRef`].
+pub trait AsPackageRef {
+    fn as_package_ref(&self) -> PackageRef;
+}
+
+impl<T: AsPackageRef> AsPackageRef for &T {
+    fn as_package_ref(&self) -> PackageRef {
+        (*self).as_package_ref()
+    }
+}
+
+impl<T: AsPackageRef> AsPackageRef for Arc<T> {
+    fn as_package_ref(&self) -> PackageRef {
+        (**self).as_package_ref()
+    }
 }
 
 /// Holds a set of [`PackageRef`].

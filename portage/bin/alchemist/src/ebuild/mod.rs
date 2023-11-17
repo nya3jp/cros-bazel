@@ -17,7 +17,11 @@ use crate::{
     bash::vars::BashVars,
     config::bundle::{ConfigBundle, IsPackageAcceptedResult},
     data::{IUseMap, Slot, UseMap},
-    dependency::{package::PackageRef, requse::RequiredUseDependency, ThreeValuedPredicate},
+    dependency::{
+        package::{AsPackageRef, PackageRef},
+        requse::RequiredUseDependency,
+        ThreeValuedPredicate,
+    },
 };
 
 use self::metadata::{CachedEBuildEvaluator, EBuildBasicData, EBuildMetadata, MaybeEBuildMetadata};
@@ -72,20 +76,6 @@ pub struct PackageDetails {
 }
 
 impl PackageDetails {
-    /// Converts this PackageDetails to a PackageRef that can be passed to
-    /// dependency predicates.
-    pub fn as_package_ref(&self) -> PackageRef {
-        PackageRef {
-            package_name: &self.as_basic_data().package_name,
-            version: &self.as_basic_data().version,
-            slot: Some(Slot {
-                main: self.slot.main.as_str(),
-                sub: self.slot.sub.as_str(),
-            }),
-            use_map: Some(&self.use_map),
-        }
-    }
-
     /// EAPI is technically a string, but working with an integer is easier.
     fn eapi(&self) -> Result<i32> {
         let eapi = self.metadata.vars.get_scalar("EAPI")?;
@@ -112,6 +102,20 @@ impl PackageDetails {
     }
 }
 
+impl AsPackageRef for PackageDetails {
+    fn as_package_ref(&self) -> PackageRef {
+        PackageRef {
+            package_name: &self.as_basic_data().package_name,
+            version: &self.as_basic_data().version,
+            slot: Some(Slot {
+                main: self.slot.main.as_str(),
+                sub: self.slot.sub.as_str(),
+            }),
+            use_map: Some(&self.use_map),
+        }
+    }
+}
+
 /// Represents an error that occurred when loading an ebuild.
 #[derive(Debug)]
 pub struct PackageLoadError {
@@ -122,6 +126,12 @@ pub struct PackageLoadError {
 impl PackageLoadError {
     pub fn as_basic_data(&self) -> &EBuildBasicData {
         self.metadata.as_basic_data()
+    }
+}
+
+impl AsPackageRef for PackageLoadError {
+    fn as_package_ref(&self) -> PackageRef {
+        self.metadata.as_package_ref()
     }
 }
 
@@ -143,6 +153,15 @@ impl MaybePackageDetails {
         match self {
             MaybePackageDetails::Ok(details) => details.as_basic_data(),
             MaybePackageDetails::Err(error) => error.as_basic_data(),
+        }
+    }
+}
+
+impl AsPackageRef for MaybePackageDetails {
+    fn as_package_ref(&self) -> PackageRef {
+        match self {
+            MaybePackageDetails::Ok(details) => details.as_package_ref(),
+            MaybePackageDetails::Err(error) => error.as_package_ref(),
         }
     }
 }

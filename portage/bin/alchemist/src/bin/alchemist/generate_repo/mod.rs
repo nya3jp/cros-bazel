@@ -18,7 +18,7 @@ use std::{
 use alchemist::{
     analyze::{analyze_packages, MaybePackage, Package},
     config::ProvidedPackage,
-    dependency::package::PackageAtom,
+    dependency::package::{AsPackageRef, PackageAtom},
     ebuild::{CachedPackageLoader, MaybePackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,

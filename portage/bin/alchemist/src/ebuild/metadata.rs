@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::dependency::package::{AsPackageRef, PackageRef};
 use crate::repository::{Repository, UnorderedRepositorySet};
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -142,6 +143,19 @@ pub struct EBuildBasicData {
     pub version: Version,
 }
 
+impl EBuildBasicData {}
+
+impl AsPackageRef for EBuildBasicData {
+    fn as_package_ref(&self) -> PackageRef {
+        PackageRef {
+            package_name: &self.package_name,
+            version: &self.version,
+            slot: None,
+            use_map: None,
+        }
+    }
+}
+
 /// Describes metadata of an ebuild.
 #[derive(Debug, Eq, PartialEq)]
 pub struct EBuildMetadata {
@@ -155,6 +169,12 @@ impl EBuildMetadata {
     }
 }
 
+impl AsPackageRef for EBuildMetadata {
+    fn as_package_ref(&self) -> PackageRef {
+        self.basic_data.as_package_ref()
+    }
+}
+
 /// Describes an error on evaluating an ebuild.
 #[derive(Debug, Eq, PartialEq)]
 pub struct EBuildEvaluationError {
@@ -165,6 +185,12 @@ pub struct EBuildEvaluationError {
 impl EBuildEvaluationError {
     pub fn as_basic_data(&self) -> &EBuildBasicData {
         &self.basic_data
+    }
+}
+
+impl AsPackageRef for EBuildEvaluationError {
+    fn as_package_ref(&self) -> PackageRef {
+        self.basic_data.as_package_ref()
     }
 }
 
@@ -186,6 +212,15 @@ impl MaybeEBuildMetadata {
         match self {
             MaybeEBuildMetadata::Ok(metadata) => &metadata.basic_data,
             MaybeEBuildMetadata::Err(error) => &error.basic_data,
+        }
+    }
+}
+
+impl AsPackageRef for MaybeEBuildMetadata {
+    fn as_package_ref(&self) -> PackageRef {
+        match self {
+            MaybeEBuildMetadata::Ok(metadata) => metadata.as_package_ref(),
+            MaybeEBuildMetadata::Err(error) => error.as_package_ref(),
         }
     }
 }
