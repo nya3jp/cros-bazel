@@ -24,7 +24,7 @@ use alchemist::{
     repository::RepositorySet,
     resolver::select_best_version,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 use rayon::prelude::*;
 use tracing::instrument;
@@ -107,46 +107,27 @@ fn load_packages(
     Ok(packages)
 }
 
-// Searches the `Package`s for the `atom` with the best version.
-fn find_best_package_in(
-    atom: &PackageAtom,
-    packages: &[MaybePackage],
-) -> Result<Option<Arc<Package>>> {
-    // TODO(b/303400631): Consider `PackageAnalysisFailure`.
-    let packages = packages
-        .iter()
-        .flat_map(|package| match package {
-            MaybePackage::Ok(package) => Some(package),
-            _ => None,
-        })
-        .collect_vec();
-
-    let sdk_packages = packages
-        .into_iter()
-        .filter(|package| atom.matches(&package.details.as_package_ref()))
-        .collect_vec();
-
-    let best_sdk_package_details = select_best_version(&sdk_packages);
-
-    let best_sdk_package_details = match best_sdk_package_details {
-        Some(best_sdk_package_details) => best_sdk_package_details,
-        None => return Ok(None),
-    };
-
-    Ok(sdk_packages
-        .iter()
-        .find(|p| {
-            p.details.as_basic_data().version == best_sdk_package_details.as_basic_data().version
-        })
-        .map(|p| (*p).clone()))
-}
-
 fn get_sdk_implicit_system_package(host_packages: &[MaybePackage]) -> Result<Arc<Package>> {
     // TODO: Add a parameter to pass this along
     let sdk_atom = PackageAtom::from_str("virtual/target-sdk-implicit-system")?;
 
-    find_best_package_in(&sdk_atom, host_packages)?
-        .with_context(|| format!("Could not find {sdk_atom}"))
+    let best_package = select_best_version(
+        host_packages
+            .iter()
+            .filter(|package| sdk_atom.matches(&package.as_package_ref())),
+    )
+    .with_context(|| format!("Could not find {sdk_atom}"))?;
+
+    match best_package {
+        MaybePackage::Ok(package) => Ok(package.clone()),
+        MaybePackage::Err(err) => bail!(
+            "Cannot determine the best version for {}: {}-{}: {}",
+            sdk_atom,
+            err.as_basic_data().package_name,
+            err.as_basic_data().version,
+            err.error
+        ),
+    }
 }
 
 /// Generates the stage1, stage2, etc packages and SDKs.
