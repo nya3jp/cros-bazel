@@ -308,7 +308,7 @@ pub struct SdkBaseConfig<'a> {
 
     /// The `virtual` package that lists all the runtime dependencies that
     /// will be installed into the SDK.
-    pub bootstrap_package: &'a Package,
+    pub implicit_system_package: &'a Package,
 }
 
 #[derive(Serialize)]
@@ -328,7 +328,7 @@ pub fn generate_base_sdk(config: &SdkBaseConfig, out: &Path) -> Result<()> {
         name: config.name,
         overlay_set: &repository_set_to_target_path(config.source_repo_set),
         target: &package_details_to_package_set_target_path(
-            &config.bootstrap_package.details,
+            &config.implicit_system_package.details,
             config.source_package_prefix,
         ),
         sdk: &format!("//internal/sdk/{}", config.source_sdk),

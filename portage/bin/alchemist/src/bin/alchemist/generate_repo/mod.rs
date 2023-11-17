@@ -148,12 +148,12 @@ fn find_best_package_in(
         .cloned())
 }
 
-fn get_bootstrap_sdk_package(
+fn get_sdk_implicit_system_package(
     host_packages: &[MaybePackage],
     host_resolver: &PackageResolver,
 ) -> Result<Option<Arc<Package>>> {
     // TODO: Add a parameter to pass this along
-    let sdk_atom = PackageAtom::from_str("virtual/target-chromium-os-sdk-bootstrap")?;
+    let sdk_atom = PackageAtom::from_str("virtual/target-sdk-implicit-system")?;
 
     find_best_package_in(&sdk_atom, host_packages, host_resolver)
 }
@@ -177,8 +177,8 @@ pub fn generate_stages(
     // analysis phase because bazel doesn't like it when there are cycles in the
     // dependency graph. This means we need to filter out the dependencies
     // when we generate the BUILD files.
-    let bootstrap_package = get_bootstrap_sdk_package(&host_packages, &host.resolver)?;
-    let sdk_packages = bootstrap_package
+    let implicit_system_package = get_sdk_implicit_system_package(&host_packages, &host.resolver)?;
+    let implicit_system_packages = implicit_system_package
         .as_ref()
         .map(|package| {
             package
@@ -232,7 +232,7 @@ pub fn generate_stages(
     //
     // This SDK will be used as the base for the host and target SDKs.
     // TODO: Make missing bootstrap_package fatal.
-    if let Some(bootstrap_package) = bootstrap_package {
+    if let Some(implicit_system_package) = implicit_system_package {
         generate_base_sdk(
             &SdkBaseConfig {
                 name: "stage2",
@@ -242,7 +242,7 @@ pub fn generate_stages(
                 // target, and we don't want those pre-installed.
                 source_sdk: "stage1/target/host:base",
                 source_repo_set: &host.repos,
-                bootstrap_package: bootstrap_package.as_ref(),
+                implicit_system_package: implicit_system_package.as_ref(),
             },
             output_dir,
         )?;
@@ -262,7 +262,7 @@ pub fn generate_stages(
     let stage2_host = PackageHostConfig {
         repo_set: &host.repos,
         prefix: "stage2/host",
-        sdk_provided_packages: &sdk_packages,
+        sdk_provided_packages: &implicit_system_packages,
     };
     generate_internal_packages(
         // We no longer need to cross-root build since we know exactly what
@@ -286,7 +286,7 @@ pub fn generate_stages(
     // TODO: Add call to generate stage3 sdk
     // TODO: Also support building a "bootstrap" SDK target that is composed
     // of ALL BDEPEND + RDEPEND + DEPEND of the
-    // virtual/target-chromium-os-sdk-bootstrap package.
+    // virtual/target-sdk-implicit-system package.
 
     // TODO: Add stage3/host package if we decide we want to build targets
     // against the stage 3 SDK.
