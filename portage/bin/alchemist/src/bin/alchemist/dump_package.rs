@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use alchemist::dependency::package::PackageAtom;
-use alchemist::ebuild::{PackageDetails, PackageReadiness};
+use alchemist::ebuild::{MaybePackageDetails, PackageDetails, PackageReadiness};
 use alchemist::resolver::select_best_version;
 use alchemist::{analyze::dependency::analyze_dependencies, bash::vars::BashValue};
 use anyhow::{Context, Result};
@@ -69,27 +69,33 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
 
         println!("=======\t{}", atom);
 
-        for (i, details) in packages.into_iter().enumerate() {
+        for (i, maybe_details) in packages.into_iter().enumerate() {
             if i > 0 {
                 println!();
             }
 
+            let basic_data = maybe_details.as_basic_data();
             let is_default = match &default {
-                Some(default) => {
-                    default.as_basic_data().ebuild_path == details.as_basic_data().ebuild_path
-                }
+                Some(default) => default.as_basic_data().ebuild_path == basic_data.ebuild_path,
                 None => false,
             };
-            println!(
-                "Path:\t\t{}",
-                &details.as_basic_data().ebuild_path.to_string_lossy()
-            );
-            println!("Package:\t{}", &details.as_basic_data().package_name);
+
+            println!("Path:\t\t{}", &basic_data.ebuild_path.to_string_lossy());
+            println!("Package:\t{}", &basic_data.package_name);
             println!(
                 "Version:\t{}{}",
-                &details.as_basic_data().version,
+                &basic_data.version,
                 if is_default { " (Default)" } else { "" }
             );
+
+            let details = match maybe_details {
+                MaybePackageDetails::Ok(details) => details,
+                MaybePackageDetails::Err(error) => {
+                    println!("WARNING: Failed to load package: {:#}", error.error);
+                    continue;
+                }
+            };
+
             println!("Slot:\t\t{}", &details.slot);
             println!("Stable:\t\t{:?}", details.stable);
             match &details.readiness {

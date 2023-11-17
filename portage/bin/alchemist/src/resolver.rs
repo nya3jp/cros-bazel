@@ -59,51 +59,58 @@ impl PackageResolver {
 
     /// Finds all packages matching the specified [`PackageAtom`].
     ///
+    /// It returns both unmasked and masked packages as long as they match the given atom.
+    ///
     /// Packages from a lower-priority repository come before packages from a higher-priority
     /// repository, which is the suitable order for [`select_best_version`].
-    pub fn find_packages(&self, atom: &PackageAtom) -> Result<Vec<Arc<PackageDetails>>> {
+    pub fn find_packages(&self, atom: &PackageAtom) -> Result<Vec<MaybePackageDetails>> {
         let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
 
         let packages = ebuild_paths
             .into_par_iter()
-            .map(|ebuild_path| self.loader.load_package(&ebuild_path))
-            .filter_map(|result| match result {
-                Ok(eval) => match eval {
-                    MaybePackageDetails::Ok(details) => Some(Ok(details)),
-                    // We ignore packages that had metadata evaluation errors.
-                    MaybePackageDetails::Err(_) => None,
-                },
-                Err(e) => Some(Err(e)),
-            })
-            .filter(|details| match details {
-                Ok(details) => atom.matches(&details.as_package_ref()),
-                Err(_) => true,
+            .filter_map(|ebuild_path| match self.loader.load_package(&ebuild_path) {
+                Ok(maybe_details) if !atom.matches(&maybe_details.as_package_ref()) => None,
+                other => Some(other),
             })
             .collect::<Result<Vec<_>>>()?;
         Ok(packages)
     }
 
-    /// Finds the best package matching the specified [`PackageAtom`].
+    /// Finds the valid package best matching the specified [`PackageAtom`].
     ///
-    /// It returns `Ok(None)` if there is no matching packages, `Ok(Some(_))` if it can determine
-    /// the best package, `Err` otherwise.
+    /// It returns `Ok(Some(_))` if it can reliably determine the best package. Note that it might
+    /// be possible to determine the best package even if some candidate packages have load errors.
+    /// It returns `Ok(None)` if no package matches the given atom. It returns `Err` otherwise.
     pub fn find_best_package(&self, atom: &PackageAtom) -> Result<Option<Arc<PackageDetails>>> {
         let matches = self
             .find_packages(atom)
             .with_context(|| format!("Error looking up {atom}"))?;
-        Ok(select_best_version(matches))
+        match select_best_version(&matches) {
+            Some(MaybePackageDetails::Ok(details)) => Ok(Some(details.clone())),
+            None => Ok(None),
+            Some(MaybePackageDetails::Err(err)) => bail!(
+                "Cannot determine the best version for {}: {}-{}: {}",
+                atom,
+                err.as_basic_data().package_name,
+                err.as_basic_data().version,
+                err.error
+            ),
+        }
     }
 
-    /// Finds a package best matching the specified [`PackageAtomDependency`].
+    /// Finds the valid package best matching the specified [`PackageDependencyAtom`].
     ///
     /// # Arguments
     ///
     /// * `source_use_map` - The [`UseMap`] for the package that specified the `atom`.
     /// * `atom` - The atom used to filter the packages.
     ///
-    /// If Ok(None) is returned that means that no suitable packages were found.
-    /// If Err(_) is returned, that means there was an unexpected error looking
-    /// for the package.
+    /// # Returns
+    ///
+    /// It returns `Ok(Some(_))` if it can reliably determine the best package. Note that it might
+    /// be possible to determine the best package even if some candidate packages have load errors.
+    /// It returns `Ok(None)` if no package matches the given dependency atom. It returns `Err`
+    /// otherwise.
     pub fn find_best_package_dependency(
         &self,
         source_use_map: &UseMap,
@@ -113,33 +120,31 @@ impl PackageResolver {
 
         let packages = ebuild_paths
             .into_par_iter()
-            .map(|ebuild_path| self.loader.load_package(&ebuild_path))
-            .collect::<Result<Vec<_>>>()?;
-        let mut matches = Vec::with_capacity(packages.len());
-        for eval in packages {
-            let details = match eval {
-                MaybePackageDetails::Ok(details) => details,
-                // We ignore packages that had metadata evaluation errors.
-                MaybePackageDetails::Err(_) => continue,
-            };
-            match atom.matches(source_use_map, &details.as_package_ref()) {
-                Ok(result) => {
-                    if result {
-                        matches.push(details);
-                    }
+            .map(|ebuild_path| -> Result<Option<MaybePackageDetails>> {
+                let maybe_details = self.loader.load_package(&ebuild_path)?;
+                // TODO: Make match errors non-fatal.
+                if atom.matches(source_use_map, &maybe_details.as_package_ref())? {
+                    Ok(Some(maybe_details))
+                } else {
+                    Ok(None)
                 }
-                // We don't use with_context because we want to manually format
-                // the error.
-                Err(err) => bail!(
-                    "target: {}-{}: {}",
-                    details.as_basic_data().package_name,
-                    details.as_basic_data().version,
-                    err
-                ),
-            }
-        }
+            })
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>();
 
-        Ok(select_best_version(matches))
+        match select_best_version(&packages) {
+            Some(MaybePackageDetails::Ok(details)) => Ok(Some(details.clone())),
+            None => Ok(None),
+            Some(MaybePackageDetails::Err(err)) => bail!(
+                "Cannot determine the best version for {}: {}-{}: {}",
+                atom,
+                err.as_basic_data().package_name,
+                err.as_basic_data().version,
+                err.error
+            ),
+        }
     }
 
     /// Finds *provided packages* matching the specified [`PackageAtomDependency`].
