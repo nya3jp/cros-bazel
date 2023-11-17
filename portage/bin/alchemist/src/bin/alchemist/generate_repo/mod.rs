@@ -352,23 +352,6 @@ pub fn generate_stages(
             output_dir,
         )?;
 
-        // TODO(b/303136802): Delete this once we migrate the CQ builders.
-        generate_public_packages(
-            &target_packages,
-            &[
-                public::TargetConfig {
-                    config: "stage1",
-                    prefix: "stage1/target/board",
-                },
-                public::TargetConfig {
-                    config: "stage2",
-                    prefix: "stage2/target/board",
-                },
-            ],
-            "stage1/target/board",
-            output_dir,
-        )?;
-
         generate_public_packages(
             &target_packages,
             &[

@@ -22,7 +22,7 @@ TARGETS=(
 
 if [[ -z "${SKIP_PORTAGE_TESTS:=}" ]]; then
   # Check that build_package works.
-  TARGETS+=( @portage//dev-libs/leveldb )
+  TARGETS+=( @portage//target/dev-libs/leveldb )
 fi
 
 set -x
