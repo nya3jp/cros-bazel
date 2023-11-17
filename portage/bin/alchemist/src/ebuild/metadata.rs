@@ -152,6 +152,7 @@ impl AsPackageRef for EBuildBasicData {
             version: &self.version,
             slot: None,
             use_map: None,
+            readiness: None,
         }
     }
 }

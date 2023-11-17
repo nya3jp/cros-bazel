@@ -38,6 +38,7 @@ pub struct PackageRef<'a> {
     // Remaining fields are optional. They're matched only when they're available.
     pub slot: Option<Slot<&'a str>>,
     pub use_map: Option<&'a UseMap>,
+    pub readiness: Option<bool>,
 }
 
 /// A trait to be implemented by types that can be converted to [`PackageRef`].
@@ -644,12 +645,14 @@ mod tests {
                 version: &default_version,
                 slot: Some(Slot::new("0")),
                 use_map: Some(&empty_use_map),
+                readiness: None,
             },
             PackageRef {
                 package_name: "pkg/bbb",
                 version: &default_version,
                 slot: Some(Slot::new("0")),
                 use_map: Some(&empty_use_map),
+                readiness: None,
             },
         ]);
 
@@ -779,6 +782,7 @@ mod tests {
                 sub: "2",
             }),
             use_map: None,
+            readiness: None,
         };
 
         let test_cases = HashMap::from([
@@ -1072,6 +1076,7 @@ mod tests {
                     sub: "2",
                 }),
                 use_map: Some(&use_map),
+                readiness: None,
             };
 
             assert!(atom.matches(&UseMap::new(), &package)?);
@@ -1087,6 +1092,7 @@ mod tests {
                     sub: "2",
                 }),
                 use_map: Some(&use_map),
+                readiness: None,
             };
 
             assert!(!atom.matches(&UseMap::new(), &package)?);
@@ -1103,6 +1109,7 @@ mod tests {
             version: &Version::try_new("9999")?,
             slot: Some(Slot::new("0")),
             use_map: Some(&use_map),
+            readiness: None,
         };
 
         let atom = PackageDependencyAtom::from_str("!sys-apps/acl")?;

@@ -340,6 +340,7 @@ impl ConfigBundle {
                 sub: slot.sub.as_ref(),
             }),
             use_map: None,
+            readiness: None,
         };
 
         let effective_iuse_map = self.compute_effective_iuse_map(ebuild_iuse_map);
@@ -687,6 +688,7 @@ mod tests {
                 sub: "0",
             }),
             use_map: None,
+            readiness: None,
         };
         let default_for_empty_config_line = "~amd64";
 
@@ -931,6 +933,7 @@ mod tests {
                 sub: "0",
             }),
             use_map: None,
+            readiness: None,
         };
     }
 
@@ -1117,6 +1120,7 @@ mod tests {
                 sub: "0",
             }),
             use_map: None,
+            readiness: None,
         });
 
         assert_eq!(

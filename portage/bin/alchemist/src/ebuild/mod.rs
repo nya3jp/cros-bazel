@@ -112,6 +112,7 @@ impl AsPackageRef for PackageDetails {
                 sub: self.slot.sub.as_str(),
             }),
             use_map: Some(&self.use_map),
+            readiness: Some(self.readiness.ok()),
         }
     }
 }
@@ -227,6 +228,7 @@ impl PackageLoader {
                 sub: &slot.sub,
             }),
             use_map: None,
+            readiness: None,
         };
 
         let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;
