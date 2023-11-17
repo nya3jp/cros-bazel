@@ -4,7 +4,7 @@
 
 use std::{fs::File, path::Path};
 
-use alchemist::analyze::{source::PackageLocalSource, Package};
+use alchemist::analyze::source::{PackageLocalSource, PackageSources};
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
@@ -46,24 +46,18 @@ enum Repository {
     },
 }
 
-pub fn generate_deps_file(packages: &[&Package], out: &Path) -> Result<()> {
-    let repos = generate_deps(packages)?;
+pub fn generate_deps_file(all_sources: &[&PackageSources], out: &Path) -> Result<()> {
+    let repos = generate_deps(all_sources)?;
     let mut file = File::create(out)?;
     serde_json::to_writer(&mut file, &repos)?;
     Ok(())
 }
 
 #[instrument(skip_all)]
-fn generate_deps(packages: &[&Package]) -> Result<Vec<Repository>> {
-    let joined_dists: Vec<DistFileEntry> = packages
+fn generate_deps(all_sources: &[&PackageSources]) -> Result<Vec<Repository>> {
+    let joined_dists: Vec<DistFileEntry> = all_sources
         .iter()
-        .flat_map(|package| {
-            package
-                .sources
-                .dist_sources
-                .iter()
-                .map(DistFileEntry::try_new)
-        })
+        .flat_map(|sources| sources.dist_sources.iter().map(DistFileEntry::try_new))
         .collect::<Result<_>>()?;
 
     let unique_dists = joined_dists
@@ -94,9 +88,9 @@ fn generate_deps(packages: &[&Package]) -> Result<Vec<Repository>> {
             }
         });
 
-    let repos = packages
+    let repos = all_sources
         .iter()
-        .flat_map(|package| &package.sources.repo_sources)
+        .flat_map(|sources| &sources.repo_sources)
         .unique_by(|source| &source.name)
         .sorted_by(|a, b| a.name.cmp(&b.name))
         .map(|repo| Repository::RepoRepository {
@@ -105,9 +99,9 @@ fn generate_deps(packages: &[&Package]) -> Result<Vec<Repository>> {
             tree: repo.tree_hash.clone(),
         });
 
-    let chrome = packages
+    let chrome = all_sources
         .iter()
-        .flat_map(|package| &package.sources.local_sources)
+        .flat_map(|sources| &sources.local_sources)
         .filter_map(|origin| match origin {
             PackageLocalSource::Chrome(version) => Some(version),
             _ => None,
@@ -125,27 +119,11 @@ fn generate_deps(packages: &[&Package]) -> Result<Vec<Repository>> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        path::PathBuf,
-        sync::Arc,
-    };
+    use std::collections::HashMap;
 
-    use alchemist::{
-        analyze::{
-            dependency::PackageDependencies,
-            source::{PackageDistSource, PackageSources},
-        },
-        bash::vars::BashVars,
-        data::{Slot, UseMap},
-        ebuild::{
-            metadata::{EBuildBasicData, EBuildMetadata},
-            PackageDetails, PackageReadiness,
-        },
-    };
+    use alchemist::analyze::source::{PackageDistSource, PackageSources};
     use pretty_assertions::assert_eq;
     use url::Url;
-    use version::Version;
 
     use super::*;
 
@@ -190,70 +168,9 @@ mod tests {
             ],
         };
 
-        let dependencies = PackageDependencies {
-            build_deps: vec![],
-            test_deps: vec![],
-            runtime_deps: vec![],
-            post_deps: vec![],
-            build_host_deps: vec![],
-            install_host_deps: vec![],
-        };
+        let all_sources = vec![&cipd_sources, &gs_sources, &https_sources];
 
-        let make_details = |short_package_name: &str| PackageDetails {
-            metadata: Arc::new(EBuildMetadata {
-                basic_data: EBuildBasicData {
-                    repo_name: "baz".to_owned(),
-                    ebuild_path: PathBuf::from(format!(
-                        "/somewhere/sys-apps/{short_package_name}-1.0.ebuild"
-                    )),
-                    package_name: format!("sys-apps/{short_package_name}"),
-                    short_package_name: short_package_name.to_owned(),
-                    category_name: "sys-apps".to_owned(),
-                    version: Version::try_new("1.0").unwrap(),
-                },
-                vars: BashVars::new(HashMap::new()),
-            }),
-            slot: Slot::new("0"),
-            use_map: UseMap::new(),
-            stable: true,
-            readiness: PackageReadiness::Ok,
-            inherited: HashSet::new(),
-            inherit_paths: vec![],
-            direct_build_target: None,
-        };
-
-        let details1 = make_details("p1");
-        let details2 = make_details("p2");
-        let details3 = make_details("p3");
-
-        let packages = vec![
-            Package {
-                details: details1.into(),
-                dependencies: dependencies.clone(),
-                sources: cipd_sources,
-                install_set: vec![],
-                build_host_deps: vec![],
-                bashrcs: vec![],
-            },
-            Package {
-                details: details2.into(),
-                dependencies: dependencies.clone(),
-                sources: gs_sources,
-                install_set: vec![],
-                build_host_deps: vec![],
-                bashrcs: vec![],
-            },
-            Package {
-                details: details3.into(),
-                dependencies: dependencies.clone(),
-                sources: https_sources,
-                install_set: vec![],
-                build_host_deps: vec![],
-                bashrcs: vec![],
-            },
-        ];
-
-        let repos = generate_deps(&packages.iter().collect_vec())?;
+        let repos = generate_deps(&all_sources)?;
         let actual = serde_json::to_string_pretty(&repos)?;
         let expected = r#"[
   {

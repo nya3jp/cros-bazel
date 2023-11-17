@@ -403,7 +403,7 @@ pub fn generate_repo_main(
         &all_packages
             .iter()
             .flat_map(|package| match package {
-                MaybePackage::Ok(package) => Some(package.as_ref()),
+                MaybePackage::Ok(package) => Some(&package.sources),
                 _ => None,
             })
             .collect_vec(),
