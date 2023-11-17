@@ -384,7 +384,7 @@ pub fn analyze_packages(
                 let build_host_deps = build_host_deps_by_path
                     .remove(partial.details.as_basic_data().ebuild_path.as_path())
                     .unwrap();
-                let bashrcs = config.package_bashrcs(&partial.details.as_thin_package_ref());
+                let bashrcs = config.package_bashrcs(&partial.details.as_package_ref());
 
                 MaybePackage::Ok(Arc::new(Package {
                     details: partial.details,

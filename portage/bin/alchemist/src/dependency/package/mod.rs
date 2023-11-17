@@ -31,10 +31,13 @@ pub type PackageDependency = Dependency<PackageDependencyMeta>;
 /// A borrowed subset of package data to be passed to package-related predicates.
 #[derive(Clone, Copy, Debug)]
 pub struct PackageRef<'a> {
+    // Package name and version are required because they should be always available.
     pub package_name: &'a str,
     pub version: &'a Version,
-    pub slot: Slot<&'a str>,
-    pub use_map: &'a UseMap,
+
+    // Remaining fields are optional. They're matched only when they're available.
+    pub slot: Option<Slot<&'a str>>,
+    pub use_map: Option<&'a UseMap>,
 }
 
 /// Holds a set of [`PackageRef`].
@@ -64,18 +67,6 @@ impl<'a> FromIterator<PackageRef<'a>> for PackageRefSet<'a> {
         }
         Self { packages }
     }
-}
-
-/// Similar to [`PackageRef`], but it contains an even smaller subset of fields
-/// that are available before computing package USE flags.
-///
-/// We use this struct to work with package dependency atoms evaluated before
-/// computing package USE flags, e.g. on processing `package.use`.
-#[derive(Clone, Copy, Debug)]
-pub struct ThinPackageRef<'a> {
-    pub package_name: &'a str,
-    pub version: &'a Version,
-    pub slot: Slot<&'a str>,
 }
 
 /// Represents a package SLOT dependency.
@@ -408,20 +399,26 @@ impl PackageDependencyAtom {
         if package.package_name != self.package_name {
             return Ok(false);
         }
+
         if let Some(p) = &self.version {
             if !p.matches(package.version) {
                 return Ok(false);
             }
         }
-        if let Some(p) = &self.slot {
-            if !p.matches(&package.slot) {
-                return Ok(false);
+
+        if let Some(slot) = &package.slot {
+            if let Some(p) = &self.slot {
+                if !p.matches(slot) {
+                    return Ok(false);
+                }
             }
         }
 
-        for uses in &self.uses {
-            if !uses.matches(source_use_map, package.use_map)? {
-                return Ok(false);
+        if let Some(use_map) = &package.use_map {
+            for uses in &self.uses {
+                if !uses.matches(source_use_map, use_map)? {
+                    return Ok(false);
+                }
             }
         }
 
@@ -582,23 +579,27 @@ impl Display for PackageAtom {
 }
 
 impl PackageAtom {
-    pub fn matches(&self, package: &ThinPackageRef) -> bool {
+    pub fn matches(&self, package: &PackageRef) -> bool {
         if package.package_name != self.package_name {
             return false;
         }
+
         if let Some(p) = &self.version {
             if !p.matches(package.version) {
                 return false;
             }
         }
-        if let Some((slot, subslot)) = &self.slot {
-            if slot != package.slot.main {
-                return false;
-            }
 
-            if let Some(subslot) = subslot {
-                if subslot != package.slot.sub {
+        if let Some(package_slot) = &package.slot {
+            if let Some((slot, subslot)) = &self.slot {
+                if slot != package_slot.main {
                     return false;
+                }
+
+                if let Some(subslot) = subslot {
+                    if subslot != package_slot.sub {
+                        return false;
+                    }
                 }
             }
         }
@@ -624,14 +625,14 @@ mod tests {
             PackageRef {
                 package_name: "pkg/aaa",
                 version: &default_version,
-                slot: Slot::new("0"),
-                use_map: &empty_use_map,
+                slot: Some(Slot::new("0")),
+                use_map: Some(&empty_use_map),
             },
             PackageRef {
                 package_name: "pkg/bbb",
                 version: &default_version,
-                slot: Slot::new("0"),
-                use_map: &empty_use_map,
+                slot: Some(Slot::new("0")),
+                use_map: Some(&empty_use_map),
             },
         ]);
 
@@ -753,13 +754,14 @@ mod tests {
 
     #[test]
     fn test_parse_package_atom_match() -> Result<()> {
-        let package = ThinPackageRef {
+        let package = PackageRef {
             package_name: "sys-apps/systemd-utils",
             version: &Version::try_new("9999")?,
-            slot: Slot {
+            slot: Some(Slot {
                 main: "1",
                 sub: "2",
-            },
+            }),
+            use_map: None,
         };
 
         let test_cases = HashMap::from([
@@ -1044,28 +1046,30 @@ mod tests {
         let atom = PackageDependencyAtom::from_str("sys-apps/systemd-utils[udev,-boot]")?;
 
         {
+            let use_map = UseMap::from([("udev".to_string(), true), ("boot".to_string(), false)]);
             let package = PackageRef {
                 package_name: "sys-apps/systemd-utils",
                 version: &Version::try_new("9999")?,
-                slot: Slot {
+                slot: Some(Slot {
                     main: "1",
                     sub: "2",
-                },
-                use_map: &UseMap::from([("udev".to_string(), true), ("boot".to_string(), false)]),
+                }),
+                use_map: Some(&use_map),
             };
 
             assert!(atom.matches(&UseMap::new(), &package)?);
         }
 
         {
+            let use_map = UseMap::from([("udev".to_string(), true), ("boot".to_string(), true)]);
             let package = PackageRef {
                 package_name: "sys-apps/systemd-utils",
                 version: &Version::try_new("9999")?,
-                slot: Slot {
+                slot: Some(Slot {
                     main: "1",
                     sub: "2",
-                },
-                use_map: &UseMap::from([("udev".to_string(), true), ("boot".to_string(), true)]),
+                }),
+                use_map: Some(&use_map),
             };
 
             assert!(!atom.matches(&UseMap::new(), &package)?);
@@ -1076,11 +1080,12 @@ mod tests {
 
     #[test]
     fn test_parse_package_dependency_atom_match_block() -> Result<()> {
+        let use_map = UseMap::new();
         let package = PackageRef {
             package_name: "sys-apps/attr",
             version: &Version::try_new("9999")?,
-            slot: Slot::new("0"),
-            use_map: &UseMap::new(),
+            slot: Some(Slot::new("0")),
+            use_map: Some(&use_map),
         };
 
         let atom = PackageDependencyAtom::from_str("!sys-apps/acl")?;

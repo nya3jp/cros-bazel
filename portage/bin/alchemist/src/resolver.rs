@@ -60,7 +60,7 @@ impl PackageResolver {
                 Err(e) => Some(Err(e)),
             })
             .filter(|details| match details {
-                Ok(details) => atom.matches(&details.as_thin_package_ref()),
+                Ok(details) => atom.matches(&details.as_package_ref()),
                 Err(_) => true,
             })
             .collect::<Result<Vec<_>>>()?;

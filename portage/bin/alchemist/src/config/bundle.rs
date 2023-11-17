@@ -16,7 +16,7 @@ use version::Version;
 use crate::{
     bash::vars::BashVars,
     data::{IUseMap, Slot, UseMap, Vars},
-    dependency::package::ThinPackageRef,
+    dependency::package::PackageRef,
 };
 
 use super::{
@@ -208,7 +208,7 @@ impl ConfigBundle {
     fn compute_accept_keywords(
         nodes: &[ConfigNode],
         default_for_empty_config_line: &str,
-        package: &ThinPackageRef,
+        package: &PackageRef,
     ) -> Vec<String> {
         let config_values = nodes
             .iter()
@@ -283,7 +283,7 @@ impl ConfigBundle {
     pub fn is_package_accepted(
         &self,
         vars: &BashVars,
-        package: &ThinPackageRef,
+        package: &PackageRef,
     ) -> Result<IsPackageAcceptedResult> {
         // ~$ARCH is used as the default value for an empty config line.
         let arch = self.env().get("ARCH").map(|s| &**s).unwrap_or_default();
@@ -332,13 +332,14 @@ impl ConfigBundle {
         slot: &Slot<String>,
         ebuild_iuse_map: &IUseMap,
     ) -> UseMap {
-        let package = &ThinPackageRef {
+        let package = &PackageRef {
             package_name,
             version,
-            slot: Slot {
+            slot: Some(Slot {
                 main: slot.main.as_ref(),
                 sub: slot.sub.as_ref(),
-            },
+            }),
+            use_map: None,
         };
 
         let effective_iuse_map = self.compute_effective_iuse_map(ebuild_iuse_map);
@@ -369,7 +370,7 @@ impl ConfigBundle {
     }
 
     /// Returns if a package is masked by package.mask and friends.
-    pub fn is_package_masked(&self, package: &ThinPackageRef) -> bool {
+    pub fn is_package_masked(&self, package: &PackageRef) -> bool {
         let status = self
             .nodes
             .iter()
@@ -404,7 +405,7 @@ impl ConfigBundle {
     }
 
     /// Returns the bashrc files that need to be executed with the package.
-    pub fn package_bashrcs(&self, package: &ThinPackageRef) -> Vec<PathBuf> {
+    pub fn package_bashrcs(&self, package: &PackageRef) -> Vec<PathBuf> {
         let mut paths = vec![];
 
         for node in &self.nodes {
@@ -504,7 +505,7 @@ impl ConfigBundle {
     /// to a package.
     fn compute_use_variable_for_package<'a>(
         &'a self,
-        package: &'a ThinPackageRef,
+        package: &'a PackageRef,
         stable: bool,
         effective_iuse_map: &'a IUseMap,
     ) -> impl Iterator<Item = &'a str> {
@@ -558,7 +559,7 @@ impl ConfigBundle {
     /// Compute the masked USE flags of a package.
     fn compute_use_masks<'a>(
         &'a self,
-        package: &'a ThinPackageRef,
+        package: &'a PackageRef,
         stable: bool,
         kind: UseUpdateKind,
     ) -> impl Iterator<Item = &'a str> {
@@ -678,13 +679,14 @@ mod tests {
 
     #[test]
     fn test_compute_accept_keywords() -> Result<()> {
-        let package = ThinPackageRef {
+        let package = PackageRef {
             package_name: "aaa/bbb",
             version: &Version::try_new("9999")?,
-            slot: Slot {
+            slot: Some(Slot {
                 main: "0",
                 sub: "0",
-            },
+            }),
+            use_map: None,
         };
         let default_for_empty_config_line = "~amd64";
 
@@ -921,13 +923,14 @@ mod tests {
 
     lazy_static! {
         static ref VERSION_9999: Version = Version::try_new("9999").unwrap();
-        static ref PACKAGE_REF_A: ThinPackageRef<'static> = ThinPackageRef {
+        static ref PACKAGE_REF_A: PackageRef<'static> = PackageRef {
             package_name: "aaa/bbb",
             version: &VERSION_9999,
-            slot: Slot {
+            slot: Some(Slot {
                 main: "0",
                 sub: "0",
-            },
+            }),
+            use_map: None,
         };
     }
 
@@ -1106,13 +1109,14 @@ mod tests {
             },
         ])]);
 
-        let bashrcs = bundle.package_bashrcs(&ThinPackageRef {
+        let bashrcs = bundle.package_bashrcs(&PackageRef {
             package_name: "sys-lib/test",
             version: &"1".parse()?,
-            slot: Slot {
+            slot: Some(Slot {
                 main: "0",
                 sub: "0",
-            },
+            }),
+            use_map: None,
         });
 
         assert_eq!(

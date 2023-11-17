@@ -17,11 +17,7 @@ use crate::{
     bash::vars::BashVars,
     config::bundle::{ConfigBundle, IsPackageAcceptedResult},
     data::{IUseMap, Slot, UseMap},
-    dependency::{
-        package::{PackageRef, ThinPackageRef},
-        requse::RequiredUseDependency,
-        ThreeValuedPredicate,
-    },
+    dependency::{package::PackageRef, requse::RequiredUseDependency, ThreeValuedPredicate},
 };
 
 use self::metadata::{CachedEBuildEvaluator, EBuildBasicData, EBuildMetadata, MaybeEBuildMetadata};
@@ -82,22 +78,11 @@ impl PackageDetails {
         PackageRef {
             package_name: &self.as_basic_data().package_name,
             version: &self.as_basic_data().version,
-            slot: Slot {
+            slot: Some(Slot {
                 main: self.slot.main.as_str(),
                 sub: self.slot.sub.as_str(),
-            },
-            use_map: &self.use_map,
-        }
-    }
-
-    pub fn as_thin_package_ref(&self) -> ThinPackageRef {
-        ThinPackageRef {
-            package_name: &self.as_basic_data().package_name,
-            version: &self.as_basic_data().version,
-            slot: Slot {
-                main: self.slot.main.as_str(),
-                sub: self.slot.sub.as_str(),
-            },
+            }),
+            use_map: Some(&self.use_map),
         }
     }
 
@@ -215,13 +200,14 @@ impl PackageLoader {
 
         let slot = Slot::<String>::new(metadata.vars.get_scalar("SLOT")?);
 
-        let package = ThinPackageRef {
+        let package = PackageRef {
             package_name: package_name.as_str(),
             version: &metadata.basic_data.version,
-            slot: Slot {
+            slot: Some(Slot {
                 main: &slot.main,
                 sub: &slot.sub,
-            },
+            }),
+            use_map: None,
         };
 
         let raw_inherited = metadata.vars.get_scalar_or_default("INHERITED")?;

@@ -124,7 +124,7 @@ fn find_best_package_in(
 
     let sdk_packages = packages
         .into_iter()
-        .filter(|package| atom.matches(&package.details.as_thin_package_ref()))
+        .filter(|package| atom.matches(&package.details.as_package_ref()))
         .collect_vec();
 
     let best_sdk_package_details = resolver.find_best_package_in(
