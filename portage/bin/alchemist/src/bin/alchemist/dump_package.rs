@@ -4,6 +4,7 @@
 
 use alchemist::dependency::package::PackageAtom;
 use alchemist::ebuild::{PackageDetails, PackageReadiness};
+use alchemist::resolver::select_best_version;
 use alchemist::{analyze::dependency::analyze_dependencies, bash::vars::BashValue};
 use anyhow::{Context, Result};
 use colored::Colorize;
@@ -61,7 +62,7 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
 
     for atom in atoms {
         let mut packages = resolver.find_packages(&atom)?;
-        let default = resolver.find_best_package_in(&packages)?;
+        let default = select_best_version(&packages).cloned();
 
         packages.sort_by(|a, b| a.as_basic_data().version.cmp(&b.as_basic_data().version));
         packages.reverse();

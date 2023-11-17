@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 use anyhow::{bail, Context, Result};
-use itertools::Itertools;
 use rayon::prelude::*;
 use std::sync::Arc;
 use version::Version;
@@ -18,6 +17,23 @@ use crate::{
     ebuild::{CachedPackageLoader, MaybePackageDetails, PackageDetails},
     repository::RepositorySet,
 };
+
+/// Selects the best version from the provided list of packages.
+///
+/// ## Notes
+///
+/// - The provided list must contain the same package only.
+/// - Packages known to be masked are excluded from consideration.
+/// - In the case there are two or more tied candidate packages, the one appears the last in the
+///   list is selected.
+/// - It may return a package that failed to load/analyze.
+pub fn select_best_version<T: AsPackageRef, I: IntoIterator<Item = T>>(packages: I) -> Option<T> {
+    // max_by will return the last element if multiple elements are equal.
+    packages
+        .into_iter()
+        .filter(|p| p.as_package_ref().readiness != Some(false))
+        .max_by(|a, b| a.as_package_ref().version.cmp(b.as_package_ref().version))
+}
 
 /// Answers queries related to Portage packages.
 #[derive(Debug)]
@@ -43,8 +59,8 @@ impl PackageResolver {
 
     /// Finds all packages matching the specified [`PackageAtom`].
     ///
-    /// Packages from a lower-priority repository come before packages from a
-    /// higher-priority repository.
+    /// Packages from a lower-priority repository come before packages from a higher-priority
+    /// repository, which is the suitable order for [`select_best_version`].
     pub fn find_packages(&self, atom: &PackageAtom) -> Result<Vec<Arc<PackageDetails>>> {
         let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
 
@@ -68,26 +84,29 @@ impl PackageResolver {
     }
 
     /// Finds the best package matching the specified [`PackageAtom`].
+    ///
+    /// It returns `Ok(None)` if there is no matching packages, `Ok(Some(_))` if it can determine
+    /// the best package, `Err` otherwise.
     pub fn find_best_package(&self, atom: &PackageAtom) -> Result<Option<Arc<PackageDetails>>> {
         let matches = self
             .find_packages(atom)
             .with_context(|| format!("Error looking up {atom}"))?;
-        self.find_best_package_in(&matches)
+        Ok(select_best_version(matches))
     }
 
     /// Finds a package best matching the specified [`PackageAtomDependency`].
     ///
     /// # Arguments
     ///
-    /// * `use_map` - The [`UseMap`] for the package that specified the `atom`.
-    /// * `atom` - The `atom` used to filter the packages.
+    /// * `source_use_map` - The [`UseMap`] for the package that specified the `atom`.
+    /// * `atom` - The atom used to filter the packages.
     ///
     /// If Ok(None) is returned that means that no suitable packages were found.
     /// If Err(_) is returned, that means there was an unexpected error looking
     /// for the package.
     pub fn find_best_package_dependency(
         &self,
-        use_map: &UseMap,
+        source_use_map: &UseMap,
         atom: &PackageDependencyAtom,
     ) -> Result<Option<Arc<PackageDetails>>> {
         let ebuild_paths = self.repos.find_ebuilds(atom.package_name())?;
@@ -103,7 +122,7 @@ impl PackageResolver {
                 // We ignore packages that had metadata evaluation errors.
                 MaybePackageDetails::Err(_) => continue,
             };
-            match atom.matches(use_map, &details.as_package_ref()) {
+            match atom.matches(source_use_map, &details.as_package_ref()) {
                 Ok(result) => {
                     if result {
                         matches.push(details);
@@ -120,31 +139,7 @@ impl PackageResolver {
             }
         }
 
-        self.find_best_package_in(&matches)
-    }
-
-    /// Finds the best package in the provided list.
-    /// You must ensure all the packages have the same name.
-    /// TODO(b/271000644): Define a PackageSelector.
-    pub fn find_best_package_in(
-        &self,
-        packages: &[Arc<PackageDetails>],
-    ) -> Result<Option<Arc<PackageDetails>>> {
-        // Filter masked packages.
-        let packages = packages
-            .iter()
-            .filter(|details| details.readiness.ok())
-            .collect_vec();
-
-        // Find the latest version.
-        // max_by will return the last element if multiple elements are equal.
-        // This translates to picking a package from an overlay with a higher
-        // priority since the `packages` variable is sorted so that lower
-        // priority packages come first and higher priority packages come last.
-        Ok(packages
-            .into_iter()
-            .max_by(|a, b| a.as_basic_data().version.cmp(&b.as_basic_data().version))
-            .cloned())
+        Ok(select_best_version(matches))
     }
 
     /// Finds *provided packages* matching the specified [`PackageAtomDependency`].

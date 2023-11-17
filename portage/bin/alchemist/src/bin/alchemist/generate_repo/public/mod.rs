@@ -12,8 +12,10 @@ use std::{
 };
 use tracing::instrument;
 
-use alchemist::{analyze::MaybePackage, ebuild::MaybePackageDetails, resolver::PackageResolver};
-use anyhow::{anyhow, Context, Result};
+use alchemist::{
+    analyze::MaybePackage, ebuild::MaybePackageDetails, resolver::select_best_version,
+};
+use anyhow::{anyhow, Result};
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use serde::Serialize;
@@ -81,7 +83,6 @@ fn get_ebuild_name_from_path(ebuild_path: &Path) -> Result<String> {
 
 fn generate_public_package(
     maybe_packages: &[&MaybePackage],
-    resolver: &PackageResolver,
     targets: &[TargetConfig],
     test_prefix: &str,
     package_output_dir: &Path,
@@ -154,15 +155,12 @@ fn generate_public_package(
         })
         .collect_vec();
     // Choose the best version to be used for unversioned aliases. If there's at
-    // least one analysis failure propagate it instead of the normal resolver
-    // results (otherwise the build results might be unexpected/incorrect).
+    // least one analysis failure propagate it instead of the normal result
+    // (otherwise the build results might be unexpected/incorrect).
     let maybe_best_version = if !non_masked_failures.is_empty() {
         // There are analysis failures.
         None
-    } else if let Some(best_package) = resolver
-        .find_best_package_in(&package_details)
-        .with_context(|| format!("Package {:?}", package_details.first()))?
-    {
+    } else if let Some(best_package) = select_best_version(&package_details) {
         Some(best_package.as_basic_data().version.clone())
     } else {
         // All packages are masked.
@@ -264,7 +262,6 @@ pub struct TargetConfig<'a> {
 #[instrument(skip_all)]
 pub fn generate_public_packages(
     all_packages: &[MaybePackage],
-    resolver: &PackageResolver,
     targets: &[TargetConfig],
     test_prefix: &str,
     output_dir: &Path,
@@ -276,13 +273,7 @@ pub fn generate_public_packages(
         .into_par_iter()
         .try_for_each(|(package_name, maybe_packages)| {
             let package_output_dir = output_dir.join(package_name);
-            generate_public_package(
-                &maybe_packages,
-                resolver,
-                targets,
-                test_prefix,
-                &package_output_dir,
-            )
+            generate_public_package(&maybe_packages, targets, test_prefix, &package_output_dir)
         })
 }
 

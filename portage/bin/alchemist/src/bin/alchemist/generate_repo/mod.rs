@@ -22,7 +22,7 @@ use alchemist::{
     ebuild::{CachedPackageLoader, MaybePackageDetails},
     fakechroot::PathTranslator,
     repository::RepositorySet,
-    resolver::PackageResolver,
+    resolver::select_best_version,
 };
 use anyhow::{Context, Result};
 use itertools::Itertools;
@@ -111,7 +111,6 @@ fn load_packages(
 fn find_best_package_in(
     atom: &PackageAtom,
     packages: &[MaybePackage],
-    resolver: &PackageResolver,
 ) -> Result<Option<Arc<Package>>> {
     // TODO(b/303400631): Consider `PackageAnalysisFailure`.
     let packages = packages
@@ -127,13 +126,7 @@ fn find_best_package_in(
         .filter(|package| atom.matches(&package.details.as_package_ref()))
         .collect_vec();
 
-    let best_sdk_package_details = resolver.find_best_package_in(
-        sdk_packages
-            .iter()
-            .map(|package| package.details.clone())
-            .collect_vec()
-            .as_slice(),
-    )?;
+    let best_sdk_package_details = select_best_version(&sdk_packages);
 
     let best_sdk_package_details = match best_sdk_package_details {
         Some(best_sdk_package_details) => best_sdk_package_details,
@@ -141,21 +134,18 @@ fn find_best_package_in(
     };
 
     Ok(sdk_packages
-        .into_iter()
+        .iter()
         .find(|p| {
             p.details.as_basic_data().version == best_sdk_package_details.as_basic_data().version
         })
-        .cloned())
+        .map(|p| (*p).clone()))
 }
 
-fn get_sdk_implicit_system_package(
-    host_packages: &[MaybePackage],
-    host_resolver: &PackageResolver,
-) -> Result<Option<Arc<Package>>> {
+fn get_sdk_implicit_system_package(host_packages: &[MaybePackage]) -> Result<Option<Arc<Package>>> {
     // TODO: Add a parameter to pass this along
     let sdk_atom = PackageAtom::from_str("virtual/target-sdk-implicit-system")?;
 
-    find_best_package_in(&sdk_atom, host_packages, host_resolver)
+    find_best_package_in(&sdk_atom, host_packages)
 }
 
 /// Generates the stage1, stage2, etc packages and SDKs.
@@ -177,7 +167,7 @@ pub fn generate_stages(
     // analysis phase because bazel doesn't like it when there are cycles in the
     // dependency graph. This means we need to filter out the dependencies
     // when we generate the BUILD files.
-    let implicit_system_package = get_sdk_implicit_system_package(&host_packages, &host.resolver)?;
+    let implicit_system_package = get_sdk_implicit_system_package(&host_packages)?;
     let implicit_system_packages = implicit_system_package
         .as_ref()
         .map(|package| {
@@ -293,7 +283,6 @@ pub fn generate_stages(
 
     generate_public_packages(
         &host_packages,
-        &host.resolver,
         &[
             public::TargetConfig {
                 config: "stage1",
@@ -374,7 +363,6 @@ pub fn generate_stages(
         // TODO(b/303136802): Delete this once we migrate the CQ builders.
         generate_public_packages(
             &target_packages,
-            &target.resolver,
             &[
                 public::TargetConfig {
                     config: "stage1",
@@ -391,7 +379,6 @@ pub fn generate_stages(
 
         generate_public_packages(
             &target_packages,
-            &target.resolver,
             &[
                 public::TargetConfig {
                     config: "stage1",
