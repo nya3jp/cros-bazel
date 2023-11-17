@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use itertools::Itertools;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap},
@@ -13,9 +12,9 @@ use std::{
 use tracing::instrument;
 
 use alchemist::{
-    analyze::MaybePackage, ebuild::MaybePackageDetails, resolver::select_best_version,
+    analyze::MaybePackage, dependency::package::AsPackageRef, resolver::select_best_version,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
 use serde::Serialize;
@@ -70,15 +69,7 @@ pub struct EbuildFailureEntry<'a> {
 struct BuildTemplateContext<'a> {
     aliases: Vec<AliasEntry<'a>>,
     test_suites: Vec<TestSuiteEntry<'a>>,
-    ebuild_failures: Vec<EbuildFailureEntry<'a>>,
-}
-
-fn get_ebuild_name_from_path(ebuild_path: &Path) -> Result<String> {
-    Ok(ebuild_path
-        .file_name()
-        .ok_or_else(|| anyhow!("Failed to extract file name from ebuild path {ebuild_path:?}"))?
-        .to_string_lossy()
-        .to_string())
+    best_version_selection_failure: Option<&'a str>,
 }
 
 fn generate_public_package(
@@ -137,42 +128,26 @@ fn generate_public_package(
         });
     }
 
-    let package_details = maybe_packages
-        .iter()
-        .filter_map(|maybe_package| match maybe_package {
-            MaybePackage::Ok(package) => Some(package.details.clone()),
-            _ => None,
-        })
-        .collect_vec();
-    let non_masked_failures = maybe_packages
-        .iter()
-        .filter_map(|maybe_package| match maybe_package {
-            MaybePackage::Err(error) => match &error.details {
-                MaybePackageDetails::Ok(details) if details.readiness.masked() => None,
-                _ => Some(error.as_ref()),
-            },
-            _ => None,
-        })
-        .collect_vec();
-    // Choose the best version to be used for unversioned aliases. If there's at
-    // least one analysis failure propagate it instead of the normal result
-    // (otherwise the build results might be unexpected/incorrect).
-    let maybe_best_version = if !non_masked_failures.is_empty() {
-        // There are analysis failures.
-        None
-    } else if let Some(best_package) = select_best_version(&package_details) {
-        Some(best_package.as_basic_data().version.clone())
-    } else {
-        // All packages are masked.
-        // TODO(emaxx): Generate ":failure" target with this explanation message.
-        None
+    let maybe_best_version: Result<&Version, String> = match select_best_version(maybe_packages) {
+        Some(MaybePackage::Err(error))
+            if error.details.as_package_ref().readiness != Some(true) =>
+        {
+            Err(format!(
+                "Can't determine the best version for {0} due to analysis errors: {0}-{1}: {2}",
+                error.as_basic_data().package_name,
+                error.as_basic_data().version,
+                error.error,
+            ))
+        }
+        Some(maybe_package) => Ok(&maybe_package.as_basic_data().version),
+        None => Err("All packages are masked".to_string()),
     };
 
-    // Generate unversioned aliases. In case of failures, all aliases point to
-    // the error-printing target.
-    let get_actual_target = |suffix: &str| match &maybe_best_version {
-        Some(v) => Cow::from(format!(":{}{}", v, suffix)),
-        None => Cow::from(":failure"),
+    // Generate unversioned aliases. In case where we cannot determine the best version, all aliases
+    // point to the error-printing target.
+    let get_actual_target = |suffix: &str| match maybe_best_version {
+        Ok(v) => Cow::from(format!(":{}{}", v, suffix)),
+        Err(_) => Cow::from(":best_version_selection_failure"),
     };
     let short_package_name = package_output_dir
         .file_name()
@@ -206,20 +181,15 @@ fn generate_public_package(
         test_name: get_actual_target("_test"),
     });
 
-    let ebuild_failures = non_masked_failures
-        .iter()
-        .map(|failed_package| EbuildFailureEntry {
-            name: Cow::from(
-                get_ebuild_name_from_path(&failed_package.as_basic_data().ebuild_path).unwrap(),
-            ),
-            error: Cow::from(&failed_package.error),
-        })
-        .collect();
+    let best_version_selection_failure = match &maybe_best_version {
+        Ok(_) => None,
+        Err(reason) => Some(reason.as_str()),
+    };
 
     let context = BuildTemplateContext {
         aliases,
         test_suites,
-        ebuild_failures,
+        best_version_selection_failure,
     };
 
     let mut file = File::create(package_output_dir.join("BUILD.bazel"))?;
@@ -309,7 +279,7 @@ mod tests {
         let context = BuildTemplateContext {
             aliases: Vec::new(),
             test_suites: Vec::new(),
-            ebuild_failures: Vec::new(),
+            best_version_selection_failure: None,
         };
 
         let _ = TEMPLATES.render(

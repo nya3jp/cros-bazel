@@ -47,60 +47,54 @@ alias(
 )
 alias(
     name = "failure",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "debug",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "failure_debug",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "package_set",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "failure_package_set",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "install",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "failure_install",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "install_list",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 alias(
     name = "failure_install_list",
-    actual = ":failure",
+    actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )
 always_fail(
-    name = "failure",
-    message = "\n--\nSome of ebuilds failed to analyze! Aborting the build " +
-              "to prevent possibly incorrect ebuild selection." +
-              "\ntarget: @" + repository_name() + "/" + package_name() +
-              "\nList of failures below:\n" +
-              "\n** failure-1.0.ebuild **\n" +
-              """ebuild failed to evaluate /mnt/host/source/src/third_party/chromiumos-overlay/test-cases/failure/failure-1.0.ebuild: exit status: 1
+    name = "best_version_selection_failure",
+    message = "\n--\nCan't determine the best version for test-cases/failure due to analysis errors: test-cases/failure-1.0: ebuild failed to evaluate /mnt/host/source/src/third_party/chromiumos-overlay/test-cases/failure/failure-1.0.ebuild: exit status: 1
 stdout: 
-stderr: """ +
-              "\n--\n",
+stderr: \n--\n",
     visibility = ["@//bazel:internal"],
 )
 test_suite(
@@ -110,11 +104,11 @@ test_suite(
 )
 test_suite(
     name = "test",
-    tests = [ ":failure" ],
+    tests = [ ":best_version_selection_failure" ],
     visibility = ["@//bazel:internal"],
 )
 test_suite(
     name = "failure_test",
-    tests = [ ":failure" ],
+    tests = [ ":best_version_selection_failure" ],
     visibility = ["@//bazel:internal"],
 )

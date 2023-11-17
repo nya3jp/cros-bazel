@@ -1,7 +1,7 @@
 # Copyright 2023 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-{% if ebuild_failures %}
+{% if best_version_selection_failure %}
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 {%- endif %}
 
@@ -22,18 +22,10 @@ alias(
 
 {%- endfor %}
 
-{%- if ebuild_failures %}
+{%- if best_version_selection_failure %}
 always_fail(
-    name = "failure",
-    message = "\n--\nSome of ebuilds failed to analyze! Aborting the build " +
-              "to prevent possibly incorrect ebuild selection." +
-              "\ntarget: @" + repository_name() + "/" + package_name() +
-              "\nList of failures below:\n" +
-{%- for ebuild_failure in ebuild_failures %}
-              "\n** {{ ebuild_failure.name }} **\n" +
-              """{{ ebuild_failure.error }}""" +
-{%- endfor %}
-              "\n--\n",
+    name = "best_version_selection_failure",
+    message = "\n--\n{{ best_version_selection_failure }}\n--\n",
     visibility = ["@//bazel:internal"],
 )
 {%- endif %}
