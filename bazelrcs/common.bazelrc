@@ -140,18 +140,23 @@ build:hash_tracer --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_trac
 # Enable build event upload to a backend.
 #
 # Use --config=bes to opt-in results upload.
-common:bes --bes_results_url=http://sponge2/
-common:bes --bes_backend=buildeventservice-pa.googleapis.com
-# Don't upload every file referenced by the BEP message, except for crucial ones
-# like test logs. 'minimal' is the default anyway, but set it to be explicit.
-common:bes --experimental_remote_build_event_upload=minimal
-# Enable BEP uploads to complete. This results in 'Waiting for build events
-# upload: Build Event Service', which fully_async should fix, but fully_async
-# doesn't upload build.log successfully.
-# Tracking in b/311307623.
-common:bes --bes_upload_mode=wait_for_upload_complete
+build:bes --bes_results_url=http://sponge2/
+build:bes --bes_backend=buildeventservice-pa.googleapis.com
+# Upload every file referenced by the BEP message, on top of crucial ones
+# like test logs. This is necessary to upload the package-local ebuild logs.
+build:bes --experimental_remote_build_event_upload=all
+# Enable BEP uploads to complete asynchronously.
+build:bes --bes_upload_mode=fully_async
 # Set a label for this invocation so it's easy to filter on the backend.
-common:bes --bes_keywords=cros-non-release-production
+build:bes --bes_keywords=cros-non-release-production
+# Publish `important_outputs` field in BEP for the artifacts tab to work with
+# sponge2. This will be disabled in an upcoming Bazel release by default. All
+# consumers should be reading NamedSetOfFiles instead. b/212691656
+build:bes --legacy_important_outputs=true
+
+# Unconditionally import configurations for Googlers.
+# TODO(b/312234436): Enable conditional configs based on the user+build environment.
+import %workspace%/bazel/bazelrcs/googlers.bazelrc
 
 # Allow user-specific overrides for this repository.
 # Should be at the end of this file so that users can override anything above.

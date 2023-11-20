@@ -1,0 +1,2 @@
+# Enable BEP upload to Sponge by default for local bazel invocations.
+build --config=bes
