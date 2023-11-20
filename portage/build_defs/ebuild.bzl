@@ -4,15 +4,13 @@
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
+load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
-load("//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("//bazel/portage/build_defs:install_groups.bzl", "calculate_install_groups")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
-load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
-load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
-load(":install_deps.bzl", "install_deps")
 
 # The stage1 SDK will need to be built with ebuild_primordial.
 # After that, they can use the ebuild rule.
@@ -182,6 +180,10 @@ _EBUILD_COMMON_ATTRS = dict(
         allow_single_file = True,
         default = Label("@goma_info//:goma_info"),
     ),
+    _remoteexec_info = attr.label(
+        allow_single_file = True,
+        default = Label("@remoteexec_info//:remoteexec_info"),
+    ),
 )
 
 # TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
@@ -304,6 +306,10 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # --goma-info
     # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
     args.add("--goma-info=%s" % ctx.file._goma_info.path)
+
+    # --remoteexec-info
+    # NOTE: We're not adding this file to transitive_inputs because the contents of remoteexec_info shouldn't affect the build output.
+    args.add("--remoteexec-info=%s" % ctx.file._remoteexec_info.path)
 
     args.add_all(ctx.attr.bashrcs, before_each = "--bashrc")
 
@@ -876,12 +882,12 @@ ebuild_compare_package_test, ebuild_compare_package_primordial_test = maybe_prim
             providers = [BinaryPackageInfo],
             mandatory = True,
         ),
+        "_bash_runfiles": BASH_RUNFILES_ATTR,
         "_xpaktool": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/xpaktool"),
         ),
-        "_bash_runfiles": BASH_RUNFILES_ATTR,
     },
     test = True,
 )

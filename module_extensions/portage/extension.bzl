@@ -6,6 +6,7 @@ load("//bazel/module_extensions/portage:alchemist.bzl", "alchemist")
 load("//bazel/module_extensions/portage:goma_info.bzl", "goma_info")
 load("//bazel/module_extensions/portage:portage.bzl", _portage = "portage")
 load("//bazel/module_extensions/portage:portage_digest.bzl", "portage_digest")
+load("//bazel/module_extensions/portage:remoteexec_info.bzl", "remoteexec_info")
 load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
 load("//bazel/portage/repo_defs/chrome:cros_chrome_repository.bzl", _cros_chrome_repository = "cros_chrome_repository")
 load("//bazel/repo_defs:repo_repository.bzl", _repo_repository = "repo_repository")
@@ -25,6 +26,9 @@ def _portage_impl(module_ctx):
     portage_digest(
         name = "portage_digest",
         alchemist = "@alchemist//:alchemist",
+    )
+    remoteexec_info(
+        name = "remoteexec_info",
     )
 
     _portage(
@@ -47,9 +51,9 @@ def _portage_deps_impl(module_ctx):
     cros_chrome_repository = hub.wrap_rule(
         _cros_chrome_repository,
         default_targets = {
+            "cipd-cache": "//:cipd-cache",
             "src": "//:src",
             "src_internal": "//:src_internal",
-            "cipd-cache": "//:cipd-cache",
         },
     )
     repo_repository = hub.wrap_rule(

@@ -81,6 +81,9 @@ struct Cli {
     #[arg(long, help = "Goma-related info encoded as JSON.")]
     goma_info: PathBuf,
 
+    #[arg(long, help = "Remoteexec-related info encoded as JSON.")]
+    remoteexec_info: PathBuf,
+
     #[arg(long)]
     test: bool,
 }
@@ -218,6 +221,14 @@ struct GomaInfo {
     oauth2_config_file: Option<PathBuf>,
 }
 
+#[derive(serde::Deserialize)]
+struct RemoteexecInfo {
+    use_remoteexec: bool,
+    gcloud_config_dir: Option<PathBuf>,
+    reclient_dir: Option<PathBuf>,
+    reproxy_cfg: Option<PathBuf>,
+}
+
 fn do_main() -> Result<()> {
     let args = Cli::try_parse()?;
 
@@ -309,6 +320,44 @@ fn do_main() -> Result<()> {
     let mut envs: Vec<(Cow<OsStr>, Cow<OsStr>)> = Vec::new();
 
     if args.ebuild.category == "chromeos-base" && args.ebuild.package_name == "chromeos-chrome" {
+        let remoteexec_info: RemoteexecInfo =
+            serde_json::from_reader(BufReader::new(File::open(args.remoteexec_info)?))?;
+        if remoteexec_info.use_remoteexec {
+            envs.push((
+                OsStr::new("USE_REMOTEEXEC").into(),
+                OsStr::new("true").into(),
+            ));
+        }
+        if let Some(gcloud_config_dir) = remoteexec_info.gcloud_config_dir {
+            settings.push_bind_mount(BindMount {
+                source: gcloud_config_dir,
+                mount_path: PathBuf::from("/home/root/.config/gcloud"),
+                rw: false,
+            });
+        }
+        if let Some(reclient_dir) = remoteexec_info.reclient_dir {
+            settings.push_bind_mount(BindMount {
+                source: reclient_dir.clone(),
+                mount_path: reclient_dir.clone(),
+                rw: false,
+            });
+            envs.push((
+                OsStr::new("RECLIENT_DIR").into(),
+                reclient_dir.into_os_string().into(),
+            ))
+        }
+        if let Some(reproxy_cfg) = remoteexec_info.reproxy_cfg {
+            settings.push_bind_mount(BindMount {
+                source: reproxy_cfg.clone(),
+                mount_path: reproxy_cfg.clone(),
+                rw: false,
+            });
+            envs.push((
+                OsStr::new("REPROXY_CFG").into(),
+                reproxy_cfg.into_os_string().into(),
+            ))
+        }
+
         let goma_info: GomaInfo =
             serde_json::from_reader(BufReader::new(File::open(args.goma_info)?))?;
         if goma_info.use_goma {
