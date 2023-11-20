@@ -46,27 +46,34 @@ pub enum DependencyKind {
     /// Post-time dependencies, aka "PDEPEND" in Portage.
     Post,
     /// Build-time host tool dependencies, aka "BDEPEND" in Portage.
-    /// `cross_compile` will be true when CBUILD != CHOST.
-    BuildHost { cross_compile: bool },
+    BuildHost,
     /// Install-time host tool dependencies, aka "IDEPEND" in Portage.
-    /// `cross_compile` will be true when CBUILD != CHOST.
-    InstallHost { cross_compile: bool },
+    InstallHost,
 }
 
 // TODO(b:299056510): Consider removing 4-argument variant of this function.
 fn extract_dependencies(
     details: &PackageDetails,
     kind: DependencyKind,
+    cross_compile: bool,
     resolver: &PackageResolver,
     allow_list: Option<&[&str]>,
 ) -> Result<Vec<Arc<PackageDetails>>> {
-    extract_dependencies_use(details, &details.use_map, kind, resolver, allow_list)
+    extract_dependencies_use(
+        details,
+        &details.use_map,
+        kind,
+        cross_compile,
+        resolver,
+        allow_list,
+    )
 }
 
 fn extract_dependencies_use(
     details: &PackageDetails,
     use_map: &UseMap,
     kind: DependencyKind,
+    cross_compile: bool,
     resolver: &PackageResolver,
     allow_list: Option<&[&str]>,
 ) -> Result<Vec<Arc<PackageDetails>>> {
@@ -74,13 +81,13 @@ fn extract_dependencies_use(
         DependencyKind::Build => "DEPEND",
         DependencyKind::Run => "RDEPEND",
         DependencyKind::Post => "PDEPEND",
-        DependencyKind::BuildHost { .. } => "BDEPEND",
-        DependencyKind::InstallHost { .. } => "IDEPEND",
+        DependencyKind::BuildHost => "BDEPEND",
+        DependencyKind::InstallHost => "IDEPEND",
     };
 
     let raw_deps = details.metadata.vars.get_scalar_or_default(var_name)?;
 
-    let raw_extra_deps = get_extra_dependencies(details, kind);
+    let raw_extra_deps = get_extra_dependencies(details, kind, cross_compile);
 
     let joined_raw_deps = format!("{} {}", raw_deps, raw_extra_deps);
     let deps = joined_raw_deps.parse::<PackageDependency>()?;
@@ -96,14 +103,20 @@ pub fn analyze_dependencies(
     host_resolver: Option<&PackageResolver>,
     target_resolver: &PackageResolver,
 ) -> Result<PackageDependencies> {
-    let build_deps = extract_dependencies(details, DependencyKind::Build, target_resolver, None)
-        .with_context(|| {
-            format!(
-                "Resolving build-time dependencies for {}-{}",
-                &details.as_basic_data().package_name,
-                &details.as_basic_data().version
-            )
-        })?;
+    let build_deps = extract_dependencies(
+        details,
+        DependencyKind::Build,
+        cross_compile,
+        target_resolver,
+        None,
+    )
+    .with_context(|| {
+        format!(
+            "Resolving build-time dependencies for {}-{}",
+            &details.as_basic_data().package_name,
+            &details.as_basic_data().version
+        )
+    })?;
 
     let test_deps = if details.use_map.contains_key("test") {
         let mut test_use_map = details.use_map.clone();
@@ -119,6 +132,7 @@ pub fn analyze_dependencies(
             details,
             &test_use_map,
             DependencyKind::Build,
+            cross_compile,
             target_resolver,
             None,
         );
@@ -129,14 +143,20 @@ pub fn analyze_dependencies(
         build_deps.clone()
     };
 
-    let runtime_deps = extract_dependencies(details, DependencyKind::Run, target_resolver, None)
-        .with_context(|| {
-            format!(
-                "Resolving runtime dependencies for {}-{}",
-                &details.as_basic_data().package_name,
-                &details.as_basic_data().version
-            )
-        })?;
+    let runtime_deps = extract_dependencies(
+        details,
+        DependencyKind::Run,
+        cross_compile,
+        target_resolver,
+        None,
+    )
+    .with_context(|| {
+        format!(
+            "Resolving runtime dependencies for {}-{}",
+            &details.as_basic_data().package_name,
+            &details.as_basic_data().version
+        )
+    })?;
 
     let build_host_deps = if let Some(host_resolver) = host_resolver {
         // We query BDEPEND regardless of EAPI because we want our overrides
@@ -144,7 +164,8 @@ pub fn analyze_dependencies(
         // if the EAPI doesn't support it.
         let mut build_host_deps = extract_dependencies(
             details,
-            DependencyKind::BuildHost { cross_compile },
+            DependencyKind::BuildHost,
+            cross_compile,
             host_resolver,
             None,
         )
@@ -164,6 +185,7 @@ pub fn analyze_dependencies(
             let build_deps_for_host = extract_dependencies(
                 details,
                 DependencyKind::Build,
+                cross_compile,
                 host_resolver,
                 Some(&DEPEND_AS_BDEPEND_ALLOW_LIST),
             )
@@ -192,7 +214,8 @@ pub fn analyze_dependencies(
     let install_host_deps = if let Some(host_resolver) = host_resolver {
         extract_dependencies(
             details,
-            DependencyKind::InstallHost { cross_compile },
+            DependencyKind::InstallHost,
+            cross_compile,
             host_resolver,
             None,
         )
@@ -230,14 +253,20 @@ pub fn analyze_dependencies(
         runtime_deps
     };
 
-    let post_deps = extract_dependencies(details, DependencyKind::Post, target_resolver, None)
-        .with_context(|| {
-            format!(
-                "Resolving post-time dependencies for {}-{}",
-                &details.as_basic_data().package_name,
-                &details.as_basic_data().version
-            )
-        })?;
+    let post_deps = extract_dependencies(
+        details,
+        DependencyKind::Post,
+        cross_compile,
+        target_resolver,
+        None,
+    )
+    .with_context(|| {
+        format!(
+            "Resolving post-time dependencies for {}-{}",
+            &details.as_basic_data().package_name,
+            &details.as_basic_data().version
+        )
+    })?;
 
     Ok(PackageDependencies {
         build_deps,
