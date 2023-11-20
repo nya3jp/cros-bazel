@@ -5,3 +5,6 @@
 import %workspace%/bazel/bazelrcs/aspect/ci.bazelrc
 
 test --flaky_test_attempts=1
+
+# Enable BEP uploads for CI builds
+build --config=bes
