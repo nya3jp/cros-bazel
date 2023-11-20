@@ -8,7 +8,9 @@
 ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel:Cargo.lock",
     "@cros//bazel/portage/bin/alchemist:BUILD.bazel",
-    "@cros//bazel/portage/bin/alchemist:src/analyze/dependency.rs",
+    "@cros//bazel/portage/bin/alchemist:src/analyze/dependency/flatten.rs",
+    "@cros//bazel/portage/bin/alchemist:src/analyze/dependency/hacks.rs",
+    "@cros//bazel/portage/bin/alchemist:src/analyze/dependency/mod.rs",
     "@cros//bazel/portage/bin/alchemist:src/analyze/mod.rs",
     "@cros//bazel/portage/bin/alchemist:src/analyze/restrict.rs",
     "@cros//bazel/portage/bin/alchemist:src/analyze/source.rs",

@@ -6,7 +6,9 @@ load(":shared_crates.bzl", "SHARED_CRATES")
 
 _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:Cargo.toml",
-    "//bazel/portage/bin/alchemist:src/analyze/dependency.rs",
+    "//bazel/portage/bin/alchemist:src/analyze/dependency/flatten.rs",
+    "//bazel/portage/bin/alchemist:src/analyze/dependency/hacks.rs",
+    "//bazel/portage/bin/alchemist:src/analyze/dependency/mod.rs",
     "//bazel/portage/bin/alchemist:src/analyze/mod.rs",
     "//bazel/portage/bin/alchemist:src/analyze/restrict.rs",
     "//bazel/portage/bin/alchemist:src/analyze/source.rs",
