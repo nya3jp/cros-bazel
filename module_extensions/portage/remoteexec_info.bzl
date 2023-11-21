@@ -27,11 +27,19 @@ def _remoteexec_info_repository_impl(repo_ctx):
         if repo_ctx.path(gcloud_config_dir).exists:
             remoteexec_info_dict["gcloud_config_dir"] = gcloud_config_dir
 
+    # TODO(b/312385225): Replace this logic with a cleaner alternative after b/311706335 is done.
+    st = repo_ctx.execute(["whoami"])
+    if st.return_code:
+        fail("Failed to execute whoami: %s%s" % (st.stdout, st.stderr))
+    username = st.stdout.strip()
+    remoteexec_info_dict["should_use_reproxy_cfg_file_for_ci"] = username == "chrome-bot"
+
     if remoteexec_info_dict["use_remoteexec"]:
         print("Remoteexec is enabled. Going to use remoteexec to build chromeos-chrome.")
         print("gcloud_config_dir=" + str(remoteexec_info_dict.get("gcloud_config_dir")))
         print("reclient_dir=" + str(remoteexec_info_dict.get("reclient_dir")))
         print("reproxy_cfg=" + str(remoteexec_info_dict.get("reproxy_cfg")))
+        print("should_use_reproxy_cfg_file_for_ci=" + str(remoteexec_info_dict.get("should_use_reproxy_cfg_file_for_ci")))
 
     remoteexec_info = json.encode(remoteexec_info_dict)
 

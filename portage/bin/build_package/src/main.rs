@@ -227,6 +227,7 @@ struct RemoteexecInfo {
     gcloud_config_dir: Option<PathBuf>,
     reclient_dir: Option<PathBuf>,
     reproxy_cfg: Option<PathBuf>,
+    should_use_reproxy_cfg_file_for_ci: bool,
 }
 
 fn do_main() -> Result<()> {
@@ -357,6 +358,15 @@ fn do_main() -> Result<()> {
                 reproxy_cfg.into_os_string().into(),
             ))
         }
+        envs.push((
+            OsStr::new("SHOULD_USE_REPROXY_CFG_FILE_FOR_CI").into(),
+            OsStr::new(if remoteexec_info.should_use_reproxy_cfg_file_for_ci {
+                "true"
+            } else {
+                "false"
+            })
+            .into(),
+        ));
 
         let goma_info: GomaInfo =
             serde_json::from_reader(BufReader::new(File::open(args.goma_info)?))?;
