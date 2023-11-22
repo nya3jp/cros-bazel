@@ -21,6 +21,9 @@ for f in {,pre_,post_}pkg_{setup,preinst,postinst}; do
   'pkg_setup () { cros-workon_pkg_setup "$@" } ')
     # cros-workon_pkg_setup does nothing for binary packages.
     ;;
+  'pkg_postinst () { cros-go_pkg_postinst "$@" } ')
+    # cros-go_pkg_postinst does nothing for binary packages.
+    ;;
   *)
     echo "${f} has a custom definition:"
     declare -f "${f}"
