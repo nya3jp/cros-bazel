@@ -1,55 +1,94 @@
-#!/bin/bash
-# Copyright 2022 The ChromiumOS Authors
+#!/usr/bin/env python3
+# Copyright 2023 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-set -eu -o pipefail
+"""The entrypoint to bazel.
 
-# We expect BAZEL_REAL to be set by Bazel.
-if [[ -z "${BAZEL_REAL:=}" ]]; then
-  echo "ERROR: BAZEL_REAL must be set." >&2
-  exit 1
-fi
+This script adds various chromeos-specific command-line options.
+"""
 
-# Allow users to create a bazelrc file shared between all chromiumos checkouts.
-# ~/.bazelrc is also shared between all chromiumos checkouts, but it also has
-# non-chromiumos stuff.
-ARGS=()
-if [ -e "${HOME}/.chromiumos.bazelrc" ]; then
-  ARGS+=("--bazelrc=${HOME}/.chromiumos.bazelrc")
-fi
+import json
+import os
+import sys
+import time
+from typing import List
 
-while [[ "$#" -gt 1 ]]; do
-  if [[ "$1" == --* ]]; then
-    ARGS+=("$1")
-    shift
-  else
-    break
-  fi
-done
 
-# Used to force the alchemist_digest repo rule to re-run every invocation.
-if [[ "$#" -gt 1 ]]; then
-  ARGS+=("$1")
-  shift
-  CACHE_BUST_DATE="${CACHE_BUST_DATE:-$(date --iso-8601=ns)}"
-  ARGS+=("--repo_env=_CACHE_BUST_DATE=${CACHE_BUST_DATE}")
-fi
+_INVOCATION_NAME_PREFIX = "invocations/build-"
 
-# Append the current ci.chromium.org build id, if this is a CI build.
-# More info: https://chromium.googlesource.com/infra/luci/luci-py/+/HEAD/client/LUCI_CONTEXT.md
-#
-# TODO(b/311706335): Read the buildbucket ID from BAPI instead of LUCI_CONTEXT
-# when that's available.
-if [[ ! -z ${LUCI_CONTEXT:-} ]]; then
-  # Match and output the ID group: "invocations/build-<ID>" from the resultDB field.
-  BUILDBUCKET_ID=$(cat ${LUCI_CONTEXT} | \
-    python3 -c \
-    "import sys, json
 
-print(json.load(sys.stdin)['resultdb']['current_invocation']['name'])" | \
-    grep -oP "invocations/build-\K(\d+)$")
-  ARGS+=("--build_metadata=cros/luci/build_url=https://ci.chromium.org/ui/b/${BUILDBUCKET_ID}")
-fi
+def fail(msg: str):
+    print(f"ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
 
-exec "${BAZEL_REAL}" "${ARGS[@]}" "$@"
+
+def main(args: List[str]):
+    # We expect BAZEL_REAL to be set by Bazel.
+    bazel_real = os.environ.get("BAZEL_REAL", None)
+    if not bazel_real:
+        fail("BAZEL_REAL must be set.")
+
+    # Allow users to have a bazelrc file shared between all chromiumos
+    # checkouts, since ~/.bazelrc also has non-chromiumos stuff.
+    startup_options = []
+    chromiumos_rc = os.path.expanduser("~/.chromiumos.bazelrc")
+    if os.path.exists(chromiumos_rc):
+        startup_options.append(f"--bazelrc={chromiumos_rc}")
+
+    command = None
+    command_options = []
+    for i, arg in enumerate(args):
+        if arg.startswith("--"):
+            startup_options.append(arg)
+        else:
+            command = args[i]
+            command_args = args[i + 1 :]
+            break
+    if command is None:
+        # Let bazel display its own error listing available commands.
+        os.execv(bazel_real, [bazel_real, *startup_options])
+
+    # Used to force the alchemist_digest repo rule to re-run every
+    # invocation.
+    cache_bust_date = os.environ.get("CACHE_BUST_DATE", f"{time.time():.9f}")
+    command_options.append(f"--repo_env=CACHE_BUST_DATE={cache_bust_date}")
+
+    # Append the current ci.chromium.org build id, if this is a CI build.
+    # More info:
+    # https://chromium.googlesource.com/infra/luci/luci-py/+/HEAD/client/LUCI_CONTEXT.md
+    #
+    # TODO(b/311706335): Read the buildbucket ID from BAPI instead of
+    # LUCI_CONTEXT
+    # when that's available.
+    luci_context = os.environ.get("LUCI_CONTEXT", None)
+    if luci_context is not None:
+        # Match the ID group: "invocations/build-<ID>" from the resultDB field.
+        with open(luci_context, "r", encoding="utf-8") as f:
+            invocation_name = json.load(f)["resultdb"]["current_invocation"][
+                "name"
+            ]
+            if not invocation_name.startswith(_INVOCATION_NAME_PREFIX):
+                fail(f"Invalid invocation name {invocation_name!r}")
+            buildbucket_id = int(
+                invocation_name[len(_INVOCATION_NAME_PREFIX) :]
+            )
+            command_options.append(
+                (
+                    "--build_metadata=cros/luci/build_url="
+                    f"https://ci.chromium.org/ui/b/{buildbucket_id}"
+                )
+            )
+
+    argv_real = [
+        bazel_real,
+        *startup_options,
+        command,
+        *command_options,
+        *command_args,
+    ]
+    os.execv(bazel_real, argv_real)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
