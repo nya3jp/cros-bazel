@@ -11,8 +11,10 @@ def regen_repo_rule_srcs(name, target, output, variable = None, extra_deps = [])
     args = ["--target", target, "--output", output, "--regen_cmd", regen_cmd]
     if variable:
         args.extend(["--variable", variable])
-    for dep in extra_deps:
-        args.extend(["--extra_dep", dep])
+    if extra_deps:
+        args.append("--extra_dep")
+        for dep in extra_deps:
+            args.append(dep)
 
     custom_args_binary(
         name = name,

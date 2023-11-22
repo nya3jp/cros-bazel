@@ -40,7 +40,7 @@ class Label:
         match = _LABEL_RE.match(label)
         if match is None:
             raise ValueError(f"Invalid absolute label {label}")
-        self.repo: str = match.group("repo") or "cros"
+        self.repo: str = (match.group("repo") or "").lstrip("@")
         self.pkg: str = match.group("pkg")
         self.name: str = match.group("name") or self.pkg.split("/")[-1]
 
@@ -54,7 +54,7 @@ class Label:
         return build_file
 
     def __str__(self):
-        return f"@{self.repo}//{self.pkg}:{self.name}"
+        return f"@{self.repo or 'cros'}//{self.pkg}:{self.name}"
 
     def __eq__(self, other):
         return self._key == other._key

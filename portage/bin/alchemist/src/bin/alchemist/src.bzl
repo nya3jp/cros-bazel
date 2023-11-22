@@ -7,6 +7,7 @@
 
 ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel:Cargo.lock",
+    "@cros//bazel:Cargo.toml",
     "@cros//bazel/portage/bin/alchemist:BUILD.bazel",
     "@cros//bazel/portage/bin/alchemist:src/analyze/dependency/direct/flatten.rs",
     "@cros//bazel/portage/bin/alchemist:src/analyze/dependency/direct/hacks.rs",
@@ -118,4 +119,5 @@ ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel/portage/common/portage/version:src/version.rs",
     "@cros//bazel/portage/common/tracing-chrome-trace:BUILD.bazel",
     "@cros//bazel/portage/common/tracing-chrome-trace:src/lib.rs",
+    "@alchemy_crates//:BUILD.bazel",
 ]
