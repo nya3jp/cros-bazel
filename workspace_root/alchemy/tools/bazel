@@ -36,4 +36,20 @@ if [[ "$#" -gt 1 ]]; then
   ARGS+=("--repo_env=_CACHE_BUST_DATE=${CACHE_BUST_DATE}")
 fi
 
+# Append the current ci.chromium.org build id, if this is a CI build.
+# More info: https://chromium.googlesource.com/infra/luci/luci-py/+/HEAD/client/LUCI_CONTEXT.md
+#
+# TODO(b/311706335): Read the buildbucket ID from BAPI instead of LUCI_CONTEXT
+# when that's available.
+if [[ ! -z ${LUCI_CONTEXT:-} ]]; then
+  # Match and output the ID group: "invocations/build-<ID>" from the resultDB field.
+  BUILDBUCKET_ID=$(cat ${LUCI_CONTEXT} | \
+    python3 -c \
+    "import sys, json
+
+print(json.load(sys.stdin)['resultdb']['current_invocation']['name'])" | \
+    grep -oP "invocations/build-\K(\d+)$")
+  ARGS+=("--build_metadata=cros/luci/build_url=https://ci.chromium.org/ui/b/${BUILDBUCKET_ID}")
+fi
+
 exec "${BAZEL_REAL}" "${ARGS[@]}" "$@"
