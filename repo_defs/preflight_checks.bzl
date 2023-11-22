@@ -21,19 +21,27 @@ def _preflight_check_fail(reason):
 
 def _preflight_checks_impl(repo_ctx):
     """Performs preflight checks."""
+    failure = None
+
     if repo_ctx.os.environ.get("ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT") != "1":
         if not repo_ctx.path("/etc/cros_chroot_version").exists:
-            _preflight_check_fail("Bazel was run outside CrOS chroot.")
+            failure = "Bazel was run outside CrOS chroot."
 
     if repo_ctx.os.environ.get("CHROMITE_BAZEL_WRAPPER") != "1":
-        _preflight_check_fail("Bazel was run without the proper wrapper.")
+        failure = "Bazel was run without the proper wrapper."
 
     llvm_path = repo_ctx.workspace_root.get_child("third_party/llvm-project")
     if not llvm_path.exists:
-        _preflight_check_fail(
+        failure = (
             "third_party/llvm-project is not checked out.\n" +
             "Did you run `repo init` with `-g default,bazel`?",
         )
+
+    if repo_ctx.os.environ.get("IS_NESTED_BAZEL") == "1":
+        failure = None
+
+    if failure != None:
+        _preflight_check_fail(failure)
 
     # Create an empty repository.
     repo_ctx.file("BUILD.bazel", "")
@@ -45,6 +53,7 @@ preflight_checks = repository_rule(
     environ = [
         "ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT",
         "CHROMITE_BAZEL_WRAPPER",
+        "IS_NESTED_BAZEL",
     ],
     local = True,
     doc = """
