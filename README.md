@@ -388,3 +388,30 @@ skip it with `git commit --no-verify`.
 cd ~/chromiumos/src/bazel
 ln -s ../../../../../src/bazel/portage/tools/run_tests.sh .git/hooks/pre-commit
 ```
+
+#### Bazel Build Event Services
+
+Bazel supports uploading and persisting build/test events and top level outputs
+(e.g. what was built, invocation command, hostname, performance metrics) to a
+backend. These build events can then be visualized and accessed over a shareable
+URL. These standardized backends are known as Build Event Services (BES), and the
+events are defined in
+[build_event_stream.proto](https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/buildeventstream/proto/build_event_stream.proto).
+
+Currently, BES uploads are enabled by default for all CI and local builds (for
+Googlers). The URL is printed at the start and end of every invocation. For
+example:
+
+``` sh
+$ BOARD=amd64-generic bazel test //bazel/rust/examples/...
+(09:18:58) INFO: Invocation ID: 2dbec8dc-8dfe-4263-b0db-399a029b7dc7
+(09:18:58) INFO: Streaming build results to: http://sponge2/2dbec8dc-8dfe-4263-b0db-399a029b7dc7
+...
+(09:19:13) INFO: Elapsed time: 16.542s, Critical Path: 2.96s
+(09:19:13) INFO: 6 processes: 3 remote cache hit, 7 linux-sandbox.
+Executed 5 out of 5 tests: 5 tests pass.
+(09:19:13) INFO: Streaming build results to: http://sponge2/2dbec8dc-8dfe-4263-b0db-399a029b7dc7
+```
+
+The flags related to BES uploads are grouped behind the `--config=bes` flag,
+defined in the common bazelrc file.
