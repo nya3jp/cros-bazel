@@ -112,6 +112,12 @@ def main(args: List[str]):
         "--platforms=@@//bazel/platforms:host",
     ]
     command_options.append(f"--repo_env=NESTED_BAZEL_CMD={json.dumps(build)}")
+    nested_opts = {
+        "base_command": nested_base_command,
+        "common_opts": nested_command_options,
+        "nested_output_base": nested_output_base,
+    }
+    command_options.append(f"--repo_env=NESTED_BAZEL={json.dumps(nested_opts)}")
 
     if command == "shutdown":
         print("Shutting down nested bazel server")
