@@ -68,6 +68,10 @@ build --nostamp
 # Minimize remote cache downloads
 build --remote_download_toplevel
 
+# Collect system-wide network metrics in JSON profiles and BEP
+# (build_metrics.network_metrics)
+build --experimental_collect_system_network_usage
+
 ###
 # Correctness guarantees
 ###
