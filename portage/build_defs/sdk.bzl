@@ -170,7 +170,7 @@ def _sdk_install_deps_impl(ctx):
         order = "postorder",
     )
 
-    outputs = install_deps(
+    layers, logs, traces = install_deps(
         ctx = ctx,
         output_prefix = ctx.attr.out or ctx.attr.name,
         board = ctx.attr.board,
@@ -187,9 +187,13 @@ def _sdk_install_deps_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset(outputs)),
+        DefaultInfo(files = depset(layers)),
+        OutputGroupInfo(
+            logs = depset(logs),
+            traces = depset(traces),
+        ),
         SDKInfo(
-            layers = sdk.layers + outputs,
+            layers = sdk.layers + layers,
             packages = depset(transitive = [sdk.packages, install_set]),
         ),
     ]

@@ -520,10 +520,12 @@ def _ebuild_impl(ctx):
 
     return [
         DefaultInfo(files = depset(
-            [output_binary_package_file, output_log_file] +
+            [output_binary_package_file] +
             interface_library_outputs,
         )),
         OutputGroupInfo(
+            logs = depset([output_log_file]),
+            traces = depset([output_profile_file]),
             _validation = depset(validation_files),
         ),
         package_info,

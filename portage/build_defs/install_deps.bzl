@@ -164,7 +164,7 @@ def _fast_install_packages(
         progress_message = actual_progress_message,
     )
 
-    return new_layers
+    return new_layers, [output_log_file], [output_profile_file]
 
 def install_deps(
         ctx,
@@ -214,6 +214,8 @@ def install_deps(
 
     Returns:
         list[File]: Files representing file system layers.
+        list[File]: Log files generated when building the layers.
+        list[File]: Trace files generated when building the layers.
     """
     if strategy == "fast":
         return _fast_install_packages(
@@ -285,4 +287,4 @@ def install_deps(
         progress_message = progress_message,
     )
 
-    return [output_root]
+    return [output_root], [output_log_file], [output_profile_file]

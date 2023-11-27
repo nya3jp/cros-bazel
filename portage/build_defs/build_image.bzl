@@ -28,7 +28,7 @@ def _build_image_impl(ctx):
         ],
         order = "postorder",
     )
-    deps_layers = install_deps(
+    deps_layers, logs, traces = install_deps(
         ctx = ctx,
         output_prefix = ctx.attr.output_image_file_name + "-deps",
         board = ctx.attr.board,
@@ -114,7 +114,13 @@ def _build_image_impl(ctx):
         progress_message = "Building " + output_image_file.basename,
     )
 
-    return [DefaultInfo(files = depset([output_image_file, output_log_file]))]
+    return [
+        DefaultInfo(files = depset([output_image_file])),
+        OutputGroupInfo(
+            logs = depset([output_log_file] + logs),
+            traces = depset([output_profile_file] + traces),
+        ),
+    ]
 
 build_image = rule(
     implementation = _build_image_impl,

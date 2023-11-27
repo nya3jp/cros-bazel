@@ -37,6 +37,9 @@ common --show_timestamps
 # Always show output from actions.
 common --experimental_ui_max_stdouterr_bytes=-1
 
+# Publish the individual action traces and logs
+build --output_groups=+logs,+traces
+
 # Prevent writing to the remote cache if source files change during the build.
 # **DISABLED** Only useful when uploading artifacts from local builds, which we
 # won't do once we have Bazel running in CI builds, and it prevents uploading
