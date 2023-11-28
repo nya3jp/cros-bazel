@@ -268,6 +268,24 @@ pub trait RepositorySetOperations<'a> {
         }
         bail!("repository not found under {}", path.display());
     }
+
+    /// Groups all the paths by the repository name they belong too.
+    fn group_paths_by_repos<I>(&'a self, paths: I) -> Result<HashMap<&'a str, HashSet<&'a Path>>>
+    where
+        I: IntoIterator<Item = &'a Path>,
+    {
+        let mut paths_by_repo_name = HashMap::new();
+
+        for path in paths {
+            let repo = self.get_repo_by_path(path)?;
+            paths_by_repo_name
+                .entry(repo.name())
+                .or_insert(HashSet::new())
+                .insert(path);
+        }
+
+        Ok(paths_by_repo_name)
+    }
 }
 
 /// Holds a set of at least one [`Repository`].
@@ -1201,6 +1219,29 @@ use-manifests = strict
                     "private-overlays/baseboard-grunt-private/sys-libs/glibc/glibc-1.0.ebuild"
                 ))?
                 .name()
+        );
+
+        assert_eq!(
+            HashMap::from([
+                (
+                    "chromiumos",
+                    HashSet::from([dir
+                        .join("third_party/chromiumos-overlay/metadata/layout.conf")
+                        .as_path()])
+                ),
+                (
+                    "portage-stable",
+                    HashSet::from([dir
+                        .join("third_party/portage-stable/metadata/layout.conf")
+                        .as_path()])
+                ),
+            ]),
+            repos.group_paths_by_repos([
+                dir.join("third_party/chromiumos-overlay/metadata/layout.conf")
+                    .as_path(),
+                dir.join("third_party/portage-stable/metadata/layout.conf")
+                    .as_path(),
+            ])?
         );
 
         Ok(())
