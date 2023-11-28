@@ -248,6 +248,9 @@ pub trait RepositorySetOperations<'a> {
 
     fn get_unordered_repos(&'a self) -> Self::Iter;
 
+    /// Looks up a repository by its name.
+    fn get_repo_by_name(&'a self, name: &str) -> Result<&'a Repository>;
+
     /// Looks up a repository that contains the specified file path.
     /// It can be used, for example, to look up a repository that contains an
     /// ebuild file.
@@ -280,6 +283,12 @@ impl<'a> RepositorySetOperations<'a> for RepositorySet {
 
     fn get_unordered_repos(&'a self) -> Self::Iter {
         self.repos.values()
+    }
+
+    fn get_repo_by_name(&self, name: &str) -> Result<&Repository> {
+        self.repos
+            .get(name)
+            .ok_or_else(|| anyhow!("repository not found: {}", name))
     }
 }
 
@@ -398,13 +407,6 @@ impl RepositorySet {
             .last()
             .expect("repository set should not be empty");
         self.get_repo_by_name(name).unwrap()
-    }
-
-    /// Looks up a repository by its name.
-    pub fn get_repo_by_name(&self, name: &str) -> Result<&Repository> {
-        self.repos
-            .get(name)
-            .ok_or_else(|| anyhow!("repository not found: {}", name))
     }
 
     /// Scans the repositories and returns ebuild file paths for the specified
@@ -797,6 +799,13 @@ impl<'a> RepositorySetOperations<'a> for UnorderedRepositorySet {
     fn get_unordered_repos(&'a self) -> Self::Iter {
         self.repos.iter()
     }
+
+    fn get_repo_by_name(&'a self, name: &str) -> Result<&'a Repository> {
+        self.repos
+            .iter()
+            .find(|repo| repo.name() == name)
+            .with_context(|| format!("repository not found: {}", name))
+    }
 }
 
 impl FromIterator<Repository> for UnorderedRepositorySet {
@@ -1178,6 +1187,11 @@ use-manifests = strict
                 .get_unordered_repos()
                 .map(|repo| repo.name())
                 .collect(),
+        );
+
+        assert_eq!(
+            "portage-stable",
+            repos.get_repo_by_name("portage-stable")?.name()
         );
 
         assert_eq!(

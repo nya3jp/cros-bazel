@@ -18,7 +18,7 @@ use crate::{
     },
     data::Vars,
     path::clean_path,
-    repository::RepositorySet,
+    repository::{RepositorySet, RepositorySetOperations},
 };
 
 /// Parsed Portage profile.

@@ -12,7 +12,11 @@ use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::{fileops::FileOps, repository::RepositorySet, toolchain::ToolchainConfig};
+use crate::{
+    fileops::FileOps,
+    repository::{RepositorySet, RepositorySetOperations},
+    toolchain::ToolchainConfig,
+};
 
 pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
 
