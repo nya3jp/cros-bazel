@@ -243,23 +243,28 @@ impl Repository {
     }
 }
 
-/// Looks up a repository that contains the specified file path.
-fn get_repo_by_path<'a, I>(path: &Path, repos: I) -> Result<&'a Repository>
-where
-    I: IntoIterator<Item = &'a Repository>,
-{
-    if !path.is_absolute() {
-        bail!(
-            "BUG: absolute path required to lookup repositories: {}",
-            path.display()
-        );
-    }
-    for repo in repos {
-        if path.starts_with(repo.base_dir()) {
-            return Ok(repo);
+pub trait RepositorySetOperations<'a> {
+    type Iter: IntoIterator<Item = &'a Repository>;
+
+    fn get_unordered_repos(&'a self) -> Self::Iter;
+
+    /// Looks up a repository that contains the specified file path.
+    /// It can be used, for example, to look up a repository that contains an
+    /// ebuild file.
+    fn get_repo_by_path(&'a self, path: &Path) -> Result<&'a Repository> {
+        if !path.is_absolute() {
+            bail!(
+                "BUG: absolute path required to lookup repositories: {}",
+                path.display()
+            );
         }
+        for repo in self.get_unordered_repos() {
+            if path.starts_with(repo.base_dir()) {
+                return Ok(repo);
+            }
+        }
+        bail!("repository not found under {}", path.display());
     }
-    bail!("repository not found under {}", path.display());
 }
 
 /// Holds a set of at least one [`Repository`].
@@ -268,6 +273,14 @@ pub struct RepositorySet {
     repos: HashMap<String, Repository>,
     // Keeps the insertion order of `repos`.
     order: Vec<String>,
+}
+
+impl<'a> RepositorySetOperations<'a> for RepositorySet {
+    type Iter = std::collections::hash_map::Values<'a, String, Repository>;
+
+    fn get_unordered_repos(&'a self) -> Self::Iter {
+        self.repos.values()
+    }
 }
 
 impl RepositorySet {
@@ -357,13 +370,6 @@ impl RepositorySet {
         }
 
         repo_list
-    }
-
-    /// Looks up a repository that contains the specified file path.
-    /// It can be used, for example, to look up a repository that contains an
-    /// ebuild file.
-    pub fn get_repo_by_path(&self, path: &Path) -> Result<&Repository> {
-        get_repo_by_path(path, self.repos.values())
     }
 
     /// Returns the primary/leaf repository.
@@ -785,16 +791,11 @@ pub struct UnorderedRepositorySet {
     repos: Vec<Repository>,
 }
 
-impl UnorderedRepositorySet {
-    pub fn repos(&self) -> &Vec<Repository> {
-        &self.repos
-    }
+impl<'a> RepositorySetOperations<'a> for UnorderedRepositorySet {
+    type Iter = std::slice::Iter<'a, Repository>;
 
-    /// Looks up a repository that contains the specified file path.
-    /// It can be used, for example, to look up a repository that contains an
-    /// ebuild file.
-    pub fn get_repo_by_path(&self, path: &Path) -> Result<&Repository> {
-        get_repo_by_path(path, self.repos.iter())
+    fn get_unordered_repos(&'a self) -> Self::Iter {
+        self.repos.iter()
     }
 }
 
@@ -1173,7 +1174,10 @@ use-manifests = strict
                 "cheets-private",
                 "grunt-private",
             ]),
-            repos.repos().iter().map(|repo| repo.name()).collect(),
+            repos
+                .get_unordered_repos()
+                .map(|repo| repo.name())
+                .collect(),
         );
 
         assert_eq!(

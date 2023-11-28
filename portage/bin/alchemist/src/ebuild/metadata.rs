@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use crate::dependency::package::{AsPackageRef, PackageRef};
-use crate::repository::{Repository, UnorderedRepositorySet};
+use crate::repository::{Repository, RepositorySetOperations, UnorderedRepositorySet};
 
 use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;

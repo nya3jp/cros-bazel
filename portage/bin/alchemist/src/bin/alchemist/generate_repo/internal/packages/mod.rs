@@ -20,7 +20,7 @@ use alchemist::{
     dependency::restrict::RestrictAtom,
     ebuild::PackageDetails,
     fakechroot::PathTranslator,
-    repository::RepositorySet,
+    repository::{RepositorySet, RepositorySetOperations},
 };
 use anyhow::{anyhow, Result};
 use itertools::Itertools;
