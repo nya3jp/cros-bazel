@@ -64,6 +64,8 @@ ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:dump_profile.rs",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/common.rs",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/deps.rs",
+    "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/internal/bashrcs/mod.rs",
+    "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/internal/bashrcs/templates/bashrc.BUILD.bazel",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/internal/mod.rs",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/internal/overlays/mod.rs",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/internal/overlays/templates/chromiumos-overlay.BUILD.bazel",

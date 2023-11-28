@@ -426,6 +426,41 @@ impl ConfigBundle {
         paths
     }
 
+    /// Returns all profile.bashrc files defined by the profile.
+    pub fn all_profile_bashrcs(&self) -> Vec<&Path> {
+        let mut paths = vec![];
+
+        for node in &self.nodes {
+            match &node.value {
+                ConfigNodeValue::ProfileBashrc(bashrcs) => {
+                    paths.extend(bashrcs.iter().map(|path| path.as_path()))
+                }
+                _ => continue,
+            }
+        }
+
+        paths
+    }
+
+    /// Returns all package.bashrc files defined by the profile.
+    pub fn all_package_bashrcs(&self) -> Vec<&Path> {
+        let mut paths = vec![];
+
+        for node in &self.nodes {
+            match &node.value {
+                ConfigNodeValue::PackageBashrcs(bashrcs) => paths.extend(
+                    bashrcs
+                        .iter()
+                        .flat_map(|bashrc| &bashrc.paths)
+                        .map(|path| path.as_path()),
+                ),
+                _ => continue,
+            }
+        }
+
+        paths
+    }
+
     /// Computes the effective IUSE of a package, which includes IUSE explicitly
     /// defined in ebuild/eclass and profile-injected IUSE.
     ///
@@ -1131,6 +1166,24 @@ mod tests {
                 Path::new("foo/bashrc/test.sh"),
                 Path::new("foo/bashrc/another.sh"),
                 Path::new("bar/profile.bashrc/c.sh",),
+            ],
+        );
+
+        assert_eq!(
+            bundle.all_profile_bashrcs(),
+            vec![
+                Path::new("foo/profile.bashrc/a.sh"),
+                Path::new("foo/profile.bashrc/b.sh"),
+                Path::new("bar/profile.bashrc/c.sh",),
+            ],
+        );
+
+        assert_eq!(
+            bundle.all_package_bashrcs(),
+            vec![
+                Path::new("foo/bashrc/test.sh"),
+                Path::new("foo/bashrc/another.sh"),
+                Path::new("foo/bashrc/other.sh"),
             ],
         );
 

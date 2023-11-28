@@ -33,6 +33,7 @@ use crate::alchemist::TargetData;
 
 use self::{
     deps::generate_deps_file,
+    internal::bashrcs::generate_internal_bashrcs,
     internal::overlays::generate_internal_overlays,
     internal::packages::{
         generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
@@ -396,6 +397,8 @@ pub fn generate_repo_main(
             .as_slice(),
         output_dir,
     )?;
+
+    generate_internal_bashrcs(translator, host, target, output_dir)?;
 
     let all_packages = generate_stages(host, target, translator, src_dir, output_dir)?;
 

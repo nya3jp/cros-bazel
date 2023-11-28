@@ -139,6 +139,19 @@ OverlaySetInfo = provider(
     },
 )
 
+BashrcInfo = provider(
+    "Portage bashrc info",
+    fields = {
+        "path": """
+            String: Path inside the container where the bashrc is mounted.
+        """,
+        "layer": """
+            File: A file which represents an overlay layer. A layer
+            file can be a tar file (.tar or .tar.zst).
+        """,
+    },
+)
+
 SDKInfo = provider(
     """
     Contains information necessary to mount an ephemeral CrOS SDK.

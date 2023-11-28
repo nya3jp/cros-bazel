@@ -1,0 +1,27 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@//bazel/portage/build_defs:bashrc.bzl", "bashrc")
+
+{%- for bashrc in bashrcs %}
+pkg_tar(
+    name = "{{ bashrc.name }}_layer",
+    extension = "tar.zst",
+    compressor = "@//bazel/portage/repo_defs/zstd",
+    compressor_args = "--threads=0",
+    files = {
+        "{{ bashrc.src }}": "{{ bashrc.dest }}",
+    },
+    visibility = ["//visibility:private"],
+)
+
+bashrc(
+    name = "{{ bashrc.name }}",
+    path = "{{ bashrc.dest }}",
+    layer = ":{{ bashrc.name }}_layer",
+    visibility = ["@//bazel:internal"],
+)
+
+{% endfor %}
