@@ -101,8 +101,8 @@ ebuild(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -178,8 +178,8 @@ ebuild_debug(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -264,8 +264,8 @@ ebuild(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -338,8 +338,8 @@ ebuild_debug(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -531,8 +531,8 @@ ebuild_test(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),

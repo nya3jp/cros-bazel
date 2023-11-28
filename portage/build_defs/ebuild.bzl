@@ -6,7 +6,7 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
-load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_input_file_path", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:install_groups.bzl", "calculate_install_groups")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
@@ -156,7 +156,8 @@ _EBUILD_COMMON_ATTRS = dict(
         """,
         mandatory = True,
     ),
-    bashrcs = attr.string_list(
+    bashrcs = attr.label_list(
+        providers = [BashrcInfo],
         doc = """
         The bashrc files to execute for the package.
         """,
@@ -185,6 +186,9 @@ _EBUILD_COMMON_ATTRS = dict(
         default = Label("@remoteexec_info//:remoteexec_info"),
     ),
 )
+
+def _bashrc_to_path(bashrc):
+    return bashrc[BashrcInfo].path
 
 # TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
 def _compute_build_package_args(ctx, output_path, use_runfiles):
@@ -265,7 +269,8 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
         sdk.layers +
         overlays.layers +
         ctx.files.eclasses +
-        ctx.files.portage_config
+        ctx.files.portage_config +
+        ctx.files.bashrcs
     )
     args.add_all(layer_inputs, map_each = format_layer_arg, expand_directories = False, allow_closure = True)
     direct_inputs.extend(layer_inputs)
@@ -311,7 +316,7 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     # NOTE: We're not adding this file to transitive_inputs because the contents of remoteexec_info shouldn't affect the build output.
     args.add("--remoteexec-info=%s" % ctx.file._remoteexec_info.path)
 
-    args.add_all(ctx.attr.bashrcs, before_each = "--bashrc")
+    args.add_all(ctx.attr.bashrcs, before_each = "--bashrc", map_each = _bashrc_to_path)
 
     # Consume interface libraries.
     interface_library_inputs = add_interface_library_args(

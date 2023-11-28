@@ -22,7 +22,7 @@ use alchemist::{
     fakechroot::PathTranslator,
     repository::{RepositorySet, RepositorySetOperations},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use rayon::prelude::*;
@@ -73,7 +73,7 @@ pub struct EBuildEntry {
     uses: Vec<String>,
     sdk: String,
     direct_build_target: Option<String>,
-    bashrcs: Vec<PathBuf>,
+    bashrcs: Vec<String>,
 }
 
 /// Specifies the config used to generate host packages.
@@ -268,6 +268,11 @@ impl EBuildEntry {
             .map(DistFileEntry::try_new)
             .collect::<Result<_>>()?;
 
+        let repo_set = match &target {
+            PackageType::Host(host) => host.repo_set,
+            PackageType::CrossRoot { target, .. } => target.repo_set,
+        };
+
         let eclasses = package
             .details
             .inherit_paths
@@ -275,10 +280,6 @@ impl EBuildEntry {
             .map(|path| {
                 let eclass = path.file_stem().unwrap().to_string_lossy();
 
-                let repo_set = match &target {
-                    PackageType::Host(host) => host.repo_set,
-                    PackageType::CrossRoot { target, .. } => target.repo_set,
-                };
                 let repo = repo_set.get_repo_by_path(path).unwrap().name();
 
                 format!("//internal/overlays/{}/eclass:{}", repo, eclass)
@@ -417,7 +418,32 @@ impl EBuildEntry {
             package.details.as_basic_data().repo_name
         );
 
-        let bashrcs = package.bashrcs.to_vec();
+        let bashrcs = package
+            .bashrcs
+            .iter()
+            .map(|bashrc| {
+                let repo = repo_set.get_repo_by_path(bashrc)?;
+                let repo_name = repo.name();
+
+                let base = bashrc
+                    .strip_prefix(repo.profiles_dir())
+                    .unwrap()
+                    .parent()
+                    .context("bashrc to have a parent directory")?
+                    .to_str()
+                    .context("bashrc is not a valid string")?;
+
+                let target_name = bashrc
+                    .file_name()
+                    .context("bashrc to have a file name")?
+                    .to_str()
+                    .context("bashrc is not a valid string")?;
+
+                Ok(format!(
+                    "//internal/bashrcs/{repo_name}/{base}:{target_name}"
+                ))
+            })
+            .collect::<Result<_>>()?;
 
         Ok(Self {
             ebuild_name,

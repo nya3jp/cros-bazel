@@ -11,6 +11,7 @@ def _bashrc_impl(ctx):
             path = ctx.attr.path,
             layer = ctx.attr.layer,
         ),
+        DefaultInfo(files = ctx.attr.layer[DefaultInfo].files),
     ]
 
 bashrc = rule(

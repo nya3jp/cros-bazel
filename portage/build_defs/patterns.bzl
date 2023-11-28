@@ -20,6 +20,7 @@ OVERLAY_ANALYSIS_FILE_PATTERN = [
 # Compliments the above OVERLAY_ANALYSIS_FILE_PATTERN and lists all additional
 # files that portage uses to compute the effective USE flags for a package.
 OVERLAY_USE_FILE_PATTERN = [
+    "profiles/**/bashrc/**",
     "profiles/**/eapi",
     "profiles/**/make.defaults",
     "profiles/**/package.bashrc",
@@ -35,6 +36,7 @@ OVERLAY_USE_FILE_PATTERN = [
     "profiles/**/package.use.stable.mask",
     "profiles/**/package.use.stable.mask/**",
     "profiles/**/parent",
+    "profiles/**/profile.bashrc",
     "profiles/**/use.force",
     "profiles/**/use.force/**",
     "profiles/**/use.mask",

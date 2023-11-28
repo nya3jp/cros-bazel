@@ -101,9 +101,9 @@ ebuild(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -179,9 +179,9 @@ ebuild_debug(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -266,9 +266,9 @@ ebuild(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -341,9 +341,9 @@ ebuild_debug(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
@@ -535,9 +535,9 @@ ebuild_test(
     }),
     bashrcs = select({
         "@//bazel/portage:compiled-profiles-enabled": [
-            "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/profile.bashrc",
-            "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
         "@//bazel/portage:compiled-profiles-disabled": [],
     }),
