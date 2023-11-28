@@ -15,6 +15,7 @@ OVERLAY_ANALYSIS_FILE_PATTERN = [
     "profiles/**/package.provided/**",
     "profiles/**/package.unmask",
     "profiles/**/package.unmask/**",
+    "profiles/**/packages",
 ]
 
 # Compliments the above OVERLAY_ANALYSIS_FILE_PATTERN and lists all additional
