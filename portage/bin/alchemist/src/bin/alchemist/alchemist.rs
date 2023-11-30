@@ -251,7 +251,7 @@ fn load_board(
     let resolver =
         PackageResolver::new(Arc::clone(&repos), Arc::clone(&config), Arc::clone(&loader));
 
-    let toolchains = load_toolchains(&repos)?;
+    let toolchains = load_toolchains(&repos.get_repos())?;
 
     Ok(TargetData {
         sysroot: root_dir.into(),

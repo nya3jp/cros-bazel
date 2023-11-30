@@ -6,8 +6,8 @@ use crate::common::CHROOT_SOURCE_DIR;
 use crate::config::makeconf::generate::generate_make_conf_for_board;
 use crate::fileops::execute_file_ops;
 use crate::fileops::FileOps;
+use crate::repository::Repository;
 use crate::repository::RepositoryLookup;
-use crate::repository::RepositorySet;
 use crate::toolchain::load_toolchains;
 use crate::toolchain::ToolchainConfig;
 use std::fs::create_dir_all;
@@ -266,8 +266,8 @@ fn generate_host_configs() -> Result<()> {
 /// Generates the portage configuration for the board.
 pub fn target_config_file_ops(
     board: &str,
-    profile: &str,
-    repos: &RepositorySet,
+    profile_path: &Path,
+    repos: &[&Repository],
     toolchains: &ToolchainConfig,
     include_provided: bool,
 ) -> Result<Vec<FileOps>> {
@@ -282,7 +282,7 @@ pub fn target_config_file_ops(
         ),
         FileOps::symlink(
             "/etc/portage/make.profile",
-            repos.primary().base_dir().join("profiles").join(profile),
+            profile_path,
         ),
     ];
 
@@ -307,14 +307,14 @@ dev-lang/go-1.20.2-r2
 
 fn generate_board_configs(
     board: &str,
-    profile: &str,
-    repos: &RepositorySet,
+    profile_path: &Path,
+    repos: &[&Repository],
     toolchains: &ToolchainConfig,
 ) -> Result<()> {
     let board_root = Path::new("/build").join(board);
 
     execute_file_ops(
-        &target_config_file_ops(board, profile, repos, toolchains, true)?,
+        &target_config_file_ops(board, profile_path, repos, toolchains, true)?,
         &board_root,
     )?;
 
@@ -328,8 +328,8 @@ fn generate_board_configs(
 /// 3) We need to generate a make.conf.host_setup instead of a make.conf.board.
 pub fn target_host_config_file_ops(
     board: &str,
-    profile: &str,
-    repos: &RepositorySet,
+    profile_path: &Path,
+    repos: &[&Repository],
     toolchains: &ToolchainConfig,
 ) -> Result<Vec<FileOps>> {
     let mut files = vec![
@@ -343,7 +343,7 @@ pub fn target_host_config_file_ops(
         ),
         FileOps::symlink(
             "/etc/portage/make.profile",
-            repos.primary().base_dir().join("profiles").join(profile),
+            profile_path,
         ),
     ];
 
@@ -354,14 +354,14 @@ pub fn target_host_config_file_ops(
 
 fn generate_sdk_board_configs(
     board: &str,
-    profile: &str,
-    repos: &RepositorySet,
+    profile_path: &Path,
+    repos: &[&Repository],
     toolchains: &ToolchainConfig,
 ) -> Result<()> {
     let board_root = Path::new("/build").join(board);
 
     execute_file_ops(
-        &target_host_config_file_ops(board, profile, repos, toolchains)?,
+        &target_host_config_file_ops(board, profile_path, repos, toolchains)?,
         &board_root,
     )?;
 
@@ -382,12 +382,26 @@ fn generate_target_configs(targets: &[&BoardTarget]) -> Result<()> {
     for target in targets {
         let repos = lookup.create_repository_set(target.board)?;
 
+        let profile_path = repos
+            .primary()
+            .base_dir()
+            .join("profiles")
+            .join(target.profile);
+
+        let repos: Vec<_> = repos.get_partially_ordered_repos().iter().collect();
+
+        // TODO(b/314189420): This method iterates the repos in reverse. If the
+        // "partner" or "internal" repos are at the end of the list, their
+        // toolchain.conf will be chosen as the primary. Thankfully we don't
+        // have any toolchain.conf in these repos. Ideally we just drop support
+        // for toolchain.conf all together and instead specify a CHOST in all
+        // the board profiles.
         let toolchains = load_toolchains(&repos)?;
 
         if target.board == "amd64-host" {
-            generate_sdk_board_configs(target.board, target.profile, &repos, &toolchains)?;
+            generate_sdk_board_configs(target.board, &profile_path, &repos, &toolchains)?;
         } else {
-            generate_board_configs(target.board, target.profile, &repos, &toolchains)?;
+            generate_board_configs(target.board, &profile_path, &repos, &toolchains)?;
         }
     }
 

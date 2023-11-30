@@ -12,11 +12,7 @@ use lazy_static::lazy_static;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::{
-    fileops::FileOps,
-    repository::{RepositorySet, RepositorySetOperations},
-    toolchain::ToolchainConfig,
-};
+use crate::{fileops::FileOps, repository::Repository, toolchain::ToolchainConfig};
 
 pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
 
@@ -71,9 +67,9 @@ struct MakeConfContext<'a> {
     vars: Vec<MakeVar<'a>>,
 }
 
-fn generate_make_conf_board(repos: &RepositorySet) -> Result<FileOps> {
+fn generate_make_conf_board(repos: &[&Repository]) -> Result<FileOps> {
     let mut sources: Vec<String> = Vec::new();
-    for repo in repos.get_repos() {
+    for repo in repos {
         let make_conf = repo.base_dir().join("make.conf");
         if make_conf.try_exists()? {
             sources.push(
@@ -85,7 +81,7 @@ fn generate_make_conf_board(repos: &RepositorySet) -> Result<FileOps> {
         }
     }
 
-    let vars: Vec<MakeVar> = if repos.get_repo_by_name("chromeos").is_err() {
+    let vars: Vec<MakeVar> = if !repos.iter().any(|repo| repo.name() == "chromeos") {
         // TODO(b/265433399): Fix the profiles so we can remove this hack
         // ondevice_speech binaries are only available for internal builds.
         vec![MakeVar::from(("USE", "$USE -ondevice_speech"))]
@@ -103,10 +99,10 @@ fn generate_make_conf_board(repos: &RepositorySet) -> Result<FileOps> {
 
 fn generate_make_conf_board_setup(
     board: &str,
-    repos: &RepositorySet,
+    repos: &[&Repository],
     toolchain_config: &ToolchainConfig,
 ) -> Result<FileOps> {
-    let overlays = repos.get_repos().iter().map(|r| r.base_dir()).collect_vec();
+    let overlays = repos.iter().map(|r| r.base_dir()).collect_vec();
 
     let vars: Vec<MakeVar> = vec![
         MakeVar::from((
@@ -204,7 +200,7 @@ fn generate_make_conf_host_setup() -> Result<FileOps> {
 
 pub fn generate_make_conf_for_board(
     board: &str,
-    repos: &RepositorySet,
+    repos: &[&Repository],
     toolchain_config: &ToolchainConfig,
 ) -> Result<Vec<FileOps>> {
     let ops = vec![

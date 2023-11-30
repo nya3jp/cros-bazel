@@ -416,34 +416,6 @@ impl RepositorySet {
         repo_list
     }
 
-    /// Returns the primary/leaf repository.
-    ///
-    /// i.e., overlay-arm64-generic
-    pub fn primary(&self) -> &Repository {
-        let name = self
-            .order
-            .iter()
-            // TODO (b/293383461): The amd64-host profile lists "chromeos" and
-            // "chromeos-partner" as the last repositories. e.g.,
-            // * portage-stable
-            // * x-crossdev
-            // * toolchains
-            // * chromiumos
-            // * eclass-overlay
-            // * amd64-host
-            // * chromeos-partner
-            // * chromeos
-            // We really want to return the `amd64-host` repository as the
-            // "primary" one since that's the one that contains the profile.
-            // In order to correctly fix this, we need to figure out how to
-            // correctly identify the "primary" repo using the `board`
-            // parameter.
-            .filter(|name| !["chromeos", "chromeos-partner"].contains(&name.as_str()))
-            .last()
-            .expect("repository set should not be empty");
-        self.get_repo_by_name(name).unwrap()
-    }
-
     /// Scans the repositories and returns ebuild file paths for the specified
     /// package.
     ///
@@ -621,6 +593,33 @@ pub struct RepositoryLookup {
     layout_map_cache: RefCell<HashMap<String, RepositoryLayout>>,
 }
 
+/// Similar to [`RepositorySet`], but PORTDIR and PORTDIR_OVERLAY have not been
+/// evaluated yet.
+#[derive(Debug)]
+pub struct RepositorySetPartial {
+    primary_repo_index: usize,
+    repos: Vec<Repository>,
+}
+
+impl RepositorySetPartial {
+    /// The primary repository is the "root" repository that was traversed to
+    /// find all the parent repositories. This repository is not guaranteed to
+    /// be the last repository because there might be "partner" and "internal"
+    /// only repositories at the end of the list.
+    ///
+    /// Knowing the primary repo is important because that's where we lookup
+    /// the profile.
+    pub fn primary(&self) -> &Repository {
+        &self.repos[self.primary_repo_index]
+    }
+
+    /// Repos ordered from lowest to highest priority. The ordering does not
+    /// take PORTDIR and PORTDIR_OVERLAY into account.
+    pub fn get_partially_ordered_repos(&self) -> &Vec<Repository> {
+        &self.repos
+    }
+}
+
 impl RepositoryLookup {
     /// Uses the specified paths to construct a repository lookup table.
     ///
@@ -787,7 +786,7 @@ impl RepositoryLookup {
     ///
     /// See https://chromium.googlesource.com/chromiumos/docs/+/HEAD/portage/overlay_faq.md#eclass_overlay
     /// for more information.
-    pub fn create_repository_set(&self, repository_name: &str) -> Result<RepositorySet> {
+    pub fn create_repository_set(&self, repository_name: &str) -> Result<RepositorySetPartial> {
         let mut context = RepositoryLookupContext {
             seen: HashSet::new(),
             order: Vec::new(),
@@ -805,21 +804,20 @@ impl RepositoryLookup {
         // `repository_name` that was passed in exists.
         self._add_repo(&mut context, repository_name, true)?;
 
-        // Finally, build a map from repository names to Repository objects,
-        // resolving references.
-        let repos: HashMap<String, Repository> = context
+        let repos: Vec<Repository> = context
             .order
-            .iter()
-            .map(|name| Repository::new(name, &self.layout_map_cache.borrow()))
-            .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .map(|repo| (repo.name().to_owned(), repo))
-            .collect();
+            .map(|name| Repository::new(&name, &self.layout_map_cache.borrow()))
+            .collect::<Result<_>>()?;
 
-        Ok(RepositorySet {
-            name: repository_name.to_owned(),
+        let primary_repo_index = repos
+            .iter()
+            .position(|r| r.name() == repository_name)
+            .unwrap();
+
+        Ok(RepositorySetPartial {
+            primary_repo_index,
             repos,
-            order: context.order,
         })
     }
 }
@@ -1089,13 +1087,12 @@ use-manifests = strict
             RepositoryLookup::new(dir, vec!["private-overlays", "overlays", "third_party"])?;
 
         let eclass_repo_set = lookup.create_repository_set("eclass-overlay")?;
-        assert_eq!("eclass-overlay", eclass_repo_set.name());
         assert_eq!("eclass-overlay", eclass_repo_set.primary().name());
         assert_eq!(
             vec!["eclass-overlay"],
             eclass_repo_set
-                .get_repos()
-                .into_iter()
+                .get_partially_ordered_repos()
+                .iter()
                 .map(|r| r.name())
                 .collect::<Vec<&str>>()
         );
@@ -1106,7 +1103,11 @@ use-manifests = strict
                 246, 22, 0, 63, 58, 189, 59, 9, 227, 180, 17, 66, 58, 162, 196, 22]
             ),],
             RepositoryDigest::new(
-                &(eclass_repo_set.get_repos().into_iter().cloned().collect()),
+                &(eclass_repo_set
+                    .get_partially_ordered_repos()
+                    .iter()
+                    .cloned()
+                    .collect()),
                 vec![]
             )?
             .file_hashes
@@ -1117,8 +1118,8 @@ use-manifests = strict
         assert_eq!(
             vec!["eclass-overlay", "portage-stable", "chromiumos"],
             chromiumos_repo_set
-                .get_repos()
-                .into_iter()
+                .get_partially_ordered_repos()
+                .iter()
                 .map(|r| r.name())
                 .collect::<Vec<&str>>()
         );
@@ -1142,8 +1143,8 @@ use-manifests = strict
             ],
             RepositoryDigest::new(
                 &(chromiumos_repo_set
-                    .get_repos()
-                    .into_iter()
+                    .get_partially_ordered_repos()
+                    .iter()
                     .cloned()
                     .collect()),
                 vec![]
@@ -1163,8 +1164,8 @@ use-manifests = strict
                 "grunt"
             ],
             grunt_repo_set
-                .get_repos()
-                .into_iter()
+                .get_partially_ordered_repos()
+                .iter()
                 .map(|r| r.name())
                 .collect::<Vec<&str>>()
         );
@@ -1192,8 +1193,8 @@ use-manifests = strict
                 "grunt-private",
             ],
             grunt_private_repo_set
-                .get_repos()
-                .into_iter()
+                .get_partially_ordered_repos()
+                .iter()
                 .map(|r| r.name())
                 .collect::<Vec<&str>>()
         );
@@ -1203,7 +1204,7 @@ use-manifests = strict
 
         let repos: UnorderedRepositorySet = [&grunt_repo_set, &grunt_private_repo_set]
             .into_iter()
-            .flat_map(|set| set.get_repos())
+            .flat_map(|set| set.get_partially_ordered_repos())
             .cloned()
             .collect();
 

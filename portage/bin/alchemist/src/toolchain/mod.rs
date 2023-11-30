@@ -14,7 +14,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::repository::RepositorySet;
+use crate::repository::Repository;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ToolchainOptions {
@@ -188,10 +188,9 @@ impl ToolchainConfig {
     }
 }
 
-pub fn load_toolchains(repos: &RepositorySet) -> Result<ToolchainConfig> {
+pub fn load_toolchains(repos: &[&Repository]) -> Result<ToolchainConfig> {
     return load_toolchains_from_paths(
         repos
-            .get_repos()
             .iter()
             .rev() // The primary toolchain is defined by the leaf overlay
             .map(|repo| repo.base_dir().join("toolchain.conf"))

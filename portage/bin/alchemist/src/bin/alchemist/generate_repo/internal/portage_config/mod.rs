@@ -170,7 +170,12 @@ pub fn generate_target_host_portage_config(host: &TargetData, out: &Path) -> Res
         file_ops_to_context(
             "full",
             &sysroot,
-            target_host_config_file_ops(&host.board, &host.profile, &host.repos, &host.toolchains)?,
+            target_host_config_file_ops(
+                &host.board,
+                &host.profile_path,
+                &host.repos.get_repos(),
+                &host.toolchains,
+            )?,
             &out,
         )?,
         file_ops_to_context("host", &sysroot, compiler.generate_portage_config()?, &out)?,
@@ -197,8 +202,8 @@ pub fn generate_target_portage_config(target: &TargetData, prefix: &str, out: &P
             &sysroot,
             target_config_file_ops(
                 &target.board,
-                &target.profile,
-                &target.repos,
+                &target.profile_path,
+                &target.repos.get_repos(),
                 &target.toolchains,
                 false,
             )?,
