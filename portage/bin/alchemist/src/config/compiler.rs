@@ -251,6 +251,7 @@ mod tests {
     use crate::config::SimpleConfigSource;
     use crate::repository::Repository;
     use crate::repository::RepositorySet;
+    use crate::repository::RepositorySetOperations;
     use nom::lib::std::collections::HashMap;
     use std::path::PathBuf;
     use tempfile::TempDir;
@@ -262,6 +263,7 @@ mod tests {
 
         let repo = Repository::new_for_testing("test", temp_dir);
         let repos = RepositorySet::new_for_testing("test", &[repo]);
+        let repo = repos.get_repo_by_name("test")?;
 
         let sysroot = "/build/amd64-host";
 
@@ -271,7 +273,7 @@ mod tests {
                 ("ARCH".into(), "amd64".into()),
                 ("CHOST".into(), "x86_64-pc-linux-gnu".into()),
                 ("ELIBC".into(), "glibc".into()),
-                ("PORTDIR".into(), repos.primary().base_dir().to_string_lossy().into()),
+                ("PORTDIR".into(), repo.base_dir().to_string_lossy().into()),
                 ("ACCEPT_KEYWORDS".into(), "amd64".into()),
                 ("PYTHON_TARGETS".into(), "python3_6".into()),
                 ("PROFILE_ONLY_VARIABLES".into(), "ARCH ELIBC IUSE_IMPLICIT USE_EXPAND_IMPLICIT USE_EXPAND_UNPREFIXED USE_EXPAND_VALUES_ARCH USE_EXPAND_VALUES_ELIBC".into()),
@@ -312,7 +314,7 @@ mod tests {
                 ("CONFIG_PROTECT_MASK", ""),
                 ("FEATURES", ""),
                 ("PKG_CONFIG", &format!("{sysroot}/build/bin/pkg-config")),
-                ("PORTDIR", &repos.primary().base_dir().to_string_lossy()),
+                ("PORTDIR", &repo.base_dir().to_string_lossy()),
                 ("ROOT", sysroot),
             ]
         );
@@ -349,7 +351,7 @@ mod tests {
                 ("CONFIG_PROTECT", ""),
                 ("CONFIG_PROTECT_MASK", ""),
                 ("FEATURES", ""),
-                ("PORTDIR", &repos.primary().base_dir().to_string_lossy()),
+                ("PORTDIR", &repo.base_dir().to_string_lossy()),
             ]
         );
 
