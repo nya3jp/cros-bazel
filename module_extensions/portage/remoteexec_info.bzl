@@ -6,12 +6,24 @@ _REMOTEEXEC_INFO_REPO_BUILD_FILE = """
 exports_files(["remoteexec_info"])
 """
 
+_PASSTHROUGH_ENVIRON = [
+    "GCE_METADATA_HOST",
+    "GCE_METADATA_IP",
+    "GCE_METADATA_ROOT",
+]
+
 def _remoteexec_info_repository_impl(repo_ctx):
     """Repository rule to generate info needed to use remoteexec."""
 
     remoteexec_info_dict = {
+        "envs": {},
         "use_remoteexec": repo_ctx.os.environ.get("USE_REMOTEEXEC") == "true",
     }
+
+    for env in _PASSTHROUGH_ENVIRON:
+        var = repo_ctx.os.environ.get(env)
+        if var:
+            remoteexec_info_dict["envs"][env] = var
 
     reclient_dir = repo_ctx.os.environ.get("RECLIENT_DIR")
     if reclient_dir:
@@ -40,6 +52,7 @@ def _remoteexec_info_repository_impl(repo_ctx):
         print("reclient_dir=" + str(remoteexec_info_dict.get("reclient_dir")))
         print("reproxy_cfg=" + str(remoteexec_info_dict.get("reproxy_cfg")))
         print("should_use_reproxy_cfg_file_for_ci=" + str(remoteexec_info_dict.get("should_use_reproxy_cfg_file_for_ci")))
+        print("envs=" + str(remoteexec_info_dict.get("envs")))
 
     remoteexec_info = json.encode(remoteexec_info_dict)
 
@@ -48,7 +61,7 @@ def _remoteexec_info_repository_impl(repo_ctx):
 
 remoteexec_info = repository_rule(
     implementation = _remoteexec_info_repository_impl,
-    environ = [
+    environ = _PASSTHROUGH_ENVIRON + [
         "HOME",
         "RECLIENT_DIR",
         "REPROXY_CFG",

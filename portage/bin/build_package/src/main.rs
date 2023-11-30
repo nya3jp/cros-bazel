@@ -224,6 +224,7 @@ struct GomaInfo {
 #[derive(serde::Deserialize)]
 struct RemoteexecInfo {
     use_remoteexec: bool,
+    envs: HashMap<String, String>,
     gcloud_config_dir: Option<PathBuf>,
     reclient_dir: Option<PathBuf>,
     reproxy_cfg: Option<PathBuf>,
@@ -328,6 +329,9 @@ fn do_main() -> Result<()> {
                 OsStr::new("USE_REMOTEEXEC").into(),
                 OsStr::new("true").into(),
             ));
+        }
+        for (key, value) in remoteexec_info.envs {
+            envs.push((OsString::from(key).into(), OsString::from(value).into()));
         }
         if let Some(gcloud_config_dir) = remoteexec_info.gcloud_config_dir {
             settings.push_bind_mount(BindMount {
