@@ -66,8 +66,8 @@ def main():
             # detect as many failure as possible on the CI builders.
             # We may need to delete this after launching Alchemy.
             "--keep_going",
-            # "--execution_log_binary_file=/tmp/allpackages_exec.log",
-            # "--noexecution_log_sort",
+            "--execution_log_binary_file=/tmp/allpackages_exec.log",
+            "--noexecution_log_sort",
         ]
         + chrome_prebuilt_configs
         + [
