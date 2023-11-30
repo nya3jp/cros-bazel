@@ -331,7 +331,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             );
         }
 
-        let repos = RepositorySet::load(&root_dir)?;
+        let repos = RepositorySet::load("board", &root_dir)?;
 
         Some((root_dir, repos, board_target))
     } else {
@@ -355,7 +355,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 host_target.profile,
             );
         }
-        let repos = RepositorySet::load(&root_dir)?;
+        let repos = RepositorySet::load("host", &root_dir)?;
         (root_dir, repos, host_target)
     };
 

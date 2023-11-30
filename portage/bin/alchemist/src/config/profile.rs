@@ -159,11 +159,14 @@ mod tests {
             dir.join("build/amd64-generic/etc/portage/make.profile"),
         )?;
 
-        let repos = RepositorySet::new_for_testing(&[Repository::new_for_testing(
-            "chromiumos",
-            dir.join("mnt/host/source/src/third_party/chromiumos-overlay")
-                .as_path(),
-        )]);
+        let repos = RepositorySet::new_for_testing(
+            "test",
+            &[Repository::new_for_testing(
+                "chromiumos",
+                dir.join("mnt/host/source/src/third_party/chromiumos-overlay")
+                    .as_path(),
+            )],
+        );
 
         let repo_root = dir.join("build/amd64-generic");
         let actual = Profile::load_default(repo_root.as_path(), &repos)?;

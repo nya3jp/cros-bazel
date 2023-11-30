@@ -261,7 +261,7 @@ mod tests {
         let temp_dir = temp_dir.path();
 
         let repo = Repository::new_for_testing("test", temp_dir);
-        let repos = RepositorySet::new_for_testing(&[repo]);
+        let repos = RepositorySet::new_for_testing("test", &[repo]);
 
         let sysroot = "/build/amd64-host";
 

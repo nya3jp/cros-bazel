@@ -366,7 +366,7 @@ mod tests {
         std::fs::write(&ebuild_path, ebuild_content)?;
 
         let repo = Repository::new_for_testing("test", temp_dir);
-        let repo_set = RepositorySet::new_for_testing(&[repo]);
+        let repo_set = RepositorySet::new_for_testing("test", &[repo]);
 
         let evaluator = CachedEBuildEvaluator::new(
             repo_set.get_repos().into_iter().cloned().collect(),

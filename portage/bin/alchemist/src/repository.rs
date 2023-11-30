@@ -291,6 +291,7 @@ pub trait RepositorySetOperations<'a> {
 /// Holds a set of at least one [`Repository`].
 #[derive(Clone, Debug)]
 pub struct RepositorySet {
+    name: String,
     repos: HashMap<String, Repository>,
     // Keeps the insertion order of `repos`.
     order: Vec<String>,
@@ -311,7 +312,7 @@ impl<'a> RepositorySetOperations<'a> for RepositorySet {
 }
 
 impl RepositorySet {
-    pub fn new_for_testing(repos: &[Repository]) -> Self {
+    pub fn new_for_testing(name: &str, repos: &[Repository]) -> Self {
         let mut order: Vec<String> = Vec::new();
         let mut repos_map: HashMap<String, Repository> = HashMap::new();
         for repo in repos {
@@ -319,6 +320,7 @@ impl RepositorySet {
             repos_map.insert(repo.name.clone(), repo.clone());
         }
         Self {
+            name: name.to_owned(),
             repos: repos_map,
             order,
         }
@@ -330,7 +332,13 @@ impl RepositorySet {
     /// to locate the primary repository (from `$PORTDIR`) and secondary
     /// repositories (from `$PORTDIR_OVERLAY`), and then loads those
     /// repositories.
-    pub fn load(root_dir: &Path) -> Result<Self> {
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - A user defined name for the repository set.
+    /// * `root_dir` - The portage config root.
+    ///
+    pub fn load(name: &str, root_dir: &Path) -> Result<Self> {
         // Locate repositories by reading PORTDIR and PORTDIR_OVERLAY in make.conf.
         let site_settings = SiteSettings::load(root_dir)?;
         let bootstrap_config = ConfigBundle::from_sources(vec![site_settings]);
@@ -386,7 +394,16 @@ impl RepositorySet {
             .map(|repo| (repo.name().to_owned(), repo))
             .collect();
 
-        Ok(Self { repos, order })
+        Ok(Self {
+            name: name.to_owned(),
+            repos,
+            order,
+        })
+    }
+
+    /// The name of the repository set.
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     /// Returns the repositories from most generic to most specific.
@@ -800,6 +817,7 @@ impl RepositoryLookup {
             .collect();
 
         Ok(RepositorySet {
+            name: repository_name.to_owned(),
             repos,
             order: context.order,
         })
@@ -1071,6 +1089,7 @@ use-manifests = strict
             RepositoryLookup::new(dir, vec!["private-overlays", "overlays", "third_party"])?;
 
         let eclass_repo_set = lookup.create_repository_set("eclass-overlay")?;
+        assert_eq!("eclass-overlay", eclass_repo_set.name());
         assert_eq!("eclass-overlay", eclass_repo_set.primary().name());
         assert_eq!(
             vec!["eclass-overlay"],
