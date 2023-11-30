@@ -106,13 +106,13 @@ struct EclassSetTemplateContext<'a> {
 }
 
 #[derive(Serialize)]
-struct OverlaysTemplateContext {
-    overlay_sets: Vec<OverlaySetTemplateContext>,
+struct OverlaysTemplateContext<'a> {
+    overlay_sets: Vec<OverlaySetTemplateContext<'a>>,
 }
 
 #[derive(Serialize)]
-struct OverlaySetTemplateContext {
-    name: String,
+struct OverlaySetTemplateContext<'a> {
+    name: &'a str,
     overlays: Vec<String>,
 }
 
@@ -197,10 +197,9 @@ fn generate_overlays_file(repo_sets: &[&RepositorySet], output_dir: &Path) -> Re
     let context = OverlaysTemplateContext {
         overlay_sets: repo_sets
             .iter()
-            .unique_by(|r| r.primary().name())
-            .sorted_by_key(|r| r.primary().name())
+            .sorted_by_key(|r| r.name())
             .map(|r| OverlaySetTemplateContext {
-                name: r.primary().name().to_string(),
+                name: r.name(),
                 overlays: r
                     .get_repos()
                     .iter()

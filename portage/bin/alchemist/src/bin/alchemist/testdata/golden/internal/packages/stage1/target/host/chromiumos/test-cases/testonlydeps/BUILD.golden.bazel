@@ -22,7 +22,7 @@ sdk_install_deps(
     out = "testonlydeps-1.0_deps",
     base = "1.0_host_deps",
     board = "amd64-host",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     portage_config = select({
         "@//bazel/portage:compiled-profiles-enabled": [
             "//internal/portage-config/host:lite",
@@ -48,7 +48,7 @@ sdk_install_deps(
     out = "testonlydeps-1.0_test_deps",
     base = "1.0_host_deps",
     board = "amd64-host",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     portage_config = select({
         "@//bazel/portage:compiled-profiles-enabled": [
             "//internal/portage-config/host:lite",
@@ -131,7 +131,7 @@ ebuild(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -212,7 +212,7 @@ ebuild_debug(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -302,7 +302,7 @@ ebuild(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -380,7 +380,7 @@ ebuild_debug(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -467,7 +467,7 @@ ebuild(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host-full",
+    overlays = "//internal/overlays:host-full",
     eclasses = [
     ],
     portage_config = [
@@ -529,7 +529,7 @@ ebuild_debug(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host-full",
+    overlays = "//internal/overlays:host-full",
     eclasses = [
     ],
     portage_config = [
@@ -603,7 +603,7 @@ ebuild_test(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-host",
     sdk = ":1.0_test_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({

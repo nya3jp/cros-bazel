@@ -88,7 +88,7 @@ ebuild(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":2.39_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -165,7 +165,7 @@ ebuild_debug(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":2.39_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -251,7 +251,7 @@ ebuild(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":2.39_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -325,7 +325,7 @@ ebuild_debug(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":2.39_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({
@@ -408,7 +408,7 @@ ebuild(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":2.39_deps",
-    overlays = "//internal/overlays:amd64-host-full",
+    overlays = "//internal/overlays:host-full",
     eclasses = [
     ],
     portage_config = [
@@ -467,7 +467,7 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":2.39_deps",
-    overlays = "//internal/overlays:amd64-host-full",
+    overlays = "//internal/overlays:host-full",
     eclasses = [
     ],
     portage_config = [
@@ -518,7 +518,7 @@ ebuild_test(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":2.39_test_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
     ],
     portage_config = select({

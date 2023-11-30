@@ -8,7 +8,7 @@ load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
 
 # The overlay_set used for building packages.
 overlay_set(
-    name = "amd64-generic",
+    name = "board",
     overlays = [
         "//internal/overlays/portage-stable",
         "//internal/overlays/chromiumos",
@@ -19,7 +19,7 @@ overlay_set(
 
 # The overlay_set used for the build_image targets.
 overlay_set(
-    name = "amd64-generic-full",
+    name = "board-full",
     overlays = [
         "//internal/overlays/portage-stable",
         "//internal/overlays/portage-stable:full",
@@ -33,7 +33,7 @@ overlay_set(
 
 # The overlay_set used for building packages.
 overlay_set(
-    name = "amd64-host",
+    name = "host",
     overlays = [
         "//internal/overlays/portage-stable",
         "//internal/overlays/toolchains",
@@ -45,7 +45,7 @@ overlay_set(
 
 # The overlay_set used for the build_image targets.
 overlay_set(
-    name = "amd64-host-full",
+    name = "host-full",
     overlays = [
         "//internal/overlays/portage-stable",
         "//internal/overlays/portage-stable:full",

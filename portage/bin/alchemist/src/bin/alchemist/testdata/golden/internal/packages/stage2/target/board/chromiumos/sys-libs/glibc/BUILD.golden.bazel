@@ -89,7 +89,7 @@ ebuild(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":2.35-r25_deps",
-    overlays = "//internal/overlays:amd64-generic",
+    overlays = "//internal/overlays:board",
     eclasses = [
     ],
     portage_config = select({
@@ -169,7 +169,7 @@ ebuild_debug(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":2.35-r25_deps",
-    overlays = "//internal/overlays:amd64-generic",
+    overlays = "//internal/overlays:board",
     eclasses = [
     ],
     portage_config = select({
@@ -258,7 +258,7 @@ ebuild(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":2.35-r25_deps",
-    overlays = "//internal/overlays:amd64-generic",
+    overlays = "//internal/overlays:board",
     eclasses = [
     ],
     portage_config = select({
@@ -335,7 +335,7 @@ ebuild_debug(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":2.35-r25_deps",
-    overlays = "//internal/overlays:amd64-generic",
+    overlays = "//internal/overlays:board",
     eclasses = [
     ],
     portage_config = select({
@@ -421,7 +421,7 @@ ebuild(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":2.35-r25_deps",
-    overlays = "//internal/overlays:amd64-generic-full",
+    overlays = "//internal/overlays:board-full",
     eclasses = [
     ],
     portage_config = [
@@ -482,7 +482,7 @@ ebuild_debug(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":2.35-r25_deps",
-    overlays = "//internal/overlays:amd64-generic-full",
+    overlays = "//internal/overlays:board-full",
     eclasses = [
     ],
     portage_config = [
@@ -555,7 +555,7 @@ ebuild_test(
     files = glob(["files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":2.35-r25_test_deps",
-    overlays = "//internal/overlays:amd64-generic",
+    overlays = "//internal/overlays:board",
     eclasses = [
     ],
     portage_config = select({

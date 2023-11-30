@@ -109,7 +109,7 @@ pkg_tar(
 # Needed for the build_image targets
 alias(
     name = "overlays",
-    actual = "//internal/overlays:amd64-generic-full",
+    actual = "//internal/overlays:board-full",
     visibility = ["@//bazel:internal"],
 )
 package_set(
@@ -131,7 +131,7 @@ package_set(
 sdk_install_deps(
     name = "additional-host-tools",
     base = "@//bazel/portage/sdk:stage1",
-    overlays = "//internal/overlays:amd64-generic",
+    overlays = "//internal/overlays:board",
     portage_config = [
         "//internal/portage-config/host:orig",
     ],
@@ -174,7 +174,7 @@ sdk_install_deps(
     name = "board",
     base = ":base",
     board = "amd64-generic",
-    overlays = "//internal/overlays:amd64-generic",
+    overlays = "//internal/overlays:board",
     portage_config = select({
         "@//bazel/portage:compiled-profiles-enabled": [
             "//internal/portage-config/host:lite",

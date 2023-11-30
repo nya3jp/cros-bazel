@@ -90,7 +90,7 @@ fn file_name_to_name(file_name: &str) -> String {
 }
 
 pub fn repository_set_to_target_path(repo_set: &RepositorySet) -> String {
-    format!("//internal/overlays:{}", repo_set.primary().name())
+    format!("//internal/overlays:{}", repo_set.name())
 }
 
 pub fn package_details_to_target_path(details: &PackageDetails, prefix: &str) -> String {

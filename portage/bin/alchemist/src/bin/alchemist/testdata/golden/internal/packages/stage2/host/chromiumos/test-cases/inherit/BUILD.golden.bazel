@@ -88,7 +88,7 @@ ebuild(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
@@ -167,7 +167,7 @@ ebuild_debug(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
@@ -255,7 +255,7 @@ ebuild(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
@@ -331,7 +331,7 @@ ebuild_debug(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
@@ -416,7 +416,7 @@ ebuild(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host-full",
+    overlays = "//internal/overlays:host-full",
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
@@ -477,7 +477,7 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
-    overlays = "//internal/overlays:amd64-host-full",
+    overlays = "//internal/overlays:host-full",
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
@@ -530,7 +530,7 @@ ebuild_test(
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_test_deps",
-    overlays = "//internal/overlays:amd64-host",
+    overlays = "//internal/overlays:host",
     eclasses = [
         "//internal/overlays/chromiumos/eclass:myclass",
         "//internal/overlays/chromiumos/eclass:mysuper",
