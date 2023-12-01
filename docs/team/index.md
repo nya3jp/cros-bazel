@@ -60,6 +60,10 @@ a path under your [depot_tools] checkout. The wrapper script provided by
 `depot_tools` performs additional tasks besides running the real `bazel`
 executable.
 
+By default, the preflight check fails if you attempt to run Bazel outside CrOS
+chroot. Set the environment variable `ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT=1` to
+bypass the check.
+
 Then just follow [Getting Started] to run Bazel directly, except that you should
 use Bazel from depot_tools and you can run it outside CrOS chroot.
 

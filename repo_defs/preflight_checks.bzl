@@ -21,6 +21,10 @@ def _preflight_check_fail(reason):
 
 def _preflight_checks_impl(repo_ctx):
     """Performs preflight checks."""
+    if repo_ctx.os.environ.get("ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT") != "1":
+        if not repo_ctx.path("/etc/cros_chroot_version").exists:
+            _preflight_check_fail("Bazel was run outside CrOS chroot.")
+
     if repo_ctx.os.environ.get("CHROMITE_BAZEL_WRAPPER") != "1":
         _preflight_check_fail("Bazel was run without the proper wrapper.")
 
@@ -39,6 +43,7 @@ preflight_checks = repository_rule(
     implementation = _preflight_checks_impl,
     attrs = {},
     environ = [
+        "ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT",
         "CHROMITE_BAZEL_WRAPPER",
     ],
     local = True,
