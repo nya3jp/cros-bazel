@@ -58,7 +58,7 @@ internal packages.
 
 [CBUILD]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
 
-## Building ChromeOS packages
+## Building ChromeOS packages with `cros build-packages`
 
 Now that you have configured your chroot, you can invoke a build with the
 standard `cros build-packages` command, except that you need to pass the extra
@@ -77,7 +77,70 @@ $ cros build-packages --board=amd64-generic --bazel
 ```
 
 Upon successful completion, packages are installed to the sysroot inside the
-CrOS SDK chroot.
+CrOS SDK chroot, so you can use other commands expecting built packages to be in
+the sysroot, e.g. `cros build-image` and `cros deploy`.
+
+## Building ChromeOS packages directly with Bazel
+
+You can alternatively run Bazel directly to build certain targets.
+
+*** promo
+Currently you need to use `/mnt/host/source/chromite/bin/bazel` instead of
+`/usr/bin/bazel` that is found first on the standard `$PATH`.
+***
+
+The syntax for specifying a Portage package is:
+
+```
+@portage//<host|target>/<category>/<package>`.
+```
+
+`host` means the build host ([CBUILD]), and `target` means the cross-compiled
+target ([CHOST]) specified by the `BOARD` environment variable.
+
+Now you're ready to start building. To build a single Portage package, e.g.
+`sys-apps/attr`:
+
+```sh
+$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/sys-apps/attr
+```
+
+To build all packages included in the ChromeOS base image:
+
+```sh
+$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/virtual/target-os:package_set
+```
+
+A `package_set` is a special target that also includes the target's [PDEPEND]s.
+
+To build a package for the host, use the `host` prefix:
+
+```sh
+$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//host/app-shells/bash
+```
+
+To build all packages included in the ChromeOS test image:
+
+```sh
+$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/virtual/target-os:package_set @portage//target/virtual/target-os-dev:package_set @portage//target/virtual/target-os-test:package_set
+```
+
+*** note
+When you build packages directly with `bazel build`, packages are not installed
+to the sysroot, which means that you can't use built packages with existing
+tools like `cros deploy`. Use `cros build-packages --bazel` instead if you want
+to install packages to the sysroot after they're built by Bazel.
+***
+
+[CBUILD]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
+[CHOST]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
+[PDEPEND]: https://devmanual.gentoo.org/general-concepts/dependencies/#post-dependencies
+
+## Building ChromeOS images
+
+You can simply run `cros build-image` to build ChromeOS images if you use
+`cros build-packages --bazel` to build ChromeOS packages included in ChromeOS
+images.
 
 ## Tips
 

@@ -60,54 +60,13 @@ a path under your [depot_tools] checkout. The wrapper script provided by
 `depot_tools` performs additional tasks besides running the real `bazel`
 executable.
 
-The syntax for specifying a Portage package is:
-
-```
-@portage//<host|target>/<category>/<package>`.
-```
-
-`host` means the build host ([CBUILD]), and `target` means the cross-compiled
-target ([CHOST]) specified by the `BOARD` environment variable.
-
-Now you're ready to start building. To build a single Portage package, e.g.
-`sys-apps/attr`:
-
-```sh
-$ BOARD=amd64-generic bazel build @portage//target/sys-apps/attr
-```
-
-To build all packages included in the ChromeOS base image:
-
-```sh
-$ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set
-```
-
-A `package_set` is a special target that also includes the target's [PDEPEND]s.
-
-To build a package for the host, use the `host` prefix:
-
-```sh
-$ BOARD=amd64-generic bazel build @portage//host/app-shells/bash
-```
-
-To build all packages included in the ChromeOS test image:
-
-```sh
-$ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set @portage//target/virtual/target-os-dev:package_set @portage//target/virtual/target-os-test:package_set
-```
+Then just follow [Getting Started] to run Bazel directly, except that you should
+use Bazel from depot_tools and you can run it outside CrOS chroot.
 
 [depot_tools]: https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
-[CBUILD]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
-[CHOST]: https://wiki.gentoo.org/wiki/Embedded_Handbook/General/Introduction#Toolchain_tuples
-[PDEPEND]: https://devmanual.gentoo.org/general-concepts/dependencies/#post-dependencies
+[Getting Started]: /docs/getting_started.md#building-chromeos-packages-directly-with-bazel
 
-## Building images
-
-When you run Bazel inside the CrOS SDK chroot, you can simply use the standard
-`cros build-image` command to build ChromeOS images.
-
-The rest of the section describes the **very experimental** way to build
-ChromeOS images under Bazel outside the CrOS SDK chroot.
+## Building images under Bazel
 
 *** note
 As of Oct 2023, we don't actively test building ChromeOS images under Bazel
