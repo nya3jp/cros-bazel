@@ -3,5 +3,7 @@
 build:rbe --remote_cache=grpcs://remotebuildexecution.googleapis.com
 build:rbe --google_default_credentials=true
 build:rbe --remote_default_exec_properties='cache-silo-key=cros-bazel'
-build:rbe --remote_instance_name=projects/chromeos-bot/instances/cros-non-release-production
+# TODO(b/314800944): Switch to using the new instance name once the rename is complete.
+#build:rbe --remote_instance_name=projects/chromeos-bot/instances/cros-non-release-production
+build:rbe --remote_instance_name=projects/chromeos-bot/instances/7523385876836878076
 build:norbe --remote_cache=
