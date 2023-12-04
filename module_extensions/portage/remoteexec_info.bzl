@@ -46,6 +46,11 @@ def _remoteexec_info_repository_impl(repo_ctx):
     username = st.stdout.strip()
     remoteexec_info_dict["should_use_reproxy_cfg_file_for_ci"] = username == "chrome-bot"
 
+    # Temporarily disable remoteexec for CI builders. b/313796569
+    if remoteexec_info_dict["should_use_reproxy_cfg_file_for_ci"]:
+        print("Temporarily disabling remoteexec for CI builders. b/313796569")
+        remoteexec_info_dict["use_remoteexec"] = False
+
     if remoteexec_info_dict["use_remoteexec"]:
         print("Remoteexec is enabled. Going to use remoteexec to build chromeos-chrome.")
         print("gcloud_config_dir=" + str(remoteexec_info_dict.get("gcloud_config_dir")))
