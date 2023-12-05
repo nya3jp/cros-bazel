@@ -4,6 +4,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@//bazel/portage/build_defs:overlay.bzl", "overlay")
@@ -39,9 +40,20 @@ pkg_mkdirs(
     visibility = ["//visibility:private"],
 )
 
+write_file(
+    name = "chromeos_version_stub",
+    content = [
+        "#!/bin/sh",
+        "container-bailout \"chromeos/config/chromeos_version.sh was called without explicit dependency declaration\"",
+    ],
+    is_executable = True,
+    out = "chromeos_version_stub.sh",
+)
+
 pkg_files(
     name = "files",
     srcs = [
+        ":chromeos_version_stub",
         "metadata/layout.conf",
     ] + glob([
         "chromeos/**",
@@ -70,6 +82,7 @@ pkg_files(
         "*/*/files/*_waf_config_answers",
     ], exclude = OVERLAY_EXCLUDE + [
         "chromeos/binhost/**",
+        "chromeos/config/chromeos_version.sh",
         "chromeos/config/make.conf.amd64-host",
         "profiles/**/*.bashrc",
     ]) + select({
@@ -86,6 +99,9 @@ pkg_files(
         ),
     }),
     prefix = "mnt/host/source/src/third_party/chromiumos-overlay",
+    renames = {
+        ":chromeos_version_stub": "chromeos/config/chromeos_version.sh",
+    },
     # chromeos/scripts/config_wrapper must be executable
     attributes = pkg_attributes(
         mode = "0755",
