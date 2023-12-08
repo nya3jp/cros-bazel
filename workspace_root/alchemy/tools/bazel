@@ -8,8 +8,13 @@
 This script adds various chromeos-specific command-line options.
 """
 
+import getpass
+import hashlib
+import itertools
 import json
 import os
+import pathlib
+import subprocess
 import sys
 import time
 from typing import List
@@ -21,6 +26,14 @@ _INVOCATION_NAME_PREFIX = "invocations/build-"
 def fail(msg: str):
     print(f"ERROR: {msg}", file=sys.stderr)
     sys.exit(1)
+
+
+def get_workspace() -> pathlib.Path:
+    cwd = pathlib.Path.cwd()
+    for parent in itertools.chain([cwd], cwd.parents):
+        if parent.joinpath(".repo").is_dir():
+            return parent.joinpath("src").resolve()
+    fail("Working directory is not a bazel workspace")
 
 
 def main(args: List[str]):
@@ -38,6 +51,7 @@ def main(args: List[str]):
 
     command = None
     command_options = []
+    nested_command_options = []
     for i, arg in enumerate(args):
         if arg.startswith("--"):
             startup_options.append(arg)
@@ -73,12 +87,60 @@ def main(args: List[str]):
             buildbucket_id = int(
                 invocation_name[len(_INVOCATION_NAME_PREFIX) :]
             )
-            command_options.append(
-                (
-                    "--build_metadata=cros/luci/build_url="
-                    f"https://ci.chromium.org/ui/b/{buildbucket_id}"
-                )
+            opt = (
+                "--build_metadata=cros/luci/build_url="
+                f"https://ci.chromium.org/ui/b/{buildbucket_id}"
             )
+            command_options.append(opt)
+            nested_command_options.append(opt)
+
+    workspace = get_workspace()
+    checksum = hashlib.md5(str(workspace).encode("utf-8")).hexdigest()
+    nested_output_base = os.path.expanduser(
+        f"~/.cache/bazel/bazel_{getpass.getuser()}/{checksum}_nested"
+    )
+    nested_base_command = [
+        bazel_real,
+        "--output_base",
+        nested_output_base,
+        *startup_options,
+    ]
+    build = [
+        *nested_base_command,
+        "build",
+        *nested_command_options,
+        "--platforms=@@//bazel/platforms:host",
+    ]
+    command_options.append(f"--repo_env=NESTED_BAZEL_CMD={json.dumps(build)}")
+
+    if command == "shutdown":
+        print("Shutting down nested bazel server")
+        subprocess.run(
+            [*nested_base_command, "shutdown", *nested_command_options],
+            check=True,
+        )
+        print("Shutting down main bazel server")
+    else:
+        # Repo rules are run in a process wrapper, and the "child subreaper"
+        # ensures that the bazel server is killed after the repo rule finishes.
+        # See github.com/bazelbuild/bazel/issues/20447
+        # To solve this, we just start the nested server on every bazel
+        # invocation by running "bazel version" to ensure it's allways running.
+
+        # This is too slow for the hot path, so we detach it. We technically
+        # could hit a race condition where the server is started by the repo
+        # rule rather than here, but it:
+        # * Doesn't affect correctness, only the performance of that invocation.
+        # * Will be corrected in the following invocation.
+        # * Is very rare.
+        # pylint: disable=consider-using-with
+        subprocess.Popen(
+            [*nested_base_command, "version", *nested_command_options],
+            stdout=subprocess.DEVNULL,
+            # Otherwise we get two "starting bazel server and connecting".
+            stderr=subprocess.DEVNULL,
+            close_fds=True,
+        )
 
     argv_real = [
         bazel_real,
