@@ -206,6 +206,7 @@ pub struct TargetData {
     pub loader: Arc<CachedPackageLoader>,
     pub resolver: PackageResolver,
     pub toolchains: ToolchainConfig,
+    pub profile_path: PathBuf,
 }
 
 fn load_board(
@@ -218,18 +219,25 @@ fn load_board(
     let repos = Arc::new(repos);
 
     // Load configurations.
-    let config = Arc::new({
+    let (config, profile_path) = {
         let profile = Profile::load_default(root_dir, &repos)?;
         let site_settings = SiteSettings::load(root_dir)?;
         let override_source = build_override_config_source();
 
-        ConfigBundle::from_sources(vec![
-            // The order matters.
-            Box::new(profile) as Box<dyn ConfigSource>,
-            Box::new(site_settings) as Box<dyn ConfigSource>,
-            Box::new(override_source) as Box<dyn ConfigSource>,
-        ])
-    });
+        let profile_path = profile.profile_path().to_path_buf();
+
+        (
+            ConfigBundle::from_sources(vec![
+                // The order matters.
+                Box::new(profile) as Box<dyn ConfigSource>,
+                Box::new(site_settings) as Box<dyn ConfigSource>,
+                Box::new(override_source) as Box<dyn ConfigSource>,
+            ]),
+            profile_path,
+        )
+    };
+
+    let config = Arc::new(config);
 
     // Force accept 9999 ebuilds when running outside a cros chroot.
     let force_accept_9999_ebuilds = !is_inside_chroot()?;
@@ -254,6 +262,7 @@ fn load_board(
         loader,
         resolver,
         toolchains,
+        profile_path,
     })
 }
 

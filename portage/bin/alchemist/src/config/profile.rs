@@ -4,7 +4,11 @@
 
 use anyhow::{Context, Result};
 use itertools::Itertools;
-use std::{fs::read_to_string, io::ErrorKind, path::Path};
+use std::{
+    fs::read_to_string,
+    io::ErrorKind,
+    path::{Path, PathBuf},
+};
 
 use crate::{
     config::{
@@ -24,6 +28,7 @@ use crate::{
 /// Parsed Portage profile.
 #[derive(Debug, Eq, PartialEq)]
 pub struct Profile {
+    profile_path: PathBuf,
     parents: Vec<Profile>,
     makeconf: MakeConf,
     precomputed_nodes: Vec<ConfigNode>,
@@ -64,6 +69,7 @@ impl Profile {
         .concat();
 
         Ok(Self {
+            profile_path: dir.to_owned(),
             parents,
             makeconf,
             precomputed_nodes,
@@ -80,6 +86,11 @@ impl Profile {
             .read_link()
             .with_context(|| format!("Reading symlink at {}", symlink_path.display()))?;
         Profile::load(&dir, repos)
+    }
+
+    /// The directory that contains the profile.
+    pub fn profile_path(&self) -> &Path {
+        &self.profile_path
     }
 }
 
@@ -172,8 +183,10 @@ mod tests {
         let actual = Profile::load_default(repo_root.as_path(), &repos)?;
 
         let expected = Profile {
+            profile_path: dir.join("mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base"),
             parents: vec![
                 Profile {
+                    profile_path: dir.join("mnt/host/source/src/third_party/chromiumos-overlay/profiles/default/linux/amd64/10.0/chromeos"),
                     parents: vec![],
                     makeconf: MakeConf::new_for_testing(
                         vec![dir.join(CHROMIUM_MAKE_CONF)],
@@ -182,6 +195,7 @@ mod tests {
                     precomputed_nodes: vec![],
                 },
                 Profile {
+                    profile_path: dir.join("mnt/host/source/src/third_party/chromiumos-overlay/profiles/features/selinux"),
                     parents: vec![],
                     makeconf: MakeConf::new_for_testing(vec![], HashMap::new()),
                     precomputed_nodes: vec![],
