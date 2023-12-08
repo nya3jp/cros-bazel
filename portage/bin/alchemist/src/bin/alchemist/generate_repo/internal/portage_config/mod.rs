@@ -7,7 +7,6 @@ use alchemist::{
     fakechroot::{host_config_file_ops, target_config_file_ops, target_host_config_file_ops},
     fileops::FileOps,
     path::join_absolute,
-    repository::RepositorySet,
 };
 use anyhow::{bail, ensure, Context, Result};
 use lazy_static::lazy_static;
@@ -74,10 +73,6 @@ fn generate_build_file(
     )?;
 
     Ok(())
-}
-
-fn profile_path(repos: &RepositorySet, profile: &str) -> PathBuf {
-    repos.primary().base_dir().join("profiles").join(profile)
 }
 
 fn file_ops_to_context<'a>(
@@ -153,7 +148,7 @@ pub fn generate_host_portage_config(host: &TargetData, out: &Path) -> Result<()>
         file_ops_to_context(
             "full",
             sysroot,
-            host_config_file_ops(Some(profile_path(&host.repos, &host.profile).as_path())),
+            host_config_file_ops(Some(&host.profile_path)),
             &out,
         )?,
     ];
