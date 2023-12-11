@@ -496,6 +496,37 @@ fn do_main() -> Result<()> {
         .with_context(|| format!("{binary_out_path:?} wasn't produced by build_package"))?;
     }
 
+    // Retrieve reclient log files. The path must be in sync with the one in
+    // chromite/sdk/reclient_cfgs/reproxy.cfg.
+    let reclient_log_dir = container.root_dir().join("tmp/reclient-chromeos-chrome");
+    if reclient_log_dir.try_exists()? {
+        // Generate a unique destination directory path with the current date and a random number.
+        // NOTE: On CI builders, chromite's remoteexec_lib.LogsArchiver will upload reclient log
+        // files found under /tmp/reclient-* as build artifacts.
+        let date = chrono::Utc::now()
+            .naive_utc()
+            .format("%Y%m%d%H%M%S")
+            .to_string();
+        let random_number = rand::random::<u32>();
+        let dest_dir = PathBuf::from(format!(
+            "/tmp/reclient-chromeos-chrome-alchemy-{date}-{random_number}"
+        ));
+
+        std::fs::create_dir(&dest_dir)?;
+        // Copy all log files created by reclient. Skip symlinks as they're not interesting.
+        // Reclient creates no directory in the log output directory.
+        for entry in std::fs::read_dir(reclient_log_dir)? {
+            let entry = entry?;
+            if entry.file_type()?.is_file() {
+                let from = entry.path();
+                let to = dest_dir.join(from.file_name().expect("`from` should have a file name."));
+                std::fs::copy(&from, &to).with_context(|| {
+                    format!("Failed to copy a reclient log file {from:?} to {to:?}")
+                })?;
+            }
+        }
+    }
+
     Ok(())
 }
 

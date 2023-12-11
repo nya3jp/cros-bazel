@@ -10,8 +10,10 @@ cliutil = { path = "../../common/cliutil" }
 container = { path = "../../common/container" }
 
 anyhow.workspace = true
+chrono.workspace = true
 clap.workspace = true
 nix.workspace = true
+rand.workspace = true
 runfiles.workspace = true
 serde.workspace = true
 serde_json.workspace = true

@@ -187,10 +187,12 @@ name = "build_package"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "clap",
  "cliutil",
  "container",
  "nix",
+ "rand",
  "runfiles",
  "serde",
  "serde_json",
