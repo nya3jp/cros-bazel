@@ -14,6 +14,7 @@ use crate::dump_profile::dump_profile_main;
 use crate::generate_repo::generate_repo_main;
 
 use alchemist::common::is_inside_chroot;
+use alchemist::data::Vars;
 use alchemist::fakechroot;
 use alchemist::toolchain::ToolchainConfig;
 use alchemist::{
@@ -113,7 +114,7 @@ fn default_source_dir() -> Result<PathBuf> {
     );
 }
 
-fn build_override_config_source() -> SimpleConfigSource {
+fn build_override_config_source(sysroot: &Path) -> Result<SimpleConfigSource> {
     let mut masked = vec![
         // HACK: Mask chromeos-base/chromeos-lacros-9999 as it's not functional.
         PackageMaskUpdate {
@@ -152,7 +153,7 @@ fn build_override_config_source() -> SimpleConfigSource {
         }
     }
 
-    let nodes = vec![
+    let mut nodes = vec![
         ConfigNode {
             sources: vec![],
             value: ConfigNodeValue::PackageMasks(masked),
@@ -182,7 +183,32 @@ fn build_override_config_source() -> SimpleConfigSource {
             ]),
         },
     ];
-    SimpleConfigSource::new(nodes)
+
+    // When running inside the chroot, we need to override the PKGDIR,
+    // PORTAGE_TMPDIR, and PORT_LOGDIR that are defined in make.conf.amd64-host
+    // because they are pointing to the BROOT.
+    // When using fakechroot, we set the values in the generated
+    // make.conf.host_setup file.
+    if is_inside_chroot()? {
+        nodes.push(ConfigNode {
+            sources: vec![],
+            value: ConfigNodeValue::Vars(Vars::from_iter([
+                (
+                    "PKGDIR".to_string(),
+                    format!("{}/packages/", sysroot.display()),
+                ),
+                (
+                    "PORTAGE_TMPDIR".to_string(),
+                    format!("{}/tmp/", sysroot.display()),
+                ),
+                (
+                    "PORT_LOGDIR".to_string(),
+                    format!("{}/tmp/portage/logs/", sysroot.display()),
+                ),
+            ])),
+        });
+    }
+    Ok(SimpleConfigSource::new(nodes))
 }
 
 fn setup_tools() -> Result<TempDir> {
@@ -222,7 +248,7 @@ fn load_board(
     let (config, profile_path) = {
         let profile = Profile::load_default(root_dir, &repos)?;
         let site_settings = SiteSettings::load(root_dir)?;
-        let override_source = build_override_config_source();
+        let override_source = build_override_config_source(root_dir)?;
 
         let profile_path = profile.profile_path().to_path_buf();
 
