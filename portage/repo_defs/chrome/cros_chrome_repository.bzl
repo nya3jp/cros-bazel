@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@bazel_tools//tools/build_defs/repo:git_worker.bzl", "git_repo")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
 def _exec(ctx, cmd, msg = None, **kwargs):
@@ -18,9 +17,9 @@ def _exec(ctx, cmd, msg = None, **kwargs):
     print("Finished running command %s" % cmd)
     return st.stdout
 
-def _git(ctx, repo, *args):
-    cmd = ["git", "-C", repo] + list(args)
-    return _exec(ctx, cmd)
+def _git(ctx, repo, args, msg = None):
+    cmd = ["git", "-C", repo] + args
+    return _exec(ctx, cmd, msg)
 
 def _cros_chrome_repository_impl(ctx):
     """Repository rule that downloads the Chromium/Chrome source."""
@@ -32,11 +31,19 @@ def _cros_chrome_repository_impl(ctx):
         fail("tar was not found on the path")
 
     ctx.template(".gclient", ctx.attr._gclient_template, {
-        "{tag}": ctx.attr.tag,
         "{internal}": str(ctx.attr.internal),
+        "{tag}": ctx.attr.tag,
     })
 
-    git_ = git_repo(ctx, "src")
+    reset_ref = "tags/" + ctx.attr.tag
+    fetch_ref = "tags/" + ctx.attr.tag + ":tags/" + ctx.attr.tag
+
+    ctx.delete("src")
+    _exec(ctx, ["git", "init", "src"])
+    _git(ctx, "src", ["remote", "add", "origin", ctx.attr.remote])
+    _git(ctx, "src", ["fetch", "--depth=1", "origin", fetch_ref], "Fetching " + fetch_ref)
+    _git(ctx, "src", ["reset", "--hard", reset_ref], "Resetting to " + reset_ref)
+    _git(ctx, "src", ["clean", "-xdf"])
 
     # The chromium repo is huge and gclient will perform a blind `git fetch`
     # that attempts to fetch all the refs. We want to ensure we only pull
@@ -44,9 +51,11 @@ def _cros_chrome_repository_impl(ctx):
     _git(
         ctx,
         "src",
-        "config",
-        "remote.origin.fetch",
-        "refs/tags/{}:refs/tags/{}".format(ctx.attr.tag, ctx.attr.tag),
+        [
+            "config",
+            "remote.origin.fetch",
+            "refs/tags/{}:refs/tags/{}".format(ctx.attr.tag, ctx.attr.tag),
+        ],
     )
 
     _exec(ctx, [
@@ -194,8 +203,8 @@ def _cros_chrome_repository_impl(ctx):
     ctx.template("BUILD.bazel", ctx.attr._build_file)
 
 _cros_sdk_repository_attrs = {
-    "tag": attr.string(
-        doc = """The expected SHA-256 of the file downloaded.""",
+    "gclient": attr.label(
+        doc = """gclient binary used to fetch chromium.""",
         mandatory = True,
     ),
     "internal": attr.bool(
@@ -206,36 +215,17 @@ _cros_sdk_repository_attrs = {
         doc = "The URI of the remote Chromium Git repository",
         default = "https://chromium.googlesource.com/chromium/src.git",
     ),
-    "verbose": attr.bool(default = False),
-
-    # The DO NOT USE attrs are only here to make `git_repo` happy.
-    "init_submodules": attr.bool(
-        default = False,
-        doc = "DO NOT USE",
-    ),
-    "recursive_init_submodules": attr.bool(
-        default = False,
-        doc = "DO NOT USE",
-    ),
-    "commit": attr.string(
-        default = "",
-        doc = "DO NOT USE",
-    ),
-    "shallow_since": attr.string(
-        default = "",
-        doc = "DO NOT USE",
-    ),
-    "gclient": attr.label(
-        doc = """gclient binary used to fetch chromium.""",
+    "tag": attr.string(
+        doc = """The expected SHA-256 of the file downloaded.""",
         mandatory = True,
-    ),
-    "_gclient_template": attr.label(
-        doc = """.gclient template.""",
-        default = ":gclient-template.py",
     ),
     "_build_file": attr.label(
         allow_single_file = True,
         default = ":BUILD.chrome-template",
+    ),
+    "_gclient_template": attr.label(
+        doc = """.gclient template.""",
+        default = ":gclient-template.py",
     ),
 }
 
