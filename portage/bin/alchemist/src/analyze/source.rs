@@ -474,7 +474,12 @@ fn extract_remote_sources(
             .env()
             .get("GENTOO_MIRRORS")
             .map_or("", |s| s.as_str());
-        let mirrors = mirrors.split_ascii_whitespace().collect_vec();
+        let mut mirrors = mirrors.split_ascii_whitespace().collect_vec();
+
+        // Move chromeos-mirror/gentoo to the top of the list if the package
+        // is from portage-stable, the bottom otherwise, to reduce 404s.
+        let is_portage_stable = details.as_basic_data().repo_name == "portage-stable";
+        mirrors.sort_by_key(|url| url.ends_with("/gentoo") != is_portage_stable);
 
         ensure!(
             !mirrors.is_empty(),
