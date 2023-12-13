@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load("//bazel/portage/build_defs:install_deps.bzl", "install_deps")
 
@@ -104,12 +105,12 @@ def _build_image_impl(ctx):
             args,
         ],
         execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
+            "no-remote": "",
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since ebuild runs in a container.
             "no-sandbox": "",
-            "no-remote": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
         },
         progress_message = "Building " + output_image_file.basename,
     )
