@@ -5,7 +5,7 @@
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 
 string_flag(
-    name = "binpkg-cache-strategy",
+    name = "binpkg_cache_strategy",
     build_setting_default = "fast",
     values = [
         "fast",
@@ -14,47 +14,47 @@ string_flag(
 )
 
 config_setting(
-    name = "binpkg-cache-fast",
+    name = "binpkg_cache_fast",
     flag_values = {
-        ":binpkg-cache-strategy": "fast",
+        ":binpkg_cache_strategy": "fast",
     },
 )
 
 string_flag(
-    name = "default-stage",
+    name = "default_stage",
     build_setting_default = "stage2",
 )
 
 config_setting(
     name = "stage1",
     flag_values = {
-        ":default-stage": "stage1",
+        ":default_stage": "stage1",
     },
 )
 
 config_setting(
     name = "stage2",
     flag_values = {
-        ":default-stage": "stage2",
+        ":default_stage": "stage2",
     },
 )
 
 bool_flag(
-    name = "compiled-profiles",
+    name = "compiled_profiles",
     build_setting_default = True,
 )
 
 config_setting(
-    name = "compiled-profiles-enabled",
+    name = "compiled_profiles_enabled",
     flag_values = {
-        ":compiled-profiles": "True",
+        ":compiled_profiles": "True",
     },
 )
 
 config_setting(
-    name = "compiled-profiles-disabled",
+    name = "compiled_profiles_disabled",
     flag_values = {
-        ":compiled-profiles": "False",
+        ":compiled_profiles": "False",
     },
 )
 
@@ -64,20 +64,20 @@ config_setting(
 # built and compared for each ebuild target. This happens as a validator
 # so it will also check all transitive dependencies as well.
 bool_flag(
-    name = "enable-portage-config-validator",
+    name = "enable_portage_config_validator",
     build_setting_default = False,
 )
 
 config_setting(
-    name = "portage-config-validator-enabled",
+    name = "portage_config_validator_enabled",
     flag_values = {
-        ":enable-portage-config-validator": "True",
+        ":enable_portage_config_validator": "True",
     },
 )
 
 config_setting(
-    name = "portage-config-validator-disabled",
+    name = "portage_config_validator_disabled",
     flag_values = {
-        ":enable-portage-config-validator": "False",
+        ":enable_portage_config_validator": "False",
     },
 )

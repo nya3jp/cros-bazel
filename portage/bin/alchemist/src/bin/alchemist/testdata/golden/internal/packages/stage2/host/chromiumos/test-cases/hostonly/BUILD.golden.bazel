@@ -84,8 +84,8 @@ ebuild(
         "-userland_BSD",
     ],
     inject_use_flags = select({
-        "@//bazel/portage:compiled-profiles-enabled": True,
-        "@//bazel/portage:compiled-profiles-disabled": False,
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
@@ -93,19 +93,19 @@ ebuild(
     eclasses = [
     ],
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:full",
         ],
     }),
     bashrcs = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [],
+        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
@@ -113,8 +113,8 @@ ebuild(
     }),
     prebuilt = ":1.0_prebuilt",
     portage_profile_test_package = select({
-        "@//bazel/portage:portage-config-validator-enabled": ":1.0_portage_profile_test_package",
-        "@//bazel/portage:portage-config-validator-disabled": None,
+        "@//bazel/portage:portage_config_validator_enabled": ":1.0_portage_profile_test_package",
+        "@//bazel/portage:portage_config_validator_disabled": None,
     }),
     visibility = ["@//bazel:internal"],
 )
@@ -162,8 +162,8 @@ ebuild_debug(
         "-userland_BSD",
     ],
     inject_use_flags = select({
-        "@//bazel/portage:compiled-profiles-enabled": True,
-        "@//bazel/portage:compiled-profiles-disabled": False,
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
@@ -171,19 +171,19 @@ ebuild_debug(
     eclasses = [
     ],
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:full",
         ],
     }),
     bashrcs = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [],
+        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1.0_incremental_enabled": ":1.0_cache_marker",
@@ -249,8 +249,8 @@ ebuild(
         "-userland_BSD",
     ],
     inject_use_flags = select({
-        "@//bazel/portage:compiled-profiles-enabled": True,
-        "@//bazel/portage:compiled-profiles-disabled": False,
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
@@ -258,19 +258,19 @@ ebuild(
     eclasses = [
     ],
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:full",
         ],
     }),
     bashrcs = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [],
+        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
@@ -324,8 +324,8 @@ ebuild_debug(
         "-userland_BSD",
     ],
     inject_use_flags = select({
-        "@//bazel/portage:compiled-profiles-enabled": True,
-        "@//bazel/portage:compiled-profiles-disabled": False,
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_deps",
@@ -333,19 +333,19 @@ ebuild_debug(
     eclasses = [
     ],
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:full",
         ],
     }),
     bashrcs = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [],
+        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
@@ -520,8 +520,8 @@ ebuild_test(
         "-userland_BSD",
     ],
     inject_use_flags = select({
-        "@//bazel/portage:compiled-profiles-enabled": True,
-        "@//bazel/portage:compiled-profiles-disabled": False,
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["files/**", "*.bashrc"]),
     sdk = ":1.0_test_deps",
@@ -529,19 +529,19 @@ ebuild_test(
     eclasses = [
     ],
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:full",
         ],
     }),
     bashrcs = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [],
+        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],

@@ -118,7 +118,7 @@ sdk_install_deps(
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-util:glib-utils",
     ],
     install_strategy = select({
-        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
     progress_message = "Installing {dep_count} host packages into %{label}",
@@ -161,11 +161,11 @@ sdk_install_deps(
     board = "{{ board }}",
     overlays = "{{ overlay_set }}",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/{{ name }}",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/{{ name }}:full",
         ],
@@ -176,7 +176,7 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
     progress_message = "Installing {dep_count} stage 1 primordial packages for {{ board }}",

@@ -21,7 +21,7 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
     visibility = ["@//bazel:internal"],
@@ -59,11 +59,11 @@ sdk_install_deps(
     board = "{{ board }}",
     overlays = "{{ target_overlay_set }}",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/{{ name }}",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/{{ name }}:full",
         ],
@@ -74,7 +74,7 @@ sdk_install_deps(
     {%- endfor %}
     ],
     install_strategy = select({
-        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
     visibility = ["@//bazel:internal"],

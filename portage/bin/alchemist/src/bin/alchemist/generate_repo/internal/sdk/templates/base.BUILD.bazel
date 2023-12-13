@@ -10,11 +10,11 @@ build_sdk(
     board = "amd64-host", # TODO: Delete this since we don't really need it.
     overlays = "{{ overlay_set }}",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/host:full",
         ],

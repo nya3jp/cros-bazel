@@ -16,13 +16,13 @@ pkg_files(
         ],
         exclude = OVERLAY_EXCLUDE,
     ) + select({
-        "@//bazel/portage:compiled-profiles-enabled": glob(
+        "@//bazel/portage:compiled_profiles_enabled": glob(
             ["profiles/**"],
             exclude = OVERLAY_EXCLUDE +
                       OVERLAY_ANALYSIS_FILE_PATTERN +
                       OVERLAY_USE_FILE_PATTERN,
         ),
-        "@//bazel/portage:compiled-profiles-disabled": glob(
+        "@//bazel/portage:compiled_profiles_disabled": glob(
             ["profiles/**"],
             exclude = OVERLAY_EXCLUDE +
                       OVERLAY_ANALYSIS_FILE_PATTERN,
@@ -52,8 +52,8 @@ overlay(
 pkg_files(
     name = "files-full",
     srcs = glob(OVERLAY_ANALYSIS_FILE_PATTERN) + select({
-        "@//bazel/portage:compiled-profiles-enabled": glob(OVERLAY_USE_FILE_PATTERN),
-        "@//bazel/portage:compiled-profiles-disabled": [],
+        "@//bazel/portage:compiled_profiles_enabled": glob(OVERLAY_USE_FILE_PATTERN),
+        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     prefix = "{{ mount_path }}",
     strip_prefix = strip_prefix.from_pkg(),

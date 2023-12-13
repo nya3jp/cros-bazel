@@ -24,11 +24,11 @@ build_image(
     output_image_file_name = "chromiumos_minimal_image",
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/board:full",
         ],
@@ -61,11 +61,11 @@ build_image(
     output_image_file_name = "chromiumos_base_image",
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/board:full",
         ],
@@ -92,11 +92,11 @@ build_image(
     output_image_file_name = "chromiumos_image",
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/board:full",
         ],
@@ -124,11 +124,11 @@ build_image(
     output_image_file_name = "chromiumos_test_image",
     overlays = "@portage//internal/sdk/stage1/target/board:overlays",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/target/board:full",
         ],

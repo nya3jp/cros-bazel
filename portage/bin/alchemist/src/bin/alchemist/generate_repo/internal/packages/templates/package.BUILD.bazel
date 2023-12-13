@@ -74,8 +74,8 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     inject_use_flags = False,
     {%- else %}
     inject_use_flags = select({
-        "@//bazel/portage:compiled-profiles-enabled": True,
-        "@//bazel/portage:compiled-profiles-disabled": False,
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     {%- endif %}
     files = glob(["files/**", "*.bashrc"]),
@@ -101,19 +101,19 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     {%- else %}
     portage_config = select({
         {%- if target_board %}
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/{{ target_portage_config }}",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/{{ target_portage_config }}:full",
         ],
         {%- else %}
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:full",
         ],
         {%- endif %}
@@ -121,12 +121,12 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     {%- endif -%}
     {%- if not full_config %}
     bashrcs = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
         {%- for bashrc in ebuild.bashrcs %}
             "{{ bashrc }}",
         {%- endfor %}
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [],
+        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     {%- endif %}
     {%- if ebuild.allow_network_access %}
@@ -185,10 +185,10 @@ sdk_install_deps(
     base = "{{ ebuild.sdk }}",
     overlays = "{{ host_overlay_set }}",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:full",
         ]
     }),
@@ -204,7 +204,7 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -225,11 +225,11 @@ sdk_install_deps(
     board = "{{ target_board }}",
     overlays = "{{ target_overlay_set }}",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/{{ target_portage_config }}",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/{{ target_portage_config }}:full",
         ],
@@ -240,7 +240,7 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -263,11 +263,11 @@ sdk_install_deps(
     {%- endif %}
     overlays = "{{ target_overlay_set }}",
     portage_config = select({
-        "@//bazel/portage:compiled-profiles-enabled": [
+        "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/{{ target_portage_config }}",
         ],
-        "@//bazel/portage:compiled-profiles-disabled": [
+        "@//bazel/portage:compiled_profiles_disabled": [
             "//internal/portage-config/host:orig",
             "//internal/portage-config/{{ target_portage_config }}:full",
         ],
@@ -278,7 +278,7 @@ sdk_install_deps(
         {%- endfor %}
     ],
     install_strategy = select({
-        "@//bazel/portage:binpkg-cache-fast": "fast",
+        "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
     visibility = ["//visibility:private"],
@@ -327,8 +327,8 @@ ebuild(
     prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
     {%- if suffix == "" %}
     portage_profile_test_package = select({
-        "@//bazel/portage:portage-config-validator-enabled": ":{{ ebuild.version }}_portage_profile_test_package",
-        "@//bazel/portage:portage-config-validator-disabled": None,
+        "@//bazel/portage:portage_config_validator_enabled": ":{{ ebuild.version }}_portage_profile_test_package",
+        "@//bazel/portage:portage_config_validator_disabled": None,
     }),
     {%- endif %}
     visibility = ["@//bazel:internal"],
