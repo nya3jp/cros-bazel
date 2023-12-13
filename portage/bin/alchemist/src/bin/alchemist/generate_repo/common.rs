@@ -137,7 +137,9 @@ impl DistFileEntry {
 ///
 /// Use this function with [`Tera::set_escape_fn`] to generate Starlark files.
 pub fn escape_starlark_string(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('\"', "\\\"")
+    s.replace('\\', "\\\\")
+        .replace('\"', "\\\"")
+        .replace('\n', "\\n")
 }
 
 #[cfg(test)]

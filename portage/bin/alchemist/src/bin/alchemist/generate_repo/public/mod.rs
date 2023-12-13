@@ -21,6 +21,8 @@ use serde::Serialize;
 use tera::Tera;
 use version::Version;
 
+use crate::generate_repo::common::escape_starlark_string;
+
 use super::common::AUTOGENERATE_NOTICE;
 
 lazy_static! {
@@ -36,6 +38,8 @@ lazy_static! {
             include_str!("templates/package.BUILD.bazel"),
         )
         .unwrap();
+        tera.autoescape_on(vec![".bazel"]);
+        tera.set_escape_fn(escape_starlark_string);
         tera
     };
 }

@@ -31,8 +31,8 @@ use tera::Tera;
 use tracing::instrument;
 
 use crate::generate_repo::common::{
-    package_details_to_target_path, repository_set_to_target_path, DistFileEntry,
-    AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
+    escape_starlark_string, package_details_to_target_path, repository_set_to_target_path,
+    DistFileEntry, AUTOGENERATE_NOTICE, PRIMORDIAL_PACKAGES,
 };
 
 lazy_static! {
@@ -43,6 +43,8 @@ lazy_static! {
             include_str!("templates/package.BUILD.bazel"),
         )
         .unwrap();
+        tera.autoescape_on(vec![".bazel"]);
+        tera.set_escape_fn(escape_starlark_string);
         tera
     };
 }

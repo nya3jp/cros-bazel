@@ -22,9 +22,7 @@ always_fail(
     name = "1.0",
     message = "\n--\nError analyzing ebuild!\ntarget: @" + repository_name() +
               "/" + package_name() + "\nebuild: failure-1.0.ebuild\n\n" +
-              """ebuild failed to evaluate /mnt/host/source/src/third_party/chromiumos-overlay/test-cases/failure/failure-1.0.ebuild: exit status: 1
-stdout: 
-stderr: \n--""",
+              """ebuild failed to evaluate /mnt/host/source/src/third_party/chromiumos-overlay/test-cases/failure/failure-1.0.ebuild: exit status: 1\nstdout: \nstderr: \n--""",
     visibility = ["@//bazel:internal"],
 )
 
