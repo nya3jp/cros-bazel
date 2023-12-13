@@ -3,9 +3,9 @@
 # found in the LICENSE file.
 
 load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
+load("//bazel/portage/common/testdata:prebuilts.bzl", "portage_testdata_prebuilts")
 load("//bazel/portage/repo_defs/prebuilts:repositories.bzl", "prebuilts_dependencies")
 load("//bazel/portage/sdk:repositories.bzl", "cros_sdk_repositories")
-load("//bazel/portage/common/testdata:prebuilts.bzl", "portage_testdata_prebuilts")
 
 def _files_impl(module_ctx):
     hub = hub_init()
@@ -48,7 +48,7 @@ def _files_impl(module_ctx):
     hub.http_file.alias_and_symlink(
         name = "goma-chromeos-modified-for-alchemy.tgz",
         sha256 = "f342a31bf63e622c31852c7627d169d2c2994510d53838013d4fd53d7ef3565c",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-throw-away-bucket/cros-bazel/goma-chromeos-modified-for-alchemy-20230914.tgz"],
+        urls = ["https://commondatastorage.googleapis.com/chromeos-localmirror/cros-bazel/goma-chromeos-modified-for-alchemy-20230914.tgz"],
     )
 
     prebuilts_dependencies(http_file = hub.http_file.alias_only)
