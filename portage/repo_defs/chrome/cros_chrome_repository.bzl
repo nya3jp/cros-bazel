@@ -4,22 +4,31 @@
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
-def _exec(ctx, cmd, msg = None, **kwargs):
+def _exec(ctx, cmd, msg = None, retries = 0, **kwargs):
     env = dict(ctx.os.environ)
     env.update(kwargs)
     if msg:
         ctx.report_progress(msg)
 
-    # Use 3600 as timeout because gclient can take a long time to finish.
-    st = ctx.execute(cmd, timeout = 3600, environment = env)
-    if st.return_code:
-        fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
-    print("Finished running command %s" % cmd)
+    st = None
+    for attempt in range(0, retries + 1):
+        # Use 3600 as timeout because gclient can take a long time to finish.
+        st = ctx.execute(cmd, timeout = 3600, environment = env)
+        if st.return_code:
+            if attempt == retries + 1:
+                fail("Error running attempt %s for command %s:\n%s%s" %
+                     (attempt, cmd, st.stdout, st.stderr))
+            else:
+                print("Error running attempt %s for command %s:\n%s%s\nRetrying." %
+                      (attempt, cmd, st.stdout, st.stderr))
+        else:
+            print("Finished running command %s (attempt %s)" % (cmd, attempt))
+            break
     return st.stdout
 
 def _git(ctx, repo, args, msg = None):
     cmd = ["git", "-C", repo] + args
-    return _exec(ctx, cmd, msg)
+    return _exec(ctx, cmd, msg, retries = 1)
 
 def _cros_chrome_repository_impl(ctx):
     """Repository rule that downloads the Chromium/Chrome source."""
