@@ -753,6 +753,82 @@ ebuild_install, ebuild_install_primordial = maybe_primordial_rule(
     ),
 )
 
+_EbuildInstalledInfo = provider(fields = dict(
+    checksum = "(File) File containing a hash of the transitive runtime deps",
+))
+
+def _ebuild_install_action_impl(ctx):
+    pkg = ctx.attr.package[BinaryPackageInfo]
+    checksum = ctx.actions.declare_file(ctx.label.name + ".sha256sum")
+    args = ctx.actions.args()
+    args.add(pkg.file)
+    args.add("/build/%s/packages/%s/%s" % (
+        ctx.attr.board,
+        pkg.category,
+        pkg.file.basename,
+    ))
+    args.add("emerge-%s --usepkgonly --nodeps --jobs =%s/%s" % (
+        ctx.attr.board,
+        pkg.category,
+        pkg.file.basename.rsplit(".", 1)[0],
+    ))
+    args.add(checksum)
+
+    inputs = []
+
+    # The only use of this is to ensure that our checksum is a hash of the
+    # transitive dependencies rather than just this file.
+    # This ensures that if we have foo -> bar -> baz, and we change baz, foo
+    # will reinstall itself.
+    for dep in ctx.attr.requires:
+        inputs.append(dep[_EbuildInstalledInfo].checksum)
+        args.add(dep[_EbuildInstalledInfo].checksum)
+
+    ctx.actions.run(
+        executable = ctx.executable._installer,
+        inputs = inputs,
+        arguments = [args],
+        outputs = [checksum],
+        execution_requirements = {
+            # This implies no-sandbox and no-remote
+            "local": "1",
+            # Ideally we should cache this if it matches the most recent hash
+            # in the cache, but the disk cache is considered a local cache, and
+            # can store older hashes.
+            "no-cache": "1",
+        },
+    )
+
+    return [
+        # We don't really want DefaultInfo, but this forces it to actually
+        # execute the installation when we build the target.
+        DefaultInfo(files = depset([checksum])),
+        _EbuildInstalledInfo(checksum = checksum),
+    ]
+
+ebuild_install_action = rule(
+    implementation = _ebuild_install_action_impl,
+    doc = "Installs the package to the permanent SDK using a bazel action.",
+    attrs = dict(
+        package = attr.label(
+            providers = [BinaryPackageInfo],
+        ),
+        board = attr.string(
+            mandatory = True,
+            doc = """
+            The target board name to build the package for.
+            """,
+        ),
+        requires = attr.label_list(providers = [_EbuildInstalledInfo]),
+        _installer = attr.label(
+            default = "//bazel/portage/build_defs:ebuild_installer",
+            executable = True,
+            cfg = "exec",
+        ),
+    ),
+    provides = [_EbuildInstalledInfo],
+)
+
 def _ebuild_install_list_impl(ctx):
     src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
 
