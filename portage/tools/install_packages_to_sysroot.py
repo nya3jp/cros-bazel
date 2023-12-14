@@ -21,6 +21,11 @@ def main():
     """The entry point of the program."""
     logging.basicConfig(level=logging.INFO)
 
+    # Dump envvars for debugging.
+    # TODO(b/313796569): Remove this.
+    for key in os.environ:
+        logging.info("envvar: %s=%s", key, os.environ[key])
+
     arg_parser = argparse.ArgumentParser(prog=_SCRIPT_NAME)
     arg_parser.add_argument(
         "--board", required=True, help="The target board name."
