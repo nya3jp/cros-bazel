@@ -37,6 +37,14 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "10.2.0_installed",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/gcc-libs:10.2.0_installed",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-libs/gcc-libs:10.2.0_installed",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "10.2.0_install_list",
     actual = select({
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-libs/gcc-libs:10.2.0_install_list",
@@ -77,6 +85,16 @@ alias(
 alias(
     name = "gcc-libs_install",
     actual = ":10.2.0_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "installed",
+    actual = ":10.2.0_installed",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "gcc-libs_installed",
+    actual = ":10.2.0_installed",
     visibility = ["@//bazel:internal"],
 )
 alias(

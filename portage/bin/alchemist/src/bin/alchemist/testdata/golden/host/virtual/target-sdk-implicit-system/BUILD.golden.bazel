@@ -37,6 +37,14 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "1-r4_installed",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4_installed",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/virtual/target-sdk-implicit-system:1-r4_installed",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "1-r4_install_list",
     actual = select({
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4_install_list",
@@ -77,6 +85,16 @@ alias(
 alias(
     name = "target-sdk-implicit-system_install",
     actual = ":1-r4_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "installed",
+    actual = ":1-r4_installed",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "target-sdk-implicit-system_installed",
+    actual = ":1-r4_installed",
     visibility = ["@//bazel:internal"],
 )
 alias(

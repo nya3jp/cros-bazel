@@ -37,6 +37,14 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "2.35-r25_installed",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25_installed",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25_installed",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "2.35-r25_install_list",
     actual = select({
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25_install_list",
@@ -77,6 +85,16 @@ alias(
 alias(
     name = "glibc_install",
     actual = ":2.35-r25_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "installed",
+    actual = ":2.35-r25_installed",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "glibc_installed",
+    actual = ":2.35-r25_installed",
     visibility = ["@//bazel:internal"],
 )
 alias(

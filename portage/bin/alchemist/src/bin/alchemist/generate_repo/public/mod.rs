@@ -94,7 +94,14 @@ fn generate_public_package(
     let mut test_suites = Vec::new();
 
     for (version, maybe_package) in version_to_maybe_package.iter() {
-        for suffix in ["", "_debug", "_package_set", "_install", "_install_list"] {
+        for suffix in [
+            "",
+            "_debug",
+            "_package_set",
+            "_install",
+            "_installed",
+            "_install_list",
+        ] {
             aliases.push(AliasEntry {
                 name: Cow::from(format!("{}{}", version, suffix)),
                 actual: SelectValue::Select(
@@ -162,7 +169,13 @@ fn generate_public_package(
         name: Cow::from(&short_package_name),
         actual: SelectValue::Single(get_actual_target("")),
     });
-    for suffix in ["debug", "package_set", "install", "install_list"] {
+    for suffix in [
+        "debug",
+        "package_set",
+        "install",
+        "installed",
+        "install_list",
+    ] {
         if suffix != short_package_name {
             aliases.push(AliasEntry {
                 name: Cow::from(suffix),

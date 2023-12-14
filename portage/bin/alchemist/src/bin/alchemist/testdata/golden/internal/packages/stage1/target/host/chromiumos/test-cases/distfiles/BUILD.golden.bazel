@@ -6,7 +6,7 @@
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
@@ -508,6 +508,15 @@ ebuild_install(
     board = "amd64-host",
     packages = [
         "//internal/packages/stage1/target/host/chromiumos/test-cases/distfiles:1.0",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_install_action(
+    name = "1.0_installed",
+    board = "amd64-host",
+    package = ":1.0",
+    requires = [
     ],
     visibility = ["@//bazel:internal"],
 )

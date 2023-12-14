@@ -37,6 +37,14 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "1.0_installed",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/simple/bbb:1.0_installed",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/simple/bbb:1.0_installed",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "1.0_install_list",
     actual = select({
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/simple/bbb:1.0_install_list",
@@ -77,6 +85,16 @@ alias(
 alias(
     name = "bbb_install",
     actual = ":1.0_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "installed",
+    actual = ":1.0_installed",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "bbb_installed",
+    actual = ":1.0_installed",
     visibility = ["@//bazel:internal"],
 )
 alias(

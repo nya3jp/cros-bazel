@@ -37,6 +37,14 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "0-r2_installed",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/portage-stable/virtual/os-headers:0-r2_installed",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/host/portage-stable/virtual/os-headers:0-r2_installed",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "0-r2_install_list",
     actual = select({
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/portage-stable/virtual/os-headers:0-r2_install_list",
@@ -77,6 +85,16 @@ alias(
 alias(
     name = "os-headers_install",
     actual = ":0-r2_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "installed",
+    actual = ":0-r2_installed",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "os-headers_installed",
+    actual = ":0-r2_installed",
     visibility = ["@//bazel:internal"],
 )
 alias(

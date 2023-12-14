@@ -38,6 +38,14 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "1.0_installed",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/hostonly:1.0_installed",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/hostonly:1.0_installed",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "1.0_install_list",
     actual = select({
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/hostonly:1.0_install_list",
@@ -77,6 +85,16 @@ alias(
 )
 alias(
     name = "hostonly_install",
+    actual = ":best_version_selection_failure",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "installed",
+    actual = ":best_version_selection_failure",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "hostonly_installed",
     actual = ":best_version_selection_failure",
     visibility = ["@//bazel:internal"],
 )

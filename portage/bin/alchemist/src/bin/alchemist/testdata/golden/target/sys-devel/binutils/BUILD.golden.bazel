@@ -37,6 +37,14 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 alias(
+    name = "2.39_installed",
+    actual = select({
+        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39_installed",
+        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39_installed",
+    }),
+    visibility = ["@//bazel:internal"],
+)
+alias(
     name = "2.39_install_list",
     actual = select({
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39_install_list",
@@ -77,6 +85,16 @@ alias(
 alias(
     name = "binutils_install",
     actual = ":2.39_install",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "installed",
+    actual = ":2.39_installed",
+    visibility = ["@//bazel:internal"],
+)
+alias(
+    name = "binutils_installed",
+    actual = ":2.39_installed",
     visibility = ["@//bazel:internal"],
 )
 alias(
