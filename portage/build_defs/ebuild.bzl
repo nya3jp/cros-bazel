@@ -767,14 +767,14 @@ def _ebuild_install_action_impl(ctx):
         pkg.category,
         pkg.file.basename,
     ))
-    args.add("emerge-%s --usepkgonly --nodeps --jobs =%s/%s" % (
+    pkg_name = pkg.category + "/" + pkg.file.basename.rsplit(".", 1)[0]
+    args.add("emerge-%s --usepkgonly --nodeps --jobs =%s" % (
         ctx.attr.board,
-        pkg.category,
-        pkg.file.basename.rsplit(".", 1)[0],
+        pkg_name,
     ))
     args.add(checksum)
 
-    inputs = []
+    inputs = [pkg.file]
 
     # The only use of this is to ensure that our checksum is a hash of the
     # transitive dependencies rather than just this file.
@@ -797,6 +797,7 @@ def _ebuild_install_action_impl(ctx):
             # can store older hashes.
             "no-cache": "1",
         },
+        progress_message = "Installing %s to sysroot" % pkg_name,
     )
 
     return [
