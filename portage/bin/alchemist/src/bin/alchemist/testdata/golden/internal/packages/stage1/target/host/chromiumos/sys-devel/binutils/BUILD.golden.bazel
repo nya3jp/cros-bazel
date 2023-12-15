@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "2.39_installed",
+    name = "2.39_installed_no_pdepends",
     board = "amd64-host",
     package = ":2.39",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "2.39_installed",
+    srcs = [
+        "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

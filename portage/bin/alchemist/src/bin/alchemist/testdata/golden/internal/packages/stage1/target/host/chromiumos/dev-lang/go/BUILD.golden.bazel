@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "1.20.5_installed",
+    name = "1.20.5_installed_no_pdepends",
     board = "amd64-host",
     package = ":1.20.5",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "1.20.5_installed",
+    srcs = [
+        "//internal/packages/stage1/target/host/chromiumos/dev-lang/go:1.20.5_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

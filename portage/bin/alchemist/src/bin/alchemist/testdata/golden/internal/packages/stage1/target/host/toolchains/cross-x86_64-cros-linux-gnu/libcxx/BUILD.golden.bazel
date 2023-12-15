@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "16.0_pre484197_installed",
+    name = "16.0_pre484197_installed_no_pdepends",
     board = "amd64-host",
     package = ":16.0_pre484197",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "16.0_pre484197_installed",
+    srcs = [
+        "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/libcxx:16.0_pre484197_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

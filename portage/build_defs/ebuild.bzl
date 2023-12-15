@@ -797,6 +797,7 @@ def _ebuild_install_action_impl(ctx):
             # can store older hashes.
             "no-cache": "1",
         },
+        mnemonic = "EbuildInstall",
         progress_message = "Installing %s to sysroot" % pkg_name,
     )
 
@@ -813,6 +814,7 @@ ebuild_install_action = rule(
     attrs = dict(
         package = attr.label(
             providers = [BinaryPackageInfo],
+            mandatory = True,
         ),
         board = attr.string(
             mandatory = True,

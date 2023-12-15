@@ -513,10 +513,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "1.0_installed",
+    name = "1.0_installed_no_pdepends",
     board = "amd64-host",
     package = ":1.0",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "1.0_installed",
+    srcs = [
+        "//internal/packages/stage1/target/host/chromiumos/test-cases/hostonly:1.0_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

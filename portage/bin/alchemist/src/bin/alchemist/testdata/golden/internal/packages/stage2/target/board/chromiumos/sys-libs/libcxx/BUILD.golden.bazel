@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "16.0_pre484197_installed",
+    name = "16.0_pre484197_installed_no_pdepends",
     board = "amd64-generic",
     package = ":16.0_pre484197",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "16.0_pre484197_installed",
+    srcs = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

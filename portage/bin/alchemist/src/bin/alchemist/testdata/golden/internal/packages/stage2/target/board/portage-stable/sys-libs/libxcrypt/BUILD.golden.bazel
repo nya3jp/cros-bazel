@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "4.4.28_installed",
+    name = "4.4.28_installed_no_pdepends",
     board = "amd64-generic",
     package = ":4.4.28",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "4.4.28_installed",
+    srcs = [
+        "//internal/packages/stage2/target/board/portage-stable/sys-libs/libxcrypt:4.4.28_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

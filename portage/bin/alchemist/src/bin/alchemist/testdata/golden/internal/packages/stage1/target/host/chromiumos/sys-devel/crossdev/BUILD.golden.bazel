@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "20211027_installed",
+    name = "20211027_installed_no_pdepends",
     board = "amd64-host",
     package = ":20211027",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "20211027_installed",
+    srcs = [
+        "//internal/packages/stage1/target/host/chromiumos/sys-devel/crossdev:20211027_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

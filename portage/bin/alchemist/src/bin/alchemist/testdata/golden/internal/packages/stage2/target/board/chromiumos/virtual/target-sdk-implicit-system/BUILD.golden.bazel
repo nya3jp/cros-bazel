@@ -547,14 +547,26 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "1-r4_installed",
+    name = "1-r4_installed_no_pdepends",
     board = "amd64-generic",
     package = ":1-r4",
     requires = [
-        "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39_installed",
-        "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197_installed",
-        "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_installed",
-        "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2_installed",
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2_installed_no_pdepends",
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "1-r4_installed",
+    srcs = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

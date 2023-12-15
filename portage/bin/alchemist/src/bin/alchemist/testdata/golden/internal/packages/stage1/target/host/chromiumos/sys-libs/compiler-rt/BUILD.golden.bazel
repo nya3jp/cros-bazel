@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "17.0_pre498229-r9_installed",
+    name = "17.0_pre498229-r9_installed_no_pdepends",
     board = "amd64-host",
     package = ":17.0_pre498229-r9",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "17.0_pre498229-r9_installed",
+    srcs = [
+        "//internal/packages/stage1/target/host/chromiumos/sys-libs/compiler-rt:17.0_pre498229-r9_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

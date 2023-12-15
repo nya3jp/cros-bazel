@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "4.14_installed",
+    name = "4.14_installed_no_pdepends",
     board = "amd64-generic",
     package = ":4.14",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "4.14_installed",
+    srcs = [
+        "//internal/packages/stage1/target/board/chromiumos/sys-kernel/linux-headers:4.14_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )

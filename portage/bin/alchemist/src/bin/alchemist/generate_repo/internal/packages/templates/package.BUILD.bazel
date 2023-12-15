@@ -371,12 +371,22 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "{{ ebuild.version }}_installed",
+    name = "{{ ebuild.version }}_installed_no_pdepends",
     board = "{{ target_board }}",
     package = ":{{ ebuild.version }}",
     requires = [
         {%- for dep in ebuild.runtime_deps %}
-        "{{ dep }}_installed",
+        "{{ dep }}_installed_no_pdepends",
+        {%- endfor %}
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "{{ ebuild.version }}_installed",
+    srcs = [
+        {%- for dep in ebuild.install_set %}
+        "{{ dep }}_installed_no_pdepends",
         {%- endfor %}
     ],
     visibility = ["@//bazel:internal"],

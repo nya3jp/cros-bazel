@@ -507,10 +507,18 @@ ebuild_install(
 )
 
 ebuild_install_action(
-    name = "10.2.0_installed",
+    name = "10.2.0_installed_no_pdepends",
     board = "amd64-generic",
     package = ":10.2.0",
     requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "10.2.0_installed",
+    srcs = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-libs/gcc-libs:10.2.0_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )
