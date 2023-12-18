@@ -15,6 +15,7 @@ use tera::Tera;
 use crate::{fileops::FileOps, repository::Repository, toolchain::ToolchainConfig};
 
 pub static CHROOT_THIRD_PARTY_DIR: &str = "/mnt/host/source/src/third_party";
+pub static MAKEOPTS_VALUE: &str = "-j32";
 
 lazy_static! {
     static ref TEMPLATES: Tera = {
@@ -138,7 +139,7 @@ fn generate_make_conf_board_setup(
             // means we get different outputs when built on different systems.
             // We can't have that. So let's leave it hard coded for now and
             // figure out how to strip it from the environment.tgz.
-            "-j32",
+            MAKEOPTS_VALUE,
         )),
         MakeVar::from(("PKG_CONFIG", format!("/build/{board}/build/bin/pkg-config"))),
         MakeVar::from((
