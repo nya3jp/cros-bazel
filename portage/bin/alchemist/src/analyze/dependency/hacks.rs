@@ -41,8 +41,8 @@ pub fn get_extra_dependencies(
     details: &PackageDetails,
     kind: DependencyKind,
     cross_compile: bool,
-) -> &'static str {
-    match (details.as_basic_data().package_name.as_str(), kind) {
+) -> String {
+    let extra = match (details.as_basic_data().package_name.as_str(), kind) {
         // poppler seems to support building without Boost, but the build fails
         // without it.
         ("app-text/poppler", DependencyKind::Build) => "dev-libs/boost",
@@ -350,7 +350,17 @@ pub fn get_extra_dependencies(
         ("dev-lang/rust-bootstrap", DependencyKind::BuildHost) => "dev-libs/openssl:PITA",
 
         _ => "",
+    };
+
+    let mut extra = extra.to_string();
+
+    // The eclass will set IDEPEND for EAPI 8+, but we are currently using
+    // EAPI7, so this doesn't get set correctly.
+    if details.inherited.contains("fcaps") && kind == DependencyKind::InstallHost {
+        extra += " sys-libs/libcap";
     }
+
+    extra
 }
 
 // TODO: Remove this hack.
