@@ -7,45 +7,81 @@
 # Copies the existing binpkgs out of the bazel root and generates a
 # prebuilts.bazelrc that points to those packages. This allows us to avoid
 # having to rebuild all packages when something primordial changes.
+#
+# Usage:
+# $ generate-stage2-prebuilts [targets...]
+#
+# If `targets` is not specified a predefined list of targets will be used.
 
 set -eu -o pipefail
 
-: "${BOARD?}"
+join() {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+
 : "${BINPKG_CACHE:=${HOME}/.cache/binpkgs}"
 
 mkdir -p "${BINPKG_CACHE}"
 
-WORKSPACE_ROOT="$(bazel info workspace 2>/dev/null)"
-BAZEL_BIN="$(bazel info bazel-bin  2>/dev/null)"
+declare -A BAZEL
+while IFS=': ' read -r key value
+do
+    BAZEL["${key}"]="${value}"
+done < <(bazel info)
+
+WORKSPACE_ROOT="${BAZEL[workspace]}"
+
+BAZEL_BIN="${BAZEL[bazel-bin]}"
 PORTAGE_BIN="${BAZEL_BIN}/external/_main~portage~portage"
 
-PREBUILTS="${WORKSPACE_ROOT}/prebuilts.bazelrc"
+BAZEL_OUTPUT_BASE="${BAZEL[output_base]}"
+BOARD_FILE="${BAZEL_OUTPUT_BASE}/external/_main~portage~portage_digest/board"
 
+
+if [[ ! -v BOARD ]]; then
+    if [[ ! -e "${BOARD_FILE}" ]]; then
+        echo "Cannot determine BOARD, please run your build again" >&2
+        exit 1
+    fi
+
+    BOARD="$(< "${BOARD_FILE}")"
+    export BOARD
+fi
+
+PREBUILTS="${WORKSPACE_ROOT}/prebuilts.bazelrc"
 exec 3> "${PREBUILTS}.tmp"
 
-declare -A QUERY_MAP=(
-    ["prebuilts/stage2-sdk"]="deps(@portage//internal/sdk/stage2)"
-    ["prebuilts/stage2-board-sdk"]="deps(@portage//internal/sdk/stage2/target/board)"
-    ["prebuilts/stage2-${BOARD}"]="deps(
-        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-dev:1_package_set +
-        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-factory-shim:1_package_set +
-        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-factory:1_package_set +
-        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-test:1_package_set +
-        @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os:1_package_set
-    )"
-)
+if [[ $# -ge 1 ]]; then
+    IFS="+" declare -A TARGET_MAP=(
+        ["prebuilts"]="$(join "+" "$@")"
+    )
+else
+    declare -A TARGET_MAP=(
+        ["prebuilts/stage2-sdk"]="@portage//internal/sdk/stage2"
+        ["prebuilts/stage2-board-sdk"]="@portage//internal/sdk/stage2/target/board"
+        ["prebuilts/stage2-${BOARD}"]="
+            @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-dev:1_package_set +
+            @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-factory-shim:1_package_set +
+            @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-factory:1_package_set +
+            @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os-test:1_package_set +
+            @portage//internal/packages/stage2/target/board/chromiumos/virtual/target-os:1_package_set
+        "
+    )
+fi
 
 echo "# Generated using BOARD='${BOARD}' $*" >&3
 
 declare -A SRC_DEST_MAP
 
-for KEY in "${!QUERY_MAP[@]}"
+for KEY in "${!TARGET_MAP[@]}"
 do
-    QUERY="${QUERY_MAP["${KEY}"]}"
+    TARGET="${TARGET_MAP["${KEY}"]}"
 
     readarray -t EBUILD_TARGETS < <(
         set -x
-        bazel query --repo_env=_CACHE_BUST_DATE=none "kind(ebuild, ${QUERY})" || kill "$$"
+        bazel query --repo_env=_CACHE_BUST_DATE=none "kind(ebuild, deps(${TARGET}))" || kill "$$"
     )
 
     echo "common:${KEY} \\" >&3
@@ -95,7 +131,7 @@ if ! grep -q prebuilts.bazelrc "${WORKSPACE_ROOT}/workspace.bazelrc"; then
 fi
 
 echo "You can now add any of the following to your \`bazel build\` command line:" >&2
-for KEY in "${!QUERY_MAP[@]}"
+for KEY in "${!TARGET_MAP[@]}"
 do
     echo "  --config=${KEY}" >&2
 done
