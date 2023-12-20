@@ -323,6 +323,18 @@ fn do_main() -> Result<()> {
 
     settings.set_allow_network_access(args.allow_network_access);
 
+    if args.allow_network_access {
+        for path in [Path::new("/etc/resolv.conf"), Path::new("/etc/hosts")] {
+            if path.try_exists()? {
+                settings.push_bind_mount(BindMount {
+                    source: path.to_owned(),
+                    mount_path: path.to_owned(),
+                    rw: false,
+                })
+            }
+        }
+    }
+
     let (portage_tmp_dir, portage_pkg_dir, portage_cache_dir) = match &args.board {
         Some(board) => {
             let root_dir = Path::new("/build").join(board);
