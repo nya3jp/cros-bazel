@@ -22,8 +22,8 @@ BinaryPackageInfo, _new_binary_package_info = provider(
     referencing it with a depset.
     """,
     fields = {
-        "file": """
-            File: A binary package file (.tbz2) of this package.
+        "category": """
+            str: The category of this package, e.g. "chromeos-base".
         """,
         "contents": """
             ContentsLayersInfo: Locates installed/staged contents layers that
@@ -36,23 +36,23 @@ BinaryPackageInfo, _new_binary_package_info = provider(
             have to statically choose whether to install it to "/" or
             "/build/amd64-host".
         """,
-        "category": """
-            str: The category of this package, e.g. "chromeos-base".
+        "direct_runtime_deps": """
+            tuple[File]: Direct runtime dependencies of the package.
+            See the provider description for why this field is a tuple, not a
+            list.
+        """,
+        "file": """
+            File: A binary package file (.tbz2) of this package.
         """,
         "package_name": """
             str: The short name of this package, e.g. "chromeos-chrome".
-        """,
-        "version": """
-            str: The version of this package, e.g. "2.5.1-r2".
         """,
         "slot": """
             str: The slot value of this package in the form of "main/sub",
             e.g. "0/1.2.3".
         """,
-        "direct_runtime_deps": """
-            tuple[File]: Direct runtime dependencies of the package.
-            See the provider description for why this field is a tuple, not a
-            list.
+        "version": """
+            str: The version of this package, e.g. "2.5.1-r2".
         """,
     },
     init = _binary_package_info_init,
@@ -66,16 +66,16 @@ ContentsLayersInfo = provider(
     BinaryPackageInfo.
     """,
     fields = {
-        "sysroot": """
-            str: A sysroot directory path where the package is installed. It
-            must be either "/build/<board>" or "/".
-        """,
         "installed": """
             File: A durable tree directory containing an installed contents
             layer.
         """,
         "staged": """
             File: A durable tree directory containing a staged contents layer.
+        """,
+        "sysroot": """
+            str: A sysroot directory path where the package is installed. It
+            must be either "/build/<board>" or "/".
         """,
     },
 )
@@ -92,17 +92,17 @@ BinaryPackageSetInfo = provider(
     that covers all transitive runtime dependencies of this package.
     """,
     fields = {
-        "packages": """
-            Depset[BinaryPackageInfo]: All Portage binary packages included in
-            this set.
+        "files": """
+            Depset[File]: All Portage binary package files included in this set.
 
             The Depset must be constructed in a way so that its to_list()
             returns packages in a valid installation order, i.e. a package's
             runtime dependencies are fully satisfied by packages that appear
             before it.
         """,
-        "files": """
-            Depset[File]: All Portage binary package files included in this set.
+        "packages": """
+            Depset[BinaryPackageInfo]: All Portage binary packages included in
+            this set.
 
             The Depset must be constructed in a way so that its to_list()
             returns packages in a valid installation order, i.e. a package's
@@ -115,13 +115,13 @@ BinaryPackageSetInfo = provider(
 OverlayInfo = provider(
     "Portage overlay info",
     fields = {
-        "path": """
-            String: Path inside the container where the overlay's ebuilds are
-            mounted.
-        """,
         "layer": """
             File: A file which represents an overlay layer. A layer
             file can be a tar file (.tar or .tar.zst).
+        """,
+        "path": """
+            String: Path inside the container where the overlay's ebuilds are
+            mounted.
         """,
     },
 )
@@ -142,12 +142,12 @@ OverlaySetInfo = provider(
 BashrcInfo = provider(
     "Portage bashrc info",
     fields = {
-        "path": """
-            String: Path inside the container where the bashrc is mounted.
-        """,
         "layer": """
             File: A file which represents an overlay layer. A layer
             file can be a tar file (.tar or .tar.zst).
+        """,
+        "path": """
+            String: Path inside the container where the bashrc is mounted.
         """,
     },
 )
@@ -174,9 +174,6 @@ SDKInfo = provider(
 EbuildLibraryInfo = provider(
     "Ebuild library info",
     fields = {
-        "strip_prefix": """
-            str: The prefix to strip off the files when installing into the sdk.
-        """,
         "headers": """
             Depset[File]: Headers provided by the package.
         """,
@@ -188,6 +185,9 @@ EbuildLibraryInfo = provider(
         """,
         "static_libs": """
             Depset[File]: .a files provided by the package.
+        """,
+        "strip_prefix": """
+            str: The prefix to strip off the files when installing into the sdk.
         """,
     },
 )
