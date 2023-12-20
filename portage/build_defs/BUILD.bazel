@@ -2,8 +2,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_python//python:defs.bzl", "py_binary")
+
 sh_binary(
     name = "ebuild_installer",
     srcs = ["ebuild_installer.sh"],
     visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "update_prebuilts",
+    srcs = ["update_prebuilts.py"],
+    visibility = ["//visibility:public"],
+    deps = ["//bazel/portage/bin/metadata:metadata_py_proto"],
 )

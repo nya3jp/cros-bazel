@@ -81,3 +81,9 @@ config_setting(
         ":enable_portage_config_validator": "False",
     },
 )
+
+string_flag(
+    name = "prebuilt_disk_cache",
+    build_setting_default = "",
+    visibility = ["//visibility:public"],
+)

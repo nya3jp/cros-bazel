@@ -165,6 +165,11 @@ build:bes --legacy_important_outputs=true
 # TODO(b/312234436): Enable conditional configs based on the user+build environment.
 import %workspace%/bazel/bazelrcs/googlers.bazelrc
 
+# Use prebuilts if the user has executed update_prebuilts.
+build --flag_alias=prebuilt_disk_cache=//bazel/portage:prebuilt_disk_cache
+build:update_prebuilts --aspects=//bazel/portage/build_defs:update_prebuilts.bzl%update_prebuilts --output_groups=+prebuilt_materialized
+try-import %workspace%/prebuilts.bazelrc
+
 # Allow user-specific overrides for this repository.
 # Should be at the end of this file so that users can override anything above.
 try-import %workspace%/workspace.bazelrc
