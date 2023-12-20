@@ -516,9 +516,27 @@ def _ebuild_impl(ctx):
         action_wrapper_executable = ctx.executable._action_wrapper,
     )
 
+    metadata = ctx.actions.declare_file(ctx.label.name + "_metadata.json")
+    gen_metadata_args = ctx.actions.args()
+    gen_metadata_args.add(str(ctx.label))
+    gen_metadata_args.add(output_binary_package_file)
+    gen_metadata_args.add(metadata)
+    ctx.actions.run(
+        executable = ctx.executable._gen_metadata,
+        arguments = [gen_metadata_args],
+        inputs = [output_binary_package_file],
+        outputs = [metadata],
+        execution_requirements = {
+            # Disable remote execution, since it's cheaper to calculate the
+            # checksum than it is to transfer the file to a remote builder.
+            "no-remote-exec": "",
+        },
+    )
+
     # Compute provider data.
     package_info = BinaryPackageInfo(
         file = output_binary_package_file,
+        metadata = metadata,
         contents = contents,
         category = ctx.attr.category,
         package_name = ctx.attr.package_name,
@@ -630,6 +648,11 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/xpaktool"),
+        ),
+        _gen_metadata = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/metadata:gen_metadata"),
         ),
         **_EBUILD_COMMON_ATTRS
     ),

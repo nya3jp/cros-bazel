@@ -1,0 +1,24 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:proto.bzl", "py_proto_library")
+
+proto_library(
+    name = "metadata_proto",
+    srcs = ["metadata.proto"],
+)
+
+py_proto_library(
+    name = "metadata_py_proto",
+    visibility = ["//visibility:public"],
+    deps = [":metadata_proto"],
+)
+
+py_binary(
+    name = "gen_metadata",
+    srcs = ["gen_metadata.py"],
+    visibility = ["//visibility:public"],
+    deps = [":metadata_py_proto"],
+)

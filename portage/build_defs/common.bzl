@@ -44,6 +44,10 @@ BinaryPackageInfo, _new_binary_package_info = provider(
         "file": """
             File: A binary package file (.tbz2) of this package.
         """,
+        "metadata": """
+            File: A json file containing metadata about the package that cannot
+            be determined during the analysis phase.
+        """,
         "package_name": """
             str: The short name of this package, e.g. "chromeos-chrome".
         """,

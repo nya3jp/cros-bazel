@@ -1,0 +1,17 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+syntax = "proto3";
+
+message Metadata {
+  // The label of the ebuild action.
+  // Note that this is the real label (@portage//internal/...), not the alias
+  // (@portage//target/...).
+  string label = 1;
+
+  // The sha256 checksum of the tbz2 file.
+  string sha256 = 2;
+
+  // The size, in bytes, of the tbz2 file.
+  uint64 size = 3;
+}
