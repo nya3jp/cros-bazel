@@ -3,8 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""
-A tool to regenerate symlinks.
+"""A tool to regenerate symlinks.
 
 We use repo manifest's feature to generate symlinks, but repo has bugs where it
 fails to create/delete symlinks when needed. This script helps you workaround

@@ -3,9 +3,9 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo")
-load("//bazel/portage/build_defs:test_helpers.bzl", "assert_eq", "assert_not_none")
+load("//bazel/portage/build_defs:test_helpers.bzl", "assert_eq")
+load(":files.bzl", "ELF_BINARY", "SHARED_LIBRARY", "SYMLINK")
 load(":package.bzl", "generate_packages", "match_packages")
-load(":files.bzl", "ELF_BINARY", "HEADER", "SHARED_LIBRARY", "SYMLINK", "get_extracted_files", "get_file_type", "preprocess_content", "resolve")
 
 visibility("private")
 
@@ -33,19 +33,19 @@ _NANO_CONTENT = {
 
 _PACKAGES = [
     {
+        "content": _NANO_CONTENT,
         "name": "app-editors/nano",
         "slot": "0",
-        "content": _NANO_CONTENT,
     },
     {
+        "content": _GLIBC_CONTENT,
         "name": "sys-libs/glibc",
         "slot": "2.2",
-        "content": _GLIBC_CONTENT,
     },
     {
+        "content": _NCURSES_CONTENT,
         "name": "sys-libs/ncurses",
         "slot": "0",
-        "content": _NCURSES_CONTENT,
     },
 ]
 

@@ -8,27 +8,31 @@
 # However, you should never need to run this unless
 # bazel explicitly tells you to.
 
-# These three lines ensures that the following json is valid skylark.
+# These three lines ensures that the following json is valid starlark.
 false = False
 true = True
 null = None
 
 SYSROOT_MANIFEST_CONTENT = {
-    "root_package": {
-        "name": "demo/shared_libs",
-        "slot": "0",
-    },
+    "header_file_dir_regexes": [
+        "/usr/include",
+    ],
+    "header_file_dirs": [
+        "/usr/include",
+    ],
+    "ld_library_path": [
+        "/lib64",
+        "/lib32",
+    ],
     "packages": [
         {
-            "name": "demo/executable",
-            "slot": "0",
             "content": {
                 "/usr/bin/hello_world.sh": {},
             },
+            "name": "demo/executable",
+            "slot": "0",
         },
         {
-            "name": "demo/shared_libs",
-            "slot": "0",
             "content": {
                 "/lib32/libbaz.so.1.2.3": {
                     "type": "SharedLibrary",
@@ -38,32 +42,32 @@ SYSROOT_MANIFEST_CONTENT = {
                     "type": "SharedLibrary",
                 },
                 "/lib64/libfoo.so": {
-                    "type": "Symlink",
                     "target": "/lib64/libfoo.so.1.2.3",
+                    "type": "Symlink",
                 },
                 "/lib64/libfoo.so.1.2.3": {
                     "type": "SharedLibrary",
                 },
             },
+            "name": "demo/shared_libs",
+            "slot": "0",
         },
         {
-            "name": "demo/symlinks",
-            "slot": "0",
             "content": {
                 "/path/to/hello.txt": {},
                 "/symlinks/absolute_symlink.txt": {
-                    "type": "Symlink",
                     "target": "/path/to/hello.txt",
+                    "type": "Symlink",
                 },
                 "/symlinks/relative_symlink.txt": {
-                    "type": "Symlink",
                     "target": "/path/to/hello.txt",
+                    "type": "Symlink",
                 },
             },
+            "name": "demo/symlinks",
+            "slot": "0",
         },
         {
-            "name": "demo/system_headers",
-            "slot": "0",
             "content": {
                 "/usr/include/foo.h": {
                     "type": "HeaderFile",
@@ -72,21 +76,17 @@ SYSROOT_MANIFEST_CONTENT = {
                     "type": "HeaderFile",
                 },
             },
+            "name": "demo/system_headers",
+            "slot": "0",
         },
         {
+            "content": {},
             "name": "virtual/sysroot",
             "slot": "0",
-            "content": {},
         },
     ],
-    "header_file_dirs": [
-        "/usr/include",
-    ],
-    "header_file_dir_regexes": [
-        "/usr/include",
-    ],
-    "ld_library_path": [
-        "/lib64",
-        "/lib32",
-    ],
+    "root_package": {
+        "name": "demo/shared_libs",
+        "slot": "0",
+    },
 }

@@ -5,7 +5,12 @@
 load("@cros//bazel/platforms:platforms.bzl", "ALL_PLATFORMS")
 
 PLATFORM_INDEPENDENT_FILES = {
+
+    # TODO: minify this. At the moment, every action depends on the whole
+    #  sysroot.
+    "all_files": [":sysroot_files"],
     "ar": ["bin/llvm-ar"],
+    "ar_files": [":sysroot_files"],
     "cargo": ["usr/bin/cargo"],
     # TODO(b/285460206): Switch to a platform-dependent clang.
     # For some reason when you use it screws with the include paths.
@@ -13,30 +18,25 @@ PLATFORM_INDEPENDENT_FILES = {
     "clang_cpp": ["usr/bin/clang++"],
     # See github.com/bazelbuild/bazel/issues/11122.
     "clang_selector": ["usr/bin/clang_selector"],
+    "compiler_files": [":sysroot_files"],
     "dwp": ["bin/llvm-dwp"],
+    "dwp_files": [":sysroot_files"],
     # A platform-dependent linker is also available.
     "ld": ["bin/ld.lld"],
+    "linker_files": [":sysroot_files"],
     "nm": ["bin/llvm-nm"],
     "objcopy": ["bin/llvm-objcopy"],
+    "objcopy_files": [":sysroot_files"],
     "objdump": ["bin/llvm-objdump"],
     "rustc": ["usr/bin/rustc"],
     "rustdoc": ["usr/bin/rustdoc"],
     "rustfmt": ["usr/bin/rustfmt"],
     "strip": ["bin/llvm-strip"],
+    "strip_files": [":sysroot_files"],
 
     # Using directories as srcs in bazel is bad practice, but we get around the
     # problems by separately declaring a sysroot_files target.
     "sysroot": ["."],
-
-    # TODO: minify this. At the moment, every action depends on the whole
-    #  sysroot.
-    "all_files": [":sysroot_files"],
-    "ar_files": [":sysroot_files"],
-    "compiler_files": [":sysroot_files"],
-    "dwp_files": [":sysroot_files"],
-    "linker_files": [":sysroot_files"],
-    "objcopy_files": [":sysroot_files"],
-    "strip_files": [":sysroot_files"],
 }
 
 PLATFORM_DEPENDENT_FILES = {

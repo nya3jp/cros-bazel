@@ -4,8 +4,8 @@
 
 load("@rules_pkg//pkg:mappings.bzl", _strip_prefix = "strip_prefix")
 load("@rules_pkg//pkg:providers.bzl", "PackageDirsInfo", "PackageFilegroupInfo", "PackageFilesInfo", "PackageSymlinkInfo")
-load(":pkg_files.bzl", "pkg_attributes", "pkg_files_impl")
 load(":deploy.bzl", "deploy_local")
+load(":pkg_files.bzl", "pkg_attributes", "pkg_files_impl")
 
 visibility("//bazel/cros_pkg/...")
 

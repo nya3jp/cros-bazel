@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@bazel_skylib//rules:common_settings.bzl", _bool_flag = "bool_flag")
 load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", _bool_flag = "bool_flag")
 
 visibility("public")
 

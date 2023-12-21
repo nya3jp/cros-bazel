@@ -29,15 +29,15 @@ def _platforminfo_init(*, name, cpu_arch, vendor, abi):
 PlatformInfo, _new_platforminfo = provider(
     "Represents all of the general information we need about a native toolchain.",
     fields = {
-        "name": "The human-readable name for the platform",
-        "kwargs": "The kwargs used to originally construct the toolchain desc",
+        "abi": "The ABI this architecture uses. This is often `gnu`.",
         "constraints": "The bazel constraints placed on the platform",
         "cpu": "The cpu constraint",
+        "kwargs": "The kwargs used to originally construct the toolchain desc",
+        "name": "The human-readable name for the platform",
+        "os": "The OS constraint.",
+        "triple": "The platform's triple.",
         "vendor": "The vendor constraint; this is ':vendor_pc' for host " +
                   "toolchains, and ':vendor_cros' for target toolchains.",
-        "os": "The OS constraint.",
-        "abi": "The ABI this architecture uses. This is often `gnu`.",
-        "triple": "The platform's triple.",
     },
     init = _platforminfo_init,
 )

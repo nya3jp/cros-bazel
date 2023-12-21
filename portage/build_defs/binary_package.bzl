@@ -54,12 +54,12 @@ binary_package = rule(
         "runtime_deps": attr.label_list(
             providers = [BinaryPackageInfo, BinaryPackageSetInfo],
         ),
+        "slot": attr.string(default = "0/0"),
         "src": attr.label(
             mandatory = True,
             allow_single_file = [".tbz2"],
         ),
         "version": attr.string(mandatory = True),
-        "slot": attr.string(default = "0/0"),
         "_action_wrapper": attr.label(
             executable = True,
             cfg = "exec",

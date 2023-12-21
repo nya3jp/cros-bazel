@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "bash_rlocation", "generate_bash_script", "runfiles_path")
+load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "bash_rlocation", "generate_bash_script")
 load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo")
 load(":common.bzl", "EXTRACT_COMMON_ATTRS")
 

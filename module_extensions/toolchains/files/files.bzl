@@ -12,7 +12,9 @@ TOOLS = {
     "clang": "usr/bin/clang",
     "clang_cpp": "usr/bin/clang++",
     "clang_selector": "usr/bin/clang_selector",
+    "cpp": "bin/{triple_no_host}-cpp",
     "dwp": "bin/llvm-dwp",
+    "gcov": "bin/{triple_no_host}-gcov",
     # A platform-dependent linker is also available.
     "ld": "bin/ld.lld",
     "nm": "bin/llvm-nm",
@@ -22,8 +24,6 @@ TOOLS = {
     "rustdoc": "usr/bin/rustdoc",
     "rustfmt": "usr/bin/rustfmt",
     "strip": "bin/llvm-strip",
-    "cpp": "bin/{triple_no_host}-cpp",
-    "gcov": "bin/{triple_no_host}-gcov",
 }
 
 TOOLCHAIN_FILEGROUPS = {
@@ -33,11 +33,11 @@ TOOLCHAIN_FILEGROUPS = {
     "dwp_files": ["**"],
     "linker_files": ["**"],
     "objcopy_files": ["**"],
-    "strip_files": ["**"],
     "runtime_files": [
         "lib/*",
         "lib64/ld-linux-x86-64.so.2",
     ],
+    "strip_files": ["**"],
 }
 
 FILEGROUPS = TOOLCHAIN_FILEGROUPS | {

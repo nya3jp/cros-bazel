@@ -154,11 +154,11 @@ def _fast_install_packages(
         tools = [executable_fast_install_packages],
         arguments = [args],
         execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since ebuild runs in a container.
             "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
         },
         mnemonic = "InstallDeps",
         progress_message = actual_progress_message,
@@ -277,11 +277,11 @@ def install_deps(
         tools = [executable_install_deps],
         arguments = [args],
         execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since ebuild runs in a container.
             "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
         },
         mnemonic = "InstallDeps",
         progress_message = progress_message,

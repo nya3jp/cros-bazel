@@ -22,8 +22,8 @@ def _goma_info_repository_impl(repo_ctx):
     """Repository rule to generate info needed to use goma."""
 
     goma_info_dict = {
-        "use_goma": repo_ctx.os.environ.get("USE_GOMA") == "true",
         "envs": {},
+        "use_goma": repo_ctx.os.environ.get("USE_GOMA") == "true",
     }
 
     for env in _ENVIRON:

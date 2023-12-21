@@ -140,6 +140,13 @@ def _repo_repository_impl(ctx):
 repo_repository = repository_rule(
     implementation = _repo_repository_impl,
     attrs = {
+        "project": attr.string(
+            doc = """The repo project to check out.""",
+            mandatory = True,
+        ),
+        "subdirs": attr.string_list(
+            doc = """The sub-directories to clone.""",
+        ),
         "tree": attr.string(
             doc = """The SHA-256 of the blob, tree or commit to check out.
 It's preferable to use a tree instead of a commit because multiple commits can
@@ -150,13 +157,6 @@ is a blob, than the raw file is extracted.
 
 You can find the tree hash using `git ls-tree <commit> <path>`.""",
             mandatory = True,
-        ),
-        "project": attr.string(
-            doc = """The repo project to check out.""",
-            mandatory = True,
-        ),
-        "subdirs": attr.string_list(
-            doc = """The sub-directories to clone.""",
         ),
     },
     # This is expensive to compute so we don't want to recreate it ever, if

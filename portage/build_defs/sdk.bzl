@@ -2,10 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load(":common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load(":install_deps.bzl", "install_deps")
-load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 
 def _sdk_from_archive_impl(ctx):
     output_prefix = ctx.attr.out or ctx.attr.name
@@ -214,6 +214,17 @@ sdk_install_deps = rule(
             otherwise they are installed into the host's sysroot.
             """,
         ),
+        "install_strategy": attr.string(
+            doc = """
+            Specifies the strategy to install packages. Valid values are:
+                "fast": Uses installed contents layers to fully avoid copying
+                    package contents.
+                "slow": Simply uses emerge to install packages into a single
+                    layer.
+            """,
+            mandatory = True,
+            values = ["fast", "slow"],
+        ),
         "out": attr.string(
             doc = "Output directory name. Defaults to the target name.",
         ),
@@ -243,31 +254,20 @@ sdk_install_deps = rule(
             """,
             providers = [BinaryPackageSetInfo],
         ),
-        "install_strategy": attr.string(
-            doc = """
-            Specifies the strategy to install packages. Valid values are:
-                "fast": Uses installed contents layers to fully avoid copying
-                    package contents.
-                "slow": Simply uses emerge to install packages into a single
-                    layer.
-            """,
-            mandatory = True,
-            values = ["fast", "slow"],
-        ),
         "_action_wrapper": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/action_wrapper"),
         ),
-        "_install_deps": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//bazel/portage/bin/install_deps"),
-        ),
         "_fast_install_packages": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/fast_install_packages"),
+        ),
+        "_install_deps": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/install_deps"),
         ),
     },
 )

@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-
 def custom_constraint(name, options, default):
     if default not in options:
         fail("{name}: Default ({default}) must be an option in {options}".format(

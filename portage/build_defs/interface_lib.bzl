@@ -13,8 +13,8 @@ avoid package rebuilds when a library package is updated without changing its
 external interfaces.
 """
 
-load("//bazel/portage/build_defs:common.bzl", "EbuildLibraryInfo", "compute_input_file_path")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load("//bazel/portage/build_defs:common.bzl", "EbuildLibraryInfo", "compute_input_file_path")
 
 def _format_input_file_arg(strip_prefix, file, use_runfiles):
     return "--sysroot-file=%s=%s" % (file.path.removeprefix(strip_prefix), compute_input_file_path(file, use_runfiles))

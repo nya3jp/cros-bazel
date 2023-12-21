@@ -2,10 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load(":common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load(":install_groups.bzl", "calculate_install_groups", "map_install_group")
-load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 
 def _build_sdk_impl(ctx):
     sdk = ctx.attr.sdk[SDKInfo]

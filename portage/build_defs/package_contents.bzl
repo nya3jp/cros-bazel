@@ -35,11 +35,11 @@ def _generate_contents_layer(
         tools = [executable_extract_package],
         arguments = arguments,
         execution_requirements = {
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since ebuild runs in a container.
             "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
         },
         progress_message = "Extracting %{label}",
     )

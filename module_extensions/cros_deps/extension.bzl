@@ -3,9 +3,9 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/repo_defs/alpine:repositories.bzl", "alpine_repository")
-load(":depot_tools/repositories.bzl", "depot_tools_repository")
-load(":chromite/repositories.bzl", "chromite")
 load("//bazel/portage/repo_defs/zstd:repositories.bzl", "zstd_repository")
+load(":chromite/repositories.bzl", "chromite")
+load(":depot_tools/repositories.bzl", "depot_tools_repository")
 
 def _cros_deps_impl(_module_ctx):
     alpine_repository()

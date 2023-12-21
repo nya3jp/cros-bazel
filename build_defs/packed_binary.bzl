@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/bash:defs.bzl", "runfiles_path", "sh_runfiles_binary")
+load("//bazel/bash:defs.bzl", "sh_runfiles_binary")
 
 visibility("public")
 
