@@ -2,17 +2,20 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-def map_install_group(group):
+def add_install_groups(args, install_groups):
     """
-    Computes an --install-target argument for an install group.
+    Adds --install-target to the command-line for a list of install groups.
 
     Args:
-        group: list[BinaryPackageInfo]: An install group.
-
-    Returns:
-        str: A value for the --install-target flag.
+        args: ctx.actions.Args: Args to add the install groups to.
+        group: list[list[BinaryPackageInfo]]: A list of install groups.
     """
-    return ":".join([pkg.file.path for pkg in group])
+    for group in install_groups:
+        args.add_joined(
+            "--install-target",
+            [binpkg.file for binpkg in group],
+            join_with = ":",
+        )
 
 def calculate_install_groups(install_list, provided_packages):
     """

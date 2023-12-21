@@ -15,7 +15,11 @@ def _extract_interface_impl(ctx):
     executable = None
     for k, v in files.items():
         out = ctx.actions.declare_file(v)
-        args.add("--output-file=%s=%s" % (k, out.path))
+        args.add_joined(
+            "--output-file",
+            [k, out],
+            join_with = "=",
+        )
         outs.append(out)
         if k == ctx.attr.executable:
             executable = out

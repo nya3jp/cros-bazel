@@ -16,24 +16,28 @@ def _generate_contents_layer(
     output_contents_dir = ctx.actions.declare_directory(output_name)
     output_log = ctx.actions.declare_file(output_name + ".log")
 
-    arguments = [
-        "--log=" + output_log.path,
-        executable_extract_package.path,
-        "--input-binary-package=" + binary_package.path,
-        "--output-directory=" + output_contents_dir.path,
+    arguments = ctx.actions.args()
+    arguments.add_all([
+        "--log",
+        output_log,
+        executable_extract_package,
+        "--input-binary-package",
+        binary_package,
+        "--output-directory",
+        output_contents_dir,
         "--image-prefix=" + image_prefix,
         "--vdb-prefix=" + vdb_prefix,
-    ]
+    ], expand_directories = False)
 
     if host:
-        arguments.append("--host")
+        arguments.add("--host")
 
     ctx.actions.run(
         inputs = [binary_package],
         outputs = [output_contents_dir, output_log],
         executable = executable_action_wrapper,
         tools = [executable_extract_package],
-        arguments = arguments,
+        arguments = [arguments],
         execution_requirements = {
             # Disable sandbox to avoid creating a symlink forest.
             # This does not affect hermeticity since ebuild runs in a container.

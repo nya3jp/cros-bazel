@@ -9,7 +9,7 @@ visibility("public")
 def _pack_binary_impl(ctx):
     tarball = ctx.actions.declare_file(ctx.label.name + ".tar.gz")
     args = ctx.actions.args()
-    args.add_all([tarball, ctx.attr.path])
+    args.add_all([tarball, ctx.attr])
     ctx.actions.run(
         executable = ctx.executable.generate_manifest,
         outputs = [tarball],

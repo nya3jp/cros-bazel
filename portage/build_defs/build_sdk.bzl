@@ -5,7 +5,7 @@
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load(":common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
-load(":install_groups.bzl", "calculate_install_groups", "map_install_group")
+load(":install_groups.bzl", "add_install_groups", "calculate_install_groups")
 
 def _build_sdk_impl(ctx):
     sdk = ctx.attr.sdk[SDKInfo]
@@ -29,10 +29,12 @@ def _build_sdk_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--log=" + output_log_file.path,
-        ctx.executable._build_sdk.path,
+        "--log",
+        output_log_file,
+        ctx.executable._build_sdk,
         "--board=" + ctx.attr.board,
-        "--output=" + output_sdk.path,
+        "--output",
+        output_sdk,
     ])
 
     direct_inputs = [pkg.file for pkg in install_list]
@@ -50,7 +52,8 @@ def _build_sdk_impl(ctx):
         install_list,
         provided_packages = depset(),
     )
-    args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
+
+    add_install_groups(args, install_groups)
 
     ctx.actions.run(
         inputs = depset(direct_inputs),

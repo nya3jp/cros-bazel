@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("install_groups.bzl", "calculate_install_groups", "map_install_group")
+load("install_groups.bzl", "add_install_groups", "calculate_install_groups")
 
 def _compute_slot_key(package):
     """
@@ -86,9 +86,11 @@ def _fast_install_packages(
 
     args = ctx.actions.args()
     args.add_all([
-        "--log=" + output_log_file.path,
-        "--profile=" + output_profile_file.path,
-        executable_fast_install_packages.path,
+        "--log",
+        output_log_file,
+        "--profile",
+        output_profile_file,
+        executable_fast_install_packages,
     ])
     args.add("--root-dir=%s" % sysroot)
 
@@ -122,13 +124,18 @@ def _fast_install_packages(
                     package.contents.sysroot,
                 ),
             )
-        args.add("--install=%s,%s,%s,%s,%s" % (
-            package.file.path,
-            package.contents.installed.path,
-            package.contents.staged.path,
-            output_preinst.path,
-            output_postinst.path,
-        ))
+        args.add_joined(
+            "--install",
+            [
+                package.file,
+                package.contents.installed,
+                package.contents.staged,
+                output_preinst,
+                output_postinst,
+            ],
+            join_with = ",",
+            expand_directories = False,
+        )
 
         inputs.extend([
             package.file,
@@ -239,10 +246,13 @@ def install_deps(
 
     args = ctx.actions.args()
     args.add_all([
-        "--log=" + output_log_file.path,
-        "--profile=" + output_profile_file.path,
-        executable_install_deps.path,
-        "--output=" + output_root.path,
+        "--log",
+        output_log_file,
+        "--profile",
+        output_profile_file,
+        executable_install_deps,
+        "--output",
+        output_root,
     ])
     if board:
         args.add("--board=" + board)
@@ -254,7 +264,7 @@ def install_deps(
         provided_packages = sdk.packages,
     )
 
-    args.add_all(install_groups, map_each = map_install_group, format_each = "--install-target=%s")
+    add_install_groups(args, install_groups)
 
     direct_inputs = []
     for group in install_groups:

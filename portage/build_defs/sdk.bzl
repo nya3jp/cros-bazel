@@ -15,12 +15,16 @@ def _sdk_from_archive_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--log=" + output_log.path,
-        "--profile=" + output_profile.path,
+        "--log",
+        output_log,
+        "--profile",
+        output_profile,
         ctx.executable._sdk_from_archive,
-        "--input=" + ctx.file.src.path,
-        "--output=" + output_root.path,
-    ])
+        "--input",
+        ctx.file.src,
+        "--output",
+        output_root,
+    ], expand_directories = False)
 
     inputs = [ctx.executable._sdk_from_archive, ctx.file.src]
     outputs = [output_root, output_log, output_profile]
@@ -81,11 +85,14 @@ def _sdk_update_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--log=" + output_log.path,
-        "--profile=" + output_profile.path,
+        "--log",
+        output_log,
+        "--profile",
+        output_profile,
         ctx.executable._sdk_update,
-        "--output=" + output_root.path,
-    ])
+        "--output",
+        output_root,
+    ], expand_directories = False)
 
     base_sdk = ctx.attr.base[SDKInfo]
     layer_inputs = base_sdk.layers
@@ -315,12 +322,16 @@ def _sdk_install_glibc_impl(ctx):
 
     args = ctx.actions.args()
     args.add_all([
-        "--log=" + output_log.path,
-        "--profile=" + output_profile.path,
+        "--log",
+        output_log,
+        "--profile",
+        output_profile,
         ctx.executable._sdk_install_glibc,
-        "--output=" + output_root.path,
-        "--board=" + ctx.attr.board,
-    ])
+        "--output",
+        output_root,
+        "--board",
+        ctx.attr.board,
+    ], expand_directories = False)
 
     base_sdk = ctx.attr.base[SDKInfo]
     layer_inputs = base_sdk.layers
