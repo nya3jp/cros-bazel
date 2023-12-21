@@ -15,14 +15,14 @@ def _exec(ctx, cmd, msg = None, retries = 0, **kwargs):
         # Use 3600 as timeout because gclient can take a long time to finish.
         st = ctx.execute(cmd, timeout = 3600, environment = env)
         if st.return_code:
-            if attempt == retries + 1:
-                fail("Error running attempt %s for command %s:\n%s%s" %
-                     (attempt, cmd, st.stdout, st.stderr))
+            if attempt == retries:
+                fail("Error running attempt %s/%s for command %s:\n%s%s" %
+                     (attempt + 1, retries + 1, cmd, st.stdout, st.stderr))
             else:
-                print("Error running attempt %s for command %s:\n%s%s\nRetrying." %
-                      (attempt, cmd, st.stdout, st.stderr))
+                print("Error running attempt %s/%s for command %s:\n%s%s\nRetrying." %
+                      (attempt + 1, retries + 1, cmd, st.stdout, st.stderr))
         else:
-            print("Finished running command %s (attempt %s)" % (cmd, attempt))
+            print("Finished running command %s (attempt %s/%s)" % (cmd, attempt + 1, retries + 1))
             break
     return st.stdout
 
