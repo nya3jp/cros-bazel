@@ -81,6 +81,12 @@ impl AsPackageRef for Package {
     }
 }
 
+impl AsRef<DirectDependencies> for Package {
+    fn as_ref(&self) -> &DirectDependencies {
+        &self.dependencies.direct
+    }
+}
+
 /// Holds information for packages that we failed to analyze.
 #[derive(Debug)]
 pub struct PackageAnalysisError {
@@ -111,6 +117,15 @@ impl AsPackageRef for PackageAnalysisError {
 pub enum MaybePackage {
     Ok(Arc<Package>),
     Err(Arc<PackageAnalysisError>),
+}
+
+impl<'a> From<&'a MaybePackage> for Result<&'a Package, &'a PackageAnalysisError> {
+    fn from(value: &'a MaybePackage) -> Self {
+        match value {
+            MaybePackage::Ok(package) => Ok(package.as_ref()),
+            MaybePackage::Err(err) => Err(err.as_ref()),
+        }
+    }
 }
 
 impl MaybePackage {

@@ -8,6 +8,7 @@ pub mod internal;
 pub(self) mod public;
 
 use std::{
+    collections::HashMap,
     fs::{create_dir_all, remove_dir_all, File},
     io::{ErrorKind, Write},
     path::Path,
@@ -16,7 +17,11 @@ use std::{
 };
 
 use alchemist::{
-    analyze::{analyze_packages, MaybePackage, Package},
+    analyze::{
+        analyze_packages, dependency::direct::DependencyKind,
+        dependency::indirect::collect_transitive_dependencies, MaybePackage, Package,
+        PackageAnalysisError,
+    },
     config::ProvidedPackage,
     dependency::package::{AsPackageRef, PackageAtom},
     fakechroot::PathTranslator,
@@ -105,6 +110,26 @@ fn get_sdk_implicit_system_package(host_packages: &[MaybePackage]) -> Result<Arc
     }
 }
 
+fn compute_provided_packages(
+    packages_by_path: &HashMap<&Path, Result<&Package, &PackageAnalysisError>>,
+    root: &Package,
+) -> Result<Vec<ProvidedPackage>> {
+    Ok(
+        collect_transitive_dependencies::<alchemist::analyze::Package, _, _, _, _>(
+            [&root.details],
+            packages_by_path,
+            &[DependencyKind::RunTarget],
+        )?
+        .into_iter()
+        .map(|package| ProvidedPackage {
+            package_name: package.as_basic_data().package_name.clone(),
+            version: package.as_basic_data().version.clone(),
+        })
+        .sorted()
+        .collect(),
+    )
+}
+
 /// Generates the stage1, stage2, etc packages and SDKs.
 pub fn generate_stages(
     host: &TargetData,
@@ -117,6 +142,16 @@ pub fn generate_stages(
 
     let host_packages = load_packages(host, host, src_dir)?;
 
+    let packages_by_path = host_packages
+        .iter()
+        .map(|package| {
+            (
+                package.as_basic_data().ebuild_path.as_path(),
+                package.into(),
+            )
+        })
+        .collect();
+
     // When we install a set of packages into an SDK layer, any ebuilds that
     // use that SDK layer now have those packages provided for them, and they
     // no longer need to install them. Unfortunately we can't filter out these
@@ -125,16 +160,8 @@ pub fn generate_stages(
     // dependency graph. This means we need to filter out the dependencies
     // when we generate the BUILD files.
     let implicit_system_package = get_sdk_implicit_system_package(&host_packages)?;
-    let implicit_system_packages = implicit_system_package
-        .dependencies
-        .indirect
-        .install_set
-        .iter()
-        .map(|p| ProvidedPackage {
-            package_name: p.as_basic_data().package_name.clone(),
-            version: p.as_basic_data().version.clone(),
-        })
-        .collect_vec();
+    let implicit_system_packages =
+        compute_provided_packages(&packages_by_path, &implicit_system_package)?;
 
     // Generate the SDK used by the stage1/target/host packages.
     generate_stage1_sdk("stage1/target/host", host, output_dir)?;

@@ -101,7 +101,7 @@ pub struct PackageMaskUpdate {
 ///
 /// A package can be pretended as provided by `package.provided`.
 /// This struct represents such an entry.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct ProvidedPackage {
     pub package_name: String,
     pub version: Version,

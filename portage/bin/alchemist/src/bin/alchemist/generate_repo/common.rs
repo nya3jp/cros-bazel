@@ -103,16 +103,6 @@ pub fn package_details_to_target_path(details: &PackageDetails, prefix: &str) ->
     )
 }
 
-pub fn package_details_to_package_set_target_path(
-    details: &PackageDetails,
-    prefix: &str,
-) -> String {
-    format!(
-        "{}_package_set",
-        package_details_to_target_path(details, prefix)
-    )
-}
-
 #[derive(Serialize)]
 pub struct DistFileEntry {
     pub name: String,

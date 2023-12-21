@@ -23,8 +23,8 @@ use tracing::instrument;
 use crate::{
     alchemist::TargetData,
     generate_repo::common::{
-        package_details_to_package_set_target_path, package_details_to_target_path,
-        repository_set_to_target_path, PRIMORDIAL_PACKAGES, TOOLCHAIN_PACKAGE_NAMES,
+        package_details_to_target_path, repository_set_to_target_path, PRIMORDIAL_PACKAGES,
+        TOOLCHAIN_PACKAGE_NAMES,
     },
 };
 
@@ -327,7 +327,7 @@ pub fn generate_base_sdk(config: &SdkBaseConfig, out: &Path) -> Result<()> {
     let context = SdkBaseContext {
         name: config.name,
         overlay_set: &repository_set_to_target_path(config.source_repo_set),
-        target: &package_details_to_package_set_target_path(
+        target: &package_details_to_target_path(
             &config.implicit_system_package.details,
             config.source_package_prefix,
         ),

@@ -11,11 +11,26 @@ load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-alias(
+sdk_install_deps(
     name = "10.2.0_host_deps",
-    # The following host packages are provided by the SDK:
-    # * test-cases/inherit-1.0
-    actual = "//internal/sdk/stage2/host",
+    out = "gcc-libs-10.2.0_host_deps",
+    base = "//internal/sdk/stage2/host",
+    overlays = "//internal/overlays:host",
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:full",
+        ]
+    }),
+    target_deps = [
+        "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0",
+    ],
+    install_strategy = select({
+        "@//bazel/portage:binpkg_cache_fast": "fast",
+        "//conditions:default": "slow",
+    }),
     visibility = ["//visibility:private"],
 )
 
