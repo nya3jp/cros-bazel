@@ -119,7 +119,7 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
                     .join(" ")
             );
 
-            match analyze_dependencies(&details, cross_compile, Some(&host.resolver), resolver) {
+            match analyze_dependencies(&details, cross_compile, &host.resolver, resolver) {
                 Ok(deps) => {
                     dump_deps("BDEPEND", &deps.build_host_deps);
                     dump_deps("IDEPEND", &deps.install_host_deps);

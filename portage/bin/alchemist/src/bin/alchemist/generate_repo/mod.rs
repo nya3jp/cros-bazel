@@ -67,7 +67,7 @@ fn evaluate_all_packages(
 }
 
 fn load_packages(
-    host: Option<&TargetData>,
+    host: &TargetData,
     target: &TargetData,
     src_dir: &Path,
 ) -> Result<Vec<MaybePackage>> {
@@ -80,7 +80,7 @@ fn load_packages(
 
     eprintln!("Analyzing packages...");
 
-    let cross_compile = if let Some(host) = host {
+    let cross_compile = {
         let cbuild = host
             .config
             .env()
@@ -92,8 +92,6 @@ fn load_packages(
             .get("CHOST")
             .context("target is missing CHOST")?;
         cbuild != chost
-    } else {
-        true
     };
 
     let packages = analyze_packages(
@@ -101,7 +99,7 @@ fn load_packages(
         cross_compile,
         details,
         src_dir,
-        host.map(|x| &x.resolver),
+        &host.resolver,
         &target.resolver,
     );
 
@@ -141,7 +139,7 @@ pub fn generate_stages(
 ) -> Result<Vec<MaybePackage>> {
     let mut all_packages = vec![];
 
-    let host_packages = load_packages(Some(host), host, src_dir)?;
+    let host_packages = load_packages(host, host, src_dir)?;
 
     // When we install a set of packages into an SDK layer, any ebuilds that
     // use that SDK layer now have those packages provided for them, and they
@@ -274,7 +272,7 @@ pub fn generate_stages(
     all_packages.extend(host_packages);
 
     if let Some(target) = target {
-        let target_packages = load_packages(Some(host), target, src_dir)?;
+        let target_packages = load_packages(host, target, src_dir)?;
 
         generate_stage1_sdk("stage1/target/board", target, output_dir)?;
 

@@ -293,7 +293,7 @@ pub fn analyze_packages(
     cross_compile: bool,
     all_details: Vec<MaybePackageDetails>,
     src_dir: &Path,
-    host_resolver: Option<&PackageResolver>,
+    host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
 ) -> Vec<MaybePackage> {
     // Analyze packages in parallel.

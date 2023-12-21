@@ -100,7 +100,7 @@ fn extract_dependencies_use(
 pub fn analyze_dependencies(
     details: &PackageDetails,
     cross_compile: bool,
-    host_resolver: Option<&PackageResolver>,
+    host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
 ) -> Result<PackageDependencies> {
     let build_deps = extract_dependencies(
@@ -158,7 +158,7 @@ pub fn analyze_dependencies(
         )
     })?;
 
-    let build_host_deps = if let Some(host_resolver) = host_resolver {
+    let build_host_deps = {
         // We query BDEPEND regardless of EAPI because we want our overrides
         // from `get_extra_dependencies` to allow specifying a BDEPEND even
         // if the EAPI doesn't support it.
@@ -207,28 +207,22 @@ pub fn analyze_dependencies(
         }
 
         build_host_deps
-    } else {
-        vec![]
     };
 
-    let install_host_deps = if let Some(host_resolver) = host_resolver {
-        extract_dependencies(
-            details,
-            DependencyKind::InstallHost,
-            cross_compile,
-            host_resolver,
-            None,
+    let install_host_deps = extract_dependencies(
+        details,
+        DependencyKind::InstallHost,
+        cross_compile,
+        host_resolver,
+        None,
+    )
+    .with_context(|| {
+        format!(
+            "Resolving install-time host dependencies for {}-{}",
+            &details.as_basic_data().package_name,
+            &details.as_basic_data().version
         )
-        .with_context(|| {
-            format!(
-                "Resolving install-time host dependencies for {}-{}",
-                &details.as_basic_data().package_name,
-                &details.as_basic_data().version
-            )
-        })?
-    } else {
-        vec![]
-    };
+    })?;
 
     // Some Rust source packages have their dependencies only listed as DEPEND.
     // They also need to be listed as RDPEND so they get pulled in as transitive
