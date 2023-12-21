@@ -212,6 +212,12 @@ sdk_install_deps(
 {%- else -%}
 alias(
     name = "{{ ebuild.version }}_host_deps",
+    {%- if ebuild.provided_host_build_deps %}
+    # The following host packages are provided by the SDK:
+        {%- for dep in ebuild.provided_host_build_deps %}
+    # * {{ dep }}
+        {%- endfor %}
+    {%- endif %}
     actual = "{{ ebuild.sdk }}",
     visibility = ["//visibility:private"],
 )
