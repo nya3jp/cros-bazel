@@ -308,13 +308,14 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     if ctx.attr.inject_use_flags:
         args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",")
 
-    # --goma-info
-    # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
-    args.add("--goma-info=%s" % ctx.file._goma_info.path)
-
-    # --remoteexec-info
-    # NOTE: We're not adding this file to transitive_inputs because the contents of remoteexec_info shouldn't affect the build output.
-    args.add("--remoteexec-info=%s" % ctx.file._remoteexec_info.path)
+    args.add_all([
+        # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
+        "--goma-info",
+        ctx.file._goma_info,
+        # NOTE: We're not adding this file to transitive_inputs because the contents of remoteexec_info shouldn't affect the build output.
+        "--remoteexec-info",
+        ctx.file._remoteexec_info,
+    ])
 
     args.add_all(ctx.attr.bashrcs, before_each = "--bashrc", map_each = _bashrc_to_path)
 
@@ -334,21 +335,22 @@ def _compute_build_package_args(ctx, output_path, use_runfiles):
     return args, inputs
 
 def _download_prebuilt(ctx, prebuilt, output_binary_package_file):
+    args = ctx.actions.args()
     if prebuilt.startswith("http://") or prebuilt.startswith("https://"):
         executable = "wget"
-        args = [prebuilt, "-O", output_binary_package_file.path]
+        args.add_all([prebuilt, "-O", output_binary_package_file])
     elif prebuilt.startswith("gs://"):
         executable = Label("@chromite//:src").workspace_root + "/bin/gsutil"
-        args = ["cp", prebuilt, output_binary_package_file.path]
+        args.add_all(["cp", prebuilt, output_binary_package_file])
     else:
         executable = "cp"
-        args = [prebuilt, output_binary_package_file.path]
+        args.add_all([prebuilt, output_binary_package_file])
 
     ctx.actions.run(
         inputs = [],
         outputs = [output_binary_package_file],
         executable = executable,
-        arguments = args,
+        arguments = [args],
         execution_requirements = {
             "no-remote": "",
             "no-sandbox": "",
@@ -427,9 +429,6 @@ def _ebuild_impl(ctx):
         src_basename + ".profile.json",
     )
 
-    # Compute arguments and inputs to run build_package.
-    args, inputs = _compute_build_package_args(ctx, output_path = output_binary_package_file.path, use_runfiles = False)
-
     # Define the main action.
     prebuilt = ctx.attr.prebuilt[BuildSettingInfo].value
     if prebuilt:
@@ -437,6 +436,20 @@ def _ebuild_impl(ctx):
         ctx.actions.write(output_log_file, "Downloaded from %s\n" % prebuilt)
         ctx.actions.write(output_profile_file, "[]")
     else:
+        # Compute arguments and inputs to run build_package.
+        args, inputs = _compute_build_package_args(
+            ctx,
+            output_path = output_binary_package_file.path,
+            use_runfiles = False,
+        )
+
+        log_args = ctx.actions.args()
+        log_args.add_all([
+            "--log",
+            output_log_file,
+            "--profile",
+            output_profile_file,
+        ])
         ctx.actions.run(
             inputs = inputs,
             outputs = [
@@ -446,11 +459,7 @@ def _ebuild_impl(ctx):
             ],
             executable = ctx.executable._action_wrapper,
             tools = [ctx.executable._build_package],
-            arguments = [
-                "--log=" + output_log_file.path,
-                "--profile=" + output_profile_file.path,
-                args,
-            ],
+            arguments = [log_args, args],
             execution_requirements = {
                 # Disable sandbox to avoid creating a symlink forest.
                 # This does not affect hermeticity since ebuild runs in a container.
