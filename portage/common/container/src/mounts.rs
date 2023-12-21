@@ -10,7 +10,10 @@ use std::{
 
 use anyhow::{bail, ensure, Context, Result};
 use itertools::Itertools;
-use nix::mount::{mount, umount2, MntFlags, MsFlags};
+use nix::{
+    mount::{mount, umount2, MntFlags, MsFlags},
+    sys::statvfs::{statvfs, FsFlags},
+};
 use tracing::info_span;
 
 fn ensure_dir_is_empty(dir: &Path) -> Result<()> {
@@ -75,14 +78,20 @@ pub(crate) fn bind_mount(old_dir: &Path, new_dir: &Path) -> Result<MountGuard> {
 }
 
 pub(crate) fn remount_readonly(path: &Path) -> Result<()> {
-    mount(
-        Some(""),
-        path,
-        Some(""),
-        MsFlags::MS_REMOUNT | MsFlags::MS_BIND | MsFlags::MS_RDONLY,
-        Some(""),
-    )
-    .with_context(|| format!("Failed remounting {} as read-only", path.display()))?;
+    let mut flags = MsFlags::MS_REMOUNT | MsFlags::MS_BIND | MsFlags::MS_RDONLY;
+
+    let stat = statvfs(path).with_context(|| format!("Failed to statvfs: {}", path.display()))?;
+    if stat.flags().contains(FsFlags::ST_NODEV) {
+        flags |= MsFlags::MS_NODEV;
+    }
+    if stat.flags().contains(FsFlags::ST_NOEXEC) {
+        flags |= MsFlags::MS_NOEXEC;
+    }
+    if stat.flags().contains(FsFlags::ST_NOSUID) {
+        flags |= MsFlags::MS_NOSUID;
+    }
+    mount(Some(""), path, Some(""), flags, Some(""))
+        .with_context(|| format!("Failed remounting {} as read-only", path.display()))?;
     Ok(())
 }
 
