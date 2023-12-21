@@ -2,10 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+load("//bazel/portage/build_defs:transitions.bzl", "rust_for_ebuild_binary")
 
-rust_binary(
+rust_for_ebuild_binary(
     name = "build_image",
     srcs = glob(["src/*.rs"]),
     crate_name = "build_image",

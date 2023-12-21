@@ -2,9 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("//bazel/portage/build_defs:transitions.bzl", "rust_for_ebuild_binary")
 
-rust_binary(
+rust_for_ebuild_binary(
     name = "build_sdk",
     srcs = glob(["src/*.rs"]),
     data = [":build_sdk.sh"],

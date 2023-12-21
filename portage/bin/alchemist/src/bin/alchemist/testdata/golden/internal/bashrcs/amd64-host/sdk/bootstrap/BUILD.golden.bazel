@@ -4,7 +4,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@//bazel/portage/build_defs:transitions.bzl", pkg_tar = "pkg_tar_for_ebuild")
 load("@//bazel/portage/build_defs:bashrc.bzl", "bashrc")
 pkg_tar(
     name = "profile.bashrc_layer",

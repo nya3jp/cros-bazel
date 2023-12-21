@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_update")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/portage/build_defs:transitions.bzl", pkg_tar = "pkg_tar_for_ebuild")
 
 pkg_tar(
     name = "extra_tarball",

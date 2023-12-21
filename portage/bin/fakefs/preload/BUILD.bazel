@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
 cc_binary(
     name = "fakefs_preload",
     srcs = ["fakefs_preload.c"],
@@ -9,6 +11,9 @@ cc_binary(
         # Avoid linking libc++.
         "-default_link_libs",
         "c_compiler",
+        # Force compiling in opt mode to improve performance, and to ensure we
+        # get cache hits.
+        "opt",
     ],
     linkopts = [
         # Force linking to shared objects even if there are static archives.

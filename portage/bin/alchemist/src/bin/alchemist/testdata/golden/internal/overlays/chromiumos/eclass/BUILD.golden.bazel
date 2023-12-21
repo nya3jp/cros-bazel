@@ -5,7 +5,7 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@//bazel/portage/build_defs:transitions.bzl", pkg_tar = "pkg_tar_for_ebuild")
 load("@//bazel/portage/build_defs:patterns.bzl", "NON_BUILD_FILE_PATTERNS")
 
 # This BUILD file provides targets for an overlay's eclasses.

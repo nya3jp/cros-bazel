@@ -2,7 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+load("//bazel/portage/build_defs:transitions.bzl", "go_for_ebuild_binary")
 
 go_library(
     name = "fakefs_lib",
@@ -17,7 +18,7 @@ go_library(
     ],
 )
 
-go_binary(
+go_for_ebuild_binary(
     name = "fakefs",
     embed = [":fakefs_lib"],
     visibility = ["//bazel/portage:__subpackages__"],

@@ -3,9 +3,9 @@
 # found in the LICENSE file.
 
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/portage/build_defs:transitions.bzl", "rust_for_ebuild_binary", "rust_for_ebuild_test")
 
-rust_binary(
+rust_for_ebuild_binary(
     name = "action_wrapper",
     srcs = glob(["src/*.rs"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -23,7 +23,7 @@ rust_binary(
     ],
 )
 
-rust_test(
+rust_for_ebuild_test(
     name = "action_wrapper_test",
     size = "small",
     crate = ":action_wrapper",
