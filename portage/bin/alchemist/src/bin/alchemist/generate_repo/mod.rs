@@ -126,6 +126,8 @@ pub fn generate_stages(
     // when we generate the BUILD files.
     let implicit_system_package = get_sdk_implicit_system_package(&host_packages)?;
     let implicit_system_packages = implicit_system_package
+        .dependencies
+        .indirect
         .install_set
         .iter()
         .map(|p| ProvidedPackage {

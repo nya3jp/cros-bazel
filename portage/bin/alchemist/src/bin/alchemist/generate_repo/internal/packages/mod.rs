@@ -294,7 +294,9 @@ impl EBuildEntry {
             PackageType::Host(host) => {
                 let (host_build_deps, provided_host_build_deps) = partition_provided(
                     package
-                        .build_host_deps
+                        .dependencies
+                        .indirect
+                        .build_host_set
                         .iter()
                         .chain(package.dependencies.direct.build_target.iter())
                         .unique_by(|details| &details.as_basic_data().ebuild_path),
@@ -312,7 +314,7 @@ impl EBuildEntry {
                 // what's contained in the stage1 SDK.
                 if let Some(host) = host {
                     let (host_build_deps, provided_host_build_deps) = partition_provided(
-                        package.build_host_deps.iter(),
+                        package.dependencies.indirect.build_host_set.iter(),
                         host.sdk_provided_packages,
                     );
 
@@ -388,7 +390,10 @@ impl EBuildEntry {
             PackageType::CrossRoot { target, .. } => target.prefix,
         };
 
-        let install_set = format_dependencies(target_prefix, package.install_set.iter())?;
+        let install_set = format_dependencies(
+            target_prefix,
+            package.dependencies.indirect.install_set.iter(),
+        )?;
 
         // TODO: Add this.
         let host_install_deps = Vec::new();

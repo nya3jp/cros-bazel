@@ -9,7 +9,6 @@ use std::{
 };
 
 use anyhow::{bail, Result};
-use itertools::Itertools;
 use rayon::prelude::*;
 use tracing::instrument;
 
@@ -24,7 +23,10 @@ use crate::{
 };
 
 use self::{
-    dependency::direct::{analyze_direct_dependencies, DirectDependencies},
+    dependency::{
+        direct::{analyze_direct_dependencies, DirectDependencies},
+        indirect::{analyze_indirect_dependencies, IndirectDependencies},
+    },
     source::{analyze_sources, PackageSources},
 };
 
@@ -36,6 +38,7 @@ mod tests;
 
 pub struct PackageDependencies {
     pub direct: DirectDependencies,
+    pub indirect: IndirectDependencies,
 }
 
 /// Holds rich information about a package.
@@ -48,31 +51,6 @@ pub struct Package {
 
     /// Locates source code needed to build this package.
     pub sources: PackageSources,
-
-    /// A list of packages needed to install together with this package.
-    /// Specifically, it is a transitive closure of dependencies introduced by
-    /// RDEPEND and PDEPEND. Alchemist needs to compute it, instead of letting
-    /// Bazel compute it, because there can be circular dependencies.
-    pub install_set: Vec<Arc<PackageDetails>>,
-
-    /// A list of host packages needed to install when building this package.
-    /// Namely, it includes the BDEPENDs declared by this package and all the
-    /// IDEPENDs specified by the package's DEPENDs and their transitive
-    /// RDEPENDs.
-    ///
-    /// When building the ephemeral CrOS SDK for building the package, we need
-    /// to ensure that all the IDEPENDs are installed. We could add the concept
-    /// of an IDEPEND to Bazel, but it would make the `sdk_install_deps` rule
-    /// very complicated and harder to understand.
-    ///
-    /// This list does NOT necessarily include all host packages to install, and
-    /// may omit some transitive runtime dependencies represented by RDEPEND and
-    /// IDEPEND. Bazel must make sure to install those transitive dependencies
-    /// as well on setting up an ephemeral CrOS SDK for building the package.
-    /// Alchemist doesn't compute the full transitive closure while it's
-    /// technically possible because it unnecessarily complicates the dependency
-    /// calculation logic.
-    pub build_host_deps: Vec<Arc<PackageDetails>>,
 
     /// The bashrc files that need to be executed for the package.
     ///
@@ -155,105 +133,21 @@ impl AsPackageRef for MaybePackage {
 
 /// Results of package-local analysis, i.e. analysis that can be performed independently of other
 /// packages.
-struct PackageLocalAnalysis {
+pub struct PackageLocalAnalysis {
     pub direct_dependencies: DirectDependencies,
     pub sources: PackageSources,
     pub bashrcs: Vec<PathBuf>,
 }
 
-type MaybePackageLocalAnalysis = Result<Box<PackageLocalAnalysis>, Arc<PackageAnalysisError>>;
+pub type MaybePackageLocalAnalysis = Result<Box<PackageLocalAnalysis>, Arc<PackageAnalysisError>>;
 
 /// Results of package-global analysis, i.e. analysis that can be performed only after finishing
 /// package-local analysis of all relevant packages.
-struct PackageGlobalAnalysis {
-    pub install_set: Vec<Arc<PackageDetails>>,
-    pub build_host_deps: Vec<Arc<PackageDetails>>,
+pub struct PackageGlobalAnalysis {
+    pub indirect_dependencies: IndirectDependencies,
 }
 
-type MaybePackageGlobalAnalysis = Result<Box<PackageGlobalAnalysis>, Arc<PackageAnalysisError>>;
-
-/// Performs DFS on the dependency graph presented by `local_map` and
-/// records the install set of `current` to `install_map`. Note that
-/// `install_map` is a [`HashMap`] because it is used for remembering visited
-/// nodes.
-fn find_install_map<'a>(
-    local_map: &'a HashMap<PathBuf, MaybePackageLocalAnalysis>,
-    current: &'a Arc<PackageDetails>,
-    install_map: &mut HashMap<&'a Path, Arc<PackageDetails>>,
-    follow_post_deps: bool,
-) {
-    use std::collections::hash_map::Entry::*;
-    match install_map.entry(current.as_basic_data().ebuild_path.as_path()) {
-        Occupied(_) => {
-            return;
-        }
-        Vacant(entry) => {
-            entry.insert(current.clone());
-        }
-    }
-
-    // PackageLocalAnalysis can be unavailable when analysis failed for the package
-    // (e.g. failed to flatten RDEPEND). We can just skip traversing the graph in this case.
-    // TODO: Handle analysis errors correctly.
-    let local = match local_map
-        .get(current.as_basic_data().ebuild_path.as_path())
-        .expect("local_map is exhaustive")
-    {
-        Ok(local) => local,
-        Err(_) => return,
-    };
-
-    let deps = &local.direct_dependencies;
-    for install in &deps.run_target {
-        find_install_map(local_map, install, install_map, follow_post_deps);
-    }
-    if follow_post_deps {
-        for install in &deps.post_target {
-            find_install_map(local_map, install, install_map, follow_post_deps);
-        }
-    }
-}
-
-/// Returns the union of `current`'s `build_host_deps` and the
-/// `install_host_deps` of all the `build_deps` and their transitive
-/// `runtime_deps`.
-fn compute_host_build_deps(
-    local_map: &HashMap<PathBuf, MaybePackageLocalAnalysis>,
-    current: &PackageDetails,
-) -> Vec<Arc<PackageDetails>> {
-    let mut build_dep_runtime_deps: HashMap<&Path, Arc<PackageDetails>> = HashMap::new();
-
-    // PackageLocalAnalysis can be unavailable when analysis failed for the package
-    // (e.g. failed to flatten RDEPEND). We can just return an empty dependencies in this case.
-    // TODO: Handle analysis errors correctly.
-    let local = match local_map
-        .get(current.as_basic_data().ebuild_path.as_path())
-        .expect("local_map is exhaustive")
-    {
-        Ok(local) => local,
-        Err(_) => return Vec::new(),
-    };
-
-    for build_dep in &local.direct_dependencies.build_target {
-        find_install_map(local_map, build_dep, &mut build_dep_runtime_deps, false);
-    }
-
-    build_dep_runtime_deps
-        .into_values()
-        .filter_map(|details| {
-            local_map
-                .get(details.as_basic_data().ebuild_path.as_path())
-                .expect("local_map is exhaustive")
-                .as_ref()
-                .ok()
-        })
-        .flat_map(|local| &local.direct_dependencies.install_host)
-        .chain(&local.direct_dependencies.build_host)
-        .sorted_by_key(|details| &details.as_basic_data().ebuild_path)
-        .unique_by(|details| &details.as_basic_data().ebuild_path)
-        .cloned()
-        .collect()
-}
+pub type MaybePackageGlobalAnalysis = Result<Box<PackageGlobalAnalysis>, Arc<PackageAnalysisError>>;
 
 fn analyze_local(
     details: &MaybePackageDetails,
@@ -339,52 +233,20 @@ fn analyze_global(
         }
     };
 
-    // Compute install sets.
-    //
-    // Portage provides two kinds of runtime dependencies: RDEPEND and PDEPEND.
-    // They're very similar, but PDEPEND doesn't require dependencies to be
-    // emerged in advance, and thus it's typically used to represent mutual
-    // runtime dependencies without introducing circular dependencies.
-    //
-    // For example, sys-libs/pam and sys-auth/pambase depends on each other:
-    // - sys-libs/pam:     PDEPEND="sys-auth/pambase"
-    // - sys-auth/pambase: RDEPEND="sys-libs/pam"
-    //
-    // To build a ChromeOS base image, we need to build all packages depended
-    // on for runtime by virtual/target-os, directly or indirectly. However,
-    // we cannot simply represent PDEPEND as Bazel target dependencies since
-    // they will introduce circular dependencies in Bazel dependency graph.
-    // Therefore, alchemist needs to resolve PDEPEND and embed the computed
-    // results in the generated BUILD.bazel files. Specifically, alchemist
-    // needs to compute a transitive closure of a runtime dependency graph,
-    // and to write the results as package_set Bazel targets.
-    //
-    // In the example above, sys-auth/pambase will appear in all package_set
-    // targets that depend on it directly or indirectly, including sys-libs/pam
-    // and virtual/target-os.
-    //
-    // There are some sophisticated algorithms to compute transitive closures,
-    // but for our purpose it is sufficient to just traverse the dependency
-    // graph starting from each node.
-    let mut install_map: HashMap<&Path, Arc<PackageDetails>> = HashMap::new();
-    find_install_map(local_map, details, &mut install_map, true);
-
-    let install_set = install_map
-        .into_values()
-        .sorted_by(|a, b| {
-            a.as_basic_data()
-                .package_name
-                .cmp(&b.as_basic_data().package_name)
-                .then_with(|| a.as_basic_data().version.cmp(&b.as_basic_data().version))
+    let result = (|| -> Result<PackageGlobalAnalysis> {
+        let indirect_dependencies = analyze_indirect_dependencies(details, local_map)?;
+        Ok(PackageGlobalAnalysis {
+            indirect_dependencies,
         })
-        .collect();
+    })();
 
-    let build_host_deps = compute_host_build_deps(local_map, details);
-
-    Ok(Box::new(PackageGlobalAnalysis {
-        install_set,
-        build_host_deps,
-    }))
+    match result {
+        Ok(global) => Ok(Box::new(global)),
+        Err(error) => Err(Arc::new(PackageAnalysisError {
+            details: MaybePackageDetails::Ok(details.clone()),
+            error: format!("{error:#}"),
+        })),
+    }
 }
 
 /// Runs package-global analysis, i.e. analysis taking other packages into account.
@@ -442,11 +304,10 @@ pub fn analyze_packages(
                         details,
                         dependencies: PackageDependencies {
                             direct: local.direct_dependencies,
+                            indirect: global.indirect_dependencies,
                         },
                         sources: local.sources,
                         bashrcs: local.bashrcs,
-                        install_set: global.install_set,
-                        build_host_deps: global.build_host_deps,
                     }))
                 }
                 (MaybePackageDetails::Err(error), _, _) => {

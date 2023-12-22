@@ -46,6 +46,18 @@ pub struct DirectDependencies {
     pub install_host: Vec<Arc<PackageDetails>>,
 }
 
+impl DirectDependencies {
+    pub fn get(&self, kind: DependencyKind) -> &Vec<Arc<PackageDetails>> {
+        match kind {
+            DependencyKind::BuildTarget => &self.build_target,
+            DependencyKind::RunTarget => &self.run_target,
+            DependencyKind::PostTarget => &self.post_target,
+            DependencyKind::BuildHost => &self.build_host,
+            DependencyKind::InstallHost => &self.install_host,
+        }
+    }
+}
+
 /// Represents a package dependency type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum DependencyKind {

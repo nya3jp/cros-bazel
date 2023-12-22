@@ -9,6 +9,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/analyze/dependency/direct/flatten.rs",
     "//bazel/portage/bin/alchemist:src/analyze/dependency/direct/hacks.rs",
     "//bazel/portage/bin/alchemist:src/analyze/dependency/direct/mod.rs",
+    "//bazel/portage/bin/alchemist:src/analyze/dependency/indirect.rs",
     "//bazel/portage/bin/alchemist:src/analyze/dependency/mod.rs",
     "//bazel/portage/bin/alchemist:src/analyze/mod.rs",
     "//bazel/portage/bin/alchemist:src/analyze/restrict.rs",

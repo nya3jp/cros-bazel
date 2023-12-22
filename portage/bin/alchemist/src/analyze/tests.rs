@@ -159,8 +159,8 @@ impl From<MaybePackage> for MaybePackageDescription {
                 post_target: describe_package_list(&deps.direct.post_target),
                 build_host: describe_package_list(&deps.direct.build_host),
                 install_host: describe_package_list(&deps.direct.install_host),
-                install_set: describe_package_list(&package.install_set),
-                build_host_set: describe_package_list(&package.build_host_deps),
+                install_set: describe_package_list(&deps.indirect.install_set),
+                build_host_set: describe_package_list(&deps.indirect.build_host_set),
             },
         }
     }
@@ -326,7 +326,6 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     test_target: vec!["sys-libs/ba-1".into()],
                     run_target: vec!["sys-libs/bb-1".into()],
                     install_set: vec!["sys-libs/b-1".into(), "sys-libs/bb-1".into()],
-
                     ..PackageDependenciesDescription::EMPTY
                 },
             },
@@ -569,6 +568,44 @@ fn test_analyze_packages_indirect_host_deps() -> Result<()> {
                 ..PackageDependenciesDescription::EMPTY
             },
         },
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_analyze_packages_propagate_errors() -> Result<()> {
+    //                 DEPEND              RDEPEND
+    // sys-apps/hello ───────► sys-libs/a ────────► sys-libs/b
+    //
+    let packages = analyze_packages_for_testing(&[
+        PackageSpec::new("sys-apps/hello", "1")?.var("DEPEND", "sys-libs/a"),
+        PackageSpec::new("sys-libs/a", "1")?.var("RDEPEND", "sys-libs/b"),
+        PackageSpec::new("sys-libs/b", "1")?
+            .var("IUSE", "host_arch")
+            .var("REQUIRED_USE", "host_arch"),
+    ])?;
+
+    assert_eq!(
+        packages,
+        vec![
+            MaybePackageDescription::Err {
+                package_name_version: "sys-apps/hello-1".into(),
+                reason: "Failed to analyze sys-libs/a-1: Resolving runtime dependencies \
+                for sys-libs/a-1: Unsatisfiable dependency: No package satisfies sys-libs/b"
+                    .into(),
+            },
+            MaybePackageDescription::Err {
+                package_name_version: "sys-libs/a-1".into(),
+                reason: "Resolving runtime dependencies for sys-libs/a-1: \
+                Unsatisfiable dependency: No package satisfies sys-libs/b"
+                    .into(),
+            },
+            MaybePackageDescription::Err {
+                package_name_version: "sys-libs/b-1".into(),
+                reason: "The package is masked: REQUIRED_USE not satisfied: host_arch".into(),
+            },
+        ]
     );
 
     Ok(())
