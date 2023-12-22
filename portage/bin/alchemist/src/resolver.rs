@@ -5,6 +5,7 @@
 use anyhow::{bail, Context, Result};
 use rayon::prelude::*;
 use std::sync::Arc;
+use tracing::instrument;
 use version::Version;
 
 use crate::{
@@ -55,6 +56,17 @@ impl PackageResolver {
             config,
             loader,
         }
+    }
+
+    /// Loads all packages covered by this resolver.
+    #[instrument(skip_all)]
+    pub fn find_all_packages(&self) -> Result<Vec<MaybePackageDetails>> {
+        // Load packages in parallel.
+        self.repos
+            .find_all_ebuilds()?
+            .into_par_iter()
+            .map(|ebuild_path| self.loader.load_package(&ebuild_path))
+            .collect()
     }
 
     /// Finds all packages matching the specified [`PackageAtom`].

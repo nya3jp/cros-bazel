@@ -49,23 +49,6 @@ use self::{
     public::{generate_public_images, generate_public_packages},
 };
 
-#[instrument(skip_all)]
-fn evaluate_all_packages(
-    repos: &RepositorySet,
-    loader: &CachedPackageLoader,
-) -> Result<Vec<MaybePackageDetails>> {
-    let ebuild_paths = repos.find_all_ebuilds()?;
-
-    // Evaluate packages in parallel.
-    let results = ebuild_paths
-        .into_par_iter()
-        .map(|ebuild_path| loader.load_package(&ebuild_path))
-        .collect::<Result<Vec<_>>>()?;
-    eprintln!("Loaded {} ebuilds", results.len());
-
-    Ok(results)
-}
-
 fn load_packages(
     host: &TargetData,
     target: &TargetData,
@@ -75,8 +58,8 @@ fn load_packages(
         "Loading packages for {}:{}...",
         target.board, target.profile
     );
-
-    let details = evaluate_all_packages(&target.repos, &target.loader)?;
+    let details = target.resolver.find_all_packages()?;
+    eprintln!("Loaded {} ebuilds", details.len());
 
     eprintln!("Analyzing packages...");
 
