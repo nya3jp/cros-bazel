@@ -14,10 +14,7 @@ external interfaces.
 """
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("//bazel/portage/build_defs:common.bzl", "EbuildLibraryInfo", "compute_input_file_path")
-
-def _format_input_file_arg(strip_prefix, file, use_runfiles):
-    return "--sysroot-file=%s=%s" % (file.path.removeprefix(strip_prefix), compute_input_file_path(file, use_runfiles))
+load("//bazel/portage/build_defs:common.bzl", "EbuildLibraryInfo", "compute_file_arg")
 
 def add_interface_library_args(input_targets, args, use_runfiles):
     """
@@ -32,7 +29,7 @@ def add_interface_library_args(input_targets, args, use_runfiles):
         args: Args: An Args object where necessary arguments are added in order
             to depend on the interface libraries.
         use_runfiles: bool: Whether to refer to input file paths in relative to
-            execroot or runfiles directory. See compute_input_file_path for
+            execroot or runfiles directory. See compute_file_arg for
             details.
 
     Returns:
@@ -44,11 +41,15 @@ def add_interface_library_args(input_targets, args, use_runfiles):
         lib_info = input_target[EbuildLibraryInfo]
         deps = depset(transitive = [lib_info.headers, lib_info.pkg_configs, lib_info.shared_libs])
 
-        args.add_all(
-            deps,
-            allow_closure = True,
-            map_each = lambda file: _format_input_file_arg(lib_info.strip_prefix, file, use_runfiles),
-        )
+        for dep in deps.to_list():
+            args.add_joined(
+                "--sysroot-file",
+                [
+                    dep.path.removeprefix(lib_info.strip_prefix),
+                    compute_file_arg(dep, use_runfiles),
+                ],
+                join_with = "=",
+            )
         depsets.append(deps)
 
     return depset(transitive = depsets)

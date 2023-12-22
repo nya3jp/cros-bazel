@@ -211,16 +211,17 @@ def relative_path_in_package(file):
         fail("File does not have an associated owner label")
     return relative_path_in_label(file, owner)
 
-def compute_input_file_path(file, use_runfiles):
+def compute_file_arg(file, use_runfiles):
     """
-    Computes a file path referring to the given input file.
+    Computes a parameter compatible with ctx.actions.Args for a given file.
 
     This function helps you to refer to input file path correctly in the two
     major different working directory configurations: execroot and runfiles.
 
     When you are going to use a file in a build action run by "bazel build",
-    pass use_runfiles=False. The function will just return `file.path` that is
-    valid in an action execroot.
+    pass use_runfiles=False. The function will just return the file.
+    We return the file instead of the path because ctx.actions.Args should
+    always prefer being passed the file instead of the path.
 
     When you are going to use a file in a binary file invoked for "bazel run"
     or "bazel test", pass use_runfiles=True and make sure to include the file
@@ -233,14 +234,15 @@ def compute_input_file_path(file, use_runfiles):
             relative to execroot or runfiles directory.
 
     Returns:
-        A file path referring to the given file.
+        If use_runfiles is false, returns the input file.
+        Otherwise, returns a path referring to the given file.
     """
     if file.owner == None:
         fail("Unable to compute a path for a file not associated with a label")
     if use_runfiles:
         return paths.join(_workspace_root(file.owner), file.short_path)
     else:
-        return file.path
+        return file
 
 def single_binary_package_set_info(self_package, package_sets):
     """
