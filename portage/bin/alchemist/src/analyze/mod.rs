@@ -257,11 +257,13 @@ fn compute_host_build_deps<'a>(
 pub fn analyze_packages(
     config: &ConfigBundle,
     cross_compile: bool,
-    all_details: Vec<MaybePackageDetails>,
     src_dir: &Path,
     host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
-) -> Vec<MaybePackage> {
+) -> Result<Vec<MaybePackage>> {
+    // Load all packages.
+    let all_details = target_resolver.find_all_packages()?;
+
     // Analyze packages in parallel.
     let all_partials: Vec<MaybePackagePartial> = all_details
         .into_par_iter()
@@ -402,5 +404,5 @@ pub fn analyze_packages(
         })
         .collect();
 
-    packages
+    Ok(packages)
 }

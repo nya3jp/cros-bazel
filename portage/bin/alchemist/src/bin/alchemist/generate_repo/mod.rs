@@ -19,15 +19,11 @@ use alchemist::{
     analyze::{analyze_packages, MaybePackage, Package},
     config::ProvidedPackage,
     dependency::package::{AsPackageRef, PackageAtom},
-    ebuild::{CachedPackageLoader, MaybePackageDetails},
     fakechroot::PathTranslator,
-    repository::RepositorySet,
     resolver::select_best_version,
 };
 use anyhow::{bail, Context, Result};
 use itertools::Itertools;
-use rayon::prelude::*;
-use tracing::instrument;
 
 use crate::alchemist::TargetData;
 
@@ -58,10 +54,6 @@ fn load_packages(
         "Loading packages for {}:{}...",
         target.board, target.profile
     );
-    let details = target.resolver.find_all_packages()?;
-    eprintln!("Loaded {} ebuilds", details.len());
-
-    eprintln!("Analyzing packages...");
 
     let cross_compile = {
         let cbuild = host
@@ -80,11 +72,12 @@ fn load_packages(
     let packages = analyze_packages(
         &target.config,
         cross_compile,
-        details,
         src_dir,
         &host.resolver,
         &target.resolver,
-    );
+    )?;
+
+    eprintln!("Loaded {} packages", packages.len());
 
     Ok(packages)
 }
