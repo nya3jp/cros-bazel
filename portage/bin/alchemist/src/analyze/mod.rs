@@ -137,11 +137,12 @@ impl AsPackageRef for MaybePackage {
     }
 }
 
-/// Similar to [`Package`], but an install set is not resolved yet.
+/// Similar to [`Package`], but only package-local analysis results are available.
 struct PackagePartial {
     pub details: Arc<PackageDetails>,
     pub dependencies: PackageDependencies,
     pub sources: PackageSources,
+    pub bashrcs: Vec<PathBuf>,
 }
 
 #[allow(dead_code)]
@@ -253,65 +254,78 @@ fn compute_host_build_deps<'a>(
         .collect()
 }
 
-#[instrument(skip_all)]
-pub fn analyze_packages(
+fn analyze_local(
+    details: MaybePackageDetails,
     config: &ConfigBundle,
     cross_compile: bool,
     src_dir: &Path,
     host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
-) -> Result<Vec<MaybePackage>> {
-    // Load all packages.
-    let all_details = target_resolver.find_all_packages()?;
+) -> MaybePackagePartial {
+    let details = match details {
+        MaybePackageDetails::Ok(details) => details,
+        MaybePackageDetails::Err(error) => {
+            return MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
+                error: error.error.clone(),
+                details: MaybePackageDetails::Err(error),
+            }));
+        }
+    };
+    let result = (|| -> Result<PackagePartial> {
+        if let PackageReadiness::Masked { reason } = &details.readiness {
+            // We do not support building masked packages because of
+            // edge cases: e.g., if one masked package depends on
+            // another masked one, this'd be treated as an unsatisfied
+            // dependency error.
+            bail!("The package is masked: {}", reason);
+        }
+        let dependencies =
+            analyze_dependencies(&details, cross_compile, host_resolver, target_resolver)?;
+        let sources = analyze_sources(config, &details, src_dir)?;
+        let bashrcs = config.package_bashrcs(&details.as_package_ref());
+        Ok(PackagePartial {
+            details: details.clone(),
+            dependencies,
+            sources,
+            bashrcs,
+        })
+    })();
+    match result {
+        Ok(package) => MaybePackagePartial::Ok(Box::new(package)),
+        Err(err) => MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
+            details: MaybePackageDetails::Ok(details),
+            error: format!("{err:#}"),
+        })),
+    }
+}
 
+/// Runs package-local analysis, i.e. analysis that can be done independently of other packages.
+fn analyze_locals(
+    all_details: Vec<MaybePackageDetails>,
+    config: &ConfigBundle,
+    cross_compile: bool,
+    src_dir: &Path,
+    host_resolver: &PackageResolver,
+    target_resolver: &PackageResolver,
+) -> Vec<MaybePackagePartial> {
     // Analyze packages in parallel.
-    let all_partials: Vec<MaybePackagePartial> = all_details
+    all_details
         .into_par_iter()
         .map(|details| {
-            let details = match details {
-                MaybePackageDetails::Ok(details) => details,
-                MaybePackageDetails::Err(error) => {
-                    return MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
-                        error: error.error.clone(),
-                        details: MaybePackageDetails::Err(error),
-                    }));
-                }
-            };
-            let result = (|| -> Result<PackagePartial> {
-                if let PackageReadiness::Masked { reason } = &details.readiness {
-                    // We do not support building masked packages because of
-                    // edge cases: e.g., if one masked package depends on
-                    // another masked one, this'd be treated as an unsatisfied
-                    // dependency error.
-                    bail!("The package is masked: {}", reason);
-                }
-                let dependencies =
-                    analyze_dependencies(&details, cross_compile, host_resolver, target_resolver)?;
-                let sources = analyze_sources(config, &details, src_dir)?;
-                Ok(PackagePartial {
-                    details: details.clone(),
-                    dependencies,
-                    sources,
-                })
-            })();
-            match result {
-                Ok(package) => MaybePackagePartial::Ok(Box::new(package)),
-                Err(err) => MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
-                    details: MaybePackageDetails::Ok(details),
-                    error: format!("{err:#}"),
-                })),
-            }
+            analyze_local(
+                details,
+                config,
+                cross_compile,
+                src_dir,
+                host_resolver,
+                target_resolver,
+            )
         })
-        .collect();
+        .collect()
+}
 
-    let errors = all_partials
-        .iter()
-        .filter(|p| matches!(p, MaybePackagePartial::Err(_)))
-        .count();
-    if errors > 0 {
-        eprintln!("WARNING: Analysis failed for {} packages", errors);
-    }
-
+/// Runs package-global analysis, i.e. analysis taking other packages into account.
+fn analyze_globals(all_partials: Vec<MaybePackagePartial>) -> Vec<MaybePackage> {
     // Compute install sets.
     //
     // Portage provides two kinds of runtime dependencies: RDEPEND and PDEPEND.
@@ -379,7 +393,7 @@ pub fn analyze_packages(
         })
         .collect();
 
-    let packages: Vec<MaybePackage> = all_partials
+    all_partials
         .into_iter()
         .map(|partial| match partial {
             MaybePackagePartial::Ok(partial) => {
@@ -389,7 +403,6 @@ pub fn analyze_packages(
                 let build_host_deps = build_host_deps_by_path
                     .remove(partial.details.as_basic_data().ebuild_path.as_path())
                     .unwrap();
-                let bashrcs = config.package_bashrcs(&partial.details.as_package_ref());
 
                 MaybePackage::Ok(Arc::new(Package {
                     details: partial.details,
@@ -397,12 +410,45 @@ pub fn analyze_packages(
                     install_set,
                     sources: partial.sources,
                     build_host_deps,
-                    bashrcs,
+                    bashrcs: partial.bashrcs,
                 }))
             }
             MaybePackagePartial::Err(err) => MaybePackage::Err(err),
         })
-        .collect();
+        .collect()
+}
+
+#[instrument(skip_all)]
+pub fn analyze_packages(
+    config: &ConfigBundle,
+    cross_compile: bool,
+    src_dir: &Path,
+    host_resolver: &PackageResolver,
+    target_resolver: &PackageResolver,
+) -> Result<Vec<MaybePackage>> {
+    // Load all packages.
+    let all_details = target_resolver.find_all_packages()?;
+
+    // Run package-local analysis.
+    let all_partials = analyze_locals(
+        all_details,
+        config,
+        cross_compile,
+        src_dir,
+        host_resolver,
+        target_resolver,
+    );
+
+    // Run package-global analysis.
+    let packages = analyze_globals(all_partials);
+
+    let errors = packages
+        .iter()
+        .filter(|p| matches!(p, MaybePackage::Err(_)))
+        .count();
+    if errors > 0 {
+        eprintln!("WARNING: Analysis failed for {} packages", errors);
+    }
 
     Ok(packages)
 }
