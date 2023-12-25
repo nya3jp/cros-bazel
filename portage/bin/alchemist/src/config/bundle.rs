@@ -184,6 +184,8 @@ impl ConfigBundle {
             value: ConfigNodeValue::Vars(HashMap::from_iter([
                 ("ARCH".into(), arch.into()),
                 ("ACCEPT_KEYWORDS".into(), arch.into()),
+                // GENTOO_MIRRORS is required for remote source analysis.
+                ("GENTOO_MIRRORS".into(), "http://localhost/gentoo".into()),
             ])),
         }])])
     }

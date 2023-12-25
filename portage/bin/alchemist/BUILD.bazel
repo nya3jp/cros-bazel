@@ -71,6 +71,7 @@ rust_test(
     deps = [
         "@alchemy_crates//:pretty_assertions",
         "@alchemy_crates//:proptest",
+        "@alchemy_crates//:shell-escape",
     ],
 )
 

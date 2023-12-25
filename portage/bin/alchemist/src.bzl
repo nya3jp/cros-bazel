@@ -13,6 +13,7 @@ _DEV_SRCS_NO_LOCK = [
     "//bazel/portage/bin/alchemist:src/analyze/mod.rs",
     "//bazel/portage/bin/alchemist:src/analyze/restrict.rs",
     "//bazel/portage/bin/alchemist:src/analyze/source.rs",
+    "//bazel/portage/bin/alchemist:src/analyze/tests.rs",
     "//bazel/portage/bin/alchemist:src/bash/expr/eval.rs",
     "//bazel/portage/bin/alchemist:src/bash/expr/mod.rs",
     "//bazel/portage/bin/alchemist:src/bash/expr/parser.rs",

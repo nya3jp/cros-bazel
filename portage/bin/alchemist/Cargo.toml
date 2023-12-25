@@ -81,5 +81,6 @@ walkdir.workspace = true
 
 [dev-dependencies]
 testutil = { path = "../../common/testutil" }
+shell-escape.workspace = true
 proptest.workspace = true
 pretty_assertions.workspace = true

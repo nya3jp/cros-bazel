@@ -31,6 +31,8 @@ use self::{
 pub mod dependency;
 pub mod restrict;
 pub mod source;
+#[cfg(test)]
+mod tests;
 
 /// Holds rich information about a package.
 pub struct Package {

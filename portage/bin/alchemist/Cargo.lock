@@ -51,6 +51,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "shell-escape",
  "strum",
  "strum_macros",
  "tempfile",

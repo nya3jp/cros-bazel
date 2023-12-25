@@ -16,6 +16,7 @@ ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel/portage/bin/alchemist:src/analyze/mod.rs",
     "@cros//bazel/portage/bin/alchemist:src/analyze/restrict.rs",
     "@cros//bazel/portage/bin/alchemist:src/analyze/source.rs",
+    "@cros//bazel/portage/bin/alchemist:src/analyze/tests.rs",
     "@cros//bazel/portage/bin/alchemist:src/bash/expr/eval.rs",
     "@cros//bazel/portage/bin/alchemist:src/bash/expr/mod.rs",
     "@cros//bazel/portage/bin/alchemist:src/bash/expr/parser.rs",
