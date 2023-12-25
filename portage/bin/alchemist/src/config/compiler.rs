@@ -249,7 +249,7 @@ mod tests {
     use crate::config::ConfigNode;
     use crate::config::ConfigNodeValue;
     use crate::config::SimpleConfigSource;
-    use crate::repository::Repository;
+    use crate::repository::RepositoryLayout;
     use crate::repository::RepositorySet;
     use crate::repository::RepositorySetOperations;
     use nom::lib::std::collections::HashMap;
@@ -261,8 +261,10 @@ mod tests {
         let temp_dir = TempDir::new()?;
         let temp_dir = temp_dir.path();
 
-        let repo = Repository::new_for_testing("test", temp_dir);
-        let repos = RepositorySet::new_for_testing("test", &[repo]);
+        let repos = RepositorySet::load_from_layouts(
+            "test",
+            &[RepositoryLayout::new("test", temp_dir, &[])],
+        )?;
         let repo = repos.get_repo_by_name("test")?;
 
         let sysroot = "/build/amd64-host";

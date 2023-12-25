@@ -368,7 +368,7 @@ ARRAY=(hello, "${WORLD}!")
         )?;
 
         let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
-        let repo = Repository::new_for_testing("test", temp_dir);
+        let repo = Repository::new_no_parents("test", temp_dir);
 
         let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
 
@@ -464,7 +464,7 @@ NOT_INCREMENTAL="not_incremental2"
         )?;
 
         let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
-        let repo = Repository::new_for_testing("test", temp_dir);
+        let repo = Repository::new_no_parents("test", temp_dir);
 
         let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
 
@@ -527,7 +527,7 @@ die "failed failed failed"
         )?;
 
         let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
-        let repo = Repository::new_for_testing("test", temp_dir);
+        let repo = Repository::new_no_parents("test", temp_dir);
 
         // evaluate_metadata should return success even with evaluation errors.
         let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
@@ -578,7 +578,7 @@ assert_var PVR "1.2.3-r99"
         )?;
 
         let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
-        let repo = Repository::new_for_testing("test", temp_dir);
+        let repo = Repository::new_no_parents("test", temp_dir);
 
         let metadata = evaluator.evaluate_metadata(&ebuild_path, &repo)?;
         assert!(
@@ -598,7 +598,7 @@ assert_var PVR "1.2.3-r99"
         let temp_dir = temp_dir.path();
 
         let evaluator = EBuildEvaluator::new(&temp_dir.join("tools"));
-        let repo = Repository::new_for_testing("test", temp_dir);
+        let repo = Repository::new_no_parents("test", temp_dir);
 
         let try_evaluate_metadata = |relative_path: &str| {
             let ebuild_path = temp_dir.join(relative_path);

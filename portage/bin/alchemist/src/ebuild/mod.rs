@@ -350,7 +350,7 @@ mod tests {
 
     use tempfile::TempDir;
 
-    use crate::repository::{Repository, RepositorySet};
+    use crate::repository::{RepositoryLayout, RepositorySet};
 
     use super::*;
 
@@ -365,8 +365,10 @@ mod tests {
         std::fs::create_dir_all(ebuild_path.parent().unwrap())?;
         std::fs::write(&ebuild_path, ebuild_content)?;
 
-        let repo = Repository::new_for_testing("test", temp_dir);
-        let repo_set = RepositorySet::new_for_testing("test", &[repo]);
+        let repo_set = RepositorySet::load_from_layouts(
+            "test",
+            &[RepositoryLayout::new("test", temp_dir, &[])],
+        )?;
 
         let evaluator = CachedEBuildEvaluator::new(
             repo_set.get_repos().into_iter().cloned().collect(),

@@ -133,7 +133,7 @@ mod tests {
 
     use super::*;
 
-    use crate::{repository::Repository, testutils::write_files};
+    use crate::{repository::RepositoryLayout, testutils::write_files};
 
     #[test]
     fn test_load() -> Result<()> {
@@ -170,14 +170,15 @@ mod tests {
             dir.join("build/amd64-generic/etc/portage/make.profile"),
         )?;
 
-        let repos = RepositorySet::new_for_testing(
+        let repos = RepositorySet::load_from_layouts(
             "test",
-            &[Repository::new_for_testing(
+            &[RepositoryLayout::new(
                 "chromiumos",
                 dir.join("mnt/host/source/src/third_party/chromiumos-overlay")
                     .as_path(),
+                &[],
             )],
-        );
+        )?;
 
         let repo_root = dir.join("build/amd64-generic");
         let actual = Profile::load_default(repo_root.as_path(), &repos)?;

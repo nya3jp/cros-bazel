@@ -35,9 +35,9 @@ static LAYOUT_CONF_LINE_RE: Lazy<Regex> =
 
 /// Layout information of a Portage repository that is loaded from `metadata/layout.conf`.
 ///
-/// This struct is used in the middle of loading repositories in [`RepositorySet`].
+/// This struct is used to construct [`RepositorySet`].
 #[derive(Debug)]
-struct RepositoryLayout {
+pub struct RepositoryLayout {
     name: String,
     base_dir: PathBuf,
     parents: Vec<String>,
@@ -45,7 +45,7 @@ struct RepositoryLayout {
 
 impl RepositoryLayout {
     /// Loads `metadata/layout.conf` from a directory.
-    fn load(base_dir: &Path) -> Result<Self> {
+    pub fn load(base_dir: &Path) -> Result<Self> {
         let path = base_dir.join("metadata/layout.conf");
         let context = || format!("Failed to load {}", path.display());
 
@@ -91,12 +91,17 @@ impl RepositoryLayout {
             parents,
         })
     }
-}
 
-/// A map of RepositoryLayout, keyed by repository names.
-///
-/// This map is used in the middle of loading repositories in [`RepositorySet`].
-type RepositoryLayoutMap = HashMap<String, RepositoryLayout>;
+    /// Constructs [`RepositoryLayout`] without reading `metadata/layout.conf`.
+    /// This is useful for unit tests.
+    pub fn new(name: &str, base_dir: &Path, parents: &[&str]) -> Self {
+        Self {
+            name: name.to_string(),
+            base_dir: base_dir.to_path_buf(),
+            parents: parents.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+}
 
 /// Holds [`PathBuf`] of various file paths related to a repository.
 ///
@@ -129,19 +134,24 @@ pub struct Repository {
 }
 
 impl Repository {
-    /// Creates a new [`Repository`] from a repository name and [`RepositoryLayoutMap`].
-    fn new(name: &str, layout_map: &RepositoryLayoutMap) -> Result<Self> {
+    /// Creates a new [`Repository`] from a repository name and a map of [`RepositoryLayout`].
+    fn new<S, L>(name: &str, layout_map: &HashMap<S, L>) -> Result<Self>
+    where
+        S: Borrow<str> + Eq + std::hash::Hash,
+        L: Borrow<RepositoryLayout>,
+    {
         let layout = layout_map
             .get(name)
             .ok_or_else(|| anyhow!("repository {} not found", name))?;
-        let location = RepositoryLocation::new(&layout.base_dir);
+        let location = RepositoryLocation::new(&layout.borrow().base_dir);
         let parents = layout
+            .borrow()
             .parents
             .iter()
             .map(|name| {
                 layout_map
-                    .get(name)
-                    .map(|layout| RepositoryLocation::new(&layout.base_dir))
+                    .get(name.as_str())
+                    .map(|layout| RepositoryLocation::new(&layout.borrow().base_dir))
                     .ok_or_else(|| anyhow!("repository {} not found", name))
             })
             .collect::<Result<Vec<_>>>()?;
@@ -152,11 +162,16 @@ impl Repository {
         })
     }
 
-    pub fn new_for_testing(name: &str, base_dir: &Path) -> Self {
+    /// Creates a [`Repository`] without parents.
+    ///
+    /// This is handy to construct a simple [`Repository`] in unit tests. If you need a
+    /// [`Repository`] with parents, create a [`RepositorySet`] first and get its repositories,
+    /// which ensures consistency among repositories.
+    pub fn new_no_parents(name: &str, base_dir: &Path) -> Self {
         Self {
-            name: name.to_owned(),
+            name: name.to_string(),
             location: RepositoryLocation::new(base_dir),
-            parents: vec![],
+            parents: Vec::new(),
         }
     }
 
@@ -312,23 +327,9 @@ impl<'a> RepositorySetOperations<'a> for RepositorySet {
 }
 
 impl RepositorySet {
-    pub fn new_for_testing(name: &str, repos: &[Repository]) -> Self {
-        let mut order: Vec<String> = Vec::new();
-        let mut repos_map: HashMap<String, Repository> = HashMap::new();
-        for repo in repos {
-            order.push(repo.name.clone());
-            repos_map.insert(repo.name.clone(), repo.clone());
-        }
-        Self {
-            name: name.to_owned(),
-            repos: repos_map,
-            order,
-        }
-    }
-
     /// Loads repositories configured for a configuration root directory.
     ///
-    /// It evaluates `make.conf` in configuration directories tunder `root_dir`
+    /// It evaluates `make.conf` in configuration directories under `root_dir`
     /// to locate the primary repository (from `$PORTDIR`) and secondary
     /// repositories (from `$PORTDIR_OVERLAY`), and then loads those
     /// repositories.
@@ -343,51 +344,78 @@ impl RepositorySet {
         let site_settings = SiteSettings::load(root_dir)?;
         let bootstrap_config = ConfigBundle::from_sources(vec![site_settings]);
 
-        let primary_repo_dir = bootstrap_config
-            .env()
-            .get("PORTDIR")
-            .cloned()
-            .ok_or_else(|| anyhow!("PORTDIR is not defined in system configs"))?;
+        let primary_repo_dir = Path::new(
+            bootstrap_config
+                .env()
+                .get("PORTDIR")
+                .context("PORTDIR is not defined in system configs")?,
+        );
         let secondary_repo_dirs = bootstrap_config
             .env()
             .get("PORTDIR_OVERLAY")
-            .cloned()
-            .unwrap_or_default();
+            .map(|s| s.as_str())
+            .unwrap_or_default()
+            .split_ascii_whitespace()
+            .map(Path::new);
 
+        let repo_dirs: Vec<&Path> = [primary_repo_dir]
+            .into_iter()
+            .chain(secondary_repo_dirs)
+            .collect();
+
+        Self::load_from_dirs(name, &repo_dirs)
+    }
+
+    /// Loads repositories from specified repository directory paths.
+    ///
+    /// It loads `metadata/layout.conf` in the specified directories to construct the repository
+    /// set.
+    ///
+    /// The first repository is the primary repository. Later repositories take precedence over
+    /// former repositories.
+    pub fn load_from_dirs(name: &str, repo_dirs: &[&Path]) -> Result<Self> {
         // Read layout.conf in repositories to build a map from repository names
         // to repository layout info.
-        let mut layout_map = HashMap::<String, RepositoryLayout>::new();
-        let mut order: Vec<String> = Vec::new();
-        for repo_dir in iter::once(primary_repo_dir.borrow())
-            .chain(secondary_repo_dirs.split_ascii_whitespace())
-        {
-            let repo_dir = PathBuf::from(repo_dir);
-            // TODO(b/264959615): Delete this once crossdev is deleted from
-            // the PORTDIR_OVERLAY.
-            if repo_dir == PathBuf::from("/usr/local/portage/crossdev") {
-                eprintln!("Skipping crossdev repo");
-                continue;
-            }
+        let layouts: Vec<RepositoryLayout> = repo_dirs
+            .iter()
+            .filter(|repo_dir| {
+                // TODO(b/264959615): Delete this once crossdev is deleted from
+                // the PORTDIR_OVERLAY.
+                if **repo_dir == Path::new("/usr/local/portage/crossdev") {
+                    eprintln!("Skipping crossdev repo");
+                    return false;
+                }
+                true
+            })
+            .map(|repo_dir| RepositoryLayout::load(repo_dir))
+            .collect::<Result<_>>()?;
 
-            let layout = RepositoryLayout::load(&repo_dir)?;
-            let name = layout.name.to_owned();
-            if let Some(old_layout) = layout_map.insert(name.to_owned(), layout) {
+        Self::load_from_layouts(name, &layouts)
+    }
+
+    /// Loads repositories from parsed [`RepositoryLayout`]s.
+    ///
+    /// The first repository is the primary repository. Later repositories take precedence over
+    /// former repositories.
+    pub fn load_from_layouts(name: &str, layouts: &[RepositoryLayout]) -> Result<Self> {
+        let mut layout_map: HashMap<&str, &RepositoryLayout> = HashMap::new();
+        for layout in layouts {
+            if let Some(old_layout) = layout_map.insert(layout.name.as_str(), layout) {
                 bail!(
                     "multiple repositories have the same name: {}",
                     old_layout.name
                 );
             }
-            order.push(name);
         }
 
+        let order: Vec<String> = layouts.iter().map(|layout| layout.name.clone()).collect();
         if order.is_empty() {
-            bail!("Repository contains no overlays");
+            bail!("RepositorySet contains no repository");
         }
 
-        // Finally, build a map from repository names to Repository objects,
-        // resolving references.
-        let repos: HashMap<String, Repository> = layout_map
-            .keys()
+        // Build a map from repository names to Repository objects, resolving references.
+        let repos = order
+            .iter()
             .map(|name| Repository::new(name, &layout_map))
             .collect::<Result<Vec<_>>>()?
             .into_iter()
