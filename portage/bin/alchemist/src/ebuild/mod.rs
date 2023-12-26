@@ -375,7 +375,7 @@ mod tests {
             &temp_dir.join("tools"),
         );
 
-        let config = ConfigBundle::new_empty_for_testing();
+        let config = ConfigBundle::new_for_testing("riscv");
         let loader = PackageLoader::new(Arc::new(evaluator), Arc::new(config), false);
 
         loader.load_package(&ebuild_path)

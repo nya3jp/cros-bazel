@@ -177,15 +177,13 @@ impl ConfigBundle {
         }
     }
 
-    /// Creates an empty [`ConfigBundle`] suitable for unit testing.
-    pub fn new_empty_for_testing() -> Self {
-        const FAKE_ARCH: &str = "riscv";
-
+    /// Creates a minimal [`ConfigBundle`] suitable for unit testing.
+    pub fn new_for_testing(arch: &str) -> Self {
         Self::from_sources([SimpleConfigSource::new(vec![ConfigNode {
             sources: vec![PathBuf::from("<fake>")],
             value: ConfigNodeValue::Vars(HashMap::from_iter([
-                ("ARCH".into(), FAKE_ARCH.into()),
-                ("ACCEPT_KEYWORDS".into(), FAKE_ARCH.into()),
+                ("ARCH".into(), arch.into()),
+                ("ACCEPT_KEYWORDS".into(), arch.into()),
             ])),
         }])])
     }
