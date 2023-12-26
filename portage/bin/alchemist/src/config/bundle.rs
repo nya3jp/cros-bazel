@@ -71,7 +71,7 @@ const BUILTIN_INCREMENTAL_VARIABLES: &[BuiltinIncrementalVariable] = &[
     },
     BuiltinIncrementalVariable {
         name: "USE_EXPAND_UNPREFIXED",
-        defaults: "",
+        defaults: "ARCH",
     },
     BuiltinIncrementalVariable {
         name: "ENV_UNSET",
