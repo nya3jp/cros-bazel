@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use alchemist::analyze::dependency::direct::analyze_direct_dependencies;
+use alchemist::bash::vars::BashValue;
 use alchemist::dependency::package::PackageAtom;
 use alchemist::ebuild::{MaybePackageDetails, PackageDetails, PackageReadiness};
 use alchemist::resolver::select_best_version;
-use alchemist::{analyze::dependency::analyze_dependencies, bash::vars::BashValue};
 use anyhow::{Context, Result};
 use colored::Colorize;
 use itertools::Itertools;
@@ -119,13 +120,13 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
                     .join(" ")
             );
 
-            match analyze_dependencies(&details, cross_compile, &host.resolver, resolver) {
+            match analyze_direct_dependencies(&details, cross_compile, &host.resolver, resolver) {
                 Ok(deps) => {
-                    dump_deps("BDEPEND", &deps.build_host_deps);
-                    dump_deps("IDEPEND", &deps.install_host_deps);
-                    dump_deps("DEPEND", &deps.build_deps);
-                    dump_deps("RDEPEND", &deps.runtime_deps);
-                    dump_deps("PDEPEND", &deps.post_deps);
+                    dump_deps("BDEPEND", &deps.build_host);
+                    dump_deps("IDEPEND", &deps.install_host);
+                    dump_deps("DEPEND", &deps.build_target);
+                    dump_deps("RDEPEND", &deps.run_target);
+                    dump_deps("PDEPEND", &deps.post_target);
                 }
                 Err(err) => {
                     println!("WARNING: Failed to analyze dependencies: {:#}", err);

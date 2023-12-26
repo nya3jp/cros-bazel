@@ -45,11 +45,11 @@ pub fn get_extra_dependencies(
     let extra = match (details.as_basic_data().package_name.as_str(), kind) {
         // poppler seems to support building without Boost, but the build fails
         // without it.
-        ("app-text/poppler", DependencyKind::Build) => "dev-libs/boost",
+        ("app-text/poppler", DependencyKind::BuildTarget) => "dev-libs/boost",
         // m2crypt fails to build for missing Python.h.
-        ("dev-python/m2crypto", DependencyKind::Build) => "dev-lang/python:3.8",
+        ("dev-python/m2crypto", DependencyKind::BuildTarget) => "dev-lang/python:3.8",
         // xau.pc contains "Requires: xproto", so it should be listed as RDEPEND.
-        ("x11-libs/libXau", DependencyKind::Run) => "x11-base/xorg-proto",
+        ("x11-libs/libXau", DependencyKind::RunTarget) => "x11-base/xorg-proto",
 
         // x11-misc/compose-tables requires the unprefixed cpp located at
         // /usr/bin/cpp. This symlink points to `clang-cpp`, but the symlink
@@ -267,7 +267,7 @@ pub fn get_extra_dependencies(
 
         /* TODO: I lost the error message */
         ("sys-fs/lvm2", DependencyKind::BuildHost) => "sys-apps/which sys-devel/binutils",
-        ("x11-misc/compose-tables", DependencyKind::Build) => "x11-misc/util-macros",
+        ("x11-misc/compose-tables", DependencyKind::BuildTarget) => "x11-misc/util-macros",
 
         /*
          * pkg_resources.DistributionNotFound: The 'pip' distribution was not found and is required by the application
@@ -322,7 +322,7 @@ pub fn get_extra_dependencies(
         ("media-libs/opencv", DependencyKind::BuildHost) => "dev-libs/protobuf",
 
         /* We need to upgrade distutils-r1 to latest from upstream */
-        ("dev-util/meson", DependencyKind::Run) => "dev-python/setuptools",
+        ("dev-util/meson", DependencyKind::RunTarget) => "dev-python/setuptools",
 
         /*
          * checking for curl-config... no

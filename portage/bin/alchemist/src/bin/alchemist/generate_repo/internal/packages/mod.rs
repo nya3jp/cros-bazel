@@ -296,7 +296,7 @@ impl EBuildEntry {
                     package
                         .build_host_deps
                         .iter()
-                        .chain(package.dependencies.build_deps.iter())
+                        .chain(package.dependencies.direct.build_target.iter())
                         .unique_by(|details| &details.as_basic_data().ebuild_path),
                     host.sdk_provided_packages,
                 );
@@ -346,7 +346,10 @@ impl EBuildEntry {
             PackageType::Host { .. } => Vec::new(),
             PackageType::CrossRoot { target, .. } => {
                 // TODO: Add support for stripping the Board SDK's packages.
-                format_dependencies(target.prefix, package.dependencies.build_deps.iter())?
+                format_dependencies(
+                    target.prefix,
+                    package.dependencies.direct.build_target.iter(),
+                )?
             }
         };
 
@@ -354,15 +357,16 @@ impl EBuildEntry {
         // if it is the same for the binary and test targets.
         let target_test_deps = match &target {
             PackageType::Host { .. } => Vec::new(),
-            PackageType::CrossRoot { target, .. } => {
-                format_dependencies(target.prefix, package.dependencies.test_deps.iter())?
-            }
+            PackageType::CrossRoot { target, .. } => format_dependencies(
+                target.prefix,
+                package.dependencies.direct.test_target.iter(),
+            )?,
         };
 
         let (runtime_deps, provided_runtime_deps) = match &target {
             PackageType::Host(host) => {
                 let (runtime_deps, provided_runtime_deps) = partition_provided(
-                    package.dependencies.runtime_deps.iter(),
+                    package.dependencies.direct.run_target.iter(),
                     host.sdk_provided_packages,
                 );
 
@@ -374,7 +378,7 @@ impl EBuildEntry {
                 (runtime_deps, provided_runtime_deps)
             }
             PackageType::CrossRoot { target, .. } => (
-                format_dependencies(target.prefix, package.dependencies.runtime_deps.iter())?,
+                format_dependencies(target.prefix, package.dependencies.direct.run_target.iter())?,
                 Vec::new(),
             ),
         };

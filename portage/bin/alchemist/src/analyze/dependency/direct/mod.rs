@@ -26,23 +26,35 @@ use self::{
 /// [`PackageDependency`] that can contain complex expressions such as any-of.
 #[derive(Clone, Debug)]
 pub struct DirectDependencies {
-    pub build_deps: Vec<Arc<PackageDetails>>,
-    pub test_deps: Vec<Arc<PackageDetails>>,
-    pub runtime_deps: Vec<Arc<PackageDetails>>,
-    pub post_deps: Vec<Arc<PackageDetails>>,
-    pub build_host_deps: Vec<Arc<PackageDetails>>,
-    pub install_host_deps: Vec<Arc<PackageDetails>>,
+    /// Target packages to install before building the package, aka DEPEND.
+    pub build_target: Vec<Arc<PackageDetails>>,
+
+    /// Target packages to install before running tests of the package.
+    pub test_target: Vec<Arc<PackageDetails>>,
+
+    /// Target packages to install before making the package usable, aka RDEPEND.
+    pub run_target: Vec<Arc<PackageDetails>>,
+
+    /// Target packages to install to make the package usable (the order does not matter),
+    /// aka PDEPEND.
+    pub post_target: Vec<Arc<PackageDetails>>,
+
+    /// Host packages to install before building the package, aka BDEPEND.
+    pub build_host: Vec<Arc<PackageDetails>>,
+
+    /// Host packages to install before installing the package, aaka IDEPEND.
+    pub install_host: Vec<Arc<PackageDetails>>,
 }
 
 /// Represents a package dependency type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum DependencyKind {
     /// Build-time dependencies, aka "DEPEND" in Portage.
-    Build,
+    BuildTarget,
     /// Run-time dependencies, aka "RDEPEND" in Portage.
-    Run,
+    RunTarget,
     /// Post-time dependencies, aka "PDEPEND" in Portage.
-    Post,
+    PostTarget,
     /// Build-time host tool dependencies, aka "BDEPEND" in Portage.
     BuildHost,
     /// Install-time host tool dependencies, aka "IDEPEND" in Portage.
@@ -76,9 +88,9 @@ fn extract_dependencies_use(
     allow_list: Option<&[&str]>,
 ) -> Result<Vec<Arc<PackageDetails>>> {
     let var_name = match kind {
-        DependencyKind::Build => "DEPEND",
-        DependencyKind::Run => "RDEPEND",
-        DependencyKind::Post => "PDEPEND",
+        DependencyKind::BuildTarget => "DEPEND",
+        DependencyKind::RunTarget => "RDEPEND",
+        DependencyKind::PostTarget => "PDEPEND",
         DependencyKind::BuildHost => "BDEPEND",
         DependencyKind::InstallHost => "IDEPEND",
     };
@@ -100,9 +112,9 @@ pub fn analyze_direct_dependencies(
     host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
 ) -> Result<DirectDependencies> {
-    let build_deps = extract_dependencies(
+    let build_target_deps = extract_dependencies(
         details,
-        DependencyKind::Build,
+        DependencyKind::BuildTarget,
         cross_compile,
         target_resolver,
         None,
@@ -115,7 +127,7 @@ pub fn analyze_direct_dependencies(
         )
     })?;
 
-    let test_deps = if details.use_map.contains_key("test") {
+    let test_target_deps = if details.use_map.contains_key("test") {
         let mut test_use_map = details.use_map.clone();
         test_use_map.insert("test".into(), true);
         // Hack: We often (more than 100 packages) fail to resolve test-only
@@ -128,21 +140,21 @@ pub fn analyze_direct_dependencies(
         let test_deps_result = extract_dependencies_use(
             details,
             &test_use_map,
-            DependencyKind::Build,
+            DependencyKind::BuildTarget,
             cross_compile,
             target_resolver,
             None,
         );
-        test_deps_result.unwrap_or(build_deps.clone())
+        test_deps_result.unwrap_or(build_target_deps.clone())
     } else {
         // The ebuild does not care about use flag, so test deps are the same
         // as build deps.
-        build_deps.clone()
+        build_target_deps.clone()
     };
 
-    let runtime_deps = extract_dependencies(
+    let run_target_deps = extract_dependencies(
         details,
-        DependencyKind::Run,
+        DependencyKind::RunTarget,
         cross_compile,
         target_resolver,
         None,
@@ -181,7 +193,7 @@ pub fn analyze_direct_dependencies(
             // resolver. i.e. `libchrome[cros_debug=]`.
             let build_deps_for_host = extract_dependencies(
                 details,
-                DependencyKind::Build,
+                DependencyKind::BuildTarget,
                 cross_compile,
                 host_resolver,
                 Some(&DEPEND_AS_BDEPEND_ALLOW_LIST),
@@ -225,10 +237,10 @@ pub fn analyze_direct_dependencies(
     // They also need to be listed as RDPEND so they get pulled in as transitive
     // deps.
     // TODO: Fix ebuilds and remove this hack.
-    let runtime_deps = if is_rust_source_package(details) {
-        runtime_deps
+    let run_target_deps = if is_rust_source_package(details) {
+        run_target_deps
             .into_iter()
-            .chain(build_deps.clone().into_iter())
+            .chain(build_target_deps.clone().into_iter())
             .sorted_by(|a, b| {
                 a.as_basic_data()
                     .package_name
@@ -241,12 +253,12 @@ pub fn analyze_direct_dependencies(
             })
             .collect()
     } else {
-        runtime_deps
+        run_target_deps
     };
 
-    let post_deps = extract_dependencies(
+    let post_target_deps = extract_dependencies(
         details,
-        DependencyKind::Post,
+        DependencyKind::PostTarget,
         cross_compile,
         target_resolver,
         None,
@@ -260,11 +272,11 @@ pub fn analyze_direct_dependencies(
     })?;
 
     Ok(DirectDependencies {
-        build_deps,
-        test_deps,
-        runtime_deps,
-        post_deps,
-        build_host_deps,
-        install_host_deps,
+        build_target: build_target_deps,
+        test_target: test_target_deps,
+        run_target: run_target_deps,
+        post_target: post_target_deps,
+        build_host: build_host_deps,
+        install_host: install_host_deps,
     })
 }

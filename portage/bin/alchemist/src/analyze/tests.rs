@@ -153,12 +153,12 @@ impl From<MaybePackage> for MaybePackageDescription {
         Self::Ok {
             package_name_version,
             dependencies: PackageDependenciesDescription {
-                build_target: describe_package_list(&deps.build_deps),
-                test_target: describe_package_list(&deps.test_deps),
-                run_target: describe_package_list(&deps.runtime_deps),
-                post_target: describe_package_list(&deps.post_deps),
-                build_host: describe_package_list(&deps.build_host_deps),
-                install_host: describe_package_list(&deps.install_host_deps),
+                build_target: describe_package_list(&deps.direct.build_target),
+                test_target: describe_package_list(&deps.direct.test_target),
+                run_target: describe_package_list(&deps.direct.run_target),
+                post_target: describe_package_list(&deps.direct.post_target),
+                build_host: describe_package_list(&deps.direct.build_host),
+                install_host: describe_package_list(&deps.direct.install_host),
                 install_set: describe_package_list(&package.install_set),
                 build_host_set: describe_package_list(&package.build_host_deps),
             },

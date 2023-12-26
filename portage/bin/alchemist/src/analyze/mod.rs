@@ -24,7 +24,7 @@ use crate::{
 };
 
 use self::{
-    dependency::{analyze_dependencies, PackageDependencies},
+    dependency::direct::{analyze_direct_dependencies, DirectDependencies},
     source::{analyze_sources, PackageSources},
 };
 
@@ -33,6 +33,10 @@ pub mod restrict;
 pub mod source;
 #[cfg(test)]
 mod tests;
+
+pub struct PackageDependencies {
+    pub direct: DirectDependencies,
+}
 
 /// Holds rich information about a package.
 pub struct Package {
@@ -142,7 +146,7 @@ impl AsPackageRef for MaybePackage {
 /// Results of package-local analysis, i.e. analysis that can be performed independently of other
 /// packages.
 struct PackageLocalAnalysis {
-    pub dependencies: PackageDependencies,
+    pub direct_dependencies: DirectDependencies,
     pub sources: PackageSources,
     pub bashrcs: Vec<PathBuf>,
 }
@@ -188,8 +192,8 @@ fn find_install_map<'a>(
         Err(_) => return,
     };
 
-    let deps = &local.dependencies;
-    let installs = deps.runtime_deps.iter().chain(deps.post_deps.iter());
+    let deps = &local.direct_dependencies;
+    let installs = deps.run_target.iter().chain(deps.post_target.iter());
     for install in installs {
         find_install_map(local_map, install, install_map);
     }
@@ -215,7 +219,7 @@ fn compute_host_build_deps(
         Err(_) => return Vec::new(),
     };
 
-    for build_dep in &local.dependencies.build_deps {
+    for build_dep in &local.direct_dependencies.build_target {
         find_install_map(local_map, build_dep, &mut build_dep_runtime_deps);
     }
 
@@ -228,8 +232,8 @@ fn compute_host_build_deps(
                 .as_ref()
                 .ok()
         })
-        .flat_map(|local| &local.dependencies.install_host_deps)
-        .chain(&local.dependencies.build_host_deps)
+        .flat_map(|local| &local.direct_dependencies.install_host)
+        .chain(&local.direct_dependencies.build_host)
         .sorted_by_key(|details| &details.as_basic_data().ebuild_path)
         .unique_by(|details| &details.as_basic_data().ebuild_path)
         .cloned()
@@ -261,12 +265,12 @@ fn analyze_local(
             // dependency error.
             bail!("The package is masked: {}", reason);
         }
-        let dependencies =
-            analyze_dependencies(details, cross_compile, host_resolver, target_resolver)?;
+        let direct_dependencies =
+            analyze_direct_dependencies(details, cross_compile, host_resolver, target_resolver)?;
         let sources = analyze_sources(config, details, src_dir)?;
         let bashrcs = config.package_bashrcs(&details.as_package_ref());
         Ok(PackageLocalAnalysis {
-            dependencies,
+            direct_dependencies,
             sources,
             bashrcs,
         })
@@ -421,7 +425,9 @@ pub fn analyze_packages(
                 (MaybePackageDetails::Ok(details), Ok(local), Ok(global)) => {
                     MaybePackage::Ok(Arc::new(Package {
                         details,
-                        dependencies: local.dependencies,
+                        dependencies: PackageDependencies {
+                            direct: local.direct_dependencies,
+                        },
                         sources: local.sources,
                         bashrcs: local.bashrcs,
                         install_set: global.install_set,
