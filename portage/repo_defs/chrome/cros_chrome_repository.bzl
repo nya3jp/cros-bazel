@@ -143,6 +143,22 @@ def _cros_chrome_repository_impl(ctx):
     # Remove CIPD cache files to make this hermetic.
     ctx.delete("src/third_party/depot_tools/.cipd_bin/.cipd")
 
+    # Remove CIPD cache files in src/third_party/depot_tools/bootstrap-*_bin/.cipd
+    for path in _exec(
+        ctx,
+        [
+            "find",
+            "src/third_party/depot_tools",
+            "-maxdepth",
+            "1",
+            "-type",
+            "d",
+            "-name",
+            "bootstrap-*_bin",
+        ],
+    ).strip("\n").split("\n"):
+        ctx.delete(paths.join(path, ".cipd"))
+
     # Remove depot_tools/metrics.cfg because its contents can be different for
     # each user and it's unecessary.
     ctx.delete("src/third_party/depot_tools/metrics.cfg")
