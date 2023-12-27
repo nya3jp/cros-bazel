@@ -64,6 +64,15 @@ struct Cli {
     #[arg(long)]
     incremental_cache_dir: Option<PathBuf>,
 
+    /// Directory to store ccache artifacts
+    #[arg(long)]
+    ccache_dir: Option<PathBuf>,
+
+    /// Enable ccache. Use with --ccache-dir to allow the cache to
+    /// be persisted.
+    #[arg(long)]
+    ccache: bool,
+
     #[arg(long)]
     output: Option<PathBuf>,
 
@@ -364,6 +373,16 @@ fn do_main() -> Result<()> {
         });
     }
 
+    if args.ccache {
+        if let Some(ccache_dir) = args.ccache_dir {
+            settings.push_bind_mount(BindMount {
+                mount_path: PathBuf::from("/var/cache/distfiles/ccache"),
+                source: ccache_dir,
+                rw: true,
+            });
+        }
+    }
+
     let mut envs: Vec<(Cow<OsStr>, Cow<OsStr>)> = Vec::new();
 
     if args.ebuild.category == "chromeos-base" && args.ebuild.package_name == "chromeos-chrome" {
@@ -520,6 +539,13 @@ fn do_main() -> Result<()> {
     if let Some(board) = args.board {
         command.env("BOARD", board);
     }
+
+    // Always set COMPILER_WRAPPER_FORCE_CCACHE.
+    // Our config should take precedence to compiler_wrapper's own default.
+    command.env(
+        "COMPILER_WRAPPER_FORCE_CCACHE",
+        if args.ccache { "1" } else { "0" },
+    );
 
     let status = command.status()?;
     collect_reclient_log_files(container.root_dir())
