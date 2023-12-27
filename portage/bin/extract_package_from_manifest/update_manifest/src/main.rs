@@ -29,45 +29,33 @@ static EXTRACTOR: &str =
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
 struct Cli {
-    #[arg(long, help = "The command to execute to regenerate the manifest")]
+    /// The command to execute to regenerate the manifest
+    #[arg(long)]
     regenerate_command: String,
 
-    #[arg(
-        long,
-        help = "The path to a json file containing Vec<BinaryPackageInfo>"
-    )]
+    /// The path to a json file containing Vec<BinaryPackageInfo>
+    #[arg(long)]
     binary_package_infos: PathBuf,
 
-    #[arg(
-        long,
-        required = true,
-        help = "The path to a .bzl file that we write the manifest to"
-    )]
+    /// The path to a .bzl file that we write the manifest to
+    #[arg(long, required = true)]
     manifest_out: PathBuf,
 
-    #[arg(
-        long,
-        help = "Updates the corresponding variable in the manifest file."
-    )]
+    /// Updates the corresponding variable in the manifest file.
+    #[arg(long)]
     manifest_variable: String,
 
-    #[arg(
-        long,
-        help = "Similar to $LD_LIBRARY_PATH, but regexes instead of files."
-    )]
+    /// Similar to $LD_LIBRARY_PATH, but regexes instead of files.
+    #[arg(long)]
     pub ld_library_path_regex: Vec<Regex>,
 
-    #[arg(
-        long,
-        help = "A regex matching all header file directories we care about."
-    )]
+    /// A regex matching all header file directories we care about.
+    #[arg(long)]
     pub header_file_dir_regex: Vec<Regex>,
 
-    #[arg(
-        long,
-        help = "If provided, instead of updating a local manifest, updates a manifest stored in a \
-        GS bucket."
-    )]
+    /// If provided, instead of updating a local manifest, updates a manifest stored in a
+    /// GS bucket.
+    #[arg(long)]
     pub remote_prebuilt_name: Option<String>,
 }
 

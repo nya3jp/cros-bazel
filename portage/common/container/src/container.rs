@@ -89,33 +89,29 @@ impl BindMount {
 /// ```
 #[derive(Clone, Debug, clap::Args)]
 pub struct CommonArgs {
-    #[arg(
-        long,
-        help = "Adds a file system layer to be mounted in the container."
-    )]
+    /// Adds a file system layer to be mounted in the container.
+    #[arg(long)]
     pub layer: Vec<PathBuf>,
 
+    /// Internal flag used to differentiate between a normal
+    /// invocation and a user invocation. i.e., _debug targets
     #[arg(
         long,
-        help = "Internal flag used to differentiate between a normal \
-            invocation and a user invocation. i.e., _debug targets",
         hide = true, // We only want the _debug targets setting this flag.
     )]
     pub interactive: bool,
 
+    /// Logs in to the SDK before installing deps, before building,
+    /// after building, or after failing to build respectively.
     #[arg(
         long,
-        help = "Logs in to the SDK before installing deps, before building, \
-            after building, or after failing to build respectively.",
         default_value_if("interactive", "true", Some("after")),
         default_value_t = LoginMode::Never,
     )]
     pub login: LoginMode,
 
-    #[arg(
-        long,
-        help = "Keeps the host file system at /host. Use for debuggin only."
-    )]
+    /// Keeps the host file system at /host. Use for debuggin only.
+    #[arg(long)]
     pub keep_host_mount: bool,
 }
 

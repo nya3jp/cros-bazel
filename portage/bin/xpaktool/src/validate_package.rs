@@ -33,24 +33,23 @@ fn use_flag_arg_parser(
 /// Performs validations on a binpkg.
 #[derive(Parser, Debug, PartialEq, Eq)]
 pub struct ValidatePackageArgs {
-    #[arg(long, help = "Portage binary packages to validate")]
+    /// Portage binary packages to validate
+    #[arg(long)]
     package: PathBuf,
 
+    /// Comma separated list of USE flags the package should have been built with.
     #[arg(
         long,
-        help = "Comma separated list of USE flags the package should have been built with.",
         value_parser = use_flag_arg_parser,
     )]
     use_flags: Option<HashMap<String, bool>>,
 
-    #[arg(
-        long,
-        help = "Bazel requires a file to be generated for all actions",
-        hide = true
-    )]
+    /// Bazel requires a file to be generated for all actions
+    #[arg(long, hide = true)]
     touch: Option<PathBuf>,
 
-    #[arg(long, help = "Do not exit abnormally on finding package differences")]
+    /// Do not exit abnormally on finding package differences
+    #[arg(long)]
     report_only: bool,
 }
 

@@ -43,45 +43,44 @@ struct Cli {
     #[arg(long)]
     distfile: Vec<BindMount>,
 
-    #[arg(long, help = "Git trees used by CROS_WORKON_TREE")]
+    /// Git trees used by CROS_WORKON_TREE
+    #[arg(long)]
     git_tree: Vec<PathBuf>,
 
-    #[arg(
-        long,
-        help = "USE flags to set when building. \
-                This must be the full set of all possible USE flags. i.e., IUSE_EFFECTIVE",
-        value_delimiter = ','
-    )]
+    /// USE flags to set when building.
+    /// This must be the full set of all possible USE flags. i.e., IUSE_EFFECTIVE
+    #[arg(long, value_delimiter = ',')]
     use_flags: Vec<String>,
 
-    #[arg(long, help = "The bashrc files to execute. The path must be absolute.")]
+    /// The bashrc files to execute. The path must be absolute.
+    #[arg(long)]
     bashrc: Vec<PathBuf>,
 
-    #[arg(
-        long,
-        help = "Points to a named pipe that is used for the GNU Make jobserver."
-    )]
+    /// Points to a named pipe that is used for the GNU Make jobserver.
+    #[arg(long)]
     jobserver: Option<PathBuf>,
 
-    #[arg(long, help = "Directory to store incremental ebuild artifacts")]
+    /// Directory to store incremental ebuild artifacts
+    #[arg(long)]
     incremental_cache_dir: Option<PathBuf>,
 
     #[arg(long)]
     output: Option<PathBuf>,
 
-    #[arg(
-        long,
-        help = "<inside path>=<outside path>: Copies the outside file into the sysroot"
-    )]
+    /// <inside path>=<outside path>: Copies the outside file into the sysroot
+    #[arg(long)]
     sysroot_file: Vec<SysrootFileSpec>,
 
-    #[arg(long, help = "Allows network access during build")]
+    /// Allows network access during build
+    #[arg(long)]
     allow_network_access: bool,
 
-    #[arg(long, help = "Goma-related info encoded as JSON.")]
+    /// Goma-related info encoded as JSON.
+    #[arg(long)]
     goma_info: PathBuf,
 
-    #[arg(long, help = "Remoteexec-related info encoded as JSON.")]
+    /// Remoteexec-related info encoded as JSON.
+    #[arg(long)]
     remoteexec_info: PathBuf,
 
     #[arg(long)]

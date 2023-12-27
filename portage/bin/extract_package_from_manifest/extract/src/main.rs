@@ -13,33 +13,29 @@ use std::{fs::File, io::BufReader, path::PathBuf, process::ExitCode};
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
 struct Cli {
-    #[arg(
-        long,
-        help = "The command to execute to fix an incorrect set of files in \
-        the interface"
-    )]
+    /// The command to execute to fix an incorrect set of files in
+    /// the interface
+    #[arg(long)]
     regenerate_command: String,
 
-    #[arg(long, required = true, help = "The binary package to unpack")]
+    /// The binary package to unpack
+    #[arg(long, required = true)]
     binpkg: PathBuf,
 
-    #[arg(
-        long,
-        required = true,
-        help = "The path to a json file containing the expected package contents"
-    )]
+    /// The path to a json file containing the expected package contents
+    #[arg(long, required = true)]
     manifest: PathBuf,
 
-    #[arg(long, help = "The directory to output to")]
+    /// The directory to output to
+    #[arg(long)]
     out_dir: PathBuf,
 
-    #[arg(long, help = "Equivalent to the bash variable $LD_LIBRARY_PATH.")]
+    /// Equivalent to the bash variable $LD_LIBRARY_PATH.
+    #[arg(long)]
     ld_library_path: Vec<PathBuf>,
 
-    #[arg(
-        long,
-        help = "A regex matching all header file directories we care about."
-    )]
+    /// A regex matching all header file directories we care about.
+    #[arg(long)]
     pub header_file_dir_regex: Vec<Regex>,
 }
 

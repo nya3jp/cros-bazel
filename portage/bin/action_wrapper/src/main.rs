@@ -26,41 +26,34 @@ const SUDO_PATH: &str = "/usr/bin/sudo";
     about = "General-purpose wrapper of programs implementing Bazel actions.",
     author, version, about, long_about=None, trailing_var_arg = true)]
 struct Cli {
-    #[arg(
-        help = "If set, redirects stdout/stderr of the wrapped process to \
-            the specified file, and print it to stderr only when it exits \
-            abnormally.",
-        long
-    )]
+    /// If set, redirects stdout/stderr of the wrapped process to
+    /// the specified file, and print it to stderr only when it exits
+    /// abnormally.
+    #[arg(long)]
     log: Option<PathBuf>,
 
-    #[arg(
-        help = "If set, sets up environment variables of the wrapped process \
-            so that it and its subprocesses records tracing data, and collects \
-            them into a single Chrome tracing JSON file at the specified path.",
-        long
-    )]
+    /// If set, sets up environment variables of the wrapped process
+    /// so that it and its subprocesses records tracing data, and collects
+    /// them into a single Chrome tracing JSON file at the specified path.
+    #[arg(long)]
     profile: Option<PathBuf>,
 
-    #[arg(
-        help = "Runs the wrapped process with privilege using sudo. This \
-            assumes that we can run sudo without password, so typically this \
-            option works only within legacy CrOS chroot. Use this option only \
-            for temporary workaround during Alchemy development.",
-        long
-    )]
+    /// Runs the wrapped process with privilege using sudo. This
+    /// assumes that we can run sudo without password, so typically this
+    /// option works only within legacy CrOS chroot. Use this option only
+    /// for temporary workaround during Alchemy development.
+    #[arg(long)]
     privileged: bool,
 
-    #[arg(
-        help = "Specifies output files of the wrapped process. It can be \
-            repeated multiple times. These files will be processed with \
-            `sudo chown` after the wrapped process finishes so that Bazel \
-            can access those files.",
-        long
-    )]
+    /// Specifies output files of the wrapped process. It can be
+    /// repeated multiple times. These files will be processed with
+    /// `sudo chown` after the wrapped process finishes so that Bazel
+    /// can access those files.
+    #[arg(long)]
     privileged_output: Vec<PathBuf>,
 
-    #[arg(help = "Command line of the wrapped process.", required = true)]
+    /// Command line of the wrapped process.
+    #[arg(required = true)]
     command_line: Vec<String>,
 }
 

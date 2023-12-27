@@ -10,10 +10,12 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[clap()]
 struct Cli {
-    #[arg(help = "The runfiles path to the manifest", long)]
+    /// The runfiles path to the manifest
+    #[arg(long)]
     manifest: String,
 
-    #[arg(help = "The directory to install to", long)]
+    /// The directory to install to
+    #[arg(long)]
     install_dir: PathBuf,
 }
 

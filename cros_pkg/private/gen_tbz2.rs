@@ -38,13 +38,20 @@ xattr";
 #[derive(Parser)]
 #[clap()]
 struct Cli {
-    #[arg(help = "Category (eg. 'chromeos-base')", long)]
+    /// Category (eg. 'chromeos-base')
+    #[arg(long)]
     category: String,
-    #[arg(help = "Package name (eg. 'goldctl')", long)]
+
+    /// Package name (eg. 'goldctl')
+    #[arg(long)]
     package_name: String,
-    #[arg(help = "Package version (eg. '1.0.0-r1')", long)]
+
+    /// Package version (eg. '1.0.0-r1')
+    #[arg(long)]
     version: String,
-    #[arg(help = "Slot", long)]
+
+    /// Slot
+    #[arg(long)]
     slot: String,
 }
 

@@ -34,14 +34,13 @@ enum Commands {
 /// Shows XPAK entries in a Portage binary package file.
 #[derive(Parser, Debug)]
 struct ExtractXpakArgs {
-    #[arg(
-        long,
-        help = "Save raw XPAK entries to the specified directory instead of \
-                showing them in the console."
-    )]
+    /// Save raw XPAK entries to the specified directory instead of
+    /// showing them in the console.
+    #[arg(long)]
     dump: Option<PathBuf>,
 
-    #[arg(help = "Portage binary package file.")]
+    /// Portage binary package file.
+    #[arg()]
     binary_package: PathBuf,
 }
 

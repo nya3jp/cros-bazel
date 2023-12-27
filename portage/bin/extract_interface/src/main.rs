@@ -21,18 +21,14 @@ struct Cli {
     #[arg(long, required = true)]
     binpkg: PathBuf,
 
-    #[arg(
-        long,
-        help = "<inside path>=<outside path>: Extracts a file from the binpkg and writes it to \
-        the outside path"
-    )]
+    /// <inside path>=<outside path>: Extracts a file from the binpkg and writes it to
+    /// the outside path
+    #[arg(long)]
     output_file: Vec<OutputFileSpec>,
 
-    #[arg(
-        long,
-        help = "<XPAK key>=[?]<output file>: Write the XPAK key from the binpkg to the \
-    specified file. If =? is used then an empty file is created if XPAK key doesn't exist."
-    )]
+    /// <XPAK key>=[?]<output file>: Write the XPAK key from the binpkg to the
+    /// specified file. If =? is used then an empty file is created if XPAK key doesn't exist.
+    #[arg(long)]
     xpak: Vec<XpakSpec>,
 }
 

@@ -19,9 +19,12 @@ use tempfile::TempDir;
 /// Compares two packages.
 #[derive(Parser, Debug)]
 pub struct ComparePackagesArgs {
-    #[arg(name = "PACKAGE-A", help = "Portage binary packages to compare")]
+    /// Portage binary packages to compare
+    #[arg(name = "PACKAGE-A")]
     package_a: PathBuf,
-    #[arg(name = "PACKAGE-B", help = "Portage binary packages to compare")]
+
+    /// Portage binary packages to compare
+    #[arg(name = "PACKAGE-B")]
     package_b: PathBuf,
 }
 
