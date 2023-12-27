@@ -137,69 +137,31 @@ impl AsPackageRef for MaybePackage {
     }
 }
 
-/// Similar to [`Package`], but only package-local analysis results are available.
-struct PackagePartial {
-    pub details: Arc<PackageDetails>,
+/// Results of package-local analysis, i.e. analysis that can be performed independently of other
+/// packages.
+struct PackageLocalAnalysis {
     pub dependencies: PackageDependencies,
     pub sources: PackageSources,
     pub bashrcs: Vec<PathBuf>,
 }
 
-#[allow(dead_code)]
-impl PackagePartial {
-    pub fn as_basic_data(&self) -> &EBuildBasicData {
-        &self.details.metadata.basic_data
-    }
+type MaybePackageLocalAnalysis = Result<Box<PackageLocalAnalysis>, Arc<PackageAnalysisError>>;
 
-    pub fn as_metadata(&self) -> &EBuildMetadata {
-        &self.details.metadata
-    }
-
-    pub fn as_details(&self) -> &PackageDetails {
-        &self.details
-    }
+/// Results of package-global analysis, i.e. analysis that can be performed only after finishing
+/// package-local analysis of all relevant packages.
+struct PackageGlobalAnalysis {
+    pub install_set: Vec<Arc<PackageDetails>>,
+    pub build_host_deps: Vec<Arc<PackageDetails>>,
 }
 
-impl AsPackageRef for PackagePartial {
-    fn as_package_ref(&self) -> PackageRef {
-        self.details.as_package_ref()
-    }
-}
+type MaybePackageGlobalAnalysis = Result<Box<PackageGlobalAnalysis>, Arc<PackageAnalysisError>>;
 
-/// Represents a partially analyzed package, covering both successful ones and failed ones.
-///
-/// While this enum looks very similar to [`Result`], we don't make it a type alias of [`Result`]
-/// to implement a few convenient methods.
-enum MaybePackagePartial {
-    Ok(Box<PackagePartial>),
-    Err(Arc<PackageAnalysisError>),
-}
-
-#[allow(dead_code)]
-impl MaybePackagePartial {
-    pub fn as_basic_data(&self) -> &EBuildBasicData {
-        match self {
-            MaybePackagePartial::Ok(package) => package.as_basic_data(),
-            MaybePackagePartial::Err(error) => error.as_basic_data(),
-        }
-    }
-}
-
-impl AsPackageRef for MaybePackagePartial {
-    fn as_package_ref(&self) -> PackageRef {
-        match self {
-            MaybePackagePartial::Ok(package) => package.as_package_ref(),
-            MaybePackagePartial::Err(error) => error.as_package_ref(),
-        }
-    }
-}
-
-/// Performs DFS on the dependency graph presented by `partial_by_path` and
+/// Performs DFS on the dependency graph presented by `local_map` and
 /// records the install set of `current` to `install_map`. Note that
 /// `install_map` is a [`HashMap`] because it is used for remembering visited
 /// nodes.
 fn find_install_map<'a>(
-    partial_by_path: &'a HashMap<&Path, &PackagePartial>,
+    local_map: &'a HashMap<PathBuf, MaybePackageLocalAnalysis>,
     current: &'a Arc<PackageDetails>,
     install_map: &mut HashMap<&'a Path, Arc<PackageDetails>>,
 ) {
@@ -213,41 +175,59 @@ fn find_install_map<'a>(
         }
     }
 
-    // PackagePartial can be unavailable when analysis failed for the package
-    // (e.g. failed to flatten RDEPEND). We can just skip traversing the graph
-    // in this case.
-    let current_partial = match partial_by_path.get(current.as_basic_data().ebuild_path.as_path()) {
-        Some(partial) => partial,
-        None => {
-            return;
-        }
+    // PackageLocalAnalysis can be unavailable when analysis failed for the package
+    // (e.g. failed to flatten RDEPEND). We can just skip traversing the graph in this case.
+    // TODO: Handle analysis errors correctly.
+    let local = match local_map
+        .get(current.as_basic_data().ebuild_path.as_path())
+        .expect("local_map is exhaustive")
+    {
+        Ok(local) => local,
+        Err(_) => return,
     };
 
-    let deps = &current_partial.dependencies;
+    let deps = &local.dependencies;
     let installs = deps.runtime_deps.iter().chain(deps.post_deps.iter());
     for install in installs {
-        find_install_map(partial_by_path, install, install_map);
+        find_install_map(local_map, install, install_map);
     }
 }
 
 /// Returns the union of `current`'s `build_host_deps` and the
 /// `install_host_deps` of all the `build_deps` and their transitive
 /// `runtime_deps`.
-fn compute_host_build_deps<'a>(
-    partial_by_path: &'a HashMap<&Path, &PackagePartial>,
-    current: &'a PackagePartial,
+fn compute_host_build_deps(
+    local_map: &HashMap<PathBuf, MaybePackageLocalAnalysis>,
+    current: &PackageDetails,
 ) -> Vec<Arc<PackageDetails>> {
-    let mut build_dep_runtime_deps: HashMap<&'a Path, Arc<PackageDetails>> = HashMap::new();
+    let mut build_dep_runtime_deps: HashMap<&Path, Arc<PackageDetails>> = HashMap::new();
 
-    for build_dep in &current.dependencies.build_deps {
-        find_install_map(partial_by_path, build_dep, &mut build_dep_runtime_deps);
+    // PackageLocalAnalysis can be unavailable when analysis failed for the package
+    // (e.g. failed to flatten RDEPEND). We can just return an empty dependencies in this case.
+    // TODO: Handle analysis errors correctly.
+    let local = match local_map
+        .get(current.as_basic_data().ebuild_path.as_path())
+        .expect("local_map is exhaustive")
+    {
+        Ok(local) => local,
+        Err(_) => return Vec::new(),
+    };
+
+    for build_dep in &local.dependencies.build_deps {
+        find_install_map(local_map, build_dep, &mut build_dep_runtime_deps);
     }
 
     build_dep_runtime_deps
         .into_values()
-        .filter_map(|details| partial_by_path.get(details.as_basic_data().ebuild_path.as_path()))
-        .flat_map(|partial| &partial.dependencies.install_host_deps)
-        .chain(&current.dependencies.build_host_deps)
+        .filter_map(|details| {
+            local_map
+                .get(details.as_basic_data().ebuild_path.as_path())
+                .expect("local_map is exhaustive")
+                .as_ref()
+                .ok()
+        })
+        .flat_map(|local| &local.dependencies.install_host_deps)
+        .chain(&local.dependencies.build_host_deps)
         .sorted_by_key(|details| &details.as_basic_data().ebuild_path)
         .unique_by(|details| &details.as_basic_data().ebuild_path)
         .cloned()
@@ -255,23 +235,23 @@ fn compute_host_build_deps<'a>(
 }
 
 fn analyze_local(
-    details: MaybePackageDetails,
+    details: &MaybePackageDetails,
     config: &ConfigBundle,
     cross_compile: bool,
     src_dir: &Path,
     host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
-) -> MaybePackagePartial {
+) -> MaybePackageLocalAnalysis {
     let details = match details {
         MaybePackageDetails::Ok(details) => details,
         MaybePackageDetails::Err(error) => {
-            return MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
+            return Err(Arc::new(PackageAnalysisError {
                 error: error.error.clone(),
-                details: MaybePackageDetails::Err(error),
+                details: MaybePackageDetails::Err(error.clone()),
             }));
         }
     };
-    let result = (|| -> Result<PackagePartial> {
+    let result = (|| -> Result<PackageLocalAnalysis> {
         if let PackageReadiness::Masked { reason } = &details.readiness {
             // We do not support building masked packages because of
             // edge cases: e.g., if one masked package depends on
@@ -280,20 +260,19 @@ fn analyze_local(
             bail!("The package is masked: {}", reason);
         }
         let dependencies =
-            analyze_dependencies(&details, cross_compile, host_resolver, target_resolver)?;
-        let sources = analyze_sources(config, &details, src_dir)?;
+            analyze_dependencies(details, cross_compile, host_resolver, target_resolver)?;
+        let sources = analyze_sources(config, details, src_dir)?;
         let bashrcs = config.package_bashrcs(&details.as_package_ref());
-        Ok(PackagePartial {
-            details: details.clone(),
+        Ok(PackageLocalAnalysis {
             dependencies,
             sources,
             bashrcs,
         })
     })();
     match result {
-        Ok(package) => MaybePackagePartial::Ok(Box::new(package)),
-        Err(err) => MaybePackagePartial::Err(Arc::new(PackageAnalysisError {
-            details: MaybePackageDetails::Ok(details),
+        Ok(local) => Ok(Box::new(local)),
+        Err(err) => Err(Arc::new(PackageAnalysisError {
+            details: MaybePackageDetails::Ok(details.clone()),
             error: format!("{err:#}"),
         })),
     }
@@ -301,31 +280,44 @@ fn analyze_local(
 
 /// Runs package-local analysis, i.e. analysis that can be done independently of other packages.
 fn analyze_locals(
-    all_details: Vec<MaybePackageDetails>,
+    all_details: &[MaybePackageDetails],
     config: &ConfigBundle,
     cross_compile: bool,
     src_dir: &Path,
     host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
-) -> Vec<MaybePackagePartial> {
+) -> HashMap<PathBuf, MaybePackageLocalAnalysis> {
     // Analyze packages in parallel.
     all_details
         .into_par_iter()
         .map(|details| {
-            analyze_local(
+            let local = analyze_local(
                 details,
                 config,
                 cross_compile,
                 src_dir,
                 host_resolver,
                 target_resolver,
-            )
+            );
+            (details.as_basic_data().ebuild_path.clone(), local)
         })
         .collect()
 }
 
-/// Runs package-global analysis, i.e. analysis taking other packages into account.
-fn analyze_globals(all_partials: Vec<MaybePackagePartial>) -> Vec<MaybePackage> {
+fn analyze_global(
+    details: &MaybePackageDetails,
+    local_map: &HashMap<PathBuf, MaybePackageLocalAnalysis>,
+) -> MaybePackageGlobalAnalysis {
+    let details = match details {
+        MaybePackageDetails::Ok(details) => details,
+        MaybePackageDetails::Err(error) => {
+            return Err(Arc::new(PackageAnalysisError {
+                details: details.clone(),
+                error: error.error.clone(),
+            }))
+        }
+    };
+
     // Compute install sets.
     //
     // Portage provides two kinds of runtime dependencies: RDEPEND and PDEPEND.
@@ -353,67 +345,37 @@ fn analyze_globals(all_partials: Vec<MaybePackagePartial>) -> Vec<MaybePackage> 
     // There are some sophisticated algorithms to compute transitive closures,
     // but for our purpose it is sufficient to just traverse the dependency
     // graph starting from each node.
+    let mut install_map: HashMap<&Path, Arc<PackageDetails>> = HashMap::new();
+    find_install_map(local_map, details, &mut install_map);
 
-    let partial_by_path: HashMap<&Path, &PackagePartial> = all_partials
-        .iter()
-        .flat_map(|partial| match partial {
-            MaybePackagePartial::Ok(partial) => Some(partial.as_ref()),
-            _ => None,
-        })
-        .map(|partial| (partial.as_basic_data().ebuild_path.as_path(), partial))
-        .collect();
-
-    let mut install_set_by_path: HashMap<PathBuf, Vec<Arc<PackageDetails>>> = partial_by_path
-        .iter()
-        .map(|(path, partial)| {
-            let mut install_map: HashMap<&Path, Arc<PackageDetails>> = HashMap::new();
-            find_install_map(&partial_by_path, &partial.details, &mut install_map);
-
-            let install_set = install_map
-                .into_values()
-                .sorted_by(|a, b| {
-                    a.as_basic_data()
-                        .package_name
-                        .cmp(&b.as_basic_data().package_name)
-                        .then_with(|| a.as_basic_data().version.cmp(&b.as_basic_data().version))
-                })
-                .collect();
-
-            ((*path).to_owned(), install_set)
+    let install_set = install_map
+        .into_values()
+        .sorted_by(|a, b| {
+            a.as_basic_data()
+                .package_name
+                .cmp(&b.as_basic_data().package_name)
+                .then_with(|| a.as_basic_data().version.cmp(&b.as_basic_data().version))
         })
         .collect();
 
-    let mut build_host_deps_by_path: HashMap<PathBuf, Vec<Arc<PackageDetails>>> = partial_by_path
-        .iter()
-        .map(|(path, partial)| {
-            (
-                path.to_path_buf(),
-                compute_host_build_deps(&partial_by_path, partial),
-            )
-        })
-        .collect();
+    let build_host_deps = compute_host_build_deps(local_map, details);
 
-    all_partials
-        .into_iter()
-        .map(|partial| match partial {
-            MaybePackagePartial::Ok(partial) => {
-                let install_set = install_set_by_path
-                    .remove(partial.details.as_basic_data().ebuild_path.as_path())
-                    .unwrap();
-                let build_host_deps = build_host_deps_by_path
-                    .remove(partial.details.as_basic_data().ebuild_path.as_path())
-                    .unwrap();
+    Ok(Box::new(PackageGlobalAnalysis {
+        install_set,
+        build_host_deps,
+    }))
+}
 
-                MaybePackage::Ok(Arc::new(Package {
-                    details: partial.details,
-                    dependencies: partial.dependencies,
-                    install_set,
-                    sources: partial.sources,
-                    build_host_deps,
-                    bashrcs: partial.bashrcs,
-                }))
-            }
-            MaybePackagePartial::Err(err) => MaybePackage::Err(err),
+/// Runs package-global analysis, i.e. analysis taking other packages into account.
+fn analyze_globals(
+    all_details: &[MaybePackageDetails],
+    local_map: &HashMap<PathBuf, MaybePackageLocalAnalysis>,
+) -> HashMap<PathBuf, MaybePackageGlobalAnalysis> {
+    all_details
+        .into_par_iter()
+        .map(|details| {
+            let global = analyze_global(details, local_map);
+            (details.as_basic_data().ebuild_path.clone(), global)
         })
         .collect()
 }
@@ -430,8 +392,8 @@ pub fn analyze_packages(
     let all_details = target_resolver.find_all_packages()?;
 
     // Run package-local analysis.
-    let all_partials = analyze_locals(
-        all_details,
+    let mut local_map = analyze_locals(
+        &all_details,
         config,
         cross_compile,
         src_dir,
@@ -440,7 +402,41 @@ pub fn analyze_packages(
     );
 
     // Run package-global analysis.
-    let packages = analyze_globals(all_partials);
+    let mut global_map = analyze_globals(&all_details, &local_map);
+
+    // Join analysis results.
+    let packages: Vec<MaybePackage> = all_details
+        .into_iter()
+        .map(|details| {
+            let ebuild_path = details.as_basic_data().ebuild_path.as_path();
+            let local = local_map
+                .remove(ebuild_path)
+                .expect("local_map is exhaustive");
+            let global = global_map
+                .remove(ebuild_path)
+                .expect("global_map is exhaustive");
+            match (details, local, global) {
+                (MaybePackageDetails::Ok(details), Ok(local), Ok(global)) => {
+                    MaybePackage::Ok(Arc::new(Package {
+                        details,
+                        dependencies: local.dependencies,
+                        sources: local.sources,
+                        bashrcs: local.bashrcs,
+                        install_set: global.install_set,
+                        build_host_deps: global.build_host_deps,
+                    }))
+                }
+                (MaybePackageDetails::Err(error), _, _) => {
+                    MaybePackage::Err(Arc::new(PackageAnalysisError {
+                        details: MaybePackageDetails::Err(error.clone()),
+                        error: error.error.clone(),
+                    }))
+                }
+                (_, Err(error), _) => MaybePackage::Err(error),
+                (_, _, Err(error)) => MaybePackage::Err(error),
+            }
+        })
+        .collect();
 
     let errors = packages
         .iter()
