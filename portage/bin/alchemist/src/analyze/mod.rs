@@ -55,13 +55,23 @@ pub struct Package {
     /// Bazel compute it, because there can be circular dependencies.
     pub install_set: Vec<Arc<PackageDetails>>,
 
-    /// The BDEPENDs declared by this package and all the IDEPENDs specified
-    /// by the package's DEPENDs and their transitive RDEPENDs.
+    /// A list of host packages needed to install when building this package.
+    /// Namely, it includes the BDEPENDs declared by this package and all the
+    /// IDEPENDs specified by the package's DEPENDs and their transitive
+    /// RDEPENDs.
     ///
-    /// When building the `build_deps` SDK layer, we need to ensure that all
-    /// the IDEPENDs are installed into the `build_host_deps` SDK layer. We
-    /// Could add the concept of an IDEPEND to bazel, but it would make the
-    /// `sdk_install_deps` rule very complicated and harder to understand.
+    /// When building the ephemeral CrOS SDK for building the package, we need
+    /// to ensure that all the IDEPENDs are installed. We could add the concept
+    /// of an IDEPEND to Bazel, but it would make the `sdk_install_deps` rule
+    /// very complicated and harder to understand.
+    ///
+    /// This list does NOT necessarily include all host packages to install, and
+    /// may omit some transitive runtime dependencies represented by RDEPEND and
+    /// IDEPEND. Bazel must make sure to install those transitive dependencies
+    /// as well on setting up an ephemeral CrOS SDK for building the package.
+    /// Alchemist doesn't compute the full transitive closure while it's
+    /// technically possible because it unnecessarily complicates the dependency
+    /// calculation logic.
     pub build_host_deps: Vec<Arc<PackageDetails>>,
 
     /// The bashrc files that need to be executed for the package.
@@ -170,6 +180,7 @@ fn find_install_map<'a>(
     local_map: &'a HashMap<PathBuf, MaybePackageLocalAnalysis>,
     current: &'a Arc<PackageDetails>,
     install_map: &mut HashMap<&'a Path, Arc<PackageDetails>>,
+    follow_post_deps: bool,
 ) {
     use std::collections::hash_map::Entry::*;
     match install_map.entry(current.as_basic_data().ebuild_path.as_path()) {
@@ -193,9 +204,13 @@ fn find_install_map<'a>(
     };
 
     let deps = &local.direct_dependencies;
-    let installs = deps.run_target.iter().chain(deps.post_target.iter());
-    for install in installs {
-        find_install_map(local_map, install, install_map);
+    for install in &deps.run_target {
+        find_install_map(local_map, install, install_map, follow_post_deps);
+    }
+    if follow_post_deps {
+        for install in &deps.post_target {
+            find_install_map(local_map, install, install_map, follow_post_deps);
+        }
     }
 }
 
@@ -220,7 +235,7 @@ fn compute_host_build_deps(
     };
 
     for build_dep in &local.direct_dependencies.build_target {
-        find_install_map(local_map, build_dep, &mut build_dep_runtime_deps);
+        find_install_map(local_map, build_dep, &mut build_dep_runtime_deps, false);
     }
 
     build_dep_runtime_deps
@@ -352,7 +367,7 @@ fn analyze_global(
     // but for our purpose it is sufficient to just traverse the dependency
     // graph starting from each node.
     let mut install_map: HashMap<&Path, Arc<PackageDetails>> = HashMap::new();
-    find_install_map(local_map, details, &mut install_map);
+    find_install_map(local_map, details, &mut install_map, true);
 
     let install_set = install_map
         .into_values()

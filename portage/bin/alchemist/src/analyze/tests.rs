@@ -495,3 +495,81 @@ fn test_analyze_packages_install_host_deps() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_analyze_packages_indirect_host_deps() -> Result<()> {
+    //                 BDEPEND                     RDEPEND
+    // sys-apps/hello ────────► sys-libs/c ────┬────────────► sys-libs/x
+    //        │                                │
+    //        │ DEPEND                         │
+    //        ▼        IDEPEND                 │   PDEPEND
+    //     sys-libs/a ────────► sys-libs/d ────┼────────────► sys-libs/y
+    //        │                                │
+    //        │ RDEPEND                        │
+    //        ▼        IDEPEND                 │   IDEPEND
+    //     sys-libs/b ────────► sys-libs/e ────┴────────────► sys-libs/z
+    //        │
+    //        │ PDEPEND
+    //        ▼        IDEPEND
+    //     sys-libs/p ────────► sys-libs/q
+    let packages = analyze_packages_for_testing(&[
+        PackageSpec::new("sys-apps/hello", "1")?
+            .var("DEPEND", "sys-libs/a")
+            .var("BDEPEND", "sys-libs/c"),
+        PackageSpec::new("sys-libs/a", "1")?
+            .var("RDEPEND", "sys-libs/b")
+            .var("IDEPEND", "sys-libs/d"),
+        PackageSpec::new("sys-libs/b", "1")?
+            .var("IDEPEND", "sys-libs/e")
+            .var("PDEPEND", "sys-libs/p"),
+        PackageSpec::new("sys-libs/c", "1")?
+            .var("RDEPEND", "sys-libs/x")
+            .var("PDEPEND", "sys-libs/y")
+            .var("IDEPEND", "sys-libs/z"),
+        PackageSpec::new("sys-libs/d", "1")?
+            .var("RDEPEND", "sys-libs/x")
+            .var("PDEPEND", "sys-libs/y")
+            .var("IDEPEND", "sys-libs/z"),
+        PackageSpec::new("sys-libs/e", "1")?
+            .var("RDEPEND", "sys-libs/x")
+            .var("PDEPEND", "sys-libs/y")
+            .var("IDEPEND", "sys-libs/z"),
+        PackageSpec::new("sys-libs/p", "1")?.var("IDEPEND", "sys-libs/q"),
+        PackageSpec::new("sys-libs/q", "1")?,
+        PackageSpec::new("sys-libs/x", "1")?,
+        PackageSpec::new("sys-libs/y", "1")?,
+        PackageSpec::new("sys-libs/z", "1")?,
+    ])?;
+
+    let hello_package = packages
+        .into_iter()
+        .find(|p| {
+            matches!(
+                p,
+                MaybePackageDescription::Ok { package_name_version, .. }
+                if package_name_version == "sys-apps/hello-1"
+            )
+        })
+        .unwrap();
+
+    assert_eq!(
+        hello_package,
+        MaybePackageDescription::Ok {
+            package_name_version: "sys-apps/hello-1".into(),
+            dependencies: PackageDependenciesDescription {
+                build_target: vec!["sys-libs/a-1".into()],
+                test_target: vec!["sys-libs/a-1".into()],
+                build_host: vec!["sys-libs/c-1".into()],
+                install_set: vec!["sys-apps/hello-1".into()],
+                build_host_set: vec![
+                    "sys-libs/c-1".into(),
+                    "sys-libs/d-1".into(),
+                    "sys-libs/e-1".into()
+                ],
+                ..PackageDependenciesDescription::EMPTY
+            },
+        },
+    );
+
+    Ok(())
+}
