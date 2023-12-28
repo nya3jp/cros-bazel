@@ -25,6 +25,7 @@ rust_library(
         "//bazel/portage/common/tracing-chrome-trace",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:either",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:nix",
         "@alchemy_crates//:shell-escape",
@@ -38,6 +39,9 @@ rust_test(
     size = "small",
     crate = ":cliutil",
     rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@alchemy_crates//:tempfile",
+    ],
 )
 
 rust_test_suite(

@@ -4,7 +4,7 @@
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use clap::{command, Parser};
-use cliutil::cli_main;
+use cliutil::{cli_main, expanded_args_os};
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use std::format;
 use std::io::Write;
@@ -265,7 +265,7 @@ struct RemoteexecInfo {
 }
 
 fn do_main() -> Result<()> {
-    let args = Cli::try_parse()?;
+    let args = Cli::try_parse_from(expanded_args_os()?)?;
 
     let mut settings = ContainerSettings::new();
     settings.apply_common_args(&args.common)?;

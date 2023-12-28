@@ -14,10 +14,12 @@ use anyhow::{bail, Result};
 
 mod config;
 mod logging;
+mod param_file;
 mod stdio_redirector;
 
 pub use crate::config::*;
 pub use crate::logging::*;
+pub use crate::param_file::expanded_args_os;
 pub use crate::stdio_redirector::{RedirectorConfig, StdioRedirector};
 
 /// Wraps a CLI main function to provide the common startup/cleanup logic.

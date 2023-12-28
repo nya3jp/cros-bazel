@@ -11,6 +11,7 @@ fileutil = { path = "../fileutil" }
 
 anyhow.workspace = true
 clap.workspace = true
+either.workspace = true
 itertools.workspace = true
 nix.workspace = true
 shell-escape.workspace = true

@@ -592,6 +592,7 @@ _SHARED_CRATE_FILES = [
     "//bazel/portage/common/cliutil:src/config.rs",
     "//bazel/portage/common/cliutil:src/lib.rs",
     "//bazel/portage/common/cliutil:src/logging.rs",
+    "//bazel/portage/common/cliutil:src/param_file.rs",
     "//bazel/portage/common/cliutil:src/stdio_redirector.rs",
     "//bazel/portage/common/fileutil:Cargo.toml",
     "//bazel/portage/common/fileutil:src/dualpath.rs",
@@ -630,6 +631,5 @@ ALCHEMIST_BAZEL_BIN_SRCS = [
 ]
 
 ALCHEMIST_REPO_RULE_SRCS = [
-    Label(x)
-    for x in _RELEASE_SRCS + _SHARED_CRATE_FILES
+    Label(x) for x in _RELEASE_SRCS + _SHARED_CRATE_FILES
 ]

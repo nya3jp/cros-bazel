@@ -104,6 +104,7 @@ ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel/portage/common/cliutil:src/config.rs",
     "@cros//bazel/portage/common/cliutil:src/lib.rs",
     "@cros//bazel/portage/common/cliutil:src/logging.rs",
+    "@cros//bazel/portage/common/cliutil:src/param_file.rs",
     "@cros//bazel/portage/common/cliutil:src/stdio_redirector.rs",
     "@cros//bazel/portage/common/fileutil:BUILD.bazel",
     "@cros//bazel/portage/common/fileutil:src/dualpath.rs",
