@@ -134,7 +134,7 @@ def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles 
         ctx.actions.run(
             outputs = [args_file],
             executable = write_to_file,
-            arguments = [args_file, args],
+            arguments = [args_file.path, args],
         )
         runfiles = runfiles.merge(ctx.runfiles(files = [args_file]))
         args = "$(cat %s)" % bash_rlocation(ctx, args_file)

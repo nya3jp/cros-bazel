@@ -12,13 +12,11 @@ def _durabletree_test_impl(ctx):
     if not ctx.attr.sandbox_on_generate:
         execution_requirements["no-sandbox"] = ""
 
-    args = ctx.actions.args()
-    args.add_all(["generate", output_dir], expand_directories = False)
     ctx.actions.run(
         inputs = depset(),
         outputs = [output_dir],
         executable = ctx.executable.bin,
-        arguments = [args],
+        arguments = ["generate", output_dir.path],
         execution_requirements = execution_requirements,
     )
 

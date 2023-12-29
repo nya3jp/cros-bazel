@@ -89,10 +89,7 @@ def _declare_interface_library_outputs(
 
         file = ctx.actions.declare_file(paths.join(output_base_dir, input_path[1:]))
         outputs.append(file)
-        args.add_joined(
-            "--output_file"[input_path, file],
-            join_with = "=",
-        )
+        args.add("--output-file=%s=%s" % (input_path, file.path))
 
     return outputs
 
@@ -143,23 +140,17 @@ def generate_interface_libraries(
 
     args = ctx.actions.args()
     args.add_all([
-        "--log",
-        output_log,
+        "--log=%s" % output_log.path,
         # TODO: Enable profiling.
         extract_interface_executable,
-        "--binpkg",
-        input_binary_package_file,
+        "--binpkg=%s" % input_binary_package_file.path,
     ])
 
     xpak_outputs = []
     for xpak_file in ["NEEDED", "REQUIRES", "PROVIDES", "USE"]:
         file = ctx.actions.declare_file(paths.join(output_base_dir, "xpak", xpak_file))
         xpak_outputs.append(file)
-        args.add_joined(
-            "--xpak",
-            [xpak_file, file],
-            join_with = "=?",
-        )
+        args.add("--xpak=%s=?%s" % (xpak_file, file.path))
 
     files_output_base_dir = paths.join(output_base_dir, "files")
     header_outputs = _declare_interface_library_outputs(

@@ -51,8 +51,7 @@ def _build_image_impl(ctx):
     transitive_inputs = []
 
     args.add_all([
-        "--output",
-        output_image_file,
+        "--output=" + output_image_file.path,
         "--board=" + ctx.attr.board,
         "--image-to-build=" + ctx.attr.image_to_build,
         "--image-file-name=" + ctx.attr.image_file_name,
@@ -98,14 +97,11 @@ def _build_image_impl(ctx):
         executable = ctx.executable._action_wrapper,
         tools = [ctx.executable._build_image],
         arguments = [
-            "--log",
-            output_log_file,
-            "--profile",
-            output_profile_file,
+            "--log=" + output_log_file.path,
+            "--profile=" + output_profile_file.path,
             "--privileged",
-            "--privileged-output",
-            output_image_file,
-            ctx.executable._build_image,
+            "--privileged-output=" + output_image_file.path,
+            ctx.executable._build_image.path,
             args,
         ],
         execution_requirements = {
