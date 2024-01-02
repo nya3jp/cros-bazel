@@ -185,6 +185,11 @@ _EBUILD_COMMON_ATTRS = dict(
         allow_single_file = True,
         default = Label("@remoteexec_info//:remoteexec_info"),
     ),
+    _remotetool = attr.label(
+        default = Label("@files//:remotetool"),
+        executable = True,
+        cfg = "exec",
+    ),
 )
 
 def _bashrc_to_path(bashrc):
@@ -342,6 +347,23 @@ def _download_prebuilt(ctx, prebuilt, output_binary_package_file):
     elif prebuilt.startswith("gs://"):
         executable = Label("@chromite//:src").workspace_root + "/bin/gsutil"
         args.add_all(["cp", prebuilt, output_binary_package_file])
+    elif prebuilt.startswith("cas://"):
+        # Format: cas://<instance>/<sha256>/<size>
+        prebuilt = prebuilt[6:]
+        instance, checksum, size = prebuilt.rsplit("/", 2)
+        executable = ctx.executable._remotetool
+        args.add_all([
+            "--service=remotebuildexecution.googleapis.com:443",
+            "--use_application_default_credentials",
+            "--operation=download_blob",
+            "--digest",
+            "{checksum}/{size}".format(checksum = checksum, size = size),
+            "--instance",
+            instance,
+            "--path",
+            output_binary_package_file,
+        ])
+
     else:
         executable = "cp"
         args.add_all([prebuilt, output_binary_package_file])
