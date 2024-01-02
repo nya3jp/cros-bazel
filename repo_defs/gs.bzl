@@ -6,11 +6,12 @@
 Repository rule for downloading files from Google Cloud Storage.
 """
 
-_BUILD_TEMPLATE = """
-# AUTO-GENERATED FILE. DO NOT EDIT.
+_BUILD_HEADER = """# AUTO-GENERATED FILE. DO NOT EDIT.
 #
 # File downloaded from Google Cloud Storage.
+"""
 
+_NON_EXECUTABLE_TEMPLATE = _BUILD_HEADER + """
 filegroup(
     name = "file",
     srcs = ["{file}"],
@@ -20,9 +21,26 @@ filegroup(
 )
 """
 
+_EXECUTABLE_TEMPLATE = _BUILD_HEADER + """
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+
+native_binary(
+    name = "file",
+    src = "{file}",
+    out = "{file}_symlink",
+    # Use public visibility since bzlmod repo namespacing prevents unwanted
+    # visibility.
+    visibility = ["//visibility:public"],
+)
+"""
+
 GS_ATTRS = {
     "downloaded_file_path": attr.string(
         doc = "Path assigned to the downloaded file.",
+    ),
+    "executable": attr.bool(
+        doc = "Whether the downloaded file is an executable",
+        default = False,
     ),
     "url": attr.string(
         doc = "gs:// URL from where the file is downloaded.",
@@ -47,11 +65,12 @@ def download_gs_file(repository_ctx):
     if not filename:
         filename = url.split("/")[-1]
 
+    dest = repository_ctx.path("file/" + filename)
     cmd = [
         repository_ctx.attr._gsutil,
         "cp",
         url,
-        repository_ctx.path("file/" + filename),
+        dest,
     ]
     st = repository_ctx.execute(
         cmd,
@@ -60,9 +79,19 @@ def download_gs_file(repository_ctx):
     if st.return_code:
         fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
 
+    template = _NON_EXECUTABLE_TEMPLATE
+    if repository_ctx.attr.executable:
+        template = _EXECUTABLE_TEMPLATE
+        st = repository_ctx.execute(["chmod", "a+x", dest])
+        if st.return_code:
+            fail(
+                "Failed to add executable permissions to %s\n%s" %
+                (dest, st.stderr),
+            )
+
     repository_ctx.file(
         "file/BUILD.bazel",
-        _BUILD_TEMPLATE.format(file = filename),
+        template.format(file = filename),
     )
 
 gs_file = repository_rule(

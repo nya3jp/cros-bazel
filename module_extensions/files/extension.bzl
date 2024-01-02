@@ -51,6 +51,12 @@ def _files_impl(module_ctx):
         urls = ["https://commondatastorage.googleapis.com/chromeos-localmirror/cros-bazel/goma-chromeos-modified-for-alchemy-20230914.tgz"],
     )
 
+    hub.gs_file.alias_only(
+        name = "remotetool",
+        url = "gs://chromeos-localmirror/cros-bazel/remotetool-20240102",
+        executable = True,
+    )
+
     prebuilts_dependencies(http_file = hub.http_file.alias_only)
     cros_sdk_repositories(http_file = hub.http_file.alias_only)
 
