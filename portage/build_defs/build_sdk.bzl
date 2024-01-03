@@ -74,6 +74,9 @@ def _build_sdk_impl(ctx):
 
     return [
         DefaultInfo(files = depset([output_sdk])),
+        OutputGroupInfo(
+            logs = depset([output_log_file]),
+        ),
         SDKInfo(
             layers = [output_sdk],
         ),

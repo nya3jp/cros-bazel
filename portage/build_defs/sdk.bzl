@@ -40,7 +40,11 @@ def _sdk_from_archive_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset(outputs)),
+        DefaultInfo(files = depset([output_root])),
+        OutputGroupInfo(
+            logs = depset([output_log]),
+            traces = depset([output_profile]),
+        ),
         SDKInfo(
             layers = [output_root],
             packages = depset(),
@@ -124,7 +128,11 @@ def _sdk_update_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset(outputs)),
+        DefaultInfo(files = depset([output_root])),
+        OutputGroupInfo(
+            logs = depset([output_log]),
+            traces = depset([output_profile]),
+        ),
         SDKInfo(
             layers = base_sdk.layers + [output_root],
             packages = base_sdk.packages,
@@ -288,7 +296,8 @@ def _sdk_extend_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset(sdk.layers)),
+        # We don't return any files since this rule doesn't create any.
+        DefaultInfo(),
         sdk,
     ]
 
@@ -364,7 +373,11 @@ def _sdk_install_glibc_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset(outputs)),
+        DefaultInfo(files = depset([output_root])),
+        OutputGroupInfo(
+            logs = depset([output_log]),
+            traces = depset([output_profile]),
+        ),
         SDKInfo(
             layers = base_sdk.layers + [output_root],
             packages = depset(
