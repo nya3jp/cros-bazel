@@ -832,22 +832,29 @@ _EbuildInstalledInfo = provider(fields = dict(
 
 def _ebuild_install_action_impl(ctx):
     pkg = ctx.attr.package[BinaryPackageInfo]
+    install_log = ctx.actions.declare_file(ctx.label.name + ".log")
     checksum = ctx.actions.declare_file(ctx.label.name + ".sha256sum")
-    args = ctx.actions.args()
-    args.add(pkg.file)
-    args.add("/build/%s/packages/%s/%s" % (
-        ctx.attr.board,
-        pkg.category,
-        pkg.file.basename,
-    ))
-    pkg_name = pkg.category + "/" + pkg.file.basename.rsplit(".", 1)[0]
-    args.add("emerge-%s --usepkgonly --nodeps --jobs =%s" % (
-        ctx.attr.board,
-        pkg_name,
-    ))
-    args.add(checksum)
 
-    inputs = [pkg.file]
+    pkg_name = pkg.category + "/" + pkg.file.basename.rsplit(".", 1)[0]
+    args = ctx.actions.args()
+    args.add_all([
+        "--log",
+        install_log,
+        ctx.executable._installer,
+        pkg.file,
+        "/build/%s/packages/%s/%s" % (
+            ctx.attr.board,
+            pkg.category,
+            pkg.file.basename,
+        ),
+        "emerge-%s --usepkgonly --nodeps --jobs =%s" % (
+            ctx.attr.board,
+            pkg_name,
+        ),
+        checksum,
+    ])
+
+    inputs = [pkg.file, ctx.executable._installer]
 
     # The only use of this is to ensure that our checksum is a hash of the
     # transitive dependencies rather than just this file.
@@ -858,10 +865,10 @@ def _ebuild_install_action_impl(ctx):
         args.add(dep[_EbuildInstalledInfo].checksum)
 
     ctx.actions.run(
-        executable = ctx.executable._installer,
+        executable = ctx.executable._action_wrapper,
         inputs = inputs,
         arguments = [args],
-        outputs = [checksum],
+        outputs = [checksum, install_log],
         execution_requirements = {
             # This implies no-sandbox and no-remote
             "local": "1",
@@ -879,6 +886,7 @@ def _ebuild_install_action_impl(ctx):
         # execute the installation when we build the target.
         DefaultInfo(files = depset([checksum])),
         _EbuildInstalledInfo(checksum = checksum),
+        OutputGroupInfo(logs = [install_log]),
     ]
 
 ebuild_install_action = rule(
@@ -900,6 +908,11 @@ ebuild_install_action = rule(
             default = "//bazel/portage/build_defs:ebuild_installer",
             executable = True,
             cfg = "exec",
+        ),
+        _action_wrapper = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/action_wrapper"),
         ),
     ),
     provides = [_EbuildInstalledInfo],
