@@ -69,6 +69,7 @@ def main():
             "--keep_going",
             "--execution_log_binary_file=/tmp/allpackages_exec.log",
             "--noexecution_log_sort",
+            "--config=hash_tracer",
         ]
         + chrome_prebuilt_configs
         + [
