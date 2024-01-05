@@ -2,10 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
-load("//bazel/portage/build_defs:transitions.bzl", "rust_for_ebuild_binary", "rust_for_ebuild_test")
 
-rust_for_ebuild_binary(
+rust_binary(
     name = "xpaktool",
     srcs = glob(["src/*.rs"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -21,7 +21,7 @@ rust_for_ebuild_binary(
     ],
 )
 
-rust_for_ebuild_test(
+rust_test(
     name = "xpaktool_test",
     size = "small",
     crate = ":xpaktool",

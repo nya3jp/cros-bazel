@@ -2,10 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
-load("//bazel/portage/build_defs:transitions.bzl", "rust_for_ebuild_binary")
 
-rust_for_ebuild_binary(
+rust_binary(
     name = "install_deps",
     srcs = glob(["src/*.rs"]),
     data = [":install_deps.sh"],
