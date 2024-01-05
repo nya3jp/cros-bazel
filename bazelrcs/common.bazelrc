@@ -155,7 +155,7 @@ build:bes --remote_build_event_upload=all
 # Enable BEP uploads to complete asynchronously.
 build:bes --bes_upload_mode=fully_async
 # Set a label for this invocation so it's easy to filter on the backend.
-build:bes --bes_keywords=cros-non-release-production
+build:bes --bes_keywords=cros-rbe-nonrelease
 # Publish `important_outputs` field in BEP for the artifacts tab to work with
 # sponge2. This will be disabled in an upcoming Bazel release by default. All
 # consumers should be reading NamedSetOfFiles instead. b/212691656
