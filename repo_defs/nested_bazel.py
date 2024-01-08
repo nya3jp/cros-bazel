@@ -11,6 +11,7 @@ import os
 import pathlib
 import subprocess
 import sys
+from typing import List
 
 
 def _fail(msg: str):
@@ -31,7 +32,7 @@ def _run(args, **kwargs) -> subprocess.CompletedProcess:
         args,
         check=False,
         **kwargs,
-        env=os.environ | {"IS_NESTED_BAZEL": "1"},
+        env={**os.environ, "IS_NESTED_BAZEL": "1"},
     )
     if ps.returncode != 0:
         # The command-line is really long and not particularly useful.
@@ -40,12 +41,12 @@ def _run(args, **kwargs) -> subprocess.CompletedProcess:
 
 
 def main(
-    base_command: list[str],
-    common_opts: list[str],
-    build_opts: list[str],
+    base_command: List[str],
+    common_opts: List[str],
+    build_opts: List[str],
     target: str,
     out_dir: str,
-    repo_rule_deps: list[str],
+    repo_rule_deps: List[str],
     nested_output_base: str,
 ):
     # Eg. ~/.cache/_bazel_$USER_nested/<checksum>/external/a~b~c.

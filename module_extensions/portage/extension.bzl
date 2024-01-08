@@ -21,7 +21,7 @@ load("//bazel/repo_defs:nested_bazel.bzl", "nested_bazel")
 load("//bazel/repo_defs:repo_repository.bzl", _repo_repository = "repo_repository")
 
 def _portage_impl(module_ctx):
-    if module_ctx.os.environ.get("NESTED_ALCHEMIST", ""):
+    if module_ctx.os.environ.get("NESTED_ALCHEMIST", "1"):
         nested_bazel(
             name = "alchemist",
             target = "//bazel/portage/bin/alchemist/src/bin/alchemist",
