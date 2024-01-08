@@ -25,7 +25,6 @@ rust_library(
         "//bazel/portage/common/tracing-chrome-trace",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
-        "@alchemy_crates//:either",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:nix",
         "@alchemy_crates//:shell-escape",

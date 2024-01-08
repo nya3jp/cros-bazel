@@ -3,12 +3,11 @@
 // found in the LICENSE file.
 
 use anyhow::{bail, Context, Result};
-use either::Either;
 use std::{
+    collections::HashSet,
     ffi::{OsStr, OsString},
     fs,
     os::unix::ffi::OsStrExt,
-    path::Path,
 };
 
 fn os_str_strip_prefix<'a>(s: &'a OsStr, prefix: &OsStr) -> Option<&'a OsStr> {
@@ -19,28 +18,36 @@ fn os_str_strip_prefix<'a>(s: &'a OsStr, prefix: &OsStr) -> Option<&'a OsStr> {
     }
 }
 
-fn read_param_file<P: AsRef<Path>>(path: P, file_prefix_symbol: &str) -> Result<Vec<OsString>> {
+fn read_param_file(
+    path: &OsStr,
+    file_prefix_symbol: &str,
+    out: &mut Vec<OsString>,
+    visited_files: &mut HashSet<OsString>,
+) -> Result<()> {
+    if !visited_files.insert(path.into()) {
+        bail!("parameter file loop detected");
+    }
     let contents = fs::read_to_string(path)?;
-    contents
-        .lines()
-        .enumerate()
-        .map(|(lineno, line)| {
-            if line.starts_with(file_prefix_symbol) {
-                bail!("line {lineno}: recursive parameter file expansion is not supported");
-            }
-            Ok(OsString::from(line))
-        })
-        .collect()
+    for (lineno, line) in contents.lines().enumerate() {
+        expand_single_param(line.into(), file_prefix_symbol, out, visited_files)
+            .with_context(|| format!("line {lineno}"))?;
+    }
+    Ok(())
 }
 
-fn expand_single_param(param: OsString, prefix: &str) -> Result<impl Iterator<Item = OsString>> {
-    match os_str_strip_prefix(&param, OsStr::from_bytes(prefix.as_bytes())) {
-        Some(path) => Ok(Either::Left(
-            read_param_file(path, prefix)
-                .with_context(|| format!("error processing parameter {:?}", param))?
-                .into_iter(),
-        )),
-        None => Ok(Either::Right(std::iter::once(param.into()))),
+fn expand_single_param(
+    param: OsString,
+    file_prefix_symbol: &str,
+    out: &mut Vec<OsString>,
+    visited_files: &mut HashSet<OsString>,
+) -> Result<()> {
+    match os_str_strip_prefix(&param, OsStr::from_bytes(file_prefix_symbol.as_bytes())) {
+        Some(path) => read_param_file(path, file_prefix_symbol, out, visited_files)
+            .with_context(|| format!("error processing parameter {:?}", param)),
+        None => {
+            out.push(param);
+            Ok(())
+        }
     }
 }
 
@@ -50,8 +57,6 @@ fn expand_single_param(param: OsString, prefix: &str) -> Result<impl Iterator<It
 /// For an argument `@file`, the arguments read from the file are inserted in
 /// place of the original @file argument.
 /// Arguments in the parameter file are terminated by newlines.
-///
-/// Nested parameter file expansion is unsupported.
 ///
 /// This is compatible with Bazel's
 /// `set_param_file_format("multiline")` and `use_param_file("@%s")`:
@@ -63,10 +68,11 @@ where
     I::Item: Into<OsString> + Clone,
 {
     let mut expanded = Vec::new();
+    let mut visited_files = HashSet::new();
 
     for item in itr {
         let param: OsString = item.into();
-        expanded.extend(expand_single_param(param, "@")?);
+        expand_single_param(param, "@", &mut expanded, &mut visited_files)?;
     }
 
     Ok(expanded)
@@ -118,18 +124,42 @@ mod tests {
     #[test]
     fn test_expand_recursive() {
         let tempdir = tempfile::tempdir().unwrap();
-        let param_file = tempdir.path().join("param_file");
-        std::fs::write(&param_file, "@recursion\n").unwrap();
+        let param_file_a = tempdir.path().join("a");
+        let param_file_b = tempdir.path().join("b");
+        std::fs::write(
+            &param_file_a,
+            format!("@{}", param_file_b.to_str().unwrap()),
+        )
+        .unwrap();
+        std::fs::write(&param_file_b, "bar\nbaz\n").unwrap();
 
-        let err = expand_params([[OsStr::new("@"), param_file.as_os_str()].join(OsStr::new(""))])
-            .unwrap_err();
-        assert!(
-            format!("{err:?}").contains("recursive parameter file expansion is not supported"),
-            "err={err:?}"
+        assert_eq!(
+            expand_params(["foo", &format!("@{}", param_file_a.to_str().unwrap())]).unwrap(),
+            ["foo", "bar", "baz"]
         );
+    }
+
+    #[test]
+    fn test_expand_recursive_loop() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let param_file_a = tempdir.path().join("a");
+        let param_file_b = tempdir.path().join("b");
+        std::fs::write(
+            &param_file_a,
+            format!("@{}", param_file_b.to_str().unwrap()),
+        )
+        .unwrap();
+        std::fs::write(
+            &param_file_b,
+            format!("@{}", param_file_a.to_str().unwrap()),
+        )
+        .unwrap();
+
+        let err =
+            expand_params(["foo", &format!("@{}", param_file_b.to_str().unwrap())]).unwrap_err();
         assert!(
-            format!("{err:?}").contains(param_file.to_str().unwrap()),
-            "err={err:?} does not contain the problematic parameter file path"
+            format!("{err:?}").contains("parameter file loop detected"),
+            "err={err:?}"
         );
     }
 }
