@@ -226,12 +226,14 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
 
     let status = {
         let _span = info_span!("run", command = escaped_command).entered();
-        Command::new(&cfg.args[0])
-            .args(&cfg.args[1..])
-            .env_clear()
-            .envs(cfg.envs)
-            .current_dir(cfg.chdir)
-            .status()?
+        processes::run(
+            Command::new(&cfg.args[0])
+                .args(&cfg.args[1..])
+                .env_clear()
+                .envs(cfg.envs)
+                .current_dir(cfg.chdir),
+        )
+        .with_context(|| format!("Failed command: {}", escaped_command))?
     };
 
     Ok(status_to_exit_code(&status))
