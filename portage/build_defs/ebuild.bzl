@@ -216,7 +216,7 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
             See compute_file_arg for details.
 
     Returns:
-        (args, inputs) where:
+        struct where:
             args: Args: Arguments to pass to action_wrapper.
             inputs: Depset[File]: Inputs to action_wrapper.
     """
@@ -356,7 +356,10 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
     transitive_inputs.append(ctx.attr._build_package[DefaultInfo].default_runfiles.files)
 
     inputs = depset(direct_inputs, transitive = transitive_inputs)
-    return args, inputs
+    return struct(
+        args = args,
+        inputs = inputs,
+    )
 
 def _download_prebuilt(ctx, prebuilt, output_binary_package_file):
     args = ctx.actions.args()
@@ -478,7 +481,7 @@ def _ebuild_impl(ctx):
         ctx.actions.write(output_profile_file, "[]")
     else:
         # Compute arguments and inputs to run build_package.
-        args, inputs = _compute_build_package_args(
+        build_package_args = _compute_build_package_args(
             ctx,
             output_file = output_binary_package_file,
             use_runfiles = False,
@@ -492,7 +495,7 @@ def _ebuild_impl(ctx):
             output_profile_file,
         ])
         ctx.actions.run(
-            inputs = inputs,
+            inputs = build_package_args.inputs,
             outputs = [
                 output_binary_package_file,
                 output_log_file,
@@ -500,7 +503,7 @@ def _ebuild_impl(ctx):
             ],
             executable = ctx.executable._action_wrapper,
             tools = [ctx.executable._build_package],
-            arguments = [log_args, args],
+            arguments = [log_args, build_package_args.args],
             execution_requirements = {
                 # Disable sandbox to avoid creating a symlink forest.
                 # This does not affect hermeticity since ebuild runs in a container.
@@ -702,19 +705,19 @@ def _ebuild_debug_impl(ctx):
     # While we include all relevant input files in the wrapper script's
     # runfiles, we embed execroot paths in the script, not runfiles paths, so
     # that the debug invocation is closer to the real build execution.
-    args, inputs = _compute_build_package_args(ctx, output_file = None, use_runfiles = False)
+    build_package_args = _compute_build_package_args(ctx, output_file = None, use_runfiles = False)
 
     # An interactive run will make --login default to after.
     # The user can still explicitly set --login=before if they wish.
-    args.add("--interactive")
+    build_package_args.args.add("--interactive")
 
     return wrap_binary_with_args(
         ctx,
         out = output_debug_script,
         binary = ctx.executable._action_wrapper,
-        args = args,
+        args = build_package_args.args,
         content_prefix = _DEBUG_SCRIPT,
-        runfiles = ctx.runfiles(transitive_files = inputs),
+        runfiles = ctx.runfiles(transitive_files = build_package_args.inputs),
     )
 
 # TODO(b/298889830): Remove this rule once chromite starts using install_list.
@@ -995,15 +998,15 @@ def _ebuild_test_impl(ctx):
     output_runner_script = ctx.actions.declare_file(src_basename + "_test.sh")
 
     # Compute arguments and inputs to run build_package.
-    args, inputs = _compute_build_package_args(ctx, output_file = None, use_runfiles = True)
-    args.add("--test")
+    build_package_args = _compute_build_package_args(ctx, output_file = None, use_runfiles = True)
+    build_package_args.args.add("--test")
 
     return wrap_binary_with_args(
         ctx,
         out = output_runner_script,
         binary = ctx.executable._action_wrapper,
-        args = args,
-        runfiles = ctx.runfiles(transitive_files = inputs),
+        args = build_package_args.args,
+        runfiles = ctx.runfiles(transitive_files = build_package_args.inputs),
     )
 
 ebuild_test, ebuild_primordial_test = maybe_primordial_rule(
