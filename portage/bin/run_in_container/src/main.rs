@@ -204,7 +204,12 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     )
     .context("Failed to mount /proc")?;
 
-    pivot_root(&cfg.root_dir, &cfg.root_dir.join("host")).context("Failed to pivot root")?;
+    // We switch into the root dir so that pivot_root will automatically update
+    // our CWD to point to the new root.
+    std::env::set_current_dir(&cfg.root_dir)
+        .with_context(|| format!("Failed to `cd {}`", cfg.root_dir.display()))?;
+
+    pivot_root(".", &cfg.root_dir.join("host")).context("Failed to pivot root")?;
 
     if !cfg.keep_host_mount {
         // Do a lazy unmount with DETACH. Since the binary is dynamically linked, we still have some
