@@ -11,9 +11,28 @@ load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-alias(
+sdk_install_deps(
     name = "2.35-r25_host_deps",
-    actual = "//internal/sdk/stage2/host",
+    out = "glibc-2.35-r25_host_deps",
+    base = "//internal/sdk/stage2/host",
+    overlays = "//internal/overlays:host",
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:full",
+        ]
+    }),
+    target_deps = [
+        # The following packages are provided by the SDK:
+        # * sys-devel/binutils-2.39
+        "//internal/packages/stage2/host/chromiumos/sys-devel/gcc:10.2.0",
+    ],
+    install_strategy = select({
+        "@//bazel/portage:binpkg_cache_fast": "fast",
+        "//conditions:default": "slow",
+    }),
     visibility = ["//visibility:private"],
 )
 
@@ -554,6 +573,7 @@ test_suite(
     name = "2.35-r25_package_set_hermetic_test",
     tests = [
         "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25_hermetic_test",
+        "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0_hermetic_test",
     ],
     visibility = ["@//bazel:internal"],
 )
@@ -562,6 +582,7 @@ package_set(
     name = "2.35-r25_package_set",
     deps = [
         "//internal/packages/stage2/host/chromiumos/sys-libs/glibc:2.35-r25",
+        "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0",
     ],
     visibility = ["@//bazel:internal"],
 )

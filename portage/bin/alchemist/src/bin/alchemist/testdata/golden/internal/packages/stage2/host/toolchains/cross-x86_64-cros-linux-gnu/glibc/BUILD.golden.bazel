@@ -558,6 +558,7 @@ ebuild_compare_package_test(
 test_suite(
     name = "2.35-r25_package_set_hermetic_test",
     tests = [
+        "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0_hermetic_test",
         "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25_hermetic_test",
     ],
     visibility = ["@//bazel:internal"],
@@ -566,6 +567,7 @@ test_suite(
 package_set(
     name = "2.35-r25_package_set",
     deps = [
+        "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0",
         "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
     ],
     visibility = ["@//bazel:internal"],

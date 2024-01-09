@@ -502,6 +502,7 @@ ebuild_install(
     board = "amd64-generic",
     packages = [
         "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r25",
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0",
     ],
     visibility = ["@//bazel:internal"],
 )
@@ -519,6 +520,7 @@ filegroup(
     name = "2.35-r25_installed",
     srcs = [
         "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r25_installed_no_pdepends",
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_installed_no_pdepends",
     ],
     visibility = ["@//bazel:internal"],
 )
@@ -529,6 +531,7 @@ ebuild_install_list(
     board = "amd64-generic",
     packages = [
         "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r25",
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0",
     ],
     visibility = ["@//bazel:internal"],
 )
@@ -610,6 +613,7 @@ test_suite(
     name = "2.35-r25_package_set_hermetic_test",
     tests = [
         "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r25_hermetic_test",
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0_hermetic_test",
     ],
     visibility = ["@//bazel:internal"],
 )
@@ -618,6 +622,7 @@ package_set(
     name = "2.35-r25_package_set",
     deps = [
         "//internal/packages/stage1/target/board/chromiumos/sys-libs/glibc:2.35-r25",
+        "//internal/packages/stage1/target/board/chromiumos/test-cases/inherit:1.0",
     ],
     visibility = ["@//bazel:internal"],
 )
