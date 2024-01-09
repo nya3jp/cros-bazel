@@ -306,16 +306,18 @@ pub struct SdkBaseConfig<'a> {
     /// Repository set for the host.
     pub source_repo_set: &'a RepositorySet,
 
-    /// The `virtual` package that lists all the runtime dependencies that
-    /// will be installed into the SDK.
-    pub implicit_system_package: &'a Package,
+    /// The packages that will be installed into the SDK.
+    pub packages: Vec<&'a Package>,
+
+    /// A suffix to be appended to each package target.
+    pub package_suffix: Option<&'a str>,
 }
 
 #[derive(Serialize)]
 struct SdkBaseContext<'a> {
     name: &'a str,
     overlay_set: &'a str,
-    target: &'a str,
+    targets: Vec<String>,
     sdk: &'a str,
 }
 
@@ -327,10 +329,19 @@ pub fn generate_base_sdk(config: &SdkBaseConfig, out: &Path) -> Result<()> {
     let context = SdkBaseContext {
         name: config.name,
         overlay_set: &repository_set_to_target_path(config.source_repo_set),
-        target: &package_details_to_target_path(
-            &config.implicit_system_package.details,
-            config.source_package_prefix,
-        ),
+        targets: config
+            .packages
+            .iter()
+            .map(|package| {
+                package_details_to_target_path(&package.details, config.source_package_prefix)
+            })
+            .map(|mut target| {
+                if let Some(suffix) = config.package_suffix {
+                    target.push_str(suffix);
+                }
+                target
+            })
+            .collect(),
         sdk: &format!("//internal/sdk/{}", config.source_sdk),
     };
 

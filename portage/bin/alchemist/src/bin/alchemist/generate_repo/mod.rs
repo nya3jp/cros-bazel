@@ -210,7 +210,8 @@ pub fn generate_stages(
             // target, and we don't want those pre-installed.
             source_sdk: "stage1/target/host:base",
             source_repo_set: &host.repos,
-            implicit_system_package: &implicit_system_package,
+            packages: vec![&implicit_system_package],
+            package_suffix: None,
         },
         output_dir,
     )?;

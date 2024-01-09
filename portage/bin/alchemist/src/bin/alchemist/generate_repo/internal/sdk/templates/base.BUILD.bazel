@@ -19,7 +19,11 @@ build_sdk(
             "//internal/portage-config/target/host:full",
         ],
     }),
-    target_deps = ["{{ target}}"],
+    target_deps = [
+        {%- for target in targets %}
+        "{{ target }}",
+        {%- endfor %}
+    ],
     sdk = "{{ sdk }}",
     visibility = ["@//bazel:internal"],
 )
