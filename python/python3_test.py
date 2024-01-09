@@ -28,7 +28,16 @@ class Py3Test(unittest.TestCase):
 
     def test_hermetic_path(self):
         for path in sys.path:
-            self.assertIn("/execroot/_main/", path)
+            # With sandbox_hermetic_tmp enabled, the sandbox runs from inside
+            # the /tmp directory
+            self.assertTrue(
+                path.startswith("/tmp/bazel-working-directory")
+                or path.startswith("/tmp/bazel-source-roots"),
+                msg=(
+                    f"{path} didn't start with /tmp/bazel-working-directory "
+                    "or /tmp/bazel-source-roots"
+                ),
+            )
 
     def test_runfiles(self):
         from python.runfiles import runfiles

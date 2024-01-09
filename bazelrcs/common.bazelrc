@@ -101,10 +101,6 @@ build --host_platform=//bazel/platforms:host
 # Use platforms instead of crostool_top to resolve C++ toolchains.
 build --incompatible_enable_cc_toolchain_resolution
 
-# TODO(b/315062703): We probably want to enable this, but we'll do it separately
-# so we can distinguish breakages.
-build --noincompatible_sandbox_hermetic_tmp
-
 ###
 # Convenience
 ###
