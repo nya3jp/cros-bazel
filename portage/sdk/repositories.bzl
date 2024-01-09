@@ -9,3 +9,10 @@ def cros_sdk_repositories(http_file):
         urls = ["https://storage.googleapis.com/chromiumos-sdk/cros-sdk-2023.11.15.020032.tar.xz"],
         downloaded_file_path = "sdk.tar.xz",
     )
+
+    http_file(
+        name = "cros-bazel-sdk",
+        sha256 = "fdd242a81296072c83ceb8089ee92882d8e57b600c8c01651447c350416a7d9a",
+        urls = ["https://storage.googleapis.com/chromiumos-sdk/cros-bazel-sdk-2024.01.08.tar.zst"],
+        downloaded_file_path = "cros-bazel-sdk.tar.zst",
+    )

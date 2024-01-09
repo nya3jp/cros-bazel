@@ -87,3 +87,22 @@ string_flag(
     build_setting_default = "",
     visibility = ["//visibility:public"],
 )
+
+bool_flag(
+    name = "use_cros_bazel_sdk",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "use_cros_bazel_sdk_enabled",
+    flag_values = {
+        ":use_cros_bazel_sdk": "True",
+    },
+)
+
+config_setting(
+    name = "use_cros_bazel_sdk_disabled",
+    flag_values = {
+        ":use_cros_bazel_sdk": "False",
+    },
+)

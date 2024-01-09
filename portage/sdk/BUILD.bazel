@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_update")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_update")
 
 pkg_tar(
     name = "extra_tarball",
@@ -20,7 +20,10 @@ pkg_tar(
 
 sdk_from_archive(
     name = "sdk_from_archive",
-    src = "@files//:cros-sdk",
+    src = select({
+        "//bazel/portage:use_cros_bazel_sdk_disabled": "@files//:cros-sdk",
+        "//bazel/portage:use_cros_bazel_sdk_enabled": "@files//:cros-bazel-sdk",
+    }),
     progress_message = "Extracting bootstrap SDK tarball",
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
