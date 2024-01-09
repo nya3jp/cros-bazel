@@ -1,0 +1,625 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+alias(
+    name = "4.4.28_host_deps",
+    actual = "//internal/sdk/stage3/target/host",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "4.4.28_deps",
+    actual = "4.4.28_host_deps",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "4.4.28_test_deps",
+    actual = "4.4.28_host_deps",
+    visibility = ["//visibility:private"],
+)
+string_flag(
+    name = "4.4.28_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "4.4.28_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "4.4.28_incremental_enabled",
+    flag_values = {":4.4.28_incremental": "true"},
+)
+
+write_file(
+    name = "4.4.28_cache_marker",
+    out = "4.4.28_incremental/MARKER",
+)
+
+ebuild(
+    name = "4.4.28",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    overlay = "//internal/overlays/toolchains",
+    category = "cross-x86_64-cros-linux-gnu",
+    package_name = "libxcrypt",
+    version = "4.4.28",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":4.4.28_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/host:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":4.4.28_incremental_enabled": ":4.4.28_cache_marker",
+        "//conditions:default": None,
+    }),
+    prebuilt = ":4.4.28_prebuilt",
+    portage_profile_test_package = select({
+        "@//bazel/portage:portage_config_validator_enabled": ":4.4.28_portage_profile_test_package",
+        "@//bazel/portage:portage_config_validator_disabled": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "4.4.28_including_provided",
+    binpkg = ":4.4.28",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "4.4.28_debug",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    overlay = "//internal/overlays/toolchains",
+    category = "cross-x86_64-cros-linux-gnu",
+    package_name = "libxcrypt",
+    version = "4.4.28",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":4.4.28_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/host:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":4.4.28_incremental_enabled": ":4.4.28_cache_marker",
+        "//conditions:default": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+string_flag(
+    name = "4.4.28_hermetic_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "4.4.28_hermetic_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "4.4.28_hermetic_test_package_incremental_enabled",
+    flag_values = {":4.4.28_hermetic_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "4.4.28_hermetic_test_package_cache_marker",
+    out = "4.4.28_hermetic_test_package_incremental/MARKER",
+)
+
+ebuild(
+    name = "4.4.28_hermetic_test_package",
+    suffix = "_hermetic_test_package",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    overlay = "//internal/overlays/toolchains",
+    category = "cross-x86_64-cros-linux-gnu",
+    package_name = "libxcrypt",
+    version = "4.4.28",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":4.4.28_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/host:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":4.4.28_hermetic_test_package_incremental_enabled": ":4.4.28_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    prebuilt = ":4.4.28_hermetic_test_package_prebuilt",
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "4.4.28_hermetic_test_package_including_provided",
+    binpkg = ":4.4.28",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "4.4.28_hermetic_test_package_debug",
+    suffix = "_hermetic_test_package",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    overlay = "//internal/overlays/toolchains",
+    category = "cross-x86_64-cros-linux-gnu",
+    package_name = "libxcrypt",
+    version = "4.4.28",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":4.4.28_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/host:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [],
+    }),
+    incremental_cache_marker = select({
+        ":4.4.28_hermetic_test_package_incremental_enabled": ":4.4.28_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+
+string_flag(
+    name = "4.4.28_portage_profile_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["@//bazel:internal"],
+)
+
+bool_flag(
+    name = "4.4.28_portage_profile_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "4.4.28_portage_profile_test_package_incremental_enabled",
+    flag_values = {":4.4.28_portage_profile_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "4.4.28_portage_profile_test_package_cache_marker",
+    out = "4.4.28_portage_profile_test_package_incremental/MARKER",
+)
+
+ebuild(
+    name = "4.4.28_portage_profile_test_package",
+    suffix = "_portage_profile_test_package",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    overlay = "//internal/overlays/toolchains",
+    category = "cross-x86_64-cros-linux-gnu",
+    package_name = "libxcrypt",
+    version = "4.4.28",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":4.4.28_deps",
+    overlays = "//internal/overlays:host-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
+    ],
+    incremental_cache_marker = select({
+        ":4.4.28_portage_profile_test_package_incremental_enabled": ":4.4.28_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    prebuilt = ":4.4.28_portage_profile_test_package_prebuilt",
+    visibility = ["@//bazel:internal"],
+)
+
+add_runtime_deps(
+    name = "4.4.28_portage_profile_test_package_including_provided",
+    binpkg = ":4.4.28",
+    runtime_deps = [
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_debug(
+    name = "4.4.28_portage_profile_test_package_debug",
+    suffix = "_portage_profile_test_package",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    overlay = "//internal/overlays/toolchains",
+    category = "cross-x86_64-cros-linux-gnu",
+    package_name = "libxcrypt",
+    version = "4.4.28",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":4.4.28_deps",
+    overlays = "//internal/overlays:host-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
+    ],
+    incremental_cache_marker = select({
+        ":4.4.28_portage_profile_test_package_incremental_enabled": ":4.4.28_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    visibility = ["@//bazel:internal"],
+)
+ebuild_install(
+    name = "4.4.28_install",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    category = "cross-x86_64-cros-linux-gnu",
+    board = "amd64-host",
+    packages = [
+        "//internal/packages/stage3/target/host/toolchains/cross-x86_64-cros-linux-gnu/libxcrypt:4.4.28",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_install_action(
+    name = "4.4.28_installed_no_pdepends",
+    board = "amd64-host",
+    package = ":4.4.28",
+    requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "4.4.28_installed",
+    srcs = [
+        "//internal/packages/stage3/target/host/toolchains/cross-x86_64-cros-linux-gnu/libxcrypt:4.4.28_installed_no_pdepends",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_install_list(
+    name = "4.4.28_install_list",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    category = "cross-x86_64-cros-linux-gnu",
+    board = "amd64-host",
+    packages = [
+        "//internal/packages/stage3/target/host/toolchains/cross-x86_64-cros-linux-gnu/libxcrypt:4.4.28",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+ebuild_test(
+    name = "4.4.28_test",
+    ebuild = "libxcrypt-4.4.28.ebuild",
+    overlay = "//internal/overlays/toolchains",
+    category = "cross-x86_64-cros-linux-gnu",
+    package_name = "libxcrypt",
+    version = "4.4.28",
+    slot = "0/0",
+    distfiles = {
+    },
+    srcs = [
+        "//internal/sources/src/scripts/hooks:__tarballs__",
+        "@chromite//:src",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = select({
+        "@//bazel/portage:compiled_profiles_enabled": True,
+        "@//bazel/portage:compiled_profiles_disabled": False,
+    }),
+    files = glob(["files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":4.4.28_test_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/host:full",
+        ],
+    }),
+    bashrcs = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/bashrcs/chromiumos/base:profile.bashrc",
+            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [],
+    }),
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "4.4.28_hermetic_test",
+    packages = [
+        ":4.4.28",
+        ":4.4.28_hermetic_test_package",
+    ],
+    size="small",
+)
+
+test_suite(
+    name = "4.4.28_package_set_hermetic_test",
+    tests = [
+        "//internal/packages/stage3/target/host/toolchains/cross-x86_64-cros-linux-gnu/libxcrypt:4.4.28_hermetic_test",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+package_set(
+    name = "4.4.28_package_set",
+    deps = [
+        "//internal/packages/stage3/target/host/toolchains/cross-x86_64-cros-linux-gnu/libxcrypt:4.4.28",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+

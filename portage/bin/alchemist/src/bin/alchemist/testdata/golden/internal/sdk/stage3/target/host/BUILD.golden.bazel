@@ -1,0 +1,52 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_glibc", "sdk_install_deps")
+
+
+
+sdk_extend(
+    name = "base",
+    base = "//internal/sdk/stage3:bootstrap",
+    extra_tarballs = [
+        # TODO(b/278728702): Stop using the stage1 board_extra_tarball and
+        # generate it here instead. Or figure out a better place to put it
+        # so it can be shared between the stages.
+        "//internal/sdk/stage1/target/host:board_extra_tarball",
+    ],
+    visibility = ["@//bazel:internal"],
+)
+
+sdk_install_deps(
+    name = "host",
+    base = ":base",
+    board = "amd64-host",
+    overlays = "//internal/overlays:host",
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/host:full",
+        ],
+    }),
+    target_deps = [
+        "//internal/packages/stage3/target/host/chromiumos/sys-kernel/linux-headers:4.14",
+        "//internal/packages/stage3/target/host/chromiumos/sys-libs/gcc-libs:10.2.0",
+        "//internal/packages/stage3/target/host/chromiumos/sys-libs/glibc:2.35-r25",
+        "//internal/packages/stage3/target/host/chromiumos/sys-libs/libcxx:16.0_pre484197",
+        "//internal/packages/stage3/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
+        "//internal/packages/stage3/target/host/portage-stable/virtual/os-headers:0-r2",
+    ],
+    install_strategy = select({
+        "@//bazel/portage:binpkg_cache_fast": "fast",
+        "//conditions:default": "slow",
+    }),
+    visibility = ["@//bazel:internal"],
+)

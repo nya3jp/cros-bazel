@@ -24,10 +24,11 @@ use alchemist::{
     },
     config::ProvidedPackage,
     dependency::package::{AsPackageRef, PackageAtom},
+    ebuild::PackageDetails,
     fakechroot::PathTranslator,
     resolver::select_best_version,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
 
 use crate::alchemist::TargetData;
@@ -128,6 +129,62 @@ fn compute_provided_packages(
         .sorted()
         .collect(),
     )
+}
+
+/// The bootstrap packages are all the BDEPENDs required to build the transitive
+/// DEPEND and RDEPEND of the `root` package.
+fn compute_bootstrap_packages<'a>(
+    packages_by_path: &'a HashMap<&Path, Result<&Package, &PackageAnalysisError>>,
+    root: &Package,
+) -> Result<Vec<&'a Package>> {
+    // We collect the DEPEND in addition to the RDEPEND because there might be
+    // packages that only declare a dependency as a DEPEND. If we only collected
+    // the RDEPEND then we might not be able to build the DEPEND and thus fail
+    // to build the implicit system set.
+    let depend_and_rdepend =
+        collect_transitive_dependencies::<alchemist::analyze::Package, _, _, _, _>(
+            [&root.details],
+            packages_by_path,
+            &[DependencyKind::BuildTarget, DependencyKind::RunTarget],
+        )?;
+
+    let mut bdepends = vec![];
+
+    let get_package = |details: &PackageDetails| -> Result<_> {
+        let maybe_package = packages_by_path
+            .get(details.as_basic_data().ebuild_path.as_path())
+            .context("package doesn't to exist")?;
+
+        maybe_package.map_err(|err| {
+            anyhow!(
+                "{} failed to analyze: {}",
+                err.as_basic_data().package_name,
+                err.error
+            )
+        })
+    };
+
+    // Get all the direct BDEPEND and IDEPEND for the DEPEND/RDEPENDs.
+    // We don't traverse the RDEPEND of the BDEPEND because we rely on bazel
+    // to compute the transitive dependencies of the BDEPEND.
+    for details in depend_and_rdepend {
+        let package = get_package(&details)?;
+        for dep in package
+            .dependencies
+            .direct
+            .build_host
+            .iter()
+            .chain(&package.dependencies.direct.install_host)
+        {
+            bdepends.push(get_package(dep)?);
+        }
+    }
+
+    Ok(bdepends
+        .into_iter()
+        .unique_by(|package| &package.as_basic_data().ebuild_path)
+        .sorted_by_key(|package| &package.as_basic_data().ebuild_path)
+        .collect())
 }
 
 /// Generates the stage1, stage2, etc packages and SDKs.
@@ -244,21 +301,89 @@ pub fn generate_stages(
         output_dir,
     )?;
 
-    // Generate the Stage 3 host SDK
+    // Generate the Stage 3 Bootstrap SDK
     //
-    // The stage 2 SDK is composed of packages built using the Stage 1 SDK.
-    // The stage 3 SDK will be composed of packages built using the Stage 2
-    // SDK. This means we can verify that the latest toolchain can bootstrap
-    // itself.
-    // i.e., Latest LLVM can build Latest LLVM.
-    // TODO: Add call to generate stage3 sdk
-    // TODO: Also support building a "bootstrap" SDK target that is composed
-    // of ALL BDEPEND + RDEPEND + DEPEND of the
-    // virtual/target-sdk-implicit-system package.
+    // The stage 3 Bootstrap SDK is composed of packages built using the Stage
+    // 2 SDK. It is used to update the Stage 1 SDK when necessary. It only
+    // contains the packages necessary to build the implicit system set.
+    generate_base_sdk(
+        &SdkBaseConfig {
+            name: "stage3:bootstrap",
+            source_package_prefix: "stage2/host",
+            // TODO: THIS IS WRONG, we should be using the stage2 SDK, but
+            // we don't have a target/host SDK right now.
+            source_sdk: "stage1/target/host:base",
+            source_repo_set: &host.repos,
+            packages: std::iter::once(implicit_system_package.as_ref())
+                .chain(compute_bootstrap_packages(
+                    &packages_by_path,
+                    &implicit_system_package,
+                )?)
+                .collect(),
+            // We use the _including_provided suffix so we can get ALL the
+            // RDEPENDs. The regular ebuild target has its RDEPENDs filtered
+            // by what the SDK already provides.
+            package_suffix: Some("_including_provided"),
+        },
+        output_dir,
+    )?;
 
-    // TODO: Add stage3/host package if we decide we want to build targets
-    // against the stage 3 SDK.
+    // Generate the SDK used by the stage3/target/host packages.
+    generate_target_sdk(
+        &SdkTargetConfig {
+            base: "stage3:bootstrap",
+            host_prefix: "TODO: REMOVE ME. Only used then target_primary_toolchain is set",
+            host_resolver: &host.resolver,
+            name: "stage3/target/host",
+            board: &host.board,
+            target_repo_set: &host.repos,
+            target_resolver: &host.resolver,
+            target_primary_toolchain: None,
+        },
+        output_dir,
+    )?;
 
+    // These packages will be used to test that the stage 3 bootstrap SDK can
+    // correctly build the implicit system set.
+    generate_internal_packages(
+        &PackageType::CrossRoot {
+            host: None,
+            target: PackageTargetConfig {
+                board: &host.board,
+                prefix: "stage3/target/host",
+                repo_set: &host.repos,
+            },
+        },
+        translator,
+        // TODO: Do we want to pass in only the DEPEND + RDEPEND of the implicit
+        // system?
+        &host_packages,
+        output_dir,
+    )?;
+
+    // Generate the stage 4 SDK
+    //
+    // This SDK is only used to verify that the Stage 3 Bootstrap SDK can
+    // actually bootstrap the implicit system.
+    //
+    // The Stage 2 SDK and Stage 4 SDK should in theory be bit-for-bit
+    // identical.
+    generate_base_sdk(
+        &SdkBaseConfig {
+            name: "stage4",
+            source_package_prefix: "stage3/target/host",
+            // We use the `host:base` target because the stage3 SDK
+            // `host` target lists all the primordial packages for the
+            // target, and we don't want those pre-installed.
+            source_sdk: "stage3/target/host:base",
+            source_repo_set: &host.repos,
+            packages: vec![&implicit_system_package],
+            package_suffix: None,
+        },
+        output_dir,
+    )?;
+
+    // Generate public aliases
     generate_public_packages(
         &host_packages,
         &[

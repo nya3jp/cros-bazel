@@ -6,7 +6,7 @@ use alchemist::{
     analyze::Package, dependency::package::PackageAtom, ebuild::PackageDetails,
     repository::RepositorySet, resolver::PackageResolver, toolchain::Toolchain,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use serde::Serialize;
@@ -322,12 +322,18 @@ struct SdkBaseContext<'a> {
 }
 
 pub fn generate_base_sdk(config: &SdkBaseConfig, out: &Path) -> Result<()> {
-    let out = out.join("internal/sdk").join(config.name);
+    let (dir, target) = match config.name.split_once(':') {
+        None => (config.name, config.name),
+        Some((_, "")) => bail!("target is blank"),
+        Some((dir, target)) => (dir, target),
+    };
+
+    let out = out.join("internal/sdk").join(dir);
 
     create_dir_all(&out)?;
 
     let context = SdkBaseContext {
-        name: config.name,
+        name: target,
         overlay_set: &repository_set_to_target_path(config.source_repo_set),
         targets: config
             .packages

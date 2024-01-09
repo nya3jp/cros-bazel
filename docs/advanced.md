@@ -103,10 +103,13 @@ In summary, this is what the structure looks like:
             packages.
             *   target/board <-- `stage2` SDK with the `/build/board` sysroot
                 containing the [primordial packages].
-        *   stage3:bootstrap <-- Will be added in the future. It will contain
-            the `stage2/host` [virtual/target-sdk-implicit-system] packages, and
-            all their transitive `BDEPEND`s. This tarball can then be used as a
+        *   stage3:bootstrap <-- It is built using the `stage2/host`
+            [virtual/target-sdk-implicit-system] packages, and all their
+            transitive `BDEPEND`s. This tarball can then be used as a
             stage1 tarball whenever we need a new one.
+        *   stage4 <-- This is only used to verify that the `stage3:bootstrap`
+            SDK can build the implicit system. It is built using the packages
+            from `stage3/target/host`.
     *   packages/ -- Directory containing all the package targets.
         *   stage1/target/host/`${OVERLAY}`/`${CATEGORY}`/`${PACKAGE}` <-- The
             cross-root compiled host packages built using the
