@@ -72,6 +72,10 @@ find "${PKG}" -name CONTENTS -exec sort -o '{}' '{}' \;
 #                  for now.
 find "${PKG}" -name environment.bz2 -exec rm '{}' +
 
+# We no longer need the ebuild file. Remove it to avoid cache busting on trivial
+# changes.
+find "${PKG}" -name "*.ebuild" -exec truncate --size 0 '{}' +
+
 # COUNTER: Since we are installing packages in parallel the COUNTER variable
 #          can change depending on when it was installed.
 find "${PKG}" -name COUNTER -exec sed -i -e 'c 0' '{}' +

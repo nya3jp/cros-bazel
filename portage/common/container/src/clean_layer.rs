@@ -69,6 +69,16 @@ fn truncate_environment(pkg_dir: &Path) -> Result<()> {
 }
 
 #[instrument]
+fn truncate_ebuild(pkg_dir: &Path) -> Result<()> {
+    for path in find_files(pkg_dir, |file_name| file_name.ends_with(".ebuild"))? {
+        with_permissions(&path, 0o644, || {
+            std::fs::write(&path, "").with_context(|| format!("Zeroing ebuild for: {path:?}"))
+        })?;
+    }
+    Ok(())
+}
+
+#[instrument]
 fn clean_portage_database(root: &Path) -> Result<()> {
     // The portage database contains some non-hermetic install artifacts:
     // COUNTER: Since we are installing packages in parallel the COUNTER variable
@@ -83,8 +93,12 @@ fn clean_portage_database(root: &Path) -> Result<()> {
     //           it.
     // Deleting the files causes a "special" delete marker to be created by overlayfs
     // this isn't supported by bazel. So instead we just truncate the files.
+    //
+    // We also clear the ebuild file since it's not required after a package has
+    // been installed.
     let pkg_dir = root.join("var/db/pkg");
     truncate_environment(&pkg_dir)?;
+    truncate_ebuild(&pkg_dir)?;
     zero_counter(&pkg_dir)?;
     sort_contents(&pkg_dir)?;
     Ok(())
