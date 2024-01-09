@@ -1,0 +1,19 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@@//bazel/module_extensions/private:symlink.bzl", "symlink_without_target")
+
+config_setting(
+    name = "is_release",
+    values = {"compilation_mode": "opt"},
+)
+
+symlink_without_target(
+    name = "static_libs",
+    actual = select({
+        ":is_release": "src/backend/linux_raw/arch/outline/release",
+        "//conditions:default": "src/backend/linux_raw/arch/outline/debug",
+    }),
+    out = "static_libs",
+)

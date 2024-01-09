@@ -90,17 +90,28 @@ use_repo(pip, "pip")
 
 # Rust support
 bazel_dep(name = "rules_rust", version = "0.20.1")
+local_path_override(
+    module_name = "rules_rust",
+    path = "../bazel_deps/rules_rust",
+)
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
     extra_target_triples = ["x86_64-unknown-linux-musl"],
+    # TODO(b/276114803): This is the versions that were used for our old pinned
+    # rules_rust. We need to update these.
+    rustfmt_version = "nightly/2023-03-23",
+    versions = ["nightly/2023-03-23"],
+)
+rust.host_tools(
+    edition = "2021",
+    version = "1.75.0",
 )
 use_repo(
     rust,
     "rust_host_tools",
     "rust_toolchains",
-    rust_musl_toolchain = "rust_linux_x86_64__x86_64-unknown-linux-musl__stable_tools",
 )
 
 # Ordering matters here. Placing our our toolchains first gives them priority.
@@ -111,11 +122,9 @@ register_toolchains("//bazel/module_extensions/toolchains/rust:all")
 register_toolchains("@rust_toolchains//:all")
 
 # Eventually this will be merged with metallurgy crates.
-crate = use_extension("@rules_rust//rust:extensions.bzl", "crate")
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(
-    annotation_files = [
-        "//bazel/rust/alchemy_crates:annotations.json",
-    ],
+    name = "alchemy_crates",
     cargo_lockfile = "//bazel:Cargo.lock",
     manifests = [
         "//bazel/portage/bin/action_wrapper:Cargo.toml",
@@ -155,13 +164,35 @@ crate.from_cargo(
         "//bazel/rust/ide_support:Cargo.toml",
         "//bazel:Cargo.toml",
     ],
-    suffix = "alchemy",
 )
-use_repo(
-    crate,
-    # Rename it from <module_name>_crates to crates
-    alchemy_crates = "cros_crates_alchemy",
+crate.annotation(
+    build_script_env = {"FORCE_C_COMPILER": "1"},
+    crate = "bzip2-sys",
 )
+crate.annotation(
+    crate = "chrono",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//third_party/rust_crates/patches:chrono/remove-old-time-feature.patch",
+    ],
+)
+crate.annotation(
+    additive_build_file = "//bazel/rust/alchemy_crates:additive_build_files/rustix.BUILD.bazel",
+    crate = "rustix",
+    data = [":static_libs"],
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//third_party/rust_crates/patches:rustix/disable-features.patch",
+    ],
+    rustc_flags = ["-L$(location :static_libs)"],
+)
+crate.annotation(
+    build_script_env = {"FORCE_C_COMPILER": "1"},
+    crate = "zstd-sys",
+)
+use_repo(crate, "alchemy_crates")
 
 files = use_extension("//bazel/module_extensions:files/extension.bzl", "files")
 use_repo(files, "files")

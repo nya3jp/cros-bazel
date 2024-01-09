@@ -13,7 +13,6 @@ def _generate_rust_toolchain(platform_info):
         cargo = "@toolchain_sdk//:cargo",
         default_edition = "2021",
         dylib_ext = ".so",
-        os = "linux",
         rust_doc = "@toolchain_sdk//:rustdoc",
         rustfmt = "@toolchain_sdk//:rustfmt",
         rust_std = "@toolchain_sdk//:rust_stdlibs_{}".format(platform_info.triple),

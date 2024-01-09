@@ -19,10 +19,6 @@ import %workspace%/bazel/bazelrcs/include/remote_build_artifacts.bazelrc
 # Bzlmod is the new dependency management system in bazel.
 common --experimental_enable_bzlmod
 common --registry=file:%workspace%/../bazel_deps/bazel-central-registry
-# TODO(b/274698330): In the long term, we'll want to replace this with a
-# GoB repo containing all bazel modules used throughout google. This shouldn't
-# be ChromeOS specific.
-common --registry=https://raw.githubusercontent.com/matts1/bazel-central-registry/main
 
 # Undo some flags that were set by aspect that don't work for us.
 # We disable this for ChromeOS because it throws errors along the lines of
@@ -128,7 +124,7 @@ build:rustfmt --
 # When building rust, also add rustc output formatted as json to the bazel
 # outputs, so that it can be picked up by rust-analyzer.
 # This isn't needed by CQ - only by local builds, but the cost is negligible.
-build --@rules_rust//:output_diagnostics=true --output_groups=+rust_lib_rustc_output,+rust_metadata_rustc_output
+build --@rules_rust//:rustc_output_diagnostics --output_groups=+rustc_output,+rustc_rmeta_output
 
 # This will be removed when it becomes the default.
 build:hermetic_toolchains --config=hermetic_cc --config=hermetic_rust
