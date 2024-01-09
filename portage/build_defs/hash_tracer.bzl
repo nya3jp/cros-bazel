@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo")
+load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "SDKInfo")
 
 HashTracerInfo = provider(
     """
@@ -128,18 +128,26 @@ def _hash_tracer_impl(target, ctx):
     # We consider these terminal nodes since we just want to print out the
     # output hash.
     if ctx.rule.kind in [
-        "build_sdk",
+        "pkg_tar_impl",
+        "go_binary",
+        "rust_binary",
         "cc_binary",
         "cc_library",
-        "go_binary",
-        "pkg_tar_impl",
         "py_library",
-        "rust_binary",
-        "sdk_from_archive",
-        "sdk_install_glibc",
-        "sdk_update",
     ]:
         direct_outputs.append(_generate_hash_action(ctx, target.files))
+
+    elif ctx.rule.kind in ["build_sdk", "sdk_update", "sdk_install_deps", "sdk_from_archive"]:
+        layers = target[SDKInfo].layers
+
+        # We only want to hash the layer that the rule created.
+        # TODO: Refactor rules to return only newly created layers in their
+        # DefaultInfo provider.
+        last_layer = layers[-1]
+
+        direct_outputs.append(_generate_hash_action(ctx, [last_layer]))
+        transitive_outputs.extend(_processes_rule(ctx.rule))
+
     elif ctx.rule.kind in ["ebuild"]:
         files = [target[BinaryPackageInfo].file]
 
