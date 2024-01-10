@@ -32,11 +32,16 @@ impl PackageSpec {
             .split_once('/')
             .with_context(|| format!("Invalid package name: {}", package_name))?;
         let version = Version::try_new(version)?;
+        let default_vars = BTreeMap::from([
+            ("EAPI".into(), "7".into()),
+            ("KEYWORDS".into(), "*".into()),
+            ("SLOT".into(), "0".into()),
+        ]);
         Ok(Self {
             category_name: category_name.to_string(),
             short_package_name: short_package_name.to_string(),
             version,
-            vars: BTreeMap::new(),
+            vars: default_vars,
         })
     }
 
@@ -59,7 +64,7 @@ impl PackageSpec {
         std::fs::create_dir_all(ebuild_dir)
             .with_context(|| format!("Failed to mkdir {}", ebuild_dir.display()))?;
 
-        let mut ebuild_content = "EAPI=7\nKEYWORDS=\"*\"\nSLOT=0\n".to_string();
+        let mut ebuild_content = String::new();
         for (name, value) in self.vars.iter() {
             writeln!(
                 &mut ebuild_content,
@@ -131,7 +136,7 @@ fn describe_package_list(packages: &[Arc<PackageDetails>]) -> Vec<String> {
 }
 
 impl From<MaybePackage> for MaybePackageDescription {
-    /// Converts [`MaybePackage`] into [`PackageDescription`].
+    /// Converts [`MaybePackage`] into [`MaybePackageDescription`].
     fn from(package: MaybePackage) -> Self {
         let package_name_version = format!(
             "{}-{}",
@@ -166,7 +171,7 @@ impl From<MaybePackage> for MaybePackageDescription {
     }
 }
 
-/// Calls [`analyze_packages`] for unit tests.
+/// Calls [`analyze_packages`] to analyze packages for the target in unit tests.
 ///
 /// Before calling [`analyze_packages`], it generates ebuild files with the given [`PackageSpec`].
 /// After calling [`analyze_packages`], it converts the result (`Vec<MaybePackage>`) into
@@ -213,7 +218,7 @@ fn analyze_packages_for_testing(specs: &[PackageSpec]) -> Result<Vec<MaybePackag
     let host_resolver = PackageResolver::new(repos.clone(), host_config.clone(), host_loader);
     let target_resolver = PackageResolver::new(repos.clone(), target_config.clone(), target_loader);
 
-    // Use the same resolver for target and host.
+    // Analyze packages for the target.
     let packages = analyze_packages(
         &target_config,
         true,
