@@ -387,7 +387,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
                 \t\tYou are running inside the CrOS SDK and `{}` doesn't exist.\n\
                 \n\
                 \t\tPlease run the following command to create the host sysroot and try again:\n\
-                \t\t$ ~/chromiumos/src/scripts/create_sdk_board_root --board {} --profile {}\n\
+                \t\t$ ~/chromiumos/src/chromite/shell/create_sdk_board_root \
+                --board {} --profile {}\n\
                 \n\
                 *****",
                 root_dir.display(),
