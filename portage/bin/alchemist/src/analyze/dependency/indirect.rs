@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use std::{
+    borrow::Borrow,
     cmp::Ordering,
     collections::HashMap,
     path::{Path, PathBuf},
@@ -13,7 +14,10 @@ use anyhow::{bail, Result};
 use itertools::Itertools;
 
 use crate::{
-    analyze::{dependency::direct::DependencyKind, MaybePackageLocalAnalysis},
+    analyze::{
+        dependency::direct::{DependencyKind, DirectDependencies},
+        MaybePackageLocalAnalysis, PackageAnalysisError, PackageLocalAnalysis,
+    },
     ebuild::PackageDetails,
 };
 
@@ -58,15 +62,22 @@ fn compare_packages(a: &&Arc<PackageDetails>, b: &&Arc<PackageDetails>) -> Order
 /// packages are always included in the result package set.
 ///
 /// `kinds` specifies dependency kinds to follow.
-fn collect_transitive_dependencies(
-    seed_packages: &[Arc<PackageDetails>],
-    local_map: &HashMap<PathBuf, MaybePackageLocalAnalysis>,
-    kinds: &[DependencyKind],
-) -> Result<Vec<Arc<PackageDetails>>> {
+pub fn collect_transitive_dependencies<'a, D, DRef, P, E, R>(
+    seed_packages: impl IntoIterator<Item = &'a Arc<PackageDetails>>,
+    local_map: &'a HashMap<P, R>,
+    kinds: &'a [DependencyKind],
+) -> Result<Vec<Arc<PackageDetails>>>
+where
+    D: AsRef<DirectDependencies>,
+    DRef: Borrow<D>,
+    P: Borrow<Path> + std::cmp::Eq + std::hash::Hash,
+    E: Borrow<PackageAnalysisError>,
+    R: Borrow<Result<DRef, E>>,
+{
     use std::collections::hash_map::Entry;
 
     let mut visited: HashMap<&Path, &Arc<PackageDetails>> = HashMap::new();
-    let mut stack: Vec<&Arc<PackageDetails>> = seed_packages.iter().collect();
+    let mut stack: Vec<&Arc<PackageDetails>> = seed_packages.into_iter().collect();
 
     // Search the dependency graph with DFS.
     while let Some(current) = stack.pop() {
@@ -80,15 +91,19 @@ fn collect_transitive_dependencies(
             }
         }
 
-        let direct_dependencies = match local_map.get(ebuild_path).expect("local_map is exhaustive")
-        {
-            Ok(local) => &local.direct_dependencies,
+        let maybe_package = local_map
+            .get(ebuild_path)
+            .expect("local_map is exhaustive")
+            .borrow();
+
+        let direct_dependencies = match maybe_package {
+            Ok(local) => local.borrow().as_ref(),
             Err(error) => {
                 bail!(
                     "Failed to analyze {}-{}: {}",
                     current.as_basic_data().package_name,
                     current.as_basic_data().version,
-                    error.error
+                    error.borrow().error
                 );
             }
         };
@@ -155,18 +170,19 @@ pub fn analyze_indirect_dependencies(
         Err(error) => bail!("{}", error.error),
     };
 
-    let install_set = collect_transitive_dependencies(
-        &[start_package.clone()],
+    let install_set = collect_transitive_dependencies::<PackageLocalAnalysis, _, _, _, _>(
+        [start_package],
         local_map,
         &[DependencyKind::RunTarget, DependencyKind::PostTarget],
     )?;
 
-    let transitive_build_target_deps = collect_transitive_dependencies(
-        &local.direct_dependencies.build_target,
-        local_map,
-        // No need to follow PDEPEND on deciding build-time dependencies.
-        &[DependencyKind::RunTarget],
-    )?;
+    let transitive_build_target_deps =
+        collect_transitive_dependencies::<PackageLocalAnalysis, _, _, _, _>(
+            &local.direct_dependencies.build_target,
+            local_map,
+            // No need to follow PDEPEND on deciding build-time dependencies.
+            &[DependencyKind::RunTarget],
+        )?;
 
     let mut build_host_set = local.direct_dependencies.build_host.clone();
     build_host_set.extend(collect_direct_host_install_dependencies(

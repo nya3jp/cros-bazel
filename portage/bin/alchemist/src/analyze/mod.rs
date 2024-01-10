@@ -139,6 +139,12 @@ pub struct PackageLocalAnalysis {
     pub bashrcs: Vec<PathBuf>,
 }
 
+impl AsRef<DirectDependencies> for PackageLocalAnalysis {
+    fn as_ref(&self) -> &DirectDependencies {
+        &self.direct_dependencies
+    }
+}
+
 pub type MaybePackageLocalAnalysis = Result<Box<PackageLocalAnalysis>, Arc<PackageAnalysisError>>;
 
 /// Results of package-global analysis, i.e. analysis that can be performed only after finishing
