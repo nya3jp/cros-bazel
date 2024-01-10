@@ -53,7 +53,7 @@ pkg_files(
         # See cros_stack_bashrc in this file for details:
         # https://source.corp.google.com/chromeos_public/src/third_party/chromiumos-overlay/profiles/base/profile.bashrc
         #
-        # TODO: Consider isolating those bashrc files from the overlay and
+        # TODO(b/304634681): Consider isolating those bashrc files from the overlay and
         # associating them to corresponding packages. Note that we also need
         # to take care of chromiumos-overlay/chromeos/config/env.
         "*/*/*.bashrc",
