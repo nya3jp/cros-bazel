@@ -111,26 +111,6 @@ fn get_sdk_implicit_system_package(host_packages: &[MaybePackage]) -> Result<Arc
     }
 }
 
-fn compute_provided_packages(
-    packages_by_path: &HashMap<&Path, Result<&Package, &PackageAnalysisError>>,
-    root: &Package,
-) -> Result<Vec<ProvidedPackage>> {
-    Ok(
-        collect_transitive_dependencies::<alchemist::analyze::Package, _, _, _, _>(
-            [&root.details],
-            packages_by_path,
-            &[DependencyKind::RunTarget],
-        )?
-        .into_iter()
-        .map(|package| ProvidedPackage {
-            package_name: package.as_basic_data().package_name.clone(),
-            version: package.as_basic_data().version.clone(),
-        })
-        .sorted()
-        .collect(),
-    )
-}
-
 /// The bootstrap packages are all the BDEPENDs required to build the transitive
 /// DEPEND and RDEPEND of the `root` package.
 fn compute_bootstrap_packages<'a>(
@@ -217,8 +197,16 @@ pub fn generate_stages(
     // dependency graph. This means we need to filter out the dependencies
     // when we generate the BUILD files.
     let implicit_system_package = get_sdk_implicit_system_package(&host_packages)?;
-    let implicit_system_packages =
-        compute_provided_packages(&packages_by_path, &implicit_system_package)?;
+    let implicit_system_packages = implicit_system_package
+        .dependencies
+        .indirect
+        .install_set
+        .iter()
+        .map(|p| ProvidedPackage {
+            package_name: p.as_basic_data().package_name.clone(),
+            version: p.as_basic_data().version.clone(),
+        })
+        .collect_vec();
 
     // Generate the SDK used by the stage1/target/host packages.
     generate_stage1_sdk("stage1/target/host", host, output_dir)?;
@@ -268,7 +256,7 @@ pub fn generate_stages(
             source_sdk: "stage1/target/host:base",
             source_repo_set: &host.repos,
             packages: vec![&implicit_system_package],
-            package_suffix: None,
+            package_suffix: Some("_package_set"),
         },
         output_dir,
     )?;
