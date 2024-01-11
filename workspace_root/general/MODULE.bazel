@@ -99,10 +99,8 @@ rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
     extra_target_triples = ["x86_64-unknown-linux-musl"],
-    # TODO(b/276114803): This is the versions that were used for our old pinned
-    # rules_rust. We need to update these.
-    rustfmt_version = "nightly/2023-03-23",
-    versions = ["nightly/2023-03-23"],
+    rustfmt_version = "1.75.0",
+    versions = ["1.75.0"],
 )
 rust.host_tools(
     edition = "2021",

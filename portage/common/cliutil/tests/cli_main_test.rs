@@ -122,8 +122,8 @@ fn test_redirection_on_main_thread_panic() -> Result<()> {
         "stdout",
         "stderr",
         INFO,
-        "thread 'main' panicked at 'unknown error', \
-        bazel/portage/common/cliutil/testdata/demo.rs:26:9",
+        "thread 'main' panicked at bazel/portage/common/cliutil/testdata/demo.rs:26:9:",
+        "unknown error",
         BACKTRACE_NOTICE,
     ]);
     assert_eq!(

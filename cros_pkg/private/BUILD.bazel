@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@pip//:requirements.bzl", "requirement")
-load("@rules_python//python:defs.bzl", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/bash:defs.bzl", "sh_runfiles_test")
 load("//bazel/cros_pkg:defs.bzl", "cros_pkg_filegroup")
@@ -90,7 +90,6 @@ rust_test(
 rust_library(
     name = "manifest",
     srcs = ["manifest.rs"],
-    crate_features = ["unix_chown"],
     deps = [
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:log",

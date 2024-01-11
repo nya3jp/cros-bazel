@@ -2,11 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// We require this feature, since nix doesn't expose lchown.
-// nix won't let you chown a symbolic link
-// We could use the libc crate, but then we have to deal with unsafe code.
-// This seems like the lesser of two evils.
-#![feature(unix_chown)]
 use anyhow::{bail, Context, Result};
 use log::debug;
 use nix::unistd::{Gid, Group, Uid, User};
