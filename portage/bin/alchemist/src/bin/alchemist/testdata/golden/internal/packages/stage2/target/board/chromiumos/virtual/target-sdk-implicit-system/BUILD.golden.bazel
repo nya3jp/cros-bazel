@@ -57,12 +57,18 @@ ebuild(
     package_name = "target-sdk-implicit-system",
     version = "1-r4",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     runtime_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
@@ -143,12 +149,18 @@ ebuild_debug(
     package_name = "target-sdk-implicit-system",
     version = "1-r4",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     runtime_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
@@ -238,12 +250,18 @@ ebuild(
     package_name = "target-sdk-implicit-system",
     version = "1-r4",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     runtime_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
@@ -321,12 +339,18 @@ ebuild_debug(
     package_name = "target-sdk-implicit-system",
     version = "1-r4",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     runtime_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
@@ -416,12 +440,18 @@ ebuild(
     package_name = "target-sdk-implicit-system",
     version = "1-r4",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     runtime_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
@@ -483,12 +513,18 @@ ebuild_debug(
     package_name = "target-sdk-implicit-system",
     version = "1-r4",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     runtime_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",
@@ -592,12 +628,18 @@ ebuild_test(
     package_name = "target-sdk-implicit-system",
     version = "1-r4",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     runtime_deps = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197",

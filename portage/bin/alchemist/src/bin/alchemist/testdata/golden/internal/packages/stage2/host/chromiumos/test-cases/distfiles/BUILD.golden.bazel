@@ -57,13 +57,19 @@ ebuild(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -135,13 +141,19 @@ ebuild_debug(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -222,13 +234,19 @@ ebuild(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -297,13 +315,19 @@ ebuild_debug(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -384,13 +408,19 @@ ebuild(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -444,13 +474,19 @@ ebuild_debug(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -493,13 +529,19 @@ ebuild_test(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-        "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            "@portage_deps//:dist_locale-gen-2.10.tar.gz": "locale-gen-2.10.tar.gz",
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",

@@ -106,3 +106,26 @@ config_setting(
         ":use_cros_bazel_sdk": "False",
     },
 )
+
+# When enabled, it will omit the srcs and distfiles for the ebuild targets.
+# This is useful when running a `bazel cquery` command because it won't force
+# bazel to download all the distfiles, or generate the @chrome_src repository
+# rule.
+bool_flag(
+    name = "omit_ebuild_src",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "omit_ebuild_src_enabled",
+    flag_values = {
+        ":omit_ebuild_src": "True",
+    },
+)
+
+config_setting(
+    name = "omit_ebuild_src_disabled",
+    flag_values = {
+        ":omit_ebuild_src": "False",
+    },
+)

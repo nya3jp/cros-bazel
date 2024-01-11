@@ -57,12 +57,18 @@ ebuild(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -136,12 +142,18 @@ ebuild_debug(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -224,12 +236,18 @@ ebuild(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -300,12 +318,18 @@ ebuild_debug(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -388,12 +412,18 @@ ebuild(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -449,12 +479,18 @@ ebuild_debug(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",
@@ -499,12 +535,18 @@ ebuild_test(
     package_name = "inherit",
     version = "1.0",
     slot = "0/0",
-    distfiles = {
-    },
-    srcs = [
-        "//internal/sources/src/scripts/hooks:__tarballs__",
-        "@chromite//:src",
-    ],
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
     use_flags = [
         "amd64",
         "elibc_glibc",

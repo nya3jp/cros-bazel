@@ -19,31 +19,43 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     package_name = "{{ ebuild.package_name }}",
     version = "{{ ebuild.version }}",
     slot = "{{ ebuild.slot }}",
-    distfiles = {
-        {%- for dist in ebuild.dists %}
-        "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
-        {%- endfor %}
-    },
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+            {%- for dist in ebuild.dists %}
+            "@portage_deps//:{{ dist.name }}": "{{ dist.filename }}",
+            {%- endfor %}
+        },
+    }),
     {%- if ebuild.sources %}
-    srcs = [
-        {%- for source in ebuild.sources %}
-        "{{ source }}",
-        {%- endfor %}
-    ],
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            {%- for source in ebuild.sources %}
+            "{{ source }}",
+            {%- endfor %}
+        ],
+    }),
     {%- endif %}
     {%- if ebuild.cache_sources %}
-    cache_srcs = [
-        {%- for source in ebuild.cache_sources %}
-        "{{ source }}",
-        {%- endfor %}
-    ],
+    cache_srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            {%- for source in ebuild.cache_sources %}
+            "{{ source }}",
+            {%- endfor %}
+        ],
+    }),
     {%- endif %}
     {%- if ebuild.git_trees %}
-    git_trees = [
-        {%- for git_tree in ebuild.git_trees %}
-        "{{ git_tree }}",
-        {%- endfor %}
-    ],
+    git_trees = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            {%- for git_tree in ebuild.git_trees %}
+            "{{ git_tree }}",
+            {%- endfor %}
+        ],
+    }),
     {%- endif %}
     {%- if ebuild.runtime_deps or ebuild.provided_runtime_deps %}
     runtime_deps = [
