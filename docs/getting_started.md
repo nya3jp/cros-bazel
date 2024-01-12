@@ -38,7 +38,7 @@ new one if you haven't already. Then run the following command to create the
 `amd64-host` sysroot.
 
 ```sh
-(cr) $ /mnt/host/source/src/chromite/shell/create_sdk_board_root --board amd64-host --profile sdk/bootstrap
+(cr) $ /mnt/host/source/chromite/shell/create_sdk_board_root --board amd64-host --profile sdk/bootstrap
 ```
 
 This will create `/build/amd64-host`. This sysroot contains the Portage
