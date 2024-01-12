@@ -28,14 +28,16 @@ pub struct ProfileCompiler<'a> {
 
 const MAKE_DEFAULT_VARIABLES: &[&str; 2] = &["PROFILE_ONLY_VARIABLES", "USE_EXPAND"];
 
-const IGNORED_VARIABLES: &[&str; 3] = &[
+const IGNORED_VARIABLES: &[&str; 5] = &[
     // We don't need a global USE declaration because we inject a
     // per-package package.use.
     "USE",
     // BINHOSTs are not required because we don't download packages
     // from inside the container. They also change all the time.
+    "CQ_BINHOST",
     "FULL_BINHOST",
     "PORTAGE_BINHOST",
+    "POSTSUBMIT_BINHOST",
     // TODO: Strip out all RESUMECOMMAND* and FETCHCOMMAND* variables
     // since we don't need them.
 ];
