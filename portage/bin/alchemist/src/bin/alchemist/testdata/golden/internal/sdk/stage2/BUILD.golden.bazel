@@ -22,7 +22,7 @@ build_sdk(
         ],
     }),
     target_deps = [
-        "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4_package_set",
+        "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4",
     ],
     sdk = "//internal/sdk/stage1/target/host:base",
     visibility = ["@//bazel:internal"],
