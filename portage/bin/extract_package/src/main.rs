@@ -46,6 +46,12 @@ struct Cli {
     /// Indicates that the package is for the host.
     #[arg(long)]
     host: bool,
+
+    /// Omit the .ebuild and environment.bz2 from the layer.
+    ///
+    /// These files are not needed after the package has been installed.
+    #[arg(long)]
+    omit_ebuild_env: bool,
 }
 
 fn read_xattrs(path: &Path) -> Result<HashMap<OsString, Vec<u8>>> {
@@ -181,6 +187,24 @@ fn do_main() -> Result<()> {
     );
     create_initial_vdb(&vdb_dir, &binary_package)?;
     std::fs::write(vdb_dir.join("CONTENTS"), contents)?;
+
+    // We delete the files instead of clearing them so that when fast_install_packages
+    // layers the installed contents layer on top of the staged contents layer
+    // we don't hide the real files.
+    if args.omit_ebuild_env {
+        let env = vdb_dir.join("environment.bz2");
+        std::fs::remove_file(&env).with_context(|| format!("Failed to delete {env:?}"))?;
+
+        let ebuild = vdb_dir.join(format!(
+            "{}.ebuild",
+            binary_package
+                .category_pf()
+                .split('/')
+                .last()
+                .expect("cat/pkg-version")
+        ));
+        std::fs::remove_file(&ebuild).with_context(|| format!("Failed to delete {ebuild:?}"))?;
+    }
 
     if args.host {
         // HACK: Rename directories that collide with well-known symlinks.

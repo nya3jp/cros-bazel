@@ -11,6 +11,7 @@ def _generate_contents_layer(
         image_prefix,
         vdb_prefix,
         host,
+        omit_ebuild_env,
         executable_action_wrapper,
         executable_extract_package):
     output_contents_dir = ctx.actions.declare_directory(output_name)
@@ -28,6 +29,9 @@ def _generate_contents_layer(
         "--image-prefix=" + image_prefix,
         "--vdb-prefix=" + vdb_prefix,
     ], expand_directories = False)
+
+    if omit_ebuild_env:
+        arguments.add("--omit-ebuild-env")
 
     if host:
         arguments.add("--host")
@@ -96,6 +100,9 @@ def generate_contents(
             image_prefix = prefix,
             vdb_prefix = prefix,
             host = host,
+            # We don't need the environment.bz2 or ebuild file when building
+            # other packages.
+            omit_ebuild_env = True,
             executable_action_wrapper = executable_action_wrapper,
             executable_extract_package = executable_extract_package,
         ),
@@ -106,6 +113,9 @@ def generate_contents(
             image_prefix = ".image",
             vdb_prefix = prefix,
             host = host,
+            # We want to keep the full environment.bz2 and ebuild file
+            # so we can execute the hooks.
+            omit_ebuild_env = False,
             executable_action_wrapper = executable_action_wrapper,
             executable_extract_package = executable_extract_package,
         ),
