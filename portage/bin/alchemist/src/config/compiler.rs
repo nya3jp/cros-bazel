@@ -28,16 +28,10 @@ pub struct ProfileCompiler<'a> {
 
 const MAKE_DEFAULT_VARIABLES: &[&str; 2] = &["PROFILE_ONLY_VARIABLES", "USE_EXPAND"];
 
-const IGNORED_VARIABLES: &[&str; 5] = &[
+const IGNORED_VARIABLES: &[&str; 1] = &[
     // We don't need a global USE declaration because we inject a
     // per-package package.use.
     "USE",
-    // BINHOSTs are not required because we don't download packages
-    // from inside the container. They also change all the time.
-    "CQ_BINHOST",
-    "FULL_BINHOST",
-    "PORTAGE_BINHOST",
-    "POSTSUBMIT_BINHOST",
     // TODO: Strip out all RESUMECOMMAND* and FETCHCOMMAND* variables
     // since we don't need them.
 ];
@@ -149,6 +143,13 @@ impl<'a> ProfileCompiler<'a> {
             || self.use_expand_keys.iter().any(|x| *x == key)
     }
 
+    fn is_ignored_key(&self, key: &str) -> bool {
+        IGNORED_VARIABLES.iter().any(|x| *x == key) ||
+        // BINHOSTs are not required because we don't download packages
+        // from inside the container. They also change all the time.
+        key.ends_with("_BINHOST")
+    }
+
     /// Returns the env keys and values that make up the compiled profile's
     /// make.defaults.
     fn make_default(&self) -> Result<Vec<(&str, &str)>> {
@@ -167,7 +168,7 @@ impl<'a> ProfileCompiler<'a> {
         self.config
             .env()
             .iter()
-            .filter(|(key, _val)| !IGNORED_VARIABLES.iter().any(|x| x == key))
+            .filter(|(key, _val)| !self.is_ignored_key(key))
             .filter(|(key, _val)| !self.is_make_default_key(key))
             // This is only filtered to make the diff between packages compiled
             // with compiled profiles match packages built using portage
@@ -287,6 +288,7 @@ mod tests {
                 ("USE_EXPAND_VALUES_ELIBC".into(), "FreeBSD glibc musl".into()),
                 ("ROOT".into(), sysroot.into()),
                 ("PKG_CONFIG".into(), format!("{sysroot}/build/bin/pkg-config")),
+                ("CQ_BINHOST".into(), format!("http://foo")),
             ])),
         }])]);
 
