@@ -13,7 +13,7 @@ use nix::{
     mount::{mount, umount2, MsFlags},
     sched::{unshare, CloneFlags},
     sys::socket::{socket, AddressFamily, SockFlag, SockProtocol, SockType},
-    unistd::pivot_root,
+    unistd::{pivot_root, sethostname},
 };
 use processes::status_to_exit_code;
 use run_in_container_lib::RunInContainerConfig;
@@ -69,7 +69,7 @@ fn enter_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     let dumb_init_path = r.rlocation("files/dumb_init");
 
     // Enter various namespaces except mount/PID namespace.
-    let mut unshare_flags = CloneFlags::CLONE_NEWIPC;
+    let mut unshare_flags = CloneFlags::CLONE_NEWIPC | CloneFlags::CLONE_NEWUTS;
     if !cfg.allow_network_access {
         unshare_flags |= CloneFlags::CLONE_NEWNET;
     }
@@ -100,6 +100,9 @@ fn enter_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
         .stderr(Stdio::null())
         .spawn()?;
     std::mem::forget(sentinel);
+
+    // Set the host name to the fixed one.
+    sethostname("ephemeral").context("Failed to set the host name")?;
 
     // Enter a PID namespace.
     unshare(CloneFlags::CLONE_NEWPID).context("Failed to enter PID namespace")?;
