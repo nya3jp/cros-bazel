@@ -3,12 +3,13 @@
 // found in the LICENSE file.
 
 use std::{
+    collections::HashSet,
     fs::File,
     io::Write,
     path::{Path, PathBuf},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use binarypackage::BinaryPackage;
 use md5::{Digest, Md5};
 use walkdir::WalkDir;
@@ -35,6 +36,40 @@ pub fn create_initial_vdb(vdb_dir: &Path, package: &BinaryPackage) -> Result<()>
     std::fs::write(vdb_dir.join("COUNTER"), "0")?;
 
     // TODO: Do we need to create INSTALL_MASK?
+
+    Ok(())
+}
+
+/// Creates an sparse VDB directory for a package.
+///
+/// This provides a database entry with enough metadata for `has_version` to
+/// function correctly.
+///
+/// We omit the files instead of clearing them so that when
+/// `fast_install_packages` layers the installed contents layer on top of the
+/// staged contents layer we don't hide the real files.
+pub fn create_sparse_vdb(vdb_dir: &Path, package: &BinaryPackage) -> Result<()> {
+    std::fs::create_dir_all(vdb_dir).with_context(|| format!("mkdir {}", vdb_dir.display()))?;
+
+    // These are the keys we need so that `has_version` can properly support
+    // a full dependency atom. i.e.,
+    //     * dev-python/six[python_targets_python3_8(-),python_single_target_python3_8(+)]
+    //     * dev-libs/openssl:3
+    //     * dev-libs/openssl::portage-stable
+    //     * sys-devel/glibc[crosscompile_opts_headers-only]
+    let mut keys = HashSet::from(["EAPI", "SLOT", "IUSE", "USE", "repository"]);
+
+    // Extract xpak.
+    for (key, value) in package.xpak().iter() {
+        if keys.remove(key.as_str()) {
+            std::fs::write(vdb_dir.join(key), value)?;
+        }
+    }
+
+    ensure!(
+        keys.is_empty(),
+        "Package is missing the following keys: {keys:?}"
+    );
 
     Ok(())
 }

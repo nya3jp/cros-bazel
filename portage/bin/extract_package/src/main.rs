@@ -16,7 +16,7 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
-use vdb::{create_initial_vdb, generate_vdb_contents, get_vdb_dir};
+use vdb::{create_initial_vdb, create_sparse_vdb, generate_vdb_contents, get_vdb_dir};
 use walkdir::WalkDir;
 
 /// Unpacks a binary package file to generate an installed image that can be
@@ -47,11 +47,11 @@ struct Cli {
     #[arg(long)]
     host: bool,
 
-    /// Omit the .ebuild and environment.bz2 from the layer.
+    /// Omit most of the metadata from the vdb entry.
     ///
-    /// These files are not needed after the package has been installed.
+    /// Most of the vdb is not needed after a package has been installed.
     #[arg(long)]
-    omit_ebuild_env: bool,
+    sparse_vdb: bool,
 }
 
 fn read_xattrs(path: &Path) -> Result<HashMap<OsString, Vec<u8>>> {
@@ -185,26 +185,18 @@ fn do_main() -> Result<()> {
         &args.output_directory.join(&args.vdb_prefix),
         binary_package.category_pf(),
     );
-    create_initial_vdb(&vdb_dir, &binary_package)?;
-    std::fs::write(vdb_dir.join("CONTENTS"), contents)?;
 
-    // We delete the files instead of clearing them so that when fast_install_packages
-    // layers the installed contents layer on top of the staged contents layer
-    // we don't hide the real files.
-    if args.omit_ebuild_env {
-        let env = vdb_dir.join("environment.bz2");
-        std::fs::remove_file(&env).with_context(|| format!("Failed to delete {env:?}"))?;
-
-        let ebuild = vdb_dir.join(format!(
-            "{}.ebuild",
-            binary_package
-                .category_pf()
-                .split('/')
-                .last()
-                .expect("cat/pkg-version")
-        ));
-        std::fs::remove_file(&ebuild).with_context(|| format!("Failed to delete {ebuild:?}"))?;
+    // Once a package has been installed, we no longer need a full vdb entry.
+    if args.sparse_vdb {
+        create_sparse_vdb(&vdb_dir, &binary_package)?;
+    } else {
+        create_initial_vdb(&vdb_dir, &binary_package)?;
     }
+
+    // We write the CONTENTS file regardless of sparse_vdb because it
+    // doesn't result in unnecessary cache busting (since it's derived from the
+    // input files), and it's also used by the find-missing-deps.sh hook.
+    std::fs::write(vdb_dir.join("CONTENTS"), contents)?;
 
     if args.host {
         // HACK: Rename directories that collide with well-known symlinks.
