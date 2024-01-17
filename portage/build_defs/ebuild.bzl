@@ -12,6 +12,9 @@ load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 
+_CCACHE_LABEL = "//bazel/portage:ccache"
+_CCACHE_DIR_LABEL = "//bazel/portage:ccache_dir"
+
 # The stage1 SDK will need to be built with ebuild_primordial.
 # After that, they can use the ebuild rule.
 # This ensures that we don't build the stage1 targets twice.
@@ -190,6 +193,14 @@ _EBUILD_COMMON_ATTRS = dict(
         executable = True,
         cfg = "exec",
     ),
+    _ccache = attr.label(
+        default = Label(_CCACHE_LABEL),
+        providers = [BuildSettingInfo],
+    ),
+    _ccache_dir = attr.label(
+        default = Label(_CCACHE_DIR_LABEL),
+        providers = [BuildSettingInfo],
+    ),
 )
 
 def _bashrc_to_path(bashrc):
@@ -327,6 +338,24 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
             cache_marker_path = cache_marker_path_or_file
         caches_dir = paths.dirname(cache_marker_path)
         args.add("--incremental-cache-dir=%s/portage" % caches_dir)
+
+    # --ccache-dir
+    ccache_dir = ctx.attr._ccache_dir[BuildSettingInfo].value
+    if ccache_dir:
+        if not ccache_dir.startswith("/"):
+            fail("%s=%r is not an absolute path" % (_CCACHE_DIR_LABEL, ccache_dir))
+
+        # Always pass --ccache-dir regardless of --ccache.
+        # So people can also enable ccache with the ebuld_debug script,
+        # without worrying about the ccache directory.
+        args.add(ccache_dir, format = "--ccache-dir=%s")
+
+    # --ccache
+    ccache = ctx.attr._ccache[BuildSettingInfo].value
+    if ccache:
+        if not ccache_dir:
+            fail("%s set but %s not set" % (_CCACHE_LABEL, _CCACHE_DIR_LABEL))
+        args.add("--ccache")
 
     # --use-flags
     if ctx.attr.inject_use_flags:

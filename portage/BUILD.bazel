@@ -129,3 +129,15 @@ config_setting(
         ":omit_ebuild_src": "False",
     },
 )
+
+bool_flag(
+    name = "ccache",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+string_flag(
+    name = "ccache_dir",
+    build_setting_default = "",
+    visibility = ["//visibility:public"],
+)
