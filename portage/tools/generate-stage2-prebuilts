@@ -81,12 +81,15 @@ do
 
     readarray -t EBUILD_TARGETS < <(
         set -x
-        bazel query --repo_env=_CACHE_BUST_DATE=none "kind(ebuild, deps(${TARGET}))" || kill "$$"
+        bazel cquery --repo_env=_CACHE_BUST_DATE=none \
+            --//bazel/portage:omit_ebuild_src \
+            "kind(ebuild, deps(${TARGET}))" || kill "$$"
     )
 
     echo "common:${KEY} \\" >&3
     for TARGET in "${EBUILD_TARGETS[@]}"; do
         TARGET="${TARGET#@portage//}"
+        TARGET="${TARGET% (*)}"
         TARGET_DIR="${TARGET%:*}"
         TARGET_NAME="$(basename "${TARGET_DIR}")"
         TARGET_VERSION="${TARGET#*:}"
