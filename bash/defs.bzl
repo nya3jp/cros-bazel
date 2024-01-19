@@ -22,10 +22,14 @@ set -uo pipefail
 
 """
 
-BASH_RUNFILES_ATTRS = dict(
-    _bash_runfiles = attr.label(default = "@bazel_tools//tools/bash/runfiles"),
+BASH_RUNFILES_ATTR = attr.label(
+    default = "@bazel_tools//tools/bash/runfiles",
+    allow_single_file = True,
 )
-BASH_RUNFILES_ATTR = attr.label(default = "@bazel_tools//tools/bash/runfiles")
+
+BASH_RUNFILES_ATTRS = dict(
+    _bash_runfiles = BASH_RUNFILES_ATTR,
+)
 
 def runfiles_path(ctx, file):
     """Returns a path suitable for use with the rlocation function."""

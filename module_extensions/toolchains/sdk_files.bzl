@@ -23,6 +23,9 @@ def generate_sdk_files():
         ]),
     )
 
+    native.filegroup(name = "libs", srcs = native.glob(["lib/*.so*"]))
+    native.filegroup(name = "interp", srcs = ["lib64/ld-linux-x86-64.so.2"])
+
     for platform_info in ALL_PLATFORMS:
         _generate_files(platform_info)
 

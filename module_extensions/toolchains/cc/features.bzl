@@ -17,51 +17,7 @@ def get_features(triple):
         features.extend(_HOST_FEATURES)
     return features
 
-_HOST_SYSROOT_PATH = "/tmp/cros_bazel_host_sysroot"
-
-_HOST_FEATURES = [
-    feature(
-        name = "dynamic_link_sysroot",
-        # Note that since this is linked dynamically, not statically, this will
-        # only work on the machine that built it, since only it has the special
-        # directory _HOST_SYSROOT_PATH.
-        # Specifically, this will not work:
-        # * Inside a chroot / user namespace without the directory linked in.
-        # * On another machine, eg. RBE (though it will probably work on a DUT).
-        enabled = True,
-        flag_sets = [
-            flag_set(
-                actions = [
-                    ACTION_NAMES.cpp_link_executable,
-                ],
-                flag_groups = [flag_group(flags = [
-                    "-Wl,-R/%s/lib" % _HOST_SYSROOT_PATH,
-                ])],
-            ),
-        ],
-    ),
-    feature(
-        name = "prebuilt_elfloader",
-        # Note that since this is linked dynamically, not statically, this will
-        # only work on the machine that built it, since only it has the special
-        # directory _HOST_SYSROOT_PATH.
-        # Specifically, this will not work:
-        # * Inside a chroot / user namespace without the directory linked in.
-        # * On another machine, eg. RBE (though it will probably work on a DUT).
-        enabled = True,
-        flag_sets = [
-            flag_set(
-                actions = [
-                    ACTION_NAMES.cpp_link_executable,
-                ],
-                flag_groups = [flag_group(flags = [
-                    # TODO: set this to the custom elf loader.
-                    "-Wl,-dynamic-linker=%s/lib64/ld-linux-x86-64.so.2" % _HOST_SYSROOT_PATH,
-                ])],
-            ),
-        ],
-    ),
-]
+_HOST_FEATURES = []
 
 # Taken from cs/chromeos_public/src/third_party/chromiumos-overlay/eclass/cros-bazel.eclass
 # TODO(b/285459767): Revisit these features.
