@@ -206,6 +206,23 @@ _EBUILD_COMMON_ATTRS = dict(
 def _bashrc_to_path(bashrc):
     return bashrc[BashrcInfo].path
 
+def _ccache_settings(ctx):
+    """Helper to get ccache settings.
+
+    Returns a tuple of (ccache, ccache_dir), where:
+        ccache: Whether ccache is enabled.
+        ccache_dir: Directory to store the ccache.
+    """
+    ccache = ctx.attr._ccache[BuildSettingInfo].value
+    ccache_dir = ctx.attr._ccache_dir[BuildSettingInfo].value
+
+    if ccache and not ccache_dir:
+        fail("%s set but %s not set" % (_CCACHE_LABEL, _CCACHE_DIR_LABEL))
+    if ccache_dir and not ccache_dir.startswith("/"):
+        fail("%s=%r is not an absolute path" % (_CCACHE_DIR_LABEL, ccache_dir))
+
+    return ccache, ccache_dir
+
 # TODO(b/269558613): Fix all call sites to always use runfile paths and delete `for_test`.
 def _compute_build_package_args(ctx, output_file, use_runfiles):
     """
@@ -339,23 +356,11 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
         caches_dir = paths.dirname(cache_marker_path)
         args.add("--incremental-cache-dir=%s/portage" % caches_dir)
 
-    # --ccache-dir
-    ccache_dir = ctx.attr._ccache_dir[BuildSettingInfo].value
-    if ccache_dir:
-        if not ccache_dir.startswith("/"):
-            fail("%s=%r is not an absolute path" % (_CCACHE_DIR_LABEL, ccache_dir))
-
-        # Always pass --ccache-dir regardless of --ccache.
-        # So people can also enable ccache with the ebuld_debug script,
-        # without worrying about the ccache directory.
-        args.add(ccache_dir, format = "--ccache-dir=%s")
-
-    # --ccache
-    ccache = ctx.attr._ccache[BuildSettingInfo].value
+    # --ccache, --ccache-dir
+    ccache, ccache_dir = _ccache_settings(ctx)
     if ccache:
-        if not ccache_dir:
-            fail("%s set but %s not set" % (_CCACHE_LABEL, _CCACHE_DIR_LABEL))
         args.add("--ccache")
+        args.add(ccache_dir, format = "--ccache-dir=%s")
 
     # --use-flags
     if ctx.attr.inject_use_flags:
@@ -737,6 +742,15 @@ def _ebuild_debug_impl(ctx):
     # runfiles, we embed execroot paths in the script, not runfiles paths, so
     # that the debug invocation is closer to the real build execution.
     build_package_args = _compute_build_package_args(ctx, output_file = None, use_runfiles = False)
+
+    # Try to add --ccache-dir if the directory is specified but ccache is not enabled.
+    # So people can enable ccache with the ebuld_debug script,
+    # without worrying about passing the ccache directory.
+    ccache, ccache_dir = _ccache_settings(ctx)
+    if ccache_dir and not ccache:
+        # Only do this when ccache is not enabled, and
+        # _compute_build_package_args doesn't set the --ccache-dir flag.
+        build_package_args.args.add(ccache_dir, format = "--ccache-dir=%s")
 
     # An interactive run will make --login default to after.
     # The user can still explicitly set --login=before if they wish.
