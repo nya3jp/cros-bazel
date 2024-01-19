@@ -9,5 +9,4 @@
 # deal.
 exports_files([
     "gclient.wrapper.sh",
-    "cipd"
 ])

@@ -34,7 +34,7 @@ def _cipd_file_impl(repository_ctx):
         fail("Error creating file dir:\n%s%s" % (st.stdout, st.stderr))
 
     cmd = [
-        repository_ctx.attr._cipd,
+        repository_ctx.workspace_root.get_child("chromium/depot_tools/cipd"),
         "pkg-fetch",
         package,
         "-version",
@@ -65,11 +65,6 @@ cipd_file = repository_rule(
 It must start with cipd://, contain file path and version,
 For example, cipd://some/tool/linux-amd64:abc1234""",
             mandatory = True,
-        ),
-        "_cipd": attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("@depot_tools//:cipd"),
         ),
     },
 )
