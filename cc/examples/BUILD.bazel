@@ -2,8 +2,32 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
 cc_binary(
     name = "hello_world",
     srcs = ["hello_world.cc"],
     visibility = ["//bazel/cros_pkg/examples:__subpackages__"],
+)
+
+cc_library(
+    name = "lib",
+    srcs = ["lib.cc"],
+    hdrs = ["lib.h"],
+)
+
+cc_test(
+    name = "lib_test",
+    size = "small",
+    srcs = ["lib_test.cc"],
+    deps = [
+        ":lib",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cc"],
+    deps = [":lib"],
 )
