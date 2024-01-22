@@ -4,21 +4,26 @@
 
 load("@bazel_skylib//rules:common_settings.bzl", "bool_setting")
 
+package(default_visibility = ["//visibility:public"])
+
+bool_setting(
+    name = "false",
+    # This can't be changed since it's a bool setting, not a bool flag.
+    build_setting_default = False,
+)
+
 bool_setting(
     name = "true",
     # This can't be changed since it's a bool setting, not a bool flag.
     build_setting_default = True,
-    visibility = ["//visibility:private"],
 )
 
 config_setting(
     name = "always_false",
     flag_values = {":true": "False"},
-    visibility = ["//visibility:public"],
 )
 
 config_setting(
     name = "always_true",
     flag_values = {":true": "True"},
-    visibility = ["//visibility:public"],
 )

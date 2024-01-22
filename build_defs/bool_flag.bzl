@@ -103,7 +103,7 @@ def bool_flag(name, default, custom_condition = False, visibility = None):
     _bool_flag(
         name = name,
         build_setting_default = default,
-        visibility = ["//visibility:private"],
+        visibility = visibility,
     )
 
     native.config_setting(
