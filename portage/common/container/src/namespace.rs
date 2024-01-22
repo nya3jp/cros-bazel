@@ -42,7 +42,7 @@ pub fn enter_mount_namespace() -> Result<()> {
     ensure_single_threaded()?;
 
     match unshare(CloneFlags::CLONE_NEWNS) {
-        Err(err) if err == Errno::EPERM => {
+        Err(Errno::EPERM) => {
             // If the current process does not have privilege, enter an
             // unprivileged user namespace and try it again.
             enter_unprivileged_user_namespace()?;

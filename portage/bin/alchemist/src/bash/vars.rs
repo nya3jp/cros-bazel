@@ -284,7 +284,7 @@ mod tests {
         ]);
 
         match vars.get_scalar("scalar") {
-            Ok(s) if s == "hi" => {}
+            Ok("hi") => {}
             other => panic!("get_scalar() returned unexpected result: {:?}", other),
         }
         assert!(vars.get_scalar("indexed").is_err());
@@ -304,7 +304,7 @@ mod tests {
         ]);
 
         match vars.get_scalar_or_default("scalar") {
-            Ok(s) if s == "hi" => {}
+            Ok("hi") => {}
             other => panic!(
                 "get_scalar_or_default() returned unexpected result: {:?}",
                 other
@@ -313,7 +313,7 @@ mod tests {
         assert!(vars.get_scalar_or_default("indexed").is_err());
         assert!(vars.get_scalar_or_default("associative").is_err());
         match vars.get_scalar_or_default("missing") {
-            Ok(s) if s.is_empty() => {}
+            Ok("") => {}
             other => panic!(
                 "get_scalar_or_default() returned unexpected result: {:?}",
                 other

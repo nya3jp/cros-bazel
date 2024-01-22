@@ -46,7 +46,7 @@ impl ControlChannel {
 
             match nix::sys::select::select(None, &mut read_fds, None, None, None) {
                 Ok(_) => {}
-                Err(e) if e == Errno::EINTR => continue,
+                Err(Errno::EINTR) => continue,
                 Err(e) => return Err(e.into()),
             }
 
