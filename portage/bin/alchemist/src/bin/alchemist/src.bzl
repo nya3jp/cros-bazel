@@ -122,4 +122,5 @@ ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel/portage/common/tracing-chrome-trace:BUILD.bazel",
     "@cros//bazel/portage/common/tracing-chrome-trace:src/lib.rs",
     "@alchemy_crates//:BUILD.bazel",
+    "@cargo_bazel_bootstrap//:BUILD.bazel",
 ]

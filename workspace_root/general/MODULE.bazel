@@ -119,6 +119,9 @@ register_toolchains("//bazel/module_extensions/toolchains/rust:all")
 
 register_toolchains("@rust_toolchains//:all")
 
+cargo_bazel_bootstrap = use_extension("@rules_rust//crate_universe/private/module_extensions:cargo_bazel_bootstrap.bzl", "cargo_bazel_bootstrap")
+use_repo(cargo_bazel_bootstrap, "cargo_bazel_bootstrap")
+
 # Eventually this will be merged with metallurgy crates.
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(

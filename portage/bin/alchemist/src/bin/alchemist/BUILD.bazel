@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("//bazel/module_extensions/helpers:regen_repo_rule_srcs.bzl", "regen_repo_rule_srcs")
 load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_BAZEL_BIN_SRCS")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
@@ -69,6 +69,7 @@ regen_repo_rule_srcs(
     # alias(name = "anyhow", actual = "@anyhow__<version>//:anyhow")
     extra_deps = [
         "@alchemy_crates//:BUILD.bazel",
+        "@cargo_bazel_bootstrap//:BUILD.bazel",
         "//bazel:Cargo.toml",
         "//bazel:Cargo.lock",
     ],
