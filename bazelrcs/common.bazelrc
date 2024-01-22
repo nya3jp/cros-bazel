@@ -75,6 +75,9 @@ build --experimental_collect_system_network_usage
 # Correctness guarantees
 ###
 
+# We're not yet ready to enable the lockfile.
+common --lockfile_mode=off
+
 # See github.com/bazelbuild/rules_python/issues/1059
 # Without this, packages installed to $HOME/.local/lib/python3.10/site-packages
 # can be imported from bazel's python.
