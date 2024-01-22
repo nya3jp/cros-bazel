@@ -11,7 +11,13 @@ CLANG_SELECTOR_SRC="$2"
 # actually running the most expensive part of the repo rule.
 if [ $# -gt 2 ]; then
   TARBALL="$3"
-  tar -xf "${TARBALL}" -C "${OUT_DIR}"
+
+  TAR_OPTS=()
+  if type pixz &> /dev/null; then
+    TAR_OPTS+=("-Ipixz")
+  fi
+
+  tar -xf "${TARBALL}" -C "${OUT_DIR}" "${TAR_OPTS[@]}"
 
   # TODO: Make this fully hermetic.
   # This is currently fully hermetic under a few conditions:
