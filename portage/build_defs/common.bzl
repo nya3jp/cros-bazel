@@ -196,6 +196,21 @@ EbuildLibraryInfo = provider(
     },
 )
 
+ExtraSourcesInfo = provider(
+    """
+    Describes extra source codes provided to ephemeral containers.
+
+    This provider can be produced only by the `extra_sources` rule which
+    essentially wraps rules_pkg while enforcing that files included in the
+    tarball have exactly the same file paths as the original ChromeOS source
+    checkout. This ensures that the source code layout in ephemeral containers
+    does not deviate from that of Portage-based builds.
+    """,
+    fields = {
+        "tar": "File: A .tar.zst file containing extra source codes.",
+    },
+)
+
 # rustc flags to enable debug symbols.
 RUSTC_DEBUG_FLAGS = ["--codegen=debuginfo=2"]
 
