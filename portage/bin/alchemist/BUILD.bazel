@@ -57,6 +57,7 @@ rust_library(
         "@alchemy_crates//:strum",
         "@alchemy_crates//:tempfile",
         "@alchemy_crates//:tera",
+        "@alchemy_crates//:toml",
         "@alchemy_crates//:tracing",
         "@alchemy_crates//:url",
         "@alchemy_crates//:walkdir",
