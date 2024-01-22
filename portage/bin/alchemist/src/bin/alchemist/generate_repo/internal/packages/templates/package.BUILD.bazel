@@ -9,6 +9,7 @@ load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
@@ -151,6 +152,10 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         "//conditions:default": None,
     }),
     {%- endif %}
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":{{ ebuild.version }}{{ suffix }}_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
 {%- endmacro -%}
 
 {%- for ebuild in ebuilds %}
@@ -334,6 +339,18 @@ config_setting(
 write_file(
     name = "{{ ebuild.version }}{{ suffix }}_cache_marker",
     out = "{{ ebuild.version }}{{ suffix }}_incremental/MARKER",
+)
+
+bool_flag(
+    name = "{{ ebuild.version }}{{ suffix }}_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "{{ ebuild.version }}{{ suffix }}_ccache_enabled_local",
+    flag_values = {
+        ":{{ ebuild.version }}{{ suffix }}_ccache": "True",
+    },
 )
 
 ebuild(

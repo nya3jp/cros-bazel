@@ -9,6 +9,7 @@ load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
 load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 alias(
@@ -47,6 +48,18 @@ config_setting(
 write_file(
     name = "17.0_pre498229-r9_cache_marker",
     out = "17.0_pre498229-r9_incremental/MARKER",
+)
+
+bool_flag(
+    name = "17.0_pre498229-r9_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "17.0_pre498229-r9_ccache_enabled_local",
+    flag_values = {
+        ":17.0_pre498229-r9_ccache": "True",
+    },
 )
 
 ebuild(
@@ -115,6 +128,10 @@ ebuild(
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_incremental_enabled": ":17.0_pre498229-r9_cache_marker",
         "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":17.0_pre498229-r9_ccache_enabled_local"): True,
+        "//conditions:default": False,
     }),
     prebuilt = ":17.0_pre498229-r9_prebuilt",
     portage_profile_test_package = select({
@@ -199,6 +216,10 @@ ebuild_debug(
         ":17.0_pre498229-r9_incremental_enabled": ":17.0_pre498229-r9_cache_marker",
         "//conditions:default": None,
     }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":17.0_pre498229-r9_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -221,6 +242,18 @@ config_setting(
 write_file(
     name = "17.0_pre498229-r9_hermetic_test_package_cache_marker",
     out = "17.0_pre498229-r9_hermetic_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "17.0_pre498229-r9_hermetic_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "17.0_pre498229-r9_hermetic_test_package_ccache_enabled_local",
+    flag_values = {
+        ":17.0_pre498229-r9_hermetic_test_package_ccache": "True",
+    },
 )
 
 ebuild(
@@ -290,6 +323,10 @@ ebuild(
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_hermetic_test_package_incremental_enabled": ":17.0_pre498229-r9_hermetic_test_package_cache_marker",
         "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":17.0_pre498229-r9_hermetic_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
     }),
     prebuilt = ":17.0_pre498229-r9_hermetic_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
@@ -371,6 +408,10 @@ ebuild_debug(
         ":17.0_pre498229-r9_hermetic_test_package_incremental_enabled": ":17.0_pre498229-r9_hermetic_test_package_cache_marker",
         "//conditions:default": None,
     }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":17.0_pre498229-r9_hermetic_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
     visibility = ["@//bazel:internal"],
 )
 
@@ -393,6 +434,18 @@ config_setting(
 write_file(
     name = "17.0_pre498229-r9_portage_profile_test_package_cache_marker",
     out = "17.0_pre498229-r9_portage_profile_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "17.0_pre498229-r9_portage_profile_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "17.0_pre498229-r9_portage_profile_test_package_ccache_enabled_local",
+    flag_values = {
+        ":17.0_pre498229-r9_portage_profile_test_package_ccache": "True",
+    },
 )
 
 ebuild(
@@ -447,6 +500,10 @@ ebuild(
     incremental_cache_marker = select({
         ":17.0_pre498229-r9_portage_profile_test_package_incremental_enabled": ":17.0_pre498229-r9_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":17.0_pre498229-r9_portage_profile_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
     }),
     prebuilt = ":17.0_pre498229-r9_portage_profile_test_package_prebuilt",
     visibility = ["@//bazel:internal"],
@@ -513,6 +570,10 @@ ebuild_debug(
         ":17.0_pre498229-r9_portage_profile_test_package_incremental_enabled": ":17.0_pre498229-r9_portage_profile_test_package_cache_marker",
         "//conditions:default": None,
     }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":17.0_pre498229-r9_portage_profile_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
     visibility = ["@//bazel:internal"],
 )
 ebuild_test(
@@ -577,6 +638,10 @@ ebuild_test(
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
         ],
         "@//bazel/portage:compiled_profiles_disabled": [],
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":17.0_pre498229-r9_ccache_enabled_local"): True,
+        "//conditions:default": False,
     }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],

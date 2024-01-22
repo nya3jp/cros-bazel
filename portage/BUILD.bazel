@@ -133,6 +133,13 @@ config_setting(
 bool_flag(
     name = "ccache",
     build_setting_default = False,
+)
+
+config_setting(
+    name = "ccache_enabled_global",
+    flag_values = {
+        ":ccache": "True",
+    },
     visibility = ["//visibility:public"],
 )
 

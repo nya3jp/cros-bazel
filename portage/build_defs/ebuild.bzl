@@ -12,7 +12,6 @@ load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
 
-_CCACHE_LABEL = "//bazel/portage:ccache"
 _CCACHE_DIR_LABEL = "//bazel/portage:ccache_dir"
 
 # The stage1 SDK will need to be built with ebuild_primordial.
@@ -193,9 +192,11 @@ _EBUILD_COMMON_ATTRS = dict(
         executable = True,
         cfg = "exec",
     ),
-    _ccache = attr.label(
-        default = Label(_CCACHE_LABEL),
-        providers = [BuildSettingInfo],
+    ccache = attr.bool(
+        doc = """
+        Enable ccache for this ebuild.
+        """,
+        mandatory = True,
     ),
     _ccache_dir = attr.label(
         default = Label(_CCACHE_DIR_LABEL),
@@ -213,11 +214,13 @@ def _ccache_settings(ctx):
         ccache: Whether ccache is enabled.
         ccache_dir: Directory to store the ccache.
     """
-    ccache = ctx.attr._ccache[BuildSettingInfo].value
+    ccache = ctx.attr.ccache
     ccache_dir = ctx.attr._ccache_dir[BuildSettingInfo].value
 
     if ccache and not ccache_dir:
-        fail("%s set but %s not set" % (_CCACHE_LABEL, _CCACHE_DIR_LABEL))
+        fail(
+            "ccache is enabled for %s but %s not set" % (ctx.label, _CCACHE_DIR_LABEL),
+        )
     if ccache_dir and not ccache_dir.startswith("/"):
         fail("%s=%r is not an absolute path" % (_CCACHE_DIR_LABEL, ccache_dir))
 
