@@ -679,7 +679,7 @@ mod tests {
             let temp_dir = tempdir()?;
             let output_dir = temp_dir.path();
 
-            generate_internal_sources(&local_sources, &case_source_dir.path(), output_dir)?;
+            generate_internal_sources(&local_sources, case_source_dir.path(), output_dir)?;
 
             let inner_output_dir = output_dir.join("internal/sources");
             compare_with_golden_data(&inner_output_dir, &case_golden_dir)?;

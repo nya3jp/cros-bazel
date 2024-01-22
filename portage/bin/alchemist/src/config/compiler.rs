@@ -288,7 +288,7 @@ mod tests {
                 ("USE_EXPAND_VALUES_ELIBC".into(), "FreeBSD glibc musl".into()),
                 ("ROOT".into(), sysroot.into()),
                 ("PKG_CONFIG".into(), format!("{sysroot}/build/bin/pkg-config")),
-                ("CQ_BINHOST".into(), format!("http://foo")),
+                ("CQ_BINHOST".into(), "http://foo".to_string()),
             ])),
         }])]);
 

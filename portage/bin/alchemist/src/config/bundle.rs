@@ -662,7 +662,7 @@ impl ConfigBundle {
             })
             .collect();
 
-        builtins.into_iter().chain(expands.into_iter()).collect()
+        builtins.into_iter().chain(expands).collect()
     }
 
     /// Compute the value of an incremental variable.

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-pub(self) mod common;
-pub(self) mod deps;
+mod common;
+mod deps;
 pub mod internal;
-pub(self) mod public;
+mod public;
 
 use std::{
     collections::HashMap,

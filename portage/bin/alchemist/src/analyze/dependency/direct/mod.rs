@@ -252,7 +252,7 @@ pub fn analyze_direct_dependencies(
     let run_target_deps = if is_rust_source_package(details) {
         run_target_deps
             .into_iter()
-            .chain(build_target_deps.clone().into_iter())
+            .chain(build_target_deps.clone())
             .sorted_by(|a, b| {
                 a.as_basic_data()
                     .package_name

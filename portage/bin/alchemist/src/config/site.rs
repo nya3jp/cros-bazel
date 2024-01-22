@@ -70,7 +70,7 @@ impl ConfigSource for SiteSettings {
         self.confs
             .iter()
             .flat_map(|conf| conf.evaluate_configs(env))
-            .chain(self.precomputed_nodes.clone().into_iter())
+            .chain(self.precomputed_nodes.clone())
             .collect()
     }
 }

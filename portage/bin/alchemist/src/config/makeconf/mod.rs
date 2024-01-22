@@ -223,7 +223,7 @@ impl ConfigSource for MakeConf {
         }
 
         // Update `env` with computed variables.
-        env.extend(vars.clone().into_iter());
+        env.extend(vars.clone());
 
         vec![ConfigNode {
             sources: self.sources.clone(),

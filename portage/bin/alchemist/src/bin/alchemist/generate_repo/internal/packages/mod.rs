@@ -527,7 +527,7 @@ fn generate_package_build_file(
                 "target/{}",
                 target
                     .prefix
-                    .split("/")
+                    .split('/')
                     .last()
                     .expect("valid target prefix")
             )),

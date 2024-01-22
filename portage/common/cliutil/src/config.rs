@@ -99,6 +99,6 @@ mod tests {
             .log_command_line(false)
             .build()
             .unwrap();
-        assert_eq!(config.log_command_line, false);
+        assert!(!config.log_command_line);
     }
 }

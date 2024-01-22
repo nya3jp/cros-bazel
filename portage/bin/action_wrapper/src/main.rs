@@ -224,11 +224,10 @@ fn main() -> ExitCode {
     std::env::set_var("RUST_BACKTRACE", "1");
 
     // Redirect stdout/stderr to a file if `--log` was specified.
-    let redirector = if let Some(log_name) = &args.log {
-        Some(cliutil::StdioRedirector::new(log_name).unwrap())
-    } else {
-        None
-    };
+    let redirector = args
+        .log
+        .as_ref()
+        .map(|log_name| cliutil::StdioRedirector::new(log_name).unwrap());
 
     // We don't use `cli_main` to avoid emitting the preamble logs because
     // action_wrapper must queue stdout/stderr until it sees the wrapped program

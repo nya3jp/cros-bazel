@@ -213,16 +213,14 @@ mod tests {
             vec![Path::new("/clang/16"),]
         );
 
-        assert!(matches!(
-            generate_ld_library_path(
-                &[
-                    Path::new("/clang/16/libfoo.so"),
-                    Path::new("/clang/17/libbar.so"),
-                ],
-                &[Regex::new(r"/clang/\d+")?]
-            ),
-            Err(_)
-        ));
+        assert!(generate_ld_library_path(
+            &[
+                Path::new("/clang/16/libfoo.so"),
+                Path::new("/clang/17/libbar.so"),
+            ],
+            &[Regex::new(r"/clang/\d+")?]
+        )
+        .is_err());
 
         Ok(())
     }
