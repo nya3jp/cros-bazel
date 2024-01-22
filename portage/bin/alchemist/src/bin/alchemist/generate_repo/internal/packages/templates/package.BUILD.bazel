@@ -41,6 +41,16 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         ],
     }),
     {%- endif %}
+    {%- if ebuild.extra_sources %}
+    extra_srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            {%- for source in ebuild.extra_sources %}
+            "{{ source }}",
+            {%- endfor %}
+        ],
+    }),
+    {%- endif %}
     {%- if ebuild.cache_sources %}
     cache_srcs = select({
         "@//bazel/portage:omit_ebuild_src_enabled": [],

@@ -59,6 +59,7 @@ pub struct EBuildEntry {
     version: String,
     slot: String,
     sources: Vec<String>,
+    extra_sources: Vec<String>,
     cache_sources: Vec<String>,
     git_trees: Vec<String>,
     dists: Vec<DistFileEntry>,
@@ -221,6 +222,23 @@ impl EBuildEntry {
                 PackageLocalSource::DepotTools => Some("@depot_tools//:src".to_string()),
                 PackageLocalSource::SrcFile(_) => None,
             })
+            .collect();
+
+        let extra_sources = package
+            .details
+            .bazel_metadata
+            .extra_sources
+            .iter()
+            .map(|p| {
+                // Fix "//" to "@//" as generated targets are under @portage.
+                if p.starts_with("//") {
+                    format!("@{}", p)
+                } else {
+                    p.to_string()
+                }
+            })
+            .sorted()
+            .dedup()
             .collect();
 
         let file_sources: Vec<String> = package
@@ -475,6 +493,7 @@ impl EBuildEntry {
             version,
             slot: package.details.slot.to_string(),
             sources,
+            extra_sources,
             cache_sources,
             git_trees,
             dists,
