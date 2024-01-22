@@ -70,6 +70,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         }
     }
 

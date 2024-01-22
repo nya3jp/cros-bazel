@@ -5,9 +5,12 @@
 pub mod metadata;
 
 use anyhow::{bail, Context, Result};
+use itertools::Itertools;
 use once_cell::sync::OnceCell;
+use serde::Deserialize;
 use std::{
     collections::{HashMap, HashSet},
+    io::ErrorKind,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
@@ -63,6 +66,77 @@ impl PackageReadiness {
     }
 }
 
+/// Defines Bazel-specific metadata found in a TOML file.
+///
+/// Metadata of a package may consist of multiple TOML files: one for the ebuild file and those for
+/// the classes inherited by the ebuild.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize)]
+pub struct BazelSpecificMetadata {
+    /// Bazel target labels providing extra source code needed to build the package.
+    ///
+    /// The order of labels does not matter. Duplicated labels are allowed.
+    /// When multiple TOML files set this metadata for the same package, labels are simply merged.
+    ///
+    /// # Background
+    ///
+    /// First-party ebuilds should usually define `CROS_WORKON_*` variables and inherit
+    /// `cros-workon.eclass` to declare source code dependencies. However, it's sometimes the case
+    /// that a package build needs to depend on extra source code that are not declared in the
+    /// ebuild's `CROS_WORKON_*`, e.g. some common build scripts. This is especially the case with
+    /// eclasses because manipulating `CROS_WORKON_*` correctly in eclasses is not straightforward.
+    /// Under the Portage-orchestrated build system, accessing those extra files is as easy as just
+    /// hard-coding `/mnt/host/source/...`, but it's an error under the Bazel-orchestrated build
+    /// system where source code dependencies are strictly managed.
+    ///
+    /// This metadata allows ebuilds and eclasses to define extra source code dependencies. Each
+    /// element must be a label of a Bazel target defined with `extra_sources` rule from
+    /// `//bazel/portage/build_defs:extra_sources.bzl`. The rule defines a set of files to be used
+    /// as extra sources.
+    pub extra_sources: HashSet<String>,
+}
+
+/// Defines the TOML metadata file format.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize)]
+pub struct TomlMetadata {
+    pub bazel: BazelSpecificMetadata,
+}
+
+impl TomlMetadata {
+    pub fn load(ebuild_basic_data: &EBuildBasicData, eclass_paths: &[&Path]) -> Result<Self> {
+        // Compute config paths.
+        let ebuild_config_path = ebuild_basic_data
+            .ebuild_path
+            .parent()
+            .expect("non-empty ebuild file path")
+            .join(format!("{}.toml", ebuild_basic_data.short_package_name));
+        let eclass_config_paths = eclass_paths
+            .iter()
+            .map(|eclass_path| eclass_path.with_extension("toml"));
+        let config_paths = std::iter::once(ebuild_config_path).chain(eclass_config_paths);
+
+        // Load configs.
+        let mut merged_metadata: TomlMetadata = Default::default();
+        for config_path in config_paths {
+            let toml_content = match std::fs::read_to_string(&config_path) {
+                Ok(toml_content) => toml_content,
+                Err(e) if e.kind() == ErrorKind::NotFound => continue,
+                Err(e) => {
+                    return Err(e).context(format!("Failed to read {}", config_path.display()))
+                }
+            };
+            let metadata: TomlMetadata = toml::from_str(&toml_content)
+                .with_context(|| format!("Failed to parse {}", config_path.display()))?;
+            merged_metadata.merge(metadata);
+        }
+
+        Ok(merged_metadata)
+    }
+
+    fn merge(&mut self, other: Self) {
+        self.bazel.extra_sources.extend(other.bazel.extra_sources);
+    }
+}
+
 #[derive(Debug)]
 pub struct PackageDetails {
     pub metadata: Arc<EBuildMetadata>,
@@ -73,6 +147,7 @@ pub struct PackageDetails {
     pub inherited: HashSet<String>,
     pub inherit_paths: Vec<PathBuf>,
     pub direct_build_target: Option<String>,
+    pub bazel_metadata: BazelSpecificMetadata,
 }
 
 impl PackageDetails {
@@ -314,6 +389,11 @@ impl PackageLoader {
                 }
             });
 
+        let toml_metadata = TomlMetadata::load(
+            metadata.as_basic_data(),
+            &inherit_paths.iter().map(|p| p.as_path()).collect_vec(),
+        )?;
+
         Ok(PackageDetails {
             metadata,
             slot,
@@ -323,6 +403,7 @@ impl PackageLoader {
             inherited,
             inherit_paths,
             direct_build_target,
+            bazel_metadata: toml_metadata.bazel,
         })
     }
 }
@@ -543,6 +624,87 @@ REQUIRED_USE="|| ( foo !bar )"
                 reason: "REQUIRED_USE not satisfied: || ( foo !bar )".into()
             }
         );
+    }
+
+    #[test]
+    fn test_load_bazel_metadata() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        // Create an ebuild and its associated toml.
+        let ebuild_dir = temp_dir.join("sys-apps/hello");
+        let ebuild_path = ebuild_dir.join("hello-1.2.3.ebuild");
+        std::fs::create_dir_all(&ebuild_dir)?;
+        std::fs::write(
+            &ebuild_path,
+            r#"
+            EAPI=7
+            SLOT=0
+            KEYWORDS="*"
+            inherit foo
+        "#,
+        )?;
+        std::fs::write(
+            ebuild_dir.join("hello.toml"),
+            r#"
+            [bazel]
+            extra_sources = [
+                "//platform2/common-mk:sources",
+                "//scripts:sources",
+            ]
+        "#,
+        )?;
+
+        // Create eclasses and their associated toml.
+        let eclass_dir = temp_dir.join("eclass");
+        std::fs::create_dir_all(&eclass_dir)?;
+        std::fs::write(eclass_dir.join("foo.eclass"), "inherit bar")?;
+        // foo.toml is missing.
+        std::fs::write(eclass_dir.join("bar.eclass"), "")?;
+        std::fs::write(
+            eclass_dir.join("bar.toml"),
+            r#"
+            [bazel]
+            extra_sources = [
+                "@chromite//:sources",
+                "//scripts:sources",
+            ]
+        "#,
+        )?;
+
+        // Load the package.
+        let repo_set = RepositorySet::load_from_layouts(
+            "test",
+            &[RepositoryLayout::new("test", temp_dir, &[])],
+        )?;
+
+        let evaluator = CachedEBuildEvaluator::new(
+            repo_set.get_repos().into_iter().cloned().collect(),
+            &temp_dir.join("tools"),
+        );
+
+        let config = ConfigBundle::new_for_testing("riscv");
+        let loader = PackageLoader::new(Arc::new(evaluator), Arc::new(config), false);
+
+        let maybe_details = loader.load_package(&ebuild_path)?;
+
+        let details = match maybe_details {
+            MaybePackageDetails::Ok(details) => details,
+            MaybePackageDetails::Err(error) => bail!("Failed to load package: {error:?}"),
+        };
+
+        // Verify the Bazel-specific metadata.
+        assert_eq!(
+            details.bazel_metadata,
+            BazelSpecificMetadata {
+                extra_sources: HashSet::from([
+                    "//platform2/common-mk:sources".into(),
+                    "//scripts:sources".into(),
+                    "@chromite//:sources".into(),
+                ]),
+            }
+        );
+        Ok(())
     }
 
     #[test]

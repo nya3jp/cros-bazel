@@ -666,6 +666,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         };
 
         Ok((package, tmp))
@@ -826,6 +827,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, Path::new("/src"))?;
@@ -948,6 +950,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, Path::new("/src"))?;
@@ -1048,6 +1051,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, Path::new("/src"))?;
@@ -1172,6 +1176,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, &dir.join("src"))?;
@@ -1257,6 +1262,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, &dir.join("src"))?;
@@ -1342,6 +1348,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         }
     }
 
@@ -1507,6 +1514,7 @@ mod tests {
             inherited: HashSet::new(),
             inherit_paths: vec![],
             direct_build_target: None,
+            bazel_metadata: Default::default(),
         };
         let (local_sources, repo_sources) =
             extract_cros_workon_sources(&package, &dir.join("src"))?;
