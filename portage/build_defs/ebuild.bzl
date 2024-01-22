@@ -516,8 +516,10 @@ def _ebuild_impl(ctx):
             use_runfiles = False,
         )
 
-        log_args = ctx.actions.args()
-        log_args.add_all([
+        action_wrapper_args = ctx.actions.args()
+        action_wrapper_args.add_all([
+            "--banner",
+            "Building %s" % ctx.label,
             "--log",
             output_log_file,
             "--profile",
@@ -532,7 +534,7 @@ def _ebuild_impl(ctx):
             ],
             executable = ctx.executable._action_wrapper,
             tools = [ctx.executable._build_package],
-            arguments = [log_args, build_package_args.args],
+            arguments = [action_wrapper_args, build_package_args.args],
             execution_requirements = {
                 # Disable sandbox to avoid creating a symlink forest.
                 # This does not affect hermeticity since ebuild runs in a container.

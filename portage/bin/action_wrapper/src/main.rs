@@ -52,6 +52,10 @@ struct Cli {
     #[arg(long)]
     privileged_output: Vec<PathBuf>,
 
+    /// If set, print this before and after the wrapped command.
+    #[arg(long)]
+    banner: Option<String>,
+
     /// Command line of the wrapped process.
     #[arg(required = true)]
     command_line: Vec<String>,
@@ -157,7 +161,7 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
     Ok(())
 }
 
-fn do_main(args: Cli) -> Result<ExitStatus> {
+fn do_main(args: &Cli) -> Result<ExitStatus> {
     let mut command = if args.privileged {
         ensure_passwordless_sudo()?;
         let mut command = Command::new(SUDO_PATH);
@@ -205,12 +209,12 @@ fn do_main(args: Cli) -> Result<ExitStatus> {
             .arg("chown")
             .arg(format!("{}:{}", getuid(), getgid()))
             .arg("--")
-            .args(args.privileged_output);
+            .args(&args.privileged_output);
         processes::run(&mut command)?;
     }
 
-    if let Some(profile_file) = args.profile {
-        merge_profiles(profiles_dir.path(), &profile_file)?;
+    if let Some(profile_file) = &args.profile {
+        merge_profiles(profiles_dir.path(), profile_file)?;
     }
 
     // Propagate the exit status of the command.
@@ -229,12 +233,16 @@ fn main() -> ExitCode {
         .as_ref()
         .map(|log_name| cliutil::StdioRedirector::new(log_name).unwrap());
 
+    if let Some(banner) = &args.banner {
+        eprintln!("{banner}");
+    }
+
     // We don't use `cli_main` to avoid emitting the preamble logs because
     // action_wrapper must queue stdout/stderr until it sees the wrapped program
     // to exit abnormally. This means we don't log the arguments passed to
     // action_wrapper itself, but the wrapped program should soon print one with
     // `cli_main`.
-    let status = do_main(args);
+    let status = do_main(&args);
     let mut success = false;
     let exit_code = handle_top_level_result(status.map(|s| {
         success = s.code() == Some(0);
@@ -244,6 +252,11 @@ fn main() -> ExitCode {
         if let Some(redirector) = redirector {
             redirector.flush_to_real_stderr().unwrap()
         }
+    }
+
+    if let Some(banner) = args.banner {
+        let prefix = if success { "Finished " } else { "FAILED: " };
+        eprintln!("{prefix}{banner}");
     }
 
     exit_code
