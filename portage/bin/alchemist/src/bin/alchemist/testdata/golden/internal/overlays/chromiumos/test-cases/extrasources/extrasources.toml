@@ -1,0 +1,6 @@
+[bazel]
+extra_sources = [
+    "//extra_sources:1",
+    "@//extra_sources:2",
+    "@another//extra_sources:3",
+]
