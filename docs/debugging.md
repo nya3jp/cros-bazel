@@ -9,14 +9,14 @@ please send an email to chromeos-build-discuss@google.com.
 
 ## Common build issues
 
-### Build-time dependencies are missing
+### Build-time package dependencies are missing
 
 **Cause**:
 Only explicitly declared build-time dependency packages are made available in
 the ephemeral CrOS SDK container when building a Portage package under Bazel.
 
 **Symptom**:
-Missing build-time dependencies result in a variety of error messages,
+Missing build-time package dependencies result in a variety of error messages,
 including:
 
 - `foobar: command not found`
@@ -35,6 +35,25 @@ Make sure you declare proper `DEPEND`/`BDEPEND` in your ebuild/eclasses.
 **Example fixes**:
 - [Adding a missing DEPEND](https://crrev.com/c/4840362)
 - [Adding a missing BDEPEND](https://crrev.com/c/4983365)
+
+### Implicit build-time dependencies are missing
+
+**Cause**:
+Ebuilds/eclasses are prohibited to access ChromeOS source checkout via
+`/mnt/host/source` unless those dependencies are explicitly declared with
+`CROS_WORKON_*`.
+
+**Symptom**:
+Implicit build-time dependencies result in a variety of error messages,
+including `foobar: command not found`.
+
+**Solution**:
+Declare extra sources in [Bazel-specific metadata].
+
+[Bazel-specific metadata]: ./advanced.md#declaring-bazel_specific-ebuild_eclass-metadata
+
+**Example fixes**:
+TBD
 
 ### Uses sudo
 

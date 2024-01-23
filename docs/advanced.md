@@ -136,6 +136,57 @@ As you can see, it's turtles (SDKs?) all the way down.
 [primordial packages]: https://chromium.googlesource.com/chromiumos/bazel/+/refs/heads/main/portage/bin/alchemist/src/bin/alchemist/generate_repo/common.rs#21
 [list]: https://chromium.googlesource.com/chromiumos/bazel/+/refs/heads/main/portage/bin/alchemist/src/analyze/dependency.rs#550
 
+## Declaring Bazel-specific ebuild/eclass metadata
+
+Our Portage-to-Bazel translator (aka Alchemist) evaluates ebuilds and eclasses
+to extract package metadata, such as package dependencies
+(`DEPEND`/`RDEPEND`/etc.) and source dependencies (`CROS_WORKON_*`), and
+translates them into `BUILD.bazel` files. While the standard metadata are enough
+to build most packages, some packages benefit from additional metadata to build
+efficiently or correctly under Bazel.
+
+You can provide Bazel-specific metadata for certain ebuilds/eclasses by placing
+TOML files in certain places:
+
+*   **ebuild**: Placed in the same directory as an ebuild, and named `$PN.toml`
+    (e.g. `cryptohome.toml` for `chromeos-base/cryptohome`).
+*   **eclass**: Placed in the same directory as an eclass, and named
+    `$ECLASS.toml` (e.g. `cros-workon.toml` for `cros-workon.eclass`).
+
+When analyzing an ebuild file, Alchemist collects Bazel-specific metadata from
+the TOML file associated with the ebuild, and those associated with eclasses
+directly or indirectly inherited by the ebuild.
+
+Below is the format of the TOML file:
+
+```toml
+# This is the only top-level table allowed in the TOML file containing
+# Bazel-specific metadata.
+[bazel]
+
+# Extra source code needed to build the package.
+#
+# First-party ebuilds should usually define CROS_WORKON_* variables and inherit
+# cros-workon.eclass to declare source code dependencies. However, it's
+# sometimes the case that a package build needs to depend on extra source code
+# that are not declared in the ebuild's CROS_WORKON_*, e.g. some common build
+# scripts. This is especially the case with eclasses because manipulating
+# CROS_WORKON_* correctly in eclasses is not straightforward. Under the
+# Portage-orchestrated build system, accessing those extra files is as easy as
+# just hard-coding /mnt/host/source/..., but it's an error under the
+# Bazel-orchestrated build system where source code dependencies are strictly
+# managed.
+#
+# This metadata allows ebuilds and eclasses to define extra source code
+# dependencies. Each element must be a label of a Bazel target defined with
+# extra_sources rule from //bazel/portage/build_defs:extra_sources.bzl. The rule
+# defines a set of files to be used as extra sources.
+#
+# When multiple TOML files set this metadata for a package, values are simply
+# merged.
+extra_sources = ["//platform2/common-mk:sources"]
+```
+
 ## Bazel Build Event Services
 
 Bazel supports uploading and persisting build/test events and top level outputs
