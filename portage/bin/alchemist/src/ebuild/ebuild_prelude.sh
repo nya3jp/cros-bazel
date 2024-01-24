@@ -3,13 +3,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Note: The variables are mangled with the "__xbuild_" prefix to reduce the risk
+# Note: The variables are prefixed with the "__alchemist_" to reduce the risk
 # of colliding with definitions inside the ebuild and eclasses that are source'd
 # below.
 
-declare -a __xbuild_out_inherit_paths=()
+declare -a __alchemist_out_inherit_paths=()
 
-readarray -t __xbuild_eclass_dirs <<< "${__xbuild_in_eclass_dirs:?}"
+readarray -t __alchemist_eclass_dirs <<< "${__alchemist_in_eclass_dirs:?}"
 
 # TODO: Is it okay to enable extglob by default?
 shopt -s extglob
@@ -23,9 +23,9 @@ inherit() {
   local names=("$@")
   local name path
   for name in "${names[@]}"; do
-    path=$(__xbuild_find_eclass "${name}")
-    __xbuild_source_eclass "${name}" "${path}"
-    __xbuild_out_inherit_paths+=("${path}")
+    path=$(__alchemist_find_eclass "${name}")
+    __alchemist_source_eclass "${name}" "${path}"
+    __alchemist_out_inherit_paths+=("${path}")
   done
 }
 
@@ -157,12 +157,12 @@ ver_cut() {
   done
 }
 
-__xbuild_find_eclass() {
+__alchemist_find_eclass() {
   local name="$1"
   local eclass_dir path result
   # In case of multiple matches, proceed with the latest one as the eclass dirs
   # are in the order from the least-preferred to the most-preferred ones.
-  for eclass_dir in "${__xbuild_eclass_dirs[@]}"; do
+  for eclass_dir in "${__alchemist_eclass_dirs[@]}"; do
     path="${eclass_dir}/${name}.eclass"
     if [[ -f "${path}" ]]; then
       result="${path}"
@@ -172,7 +172,7 @@ __xbuild_find_eclass() {
   echo -n "${result}"
 }
 
-__xbuild_source_eclass() {
+__alchemist_source_eclass() {
   local name="$1"
   local path="$2"
 
@@ -205,31 +205,31 @@ __xbuild_source_eclass() {
   fi
   INHERITED="${INHERITED} ${name}"
 
-  __xbuild_eclass_IUSE="${__xbuild_eclass_IUSE:+${__xbuild_eclass_IUSE} }${IUSE}"
+  __alchemist_eclass_IUSE="${__alchemist_eclass_IUSE:+${__alchemist_eclass_IUSE} }${IUSE}"
   IUSE="${saved_IUSE}"
-  __xbuild_eclass_REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE:+${__xbuild_eclass_REQUIRED_USE} }${REQUIRED_USE}"
+  __alchemist_eclass_REQUIRED_USE="${__alchemist_eclass_REQUIRED_USE:+${__alchemist_eclass_REQUIRED_USE} }${REQUIRED_USE}"
   REQUIRED_USE="${saved_REQUIRED_USE}"
-  __xbuild_eclass_DEPEND="${__xbuild_eclass_DEPEND:+${__xbuild_eclass_DEPEND} }${DEPEND}"
+  __alchemist_eclass_DEPEND="${__alchemist_eclass_DEPEND:+${__alchemist_eclass_DEPEND} }${DEPEND}"
   DEPEND="${saved_DEPEND}"
-  __xbuild_eclass_BDEPEND="${__xbuild_eclass_BDEPEND:+${__xbuild_eclass_BDEPEND} }${BDEPEND}"
+  __alchemist_eclass_BDEPEND="${__alchemist_eclass_BDEPEND:+${__alchemist_eclass_BDEPEND} }${BDEPEND}"
   BDEPEND="${saved_BDEPEND}"
-  __xbuild_eclass_RDEPEND="${__xbuild_eclass_RDEPEND:+${__xbuild_eclass_RDEPEND} }${RDEPEND}"
+  __alchemist_eclass_RDEPEND="${__alchemist_eclass_RDEPEND:+${__alchemist_eclass_RDEPEND} }${RDEPEND}"
   RDEPEND="${saved_RDEPEND}"
-  __xbuild_eclass_PDEPEND="${__xbuild_eclass_PDEPEND:+${__xbuild_eclass_PDEPEND} }${PDEPEND}"
+  __alchemist_eclass_PDEPEND="${__alchemist_eclass_PDEPEND:+${__alchemist_eclass_PDEPEND} }${PDEPEND}"
   PDEPEND="${saved_PDEPEND}"
-  __xbuild_eclass_IDEPEND="${__xbuild_eclass_IDEPEND:+${__xbuild_eclass_IDEPEND} }${IDEPEND}"
+  __alchemist_eclass_IDEPEND="${__alchemist_eclass_IDEPEND:+${__alchemist_eclass_IDEPEND} }${IDEPEND}"
   IDEPEND="${saved_IDEPEND}"
 }
 
 unset EAPI EBUILD ECLASS INHERITED
 # ShellCheck can't figure out that $EBUILD may be used in ebuilds.
 # shellcheck disable=SC2034
-EBUILD="${__xbuild_in_ebuild:?}"
-set -- "${__xbuild_in_ebuild:?}"
+EBUILD="${__alchemist_in_ebuild:?}"
+set -- "${__alchemist_in_ebuild:?}"
 
 # ShellCheck can't find the source, that is okay.
 # shellcheck disable=SC1090
-source "${__xbuild_in_ebuild:?}"
+source "${__alchemist_in_ebuild:?}"
 
 # In EAPI=0/1/2/3, RDEPEND=DEPEND if RDEPEND is unset.
 # https://projects.gentoo.org/pms/8/pms.html#x1-690007.3.7
@@ -242,19 +242,19 @@ esac
 
 # Collect accumulated metadata keys in eclasses.
 # https://projects.gentoo.org/pms/8/pms.html#x1-10600010.2
-IUSE="${__xbuild_eclass_IUSE:+${__xbuild_eclass_IUSE} }${IUSE}"
-REQUIRED_USE="${__xbuild_eclass_REQUIRED_USE:+${__xbuild_eclass_REQUIRED_USE} }${REQUIRED_USE}"
-DEPEND="${__xbuild_eclass_DEPEND:+${__xbuild_eclass_DEPEND} }${DEPEND}"
-BDEPEND="${__xbuild_eclass_BDEPEND:+${__xbuild_eclass_BDEPEND} }${BDEPEND}"
-RDEPEND="${__xbuild_eclass_RDEPEND:+${__xbuild_eclass_RDEPEND} }${RDEPEND}"
-PDEPEND="${__xbuild_eclass_PDEPEND:+${__xbuild_eclass_PDEPEND} }${PDEPEND}"
-IDEPEND="${__xbuild_eclass_IDEPEND:+${__xbuild_eclass_IDEPEND} }${IDEPEND}"
+IUSE="${__alchemist_eclass_IUSE:+${__alchemist_eclass_IUSE} }${IUSE}"
+REQUIRED_USE="${__alchemist_eclass_REQUIRED_USE:+${__alchemist_eclass_REQUIRED_USE} }${REQUIRED_USE}"
+DEPEND="${__alchemist_eclass_DEPEND:+${__alchemist_eclass_DEPEND} }${DEPEND}"
+BDEPEND="${__alchemist_eclass_BDEPEND:+${__alchemist_eclass_BDEPEND} }${BDEPEND}"
+RDEPEND="${__alchemist_eclass_RDEPEND:+${__alchemist_eclass_RDEPEND} }${RDEPEND}"
+PDEPEND="${__alchemist_eclass_PDEPEND:+${__alchemist_eclass_PDEPEND} }${PDEPEND}"
+IDEPEND="${__alchemist_eclass_IDEPEND:+${__alchemist_eclass_IDEPEND} }${IDEPEND}"
 
 if [[ "$(type -t src_compile)" == "function" ]]; then
-  __xbuild_out_has_src_compile=1
+  __alchemist_out_has_src_compile=1
 else
-  __xbuild_out_has_src_compile=0
+  __alchemist_out_has_src_compile=0
 fi
 
 set -o posix
-set > "${__xbuild_in_output_vars:?}"
+set > "${__alchemist_in_output_vars:?}"

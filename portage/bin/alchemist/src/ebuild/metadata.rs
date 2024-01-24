@@ -42,16 +42,19 @@ fn run_ebuild<'a>(
         .env_clear()
         .envs(env)
         .env("PATH", tools_dir.to_string_lossy().as_ref())
-        .env("__xbuild_in_ebuild", ebuild_path.to_string_lossy().as_ref())
         .env(
-            "__xbuild_in_eclass_dirs",
+            "__alchemist_in_ebuild",
+            ebuild_path.to_string_lossy().as_ref(),
+        )
+        .env(
+            "__alchemist_in_eclass_dirs",
             eclass_dirs
                 .into_iter()
                 .map(|path| format!("{}\n", path.to_string_lossy()))
                 .join(""),
         )
         .env(
-            "__xbuild_in_output_vars",
+            "__alchemist_in_output_vars",
             set_output_file.as_ref().to_string_lossy().as_ref(),
         )
         .output()
