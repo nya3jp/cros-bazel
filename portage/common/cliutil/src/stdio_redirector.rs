@@ -4,7 +4,12 @@
 
 use anyhow::{Context, Result};
 use std::{
-    fs::File, os::fd::AsRawFd, os::fd::FromRawFd, os::fd::OwnedFd, path::Path, path::PathBuf,
+    fs::{File, OpenOptions},
+    os::fd::AsRawFd,
+    os::fd::FromRawFd,
+    os::fd::OwnedFd,
+    path::Path,
+    path::PathBuf,
 };
 
 static STDIO_REDIRECT_ENV: &str = "CROS_BAZEL_STDIO_REDIRECT";
@@ -72,7 +77,11 @@ pub struct StdioRedirector {
 impl StdioRedirector {
     /// Redirects stdout and stderr to the specified path.
     pub fn new(path: &Path) -> Result<Self> {
-        let file = File::create(path).context("Failed to create the log file")?;
+        let file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+            .context("Failed to create the log file")?;
         let (saved_stdout, saved_stderr) =
             redirect_stdout_stderr(&file).context("Failed to redirect stdout/stderr")?;
 
