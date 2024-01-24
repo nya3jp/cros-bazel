@@ -454,6 +454,68 @@ KEYWORDS="-*"
     }
 
     #[test]
+    fn test_load_inherit_paths() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        // Create an ebuild.
+        let ebuild_dir = temp_dir.join("sys-apps/hello");
+        let ebuild_path = ebuild_dir.join("hello-1.2.3.ebuild");
+        std::fs::create_dir_all(&ebuild_dir)?;
+        std::fs::write(
+            &ebuild_path,
+            r#"
+            EAPI=7
+            SLOT=0
+            KEYWORDS="*"
+            inherit aaa
+        "#,
+        )?;
+
+        // Create eclasses with a diamond inheritance.
+        let eclass_dir = temp_dir.join("eclass");
+        std::fs::create_dir_all(&eclass_dir)?;
+        std::fs::write(eclass_dir.join("aaa.eclass"), "inherit bbb ccc")?;
+        std::fs::write(eclass_dir.join("bbb.eclass"), "inherit ddd")?;
+        std::fs::write(eclass_dir.join("ccc.eclass"), "inherit ddd")?;
+        std::fs::write(eclass_dir.join("ddd.eclass"), "")?;
+
+        // Load the package.
+        let repo_set = RepositorySet::load_from_layouts(
+            "test",
+            &[RepositoryLayout::new("test", temp_dir, &[])],
+        )?;
+
+        let evaluator = CachedEBuildEvaluator::new(
+            repo_set.get_repos().into_iter().cloned().collect(),
+            &temp_dir.join("tools"),
+        );
+
+        let config = ConfigBundle::new_for_testing("riscv");
+        let loader = PackageLoader::new(Arc::new(evaluator), Arc::new(config), false);
+
+        let maybe_details = loader.load_package(&ebuild_path)?;
+
+        let details = match maybe_details {
+            MaybePackageDetails::Ok(details) => details,
+            MaybePackageDetails::Err(error) => bail!("Failed to load package: {error:?}"),
+        };
+
+        // Verify the inherit paths.
+        assert_eq!(
+            details.inherit_paths,
+            vec![
+                eclass_dir.join("ddd.eclass"),
+                eclass_dir.join("bbb.eclass"),
+                eclass_dir.join("ddd.eclass"),
+                eclass_dir.join("ccc.eclass"),
+                eclass_dir.join("aaa.eclass"),
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_load_required_use() {
         let details = do_load_package_and_unwrap(
             "sys-apps/hello/hello-1.ebuild",

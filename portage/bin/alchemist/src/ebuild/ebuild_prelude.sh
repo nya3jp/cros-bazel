@@ -22,7 +22,7 @@ if [[ -z "${__xbuild_in_output_vars}" ]]; then
   exit 1
 fi
 
-declare -A __xbuild_eclass_paths
+declare -a __xbuild_out_inherit_paths=()
 
 readarray -t __xbuild_eclass_dirs <<< "${__xbuild_in_eclass_dirs}"
 
@@ -39,8 +39,8 @@ inherit() {
   local name path
   for name in "${names[@]}"; do
     path=$(__xbuild_find_eclass "${name}")
-    __xbuild_eclass_paths["${path}"]=1
     __xbuild_source_eclass "${name}" "${path}"
+    __xbuild_out_inherit_paths+=("${path}")
   done
 }
 
@@ -258,8 +258,6 @@ BDEPEND="${__xbuild_eclass_BDEPEND:+${__xbuild_eclass_BDEPEND} }${BDEPEND}"
 RDEPEND="${__xbuild_eclass_RDEPEND:+${__xbuild_eclass_RDEPEND} }${RDEPEND}"
 PDEPEND="${__xbuild_eclass_PDEPEND:+${__xbuild_eclass_PDEPEND} }${PDEPEND}"
 IDEPEND="${__xbuild_eclass_IDEPEND:+${__xbuild_eclass_IDEPEND} }${IDEPEND}"
-
-__xbuild_out_inherit_paths=("${!__xbuild_eclass_paths[@]}")
 
 if [[ "$(type -t src_compile)" == "function" ]]; then
   __xbuild_out_has_src_compile=1

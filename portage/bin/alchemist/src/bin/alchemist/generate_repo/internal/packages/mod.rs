@@ -279,6 +279,10 @@ impl EBuildEntry {
             .details
             .inherit_paths
             .iter()
+            // Deduplicate paths in inherit_paths since Bazel doesn't allow duplicated
+            // labels in dependencies.
+            .sorted()
+            .dedup()
             .map(|path| {
                 let eclass = path.file_stem().unwrap().to_string_lossy();
 
