@@ -191,6 +191,7 @@ dependencies = [
  "clap",
  "cliutil",
  "container",
+ "fileutil",
  "nix",
  "rand",
  "runfiles",

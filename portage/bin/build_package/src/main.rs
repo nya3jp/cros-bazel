@@ -6,6 +6,7 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use clap::{command, Parser};
 use cliutil::{cli_main, expanded_args_os};
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
+use fileutil::SafeTempDirBuilder;
 use std::format;
 use std::io::Write;
 use std::{
@@ -276,7 +277,21 @@ struct RemoteexecInfo {
 fn do_main() -> Result<()> {
     let args = Cli::try_parse_from(expanded_args_os()?)?;
 
+    // If we are outputting a binpkg use the parent directory as a tmpdir.
+    // /tmp isn't always suitable because it might not be a real filesystem.
+    let mutable_base_dir = match &args.output {
+        Some(output) => Some(
+            SafeTempDirBuilder::new()
+                .base_dir(output.parent().context("output missing parent")?)
+                .build()?,
+        ),
+        None => None,
+    };
+
     let mut settings = ContainerSettings::new();
+    if let Some(tmpdir) = &mutable_base_dir {
+        settings.set_mutable_base_dir(tmpdir.path());
+    }
     settings.apply_common_args(&args.common)?;
 
     let runfiles = runfiles::Runfiles::create()?;

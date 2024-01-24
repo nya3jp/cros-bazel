@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 cliutil = { path = "../../common/cliutil" }
 container = { path = "../../common/container" }
+fileutil = { path = "../../common/fileutil" }
 
 anyhow.workspace = true
 chrono.workspace = true
