@@ -237,7 +237,9 @@ impl PackageLoader {
             .map(|s| s.to_owned())
             .collect();
 
-        let raw_inherit_paths = metadata.vars.get_indexed_array("INHERIT_PATHS")?;
+        let raw_inherit_paths = metadata
+            .vars
+            .get_indexed_array("__xbuild_out_inherit_paths")?;
         let inherit_paths: Vec<PathBuf> = raw_inherit_paths.iter().map(PathBuf::from).collect();
 
         let accepted_result = self.config.is_package_accepted(&metadata.vars, &package)?;

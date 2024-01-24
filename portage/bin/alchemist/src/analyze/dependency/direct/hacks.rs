@@ -368,7 +368,7 @@ pub fn is_rust_source_package(details: &PackageDetails) -> bool {
     let is_rust_package = details.inherited.contains("cros-rust");
     let is_cros_workon_package = details.inherited.contains("cros-workon");
     let has_src_compile = matches!(
-        details.metadata.vars.hash_map().get("HAS_SRC_COMPILE"),
+        details.metadata.vars.hash_map().get("__xbuild_out_has_src_compile"),
         Some(BashValue::Scalar(s)) if s == "1");
 
     is_rust_package && !is_cros_workon_package && !has_src_compile

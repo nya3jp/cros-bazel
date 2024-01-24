@@ -259,12 +259,12 @@ RDEPEND="${__xbuild_eclass_RDEPEND:+${__xbuild_eclass_RDEPEND} }${RDEPEND}"
 PDEPEND="${__xbuild_eclass_PDEPEND:+${__xbuild_eclass_PDEPEND} }${PDEPEND}"
 IDEPEND="${__xbuild_eclass_IDEPEND:+${__xbuild_eclass_IDEPEND} }${IDEPEND}"
 
-INHERIT_PATHS=("${!__xbuild_eclass_paths[@]}")
+__xbuild_out_inherit_paths=("${!__xbuild_eclass_paths[@]}")
 
 if [[ "$(type -t src_compile)" == "function" ]]; then
-  HAS_SRC_COMPILE=1
+  __xbuild_out_has_src_compile=1
 else
-  HAS_SRC_COMPILE=0
+  __xbuild_out_has_src_compile=0
 fi
 
 set -o posix
