@@ -7,24 +7,9 @@
 # of colliding with definitions inside the ebuild and eclasses that are source'd
 # below.
 
-if [[ -z "${__xbuild_in_ebuild}" ]]; then
-  echo "__xbuild_in_ebuild is not set" >&2
-  exit 1
-fi
-
-if [[ ! -f "${__xbuild_in_ebuild}" ]]; then
-  echo "${__xbuild_in_ebuild} does not exist" >&2
-  exit 1
-fi
-
-if [[ -z "${__xbuild_in_output_vars}" ]]; then
-  echo "__xbuild_in_output_vars is not set" >&2
-  exit 1
-fi
-
 declare -a __xbuild_out_inherit_paths=()
 
-readarray -t __xbuild_eclass_dirs <<< "${__xbuild_in_eclass_dirs}"
+readarray -t __xbuild_eclass_dirs <<< "${__xbuild_in_eclass_dirs:?}"
 
 # TODO: Is it okay to enable extglob by default?
 shopt -s extglob
@@ -117,7 +102,7 @@ eend() {
 EXPORT_FUNCTIONS() {
   local name
   for name in "$@"; do
-    eval "function ${name}() { ${ECLASS?}_name; }"
+    eval "function ${name}() { ${ECLASS:?}_name; }"
   done
 }
 
@@ -129,7 +114,7 @@ ver_cut() {
   local range="$1"
   local version="$2"
   if [[ -z "${version}" ]]; then
-    version="${PV}"
+    version="${PV:?}"
   fi
 
   local begin end
@@ -165,9 +150,9 @@ ver_cut() {
 
   local i
   for (( i=begin; i<=end; i++ )); do
-    echo -n "${versions[$i]}"
+    echo -n "${versions[${i}]}"
     if [[ ${i} -lt ${end} ]]; then
-      echo -n "${separators[$i]}"
+      echo -n "${separators[${i}]}"
     fi
   done
 }
@@ -210,6 +195,8 @@ __xbuild_source_eclass() {
 
   ECLASS="${name}"
 
+  # ShellCheck can't find the source, that is okay.
+  # shellcheck disable=SC1090
   source "${path}"
 
   unset ECLASS
@@ -235,14 +222,18 @@ __xbuild_source_eclass() {
 }
 
 unset EAPI EBUILD ECLASS INHERITED
-EBUILD="${__xbuild_in_ebuild}"
-set -- "${__xbuild_in_ebuild}"
+# ShellCheck can't figure out that $EBUILD may be used in ebuilds.
+# shellcheck disable=SC2034
+EBUILD="${__xbuild_in_ebuild:?}"
+set -- "${__xbuild_in_ebuild:?}"
 
-source "${__xbuild_in_ebuild}"
+# ShellCheck can't find the source, that is okay.
+# shellcheck disable=SC1090
+source "${__xbuild_in_ebuild:?}"
 
 # In EAPI=0/1/2/3, RDEPEND=DEPEND if RDEPEND is unset.
 # https://projects.gentoo.org/pms/8/pms.html#x1-690007.3.7
-case "${EAPI}" in
+case "${EAPI:-}" in
 0|1|2|3)
   if [[ -z "${RDEPEND+x}" ]]; then
     RDEPEND="${DEPEND}"
@@ -266,4 +257,4 @@ else
 fi
 
 set -o posix
-set > "${__xbuild_in_output_vars}"
+set > "${__xbuild_in_output_vars:?}"
