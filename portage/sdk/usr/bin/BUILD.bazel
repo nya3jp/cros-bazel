@@ -11,6 +11,7 @@ pkg_files(
         "//bazel/portage/bin/fakefs",
         # Intentionally depend on the .py file instead of the library to avoid
         # including stuff like the python runtime.
+        "container-bailout.sh",
         "fake_sudo.py",
     ],
     attributes = pkg_attributes(
@@ -19,6 +20,7 @@ pkg_files(
     prefix = "usr/bin",
     renames = {
         "//bazel/portage/bin/fakefs": "fakeroot",
+        "container-bailout.sh": "container-bailout",
         "fake_sudo.py": "sudo",
     },
     visibility = ["//bazel/portage/sdk:__pkg__"],
