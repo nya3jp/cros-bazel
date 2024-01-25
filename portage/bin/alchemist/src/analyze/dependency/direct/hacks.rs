@@ -247,11 +247,6 @@ pub fn get_extra_dependencies(
         ("sys-apps/proot", DependencyKind::BuildHost) => "dev-vcs/git",
         ("app-misc/jq", DependencyKind::BuildHost) => "dev-vcs/git",
 
-        /*
-         * b/299325226 - gcc is missing (exec: "gcc": executable file not found in syzkaller-0.0.21ATH)
-         */
-        ("dev-go/syzkaller", DependencyKind::BuildHost) => "dev-vcs/git sys-devel/gcc",
-
         /* Our setuptools is way too old. b/293899573 */
         ("dev-python/jinja", DependencyKind::BuildHost) => "dev-python/markupsafe",
 
