@@ -113,7 +113,7 @@ _cros_pkg_filegroup = rule(
     ),
 )
 
-def cros_pkg_filegroup(name, srcs = [], visibility = None, include = []):
+def cros_pkg_filegroup(name, srcs = [], visibility = None, include = [], **kwargs):
     # Bazel doesn't support arbitrary types like Dict[string, List[Label]].
     # So we're stuck with converting this to a "label_keyed_string_dict".
     label_keyed_srcs = {}
@@ -159,6 +159,7 @@ def cros_pkg_filegroup(name, srcs = [], visibility = None, include = []):
         dirs = json.encode(dirs),
         include = include,
         visibility = visibility,
+        **kwargs
     )
 
     deploy_local(

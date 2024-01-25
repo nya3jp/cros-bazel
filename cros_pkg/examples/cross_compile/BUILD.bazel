@@ -30,6 +30,9 @@ cros_pkg_filegroup(
             srcs = ["//bazel/cc/examples:hello_world"],
         ),
     ],
+    target_compatible_with = [
+        "//bazel/platforms/constraints:vendor_cros",
+    ],
     visibility = ["@portage//:all_packages"],
 )
 

@@ -237,14 +237,12 @@ def pkg_files_impl(ctx):
         if len(rename_src_files) != 1:
             fail(
                 "Target {} expands to multiple files, should only refer to one".format(rename_src),
-                "renames",
             )
 
         src_file = rename_src_files[0]
         if src_file not in src_dest_paths_map:
             fail(
                 "File remapping from {0} to {1} is invalid: {0} is not provided to this rule or was excluded".format(rename_src, rename_dest),
-                "renames",
             )
 
         if rename_dest == REMOVE_BASE_DIRECTORY:
