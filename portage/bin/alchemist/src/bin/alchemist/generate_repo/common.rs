@@ -48,9 +48,16 @@ pub static PRIMORDIAL_PACKAGES: &[&str] = &[
 /// dependent.
 ///     BDEPEND="cross-${CHOST}/go"
 ///
-/// This means we need to include `go` and `gcc` as implicit dependencies for
-/// ALL target packages even though only a subset of packages actually require
-/// these host tools.
+/// For packages we maintain, we can add explicit BDEPENDs on the
+/// cross-compilers since we only support a handful of architectures:
+///
+///    BDEPEND="!cros_host? (
+///        arm? ( cross-armv7a-cros-linux-gnueabihf/go )
+///        arm64? ( cross-aarch64-cros-linux-gnu/go )
+///        amd64? ( cross-x86_64-cros-linux-gnu/go )
+///    )"
+///
+/// Ideally we can prune this list as much as possible.
 ///
 /// Questions:
 /// * Why is LLVM not listed here? The sys-devel/llvm ebuild generates compilers
@@ -66,7 +73,6 @@ pub static TOOLCHAIN_PACKAGE_NAMES: &[&str] = &[
     "binutils",
     // Only used by the packages that call `cros_use_gcc`.
     "gcc",
-    "go",
     // compiler-rt is only required for non-x86 toolchains. It's handled
     // as a special case in the generator code.
     "compiler-rt",
