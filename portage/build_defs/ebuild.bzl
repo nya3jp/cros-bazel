@@ -553,7 +553,11 @@ def _ebuild_impl(ctx):
     contents = generate_contents(
         ctx = ctx,
         binary_package = output_binary_package_file,
-        output_prefix = src_basename,
+        # We use a per-ebuild target unique identifier as the prefix. This
+        # allows us to erase the version number of the ebuild in the content
+        # layer paths. This way if an ebuild is upreved, it doesn't necessarily
+        # cache bust all its reverse dependencies.
+        output_prefix = str(ctx.attr.index),
         board = ctx.attr.board,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_extract_package = ctx.executable._extract_package,
@@ -678,6 +682,13 @@ ebuild, ebuild_primordial = maybe_primordial_rule(
             doc = """
             Suffix to add to the output file. i.e., libcxx-17.0-r15<suffix>.tbz2
             """,
+        ),
+        index = attr.int(
+            doc = """
+            This index is used when generating the "installed" contents layer.
+            It must be unique for each ebuild target in this package.
+            """,
+            mandatory = True,
         ),
         prebuilt = attr.label(providers = [BuildSettingInfo]),
         portage_profile_test_package = attr.label(

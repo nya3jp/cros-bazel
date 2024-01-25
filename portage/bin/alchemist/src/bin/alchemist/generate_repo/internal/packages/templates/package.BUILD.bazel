@@ -13,13 +13,16 @@ load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False, full_config=False) -%}
+{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False, full_config=False, index=0) -%}
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
     package_name = "{{ ebuild.package_name }}",
     version = "{{ ebuild.version }}",
     slot = "{{ ebuild.slot }}",
+    {%- if index > 0 %}
+    index = {{ index - 1}},
+    {%- endif %}
     distfiles = select({
         "@//bazel/portage:omit_ebuild_src_enabled": {},
         "@//bazel/portage:omit_ebuild_src_disabled": {
@@ -158,6 +161,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     }),
 {%- endmacro -%}
 
+{%- set ebuild_count = 0 %}
 {%- for ebuild in ebuilds %}
 {% if ebuild.direct_build_target -%}
 direct_ebuild(
@@ -341,12 +345,13 @@ config_setting(
     },
 )
 
+{% set_global ebuild_count = ebuild_count + 1 -%}
 ebuild(
     name = "{{ ebuild.version }}{{ suffix }}",
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True, full_config=full_config) }}
+    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True, full_config=full_config, index=ebuild_count) }}
     prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
     {%- if suffix == "" %}
     portage_profile_test_package = select({

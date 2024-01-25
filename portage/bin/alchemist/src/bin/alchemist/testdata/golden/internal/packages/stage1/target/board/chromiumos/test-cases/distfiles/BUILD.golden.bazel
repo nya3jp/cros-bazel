@@ -70,6 +70,7 @@ ebuild(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
+    index = 0,
     distfiles = select({
         "@//bazel/portage:omit_ebuild_src_enabled": {},
         "@//bazel/portage:omit_ebuild_src_disabled": {
@@ -273,6 +274,7 @@ ebuild(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
+    index = 1,
     distfiles = select({
         "@//bazel/portage:omit_ebuild_src_enabled": {},
         "@//bazel/portage:omit_ebuild_src_disabled": {
@@ -473,6 +475,7 @@ ebuild(
     package_name = "distfiles",
     version = "1.0",
     slot = "0/0",
+    index = 2,
     distfiles = select({
         "@//bazel/portage:omit_ebuild_src_enabled": {},
         "@//bazel/portage:omit_ebuild_src_disabled": {
