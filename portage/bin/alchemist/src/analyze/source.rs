@@ -53,6 +53,8 @@ pub enum PackageLocalSource {
     Chromite,
     /// Chrome source code.
     Chrome(ChromeVersion),
+    /// depot_tools at /mnt/host/source/src/chromium/depot_tools.
+    DepotTools,
 }
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -342,6 +344,11 @@ fn apply_local_sources_workarounds(
         let version = details.as_basic_data().version.main().join(".");
         // TODO: We need USE flags to add src-internal.
         local_sources.push(PackageLocalSource::Chrome(version));
+    }
+
+    // Building chromium source requires depot_tools.
+    if details.inherited.contains("chromium-source") {
+        local_sources.push(PackageLocalSource::DepotTools);
     }
 
     // Running install hooks requires src/scripts/hooks and chromite.

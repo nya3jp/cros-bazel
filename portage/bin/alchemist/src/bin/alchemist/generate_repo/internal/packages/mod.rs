@@ -217,6 +217,7 @@ impl EBuildEntry {
                     Some(format!("@portage_deps//:chrome-{version}_src"))
                 }
                 PackageLocalSource::Chromite => Some("@chromite//:src".to_string()),
+                PackageLocalSource::DepotTools => Some("@depot_tools//:src".to_string()),
                 PackageLocalSource::SrcFile(_) => None,
             })
             .collect();
