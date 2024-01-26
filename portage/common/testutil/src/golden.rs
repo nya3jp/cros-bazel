@@ -112,8 +112,8 @@ pub fn compare_with_golden_data(output: &Path, golden: &Path) -> Result<()> {
         }
         let status = Command::new("diff")
             .args(["-Naru", "--"])
-            .arg(output)
             .arg(real_golden)
+            .arg(output)
             .status()?;
         if !status.success() {
             // Print a friendly instruction if we're running under Bazel.
