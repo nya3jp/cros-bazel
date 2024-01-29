@@ -38,7 +38,6 @@ sdk_install_deps(
     }),
     target_deps = [
         "//internal/packages/stage3/target/host/chromiumos/sys-kernel/linux-headers:4.14",
-        "//internal/packages/stage3/target/host/chromiumos/sys-libs/gcc-libs:10.2.0",
         "//internal/packages/stage3/target/host/chromiumos/sys-libs/glibc:2.35-r25",
         "//internal/packages/stage3/target/host/chromiumos/sys-libs/libcxx:16.0_pre484197",
         "//internal/packages/stage3/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",

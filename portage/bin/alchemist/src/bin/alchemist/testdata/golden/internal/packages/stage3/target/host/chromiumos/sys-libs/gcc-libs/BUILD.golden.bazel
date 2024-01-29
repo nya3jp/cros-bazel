@@ -14,7 +14,7 @@ load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 alias(
     name = "10.2.0_host_deps",
-    actual = "//internal/sdk/stage3/target/host:base",
+    actual = "//internal/sdk/stage3/target/host",
     visibility = ["//visibility:private"],
 )
 

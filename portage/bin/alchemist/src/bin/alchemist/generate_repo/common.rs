@@ -20,7 +20,6 @@ pub static AUTOGENERATE_NOTICE: &str = "# AUTO-GENERATED FILE. DO NOT EDIT.\n\n"
 /// it into alchemist.
 pub static PRIMORDIAL_PACKAGES: &[&str] = &[
     "sys-kernel/linux-headers",
-    "sys-libs/gcc-libs",
     // We currently have glibc in package.provided for !amd64-host boards.
     // When cross-compiling we use the toolchain's glibc package and manually
     // install it into the SYSROOT.

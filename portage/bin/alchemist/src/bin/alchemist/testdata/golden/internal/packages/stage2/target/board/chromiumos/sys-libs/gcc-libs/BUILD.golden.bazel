@@ -15,7 +15,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 sdk_install_deps(
     name = "10.2.0_host_deps",
     out = "gcc-libs-10.2.0_host_deps",
-    base = "//internal/sdk/stage2/target/board:base",
+    base = "//internal/sdk/stage2/target/board",
     overlays = "//internal/overlays:host",
     portage_config = select({
         "@//bazel/portage:compiled_profiles_enabled": [
