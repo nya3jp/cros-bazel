@@ -32,10 +32,8 @@ def _preflight_checks_impl(repo_ctx):
 
     llvm_path = repo_ctx.workspace_root.get_child("third_party/llvm-project")
     if not llvm_path.exists:
-        failure = (
-            "third_party/llvm-project is not checked out.\n" +
-            "Did you run `repo init` with `-g default,bazel`?",
-        )
+        failure = "third_party/llvm-project is not checked out.\n" + \
+                  "Did you run `repo init` with `-g default,bazel`?"
 
     if repo_ctx.os.environ.get("IS_NESTED_BAZEL") == "1":
         failure = None
