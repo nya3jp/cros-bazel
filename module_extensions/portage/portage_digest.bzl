@@ -24,25 +24,28 @@ def _portage_digest_repository_impl(repo_ctx):
     else:
         profile = ""
 
-    # If we don't have a BOARD defined, we need to clear out the repository
-    if board:
-        # TODO: add a cache_dir argument
-        args = [
-            alchemist,
-            "--board",
-            board,
-            "--source-dir",
-            root,
-            "digest-repo",
-        ]
-        st = repo_ctx.execute(args)
-        if st.return_code:
-            fail("Error running command %s:\n%s%s" %
-                 (args, st.stdout, st.stderr))
+    args = [
+        alchemist,
+        "--source-dir",
+        root,
+    ]
 
-        digest = st.stdout
+    if board:
+        args.extend(["--board", board])
+
+        if profile:
+            args.extend(["--profile", profile])
     else:
-        digest = ""
+        args.append("--host")
+
+    args.append("digest-repo")
+
+    st = repo_ctx.execute(args)
+    if st.return_code:
+        fail("Error running command %s:\n%s%s" %
+             (args, st.stdout, st.stderr))
+
+    digest = st.stdout
 
     repo_ctx.file("BUILD.bazel", content = _PORTAGE_DIGEST_REPO_BUILD_FILE)
 
