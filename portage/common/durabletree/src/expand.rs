@@ -8,7 +8,6 @@ use std::{
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
     process::{Command, Stdio},
-    time::Duration,
 };
 
 use anyhow::{bail, Context, Result};
@@ -17,7 +16,6 @@ use nix::mount::{mount, umount2, MntFlags, MsFlags};
 use tracing::{instrument, warn};
 
 use crate::{
-    b299934607,
     consts::{
         EXTRA_TARBALL_FILE_NAME, MANIFEST_FILE_NAME, MARKER_FILE_NAME, RAW_DIR_NAME, RESTORED_XATTR,
     },
@@ -73,10 +71,6 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
         // Already restored.
         return Ok(());
     }
-
-    // Wait until Bazel finishes calling chmod on the durable tree.
-    // TODO(b/299934607): Remove this hack once a fix lands to Bazel.
-    b299934607::wait_chmods(root_dir, Duration::from_secs(60))?;
 
     let raw_dir = root_dir.join(RAW_DIR_NAME);
 
