@@ -25,8 +25,6 @@ sdk_from_archive(
         "//bazel/portage:use_cros_bazel_sdk_enabled": "@files//:cros-bazel-sdk",
     }),
     progress_message = "Extracting bootstrap SDK tarball",
-    # This rule just extracts an archive, do not bother dispatching to remotes.
-    tags = ["no-remote"],
 )
 
 remote_toolchain_inputs(

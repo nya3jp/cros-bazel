@@ -31,8 +31,6 @@ build_sdk(
 sdk_from_archive(
     name = "base",
     src = ":tarball",
-    # This rule just extracts an archive, do not bother dispatching to remotes.
-    tags = ["no-remote"],
     progress_message = "Extracting %{label}",
     visibility = ["//visibility:private"],
 )
