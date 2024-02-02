@@ -224,9 +224,15 @@ fn write_profile_bashrc(sysroot: &Path, bashrcs: &Vec<PathBuf>) -> Result<()> {
 
 /// Collects reclient log files.
 fn collect_reclient_log_files(container_root: &Path) -> Result<()> {
-    // The path must be in sync with the one in chromite/sdk/reclient_cfgs/reproxy.cfg.
-    let reclient_log_dir = container_root.join("tmp/reclient-chromeos-chrome");
-    if reclient_log_dir.try_exists()? {
+    // Find directories at /tmp/reclient-*.
+    // The path must be in sync with the one in cros-remoteexec.eclass.
+    for entry in std::fs::read_dir(container_root.join("tmp"))? {
+        let entry = entry?;
+        let path = entry.path();
+        let name = path.file_name().unwrap().to_string_lossy();
+        if !entry.file_type()?.is_dir() || !name.starts_with("reclient-") {
+            continue;
+        }
         // Generate a unique destination directory path with the current date and a random number.
         // NOTE: On CI builders, chromite's remoteexec_lib.LogsArchiver will upload reclient log
         // files found under /tmp/reclient-* as build artifacts.
@@ -235,14 +241,12 @@ fn collect_reclient_log_files(container_root: &Path) -> Result<()> {
             .format("%Y%m%d%H%M%S")
             .to_string();
         let random_number = rand::random::<u32>();
-        let dest_dir = PathBuf::from(format!(
-            "/tmp/reclient-chromeos-chrome-alchemy-{date}-{random_number}"
-        ));
+        let dest_dir = PathBuf::from(format!("/tmp/{name}-alchemy-{date}-{random_number}"));
 
         std::fs::create_dir(&dest_dir)?;
         // Copy all log files created by reclient. Skip symlinks as they're not interesting.
         // Reclient creates no directory in the log output directory.
-        for entry in std::fs::read_dir(reclient_log_dir)? {
+        for entry in std::fs::read_dir(path)? {
             let entry = entry?;
             if entry.file_type()?.is_file() {
                 let from = entry.path();
