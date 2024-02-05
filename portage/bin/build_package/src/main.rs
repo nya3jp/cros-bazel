@@ -412,13 +412,6 @@ fn do_main() -> Result<()> {
                 OsStr::new("USE_REMOTEEXEC").into(),
                 OsStr::new("true").into(),
             ));
-
-            let remote_toolchain_inputs = Path::new("/usr/bin/remote_toolchain_inputs");
-            settings.push_bind_mount(BindMount {
-                source: remote_toolchain_inputs.to_owned(),
-                mount_path: remote_toolchain_inputs.to_owned(),
-                rw: false,
-            });
         }
         for (key, value) in remoteexec_info.envs {
             envs.push((OsString::from(key).into(), OsString::from(value).into()));

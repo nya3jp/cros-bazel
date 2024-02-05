@@ -418,3 +418,79 @@ sdk_install_glibc = rule(
         ),
     },
 )
+
+def _remote_toolchain_inputs(ctx):
+    output_prefix = ctx.attr.name
+    output = ctx.actions.declare_file(output_prefix + ".tar.zst")
+    output_log = ctx.actions.declare_file(output_prefix + ".log")
+    output_profile = ctx.actions.declare_file(output_prefix + ".profile.json")
+
+    args = ctx.actions.args()
+    args.add_all([
+        "--log",
+        output_log,
+        "--profile",
+        output_profile,
+        ctx.executable._generate_reclient_inputs,
+        "--output",
+        output,
+    ], expand_directories = False)
+
+    layer_inputs = ctx.attr.sdk[SDKInfo].layers + [ctx.file._chromite_src]
+    args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
+
+    inputs = depset(
+        [ctx.executable._generate_reclient_inputs] + layer_inputs,
+    )
+
+    outputs = [output, output_log, output_profile]
+
+    ctx.actions.run(
+        inputs = inputs,
+        outputs = outputs,
+        executable = ctx.executable._action_wrapper,
+        tools = [ctx.executable._generate_reclient_inputs],
+        arguments = [args],
+        execution_requirements = {
+            # Disable sandbox to avoid creating a symlink forest.
+            # This does not affect hermeticity since generate_reclient_inputs runs in a container.
+            "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+        },
+        mnemonic = "GenerateReclientInputs",
+        progress_message = "Building %{label}",
+    )
+
+    return [
+        DefaultInfo(files = depset([output])),
+        OutputGroupInfo(
+            logs = depset([output_log]),
+            traces = depset([output_profile]),
+        ),
+    ]
+
+remote_toolchain_inputs = rule(
+    implementation = _remote_toolchain_inputs,
+    attrs = {
+        "sdk": attr.label(
+            doc = "The SDK to generate the remote_toolchain_inputs file for.",
+            mandatory = True,
+            providers = [SDKInfo],
+        ),
+        "_action_wrapper": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/action_wrapper"),
+        ),
+        "_chromite_src": attr.label(
+            default = Label("@chromite//:src"),
+            allow_single_file = True,
+        ),
+        "_generate_reclient_inputs": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/generate_reclient_inputs"),
+        ),
+    },
+)

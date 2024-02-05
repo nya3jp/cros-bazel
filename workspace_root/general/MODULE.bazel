@@ -141,6 +141,7 @@ crate.from_cargo(
         "//bazel/portage/bin/extract_package_from_manifest/package:Cargo.toml",
         "//bazel/portage/bin/extract_package_from_manifest/update_manifest:Cargo.toml",
         "//bazel/portage/bin/fast_install_packages:Cargo.toml",
+        "//bazel/portage/bin/generate_reclient_inputs:Cargo.toml",
         "//bazel/portage/bin/install_deps:Cargo.toml",
         "//bazel/portage/bin/overlayfs_mount_helper:Cargo.toml",
         "//bazel/portage/bin/run_in_container:Cargo.toml",

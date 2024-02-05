@@ -15,6 +15,7 @@ members = [
     "portage/bin/extract_package_from_manifest/package",
     "portage/bin/extract_package_from_manifest/update_manifest",
     "portage/bin/fast_install_packages",
+    "portage/bin/generate_reclient_inputs",
     "portage/bin/install_deps",
     "portage/bin/overlayfs_mount_helper",
     "portage/bin/run_in_container",

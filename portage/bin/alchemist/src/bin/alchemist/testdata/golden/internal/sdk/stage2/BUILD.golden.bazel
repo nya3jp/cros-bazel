@@ -43,6 +43,7 @@ sdk_update(
     base = ":base",
     extra_tarballs = [
         "@//bazel/portage/sdk:extra_tarball",
+        "@//bazel/portage/sdk:remote_toolchain_inputs",
     ],
     progress_message = "Patching %{label}",
     visibility = ["@//bazel:internal"],
