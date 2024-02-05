@@ -139,6 +139,8 @@ impl BinaryPackage {
     pub fn extract_image(&mut self, output_dir: &Path, use_fakefs: bool) -> Result<()> {
         let runfiles = Runfiles::create()?;
         let fakefs_path = runfiles.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
+        let preload_path =
+            runfiles.rlocation("cros/bazel/portage/bin/fakefs/preload/libfakefs_preload.so");
         let zstd_path = runfiles.rlocation("zstd/zstd");
 
         let mut tarball = self.new_tarball_reader()?;
@@ -146,6 +148,8 @@ impl BinaryPackage {
         let mut command = if use_fakefs {
             let mut command = Command::new(fakefs_path);
             command
+                .arg("--preload")
+                .arg(preload_path)
                 .arg(locate_system_binary("tar")?)
                 .arg("-x")
                 .arg("--same-permissions")
