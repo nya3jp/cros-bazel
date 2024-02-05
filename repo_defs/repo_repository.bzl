@@ -37,7 +37,7 @@ def _repo_repository_impl(ctx):
 
     object_type = _exec(ctx, [
         "git",
-        "-C",
+        "--git-dir",
         repo_project,
         "cat-file",
         "-t",
@@ -77,7 +77,7 @@ def _repo_repository_impl(ctx):
         _exec(ctx, ["mkdir", "work"])
         _exec(ctx, [
             "git",
-            "-C",
+            "--git-dir",
             local_repo,
             "--work-tree",
             ctx.path("work"),
@@ -122,7 +122,7 @@ def _repo_repository_impl(ctx):
 
         content = _exec(ctx, [
             "git",
-            "-C",
+            "--git-dir",
             repo_project,
             "cat-file",
             object_type,
