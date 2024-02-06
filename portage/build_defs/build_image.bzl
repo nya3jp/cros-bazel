@@ -91,6 +91,18 @@ def _build_image_impl(ctx):
 
     inputs = depset(direct_inputs, transitive = transitive_inputs)
 
+    action_wrapper_args = ctx.actions.args()
+    action_wrapper_args.add_all([
+        "--log",
+        output_log_file,
+        "--profile",
+        output_profile_file,
+        "--privileged",
+        "--privileged-output",
+        output_image_file,
+        ctx.executable._build_image,
+    ])
+
     # Define the main action.
     ctx.actions.run(
         inputs = inputs,
@@ -98,14 +110,7 @@ def _build_image_impl(ctx):
         executable = ctx.executable._action_wrapper,
         tools = [ctx.executable._build_image],
         arguments = [
-            "--log",
-            output_log_file,
-            "--profile",
-            output_profile_file,
-            "--privileged",
-            "--privileged-output",
-            output_image_file,
-            ctx.executable._build_image,
+            action_wrapper_args,
             args,
         ],
         execution_requirements = {
