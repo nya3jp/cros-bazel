@@ -26,6 +26,6 @@ pkg_tar(
         {%- endfor %}
     },
     {%- endif %}
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 {%- endfor %}

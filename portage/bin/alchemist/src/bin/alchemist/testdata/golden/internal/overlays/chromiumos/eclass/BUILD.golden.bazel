@@ -31,7 +31,7 @@ pkg_tar(
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     srcs = [":myclass_files"],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 
@@ -57,7 +57,7 @@ pkg_tar(
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     srcs = [":mysuper_files"],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 

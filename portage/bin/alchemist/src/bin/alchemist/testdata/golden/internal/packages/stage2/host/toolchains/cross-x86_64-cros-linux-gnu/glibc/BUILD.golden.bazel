@@ -32,7 +32,7 @@ alias(
 string_flag(
     name = "2.35-r25_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -139,7 +139,7 @@ ebuild(
         "@//bazel/portage:portage_config_validator_enabled": ":2.35-r25_portage_profile_test_package",
         "@//bazel/portage:portage_config_validator_disabled": None,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -147,7 +147,7 @@ add_runtime_deps(
     binpkg = ":2.35-r25",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -222,13 +222,13 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":2.35-r25_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 string_flag(
     name = "2.35-r25_hermetic_test_package_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -332,7 +332,7 @@ ebuild(
         "//conditions:default": False,
     }),
     prebuilt = ":2.35-r25_hermetic_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -340,7 +340,7 @@ add_runtime_deps(
     binpkg = ":2.35-r25",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -416,13 +416,13 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":2.35-r25_hermetic_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 string_flag(
     name = "2.35-r25_portage_profile_test_package_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -510,7 +510,7 @@ ebuild(
         "//conditions:default": False,
     }),
     prebuilt = ":2.35-r25_portage_profile_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -518,7 +518,7 @@ add_runtime_deps(
     binpkg = ":2.35-r25",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -578,7 +578,7 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":2.35-r25_portage_profile_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 ebuild_test(
     name = "2.35-r25_test",
@@ -650,7 +650,7 @@ ebuild_test(
     }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_compare_package_test(
@@ -668,7 +668,7 @@ test_suite(
         "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0_hermetic_test",
         "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25_hermetic_test",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 package_set(
@@ -677,7 +677,7 @@ package_set(
         "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0",
         "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 

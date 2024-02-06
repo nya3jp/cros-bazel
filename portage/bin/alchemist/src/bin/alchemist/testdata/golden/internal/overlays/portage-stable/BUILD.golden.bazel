@@ -48,7 +48,7 @@ overlay(
     name = "portage-stable",
     path = "/mnt/host/source/src/third_party/portage-stable",
     layer = ":layer",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 pkg_files(
@@ -75,5 +75,5 @@ overlay(
     name = "full",
     path = "/mnt/host/source/src/third_party/portage-stable",
     layer = ":layer-full",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

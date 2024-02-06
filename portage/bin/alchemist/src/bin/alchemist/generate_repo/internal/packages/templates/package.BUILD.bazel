@@ -180,7 +180,7 @@ direct_ebuild(
         {%- endfor %}
     ],
     {%- endif %}
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -191,7 +191,7 @@ add_runtime_deps(
         "{{ dep }}_including_provided",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 {% else -%}
@@ -323,7 +323,7 @@ alias(
 string_flag(
     name = "{{ ebuild.version }}{{ suffix }}_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -366,7 +366,7 @@ ebuild(
         "@//bazel/portage:portage_config_validator_disabled": None,
     }),
     {%- endif %}
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -377,7 +377,7 @@ add_runtime_deps(
         "{{ dep }}_including_provided",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -386,7 +386,7 @@ ebuild_debug(
     suffix = "{{ suffix }}",
     {%- endif %}
     {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True, full_config=full_config) }}
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 {% endfor -%}
 {% endif -%}
@@ -402,7 +402,7 @@ ebuild_install(
         "{{ dep }}",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_install_action(
@@ -424,7 +424,7 @@ filegroup(
         "{{ dep }}_installed_no_pdepends",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 {% endif -%}
 
@@ -439,7 +439,7 @@ ebuild_install_list(
         "{{ dep }}",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 {% endif -%}
 
@@ -450,7 +450,7 @@ ebuild_test(
     {{ self::ebuild_args(ebuild=ebuild, sdk_suffix="_test_deps", allow_incremental=False) }}
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_compare_package_test(
@@ -469,7 +469,7 @@ test_suite(
         "{{ dep }}_hermetic_test",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 package_set(
@@ -479,7 +479,7 @@ package_set(
         "{{ dep }}",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 {% endfor %}
@@ -487,7 +487,7 @@ package_set(
 string_flag(
     name = "{{ failure.version }}_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 always_fail(
@@ -495,13 +495,13 @@ always_fail(
     message = "\n--\nError analyzing ebuild!\ntarget: @" + repository_name() +
               "/" + package_name() + "\nebuild: {{ failure.ebuild_name }}\n\n" +
               """{{ failure.error }}\n--""",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 alias(
     name = "{{ failure.version }}_hermetic_test_package",
     actual = "{{ failure.version }}",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_compare_package_test(

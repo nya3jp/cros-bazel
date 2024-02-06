@@ -18,7 +18,7 @@ sdk_extend(
         # so it can be shared between the stages.
         "//internal/sdk/stage1/target/host:board_extra_tarball",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 sdk_install_deps(
@@ -47,5 +47,5 @@ sdk_install_deps(
         "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

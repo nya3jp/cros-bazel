@@ -46,7 +46,7 @@ overlay(
     name = "{{ name }}",
     path = "/{{ mount_path }}",
     layer = ":layer",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 pkg_files(
@@ -73,5 +73,5 @@ overlay(
     name = "full",
     path = "/{{ mount_path }}",
     layer = ":layer-full",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

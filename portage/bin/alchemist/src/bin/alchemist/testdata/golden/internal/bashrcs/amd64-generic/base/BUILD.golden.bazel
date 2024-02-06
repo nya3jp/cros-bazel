@@ -21,7 +21,7 @@ bashrc(
     name = "profile.bashrc",
     path = "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/profile.bashrc",
     layer = ":profile.bashrc_layer",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 

@@ -14,7 +14,7 @@ overlay_set(
         "//internal/overlays/chromiumos",
         "//internal/overlays/amd64-generic",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 # The overlay_set used for the build_image targets.
@@ -28,7 +28,7 @@ overlay_set(
         "//internal/overlays/amd64-generic",
         "//internal/overlays/amd64-generic:full",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 # The overlay_set used for building packages.
@@ -40,7 +40,7 @@ overlay_set(
         "//internal/overlays/chromiumos",
         "//internal/overlays/amd64-host",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 # The overlay_set used for the build_image targets.
@@ -56,5 +56,5 @@ overlay_set(
         "//internal/overlays/amd64-host",
         "//internal/overlays/amd64-host:full",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

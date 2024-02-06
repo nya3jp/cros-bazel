@@ -107,7 +107,7 @@ overlay(
     name = "chromiumos",
     path = "/mnt/host/source/src/third_party/chromiumos-overlay",
     layer = ":layer",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 pkg_files(
@@ -137,5 +137,5 @@ overlay(
     name = "full",
     path = "/mnt/host/source/src/third_party/chromiumos-overlay",
     layer = ":layer-full",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

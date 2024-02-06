@@ -5,5 +5,5 @@
 alias(
     name = "host",
     actual = "{{ base }}",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

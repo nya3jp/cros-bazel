@@ -21,7 +21,7 @@ bashrc(
     name = "glibc.sh",
     path = "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
     layer = ":glibc.sh_layer",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 

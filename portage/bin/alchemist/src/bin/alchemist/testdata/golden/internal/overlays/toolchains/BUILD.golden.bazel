@@ -48,7 +48,7 @@ overlay(
     name = "toolchains",
     path = "/mnt/host/source/src/third_party/toolchains-overlay",
     layer = ":layer",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 pkg_files(
@@ -75,5 +75,5 @@ overlay(
     name = "full",
     path = "/mnt/host/source/src/third_party/toolchains-overlay",
     layer = ":layer-full",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

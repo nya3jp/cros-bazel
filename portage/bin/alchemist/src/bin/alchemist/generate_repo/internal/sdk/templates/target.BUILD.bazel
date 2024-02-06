@@ -24,7 +24,7 @@ sdk_install_deps(
         "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//visibility:private"],
 )
 
 # The legacy setup_bord flow relied on manually copying glibc into the board's
@@ -36,7 +36,7 @@ sdk_install_glibc(
     base = ":{{ cross_compiler.primary_triple }}",
     board = "{{ board }}",
     glibc = "{{ cross_compiler.glibc_target }}",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//visibility:private"],
 )
 {%- set base = ":glibc" %}
 {%- endif %}
@@ -50,7 +50,7 @@ sdk_extend(
         # so it can be shared between the stages.
         "//internal/sdk/stage1/target/{{ name }}:board_extra_tarball",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 sdk_install_deps(
@@ -77,5 +77,5 @@ sdk_install_deps(
         "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

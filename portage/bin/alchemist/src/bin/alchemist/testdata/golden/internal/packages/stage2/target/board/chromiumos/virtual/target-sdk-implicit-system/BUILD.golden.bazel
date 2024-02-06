@@ -32,7 +32,7 @@ alias(
 string_flag(
     name = "1-r4_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -147,7 +147,7 @@ ebuild(
         "@//bazel/portage:portage_config_validator_enabled": ":1-r4_portage_profile_test_package",
         "@//bazel/portage:portage_config_validator_disabled": None,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -155,7 +155,7 @@ add_runtime_deps(
     binpkg = ":1-r4",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -238,13 +238,13 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 string_flag(
     name = "1-r4_hermetic_test_package_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -356,7 +356,7 @@ ebuild(
         "//conditions:default": False,
     }),
     prebuilt = ":1-r4_hermetic_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -364,7 +364,7 @@ add_runtime_deps(
     binpkg = ":1-r4",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -448,13 +448,13 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_hermetic_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 string_flag(
     name = "1-r4_portage_profile_test_package_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -550,7 +550,7 @@ ebuild(
         "//conditions:default": False,
     }),
     prebuilt = ":1-r4_portage_profile_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -558,7 +558,7 @@ add_runtime_deps(
     binpkg = ":1-r4",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -626,7 +626,7 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_portage_profile_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 ebuild_install(
     name = "1-r4_install",
@@ -640,7 +640,7 @@ ebuild_install(
         "//internal/packages/stage2/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4",
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_install_action(
@@ -665,7 +665,7 @@ filegroup(
         "//internal/packages/stage2/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4_installed_no_pdepends",
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2_installed_no_pdepends",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 ebuild_install_list(
     name = "1-r4_install_list",
@@ -679,7 +679,7 @@ ebuild_install_list(
         "//internal/packages/stage2/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4",
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 ebuild_test(
     name = "1-r4_test",
@@ -759,7 +759,7 @@ ebuild_test(
     }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_compare_package_test(
@@ -780,7 +780,7 @@ test_suite(
         "//internal/packages/stage2/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4_hermetic_test",
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2_hermetic_test",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 package_set(
@@ -792,7 +792,7 @@ package_set(
         "//internal/packages/stage2/target/board/chromiumos/virtual/target-sdk-implicit-system:1-r4",
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 

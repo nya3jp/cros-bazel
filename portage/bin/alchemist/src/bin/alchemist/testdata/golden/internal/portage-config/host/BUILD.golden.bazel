@@ -21,7 +21,7 @@ pkg_tar(
             "/etc/make.conf": "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
             "/etc/portage/make.profile": "/mnt/host/source/src/third_party/chromiumos-overlay/profiles/default/linux/amd64/10.0/sdk",
     },
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 pkg_tar(
     name = "lite",
@@ -34,7 +34,7 @@ pkg_tar(
     },
     symlinks = {
     },
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 pkg_tar(
     name = "host",
@@ -47,7 +47,7 @@ pkg_tar(
     },
     symlinks = {
     },
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 pkg_tar(
     name = "full",
@@ -63,5 +63,5 @@ pkg_tar(
             "/etc/make.conf": "/mnt/host/source/src/third_party/chromiumos-overlay/chromeos/config/make.conf.amd64-host",
             "/etc/portage/make.profile": "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap",
     },
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

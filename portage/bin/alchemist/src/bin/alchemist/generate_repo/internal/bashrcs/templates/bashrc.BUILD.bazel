@@ -21,7 +21,7 @@ bashrc(
     name = "{{ bashrc.name }}",
     path = "{{ bashrc.dest }}",
     layer = ":{{ bashrc.name }}_layer",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 {% endfor %}

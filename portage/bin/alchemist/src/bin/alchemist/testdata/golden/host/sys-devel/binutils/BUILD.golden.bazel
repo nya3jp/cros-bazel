@@ -10,7 +10,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "2.39_debug",
@@ -18,7 +21,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_debug",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39_debug",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "2.39_package_set",
@@ -26,7 +32,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_package_set",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39_package_set",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "2.39_install",
@@ -34,7 +43,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_install",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39_install",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "2.39_installed",
@@ -42,7 +54,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_installed",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39_installed",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "2.39_install_list",
@@ -50,62 +65,98 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_install_list",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/binutils:2.39_install_list",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "binutils",
     actual = ":2.39",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "debug",
     actual = ":2.39_debug",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "binutils_debug",
     actual = ":2.39_debug",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "package_set",
     actual = ":2.39_package_set",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "binutils_package_set",
     actual = ":2.39_package_set",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "install",
     actual = ":2.39_install",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "binutils_install",
     actual = ":2.39_install",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "installed",
     actual = ":2.39_installed",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "binutils_installed",
     actual = ":2.39_installed",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "install_list",
     actual = ":2.39_install_list",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "binutils_install_list",
     actual = ":2.39_install_list",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 test_suite(
     name = "2.39_test",

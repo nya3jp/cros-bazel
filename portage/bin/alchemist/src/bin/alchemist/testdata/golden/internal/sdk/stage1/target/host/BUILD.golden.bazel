@@ -103,14 +103,14 @@ pkg_tar(
         ":wrappers_usr_local_bin",
     ],
     extension = "tar",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 # Needed for the build_image targets
 alias(
     name = "overlays",
     actual = "//internal/overlays:host-full",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//images:__pkg__"],
 )
 sdk_extend(
     name = "base",
@@ -118,7 +118,7 @@ sdk_extend(
     extra_tarballs = [
         ":board_extra_tarball",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 sdk_install_deps(
@@ -148,5 +148,5 @@ sdk_install_deps(
         "//conditions:default": "slow",
     }),
     progress_message = "Installing {dep_count} stage 1 primordial packages for amd64-host",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

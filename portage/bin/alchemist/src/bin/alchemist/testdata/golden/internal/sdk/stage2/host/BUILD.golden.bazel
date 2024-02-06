@@ -7,5 +7,5 @@
 alias(
     name = "host",
     actual = "//internal/sdk/stage2",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

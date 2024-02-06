@@ -10,7 +10,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/crossdev:20211027",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "20211027_debug",
@@ -18,7 +21,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/crossdev:20211027_debug",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027_debug",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "20211027_package_set",
@@ -26,7 +32,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/crossdev:20211027_package_set",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027_package_set",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "20211027_install",
@@ -34,7 +43,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/crossdev:20211027_install",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027_install",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "20211027_installed",
@@ -42,7 +54,10 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/crossdev:20211027_installed",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027_installed",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "20211027_install_list",
@@ -50,62 +65,98 @@ alias(
         "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/chromiumos/sys-devel/crossdev:20211027_install_list",
         "@//bazel/portage:stage2": "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027_install_list",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "crossdev",
     actual = ":20211027",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "debug",
     actual = ":20211027_debug",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "crossdev_debug",
     actual = ":20211027_debug",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "package_set",
     actual = ":20211027_package_set",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "crossdev_package_set",
     actual = ":20211027_package_set",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "install",
     actual = ":20211027_install",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "crossdev_install",
     actual = ":20211027_install",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "installed",
     actual = ":20211027_installed",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "crossdev_installed",
     actual = ":20211027_installed",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "install_list",
     actual = ":20211027_install_list",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 alias(
     name = "crossdev_install_list",
     actual = ":20211027_install_list",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
 )
 test_suite(
     name = "20211027_test",

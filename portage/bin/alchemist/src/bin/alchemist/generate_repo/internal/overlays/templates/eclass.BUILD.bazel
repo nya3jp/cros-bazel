@@ -31,7 +31,7 @@ pkg_tar(
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     srcs = [":{{ eclass.name }}_files"],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 {% endfor %}

@@ -14,7 +14,7 @@ overlay_set(
         "{{ overlay }}",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 # The overlay_set used for the build_image targets.
@@ -26,6 +26,6 @@ overlay_set(
         "{{ overlay }}:full",
         {%- endfor %}
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 {%- endfor %}

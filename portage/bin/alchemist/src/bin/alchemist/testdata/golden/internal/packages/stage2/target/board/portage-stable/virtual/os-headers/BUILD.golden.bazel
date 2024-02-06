@@ -32,7 +32,7 @@ alias(
 string_flag(
     name = "0-r2_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -141,7 +141,7 @@ ebuild(
         "@//bazel/portage:portage_config_validator_enabled": ":0-r2_portage_profile_test_package",
         "@//bazel/portage:portage_config_validator_disabled": None,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -149,7 +149,7 @@ add_runtime_deps(
     binpkg = ":0-r2",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -226,13 +226,13 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":0-r2_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 string_flag(
     name = "0-r2_hermetic_test_package_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -338,7 +338,7 @@ ebuild(
         "//conditions:default": False,
     }),
     prebuilt = ":0-r2_hermetic_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -346,7 +346,7 @@ add_runtime_deps(
     binpkg = ":0-r2",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -424,13 +424,13 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":0-r2_hermetic_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 string_flag(
     name = "0-r2_portage_profile_test_package_prebuilt",
     build_setting_default = "",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 bool_flag(
@@ -520,7 +520,7 @@ ebuild(
         "//conditions:default": False,
     }),
     prebuilt = ":0-r2_portage_profile_test_package_prebuilt",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 add_runtime_deps(
@@ -528,7 +528,7 @@ add_runtime_deps(
     binpkg = ":0-r2",
     runtime_deps = [
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_debug(
@@ -590,7 +590,7 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":0-r2_portage_profile_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 ebuild_install(
     name = "0-r2_install",
@@ -600,7 +600,7 @@ ebuild_install(
     packages = [
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_install_action(
@@ -617,7 +617,7 @@ filegroup(
     srcs = [
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2_installed_no_pdepends",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 ebuild_install_list(
     name = "0-r2_install_list",
@@ -627,7 +627,7 @@ ebuild_install_list(
     packages = [
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 ebuild_test(
     name = "0-r2_test",
@@ -701,7 +701,7 @@ ebuild_test(
     }),
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 ebuild_compare_package_test(
@@ -718,7 +718,7 @@ test_suite(
     tests = [
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2_hermetic_test",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 package_set(
@@ -726,7 +726,7 @@ package_set(
     deps = [
         "//internal/packages/stage2/target/board/portage-stable/virtual/os-headers:0-r2",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 

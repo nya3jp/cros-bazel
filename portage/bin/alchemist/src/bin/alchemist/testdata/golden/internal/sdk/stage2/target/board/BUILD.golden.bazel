@@ -25,7 +25,7 @@ sdk_install_deps(
         "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//visibility:private"],
 )
 
 # The legacy setup_bord flow relied on manually copying glibc into the board's
@@ -37,7 +37,7 @@ sdk_install_glibc(
     base = ":x86_64-cros-linux-gnu",
     board = "amd64-generic",
     glibc = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//visibility:private"],
 )
 
 sdk_extend(
@@ -49,7 +49,7 @@ sdk_extend(
         # so it can be shared between the stages.
         "//internal/sdk/stage1/target/board:board_extra_tarball",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 sdk_install_deps(
@@ -78,5 +78,5 @@ sdk_install_deps(
         "@//bazel/portage:binpkg_cache_fast": "fast",
         "//conditions:default": "slow",
     }),
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

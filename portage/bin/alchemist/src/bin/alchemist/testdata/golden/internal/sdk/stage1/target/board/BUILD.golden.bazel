@@ -103,14 +103,14 @@ pkg_tar(
         ":wrappers_usr_local_bin",
     ],
     extension = "tar",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 # Needed for the build_image targets
 alias(
     name = "overlays",
     actual = "//internal/overlays:board-full",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//images:__pkg__"],
 )
 package_set(
     name = "cross-packages",
@@ -125,7 +125,7 @@ package_set(
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:linux-headers",
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:llvm-libunwind",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//images:__pkg__"],
 )
 
 sdk_install_deps(
@@ -147,7 +147,7 @@ sdk_install_deps(
         "//conditions:default": "slow",
     }),
     progress_message = "Installing {dep_count} host packages into %{label}",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//visibility:private"],
 )
 
 # The legacy setup_bord flow relied on manually copying glibc into the board's
@@ -159,6 +159,7 @@ sdk_install_glibc(
     base = ":additional-host-tools",
     board = "amd64-generic",
     glibc = "@//bazel/portage/repo_defs/prebuilts/amd64-host/cross-x86_64-cros-linux-gnu:glibc",
+    visibility = ["//visibility:private"],
 )
 
 sdk_extend(
@@ -167,7 +168,7 @@ sdk_extend(
     extra_tarballs = [
         ":board_extra_tarball",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 
 sdk_install_deps(
@@ -197,5 +198,5 @@ sdk_install_deps(
         "//conditions:default": "slow",
     }),
     progress_message = "Installing {dep_count} stage 1 primordial packages for amd64-generic",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

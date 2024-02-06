@@ -21,7 +21,7 @@ pkg_tar(
             "/build/amd64-generic/etc/make.conf.user": "/etc/make.conf.user",
             "/build/amd64-generic/etc/portage/make.profile": "/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base",
     },
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
 pkg_tar(
     name = "board",
@@ -34,5 +34,5 @@ pkg_tar(
     },
     symlinks = {
     },
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )

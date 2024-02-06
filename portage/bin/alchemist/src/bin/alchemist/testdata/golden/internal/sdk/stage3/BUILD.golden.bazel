@@ -27,7 +27,7 @@ build_sdk(
         "//internal/packages/stage2/host/chromiumos/sys-devel/gcc:10.2.0_including_provided",
     ],
     sdk = "//internal/sdk/stage1/target/host:base",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//visibility:private"],
 )
 
 sdk_from_archive(
@@ -36,7 +36,7 @@ sdk_from_archive(
     # This rule just extracts an archive, do not bother dispatching to remotes.
     tags = ["no-remote"],
     progress_message = "Extracting %{label}",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//visibility:private"],
 )
 
 # This is required so we can monkey patch portage.
@@ -48,5 +48,5 @@ sdk_update(
         "@//bazel/portage/sdk:remote_toolchain_inputs",
     ],
     progress_message = "Patching %{label}",
-    visibility = ["@//bazel:internal"],
+    visibility = ["//:__subpackages__"],
 )
