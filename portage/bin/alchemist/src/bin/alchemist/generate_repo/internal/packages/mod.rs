@@ -249,8 +249,10 @@ impl EBuildEntry {
             .local_sources
             .iter()
             .filter_map(|source| match source {
-                // Add cipd-cache as a cache source when the package depends on chrome source.
-                PackageLocalSource::Chrome(version) => {
+                // Add cipd-cache as a cache source for chromeos-chrome.
+                PackageLocalSource::Chrome(version)
+                    if category == "chromeos-base" && package_name == "chromeos-chrome" =>
+                {
                     Some(format!("@portage_deps//:chrome-{version}_cipd-cache"))
                 }
                 _ => None,
