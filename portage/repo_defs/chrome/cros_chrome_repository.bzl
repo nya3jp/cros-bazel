@@ -140,8 +140,8 @@ def _cros_chrome_repository_impl(ctx):
         "--transform=flags=rSh;s,^,/home/root/chrome_root/,",
     ]
 
-    # Remove CIPD cache files to make this hermetic.
-    ctx.delete("src/third_party/depot_tools/.cipd_bin/.cipd")
+    # Remove CIPD files to make this hermetic.
+    ctx.delete("src/third_party/depot_tools/.cipd_bin")
 
     # Remove CIPD cache files in src/third_party/depot_tools/bootstrap-*_bin/.cipd
     for path in _exec(
