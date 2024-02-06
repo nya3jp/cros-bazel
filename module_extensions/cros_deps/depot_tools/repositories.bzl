@@ -12,21 +12,8 @@ def depot_tools_repository():
         commit = "86752e9a55281200715749d75a88cf57bf2e7b01",
         shallow_since = "1703067784 +0000",
         patch_cmds = [
-            "touch .disable_auto_update",
-            # We need gclient to fetch the chromium sources
-            '''
-            cat <<-'EOF' > gclient.wrapper.sh
-#!/bin/bash
-ROOT="$(realpath $(dirname "${BASH_SOURCE[0]}"))"
-export CIPD_CACHE_DIR="${ROOT}/.cipd_cache"
-export VPYTHON_VIRTUALENV_ROOT="${ROOT}/.vpython-root"
-export PATH="${ROOT}:$PATH"
-exec "${ROOT}/gclient" "$@"
-EOF
-            ''',
-            "chmod +x gclient.wrapper.sh",
             # Force the cipd binaries and python venv to be downloaded.
-            "DEPOT_TOOLS_DIR=$PWD ./ensure_bootstrap",
+            "DEPOT_TOOLS_UPDATE=0 ./ensure_bootstrap",
         ],
         build_file = "@//bazel/module_extensions/cros_deps:depot_tools/BUILD.depot_tools-template",
     )

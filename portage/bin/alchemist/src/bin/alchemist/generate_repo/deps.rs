@@ -39,11 +39,7 @@ enum Repository {
         tree: String,
     },
     #[allow(clippy::enum_variant_names)]
-    CrosChromeRepository {
-        name: String,
-        tag: String,
-        gclient: String,
-    },
+    CrosChromeRepository { name: String, tag: String },
 }
 
 pub fn generate_deps_file(all_sources: &[&PackageSources], out: &Path) -> Result<()> {
@@ -111,7 +107,6 @@ fn generate_deps(all_sources: &[&PackageSources]) -> Result<Vec<Repository>> {
         .map(|version| Repository::CrosChromeRepository {
             name: format!("chrome-{}", version),
             tag: version.clone(),
-            gclient: "@depot_tools//:gclient.wrapper.sh".to_string(),
         });
 
     Ok(unique_dists.chain(repos).chain(chrome).collect())

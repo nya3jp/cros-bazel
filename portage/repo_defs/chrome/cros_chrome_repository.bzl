@@ -67,45 +67,50 @@ def _cros_chrome_repository_impl(ctx):
         ],
     )
 
-    _exec(ctx, [
-        ctx.attr.gclient,
-        "sync",
-        "--noprehooks",
-        "--nohooks",
-        # This unfortunately doesn't change how much data we fetch.
-        "--no-history",
-        # This still pulls in 10000 commits. I wish we could specify the depth.
-        "--shallow",
-        "--jobs",
-        "12",
-    ], "Fetching third_party chromium dependencies")
-
     pwd = _exec(ctx, ["pwd"]).strip()
 
     # Set the cache directories so we don't write to the users home directory.
     cipd_cache_dir = paths.join(pwd, ".cipd-cache")
     vpython_root = paths.join(pwd, ".vpython-root")
-    depot_tools_path = paths.join(pwd, "src/third_party/depot_tools")
+    depot_tools_path = ctx.workspace_root.get_child("chromium/depot_tools")
 
-    # Never auto update depot_tools since we won't have network access.
-    ctx.file(paths.join(depot_tools_path, ".disable_auto_update"), "")
+    _exec(
+        ctx,
+        [
+            depot_tools_path.get_child("gclient"),
+            "sync",
+            "--noprehooks",
+            "--nohooks",
+            # This unfortunately doesn't change how much data we fetch.
+            "--no-history",
+            # This still pulls in 10000 commits. I wish we could specify the depth.
+            "--shallow",
+            "--jobs",
+            "12",
+        ],
+        "Fetching third_party chromium dependencies",
+        PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
+        CIPD_CACHE_DIR = cipd_cache_dir,
+        VPYTHON_VIRTUALENV_ROOT = vpython_root,
+        DEPOT_TOOLS_UPDATE = "0",
+    )
 
     # This command will populate the cipd cache and create a python venv.
     _exec(
         ctx,
-        [paths.join(depot_tools_path, "ensure_bootstrap")],
+        [depot_tools_path.get_child("ensure_bootstrap")],
         "Downloading depot_tools dependencies",
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
-        DEPOT_TOOLS_DIR = depot_tools_path,
+        DEPOT_TOOLS_UPDATE = "0",
     )
 
     # Run the hooks with the depot tools pinned by chromium.
     _exec(
         ctx,
         [
-            paths.join(depot_tools_path, "gclient"),
+            depot_tools_path.get_child("gclient"),
             "runhooks",
             "--force",
             "--jobs",
@@ -115,6 +120,7 @@ def _cros_chrome_repository_impl(ctx):
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
+        DEPOT_TOOLS_UPDATE = "0",
     )
 
     # See https://reproducible-builds.org/docs/archives/
@@ -228,10 +234,6 @@ def _cros_chrome_repository_impl(ctx):
     ctx.template("BUILD.bazel", ctx.attr._build_file)
 
 _cros_sdk_repository_attrs = {
-    "gclient": attr.label(
-        doc = """gclient binary used to fetch chromium.""",
-        mandatory = True,
-    ),
     "internal": attr.bool(
         doc = """If true download Chrome if false download Chromium.""",
         default = False,
