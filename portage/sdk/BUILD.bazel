@@ -15,7 +15,7 @@ pkg_tar(
         "//bazel/portage/sdk/usr/src",
     ],
     extension = "tar.gz",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 sdk_from_archive(
@@ -32,7 +32,7 @@ sdk_from_archive(
 remote_toolchain_inputs(
     name = "remote_toolchain_inputs",
     sdk = ":sdk_from_archive",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 # The stage1 bootstrap SDK.
@@ -45,5 +45,8 @@ sdk_update(
         ":extra_tarball",
         ":remote_toolchain_inputs",
     ],
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "@//bazel:internal",
+        "@portage//:__subpackages__",
+    ],
 )

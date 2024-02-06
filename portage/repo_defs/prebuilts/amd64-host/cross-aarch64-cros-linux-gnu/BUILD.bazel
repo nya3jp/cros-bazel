@@ -7,59 +7,59 @@ load("//bazel/portage/repo_defs/prebuilts:prebuilt_binary_package.bzl", "prebuil
 prebuilt_binary_package(
     name = "binutils",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_binutils",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "compiler-rt",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_compiler_rt",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "gcc",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_gcc",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "gdb",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_gdb",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "glibc",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_glibc",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "go",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_go",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "libcxx",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_libcxx",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "libxcrypt",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_libxcrypt",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "linux-headers",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_linux_headers",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 prebuilt_binary_package(
     name = "llvm-libunwind",
     src = "@files//:amd64_host_cross_aarch64_cros_linux_gnu_llvm_libunwind",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )

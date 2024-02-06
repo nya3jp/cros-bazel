@@ -33,7 +33,7 @@ cros_pkg_filegroup(
     target_compatible_with = [
         "//bazel/platforms/constraints:vendor_cros",
     ],
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 # Unfortunately, selects are limited in capabilities, so it's not possible to
@@ -71,5 +71,5 @@ alias(
 cros_pkg_filegroup(
     name = "different_location",
     include = [":filegroup_per_arch"],
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )

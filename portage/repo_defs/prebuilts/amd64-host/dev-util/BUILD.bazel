@@ -8,5 +8,5 @@ load("//bazel/portage/repo_defs/prebuilts:prebuilt_binary_package.bzl", "prebuil
 prebuilt_binary_package(
     name = "glib-utils",
     src = "@files//:amd64_host_dev_util_glib_utils",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )

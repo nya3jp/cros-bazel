@@ -9,7 +9,7 @@ rust_binary(
     name = "xpaktool",
     srcs = glob(["src/*.rs"]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
     deps = [
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/portage/binarypackage",

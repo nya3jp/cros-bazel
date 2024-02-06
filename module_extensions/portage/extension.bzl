@@ -89,7 +89,7 @@ def _portage_deps_impl(module_ctx):
 
     hub.generate_hub_repo(
         name = "portage_deps",
-        visibility = ["@portage//:all_packages"],
+        visibility = ["@portage//:__subpackages__"],
     )
 
 portage_deps = module_extension(

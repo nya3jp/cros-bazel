@@ -18,7 +18,7 @@ rust_binary(
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = [
-        "@portage//:all_packages",
+        "@portage//:__subpackages__",
     ],
     deps = [
         "//bazel/portage/common/cliutil",

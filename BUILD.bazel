@@ -2,20 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# The group of packages considered internal to Alchemy.
-# If you need to make an Alchemy target accessible from other Alchemy targets,
-# this is a good default. Of course it's even better if you could use a smaller
-# group though. Never use //visibility:public in Alchemy targets to avoid
-# unexpected dependencies.
+# The group of non-generated packages considered internal to Alchemy.
+# If you need to make a non-generated Alchemy target accessible from other
+# non-generated Alchemy targets, this is a good default. Of course it's even
+# better if you could use a smaller group though. Never use //visibility:public
+# in Alchemy targets to avoid unexpected dependencies.
+#
+# If you need to expose a non-generated Alchemy target to a generated target
+# you should instead add `@portage//:__subpacakges__`. This syntax is special
+# cased so that the non-generated targets won't depend on the @portage
+# repository.
 package_group(
     name = "internal",
-    includes = [
-        "@portage//:all_packages",
-    ],
     packages = [
-        # Note: External repositories (@foo//...) are not accepted here.
-        # Define a package group in each external repository and include it
-        # instead.
         "//bazel/...",
         # The top-level package defining a few special targets.
         "//",

@@ -8,12 +8,12 @@ load("//bazel/portage/repo_defs/prebuilts:prebuilt_binary_package.bzl", "prebuil
 prebuilt_binary_package(
     name = "hps-sdk",
     src = "@files//:amd64_host_dev_embedded_hps_sdk",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )
 
 # Needed for chromeos-ec
 prebuilt_binary_package(
     name = "coreboot-sdk",
     src = "@files//:amd64_host_dev_embedded_coreboot_sdk",
-    visibility = ["@portage//:all_packages"],
+    visibility = ["@portage//:__subpackages__"],
 )

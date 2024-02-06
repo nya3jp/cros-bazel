@@ -52,7 +52,10 @@ pkg_tar(
     compressor = "@//bazel/portage/repo_defs/zstd",
     compressor_args = "--threads=0",
     extension = "tar.zst",
-    visibility = ["@//bazel:internal"],
+    visibility = [
+        "@//bazel:internal",
+        "@portage//:__subpackages__",
+    ],
 )
 
 # By only exposing the file we don't need to depend on vpython, cache
