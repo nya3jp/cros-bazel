@@ -351,8 +351,8 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
         # NOTE: build_package assumes the directory is writable.
         # TODO(b/308409815): Make this more robust.
         # See https://crrev.com/c/4989046/comment/196dbd8c_c044dfc0/.
-        cache_marker_path_or_file = compute_file_arg(ctx.file.incremental_cache_marker)
-        if type(cache_marker_path_or_file) == "string":
+        cache_marker_path_or_file = compute_file_arg(ctx.file.incremental_cache_marker, use_runfiles)
+        if type(cache_marker_path_or_file) != "string":
             cache_marker_path = cache_marker_path_or_file.path
         else:
             cache_marker_path = cache_marker_path_or_file
