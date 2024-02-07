@@ -20,7 +20,6 @@
 // TODO: Compile this code with hermetic toolchains and get rid of this hack.
 __asm__(".symver __errno_location,__errno_location@GLIBC_2.2.5");
 __asm__(".symver dlsym,dlsym@GLIBC_2.2.5");
-__asm__(".symver fgetxattr,fgetxattr@GLIBC_2.3");
 __asm__(".symver fprintf,fprintf@GLIBC_2.2.5");
 __asm__(".symver fwrite,fwrite@GLIBC_2.2.5");
 __asm__(".symver getenv,getenv@GLIBC_2.2.5");
@@ -28,6 +27,7 @@ __asm__(".symver gettid,gettid@GLIBC_2.30");
 __asm__(".symver getxattr,getxattr@GLIBC_2.3");
 __asm__(".symver lgetxattr,lgetxattr@GLIBC_2.3");
 __asm__(".symver pthread_once,pthread_once@GLIBC_2.2.5");
+__asm__(".symver sprintf,sprintf@GLIBC_2.2.5");
 __asm__(".symver stderr,stderr@GLIBC_2.2.5");
 __asm__(".symver syscall,syscall@GLIBC_2.2.5");
 
@@ -50,28 +50,23 @@ static void do_init(void) {
 
 static void ensure_init(void) { pthread_once(&g_init_flag, do_init); }
 
-static bool errno_has_no_override() {
-  return errno == ENODATA || errno == ENOTSUP || errno == ENOENT ||
-         errno == ENOTDIR;
-}
-
 static bool path_has_no_override(const char *pathname, bool follow_symlink) {
   int saved_errno = errno;
   errno = 0;
   (follow_symlink ? getxattr : lgetxattr)(pathname, OVERRIDE_XATTR_NAME, NULL,
                                           0);
-  bool result = errno_has_no_override();
+  bool result = errno == ENODATA || errno == ENOTSUP || errno == ENOENT ||
+                errno == ENOTDIR;
   errno = saved_errno;
   return result;
 }
 
 static bool fd_has_no_override(int fd) {
-  int saved_errno = errno;
-  errno = 0;
-  fgetxattr(fd, OVERRIDE_XATTR_NAME, NULL, 0);
-  bool result = errno_has_no_override();
-  errno = saved_errno;
-  return result;
+  // fgetxattr may not work with O_PATH file descriptors, so use /proc/self/fd
+  // instead.
+  char fdpath[64];
+  sprintf(fdpath, "/proc/self/fd/%d", fd);
+  return path_has_no_override(fdpath, true);
 }
 
 static int backdoor_fstatat(int dirfd, const char *pathname, void *statbuf,
