@@ -17,12 +17,14 @@
 #include <unistd.h>
 
 // Maximize glibc compatibility.
-// TODO: Compile this code with CrOS SDK and get rid of this hack.
+// TODO: Compile this code with hermetic toolchains and get rid of this hack.
 __asm__(".symver __errno_location,__errno_location@GLIBC_2.2.5");
 __asm__(".symver dlsym,dlsym@GLIBC_2.2.5");
 __asm__(".symver fgetxattr,fgetxattr@GLIBC_2.3");
+__asm__(".symver fprintf,fprintf@GLIBC_2.2.5");
 __asm__(".symver fwrite,fwrite@GLIBC_2.2.5");
 __asm__(".symver getenv,getenv@GLIBC_2.2.5");
+__asm__(".symver gettid,gettid@GLIBC_2.30");
 __asm__(".symver getxattr,getxattr@GLIBC_2.3");
 __asm__(".symver lgetxattr,lgetxattr@GLIBC_2.3");
 __asm__(".symver pthread_once,pthread_once@GLIBC_2.2.5");
