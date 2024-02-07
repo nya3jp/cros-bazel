@@ -468,7 +468,7 @@ def _generate_ebuild_validation_action(ctx, binpkg):
         executable = ctx.executable._xpaktool,
         arguments = [args],
         mnemonic = "EbuildValidation",
-        progress_message = "Building %{label}",
+        progress_message = "Validating %{label}",
     )
 
     return validation_file
