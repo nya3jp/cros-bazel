@@ -33,6 +33,12 @@ alias(
     visibility = ["//:__subpackages__"],
 )
 
+alias(
+    name = "1.0_package_set",
+    actual = "1.0",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild_compare_package_test(
     name = "1.0_hermetic_test",
     packages = [

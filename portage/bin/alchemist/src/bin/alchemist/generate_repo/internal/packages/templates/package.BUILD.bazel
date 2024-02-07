@@ -504,6 +504,12 @@ alias(
     visibility = ["//:__subpackages__"],
 )
 
+alias(
+    name = "{{ failure.version }}_package_set",
+    actual = "{{ failure.version }}",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild_compare_package_test(
     name = "{{ failure.version }}_hermetic_test",
     packages = [
