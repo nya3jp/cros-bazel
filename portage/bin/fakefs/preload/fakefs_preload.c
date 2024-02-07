@@ -47,12 +47,15 @@ static int (*g_libc_statx)(int dirfd, const char *pathname, int flags,
                            unsigned int mask, struct statx *statxbuf);
 static int (*g_libc_fchownat)(int dirfd, const char *pathname, uid_t owner,
                               gid_t group, int flags);
+static int (*g_libc_fchmodat)(int dirfd, const char *pathname, mode_t mode,
+                              int flags);
 
 static void do_init(void) {
   g_verbose = getenv("FAKEFS_VERBOSE") != NULL;
   g_libc_fstatat = dlsym(RTLD_NEXT, "fstatat");
   g_libc_statx = dlsym(RTLD_NEXT, "statx");
   g_libc_fchownat = dlsym(RTLD_NEXT, "fchownat");
+  g_libc_fchmodat = dlsym(RTLD_NEXT, "fchmodat");
 }
 
 static void ensure_init(void) { pthread_once(&g_init_flag, do_init); }
@@ -251,6 +254,28 @@ static int wrap_fchownat(int dirfd, const char *pathname, uid_t owner,
   return g_libc_fchownat(dirfd, pathname, owner, group, flags);
 }
 
+static int wrap_fchmodat(int dirfd, const char *pathname, mode_t mode,
+                         int flags) {
+  // Typical filesystems don't support changing permissions of symlinks, so
+  // Linux kernel's fchmodat(2) interface was designed not to take the flags
+  // argument, and glibc's fchmodat(3) initially returned ENOTSUP when
+  // AT_SYMLINK_NOFOLLOW was passed. However, permissions of some special
+  // symlinks, such as those on /proc, can be updated by calling chmod on
+  // /proc/self/fd/N via O_PATH file descriptors, so glibc added support of
+  // AT_SYMLINK_NOFOLLOW in 2.32. Unfortunately the glibc implementation calls
+  // into fstatat(2) that is ptrace'd by fakefs and thus slow, while meaningful
+  // use cases of fchmodat(3) with AT_SYMLINK_NOFOLLOW are extremely limited.
+  // To avoid this unnecessary slowness, we forcibly simulate glibc's old
+  // behavior to always return ENOTSUP. Even if this happens, callers (e.g.
+  // GNU tar) should fall back to calling fchmodat(3) without
+  // AT_SYMLINK_NOFOLLOW for compatibility with older glibc.
+  if ((flags & AT_SYMLINK_NOFOLLOW) != 0) {
+    errno = ENOTSUP;
+    return -1;
+  }
+  return g_libc_fchmodat(dirfd, pathname, mode, flags);
+}
+
 int __fakefs_stat(const char *pathname, struct stat *statbuf) {
   ensure_init();
   return wrap_fstatat(AT_FDCWD, pathname, statbuf, 0);
@@ -321,6 +346,11 @@ int __fakefs_fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group,
   return wrap_fchownat(dirfd, pathname, owner, group, flags);
 }
 
+int __fakefs_fchmodat(int dirfd, const char *pathname, mode_t mode, int flags) {
+  ensure_init();
+  return wrap_fchmodat(dirfd, pathname, mode, flags);
+}
+
 // Define libc intercepting symbols as aliases.
 // Implementing them directly can lead to incorrect compiler optimizations
 // because prototype declarations of these functions in the standard library
@@ -353,3 +383,5 @@ int lchown(const char *pathname, uid_t owner, gid_t group)
     __attribute__((alias("__fakefs_lchown")));
 int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group,
              int flags) __attribute__((alias("__fakefs_fchownat")));
+int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags)
+    __attribute__((alias("__fakefs_fchmodat")));
