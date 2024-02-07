@@ -211,8 +211,8 @@ Running a build with pinned packages:
 $ BOARD=amd64-generic bazel build --config=prebuilts/stage2-board-sdk @portage//target/sys-apps/attr
 ```
 
-[generate_chrome_prebuilt_config.py]: ./portage/tools/generate_chrome_prebuilt_config.py
-[generate-stage2-prebuilts]: ./portage/tools/generate-stage2-prebuilts
+[generate_chrome_prebuilt_config.py]: ../portage/tools/generate_chrome_prebuilt_config.py
+[generate-stage2-prebuilts]: ../portage/tools/generate-stage2-prebuilts
 
 ## Extracting binary packages
 

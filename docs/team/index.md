@@ -94,9 +94,8 @@ Building a ChromeOS image takes several hours. Most packages build in a few
 minutes, but there are several known heavy packages, such as
 `chromeos-base/chromeos-chrome` that takes 2-3 hours. You can inject prebuilt
 binary packages to bypass building those packages.
-See [Injecting prebuilt binary packages](#injecting-prebuilt-binary-packages)
-for more details. To make `chromeos-base/chromeos-chrome` build faster, you can
-also use [Goma](#using-goma-to-build-chrome).
+See [Injecting prebuilt binary packages] for more details.
+To make `chromeos-base/chromeos-chrome` build faster, you can also use [Goma].
 
 After building an image, you can use `cros_vm` command available in CrOS SDK
 to run a VM locally. Make sure to copy an image out from `bazel-bin` as it's not
@@ -117,3 +116,6 @@ You can also use `cros_vm` command to stop the VM.
 ```sh
 $ chromite/bin/cros_vm --stop
 ```
+
+[Injecting prebuilt binary packages]: ../advanced.md#injecting-prebuilt-binary-packages
+[Goma]: ../getting_started.md#using-goma-to-build-chrome
