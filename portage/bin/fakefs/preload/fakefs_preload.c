@@ -19,6 +19,7 @@
 // Maximize glibc compatibility.
 // TODO: Compile this code with hermetic toolchains and get rid of this hack.
 __asm__(".symver __errno_location,__errno_location@GLIBC_2.2.5");
+__asm__(".symver close,close@GLIBC_2.2.5");
 __asm__(".symver dlsym,dlsym@GLIBC_2.2.5");
 __asm__(".symver fprintf,fprintf@GLIBC_2.2.5");
 __asm__(".symver fwrite,fwrite@GLIBC_2.2.5");
@@ -26,6 +27,7 @@ __asm__(".symver getenv,getenv@GLIBC_2.2.5");
 __asm__(".symver gettid,gettid@GLIBC_2.30");
 __asm__(".symver getxattr,getxattr@GLIBC_2.3");
 __asm__(".symver lgetxattr,lgetxattr@GLIBC_2.3");
+__asm__(".symver openat,openat@GLIBC_2.4");
 __asm__(".symver pthread_once,pthread_once@GLIBC_2.2.5");
 __asm__(".symver sprintf,sprintf@GLIBC_2.2.5");
 __asm__(".symver stderr,stderr@GLIBC_2.2.5");
@@ -51,14 +53,10 @@ static void do_init(void) {
 static void ensure_init(void) { pthread_once(&g_init_flag, do_init); }
 
 static bool path_has_no_override(const char *pathname, bool follow_symlink) {
-  int saved_errno = errno;
-  errno = 0;
-  (follow_symlink ? getxattr : lgetxattr)(pathname, OVERRIDE_XATTR_NAME, NULL,
-                                          0);
-  bool result = errno == ENODATA || errno == ENOTSUP || errno == ENOENT ||
-                errno == ENOTDIR;
-  errno = saved_errno;
-  return result;
+  int ret = (follow_symlink ? getxattr : lgetxattr)(
+      pathname, OVERRIDE_XATTR_NAME, NULL, 0);
+  return ret < 0 && (errno == ENODATA || errno == ENOTSUP || errno == ENOENT ||
+                     errno == ENOTDIR);
 }
 
 static bool fd_has_no_override(int fd) {
@@ -69,13 +67,41 @@ static bool fd_has_no_override(int fd) {
   return path_has_no_override(fdpath, true);
 }
 
-static int backdoor_fstatat(int dirfd, const char *pathname, void *statbuf,
-                            int flags) {
-  if (g_verbose) {
-    fprintf(stderr, "[fakefs %d] fast: fstatat(%d, \"%s\", 0x%x)\n", gettid(),
-            dirfd, pathname, flags);
+// Returns true if the specified file has no ownership override.
+// Even if this function returns false, it does not necessarily mean that the
+// file has ownership override, e.g. it might be because the function failed to
+// determine it due to errors.
+// This function preserves `errno`.
+static bool has_no_override(int dirfd, const char *pathname, int flags) {
+  int saved_errno = errno;
+
+  bool no_override;
+  if ((flags & AT_EMPTY_PATH) != 0 && pathname[0] == '\0') {
+    no_override = fd_has_no_override(dirfd);
+  } else {
+    if (dirfd == AT_FDCWD || pathname[0] == '/') {
+      no_override =
+          path_has_no_override(pathname, (flags & AT_SYMLINK_NOFOLLOW) == 0);
+    } else {
+      int tmpfd =
+          openat(dirfd, pathname,
+                 O_RDONLY | O_CLOEXEC | O_PATH |
+                     ((flags & AT_SYMLINK_NOFOLLOW) != 0 ? O_NOFOLLOW : 0));
+      if (tmpfd >= 0) {
+        no_override = fd_has_no_override(tmpfd);
+        close(tmpfd);
+      } else {
+        no_override = false;
+      }
+    }
   }
 
+  errno = saved_errno;
+  return no_override;
+}
+
+static int backdoor_fstatat(int dirfd, const char *pathname, void *statbuf,
+                            int flags) {
   int ret = syscall(SYS_newfstatat, dirfd, pathname, statbuf, flags, 0,
                     FAKEFS_BACKDOOR_KEY);
   // Clobber %r9 so that FAKEFS_PASS_KEY is not preserved.
@@ -85,11 +111,6 @@ static int backdoor_fstatat(int dirfd, const char *pathname, void *statbuf,
 
 static int backdoor_statx(int dirfd, const char *pathname, int flags,
                           unsigned int mask, struct statx *statxbuf) {
-  if (g_verbose) {
-    fprintf(stderr, "[fakefs %d] fast: statx(%d, \"%s\", 0x%x, 0x%x)\n",
-            gettid(), dirfd, pathname, flags, mask);
-  }
-
   int ret = syscall(SYS_statx, dirfd, pathname, flags, mask, statxbuf,
                     FAKEFS_BACKDOOR_KEY);
   // Clobber %r9 so that FAKEFS_PASS_KEY is not preserved.
@@ -104,16 +125,12 @@ static int wrap_fstatat(int dirfd, const char *pathname, void *statbuf,
     return -1;
   }
 
-  if (dirfd == AT_FDCWD || pathname[0] == '/') {
-    if (path_has_no_override(pathname, (flags & AT_SYMLINK_NOFOLLOW) == 0)) {
-      return backdoor_fstatat(dirfd, pathname, statbuf, flags);
+  if (has_no_override(dirfd, pathname, flags)) {
+    if (g_verbose) {
+      fprintf(stderr, "[fakefs %d] fast: fstatat(%d, \"%s\", 0x%x)\n", gettid(),
+              dirfd, pathname, flags);
     }
-  }
-
-  if (pathname[0] == '\0' && (flags & AT_EMPTY_PATH) != 0) {
-    if (fd_has_no_override(dirfd)) {
-      return backdoor_fstatat(dirfd, pathname, statbuf, flags);
-    }
+    return backdoor_fstatat(dirfd, pathname, statbuf, flags);
   }
 
   return g_libc_fstatat(dirfd, pathname, statbuf, flags);
@@ -126,16 +143,12 @@ static int wrap_statx(int dirfd, const char *pathname, int flags,
     return -1;
   }
 
-  if (dirfd == AT_FDCWD || pathname[0] == '/') {
-    if (path_has_no_override(pathname, (flags & AT_SYMLINK_NOFOLLOW) == 0)) {
-      return backdoor_statx(dirfd, pathname, flags, mask, statxbuf);
+  if (has_no_override(dirfd, pathname, flags)) {
+    if (g_verbose) {
+      fprintf(stderr, "[fakefs %d] fast: statx(%d, \"%s\", 0x%x, 0x%x)\n",
+              gettid(), dirfd, pathname, flags, mask);
     }
-  }
-
-  if (pathname[0] == '\0' && (flags & AT_EMPTY_PATH) != 0) {
-    if (fd_has_no_override(dirfd)) {
-      return backdoor_statx(dirfd, pathname, flags, mask, statxbuf);
-    }
+    return backdoor_statx(dirfd, pathname, flags, mask, statxbuf);
   }
 
   return g_libc_statx(dirfd, pathname, flags, mask, statxbuf);
