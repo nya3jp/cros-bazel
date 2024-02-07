@@ -27,8 +27,10 @@ __asm__(".symver getenv,getenv@GLIBC_2.2.5");
 __asm__(".symver gettid,gettid@GLIBC_2.30");
 __asm__(".symver getxattr,getxattr@GLIBC_2.3");
 __asm__(".symver lgetxattr,lgetxattr@GLIBC_2.3");
+__asm__(".symver lremovexattr,removexattr@GLIBC_2.3");
 __asm__(".symver openat,openat@GLIBC_2.4");
 __asm__(".symver pthread_once,pthread_once@GLIBC_2.2.5");
+__asm__(".symver removexattr,removexattr@GLIBC_2.3");
 __asm__(".symver sprintf,sprintf@GLIBC_2.2.5");
 __asm__(".symver stderr,stderr@GLIBC_2.2.5");
 __asm__(".symver syscall,syscall@GLIBC_2.2.5");
@@ -43,11 +45,14 @@ static int (*g_libc_fstatat)(int dirfd, const char *pathname,
                              struct stat *statbuf, int flags);
 static int (*g_libc_statx)(int dirfd, const char *pathname, int flags,
                            unsigned int mask, struct statx *statxbuf);
+static int (*g_libc_fchownat)(int dirfd, const char *pathname, uid_t owner,
+                              gid_t group, int flags);
 
 static void do_init(void) {
   g_verbose = getenv("FAKEFS_VERBOSE") != NULL;
   g_libc_fstatat = dlsym(RTLD_NEXT, "fstatat");
   g_libc_statx = dlsym(RTLD_NEXT, "statx");
+  g_libc_fchownat = dlsym(RTLD_NEXT, "fchownat");
 }
 
 static void ensure_init(void) { pthread_once(&g_init_flag, do_init); }
@@ -100,6 +105,52 @@ static bool has_no_override(int dirfd, const char *pathname, int flags) {
   return no_override;
 }
 
+static bool path_clear_override(const char *pathname, bool follow_symlink) {
+  int ret = (follow_symlink ? removexattr : lremovexattr)(pathname,
+                                                          OVERRIDE_XATTR_NAME);
+  return ret == 0 || errno == ENODATA || errno == ENOTSUP || errno == EPERM;
+}
+
+static bool fd_clear_override(int fd) {
+  // fremovexattr may not support O_PATH file descriptors, so use /proc/self/fd
+  // instead.
+  char fdpath[40];
+  sprintf(fdpath, "/proc/self/fd/%d", fd);
+  return path_clear_override(fdpath, true);
+}
+
+// Clears ownership override of the specified file. It returns true on success.
+// This function preserves `errno`.
+static bool clear_override(int dirfd, const char *pathname, int flags) {
+  int saved_errno = errno;
+
+  bool no_override;
+  if ((flags & AT_EMPTY_PATH) != 0 && pathname[0] == '\0') {
+    no_override = fd_clear_override(dirfd);
+  } else {
+    if (dirfd == AT_FDCWD || pathname[0] == '/') {
+      no_override =
+          path_clear_override(pathname, (flags & AT_SYMLINK_NOFOLLOW) == 0);
+    } else {
+      // We use O_RDONLY instead of O_WRONLY because the latter updates mtime.
+      // Fortunately O_RDONLY is enough to manipulate xattrs.
+      int tmpfd =
+          openat(dirfd, pathname,
+                 O_RDONLY | O_CLOEXEC | O_PATH |
+                     ((flags & AT_SYMLINK_NOFOLLOW) != 0 ? O_NOFOLLOW : 0));
+      if (tmpfd >= 0) {
+        no_override = fd_clear_override(tmpfd);
+        close(tmpfd);
+      } else {
+        no_override = false;
+      }
+    }
+  }
+
+  errno = saved_errno;
+  return no_override;
+}
+
 static int backdoor_fstatat(int dirfd, const char *pathname, void *statbuf,
                             int flags) {
   int ret = syscall(SYS_newfstatat, dirfd, pathname, statbuf, flags, 0,
@@ -116,6 +167,30 @@ static int backdoor_statx(int dirfd, const char *pathname, int flags,
   // Clobber %r9 so that FAKEFS_PASS_KEY is not preserved.
   asm volatile("mov $0, %%r9" ::: "r9");
   return ret;
+}
+
+static int backdoor_fchownat(int dirfd, const char *pathname, uid_t owner,
+                             gid_t group, int flags) {
+  int ret = syscall(SYS_fchownat, dirfd, pathname, owner, group, flags,
+                    FAKEFS_BACKDOOR_KEY);
+  // Clobber %r9 so that FAKEFS_PASS_KEY is not preserved.
+  asm volatile("mov $0, %%r9" ::: "r9");
+  return ret;
+}
+
+// Returns true if the specified file's original ownership (i.e. ignoring
+// fakefs ownership override) matches the given UID/GID.
+// This function returns false if the function failed to read the original
+// ownership due to errors.
+// This function preserves `errno`.
+static bool matches_original_ownership(int dirfd, const char *pathname,
+                                       int flags, uid_t owner, gid_t group) {
+  int saved_errno = errno;
+  struct stat statbuf;
+  bool matched = backdoor_fstatat(dirfd, pathname, &statbuf, flags) == 0 &&
+                 statbuf.st_uid == owner && statbuf.st_gid == group;
+  errno = saved_errno;
+  return matched;
 }
 
 static int wrap_fstatat(int dirfd, const char *pathname, void *statbuf,
@@ -152,6 +227,28 @@ static int wrap_statx(int dirfd, const char *pathname, int flags,
   }
 
   return g_libc_statx(dirfd, pathname, flags, mask, statxbuf);
+}
+
+static int wrap_fchownat(int dirfd, const char *pathname, uid_t owner,
+                         gid_t group, int flags) {
+  if (pathname == NULL) {
+    errno = EFAULT;
+    return -1;
+  }
+
+  if (matches_original_ownership(dirfd, pathname, flags, owner, group)) {
+    if (clear_override(dirfd, pathname, flags)) {
+      if (g_verbose) {
+        fprintf(stderr,
+                "[fakefs %d] fast: fchownat(%d, \"%s\", %d, %d, 0x%x)\n",
+                gettid(), dirfd, pathname, owner, group, flags);
+      }
+      // Still call fchownat to update ctime.
+      return backdoor_fchownat(dirfd, pathname, owner, group, flags);
+    }
+  }
+
+  return g_libc_fchownat(dirfd, pathname, owner, group, flags);
 }
 
 int __fakefs_stat(const char *pathname, struct stat *statbuf) {
@@ -203,6 +300,27 @@ int __fakefs_statx(int dirfd, const char *pathname, int flags,
   return wrap_statx(dirfd, pathname, flags, mask, statxbuf);
 }
 
+int __fakefs_chown(const char *pathname, uid_t owner, gid_t group) {
+  ensure_init();
+  return wrap_fchownat(AT_FDCWD, pathname, owner, group, 0);
+}
+
+int __fakefs_fchown(int fd, uid_t owner, gid_t group) {
+  ensure_init();
+  return wrap_fchownat(fd, "", owner, group, AT_EMPTY_PATH);
+}
+
+int __fakefs_lchown(const char *pathname, uid_t owner, gid_t group) {
+  ensure_init();
+  return wrap_fchownat(AT_FDCWD, pathname, owner, group, AT_SYMLINK_NOFOLLOW);
+}
+
+int __fakefs_fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group,
+                      int flags) {
+  ensure_init();
+  return wrap_fchownat(dirfd, pathname, owner, group, flags);
+}
+
 // Define libc intercepting symbols as aliases.
 // Implementing them directly can lead to incorrect compiler optimizations
 // because prototype declarations of these functions in the standard library
@@ -227,3 +345,11 @@ int fstatat64(int dirfd, const char *pathname, struct stat64 *statbuf,
               int flags) __attribute__((alias("__fakefs_fstatat64")));
 int statx(int dirfd, const char *pathname, int flags, unsigned int mask,
           struct statx *statxbuf) __attribute__((alias("__fakefs_statx")));
+int chown(const char *pathname, uid_t owner, gid_t group)
+    __attribute__((alias("__fakefs_chown")));
+int fchown(int fd, uid_t owner, gid_t group)
+    __attribute__((alias("__fakefs_fchown")));
+int lchown(const char *pathname, uid_t owner, gid_t group)
+    __attribute__((alias("__fakefs_lchown")));
+int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group,
+             int flags) __attribute__((alias("__fakefs_fchownat")));
