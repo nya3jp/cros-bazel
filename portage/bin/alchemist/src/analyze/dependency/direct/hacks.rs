@@ -339,11 +339,6 @@ pub fn get_extra_dependencies(
          */
         ("media-gfx/zbar", DependencyKind::BuildHost) => "sys-devel/gettext virtual/libiconv",
 
-        /*
-         * /var/tmp/portage/dev-lang/rust-bootstrap-1.69.0/work/opt/rust-bootstrap-1.68.0/bin/cargo: error while loading shared libraries: libssl.so.1.1: cannot open shared object file: No such file or directory
-         */
-        ("dev-lang/rust-bootstrap", DependencyKind::BuildHost) => "dev-libs/openssl:PITA",
-
         _ => "",
     };
 
