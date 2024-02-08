@@ -37,9 +37,7 @@ def _build_image_impl(ctx):
         overlays = overlays,
         portage_configs = ctx.files.portage_config,
         install_set = install_set,
-        strategy = "slow",
         executable_action_wrapper = ctx.executable._action_wrapper,
-        executable_install_deps = ctx.executable._install_deps,
         executable_fast_install_packages =
             ctx.executable._fast_install_packages,
         progress_message = "Setting up SDK to build image",
@@ -212,11 +210,6 @@ build_image = rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/build_image"),
-        ),
-        _install_deps = attr.label(
-            executable = True,
-            cfg = "exec",
-            default = Label("//bazel/portage/bin/install_deps"),
         ),
         _fast_install_packages = attr.label(
             executable = True,

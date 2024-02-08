@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("install_groups.bzl", "add_install_groups", "calculate_install_groups")
-
 def _compute_slot_key(package):
     """
     Computes a slot key from BinaryPackageInfo.
@@ -27,7 +25,7 @@ def _compute_slot_key(package):
         package.contents.sysroot,
     )
 
-def _fast_install_packages(
+def install_deps(
         ctx,
         output_prefix,
         board,
@@ -38,6 +36,37 @@ def _fast_install_packages(
         executable_action_wrapper,
         executable_fast_install_packages,
         progress_message):
+    """
+    Creates an action which builds file system layers in which the build dependencies are installed.
+
+    Args:
+        ctx: ctx: A context object passed to the rule implementation.
+        output_prefix: str: A file name prefix to prepend to output files
+            defined in this function.
+        board: str: The target board name to install dependencies for. If it is
+            non-empty, packages are installed to the corresponding sysroot
+            (ROOT="/build/<board>"). If it is an empty string, packages are
+            installed to the host (ROOT="/").
+        sdk: SDKInfo: The provider describing the base file system layers.
+        overlays: OverlaySetInfo: Overlays providing packages.
+        portage_configs: list[File]: Tarballs containing portage config.
+        install_set: Depset[BinaryPackageInfo]: Binary package targets to
+            install. This depset must be closed over transitive runtime
+            dependencies; that is, if the depset contains a package X, it must
+            also contain all transitive dependencies of the package X. Also,
+            This depset's to_list() must return packages in a valid installation
+            order, i.e. a package's runtime dependencies are fully satisfied by
+            packages that appear before it.
+        executable_action_wrapper: File: An executable file of action_wrapper.
+        executable_fast_install_packages: File: An executable file of
+            fast_install_packages.
+        progress_message: str: Progress message for the installation action.
+
+    Returns:
+        list[File]: Files representing file system layers.
+        list[File]: Log files generated when building the layers.
+        list[File]: Trace files generated when building the layers.
+    """
     sysroot = "/build/%s" % board if board else "/"
 
     slot_key_to_package = {}  # dict[str, BinaryPackageInfo]
@@ -172,129 +201,3 @@ def _fast_install_packages(
     )
 
     return new_layers, [output_log_file], [output_profile_file]
-
-def install_deps(
-        ctx,
-        output_prefix,
-        board,
-        sdk,
-        overlays,
-        portage_configs,
-        install_set,
-        strategy,
-        executable_action_wrapper,
-        executable_install_deps,
-        executable_fast_install_packages,
-        progress_message):
-    """
-    Creates an action which builds file system layers in which the build dependencies are installed.
-
-    Args:
-        ctx: ctx: A context object passed to the rule implementation.
-        output_prefix: str: A file name prefix to prepend to output files
-            defined in this function.
-        board: str: The target board name to install dependencies for. If it is
-            non-empty, packages are installed to the corresponding sysroot
-            (ROOT="/build/<board>"). If it is an empty string, packages are
-            installed to the host (ROOT="/").
-        sdk: SDKInfo: The provider describing the base file system layers.
-        overlays: OverlaySetInfo: Overlays providing packages.
-        portage_configs: list[File]: Tarballs containing portage config.
-        install_set: Depset[BinaryPackageInfo]: Binary package targets to
-            install. This depset must be closed over transitive runtime
-            dependencies; that is, if the depset contains a package X, it must
-            also contain all transitive dependencies of the package X. Also,
-            This depset's to_list() must return packages in a valid installation
-            order, i.e. a package's runtime dependencies are fully satisfied by
-            packages that appear before it.
-        strategy: str: Specifies the strategy to install packages. Valid values
-            are:
-                "fast": Uses installed contents layers to fully avoid copying
-                    package contents.
-                "slow": Simply uses emerge to install packages into a single
-                    layer.
-        executable_action_wrapper: File: An executable file of action_wrapper.
-        executable_install_deps: File: An executable file of install_deps.
-        executable_fast_install_packages: File: An executable file of
-            fast_install_packages.
-        progress_message: str: Progress message for the installation action.
-
-    Returns:
-        list[File]: Files representing file system layers.
-        list[File]: Log files generated when building the layers.
-        list[File]: Trace files generated when building the layers.
-    """
-    if strategy == "fast":
-        return _fast_install_packages(
-            ctx = ctx,
-            output_prefix = output_prefix,
-            board = board,
-            sdk = sdk,
-            overlays = overlays,
-            portage_configs = portage_configs,
-            install_set = install_set,
-            executable_action_wrapper = executable_action_wrapper,
-            executable_fast_install_packages = executable_fast_install_packages,
-            progress_message = progress_message,
-        )
-
-    output_root = ctx.actions.declare_directory(output_prefix)
-    output_log_file = ctx.actions.declare_file(output_prefix + ".log")
-    output_profile_file = ctx.actions.declare_file(
-        output_prefix + ".profile.json",
-    )
-
-    args = ctx.actions.args()
-    args.add_all([
-        "--log",
-        output_log_file,
-        "--profile",
-        output_profile_file,
-        executable_install_deps,
-        "--output",
-        output_root,
-    ])
-    if board:
-        args.add("--board=" + board)
-
-    install_list = install_set.to_list()
-
-    install_groups = calculate_install_groups(
-        install_list,
-        provided_packages = sdk.packages,
-    )
-
-    add_install_groups(args, install_groups)
-
-    direct_inputs = []
-    for group in install_groups:
-        for package in group:
-            direct_inputs.append(package.file)
-
-    layer_inputs = sdk.layers + overlays.layers + portage_configs
-    args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(layer_inputs)
-
-    progress_message = progress_message.replace(
-        "{dep_count}",
-        str(len(install_list)),
-    )
-
-    ctx.actions.run(
-        inputs = depset(direct_inputs),
-        outputs = [output_root, output_log_file, output_profile_file],
-        executable = executable_action_wrapper,
-        tools = [executable_install_deps],
-        arguments = [args],
-        execution_requirements = {
-            # Disable sandbox to avoid creating a symlink forest.
-            # This does not affect hermeticity since ebuild runs in a container.
-            "no-sandbox": "",
-            # Send SIGTERM instead of SIGKILL on user interruption.
-            "supports-graceful-termination": "",
-        },
-        mnemonic = "InstallDeps",
-        progress_message = progress_message,
-    )
-
-    return [output_root], [output_log_file], [output_profile_file]

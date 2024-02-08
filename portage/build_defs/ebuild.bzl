@@ -169,11 +169,6 @@ _EBUILD_COMMON_ATTRS = dict(
         cfg = "exec",
         default = Label("//bazel/portage/bin/action_wrapper"),
     ),
-    _install_deps = attr.label(
-        executable = True,
-        cfg = "exec",
-        default = Label("//bazel/portage/bin/install_deps"),
-    ),
     _build_package = attr.label(
         executable = True,
         cfg = "exec",
