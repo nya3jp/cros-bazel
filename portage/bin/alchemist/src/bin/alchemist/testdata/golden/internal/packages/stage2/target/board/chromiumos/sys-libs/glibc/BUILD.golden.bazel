@@ -30,10 +30,6 @@ sdk_install_deps(
         # * sys-devel/binutils-2.39
         "//internal/packages/stage2/host/chromiumos/sys-devel/gcc:10.2.0",
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     visibility = ["//visibility:private"],
 )
 

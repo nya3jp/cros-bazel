@@ -143,10 +143,6 @@ sdk_install_deps(
         "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
         "//internal/packages/stage1/target/host/portage-stable/virtual/os-headers:0-r2",
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     progress_message = "Installing {dep_count} stage 1 primordial packages for amd64-host",
     visibility = ["//:__subpackages__"],
 )

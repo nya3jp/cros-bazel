@@ -193,7 +193,7 @@ def _sdk_install_deps_impl(ctx):
         overlays = ctx.attr.overlays[OverlaySetInfo],
         portage_configs = ctx.files.portage_config,
         install_set = install_set,
-        strategy = ctx.attr.install_strategy,
+        strategy = "fast",
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_install_deps = ctx.executable._install_deps,
         executable_fast_install_packages =
@@ -228,17 +228,6 @@ sdk_install_deps = rule(
             If set, the packages are installed into the board's sysroot,
             otherwise they are installed into the host's sysroot.
             """,
-        ),
-        "install_strategy": attr.string(
-            doc = """
-            Specifies the strategy to install packages. Valid values are:
-                "fast": Uses installed contents layers to fully avoid copying
-                    package contents.
-                "slow": Simply uses emerge to install packages into a single
-                    layer.
-            """,
-            mandatory = True,
-            values = ["fast", "slow"],
         ),
         "out": attr.string(
             doc = "Output directory name. Defaults to the target name.",

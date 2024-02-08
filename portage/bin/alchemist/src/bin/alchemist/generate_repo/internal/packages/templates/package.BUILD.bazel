@@ -220,10 +220,6 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     visibility = ["//visibility:private"],
 )
 {%- else -%}
@@ -262,10 +258,6 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     visibility = ["//visibility:private"],
 )
 {%- else -%}
@@ -300,10 +292,6 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     visibility = ["//visibility:private"],
 )
 {%- else -%}

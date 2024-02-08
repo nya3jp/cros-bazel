@@ -28,10 +28,6 @@ sdk_install_deps(
     target_deps = [
         "//internal/packages/stage2/host/chromiumos/simple/aaa:1.0",
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     visibility = ["//visibility:private"],
 )
 

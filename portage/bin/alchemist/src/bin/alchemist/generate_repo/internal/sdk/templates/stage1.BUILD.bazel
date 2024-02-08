@@ -117,10 +117,6 @@ sdk_install_deps(
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-lang:rust",
         "@//bazel/portage/repo_defs/prebuilts/amd64-host/dev-util:glib-utils",
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     progress_message = "Installing {dep_count} host packages into %{label}",
     visibility = ["//visibility:private"],
 )
@@ -176,10 +172,6 @@ sdk_install_deps(
         "{{ package }}",
         {%- endfor %}
     ],
-    install_strategy = select({
-        "@//bazel/portage:binpkg_cache_fast": "fast",
-        "//conditions:default": "slow",
-    }),
     progress_message = "Installing {dep_count} stage 1 primordial packages for {{ board }}",
     visibility = ["//:__subpackages__"],
 )
