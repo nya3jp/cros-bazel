@@ -347,7 +347,10 @@ fn apply_local_sources_workarounds(
     }
 
     // Building chromium source requires depot_tools.
-    if details.inherited.contains("chromium-source") {
+    // Using reclient requires depot_tools.
+    if details.inherited.contains("chromium-source")
+        || details.inherited.contains("cros-remoteexec")
+    {
         local_sources.push(PackageLocalSource::DepotTools);
     }
 

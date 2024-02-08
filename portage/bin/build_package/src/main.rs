@@ -404,9 +404,9 @@ fn do_main() -> Result<()> {
 
     let mut envs: Vec<(Cow<OsStr>, Cow<OsStr>)> = Vec::new();
 
-    if args.ebuild.category == "chromeos-base" && args.ebuild.package_name == "chromeos-chrome" {
-        let remoteexec_info: RemoteexecInfo =
-            serde_json::from_reader(BufReader::new(File::open(args.remoteexec_info)?))?;
+    if let Some(remoteexec_info) = serde_json::from_reader::<_, Option<RemoteexecInfo>>(
+        BufReader::new(File::open(args.remoteexec_info)?),
+    )? {
         if remoteexec_info.use_remoteexec {
             envs.push((
                 OsStr::new("USE_REMOTEEXEC").into(),
@@ -454,7 +454,9 @@ fn do_main() -> Result<()> {
             })
             .into(),
         ));
+    }
 
+    if args.ebuild.category == "chromeos-base" && args.ebuild.package_name == "chromeos-chrome" {
         let goma_info: GomaInfo =
             serde_json::from_reader(BufReader::new(File::open(args.goma_info)?))?;
         if goma_info.use_goma {
