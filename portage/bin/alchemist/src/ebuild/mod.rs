@@ -90,6 +90,15 @@ impl PackageDetails {
 
         eapi >= 7
     }
+
+    pub fn supports_idepend(&self) -> bool {
+        let eapi = match self.eapi() {
+            Ok(val) => val,
+            Err(_) => return false,
+        };
+
+        eapi >= 8
+    }
 }
 
 impl PackageDetails {

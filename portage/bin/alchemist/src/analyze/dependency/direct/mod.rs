@@ -100,14 +100,16 @@ fn extract_dependencies_use(
     allow_list: Option<&[&str]>,
 ) -> Result<Vec<Arc<PackageDetails>>> {
     let var_name = match kind {
-        DependencyKind::BuildTarget => "DEPEND",
-        DependencyKind::RunTarget => "RDEPEND",
-        DependencyKind::PostTarget => "PDEPEND",
-        DependencyKind::BuildHost => "BDEPEND",
-        DependencyKind::InstallHost => "IDEPEND",
+        DependencyKind::BuildTarget => Some("DEPEND"),
+        DependencyKind::RunTarget => Some("RDEPEND"),
+        DependencyKind::PostTarget => Some("PDEPEND"),
+        DependencyKind::BuildHost => Some("BDEPEND"),
+        DependencyKind::InstallHost => details.supports_idepend().then_some("IDEPEND"),
     };
 
-    let raw_deps = details.metadata.vars.get_scalar_or_default(var_name)?;
+    let raw_deps = var_name.map_or(Ok(""), |var_name| {
+        details.metadata.vars.get_scalar_or_default(var_name)
+    })?;
 
     let raw_extra_deps = get_extra_dependencies(details, kind, cross_compile);
 

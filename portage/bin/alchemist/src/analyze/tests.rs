@@ -462,7 +462,9 @@ fn test_analyze_packages_install_host_deps() -> Result<()> {
     //
     let packages = analyze_packages_for_testing(&[
         PackageSpec::new("sys-apps/hello", "1")?.var("DEPEND", "sys-libs/libfoo"),
-        PackageSpec::new("sys-libs/libfoo", "1")?.var("IDEPEND", "sys-apps/coreutils"),
+        PackageSpec::new("sys-libs/libfoo", "1")?
+            .var("EAPI", "8")
+            .var("IDEPEND", "sys-apps/coreutils"),
         PackageSpec::new("sys-apps/coreutils", "1")?
             .var("IUSE", "host_arch")
             .var("REQUIRED_USE", "host_arch"),
@@ -501,6 +503,41 @@ fn test_analyze_packages_install_host_deps() -> Result<()> {
 }
 
 #[test]
+fn test_analyze_packages_install_host_deps_eapi7() -> Result<()> {
+    //                  IDEPEND
+    // sys-libs/libfoo ────X───► sys-apps/coreutils
+    //
+    let packages = analyze_packages_for_testing(&[
+        PackageSpec::new("sys-libs/libfoo", "1")?
+            .var("EAPI", "7")
+            .var("IDEPEND", "sys-apps/coreutils"),
+        PackageSpec::new("sys-apps/coreutils", "1")?,
+    ])?;
+
+    assert_eq!(
+        packages,
+        vec![
+            MaybePackageDescription::Ok {
+                package_name_version: "sys-apps/coreutils-1".into(),
+                dependencies: PackageDependenciesDescription {
+                    install_set: vec!["sys-apps/coreutils-1".into()],
+                    ..PackageDependenciesDescription::EMPTY
+                },
+            },
+            MaybePackageDescription::Ok {
+                package_name_version: "sys-libs/libfoo-1".into(),
+                dependencies: PackageDependenciesDescription {
+                    install_set: vec!["sys-libs/libfoo-1".into()],
+                    ..PackageDependenciesDescription::EMPTY
+                },
+            },
+        ]
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_analyze_packages_indirect_host_deps() -> Result<()> {
     //                 BDEPEND                     RDEPEND
     // sys-apps/hello ────────► sys-libs/c ────┬────────────► sys-libs/x
@@ -521,24 +558,31 @@ fn test_analyze_packages_indirect_host_deps() -> Result<()> {
             .var("DEPEND", "sys-libs/a")
             .var("BDEPEND", "sys-libs/c"),
         PackageSpec::new("sys-libs/a", "1")?
+            .var("EAPI", "8")
             .var("RDEPEND", "sys-libs/b")
             .var("IDEPEND", "sys-libs/d"),
         PackageSpec::new("sys-libs/b", "1")?
+            .var("EAPI", "8")
             .var("IDEPEND", "sys-libs/e")
             .var("PDEPEND", "sys-libs/p"),
         PackageSpec::new("sys-libs/c", "1")?
+            .var("EAPI", "8")
             .var("RDEPEND", "sys-libs/x")
             .var("PDEPEND", "sys-libs/y")
             .var("IDEPEND", "sys-libs/z"),
         PackageSpec::new("sys-libs/d", "1")?
+            .var("EAPI", "8")
             .var("RDEPEND", "sys-libs/x")
             .var("PDEPEND", "sys-libs/y")
             .var("IDEPEND", "sys-libs/z"),
         PackageSpec::new("sys-libs/e", "1")?
+            .var("EAPI", "8")
             .var("RDEPEND", "sys-libs/x")
             .var("PDEPEND", "sys-libs/y")
             .var("IDEPEND", "sys-libs/z"),
-        PackageSpec::new("sys-libs/p", "1")?.var("IDEPEND", "sys-libs/q"),
+        PackageSpec::new("sys-libs/p", "1")?
+            .var("EAPI", "8")
+            .var("IDEPEND", "sys-libs/q"),
         PackageSpec::new("sys-libs/q", "1")?,
         PackageSpec::new("sys-libs/x", "1")?,
         PackageSpec::new("sys-libs/y", "1")?,
