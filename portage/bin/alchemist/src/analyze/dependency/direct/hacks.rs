@@ -109,14 +109,6 @@ pub fn get_extra_dependencies(
         }
 
         /*
-         * cannot find C preprocessor: cpp
-         *
-         * We use gcc for `cpp`, we should switch this to clang.
-         * /usr/bin/x86_64-pc-linux-gnu-cpp: symbolic link to /usr/x86_64-pc-linux-gnu/gcc-bin/10.2.0/x86_64-pc-linux-gnu-cpp
-         */
-        ("net-libs/rpcsvc-proto", DependencyKind::BuildHost) if !cross_compile => "sys-devel/gcc",
-
-        /*
          * configure: WARNING: nih-dbus-tool not found, but you are cross-compiling.  Using built copy, which is probably not what you want.  Set NIH_DBUS_TOOL maybe?
          */
         ("sys-libs/libnih", DependencyKind::BuildHost) if cross_compile => "sys-libs/libnih",
