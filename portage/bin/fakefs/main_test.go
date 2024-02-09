@@ -254,3 +254,9 @@ func TestFchownOPathFD(t *testing.T) {
 		t.Fatal("fchown did not change ctime")
 	}
 }
+
+func TestFchmodatStub(t *testing.T) {
+	dir := t.TempDir()
+
+	runTestHelper(t, runNormal, dir, "fchmodat-stub")
+}

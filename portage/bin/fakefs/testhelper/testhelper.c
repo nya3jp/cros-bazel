@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #define _GNU_SOURCE
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,6 +69,17 @@ int fchown_self(const char *path) {
   return EXIT_SUCCESS;
 }
 
+// Makes sure fchmodat(AT_SYMLINK_NOFOLLOW) returns ENOTSUP.
+int fchmodat_stub(void) {
+  errno = 0;
+  fchmodat(AT_FDCWD, "arbitrary_file_name", 0777, AT_SYMLINK_NOFOLLOW);
+  if (errno != ENOTSUP) {
+    perror("fchmodat");
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
+}
+
 int main(int argc, char **argv) {
   if (argc < 2) {
     fprintf(stderr, "testhelper: needs arguments\n");
@@ -93,6 +105,13 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
     return fchown_self(argv[2]);
+  }
+  if (strcmp(argv[1], "fchmodat-stub") == 0) {
+    if (argc != 2) {
+      fprintf(stderr, "testhelper: fchmodat: needs no argument\n");
+      return EXIT_FAILURE;
+    }
+    return fchmodat_stub();
   }
   fprintf(stderr, "testhelper: unknown subcommand %s\n", argv[1]);
   return EXIT_FAILURE;
