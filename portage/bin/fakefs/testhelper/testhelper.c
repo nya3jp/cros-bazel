@@ -51,6 +51,23 @@ int stat_proc_self_fd(const char *path) {
   return EXIT_SUCCESS;
 }
 
+// Calls fchown with the current UID/GID.
+int fchown_self(const char *path) {
+  int fd = open(path, O_RDONLY | O_PATH);
+  if (fd < 0) {
+    perror("open");
+    return EXIT_FAILURE;
+  }
+
+  if (fchown(fd, getuid(), getgid()) < 0) {
+    perror("fchown");
+    return EXIT_FAILURE;
+  }
+
+  close(fd);
+  return EXIT_SUCCESS;
+}
+
 int main(int argc, char **argv) {
   if (argc < 2) {
     fprintf(stderr, "testhelper: needs arguments\n");
@@ -69,6 +86,13 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
     return stat_proc_self_fd(argv[2]);
+  }
+  if (strcmp(argv[1], "fchown-self") == 0) {
+    if (argc != 3) {
+      fprintf(stderr, "testhelper: fchown-self: needs exactly 1 path\n");
+      return EXIT_FAILURE;
+    }
+    return fchown_self(argv[2]);
   }
   fprintf(stderr, "testhelper: unknown subcommand %s\n", argv[1]);
   return EXIT_FAILURE;

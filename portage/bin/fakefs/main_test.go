@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/bazelbuild/rules_go/go/runfiles"
@@ -215,4 +217,40 @@ func TestFstatOPathFD(t *testing.T) {
 
 	runBash(t, runNormal, dir, "touch foo")
 	runTestHelper(t, runAbortOnSlow, dir, "fstatat-empty-path", "foo")
+}
+
+func TestFchownOPathFD(t *testing.T) {
+	dir := t.TempDir()
+
+	runBash(t, runNormal, dir, "touch foo; chown 123:234 foo")
+
+	// Record the initial ctime.
+	stat1, err := os.Stat(filepath.Join(dir, "foo"))
+	if err != nil {
+		t.Fatalf("Failed to stat foo: %v", err)
+	}
+
+	// Call fchown. This should be processed by libfakefs_preload.so.
+	runTestHelper(t, runAbortOnSlow, dir, "fchown-self", "foo")
+
+	// Make sure ctime has been updated.
+	stat2, err := os.Stat(filepath.Join(dir, "foo"))
+	if err != nil {
+		t.Fatalf("Failed to stat foo: %v", err)
+	}
+	if stat2.Sys().(*syscall.Stat_t).Ctim == stat1.Sys().(*syscall.Stat_t).Ctim {
+		t.Fatal("fchown did not change ctime")
+	}
+
+	// Call fchown again. This should be processed by libfakefs_preload.so too.
+	runTestHelper(t, runAbortOnSlow, dir, "fchown-self", "foo")
+
+	// Make sure ctime has been updated.
+	stat3, err := os.Stat(filepath.Join(dir, "foo"))
+	if err != nil {
+		t.Fatalf("Failed to stat foo: %v", err)
+	}
+	if stat3.Sys().(*syscall.Stat_t).Ctim == stat2.Sys().(*syscall.Stat_t).Ctim {
+		t.Fatal("fchown did not change ctime")
+	}
 }
