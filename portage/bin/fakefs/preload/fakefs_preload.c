@@ -19,6 +19,7 @@
 // Maximize glibc compatibility.
 // TODO: Compile this code with hermetic toolchains and get rid of this hack.
 __asm__(".symver __errno_location,__errno_location@GLIBC_2.2.5");
+__asm__(".symver abort,abort@GLIBC_2.2.5");
 __asm__(".symver close,close@GLIBC_2.2.5");
 __asm__(".symver dlsym,dlsym@GLIBC_2.2.5");
 __asm__(".symver fprintf,fprintf@GLIBC_2.2.5");
@@ -41,6 +42,7 @@ static const int FAKEFS_BACKDOOR_KEY = 0x20221107;
 static pthread_once_t g_init_flag = PTHREAD_ONCE_INIT;
 
 static bool g_verbose;
+static bool g_abort_on_slow;
 static int (*g_libc_fstatat)(int dirfd, const char *pathname,
                              struct stat *statbuf, int flags);
 static int (*g_libc_statx)(int dirfd, const char *pathname, int flags,
@@ -52,6 +54,7 @@ static int (*g_libc_fchmodat)(int dirfd, const char *pathname, mode_t mode,
 
 static void do_init(void) {
   g_verbose = getenv("FAKEFS_VERBOSE") != NULL;
+  g_abort_on_slow = getenv("FAKEFS_ABORT_ON_SLOW") != NULL;
   g_libc_fstatat = dlsym(RTLD_NEXT, "fstatat");
   g_libc_statx = dlsym(RTLD_NEXT, "statx");
   g_libc_fchownat = dlsym(RTLD_NEXT, "fchownat");
@@ -211,6 +214,11 @@ static int wrap_fstatat(int dirfd, const char *pathname, void *statbuf,
     return backdoor_fstatat(dirfd, pathname, statbuf, flags);
   }
 
+  if (g_abort_on_slow) {
+    fprintf(stderr, "[fakefs %d] ABORT-ON-SLOW: fstatat(%d, \"%s\", 0x%x)\n",
+            gettid(), dirfd, pathname, flags);
+    abort();
+  }
   return g_libc_fstatat(dirfd, pathname, statbuf, flags);
 }
 
@@ -229,6 +237,12 @@ static int wrap_statx(int dirfd, const char *pathname, int flags,
     return backdoor_statx(dirfd, pathname, flags, mask, statxbuf);
   }
 
+  if (g_abort_on_slow) {
+    fprintf(stderr,
+            "[fakefs %d] ABORT-ON-SLOW: statx(%d, \"%s\", 0x%x, 0x%x)\n",
+            gettid(), dirfd, pathname, flags, mask);
+    abort();
+  }
   return g_libc_statx(dirfd, pathname, flags, mask, statxbuf);
 }
 
@@ -251,6 +265,12 @@ static int wrap_fchownat(int dirfd, const char *pathname, uid_t owner,
     }
   }
 
+  if (g_abort_on_slow) {
+    fprintf(stderr,
+            "[fakefs %d] ABORT-ON-SLOW: fchownat(%d, \"%s\", %d, %d, 0x%x)\n",
+            gettid(), dirfd, pathname, owner, group, flags);
+    abort();
+  }
   return g_libc_fchownat(dirfd, pathname, owner, group, flags);
 }
 

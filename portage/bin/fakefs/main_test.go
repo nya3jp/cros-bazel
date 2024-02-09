@@ -48,6 +48,10 @@ const (
 	// Runs fakefs with ptrace only, essentially simulating the case with
 	// statically-linked binaries.
 	runNoPreload
+	// Runs fakefs with ptrace and preload, and lets the process abort when the
+	// preload library had to fall back to ptrace. This mode is useful to exercise
+	// the preload library's ability to process certain libc function calls fast.
+	runAbortOnSlow
 )
 
 // A list of runMode that simulate production behavior.
@@ -59,6 +63,8 @@ func (m runMode) String() string {
 		return "normal"
 	case runNoPreload:
 		return "no-preload"
+	case runAbortOnSlow:
+		return "abort-on-slow"
 	default:
 		panic(fmt.Sprintf("unknown run mode: %d", int(m)))
 	}
@@ -78,6 +84,10 @@ func runCmd(t *testing.T, mode runMode, cwd string, cmd []string) string {
 	c.Stdin = nil
 	c.Stderr = os.Stderr
 	c.Env = os.Environ()
+
+	if mode == runAbortOnSlow {
+		c.Env = append(c.Env, "FAKEFS_ABORT_ON_SLOW=1")
+	}
 
 	output, err := c.Output()
 	if err != nil {
@@ -198,4 +208,11 @@ func TestProcSelf(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFstatOPathFD(t *testing.T) {
+	dir := t.TempDir()
+
+	runBash(t, runNormal, dir, "touch foo")
+	runTestHelper(t, runAbortOnSlow, dir, "fstatat-empty-path", "foo")
 }
