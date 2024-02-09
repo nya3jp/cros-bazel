@@ -22,9 +22,9 @@ func fakeFsBin(t *testing.T) string {
 }
 
 func testHelperBin(t *testing.T) string {
-	bin, ok := bazel.FindBinary("bazel/portage/bin/fakefs/testhelper", "testhelper")
-	if !ok {
-		t.Fatal("testhelper not found")
+	bin, err := runfiles.Rlocation("cros/bazel/portage/bin/fakefs/testhelper/testhelper")
+	if err != nil {
+		t.Fatalf("testhelper not found: %v", err)
 	}
 	return bin
 }
