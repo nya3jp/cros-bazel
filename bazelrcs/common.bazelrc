@@ -66,6 +66,8 @@ query --experimental_remote_merkle_tree_cache
 build --nostamp
 # Minimize remote cache downloads
 build --remote_download_toplevel
+# Allow Bazel to cache hashes of more files, to avoid re-scanning files
+build --cache_computed_file_digests=500000
 
 # Collect system-wide network metrics in JSON profiles and BEP
 # (build_metrics.network_metrics)
