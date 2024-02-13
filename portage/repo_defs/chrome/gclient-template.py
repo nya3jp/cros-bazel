@@ -11,7 +11,14 @@ solutions = [
         "deps_file": "DEPS",
         "managed": True,
         "custom_deps": {},
-        "custom_vars": {"checkout_src_internal": {internal}},
+        "custom_vars": {
+            "checkout_src_internal": {internal},
+            # We don't need any arch specific sysroots.
+            "checkout_arm": False,
+            "checkout_arm64": False,
+            "checkout_x86": False,
+            "checkout_x64": False,
+        },
     },
 ]
 
