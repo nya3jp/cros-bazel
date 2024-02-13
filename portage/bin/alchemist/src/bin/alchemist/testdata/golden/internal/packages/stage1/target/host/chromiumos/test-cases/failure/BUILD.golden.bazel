@@ -39,6 +39,24 @@ alias(
     visibility = ["@//bazel:internal"],
 )
 
+alias(
+    name = "1.0_debug",
+    actual = "1.0",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "1.0_installed_no_pdepends",
+    actual = "1.0",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "1.0_installed",
+    actual = "1.0",
+    visibility = ["@//bazel:internal"],
+)
+
 ebuild_compare_package_test(
     name = "1.0_hermetic_test",
     packages = [
