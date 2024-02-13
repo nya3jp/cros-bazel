@@ -963,19 +963,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "install_deps"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "cliutil",
- "container",
- "durabletree",
- "fileutil",
- "runfiles",
-]
-
-[[package]]
 name = "instant"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
