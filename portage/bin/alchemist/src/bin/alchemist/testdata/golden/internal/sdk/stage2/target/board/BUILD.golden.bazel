@@ -19,7 +19,6 @@ sdk_install_deps(
     target_deps = [
             "//internal/packages/stage2/host/chromiumos/sys-devel/crossdev:20211027",
             "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/binutils:2.39",
-            "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/gcc:10.2.0",
     ],
     visibility = ["//visibility:private"],
 )

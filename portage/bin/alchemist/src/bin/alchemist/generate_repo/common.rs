@@ -70,8 +70,6 @@ pub static PRIMORDIAL_PACKAGES: &[&str] = &[
 /// `cross-$CHOST`.
 pub static TOOLCHAIN_PACKAGE_NAMES: &[&str] = &[
     "binutils",
-    // Only used by the packages that call `cros_use_gcc`.
-    "gcc",
     // compiler-rt is only required for non-x86 toolchains. It's handled
     // as a special case in the generator code.
     "compiler-rt",
