@@ -124,10 +124,14 @@ pub(crate) fn mount_overlayfs(
         dir_builder.create(dir)?;
     }
 
+    // Create a mount point at the lowers directory so that we can unmount all
+    // submounts quickly.
+    let _lowers_guard = bind_mount(&lowers_dir, &lowers_dir)?;
+
     // Bind-mount lower directories so we can refer to them in overlayfs options
     // in very short file paths because the maximum length of option strings for
     // mount(2) is constrained.
-    let mut short_lower_dirs: Vec<(String, MountGuard)> = Vec::new();
+    let mut short_lower_dirs: Vec<String> = Vec::new();
 
     for (i, lower_dir) in lower_dirs.iter().enumerate() {
         let name = i.to_string();
@@ -135,8 +139,10 @@ pub(crate) fn mount_overlayfs(
 
         dir_builder.create(&path)?;
         let guard = bind_mount(lower_dir, &path)?;
+        // This bind-mount is released by _lowers_guard recursively.
+        guard.leak();
 
-        short_lower_dirs.push((name, guard));
+        short_lower_dirs.push(name);
     }
 
     let runfiles = runfiles::Runfiles::create()?;
@@ -165,11 +171,11 @@ pub(crate) fn mount_overlayfs(
             MAX_LOWER_DIRS,
         );
 
-        let mut new_short_lower_dirs: Vec<(String, MountGuard)> = Vec::new();
+        let mut new_short_lower_dirs: Vec<String> = Vec::new();
 
         let chunks = short_lower_dirs.into_iter().chunks(MAX_LOWER_DIRS);
         for (i, chunk) in chunks.into_iter().enumerate() {
-            let chunk: Vec<(String, MountGuard)> = chunk.into_iter().collect();
+            let chunk: Vec<String> = chunk.into_iter().collect();
             if chunk.len() == 1 {
                 // overlayfs fails to mount with no upper layer and exactly 1 lower layer, so
                 // specially handle this case.
@@ -186,13 +192,15 @@ pub(crate) fn mount_overlayfs(
                 "lowerdir={}",
                 // Overlayfs option treats the first lower directory as the least lower
                 // directory, while we order filesystem layers in the opposite order.
-                chunk.iter().map(|(name, _guard)| name).rev().join(":")
+                chunk.iter().rev().join(":")
             );
 
             // Mount overlayfs via overlayfs_mount_helper.
             // We don't call mount(2) directly because it requires us to change the
             // working directory of the current process, which introduces tricky issues
             // in multi-threaded programs, including unit tests.
+            // Since we mount overlayfs under the lowers directory, it is
+            // unmounted recursively by _lowers_guard.
             let status = Command::new(&helper_path)
                 .arg(overlay_options)
                 .arg(&chunk_dir)
@@ -200,10 +208,7 @@ pub(crate) fn mount_overlayfs(
                 .status()?;
             ensure!(status.success(), "Failed to mount overlayfs: {:?}", status);
 
-            new_short_lower_dirs.push((chunk_name, MountGuard::new(&chunk_dir)));
-
-            // At this point bind-mounts for the lower directories are unmounted, but it's fine
-            // because overlayfs holds references to those mounts internally.
+            new_short_lower_dirs.push(chunk_name);
         }
 
         short_lower_dirs = new_short_lower_dirs;
@@ -217,11 +222,7 @@ pub(crate) fn mount_overlayfs(
         work_dir.display(),
         // Overlayfs option treats the first lower directory as the least lower
         // directory, while we order filesystem layers in the opposite order.
-        short_lower_dirs
-            .iter()
-            .map(|(name, _guard)| name)
-            .rev()
-            .join(":"),
+        short_lower_dirs.iter().rev().join(":"),
     );
 
     // Mount overlayfs via overlayfs_mount_helper.
