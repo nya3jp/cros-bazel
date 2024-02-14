@@ -297,7 +297,9 @@ impl ContainerSettings {
         if let Some(reusable_archive_dir) = &self.reusable_archive_dir {
             Ok(reusable_archive_dir.clone())
         } else {
-            let new_archive_dir = SafeTempDir::new()?;
+            let new_archive_dir = SafeTempDirBuilder::new()
+                .base_dir(&self.mutable_base_dir)
+                .build()?;
             let path = new_archive_dir.path().to_owned();
             self.archive_dirs.push(new_archive_dir);
             self.reusable_archive_dir = Some(path.clone());
