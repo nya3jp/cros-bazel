@@ -105,7 +105,7 @@ ebuild(
         "@//bazel/portage:compiled_profiles_enabled": True,
         "@//bazel/portage:compiled_profiles_disabled": False,
     }),
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
@@ -193,7 +193,7 @@ ebuild_debug(
         "@//bazel/portage:compiled_profiles_enabled": True,
         "@//bazel/portage:compiled_profiles_disabled": False,
     }),
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
@@ -302,7 +302,7 @@ ebuild(
         "@//bazel/portage:compiled_profiles_enabled": True,
         "@//bazel/portage:compiled_profiles_disabled": False,
     }),
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
@@ -387,7 +387,7 @@ ebuild_debug(
         "@//bazel/portage:compiled_profiles_enabled": True,
         "@//bazel/portage:compiled_profiles_disabled": False,
     }),
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
@@ -493,7 +493,7 @@ ebuild(
         "-userland_BSD",
     ],
     inject_use_flags = False,
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host-full",
     eclasses = [
@@ -562,7 +562,7 @@ ebuild_debug(
         "-userland_BSD",
     ],
     inject_use_flags = False,
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host-full",
     eclasses = [
@@ -623,7 +623,7 @@ ebuild_test(
         "@//bazel/portage:compiled_profiles_enabled": True,
         "@//bazel/portage:compiled_profiles_disabled": False,
     }),
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_test_deps",
     overlays = "//internal/overlays:host",
     eclasses = [

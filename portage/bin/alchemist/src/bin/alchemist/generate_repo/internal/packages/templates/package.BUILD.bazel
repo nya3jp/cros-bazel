@@ -91,7 +91,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     {%- endif %}
-    files = glob(["files/**", "*.bashrc"]),
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
     {%- if target_board %}
     board = "{{ target_board }}",
     {%- endif %}
