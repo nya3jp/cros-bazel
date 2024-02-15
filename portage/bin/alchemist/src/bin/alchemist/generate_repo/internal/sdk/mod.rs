@@ -3,8 +3,12 @@
 // found in the LICENSE file.
 
 use alchemist::{
-    analyze::Package, dependency::package::PackageAtom, ebuild::PackageDetails,
-    repository::RepositorySet, resolver::PackageResolver, toolchain::Toolchain,
+    analyze::Package,
+    dependency::package::{PackageAtom, PackageDependencyAtom},
+    ebuild::PackageDetails,
+    repository::RepositorySet,
+    resolver::PackageResolver,
+    toolchain::Toolchain,
 };
 use anyhow::{bail, Context, Result};
 use itertools::Itertools;
@@ -160,17 +164,18 @@ struct SdkTemplateContext<'a> {
 fn get_primordial_packages(resolver: &PackageResolver) -> Result<Vec<Arc<PackageDetails>>> {
     let mut packages = Vec::with_capacity(PRIMORDIAL_PACKAGES.len());
     for package_name in PRIMORDIAL_PACKAGES {
+        let atom = PackageDependencyAtom::from_str(package_name)?;
+
+        if resolver.find_provided_packages(&atom).next().is_some() {
+            continue;
+        }
+
         let atom = PackageAtom::from_str(package_name)?;
         let best = resolver
             .find_best_package(&atom)?
             .with_context(|| format!("Failed to find {}", package_name))?;
 
-        if !resolver.is_provided(
-            &best.as_basic_data().package_name,
-            &best.as_basic_data().version,
-        ) {
-            packages.push(best);
-        }
+        packages.push(best);
     }
 
     Ok(packages)
