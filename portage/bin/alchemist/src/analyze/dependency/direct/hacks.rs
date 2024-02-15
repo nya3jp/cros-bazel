@@ -331,6 +331,13 @@ pub fn get_extra_dependencies(
          */
         ("media-gfx/zbar", DependencyKind::BuildHost) => "sys-devel/gettext virtual/libiconv",
 
+        /*
+         * File "/build/amd64-generic/usr/local/build/autotest/autotest_lib/client/bin/utils.py", line 16, in <module>
+         * import chardet
+         * ModuleNotFoundError: No module named 'chardet'
+         */
+        ("chromeos-base/autotest-all", DependencyKind::InstallHost) => "dev-python/chardet",
+
         _ => "",
     };
 
