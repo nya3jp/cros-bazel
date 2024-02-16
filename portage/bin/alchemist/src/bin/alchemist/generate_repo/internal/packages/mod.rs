@@ -603,11 +603,16 @@ fn generate_package(
         symlink(translator.to_outer(ebuild)?, output_dir.join(file_name))?;
 
         if i == 0 {
-            // Create a `files` symlink if necessary.
-            let files_dir = ebuild.with_file_name("files");
-            if files_dir.try_exists()? {
-                let output_files_dir = output_dir.join("files");
-                symlink(translator.to_outer(files_dir)?, output_files_dir)?;
+            // Create a `files` and `cros` symlink if necessary.
+            // The `cros` symlink is ChromeOS specific. It contains additional
+            // bashrc files and patches that can be applied to portage-stable
+            // packages.
+            for name in ["files", "cros"] {
+                let files_dir = ebuild.with_file_name(name);
+                if files_dir.try_exists()? {
+                    let output_files_dir = output_dir.join(name);
+                    symlink(translator.to_outer(files_dir)?, output_files_dir)?;
+                }
             }
         }
     }
