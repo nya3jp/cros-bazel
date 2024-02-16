@@ -65,6 +65,11 @@ fn truncate_environment(pkg_dir: &Path) -> Result<()> {
                 .with_context(|| format!("Zeroing environment.bz2 for: {path:?}"))
         })?;
     }
+    for path in find_files(pkg_dir, |file_name| file_name == "environment.raw")? {
+        with_permissions(path.parent().expect("non-empty path"), 0o755, || {
+            std::fs::remove_file(&path).with_context(|| format!("Removing {path:?}"))
+        })?;
+    }
     Ok(())
 }
 
@@ -88,6 +93,7 @@ fn clean_portage_database(root: &Path) -> Result<()> {
     //                  but I didn't think the binpkg-hermetic FEATURE should apply
     //                  to locally installed artifacts. So we just delete the file
     //                  for now.
+    // environment.raw: Similar to environment.bz2, but it's a decompressed copy.
     // CONTENTS: This file is sorted in the binpkg, but when portage installs the
     //           binpkg it recreates it in a non-hermetic way, so we manually sort
     //           it.
@@ -275,6 +281,7 @@ sym bin/hello -> /usr/bin/hello 4444
         )?;
         std::fs::write(vdb_dir.join("COUNTER"), "12345")?;
         std::fs::write(vdb_dir.join("environment.bz2"), "fake environment")?;
+        std::fs::write(vdb_dir.join("environment.raw"), "fake environment")?;
 
         clean_layer(output_dir)?;
 
@@ -294,6 +301,7 @@ sym bin/world -> ../usr/bin/world 3333
         assert_eq!(counter, "0");
         let environment = std::fs::read_to_string(vdb_dir.join("environment.bz2"))?;
         assert_eq!(environment, "");
+        assert!(!vdb_dir.join("environment.raw").try_exists()?);
 
         Ok(())
     }

@@ -10,7 +10,6 @@ use std::{
 };
 
 use anyhow::{ensure, Result};
-use bzip2::{write::BzEncoder, Compression};
 use runfiles::Runfiles;
 use tempfile::TempDir;
 use vdb::get_vdb_dir;
@@ -59,12 +58,9 @@ fn create_test_vdb(root_dir: &Path, cpf: &str, extra_environment: &str) -> Resul
 
     std::fs::write(vdb_dir.join("repository"), "chromiumos")?;
 
-    let mut encoder = BzEncoder::new(
-        File::create(vdb_dir.join("environment.bz2"))?,
-        Compression::fast(),
-    );
+    let mut environment = File::create(vdb_dir.join("environment.raw"))?;
     write!(
-        &mut encoder,
+        &mut environment,
         "EAPI=7\nPF={}\n{}",
         cpf.split_once('/').unwrap().1,
         extra_environment

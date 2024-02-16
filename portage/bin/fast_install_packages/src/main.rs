@@ -4,7 +4,6 @@
 
 use anyhow::{ensure, Context, Error, Result};
 use binarypackage::BinaryPackage;
-use bzip2::read::BzDecoder;
 use clap::Parser;
 use cliutil::cli_main;
 use container::{
@@ -23,7 +22,6 @@ use std::{
     process::{Command, ExitCode},
     str::FromStr,
 };
-use tempfile::NamedTempFile;
 use tracing::info_span;
 use vdb::{generate_vdb_contents, get_vdb_dir};
 
@@ -123,25 +121,7 @@ fn move_directory(source_dir: &Path, target_dir: &Path) -> Result<()> {
 }
 
 /// Checks if we can skip install hooks for the package.
-fn can_skip_install_hooks(binary_package: &BinaryPackage) -> Result<bool> {
-    // Extract environment.
-    let environment_compressed = binary_package
-        .xpak()
-        .get("environment.bz2")
-        .map(|value| value.as_slice())
-        .unwrap_or_default();
-    let mut environment_file = NamedTempFile::new()?;
-    std::io::copy(
-        &mut BzDecoder::new(environment_compressed),
-        environment_file.as_file_mut(),
-    )
-    .with_context(|| {
-        format!(
-            "Failed to decode environment.bz2 for {}",
-            binary_package.category_pf()
-        )
-    })?;
-
+fn can_skip_install_hooks(cpf: &str, environment_raw_path: &Path) -> Result<bool> {
     // Run pkg_hook_check.sh.
     let runfiles = Runfiles::create()?;
     let output = Command::new(runfiles.rlocation("files/bash-static"))
@@ -153,14 +133,9 @@ fn can_skip_install_hooks(binary_package: &BinaryPackage) -> Result<bool> {
     "#,
             "pkg_hook_check",
         ])
-        .arg(environment_file.path())
+        .arg(environment_raw_path)
         .output()
-        .with_context(|| {
-            format!(
-                "pkg_hook_check.sh failed for {}",
-                binary_package.category_pf()
-            )
-        })?;
+        .with_context(|| format!("pkg_hook_check.sh failed for {}", cpf))?;
     if !output.status.success() {
         eprintln!(
             "We have to run install hooks: {}",
@@ -238,20 +213,39 @@ fn run_hooks_general(
     Ok(())
 }
 
-/// Runs the pkg_setup and pkg_preinst hook.
+/// Runs the pkg_setup and pkg_preinst hook. It returns `true` if it turned out that
+/// we don't need to run hooks, including `pkg_postinst``.
 /// An upper directory is saved to `preinst_dir`.
 fn run_pkg_setup_and_preinst(
     settings: &ContainerSettings,
     preinst_dir: &Path,
     root_dir: &Path,
     category_pf: &str,
-) -> Result<()> {
+) -> Result<bool> {
     let _span = info_span!("pkg_setup+pkg_preinst").entered();
 
     let mut container = settings.prepare()?;
+
+    // Check if we can skip hooks.
+    // We do this check as the side effect of this function to minimize the number of mounting
+    // overlayfs.
+    let vdb_dir = get_vdb_dir(
+        &container.root_dir().join(
+            root_dir
+                .strip_prefix("/")
+                .expect("--root-dir must be absolute"),
+        ),
+        category_pf,
+    );
+    let environment_raw_path = vdb_dir.join("environment.raw");
+    ensure!(environment_raw_path.exists(), "environment.raw is missing!");
+    if can_skip_install_hooks(category_pf, &environment_raw_path)? {
+        return Ok(true);
+    }
+
     run_hooks_general(&mut container, root_dir, category_pf, &["setup", "preinst"])?;
     move_directory(&container.into_upper_dir(), preinst_dir)?;
-    Ok(())
+    Ok(false)
 }
 
 /// Post-processes a preinst layer and returns an initial upper directory to be used to run
@@ -303,7 +297,7 @@ fn mangle_preinst_layer(
         move_directory(&preinst_image_dir, &postinst_root_dir)?;
     }
 
-    // Migrate preinst modifications to the VDB directory (e.g. environment.bz2) to the postinst
+    // Migrate preinst modifications to the VDB directory to the postinst
     // upper directory to reduce preinst layer contents.
     let absolute_vdb_dir = get_vdb_dir(root_dir, category_pf);
     let relative_vdb_dir = absolute_vdb_dir
@@ -312,8 +306,10 @@ fn mangle_preinst_layer(
     let preinst_vdb_dir = preinst_dir.join(relative_vdb_dir);
     let postinst_vdb_dir = postinst_upper_dir.path().join(relative_vdb_dir);
 
-    std::fs::create_dir_all(&postinst_vdb_dir)?;
-    move_directory(&preinst_vdb_dir, &postinst_vdb_dir)?;
+    if preinst_vdb_dir.exists() {
+        std::fs::create_dir_all(&postinst_vdb_dir)?;
+        move_directory(&preinst_vdb_dir, &postinst_vdb_dir)?;
+    }
 
     // If we recomputed CONTENTS, it's time to apply it now that we've reflected VDB
     // modifications.
@@ -378,17 +374,6 @@ fn install_package(
     std::fs::set_permissions(&spec.output_preinst_dir, Permissions::from_mode(0o755))?;
     std::fs::set_permissions(&spec.output_postinst_dir, Permissions::from_mode(0o755))?;
 
-    // Check if we can skip install hooks.
-    if can_skip_install_hooks(&binary_package)? {
-        let _span = info_span!("install_without_hooks", package = category_pf).entered();
-
-        // Enough to just mount the installed contents layer.
-        // TODO(b/299564235): Check file collisions.
-        settings.push_layer(&resolve_symlink_forest(&spec.input_installed_contents_dir)?)?;
-
-        return Ok(());
-    }
-
     // Bind-mount the binary package.
     bind_mount_binary_package(settings, &spec.input_binary_package, root_dir, category_pf)?;
 
@@ -397,7 +382,8 @@ fn install_package(
     settings.push_layer(&resolve_symlink_forest(&spec.input_staged_contents_dir)?)?;
 
     // Run pkg_setup and pkg_preinst.
-    run_pkg_setup_and_preinst(settings, &spec.output_preinst_dir, root_dir, category_pf)?;
+    let skip_install_hooks =
+        run_pkg_setup_and_preinst(settings, &spec.output_preinst_dir, root_dir, category_pf)?;
 
     // Add the preinst layer to the container so that pkg_postinst and packages installed later can
     // see modifications made by pkg_setup and pkg_preinst.
@@ -420,13 +406,17 @@ fn install_package(
     settings.push_layer(&resolve_symlink_forest(&spec.input_installed_contents_dir)?)?;
 
     // Run pkg_postinst.
-    run_pkg_postinst(
-        settings,
-        &spec.output_postinst_dir,
-        root_dir,
-        category_pf,
-        postinst_upper_dir,
-    )?;
+    if skip_install_hooks {
+        move_directory(postinst_upper_dir.path(), &spec.output_postinst_dir)?;
+    } else {
+        run_pkg_postinst(
+            settings,
+            &spec.output_postinst_dir,
+            root_dir,
+            category_pf,
+            postinst_upper_dir,
+        )?;
+    }
 
     // Add the postinst layer to the container so that packages installed later can see
     // modifications made by pkg_postinst.

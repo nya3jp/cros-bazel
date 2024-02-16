@@ -501,7 +501,6 @@ name = "drive_binary_package"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bzip2",
  "runfiles",
  "tempfile",
  "vdb",
@@ -663,6 +662,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "binarypackage",
+ "bzip2",
  "clap",
  "cliutil",
  "container",

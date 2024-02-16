@@ -101,7 +101,7 @@ fn installed_image_for_target() -> Result<()> {
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/SIZE",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/SLOT",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/USE",
-            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/environment.bz2",
+            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/environment.raw",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/extract-test-1.2.3.ebuild",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/license.yaml",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/repository"
@@ -142,7 +142,7 @@ fn installed_image_for_host() -> Result<()> {
             "var/db/pkg/virtual/extract-test-1.2.3/SIZE",
             "var/db/pkg/virtual/extract-test-1.2.3/SLOT",
             "var/db/pkg/virtual/extract-test-1.2.3/USE",
-            "var/db/pkg/virtual/extract-test-1.2.3/environment.bz2",
+            "var/db/pkg/virtual/extract-test-1.2.3/environment.raw",
             "var/db/pkg/virtual/extract-test-1.2.3/extract-test-1.2.3.ebuild",
             "var/db/pkg/virtual/extract-test-1.2.3/license.yaml",
             "var/db/pkg/virtual/extract-test-1.2.3/repository"
@@ -183,7 +183,7 @@ fn staged_image_for_target() -> Result<()> {
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/SIZE",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/SLOT",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/USE",
-            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/environment.bz2",
+            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/environment.raw",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/extract-test-1.2.3.ebuild",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/license.yaml",
             "build/foo/var/db/pkg/virtual/extract-test-1.2.3/repository"
@@ -224,7 +224,7 @@ fn staged_image_for_host() -> Result<()> {
             "var/db/pkg/virtual/extract-test-1.2.3/SIZE",
             "var/db/pkg/virtual/extract-test-1.2.3/SLOT",
             "var/db/pkg/virtual/extract-test-1.2.3/USE",
-            "var/db/pkg/virtual/extract-test-1.2.3/environment.bz2",
+            "var/db/pkg/virtual/extract-test-1.2.3/environment.raw",
             "var/db/pkg/virtual/extract-test-1.2.3/extract-test-1.2.3.ebuild",
             "var/db/pkg/virtual/extract-test-1.2.3/license.yaml",
             "var/db/pkg/virtual/extract-test-1.2.3/repository"

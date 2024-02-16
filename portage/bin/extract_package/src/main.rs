@@ -4,6 +4,7 @@
 
 use anyhow::{bail, Context, Result};
 use binarypackage::BinaryPackage;
+use bzip2::read::BzDecoder;
 use clap::Parser;
 use cliutil::cli_main;
 use container::enter_mount_namespace;
@@ -11,6 +12,7 @@ use durabletree::DurableTree;
 use std::{
     collections::HashMap,
     ffi::OsString,
+    fs::File,
     io::ErrorKind,
     os::unix::prelude::MetadataExt,
     path::{Path, PathBuf},
@@ -169,6 +171,17 @@ fn merge_directories(source_root: &Path, target_root: &Path) -> Result<()> {
     Ok(())
 }
 
+// Decompresses environment.bz2 for faster processing.
+fn decompress_environment(vdb_dir: &Path) -> Result<()> {
+    let bz2_path = vdb_dir.join("environment.bz2");
+    let bz2_file = File::open(&bz2_path)?;
+    let mut raw_file = File::create(vdb_dir.join("environment.raw"))?;
+    std::io::copy(&mut BzDecoder::new(&bz2_file), &mut raw_file)
+        .context("failed to decompress environment.bz2")?;
+    std::fs::remove_file(bz2_path).context("Failed to remove environment.bz2")?;
+    Ok(())
+}
+
 fn do_main() -> Result<()> {
     let args = Cli::try_parse()?;
 
@@ -191,6 +204,7 @@ fn do_main() -> Result<()> {
         create_sparse_vdb(&vdb_dir, &binary_package)?;
     } else {
         create_initial_vdb(&vdb_dir, &binary_package)?;
+        decompress_environment(&vdb_dir)?;
     }
 
     // We write the CONTENTS file regardless of sparse_vdb because it

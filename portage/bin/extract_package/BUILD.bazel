@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_binary(
     name = "extract_package",
@@ -17,6 +17,7 @@ rust_binary(
         "//bazel/portage/common/portage/binarypackage",
         "//bazel/portage/common/portage/vdb",
         "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:bzip2",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:walkdir",
         "@alchemy_crates//:xattr",

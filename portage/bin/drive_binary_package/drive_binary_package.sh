@@ -305,10 +305,10 @@ if (( __dbp_verbose )); then
 fi
 
 # Load the environment in the global scope.
-# shellcheck disable=SC1090
-source <(bzip2 -dc "${__dbp_vdb_dir}/environment.bz2")
+# shellcheck disable=SC1091
+source "${__dbp_vdb_dir}/environment.raw"
 
 __dbp_main "$@"
 
 # Save the environment.
-__dbp_dump_environment | bzip2 -zc > "${__dbp_vdb_dir}/environment.bz2"
+__dbp_dump_environment > "${__dbp_vdb_dir}/environment.raw"

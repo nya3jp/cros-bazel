@@ -13,6 +13,7 @@ binarypackage = { path = "../../common/portage/binarypackage" }
 vdb = { path = "../../common/portage/vdb" }
 
 anyhow.workspace = true
+bzip2.workspace = true
 clap.workspace = true
 walkdir.workspace = true
 xattr.workspace = true
