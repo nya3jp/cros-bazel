@@ -15,7 +15,7 @@ use std::fs::File;
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, ExitStatus};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 const PROGRAM_NAME: &str = "action_wrapper";
 
@@ -84,7 +84,7 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
     }
 
     // Compute timestamp offsets from clock_sync metadata events.
-    let mut clock_offset_by_process_id: HashMap<i64, f64> = HashMap::new();
+    let mut clock_offset_by_process_id: HashMap<i64, Duration> = HashMap::new();
     for event in merged_trace.events.iter() {
         if event.phase != Phase::Metadata {
             continue;
@@ -111,12 +111,12 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
             }
         };
         let system_time = match system_time_number.as_f64() {
-            Some(f) => f,
+            Some(f) => Duration::from_secs_f64(f),
             None => {
                 continue;
             }
         };
-        let offset = system_time - event.timestamp / 1000.0;
+        let offset = system_time - Duration::from_secs_f64(event.timestamp / 1_000_000.0);
         clock_offset_by_process_id.insert(event.process_id, offset);
     }
 
@@ -124,7 +124,7 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
     if let Some(min_clock_offset) = clock_offset_by_process_id
         .values()
         .copied()
-        .reduce(f64::min)
+        .reduce(Duration::min)
     {
         for event in merged_trace.events.iter_mut() {
             let clock_offset = match clock_offset_by_process_id.get(&event.process_id) {
@@ -134,13 +134,13 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
                     continue;
                 }
             };
-            event.timestamp += clock_offset - min_clock_offset;
+            event.timestamp += (clock_offset - min_clock_offset).as_secs_f64() * 1_000_000.0;
         }
     }
 
     // Also add process_sort_index metadata to ensure processes are sorted in
     // the execution order.
-    let mut clock_offsets: Vec<(i64, f64)> = clock_offset_by_process_id.into_iter().collect();
+    let mut clock_offsets: Vec<(i64, Duration)> = clock_offset_by_process_id.into_iter().collect();
     clock_offsets.sort_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Clock offset is NaN"));
 
     for (sort_index, (process_id, _)) in clock_offsets.into_iter().enumerate() {
