@@ -289,10 +289,6 @@ __dbp_define_vars() {
 ################################################################################
 
 __dbp_main() {
-  if [[ "${__dbp_verbose}" = 1 ]]; then
-    set -x
-  fi
-
   __dbp_set_up_temporary_dir
   __dbp_define_vars
 
@@ -307,6 +303,13 @@ __dbp_main() {
     done
   done
 }
+
+if (( __dbp_verbose )); then
+  shopt -s extdebug
+  # ShellCheck doesn't know EPOCHREALTIME.
+  # shellcheck disable=SC2154
+  trap 'echo "[${EPOCHREALTIME}] ${BASH_COMMAND}" >&2' DEBUG
+fi
 
 # Load the environment in the global scope.
 # shellcheck disable=SC1090
