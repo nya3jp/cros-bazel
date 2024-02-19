@@ -6,8 +6,8 @@ use std::{
     fs::File,
     io::Result,
     path::Path,
-    sync::{Arc, Mutex},
-    time::{Instant, SystemTime},
+    sync::{Arc, Mutex, OnceLock},
+    time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
 use chrome_trace::{Event, Phase, StreamWriter};
@@ -25,9 +25,11 @@ use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
 /// Use [`CurrentThreadInfo::get`] to obtain the instance.
 #[derive(Clone, Copy, Eq, PartialEq)]
 struct CurrentThreadInfo {
-    pub process_id: Pid,
+    pub pseudo_process_id: i32,
     pub thread_id: Pid,
 }
+
+static PSEUDO_PROCESS_ID_CACHE: OnceLock<i32> = OnceLock::new();
 
 impl CurrentThreadInfo {
     thread_local! {
@@ -47,8 +49,16 @@ impl CurrentThreadInfo {
 
     /// Returns a new uncached instance for the current thread.
     fn new_uncached() -> Self {
+        let pseudo_process_id = *PSEUDO_PROCESS_ID_CACHE.get_or_init(|| {
+            // Perfetto UI supports PID/TID up to 2^31.
+            (SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("current time must not be before UNIX epoch")
+                .as_nanos()
+                & 0x7fff_ffff) as i32
+        });
         Self {
-            process_id: nix::unistd::getpid(),
+            pseudo_process_id,
             thread_id: nix::unistd::gettid(),
         }
     }
@@ -97,7 +107,7 @@ impl ChromeTraceLayer {
             category: "".to_owned(),
             phase: Phase::Metadata,
             timestamp: self.get_current_timestamp(),
-            process_id: info.process_id.as_raw().into(),
+            process_id: info.pseudo_process_id as i64,
             thread_id: info.thread_id.as_raw().into(),
             args: Some(json!({ "system_time": start_clock })),
         });
@@ -108,7 +118,7 @@ impl ChromeTraceLayer {
             category: "".to_owned(),
             phase: Phase::Metadata,
             timestamp: self.get_current_timestamp(),
-            process_id: info.process_id.as_raw().into(),
+            process_id: info.pseudo_process_id as i64,
             thread_id: info.thread_id.as_raw().into(),
             args: Some(json!({ "name": get_current_process_name() })),
         });
@@ -172,7 +182,7 @@ where
             category: metadata.target().to_owned(),
             phase: Phase::Begin,
             timestamp: self.get_current_timestamp(),
-            process_id: info.process_id.as_raw().into(),
+            process_id: info.pseudo_process_id as i64,
             thread_id: info.thread_id.as_raw().into(),
             args,
         });
@@ -188,7 +198,7 @@ where
             category: metadata.target().to_owned(),
             phase: Phase::End,
             timestamp: self.get_current_timestamp(),
-            process_id: info.process_id.as_raw().into(),
+            process_id: info.pseudo_process_id as i64,
             thread_id: info.thread_id.as_raw().into(),
             args: None,
         });
@@ -218,7 +228,7 @@ where
             category: metadata.target().to_owned(),
             phase: Phase::Instant,
             timestamp: self.get_current_timestamp(),
-            process_id: info.process_id.as_raw().into(),
+            process_id: info.pseudo_process_id as i64,
             thread_id: info.thread_id.as_raw().into(),
             args,
         });
@@ -330,7 +340,7 @@ mod tests {
                         category: "".to_owned(),
                         phase: Phase::Metadata,
                         timestamp: 0.0,
-                        process_id: info.process_id.as_raw() as i64,
+                        process_id: info.pseudo_process_id as i64,
                         thread_id: info.thread_id.as_raw() as i64,
                         args: Some(json!({ "system_time": FAKE_SYSTEM_TIME })),
                     },
@@ -339,7 +349,7 @@ mod tests {
                         category: "".to_owned(),
                         phase: Phase::Metadata,
                         timestamp: 1.0,
-                        process_id: info.process_id.as_raw() as i64,
+                        process_id: info.pseudo_process_id as i64,
                         thread_id: info.thread_id.as_raw() as i64,
                         args: Some(json!({ "name": get_current_process_name() })),
                     },
@@ -348,7 +358,7 @@ mod tests {
                         category: "tracing_chrome_trace::tests".to_owned(),
                         phase: Phase::Begin,
                         timestamp: 2.0,
-                        process_id: info.process_id.as_raw() as i64,
+                        process_id: info.pseudo_process_id as i64,
                         thread_id: info.thread_id.as_raw() as i64,
                         args: None,
                     },
@@ -357,7 +367,7 @@ mod tests {
                         category: "tracing_chrome_trace::tests".to_owned(),
                         phase: Phase::Instant,
                         timestamp: 3.0,
-                        process_id: info.process_id.as_raw() as i64,
+                        process_id: info.pseudo_process_id as i64,
                         thread_id: info.thread_id.as_raw() as i64,
                         args: None,
                     },
@@ -366,7 +376,7 @@ mod tests {
                         category: "tracing_chrome_trace::tests".to_owned(),
                         phase: Phase::End,
                         timestamp: 4.0,
-                        process_id: info.process_id.as_raw() as i64,
+                        process_id: info.pseudo_process_id as i64,
                         thread_id: info.thread_id.as_raw() as i64,
                         args: None,
                     },
@@ -375,5 +385,18 @@ mod tests {
         );
 
         Ok(())
+    }
+
+    #[test]
+    fn id_uniqueness() {
+        let (info1, info2) = std::thread::scope(|scope| {
+            let handle1 = scope.spawn(CurrentThreadInfo::get);
+            let handle2 = scope.spawn(CurrentThreadInfo::get);
+            let info1 = handle1.join().unwrap();
+            let info2 = handle2.join().unwrap();
+            (info1, info2)
+        });
+        assert_eq!(info1.pseudo_process_id, info2.pseudo_process_id);
+        assert_ne!(info1.thread_id, info2.thread_id);
     }
 }
