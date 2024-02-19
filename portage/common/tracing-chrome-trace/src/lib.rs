@@ -11,6 +11,7 @@ use std::{
 };
 
 use chrome_trace::{Event, Phase, StreamWriter};
+use nix::unistd::Pid;
 use serde_json::json;
 use tracing::{
     field::{Field, Visit},
@@ -18,6 +19,40 @@ use tracing::{
     Id, Subscriber,
 };
 use tracing_subscriber::{layer::Context, registry::LookupSpan, Layer};
+
+/// Static information about the current thread.
+///
+/// Use [`CurrentThreadInfo::get`] to obtain the instance.
+#[derive(Clone, Copy, Eq, PartialEq)]
+struct CurrentThreadInfo {
+    pub process_id: Pid,
+    pub thread_id: Pid,
+}
+
+impl CurrentThreadInfo {
+    thread_local! {
+        /// The cached instance for the current thread.
+        static CACHE: CurrentThreadInfo = CurrentThreadInfo::new_uncached();
+    }
+
+    /// Returns the [`CurrentThreadInfo`] for the current thread.
+    ///
+    /// This function may return a cached value if the current thread has already called it. It
+    /// means that the returned value may be incorrect if the thread ID of the current thread has
+    /// changed by calling the `fork` system call. But, in general, `fork` is considered unsafe in
+    /// Rust.
+    pub fn get() -> Self {
+        Self::CACHE.with(|info| *info)
+    }
+
+    /// Returns a new uncached instance for the current thread.
+    fn new_uncached() -> Self {
+        Self {
+            process_id: nix::unistd::getpid(),
+            thread_id: nix::unistd::gettid(),
+        }
+    }
+}
 
 /// A [`tracing_subscriber::Layer`] that writes instrumentation data to a local
 /// JSON file in the Chrome trace event data format.
@@ -55,13 +90,15 @@ impl ChromeTraceLayer {
             .expect("System time is before UNIX epoch")
             .as_secs_f64();
 
+        let info = CurrentThreadInfo::get();
+
         self.write_event(|| Event {
             name: "clock_sync".to_owned(),
             category: "".to_owned(),
             phase: Phase::Metadata,
             timestamp: self.get_current_timestamp(),
-            process_id: nix::unistd::getpid().as_raw().into(),
-            thread_id: nix::unistd::gettid().as_raw().into(),
+            process_id: info.process_id.as_raw().into(),
+            thread_id: info.thread_id.as_raw().into(),
             args: Some(json!({ "system_time": start_clock })),
         });
 
@@ -71,8 +108,8 @@ impl ChromeTraceLayer {
             category: "".to_owned(),
             phase: Phase::Metadata,
             timestamp: self.get_current_timestamp(),
-            process_id: nix::unistd::getpid().as_raw().into(),
-            thread_id: nix::unistd::gettid().as_raw().into(),
+            process_id: info.process_id.as_raw().into(),
+            thread_id: info.thread_id.as_raw().into(),
             args: Some(json!({ "name": get_current_process_name() })),
         });
     }
@@ -129,13 +166,14 @@ where
             Some(serde_json::Value::Object(args))
         };
 
+        let info = CurrentThreadInfo::get();
         self.write_event(|| Event {
             name: metadata.name().to_owned(),
             category: metadata.target().to_owned(),
             phase: Phase::Begin,
             timestamp: self.get_current_timestamp(),
-            process_id: nix::unistd::getpid().as_raw().into(),
-            thread_id: nix::unistd::gettid().as_raw().into(),
+            process_id: info.process_id.as_raw().into(),
+            thread_id: info.thread_id.as_raw().into(),
             args,
         });
     }
@@ -144,13 +182,14 @@ where
         let span = ctx.span(id).expect("BUG: span not found");
         let metadata = span.metadata();
 
+        let info = CurrentThreadInfo::get();
         self.write_event(|| Event {
             name: metadata.name().to_owned(),
             category: metadata.target().to_owned(),
             phase: Phase::End,
             timestamp: self.get_current_timestamp(),
-            process_id: nix::unistd::getpid().as_raw().into(),
-            thread_id: nix::unistd::gettid().as_raw().into(),
+            process_id: info.process_id.as_raw().into(),
+            thread_id: info.thread_id.as_raw().into(),
             args: None,
         });
     }
@@ -173,13 +212,14 @@ where
 
         let metadata = event.metadata();
 
+        let info = CurrentThreadInfo::get();
         self.write_event(|| Event {
             name: message,
             category: metadata.target().to_owned(),
             phase: Phase::Instant,
             timestamp: self.get_current_timestamp(),
-            process_id: nix::unistd::getpid().as_raw().into(),
-            thread_id: nix::unistd::gettid().as_raw().into(),
+            process_id: info.process_id.as_raw().into(),
+            thread_id: info.thread_id.as_raw().into(),
             args,
         });
     }
@@ -279,8 +319,7 @@ mod tests {
             .get_mut("system_time")
             .expect("First event does not have system_time arg") = json!(FAKE_SYSTEM_TIME);
 
-        let process_id = nix::unistd::getpid().as_raw().into();
-        let thread_id = nix::unistd::gettid().as_raw().into();
+        let info = CurrentThreadInfo::get();
 
         assert_eq!(
             trace,
@@ -291,8 +330,8 @@ mod tests {
                         category: "".to_owned(),
                         phase: Phase::Metadata,
                         timestamp: 0.0,
-                        process_id,
-                        thread_id,
+                        process_id: info.process_id.as_raw() as i64,
+                        thread_id: info.thread_id.as_raw() as i64,
                         args: Some(json!({ "system_time": FAKE_SYSTEM_TIME })),
                     },
                     Event {
@@ -300,8 +339,8 @@ mod tests {
                         category: "".to_owned(),
                         phase: Phase::Metadata,
                         timestamp: 1.0,
-                        process_id,
-                        thread_id,
+                        process_id: info.process_id.as_raw() as i64,
+                        thread_id: info.thread_id.as_raw() as i64,
                         args: Some(json!({ "name": get_current_process_name() })),
                     },
                     Event {
@@ -309,8 +348,8 @@ mod tests {
                         category: "tracing_chrome_trace::tests".to_owned(),
                         phase: Phase::Begin,
                         timestamp: 2.0,
-                        process_id,
-                        thread_id,
+                        process_id: info.process_id.as_raw() as i64,
+                        thread_id: info.thread_id.as_raw() as i64,
                         args: None,
                     },
                     Event {
@@ -318,8 +357,8 @@ mod tests {
                         category: "tracing_chrome_trace::tests".to_owned(),
                         phase: Phase::Instant,
                         timestamp: 3.0,
-                        process_id,
-                        thread_id,
+                        process_id: info.process_id.as_raw() as i64,
+                        thread_id: info.thread_id.as_raw() as i64,
                         args: None,
                     },
                     Event {
@@ -327,8 +366,8 @@ mod tests {
                         category: "tracing_chrome_trace::tests".to_owned(),
                         phase: Phase::End,
                         timestamp: 4.0,
-                        process_id,
-                        thread_id,
+                        process_id: info.process_id.as_raw() as i64,
+                        thread_id: info.thread_id.as_raw() as i64,
                         args: None,
                     },
                 ]
