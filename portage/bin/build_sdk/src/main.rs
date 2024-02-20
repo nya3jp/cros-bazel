@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Context, Result};
 use clap::Parser;
 use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings, InstallGroup};
-use fileutil::resolve_symlink_forest;
+use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
 use std::fs::File;
 use std::{path::PathBuf, process::ExitCode};
 
@@ -34,7 +34,14 @@ struct Cli {
 fn do_main() -> Result<()> {
     let args = Cli::try_parse()?;
 
+    // Use the output directory's parent as a tmpdir.
+    // /tmp isn't always suitable because it might not be a real filesystem.
+    let mutable_base_dir = SafeTempDirBuilder::new()
+        .base_dir(&args.output.parent().context("output missing parent")?)
+        .build()?;
+
     let mut settings = ContainerSettings::new();
+    settings.set_mutable_base_dir(&mutable_base_dir.path());
     settings.apply_common_args(&args.common)?;
 
     let runfiles = runfiles::Runfiles::create()?;
