@@ -91,7 +91,7 @@ struct Cli {
 
     /// Remoteexec-related info encoded as JSON.
     #[arg(long)]
-    remoteexec_info: PathBuf,
+    remoteexec_info: Option<PathBuf>,
 
     #[arg(long)]
     test: bool,
@@ -404,9 +404,13 @@ fn do_main() -> Result<()> {
 
     let mut envs: Vec<(Cow<OsStr>, Cow<OsStr>)> = Vec::new();
 
-    if let Some(remoteexec_info) = serde_json::from_reader::<_, Option<RemoteexecInfo>>(
-        BufReader::new(File::open(args.remoteexec_info)?),
-    )? {
+    let remoteexec_info = match args.remoteexec_info {
+        Some(path) => {
+            serde_json::from_reader::<_, Option<RemoteexecInfo>>(BufReader::new(File::open(path)?))?
+        }
+        None => None,
+    };
+    if let Some(remoteexec_info) = remoteexec_info {
         if remoteexec_info.use_remoteexec {
             envs.push((
                 OsStr::new("USE_REMOTEEXEC").into(),

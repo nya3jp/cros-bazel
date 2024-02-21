@@ -159,6 +159,9 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         ("@//bazel/portage:ccache_enabled_global", ":{{ ebuild.version }}{{ suffix }}_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    {%- if ebuild.supports_remoteexec %}
+    supports_remoteexec = True,
+    {%- endif %}
 {%- endmacro -%}
 
 {%- set ebuild_count = 0 %}

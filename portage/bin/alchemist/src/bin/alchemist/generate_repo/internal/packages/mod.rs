@@ -76,6 +76,7 @@ pub struct EBuildEntry {
     sdk: String,
     direct_build_target: Option<String>,
     bashrcs: Vec<String>,
+    supports_remoteexec: bool,
 }
 
 /// Specifies the config used to generate host packages.
@@ -463,6 +464,8 @@ impl EBuildEntry {
             })
             .collect::<Result<_>>()?;
 
+        let supports_remoteexec = package.details.inherited.contains("cros-remoteexec");
+
         Ok(Self {
             ebuild_name,
             basename,
@@ -489,6 +492,7 @@ impl EBuildEntry {
             sdk,
             direct_build_target: package.details.direct_build_target.clone(),
             bashrcs,
+            supports_remoteexec,
         })
     }
 }

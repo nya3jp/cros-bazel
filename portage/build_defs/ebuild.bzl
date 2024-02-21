@@ -197,6 +197,12 @@ _EBUILD_COMMON_ATTRS = dict(
         default = Label(_CCACHE_DIR_LABEL),
         providers = [BuildSettingInfo],
     ),
+    supports_remoteexec = attr.bool(
+        default = False,
+        doc = """
+        Indicates whether this ebuild supports building with reclient or not.
+        """,
+    ),
 )
 
 def _bashrc_to_path(bashrc):
@@ -368,10 +374,13 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
         # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
         "--goma-info",
         ctx.file._goma_info,
-        # NOTE: We're not adding this file to transitive_inputs because the contents of remoteexec_info shouldn't affect the build output.
-        "--remoteexec-info",
-        ctx.file._remoteexec_info,
     ])
+    if ctx.attr.supports_remoteexec:
+        args.add_all([
+            # NOTE: We're not adding this file to transitive_inputs because the contents of remoteexec_info shouldn't affect the build output.
+            "--remoteexec-info",
+            ctx.file._remoteexec_info,
+        ])
 
     args.add_all(ctx.attr.bashrcs, before_each = "--bashrc", map_each = _bashrc_to_path)
 
