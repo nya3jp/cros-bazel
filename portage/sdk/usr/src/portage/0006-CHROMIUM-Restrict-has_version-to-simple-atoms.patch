@@ -1,0 +1,62 @@
+From a70c690f546a85011bc6ba40d649bbfda3b51a18 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Thu, 22 Feb 2024 13:24:44 -0700
+Subject: [PATCH] CHROMIUM: Restrict has_version to simple atoms
+
+In the bazel builds we are pruning the vdb so we can avoid excessive
+cache busting on ebuild changes that don't affect the output.
+Since some ebuilds call has_version/best_version to inspect the vdb,
+we need to make sure that they don't inspect any fields that we don't
+populate in the vdb.
+
+BUG=b:311094915
+TEST=has_version "=sys-libs/libcap-2.65"
+TEST=has_version "=sys-libs/libcap-2.65-r2"
+TEST=has_version ">=sys-libs/libcap-2.65"
+TEST=has_version "~sys-libs/libcap-2.65"
+TEST=has_version "=sys-libs/libcap-2*"
+TEST=has_version "sys-libs/libcap:0/0"
+
+Change-Id: I2c9610d8762b2b58b46fe2934e55950fab819566
+---
+ .../package/ebuild/_ipc/QueryCommand.py       | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/_ipc/QueryCommand.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/_ipc/QueryCommand.py
+index fa6d1ea168..036d02939e 100644
+--- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/_ipc/QueryCommand.py
++++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/_ipc/QueryCommand.py
+@@ -72,6 +72,30 @@ class QueryCommand(IpcCommand):
+ 			if use is None:
+ 				use = self.settings['PORTAGE_USE']
+ 
++			# CrOS: b/311094915 - When building under bazel we don't
++			# fully populate the vdb. `has_version` and
++			# `best_version` are used to query the vdb at build
++			# time. Since we don't have all the information, block
++			# any atoms that we can't answer.
++			if atom.version:
++				rev = portage.pkgsplit(atom.cpv)[2]
++				# pkgsplit always returns a revision.
++				if rev == "r0" and not atom.cpv.endswith(rev):
++					rev = None
++				if rev:
++					return (
++						'',
++						'%s: CrOS: Invalid atom: %s, revision (i.e., -rX) constraint is not supported.\n' % (cmd, args[0]),
++						2
++					)
++			for key in ['repo', 'sub_slot', 'build_id']:
++				if getattr(atom, key):
++					return (
++						'',
++						'%s: CrOS: Invalid atom: %s, %s constraint is not supported.\n' % (cmd, args[0], key),
++						2
++					)
++
+ 			use = frozenset(use.split())
+ 			atom = atom.evaluate_conditionals(use)
+ 
+-- 
+2.44.0.rc0.258.g7320e95886-goog
+
