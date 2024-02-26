@@ -51,14 +51,6 @@ pub fn get_extra_dependencies(
         // xau.pc contains "Requires: xproto", so it should be listed as RDEPEND.
         ("x11-libs/libXau", DependencyKind::RunTarget) => "x11-base/xorg-proto",
 
-        // x11-misc/compose-tables requires the unprefixed cpp located at
-        // /usr/bin/cpp. This symlink points to `clang-cpp`, but the symlink
-        // is created by the `gcc` package. x11-misc/compose-tables doesn't
-        // actually use GCC for anything other than this symlink.
-        // See b/258234653
-        ("x11-misc/compose-tables", DependencyKind::BuildHost) => "sys-devel/gcc",
-        ("x11-libs/libX11", DependencyKind::BuildHost) => "sys-devel/gcc",
-
         // The nls use flag claims that gettext is optional, but in reality
         // the ./configure script calls `aclocal` and it expects the gettext
         // macros.
