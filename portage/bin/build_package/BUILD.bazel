@@ -11,7 +11,6 @@ rust_binary(
     crate_name = "build_package",
     data = [
         ":build_package.sh",
-        "@files//:goma-chromeos-modified-for-alchemy.tgz_symlink",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["@portage//:__subpackages__"],

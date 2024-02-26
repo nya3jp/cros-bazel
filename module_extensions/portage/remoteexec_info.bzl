@@ -25,14 +25,6 @@ def _remoteexec_info_repository_impl(repo_ctx):
         if var:
             remoteexec_info_dict["envs"][env] = var
 
-    reclient_dir = repo_ctx.os.environ.get("RECLIENT_DIR")
-    if reclient_dir:
-        remoteexec_info_dict["reclient_dir"] = reclient_dir
-
-    reproxy_cfg = repo_ctx.os.environ.get("REPROXY_CFG")
-    if reproxy_cfg:
-        remoteexec_info_dict["reproxy_cfg"] = reproxy_cfg
-
     home = repo_ctx.os.environ.get("HOME")
     if home:
         gcloud_config_dir = home + "/.config/gcloud"
@@ -49,8 +41,6 @@ def _remoteexec_info_repository_impl(repo_ctx):
     if remoteexec_info_dict["use_remoteexec"]:
         print("Remoteexec is enabled. Going to use remoteexec to build chromeos-chrome.")
         print("gcloud_config_dir=" + str(remoteexec_info_dict.get("gcloud_config_dir")))
-        print("reclient_dir=" + str(remoteexec_info_dict.get("reclient_dir")))
-        print("reproxy_cfg=" + str(remoteexec_info_dict.get("reproxy_cfg")))
         print("should_use_reproxy_cfg_file_for_ci=" + str(remoteexec_info_dict.get("should_use_reproxy_cfg_file_for_ci")))
         print("envs=" + str(remoteexec_info_dict.get("envs")))
 
@@ -63,8 +53,6 @@ remoteexec_info = repository_rule(
     implementation = _remoteexec_info_repository_impl,
     environ = _PASSTHROUGH_ENVIRON + [
         "HOME",
-        "RECLIENT_DIR",
-        "REPROXY_CFG",
         "USE_REMOTEEXEC",
     ],
     local = True,

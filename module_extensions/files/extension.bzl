@@ -42,15 +42,6 @@ def _files_impl(module_ctx):
         sha256 = "2aef0f1ef80a0140b8fe6e6a8eb822e14827d8855bfc6681532c7530339ea23b",
     )
 
-    # Goma client modified specially for Alchemy.
-    # Namely, CanGomaccHandleCwd() is modified to return true even if getuid() == 0.
-    # TODO(b/300364876): Stop using goma to remove this after switching to reclient.
-    hub.http_file.alias_and_symlink(
-        name = "goma-chromeos-modified-for-alchemy.tgz",
-        sha256 = "f342a31bf63e622c31852c7627d169d2c2994510d53838013d4fd53d7ef3565c",
-        urls = ["https://commondatastorage.googleapis.com/chromeos-localmirror/cros-bazel/goma-chromeos-modified-for-alchemy-20230914.tgz"],
-    )
-
     hub.gs_file.alias_only(
         name = "remotetool",
         url = "gs://chromeos-localmirror/cros-bazel/remotetool-20240102",

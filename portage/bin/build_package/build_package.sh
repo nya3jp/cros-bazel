@@ -19,13 +19,6 @@ if [[ -d /home/root/chrome_root/src/third_party/depot_tools ]]; then
   export CHROME_ORIGIN="LOCAL_SOURCE"
 fi
 
-if [[ -n "${USE_GOMA}" && "${USE_GOMA}" == "true" ]]; then
-  tar --no-same-owner --no-same-permissions -xf /mnt/host/goma.tgz -C /tmp
-  export GOMA_DIR=/tmp/goma-chromeos
-
-  "${GOMA_DIR}/goma_ctl.py" start
-fi
-
 # cros_sdk creates this directory.
 # This is needed for stage1 build because otherwise it fails trying to create
 # /var/cache/distfiles/ccache/tmp

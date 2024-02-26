@@ -85,10 +85,6 @@ struct Cli {
     #[arg(long)]
     allow_network_access: bool,
 
-    /// Goma-related info encoded as JSON.
-    #[arg(long)]
-    goma_info: PathBuf,
-
     /// Remoteexec-related info encoded as JSON.
     #[arg(long)]
     remoteexec_info: Option<PathBuf>,
@@ -261,20 +257,10 @@ fn collect_reclient_log_files(container_root: &Path) -> Result<()> {
 }
 
 #[derive(serde::Deserialize)]
-struct GomaInfo {
-    use_goma: bool,
-    envs: HashMap<String, String>,
-    luci_context: Option<PathBuf>,
-    oauth2_config_file: Option<PathBuf>,
-}
-
-#[derive(serde::Deserialize)]
 struct RemoteexecInfo {
     use_remoteexec: bool,
     envs: HashMap<String, String>,
     gcloud_config_dir: Option<PathBuf>,
-    reclient_dir: Option<PathBuf>,
-    reproxy_cfg: Option<PathBuf>,
     should_use_reproxy_cfg_file_for_ci: bool,
 }
 
@@ -427,28 +413,6 @@ fn do_main() -> Result<()> {
                 rw: false,
             });
         }
-        if let Some(reclient_dir) = remoteexec_info.reclient_dir {
-            settings.push_bind_mount(BindMount {
-                source: reclient_dir.clone(),
-                mount_path: reclient_dir.clone(),
-                rw: false,
-            });
-            envs.push((
-                OsStr::new("RECLIENT_DIR").into(),
-                reclient_dir.into_os_string().into(),
-            ))
-        }
-        if let Some(reproxy_cfg) = remoteexec_info.reproxy_cfg {
-            settings.push_bind_mount(BindMount {
-                source: reproxy_cfg.clone(),
-                mount_path: reproxy_cfg.clone(),
-                rw: false,
-            });
-            envs.push((
-                OsStr::new("REPROXY_CFG").into(),
-                reproxy_cfg.into_os_string().into(),
-            ))
-        }
         envs.push((
             OsStr::new("SHOULD_USE_REPROXY_CFG_FILE_FOR_CI").into(),
             OsStr::new(if remoteexec_info.should_use_reproxy_cfg_file_for_ci {
@@ -458,54 +422,6 @@ fn do_main() -> Result<()> {
             })
             .into(),
         ));
-    }
-
-    if args.ebuild.category == "chromeos-base" && args.ebuild.package_name == "chromeos-chrome" {
-        let goma_info: GomaInfo =
-            serde_json::from_reader(BufReader::new(File::open(args.goma_info)?))?;
-        if goma_info.use_goma {
-            // TODO(b/300218625): Also set GLOG_log_dir to support uploading build logs.
-            envs.extend([
-                (OsStr::new("USE_GOMA").into(), OsStr::new("true").into()),
-                (
-                    OsStr::new("GOMA_TMP_DIR").into(),
-                    OsStr::new("/tmp/goma").into(),
-                ),
-            ]);
-            settings.push_bind_mount(BindMount {
-                source: runfiles.rlocation("files/goma-chromeos-modified-for-alchemy.tgz"),
-                mount_path: PathBuf::from("/mnt/host/goma.tgz"),
-                rw: false,
-            });
-
-            for (key, value) in goma_info.envs {
-                envs.push((OsString::from(key).into(), OsString::from(value).into()));
-            }
-
-            if let Some(oauth2_config_file) = goma_info.oauth2_config_file {
-                settings.push_bind_mount(BindMount {
-                    source: oauth2_config_file.clone(),
-                    mount_path: oauth2_config_file.clone(),
-                    rw: false,
-                });
-                envs.push((
-                    OsStr::new("GOMA_OAUTH2_CONFIG_FILE").into(),
-                    oauth2_config_file.into_os_string().into(),
-                ));
-            }
-
-            if let Some(luci_context) = goma_info.luci_context {
-                settings.push_bind_mount(BindMount {
-                    source: luci_context.clone(),
-                    mount_path: luci_context.clone(),
-                    rw: false,
-                });
-                envs.push((
-                    OsStr::new("LUCI_CONTEXT").into(),
-                    luci_context.into_os_string().into(),
-                ));
-            }
-        }
     }
 
     if let Some(jobserver) = args.jobserver {

@@ -174,10 +174,6 @@ _EBUILD_COMMON_ATTRS = dict(
         cfg = "exec",
         default = Label("//bazel/portage/bin/build_package"),
     ),
-    _goma_info = attr.label(
-        allow_single_file = True,
-        default = Label("@goma_info//:goma_info"),
-    ),
     _remoteexec_info = attr.label(
         allow_single_file = True,
         default = Label("@remoteexec_info//:remoteexec_info"),
@@ -370,11 +366,6 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
     if ctx.attr.inject_use_flags:
         args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",")
 
-    args.add_all([
-        # NOTE: We're not adding this file to transitive_inputs because the contents of goma_info shouldn't affect the build output.
-        "--goma-info",
-        ctx.file._goma_info,
-    ])
     if ctx.attr.supports_remoteexec:
         args.add_all([
             # NOTE: We're not adding this file to transitive_inputs because the contents of remoteexec_info shouldn't affect the build output.
