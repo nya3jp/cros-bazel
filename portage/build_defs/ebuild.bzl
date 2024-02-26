@@ -528,6 +528,16 @@ def _ebuild_impl(ctx):
             use_runfiles = False,
         )
 
+        execution_requirements = {
+            # Disable sandbox to avoid creating a symlink forest.
+            # This does not affect hermeticity since ebuild runs in a container.
+            "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+        }
+        if ctx.attr.supports_remoteexec:
+            execution_requirements["no-remote-exec"] = ""
+
         action_wrapper_args = ctx.actions.args()
         action_wrapper_args.add_all([
             "--banner",
@@ -547,13 +557,7 @@ def _ebuild_impl(ctx):
             executable = ctx.executable._action_wrapper,
             tools = [ctx.executable._build_package],
             arguments = [action_wrapper_args, build_package_args.args],
-            execution_requirements = {
-                # Disable sandbox to avoid creating a symlink forest.
-                # This does not affect hermeticity since ebuild runs in a container.
-                "no-sandbox": "",
-                # Send SIGTERM instead of SIGKILL on user interruption.
-                "supports-graceful-termination": "",
-            },
+            execution_requirements = execution_requirements,
             mnemonic = "Ebuild",
             progress_message = "Building %{label}",
         )
