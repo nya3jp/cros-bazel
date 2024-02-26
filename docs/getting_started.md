@@ -153,31 +153,27 @@ to authenticate.
 After authentication, make sure that you restart the Bazel instance by running
 `bazel shutdown`.
 
-### Using Goma to build Chrome
+### Using reclient for faster build
 
-Building `chromeos-base/chromeos-chrome` takes 2-3 hours, but you can use Goma
+Building `chromeos-base/chromeos-chrome` takes 2-3 hours, but you can use reclient
 to make it as fast as less than 1 hour.
 
-To use Goma, please follow [Goma for Chromium contributors] (or
-[go/chrome-linux-build](http://go/chrome-linux-build) if you're a Googler) and
-run `goma_auth login` for authentication. Please make sure that you perform
-authentication inside the chroot if you're going to run `bazel build` inside
-the chroot, and do that outside the chroot if you're going to run it outside the
-chroot.
+To use reclient, please run `gcloud auth application-default login` for
+authentication. If you're going to run `bazel build` inside the chroot, please
+make sure that you run this outside the chroot after exiting the chroot in all
+existing windows.
 
-[Goma for Chromium contributors]: https://chromium.googlesource.com/infra/goma/client/+/HEAD/doc/early-access-guide.md
-
-After authentication, you can just run `bazel build` with `USE_GOMA=true` to
-enable Goma.
+After authentication, you can just run `bazel build` with `USE_REMOTEEXEC=true`
+to enable reclient.
 
 ```
-$ USE_GOMA=true BOARD=amd64-generic bazel build @portage//chromeos-base/chromeos-chrome
+$ USE_REMOTEEXEC=true BOARD=amd64-generic bazel build @portage//chromeos-base/chromeos-chrome
 ```
 
-You can also run `build_packages` with `--run-goma` to run it with Goma.
+You can also run `build_packages` with `--run_remoteexec` to run it with reclient.
 
 ```
-$ build_packages --bazel --board=amd64-generic --run-goma
+$ build_packages --bazel --board=amd64-generic --run_remoteexec
 ```
 
 ### Enabling @portage tab completion
