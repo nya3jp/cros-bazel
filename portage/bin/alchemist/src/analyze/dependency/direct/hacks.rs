@@ -275,17 +275,11 @@ pub fn get_extra_dependencies(
         }
 
         /*
-         * /bin/sh: line 1: x86_64-pc-linux-gnu-gcc: command not found
-         * make[1]: *** [scripts/Makefile.host:104: scripts/basic/fixdep] Error 127
-         *
-         * We force busybox to be built with GCC instead of LLVM. We should see if we can use
-         * LLVM instead.
-         *
          * /bin/sh: line 1: pod2text: command not found
          * /bin/sh: line 1: pod2man: command not found
          * /bin/sh: line 1: pod2html: command not found
          */
-        ("sys-apps/busybox", DependencyKind::BuildHost) => "sys-devel/gcc dev-lang/perl",
+        ("sys-apps/busybox", DependencyKind::BuildHost) => "dev-lang/perl",
 
         /*
          * File "build/servo/data/data_integrity_test.py", line 13, in <module>
