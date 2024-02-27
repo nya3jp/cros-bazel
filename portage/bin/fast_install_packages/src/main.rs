@@ -206,6 +206,19 @@ fn run_hooks_general(
 ) -> Result<()> {
     let _span = info_span!("drive_binary_package").entered();
 
+    // The temporary directory used by ebuilds. It's available to ebuilds as `$T`.
+    // This must be under /tmp so that post-processing clears it from durable trees.
+    const EBUILD_TEMP_DIR: &str = "/tmp/ebuild";
+
+    let temp_dir = container.root_dir().join(
+        EBUILD_TEMP_DIR
+            .strip_prefix('/')
+            .expect("EBUILD_TEMP_DIR must be absolute"),
+    );
+    if !temp_dir.exists() {
+        std::fs::create_dir_all(temp_dir)?;
+    }
+
     let status = container
         // Run hooks under fakeroot (fakefs).
         .command("/usr/bin/fakeroot")
@@ -214,6 +227,8 @@ fn run_hooks_general(
         .arg(root_dir)
         .arg("-d")
         .arg(format!("/{STAGE_DIR_NAME}"))
+        .arg("-t")
+        .arg(EBUILD_TEMP_DIR)
         .arg("-p")
         .arg(category_pf)
         .args(phases)

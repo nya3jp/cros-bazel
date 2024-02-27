@@ -17,6 +17,7 @@ __dbp_print_usage_and_exit() {
   echo "options:"
   echo "  -r dir    root directory aka \$ROOT (required)"
   echo "  -d dir    package image directory (required)"
+  echo "  -t dir    ebuild temporary directory aka \$T (required)"
   echo "  -p cpf    package CPF like sys-apps/attr-1.0 (required)"
   echo "  -v        enable verbose logging"
   exit 2
@@ -24,12 +25,14 @@ __dbp_print_usage_and_exit() {
 
 __dbp_root_dir=
 __dbp_image_dir=
+__dbp_temp_dir=
 __dbp_cpf=
 __dbp_verbose=0
-while getopts "r:d:p:v" OPTNAME; do
+while getopts "r:d:t:p:v" OPTNAME; do
   case "${OPTNAME}" in
     r) __dbp_root_dir="${OPTARG}";;
     d) __dbp_image_dir="${OPTARG}";;
+    t) __dbp_temp_dir="${OPTARG}";;
     p) __dbp_cpf="${OPTARG}";;
     v) __dbp_verbose=1;;
     *) __dbp_print_usage_and_exit;;
@@ -39,12 +42,8 @@ done
 shift $(( OPTIND - 1 ))
 unset OPTNAME OPTARG OPTIND
 
-if [[ -z "${__dbp_root_dir}" || -z "${__dbp_image_dir}" || -z "${__dbp_cpf}" ]]
-then
-  __dbp_print_usage_and_exit
-fi
-
-if [[ "$#" == 0 ]]; then
+if [[ -z "${__dbp_root_dir}" || -z "${__dbp_image_dir}" ||
+      -z "${__dbp_temp_dir}" || -z "${__dbp_cpf}" || "$#" == 0 ]]; then
   __dbp_print_usage_and_exit
 fi
 
@@ -226,11 +225,6 @@ __dbp_dump_environment() {
   )
 }
 
-__dbp_set_up_temporary_dir() {
-  __dbp_temp_dir="/tmp/drive_binary_package/${__dbp_cpf}"
-  mkdir -p "${__dbp_temp_dir}"
-}
-
 __dbp_define_vars() {
   # Define PMS variables.
   # See 11.1 Defined Variables for the list of defined in the environment.
@@ -289,7 +283,6 @@ __dbp_define_vars() {
 ################################################################################
 
 __dbp_main() {
-  __dbp_set_up_temporary_dir
   __dbp_define_vars
 
   export EBUILD_PHASE EBUILD_PHASE_FUNC

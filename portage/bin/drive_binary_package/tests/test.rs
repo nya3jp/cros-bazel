@@ -21,6 +21,8 @@ fn run_drive_binary_package(
     cpf: &str,
     phases: &[&str],
 ) -> Result<Output> {
+    let temp_dir = TempDir::new()?;
+    let temp_dir = temp_dir.path();
     let runfiles = Runfiles::create()?;
     let program_path =
         runfiles.rlocation("cros/bazel/portage/bin/drive_binary_package/drive_binary_package.sh");
@@ -33,6 +35,8 @@ fn run_drive_binary_package(
         .arg(root_dir)
         .arg("-d")
         .arg(image_dir)
+        .arg("-t")
+        .arg(temp_dir)
         .arg("-p")
         .arg(cpf)
         .args(phases)
