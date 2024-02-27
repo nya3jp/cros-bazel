@@ -132,7 +132,7 @@ use_enable() {
 
 in_iuse() {
   # shellcheck disable=SC2046
-  has "$1" $(cat "${__dbp_vdb_dir?}/IUSE_EFFECTIVE")
+  has "$1" $(< "${__dbp_vdb_dir?}/IUSE_EFFECTIVE")
 }
 
 debug-print() {
@@ -277,7 +277,7 @@ __dbp_define_vars() {
   export PORTAGE_CONFIGROOT="${ROOT}"
   export PORTAGE_GRPNAME="root"
   export PORTAGE_REPO_NAME
-  PORTAGE_REPO_NAME="$(cat "${__dbp_vdb_dir?}/repository")"
+  PORTAGE_REPO_NAME="$(< "${__dbp_vdb_dir?}/repository")"
   export PORTAGE_TMPDIR="${TMPDIR?}"
   export PORTAGE_USERNAME="root"
   export TEMP="${TMPDIR?}"
@@ -296,7 +296,7 @@ __dbp_main() {
 
   for EBUILD_PHASE in "$@"; do
     for EBUILD_PHASE_FUNC in {pre_,,post_}"pkg_${EBUILD_PHASE}"; do
-      if [[ $(type -t "${EBUILD_PHASE_FUNC}") == function ]]; then
+      if declare -F "${EBUILD_PHASE_FUNC}" > /dev/null; then
         echo "${CATEGORY}/${PF}: Running ${EBUILD_PHASE_FUNC}" >&2
         "${EBUILD_PHASE_FUNC}"
       fi
