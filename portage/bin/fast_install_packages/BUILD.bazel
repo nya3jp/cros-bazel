@@ -12,7 +12,6 @@ rust_binary(
     name = "fast_install_packages",
     srcs = glob(["src/**/*.rs"]),
     data = [
-        ":pkg_hook_check.sh",
         ":portageq_wrapper.py",
         "@files//:bash-static_symlink",
     ],

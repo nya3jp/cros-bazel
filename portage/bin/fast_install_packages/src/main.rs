@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{ensure, Context, Error, Result};
+use anyhow::{bail, ensure, Context, Error, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use cliutil::cli_main;
@@ -121,30 +121,31 @@ fn move_directory(source_dir: &Path, target_dir: &Path) -> Result<()> {
 }
 
 /// Checks if we can skip install hooks for the package.
-fn can_skip_install_hooks(cpf: &str, environment_raw_path: &Path) -> Result<bool> {
-    // Run pkg_hook_check.sh.
-    let runfiles = Runfiles::create()?;
-    let output = Command::new(runfiles.rlocation("files/bash-static"))
-        .args([
-            "-c",
-            r#"
-    source "$1"
-    source "bazel/portage/bin/fast_install_packages/pkg_hook_check.sh"
-    "#,
-            "pkg_hook_check",
-        ])
-        .arg(environment_raw_path)
-        .output()
-        .with_context(|| format!("pkg_hook_check.sh failed for {}", cpf))?;
-    if !output.status.success() {
-        eprintln!(
-            "We have to run install hooks: {}",
-            String::from_utf8_lossy(&output.stdout)
+fn can_skip_install_hooks(staged_contents_dir: &Path, cpf: &str, root_dir: &Path) -> Result<bool> {
+    // TODO: Avoid assuming that the staged contents dir is a durable tree.
+    let tree = DurableTree::expand(staged_contents_dir)?;
+
+    for layer_dir in tree.layers().iter().rev() {
+        let vdb_dir = get_vdb_dir(
+            &layer_dir.join(
+                root_dir
+                    .strip_prefix("/")
+                    .expect("--root-dir must be absolute"),
+            ),
+            cpf,
         );
-        return Ok(false);
+        if let Ok(files) = std::fs::read_to_string(vdb_dir.join("CROS_BAZEL_HOOK_REQUIRES")) {
+            if files.is_empty() {
+                tracing::info!("Skipping install hooks safely");
+                return Ok(true);
+            }
+            tracing::info!("We have to run install hooks because they access following files:");
+            eprint!("{}", files);
+            return Ok(false);
+        }
     }
-    eprintln!("Skipping install hooks safely");
-    Ok(true)
+
+    bail!("CROS_BAZEL_HOOK_REQUIRES not found");
 }
 
 /// Bind-mounts the binary package to the container.
@@ -221,31 +222,13 @@ fn run_pkg_setup_and_preinst(
     preinst_dir: &Path,
     root_dir: &Path,
     category_pf: &str,
-) -> Result<bool> {
+) -> Result<()> {
     let _span = info_span!("pkg_setup+pkg_preinst").entered();
 
     let mut container = settings.prepare()?;
-
-    // Check if we can skip hooks.
-    // We do this check as the side effect of this function to minimize the number of mounting
-    // overlayfs.
-    let vdb_dir = get_vdb_dir(
-        &container.root_dir().join(
-            root_dir
-                .strip_prefix("/")
-                .expect("--root-dir must be absolute"),
-        ),
-        category_pf,
-    );
-    let environment_raw_path = vdb_dir.join("environment.raw");
-    ensure!(environment_raw_path.exists(), "environment.raw is missing!");
-    if can_skip_install_hooks(category_pf, &environment_raw_path)? {
-        return Ok(true);
-    }
-
     run_hooks_general(&mut container, root_dir, category_pf, &["setup", "preinst"])?;
     move_directory(&container.into_upper_dir(), preinst_dir)?;
-    Ok(false)
+    Ok(())
 }
 
 /// Post-processes a preinst layer and returns an initial upper directory to be used to run
@@ -357,6 +340,7 @@ fn install_package(
     spec: &InstallSpec,
     root_dir: &Path,
     mutable_base_dir: &Path,
+    ensure_skip_hooks: bool,
 ) -> Result<()> {
     let _span = info_span!(
         "install",
@@ -368,11 +352,32 @@ fn install_package(
         .with_context(|| format!("Failed to open {}", spec.input_binary_package.display()))?;
     let category_pf = binary_package.category_pf();
 
-    eprintln!("Installing {}", category_pf);
+    tracing::info!("Installing {}", category_pf);
 
     // Make sure output directories have right permissions.
     std::fs::set_permissions(&spec.output_preinst_dir, Permissions::from_mode(0o755))?;
     std::fs::set_permissions(&spec.output_postinst_dir, Permissions::from_mode(0o755))?;
+
+    // Check if we can skip install hooks.
+    if can_skip_install_hooks(
+        &resolve_symlink_forest(&spec.input_staged_contents_dir)?,
+        category_pf,
+        root_dir,
+    )? {
+        let _span = info_span!("install_without_hooks", package = category_pf).entered();
+
+        tracing::info!("Skipping install hooks safely");
+
+        // Enough to just mount the installed contents layer.
+        // TODO(b/299564235): Check file collisions.
+        settings.push_layer(&resolve_symlink_forest(&spec.input_installed_contents_dir)?)?;
+
+        return Ok(());
+    }
+
+    if ensure_skip_hooks {
+        bail!("--ensure-skip-hooks was set but we need to run hooks");
+    }
 
     // Bind-mount the binary package.
     bind_mount_binary_package(settings, &spec.input_binary_package, root_dir, category_pf)?;
@@ -382,8 +387,7 @@ fn install_package(
     settings.push_layer(&resolve_symlink_forest(&spec.input_staged_contents_dir)?)?;
 
     // Run pkg_setup and pkg_preinst.
-    let skip_install_hooks =
-        run_pkg_setup_and_preinst(settings, &spec.output_preinst_dir, root_dir, category_pf)?;
+    run_pkg_setup_and_preinst(settings, &spec.output_preinst_dir, root_dir, category_pf)?;
 
     // Add the preinst layer to the container so that pkg_postinst and packages installed later can
     // see modifications made by pkg_setup and pkg_preinst.
@@ -406,17 +410,13 @@ fn install_package(
     settings.push_layer(&resolve_symlink_forest(&spec.input_installed_contents_dir)?)?;
 
     // Run pkg_postinst.
-    if skip_install_hooks {
-        move_directory(postinst_upper_dir.path(), &spec.output_postinst_dir)?;
-    } else {
-        run_pkg_postinst(
-            settings,
-            &spec.output_postinst_dir,
-            root_dir,
-            category_pf,
-            postinst_upper_dir,
-        )?;
-    }
+    run_pkg_postinst(
+        settings,
+        &spec.output_postinst_dir,
+        root_dir,
+        category_pf,
+        postinst_upper_dir,
+    )?;
 
     // Add the postinst layer to the container so that packages installed later can see
     // modifications made by pkg_postinst.
@@ -460,6 +460,10 @@ struct Args {
     /// See [`InstallSpec`] for details.
     #[arg(long)]
     install: Vec<InstallSpec>,
+
+    /// Abort if we have to run hooks. Used for testing.
+    #[arg(long)]
+    ensure_skip_hooks: bool,
 }
 
 fn do_main() -> Result<()> {
@@ -491,14 +495,20 @@ fn do_main() -> Result<()> {
     });
 
     for spec in &args.install {
-        install_package(&mut settings, spec, &args.root_dir, tmpfs.path())?;
+        install_package(
+            &mut settings,
+            spec,
+            &args.root_dir,
+            tmpfs.path(),
+            args.ensure_skip_hooks,
+        )?;
     }
 
     for spec in &args.install {
         postprocess_layers(spec)?;
     }
 
-    eprintln!(
+    tracing::info!(
         "fast_install_packages: Installed {} packages",
         args.install.len()
     );

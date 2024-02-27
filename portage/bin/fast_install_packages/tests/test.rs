@@ -84,6 +84,7 @@ fn run_fast_install_packages(
     container_image_path: &Path,
     root_dir: &Path,
     specs: &[&InstallSpec],
+    extra_args: &[&str],
 ) -> Result<()> {
     let runfiles = Runfiles::create()?;
 
@@ -106,6 +107,7 @@ fn run_fast_install_packages(
             spec.output_postinst_dir.display()
         ));
     }
+    command.args(extra_args);
     let status = command.status()?;
     ensure!(
         status.success(),
@@ -134,6 +136,7 @@ fn fast_install_packages(
     settings: &mut ContainerSettings,
     binary_packages: &[&Path],
     root_dir: &Path,
+    extra_args: &[&str],
 ) -> Result<Vec<InstalledGuard>> {
     // Generate a container image tarball from `ContainerSettings`.
     let container_image_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
@@ -184,6 +187,7 @@ fn fast_install_packages(
         container_image_path,
         root_dir,
         &specs.iter().collect::<Vec<_>>(),
+        extra_args,
     )?;
 
     for spec in specs {
@@ -285,7 +289,7 @@ fn create_binary_package(
 #[test]
 fn test_install_nothing() -> Result<()> {
     let mut settings = create_fake_sdk_container()?;
-    fast_install_packages(&mut settings, &[], Path::new("/build/eve"))?;
+    fast_install_packages(&mut settings, &[], Path::new("/build/eve"), &[])?;
     Ok(())
 }
 
@@ -310,6 +314,7 @@ fn test_install_simple() -> Result<()> {
         &mut settings,
         &[binary_package.path()],
         Path::new("/build/eve"),
+        &[],
     )?;
 
     // Try running /build/eve/usr/bin/ok in the container to verify that it's installed.
@@ -349,6 +354,7 @@ fn test_install_virtual() -> Result<()> {
         &mut settings,
         &[binary_package.path()],
         Path::new("/build/eve"),
+        &[],
     )?;
 
     // Inspect CONTENTS in VDB.
@@ -402,6 +408,7 @@ fn test_install_hooks() -> Result<()> {
         &mut settings,
         &[binary_package.path()],
         Path::new("/build/eve"),
+        &[],
     )?;
 
     // Verify the contents of /build/eve/etc/foo.conf.
@@ -469,6 +476,7 @@ fn test_install_multiple() -> Result<()> {
         &mut settings,
         &binary_packages.iter().map(|bp| bp.path()).collect_vec(),
         Path::new("/build/eve"),
+        &[],
     )?;
 
     let container = settings.prepare()?;
@@ -499,6 +507,31 @@ obj opt/files/{index}.txt d41d8cd98f00b204e9800998ecf8427e 0
             .join(format!("build/eve/opt/files/{index}.txt"));
         assert!(path.try_exists()?);
     }
+
+    Ok(())
+}
+
+#[test]
+fn test_install_skip_hooks() -> Result<()> {
+    let mut settings = create_fake_sdk_container()?;
+
+    let extra_environment = r#"
+pkg_setup() {
+    echo "Hello, world!"
+}
+"#;
+    let binary_package = create_binary_package(
+        "sys-apps/empty-1.0",
+        TempDir::new()?.path(),
+        extra_environment,
+    )?;
+
+    fast_install_packages(
+        &mut settings,
+        &[binary_package.path()],
+        Path::new("/build/eve"),
+        &["--ensure-skip-hooks"],
+    )?;
 
     Ok(())
 }
