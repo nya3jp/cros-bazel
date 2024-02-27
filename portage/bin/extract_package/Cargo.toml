@@ -9,17 +9,22 @@ edition = "2021"
 cliutil = { path = "../../common/cliutil" }
 container = { path = "../../common/container" }
 durabletree = { path = "../../common/durabletree" }
+fileutil = { path = "../../common/fileutil" }
 binarypackage = { path = "../../common/portage/binarypackage" }
 vdb = { path = "../../common/portage/vdb" }
 
 anyhow.workspace = true
 bzip2.workspace = true
 clap.workspace = true
+nix.workspace = true
+runfiles.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+tempfile.workspace = true
+tracing.workspace = true
 walkdir.workspace = true
 xattr.workspace = true
 
 [dev-dependencies]
 fileutil = { path = "../../common/fileutil" }
 testutil = { path = "../../common/testutil" }
-runfiles.workspace = true
-tempfile.workspace = true

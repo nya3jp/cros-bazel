@@ -8,19 +8,33 @@ load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 rust_binary(
     name = "extract_package",
     srcs = glob(["src/**/*.rs"]),
+    data = [
+        "//bazel/portage/bin/auditfuse",
+        "//bazel/portage/bin/drive_binary_package:drive_binary_package.sh",
+        "@files//:bash-static_symlink",
+    ],
+    proc_macro_deps = [
+        "@alchemy_crates//:strum_macros",
+    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/container",
         "//bazel/portage/common/durabletree",
+        "//bazel/portage/common/fileutil",
         "//bazel/portage/common/portage/binarypackage",
         "//bazel/portage/common/portage/vdb",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bzip2",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:nix",
+        "@alchemy_crates//:strum",
+        "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:tracing",
         "@alchemy_crates//:walkdir",
         "@alchemy_crates//:xattr",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
@@ -30,6 +44,7 @@ rust_test(
     crate = ":extract_package",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
+        "//bazel/portage/common/testutil",
         "@alchemy_crates//:tempfile",
     ],
 )

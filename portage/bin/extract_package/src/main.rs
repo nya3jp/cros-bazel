@@ -2,7 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+mod audit;
+
 use anyhow::{bail, Context, Result};
+use audit::audit_hooks;
 use binarypackage::BinaryPackage;
 use bzip2::read::BzDecoder;
 use clap::Parser;
@@ -13,7 +16,7 @@ use std::{
     collections::HashMap,
     ffi::OsString,
     fs::File,
-    io::ErrorKind,
+    io::{ErrorKind, Write},
     os::unix::prelude::MetadataExt,
     path::{Path, PathBuf},
     process::ExitCode,
@@ -205,6 +208,28 @@ fn do_main() -> Result<()> {
     } else {
         create_initial_vdb(&vdb_dir, &binary_package)?;
         decompress_environment(&vdb_dir)?;
+
+        tracing::info!("Auditing package hooks...");
+
+        let entries = audit_hooks(
+            binary_package.category_pf(),
+            &Path::new("/").join(&args.vdb_prefix),
+            &vdb_dir,
+        )?;
+
+        let mut f = File::create(vdb_dir.join("CROS_BAZEL_HOOK_REQUIRES"))?;
+        for entry in &entries {
+            writeln!(&mut f, "{}", entry)?;
+        }
+
+        if entries.is_empty() {
+            tracing::info!("It's safe to skip package hooks as they do not access the file system");
+        } else {
+            tracing::info!("Package hooks can not be skipped as they access the file system:");
+            for entry in &entries {
+                tracing::info!("{}", entry);
+            }
+        }
     }
 
     // We write the CONTENTS file regardless of sparse_vdb because it
