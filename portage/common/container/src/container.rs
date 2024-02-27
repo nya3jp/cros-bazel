@@ -13,7 +13,7 @@ use std::{
     str::FromStr,
 };
 
-use anyhow::{bail, ensure, Result};
+use anyhow::{bail, ensure, Context, Result};
 use durabletree::DurableTree;
 use fileutil::{resolve_symlink_forest, SafeTempDir, SafeTempDirBuilder};
 use run_in_container_lib::{BindMountConfig, RunInContainerConfig};
@@ -395,13 +395,21 @@ impl<'settings> PreparedContainer<'settings> {
 
         // Create mount points for bind-mounts.
         for spec in settings.bind_mounts.iter() {
-            let target = stage_dir.path().join(spec.mount_path.strip_prefix("/")?);
-            let metadata = std::fs::metadata(&spec.source)?;
+            let target = stage_dir.path().join(
+                spec.mount_path
+                    .strip_prefix("/")
+                    .with_context(|| format!("{:?} must start with '/'", spec.mount_path))?,
+            );
+            let metadata = std::fs::metadata(&spec.source)
+                .with_context(|| format!("stat {:?}", spec.source))?;
             if metadata.is_dir() {
-                std::fs::create_dir_all(&target)?;
+                std::fs::create_dir_all(&target)
+                    .with_context(|| format!("mkdir -p {:?}", target))?;
             } else {
-                std::fs::create_dir_all(target.parent().unwrap())?;
-                File::create(&target)?;
+                let parent = target.parent().unwrap();
+                std::fs::create_dir_all(parent)
+                    .with_context(|| format!("mkdir -p {:?}", parent))?;
+                File::create(&target).with_context(|| format!("touch {:?}", target))?;
             }
         }
 
