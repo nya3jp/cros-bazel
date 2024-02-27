@@ -1,0 +1,17 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "fsimpl",
+    srcs = ["fsimpl.go"],
+    importpath = "cros.local/bazel/portage/bin/auditfuse/fsimpl",
+    visibility = ["//bazel/portage/bin/auditfuse:__subpackages__"],
+    deps = [
+        "//bazel/portage/bin/auditfuse/reporter",
+        "@com_github_hanwen_go_fuse_v2//fs",
+        "@com_github_hanwen_go_fuse_v2//fuse",
+    ],
+)

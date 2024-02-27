@@ -1,0 +1,37 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_library(
+    name = "auditfuse_lib",
+    srcs = ["main.go"],
+    importpath = "cros.local/bazel/portage/bin/auditfuse",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//bazel/portage/bin/auditfuse/daemonize",
+        "//bazel/portage/bin/auditfuse/fsimpl",
+        "//bazel/portage/bin/auditfuse/reporter",
+        "@com_github_hanwen_go_fuse_v2//fs",
+        "@com_github_hanwen_go_fuse_v2//fuse",
+        "@com_github_urfave_cli_v2//:cli",
+    ],
+)
+
+go_binary(
+    name = "auditfuse",
+    embed = [":auditfuse_lib"],
+    visibility = ["//bazel:internal"],
+)
+
+go_test(
+    name = "auditfuse_test",
+    srcs = ["main_test.go"],
+    data = [
+        ":auditfuse",
+    ],
+    deps = [
+        "@rules_go//go/tools/bazel:go_default_library",
+    ],
+)
