@@ -536,6 +536,7 @@ def _ebuild_impl(ctx):
             "supports-graceful-termination": "",
         }
         if ctx.attr.supports_remoteexec:
+            # Do not execute remotely when the underlying build is executing remote jobs.
             execution_requirements["no-remote-exec"] = ""
 
         action_wrapper_args = ctx.actions.args()
