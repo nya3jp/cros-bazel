@@ -7,7 +7,6 @@ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_file_arg", "relative_path_in_package", "single_binary_package_set_info")
-load("//bazel/portage/build_defs:install_groups.bzl", "calculate_install_groups")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
@@ -795,99 +794,6 @@ ebuild_debug, ebuild_debug_primordial = maybe_primordial_rule(
     ),
 )
 
-_INSTALL_SCRIPT_HEADER = """#!/bin/bash
-set -ue
-
-if [[ ! -e /etc/cros_chroot_version ]]; then
-  echo "Cannot run outside the cros SDK chroot."
-  exit 1
-fi
-
-# Arguments passed in during build time are passed in relative to the execroot,
-# which means all files passed in are relative paths starting with bazel-out/
-# Thus, we cd to the directory in our working directory containing a bazel-out.
-
-wd="$(pwd)"
-cd "${wd%%/bazel-out/*}"
-"""
-
-def _ebuild_install_impl(ctx):
-    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
-
-    # Generate script.
-    script_contents = _INSTALL_SCRIPT_HEADER
-
-    # Add script to copy binary packages to the PKGDIR.
-    for package in ctx.attr.packages:
-        info = package[BinaryPackageInfo]
-        dest_dir = "/build/%s/packages/%s/" % (ctx.attr.board, info.category)
-        dest_path = "%s/%s" % (dest_dir, info.file.basename)
-        script_contents += """
-        sudo mkdir -p "%s"
-        sudo cp "%s" "%s"
-        sudo chmod 644 "%s"
-        """ % (dest_dir, info.file.path, dest_path, dest_path)
-
-    # Add script to install binary packages.
-    install_groups = calculate_install_groups(
-        [package[BinaryPackageInfo] for package in ctx.attr.packages],
-        provided_packages = depset(),
-    )
-    for install_group in install_groups:
-        atoms = [
-            "=%s/%s" % (info.category, info.file.basename.rsplit(".", 1)[0])
-            for info in install_group
-        ]
-        script_contents += "emerge-%s --usepkgonly --nodeps --jobs %s\n" % (
-            ctx.attr.board,
-            " ".join(atoms),
-        )
-
-    # Write script.
-    output_install_script = ctx.actions.declare_file(src_basename +
-                                                     "_install.sh")
-    ctx.actions.write(
-        output_install_script,
-        script_contents,
-        is_executable = True,
-    )
-
-    runfiles = ctx.runfiles(files = [
-        package[BinaryPackageInfo].file
-        for package in ctx.attr.packages
-    ])
-    return DefaultInfo(
-        executable = output_install_script,
-        runfiles = runfiles,
-    )
-
-ebuild_install, ebuild_install_primordial = maybe_primordial_rule(
-    implementation = _ebuild_install_impl,
-    executable = True,
-    doc = "Installs the package to the environment.",
-    attrs = dict(
-        ebuild = attr.label(
-            mandatory = True,
-            allow_single_file = [".ebuild"],
-        ),
-        category = attr.string(
-            mandatory = True,
-            doc = """
-            The category name of the package.
-            """,
-        ),
-        board = attr.string(
-            mandatory = True,
-            doc = """
-            The target board name to build the package for.
-            """,
-        ),
-        packages = attr.label_list(
-            providers = [BinaryPackageInfo],
-        ),
-    ),
-)
-
 _EbuildInstalledInfo = provider(fields = dict(
     checksum = "(File) File containing a hash of the transitive runtime deps",
 ))
@@ -978,76 +884,6 @@ ebuild_install_action = rule(
         ),
     ),
     provides = [_EbuildInstalledInfo],
-)
-
-def _ebuild_install_list_impl(ctx):
-    src_basename = ctx.file.ebuild.basename.rsplit(".", 1)[0]
-
-    path_to_info = {
-        package[BinaryPackageInfo].file.path: package[BinaryPackageInfo]
-        for package in ctx.attr.packages
-    }
-
-    packages = []
-    for package in ctx.attr.packages:
-        info = package[BinaryPackageInfo]
-        name = "%s/%s" % (info.category, info.file.basename)
-        path = info.file.path
-
-        dep_names = []
-        for dep_file in info.direct_runtime_deps:
-            dep = path_to_info[dep_file.path]
-            if not dep:
-                fail("ebuild_install_list: packages are not exhaustive")
-            dep_names.append("%s/%s" % (dep.category, dep.file.basename))
-
-        packages.append("""{
-            "name": "%s",
-            "path": "%s",
-            "deps": [%s]
-        }""" % (name, path, ",".join(["\"%s\"" % dep for dep in dep_names])))
-
-    contents = "[%s]" % ",".join(packages)
-
-    output = ctx.actions.declare_file(src_basename + "_install_list.json")
-    ctx.actions.write(
-        output,
-        contents,
-    )
-
-    runfiles = ctx.runfiles(files = [
-        package[BinaryPackageInfo].file
-        for package in ctx.attr.packages
-    ])
-    return DefaultInfo(
-        files = depset([output]),
-        runfiles = runfiles,
-    )
-
-ebuild_install_list, ebuild_install_list_primordial = maybe_primordial_rule(
-    implementation = _ebuild_install_list_impl,
-    doc = "Generates a JSON file which contains necessary info to install the package to the environment.",
-    attrs = dict(
-        ebuild = attr.label(
-            mandatory = True,
-            allow_single_file = [".ebuild"],
-        ),
-        category = attr.string(
-            mandatory = True,
-            doc = """
-            The category name of the package.
-            """,
-        ),
-        board = attr.string(
-            mandatory = True,
-            doc = """
-            The target board name to build the package for.
-            """,
-        ),
-        packages = attr.label_list(
-            providers = [BinaryPackageInfo, BinaryPackageSetInfo],
-        ),
-    ),
 )
 
 def _ebuild_test_impl(ctx):

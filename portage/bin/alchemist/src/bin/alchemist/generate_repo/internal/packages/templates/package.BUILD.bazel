@@ -6,7 +6,7 @@ load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 {%- endif %}
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
@@ -388,19 +388,6 @@ ebuild_debug(
 {% endif -%}
 
 {% if target_board -%}
-ebuild_install(
-    name = "{{ ebuild.version }}_install",
-    ebuild = "{{ ebuild.ebuild_name }}",
-    category = "{{ebuild.category}}",
-    board = "{{ target_board }}",
-    packages = [
-        {%- for dep in ebuild.install_set %}
-        "{{ dep }}",
-        {%- endfor %}
-    ],
-    visibility = ["//:__subpackages__"],
-)
-
 ebuild_install_action(
     name = "{{ ebuild.version }}_installed_no_pdepends",
     board = "{{ target_board }}",
@@ -418,21 +405,6 @@ filegroup(
     srcs = [
         {%- for dep in ebuild.install_set %}
         "{{ dep }}_installed_no_pdepends",
-        {%- endfor %}
-    ],
-    visibility = ["//:__subpackages__"],
-)
-{% endif -%}
-
-{% if target_board -%}
-ebuild_install_list(
-    name = "{{ ebuild.version }}_install_list",
-    ebuild = "{{ ebuild.ebuild_name }}",
-    category = "{{ebuild.category}}",
-    board = "{{ target_board }}",
-    packages = [
-        {%- for dep in ebuild.install_set %}
-        "{{ dep }}",
         {%- endfor %}
     ],
     visibility = ["//:__subpackages__"],

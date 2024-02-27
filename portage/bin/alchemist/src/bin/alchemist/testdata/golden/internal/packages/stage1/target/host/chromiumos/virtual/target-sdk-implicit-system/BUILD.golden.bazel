@@ -6,7 +6,7 @@
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
@@ -643,24 +643,6 @@ ebuild_debug(
     }),
     visibility = ["//:__subpackages__"],
 )
-ebuild_install(
-    name = "1-r4_install",
-    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
-    category = "virtual",
-    board = "amd64-host",
-    packages = [
-        "//internal/packages/stage1/target/host/chromiumos/dev-lang/go:1.20.5",
-        "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39",
-        "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r25",
-        "//internal/packages/stage1/target/host/chromiumos/sys-libs/libcxx:16.0_pre484197",
-        "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
-        "//internal/packages/stage1/target/host/chromiumos/test-cases/inherit:1.0",
-        "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4",
-        "//internal/packages/stage1/target/host/portage-stable/virtual/os-headers:0-r2",
-    ],
-    visibility = ["//:__subpackages__"],
-)
-
 ebuild_install_action(
     name = "1-r4_installed_no_pdepends",
     board = "amd64-host",
@@ -687,23 +669,6 @@ filegroup(
         "//internal/packages/stage1/target/host/chromiumos/test-cases/inherit:1.0_installed_no_pdepends",
         "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4_installed_no_pdepends",
         "//internal/packages/stage1/target/host/portage-stable/virtual/os-headers:0-r2_installed_no_pdepends",
-    ],
-    visibility = ["//:__subpackages__"],
-)
-ebuild_install_list(
-    name = "1-r4_install_list",
-    ebuild = "target-sdk-implicit-system-1-r4.ebuild",
-    category = "virtual",
-    board = "amd64-host",
-    packages = [
-        "//internal/packages/stage1/target/host/chromiumos/dev-lang/go:1.20.5",
-        "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39",
-        "//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.35-r25",
-        "//internal/packages/stage1/target/host/chromiumos/sys-libs/libcxx:16.0_pre484197",
-        "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
-        "//internal/packages/stage1/target/host/chromiumos/test-cases/inherit:1.0",
-        "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4",
-        "//internal/packages/stage1/target/host/portage-stable/virtual/os-headers:0-r2",
     ],
     visibility = ["//:__subpackages__"],
 )

@@ -6,7 +6,7 @@
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
@@ -595,18 +595,6 @@ ebuild_debug(
     }),
     visibility = ["//:__subpackages__"],
 )
-ebuild_install(
-    name = "2.35-r25_install",
-    ebuild = "glibc-2.35-r25.ebuild",
-    category = "sys-libs",
-    board = "amd64-host",
-    packages = [
-        "//internal/packages/stage3/target/host/chromiumos/sys-libs/glibc:2.35-r25",
-        "//internal/packages/stage3/target/host/chromiumos/test-cases/inherit:1.0",
-    ],
-    visibility = ["//:__subpackages__"],
-)
-
 ebuild_install_action(
     name = "2.35-r25_installed_no_pdepends",
     board = "amd64-host",
@@ -621,17 +609,6 @@ filegroup(
     srcs = [
         "//internal/packages/stage3/target/host/chromiumos/sys-libs/glibc:2.35-r25_installed_no_pdepends",
         "//internal/packages/stage3/target/host/chromiumos/test-cases/inherit:1.0_installed_no_pdepends",
-    ],
-    visibility = ["//:__subpackages__"],
-)
-ebuild_install_list(
-    name = "2.35-r25_install_list",
-    ebuild = "glibc-2.35-r25.ebuild",
-    category = "sys-libs",
-    board = "amd64-host",
-    packages = [
-        "//internal/packages/stage3/target/host/chromiumos/sys-libs/glibc:2.35-r25",
-        "//internal/packages/stage3/target/host/chromiumos/test-cases/inherit:1.0",
     ],
     visibility = ["//:__subpackages__"],
 )

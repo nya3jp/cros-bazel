@@ -6,7 +6,7 @@
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install", "ebuild_install_action", "ebuild_install_list", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
@@ -595,17 +595,6 @@ ebuild_debug(
     }),
     visibility = ["//:__subpackages__"],
 )
-ebuild_install(
-    name = "2.39_install",
-    ebuild = "binutils-2.39.ebuild",
-    category = "sys-devel",
-    board = "amd64-generic",
-    packages = [
-        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
-    ],
-    visibility = ["//:__subpackages__"],
-)
-
 ebuild_install_action(
     name = "2.39_installed_no_pdepends",
     board = "amd64-generic",
@@ -619,16 +608,6 @@ filegroup(
     name = "2.39_installed",
     srcs = [
         "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39_installed_no_pdepends",
-    ],
-    visibility = ["//:__subpackages__"],
-)
-ebuild_install_list(
-    name = "2.39_install_list",
-    ebuild = "binutils-2.39.ebuild",
-    category = "sys-devel",
-    board = "amd64-generic",
-    packages = [
-        "//internal/packages/stage1/target/board/chromiumos/sys-devel/binutils:2.39",
     ],
     visibility = ["//:__subpackages__"],
 )
