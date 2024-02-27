@@ -12,7 +12,13 @@
 ################################################################################
 
 __dbp_print_usage_and_exit() {
-  echo "usage: $0 -r ROOT_DIR -d IMAGE_DIR -p CPF [-v] PHASES" >&2
+  exec >&2
+  echo "usage: $0 [options] PHASES"
+  echo "options:"
+  echo "  -r dir    root directory aka \$ROOT (required)"
+  echo "  -d dir    package image directory (required)"
+  echo "  -p cpf    package CPF like sys-apps/attr-1.0 (required)"
+  echo "  -v        enable verbose logging"
   exit 2
 }
 
