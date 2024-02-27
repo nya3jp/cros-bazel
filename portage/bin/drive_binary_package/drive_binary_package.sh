@@ -19,6 +19,7 @@ __dbp_print_usage_and_exit() {
   echo "  -d dir    package image directory (required)"
   echo "  -t dir    ebuild temporary directory aka \$T (required)"
   echo "  -p cpf    package CPF like sys-apps/attr-1.0 (required)"
+  echo "  -n        do not update environment.raw on exit"
   echo "  -v        enable verbose logging"
   exit 2
 }
@@ -27,13 +28,15 @@ __dbp_root_dir=
 __dbp_image_dir=
 __dbp_temp_dir=
 __dbp_cpf=
+__dbp_save_env=1
 __dbp_verbose=0
-while getopts "r:d:t:p:v" OPTNAME; do
+while getopts "r:d:t:p:nv" OPTNAME; do
   case "${OPTNAME}" in
     r) __dbp_root_dir="${OPTARG}";;
     d) __dbp_image_dir="${OPTARG}";;
     t) __dbp_temp_dir="${OPTARG}";;
     p) __dbp_cpf="${OPTARG}";;
+    n) __dbp_save_env=0;;
     v) __dbp_verbose=1;;
     *) __dbp_print_usage_and_exit;;
   esac
@@ -311,4 +314,6 @@ source "${__dbp_vdb_dir}/environment.raw"
 __dbp_main "$@"
 
 # Save the environment.
-__dbp_dump_environment > "${__dbp_vdb_dir}/environment.raw"
+if (( __dbp_save_env )); then
+  __dbp_dump_environment > "${__dbp_vdb_dir}/environment.raw"
+fi

@@ -18,6 +18,7 @@ fn run_drive_binary_package(
     root_dir: &Path,
     image_dir: &Path,
     cpf: &str,
+    extra_options: &[&str],
     phases: &[&str],
 ) -> Result<Output> {
     let temp_dir = TempDir::new()?;
@@ -38,6 +39,7 @@ fn run_drive_binary_package(
         .arg(temp_dir)
         .arg("-p")
         .arg(cpf)
+        .args(extra_options)
         .args(phases)
         .env("PATH", path_with_fakes)
         .output()?;
@@ -84,6 +86,7 @@ fn no_hooks() -> Result<()> {
         root_dir,
         image_dir,
         TEST_CPF,
+        &[],
         &["setup", "preinst", "postinst"],
     )?;
 
@@ -117,6 +120,7 @@ fn print_messages() -> Result<()> {
         root_dir,
         image_dir,
         TEST_CPF,
+        &[],
         &["setup", "preinst", "postinst"],
     )?;
 
@@ -165,7 +169,7 @@ fn keep_environment() -> Result<()> {
     )?;
 
     for (phase, expected_counter) in [("setup", "0"), ("preinst", "1"), ("postinst", "2")] {
-        let output = run_drive_binary_package(root_dir, image_dir, TEST_CPF, &[phase])?;
+        let output = run_drive_binary_package(root_dir, image_dir, TEST_CPF, &[], &[phase])?;
 
         let stdout = String::from_utf8(output.stdout)?;
         let expect = format!("MY_COUNTER={}", expected_counter);
@@ -207,6 +211,7 @@ fn modify_file_system() -> Result<()> {
         root_dir,
         image_dir,
         TEST_CPF,
+        &[],
         &["setup", "preinst", "postinst"],
     )?;
 
@@ -235,8 +240,35 @@ fn ebuild_function_tests() -> Result<()> {
         root_dir,
         image_dir,
         TEST_CPF,
+        &[],
         &["setup", "preinst", "postinst"],
     )?;
+
+    Ok(())
+}
+
+// Verify the option to not save the environment.
+#[test]
+fn no_clobber() -> Result<()> {
+    let root_dir = TempDir::new()?;
+    let root_dir = root_dir.path();
+    let image_dir = &root_dir.join(".image");
+    std::fs::create_dir_all(image_dir)?;
+
+    create_test_vdb(
+        root_dir,
+        TEST_CPF,
+        r#"
+    pkg_setup() {
+        export MY_"NEW"_VARIABLE=defined
+    }
+    "#,
+    )?;
+    run_drive_binary_package(root_dir, image_dir, TEST_CPF, &["-n"], &["setup"])?;
+
+    let environment =
+        std::fs::read_to_string(get_vdb_dir(root_dir, TEST_CPF).join("environment.raw"))?;
+    assert!(!environment.contains("MY_NEW_VARIABLE"));
 
     Ok(())
 }
