@@ -38,5 +38,6 @@ rust_test(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/portage/common/fileutil",
+        "@alchemy_crates//:tempfile",
     ],
 )

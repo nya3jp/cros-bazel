@@ -9,9 +9,8 @@ use runfiles::Runfiles;
 use std::{
     collections::HashMap,
     fs::File,
-    io::SeekFrom::Start,
-    io::{Read, Seek},
-    os::unix::fs::MetadataExt,
+    io::{Read, Seek, SeekFrom::Start, Write},
+    os::{fd::AsRawFd, unix::fs::MetadataExt},
     path::Path,
     process::{Command, Stdio},
 };
@@ -180,6 +179,62 @@ impl BinaryPackage {
 
         Ok(())
     }
+
+    // Writes the new XPAK to the `BinaryPackage`.
+    pub fn replace_xpak(self, xpak: &HashMap<String, Vec<u8>>) -> Result<()> {
+        // Reopen file with write permissions.
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .open(format!("/proc/self/fd/{}", self.file.as_raw_fd()))?;
+
+        // Truncate the xpak off the file.
+        file.set_len(self.xpak_start)?;
+        file.seek(Start(self.xpak_start))?;
+
+        write_xpak(&mut file, xpak)?;
+
+        let xpak_end = file.stream_position()?;
+        write_be32(&mut file, (xpak_end - self.xpak_start).try_into()?)?;
+        file.write_all(b"STOP")?;
+
+        Ok(())
+    }
+}
+
+fn write_xpak(out: &mut impl std::io::Write, xpak: &HashMap<String, Vec<u8>>) -> Result<()> {
+    let mut keys: Vec<_> = xpak.keys().collect();
+    keys.sort();
+    let keys = keys;
+
+    out.write_all(b"XPAKPACK")?;
+
+    let mut index = Vec::new();
+
+    let mut data_offset = 0;
+    for k in &keys {
+        let v = xpak.get(*k).unwrap();
+        let name = k.as_bytes();
+
+        write_be32(&mut index, name.len())?;
+        index.write_all(name)?;
+        write_be32(&mut index, data_offset)?;
+        write_be32(&mut index, v.len())?;
+        data_offset += v.len();
+    }
+
+    write_be32(out, index.len())?;
+    write_be32(out, data_offset)?; // data_len
+    out.write_all(&index)?;
+
+    for k in &keys {
+        let v = xpak.get(*k).unwrap();
+
+        out.write_all(v)?;
+    }
+
+    out.write_all(b"XPAKSTOP")?;
+
+    Ok(())
 }
 
 fn read_u32(f: &mut File, offset: u64) -> Result<u32> {
@@ -187,6 +242,10 @@ fn read_u32(f: &mut File, offset: u64) -> Result<u32> {
     let mut buffer = [0_u8; std::mem::size_of::<u32>()];
     f.read_exact(&mut buffer)?;
     Ok(bytes::BigEndian::read_u32(&buffer))
+}
+
+fn write_be32(file: &mut impl std::io::Write, data: usize) -> Result<()> {
+    Ok(file.write_all(&u32::try_from(data)?.to_be_bytes())?)
 }
 
 fn expect_magic(f: &mut File, offset: u64, want: &str) -> Result<()> {
@@ -250,14 +309,19 @@ fn parse_xpak(
 #[cfg(test)]
 mod tests {
     use fileutil::SafeTempDir;
+    use std::{collections::HashSet, path::PathBuf};
 
     use super::*;
 
-    fn binary_package() -> Result<BinaryPackage> {
+    fn testfile() -> Result<PathBuf> {
         let runfiles = Runfiles::create()?;
-        BinaryPackage::open(&runfiles.rlocation(
+        Ok(runfiles.rlocation(
             "cros/bazel/portage/common/portage/binarypackage/testdata/binpkg-test-1.2.3.tbz2",
         ))
+    }
+
+    fn binary_package() -> Result<BinaryPackage> {
+        BinaryPackage::open(&testfile()?)
     }
 
     #[test]
@@ -380,6 +444,78 @@ mod tests {
 
         let hello_path = temp_dir.join("usr/bin/hello");
         assert!(hello_path.try_exists()?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn update_package() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        let src_path = testfile()?;
+        let dest_path = dir.join("out.tbz2");
+
+        std::fs::copy(&src_path, &dest_path)?;
+
+        let dest =
+            BinaryPackage::open(&dest_path).with_context(|| format!("dest: {dest_path:?}"))?;
+        let mut xpak = dest.xpak().clone();
+        xpak.insert("NEW_KEY".to_string(), b"Hello World".to_vec());
+        xpak.insert("CHOST".to_string(), b"x86_64-pc-linux-gnu-new\n".to_vec());
+        dest.replace_xpak(&xpak)?;
+
+        let src = BinaryPackage::open(&src_path).with_context(|| format!("src: {src_path:?}"))?;
+        let dest =
+            BinaryPackage::open(&dest_path).with_context(|| format!("dest: {dest_path:?}"))?;
+
+        // Ensure previous content was copied over.
+        let src_keys: HashSet<_> = src.xpak().keys().collect();
+        let dest_keys: HashSet<_> = dest.xpak().keys().collect();
+
+        let intersection: Vec<_> = src_keys.intersection(&dest_keys).collect();
+        assert!(!intersection.is_empty());
+        for key in intersection {
+            if *key == "CHOST" {
+                // Checked below
+                continue;
+            }
+
+            assert_eq!(
+                src.xpak().get(*key).unwrap(),
+                dest.xpak().get(*key).unwrap()
+            );
+        }
+
+        // No keys are missing in dest.
+        assert!(src_keys.difference(&dest_keys).next().is_none());
+
+        // Only NEW_KEY is added to dest.
+        assert_eq!(
+            vec![&"NEW_KEY"],
+            dest_keys.difference(&src_keys).collect::<Vec<_>>()
+        );
+
+        assert_eq!(
+            dest.xpak().get("NEW_KEY").unwrap(),
+            "Hello World".as_bytes()
+        );
+
+        // Ensure key was replaced.
+        assert_eq!(
+            src.xpak().get("CHOST").unwrap(),
+            "x86_64-pc-linux-gnu\n".as_bytes()
+        );
+        assert_eq!(
+            dest.xpak().get("CHOST").unwrap(),
+            "x86_64-pc-linux-gnu-new\n".as_bytes()
+        );
+
+        // Verify keys are sorted.
+        let mut sorted = dest.xpak_order().clone();
+        sorted.sort();
+
+        assert_eq!(&sorted, dest.xpak_order(),);
 
         Ok(())
     }
