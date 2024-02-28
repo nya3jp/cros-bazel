@@ -5,6 +5,7 @@
 mod compare_packages;
 #[cfg(test)]
 mod testdata;
+mod update_xpak;
 mod validate_package;
 
 use anyhow::Result;
@@ -14,6 +15,7 @@ use cliutil::{cli_main, ConfigBuilder};
 use itertools::Itertools;
 
 use crate::compare_packages::{do_compare_packages, ComparePackagesArgs};
+use crate::update_xpak::{do_update_xpak, UpdateXpakArgs};
 use crate::validate_package::{do_validate_package, ValidatePackageArgs};
 use std::{path::PathBuf, process::ExitCode};
 
@@ -29,6 +31,7 @@ enum Commands {
     ExtractXpak(ExtractXpakArgs),
     ComparePackages(ComparePackagesArgs),
     ValidatePackage(ValidatePackageArgs),
+    UpdateXpak(UpdateXpakArgs),
 }
 
 /// Shows XPAK entries in a Portage binary package file.
@@ -50,6 +53,7 @@ fn do_main() -> Result<()> {
         Commands::ExtractXpak(args) => do_extract_xpak(args),
         Commands::ComparePackages(args) => do_compare_packages(args),
         Commands::ValidatePackage(args) => do_validate_package(args),
+        Commands::UpdateXpak(args) => do_update_xpak(args),
     }
 }
 
