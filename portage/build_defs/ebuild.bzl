@@ -809,16 +809,20 @@ def _ebuild_install_action_impl(ctx):
         "--log",
         install_log,
         ctx.executable._installer,
+        "-b",
         pkg.file,
+        "-d",
         "/build/%s/packages/%s/%s" % (
             ctx.attr.board,
             pkg.category,
             pkg.file.basename,
         ),
+        "-e",
         "emerge-%s --usepkgonly --nodeps --jobs =%s" % (
             ctx.attr.board,
             pkg_name,
         ),
+        "-c",
         checksum,
     ])
 
@@ -830,6 +834,7 @@ def _ebuild_install_action_impl(ctx):
     # will reinstall itself.
     for dep in ctx.attr.requires:
         inputs.append(dep[_EbuildInstalledInfo].checksum)
+        args.add("-s")
         args.add(dep[_EbuildInstalledInfo].checksum)
 
     ctx.actions.run(

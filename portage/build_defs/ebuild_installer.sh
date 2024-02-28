@@ -9,14 +9,28 @@ if [[ ! -e /etc/cros_chroot_version ]]; then
   exit 1
 fi
 
-BINPKG="$1"
-shift
-DEST="$1"
-shift
-EMERGE_CMD="$1"
-shift
-CHECKSUM="$1"
-shift
+print_usage_and_exit() {
+  exec >&2
+  echo "usage: $0 [flags] [dep checksums]"
+  echo "   -b file - Binary package to install"
+  echo "   -d dir - Directory to place the binary package"
+  echo "   -e cmd - Emerge command to execute"
+  echo "   -c file - File to write checksum into"
+  echo "   -s file - File to checksum"
+  exit 1
+}
+
+CHECKSUM_FILES=()
+while getopts "b:d:e:c:s:" OPTNAME; do
+  case "${OPTNAME}" in
+    b) BINPKG="${OPTARG}";;
+    d) DEST="${OPTARG}";;
+    e) EMERGE_CMD="${OPTARG}";;
+    c) CHECKSUM="${OPTARG}";;
+    s) CHECKSUM_FILES+=("${OPTARG}");;
+    *) print_usage_and_exit;;
+  esac
+done
 
 sudo mkdir -p "$(dirname "${DEST}")"
 
@@ -27,7 +41,7 @@ sudo cp "${BINPKG}" "${DEST}"
 sudo chmod 644 "${DEST}"
 
 # Calculate the checksums in parallel with emerging.
-(cat "${BINPKG}" "$@" | sha256sum > "${CHECKSUM}" ) &
+(cat "${BINPKG}" "${CHECKSUM_FILES[@]}" | sha256sum > "${CHECKSUM}" ) &
 
 # Note: Despite only installing a single package at a time, this operates in
 # parallel because emerge doesn't take a lock and allows you to install multiple
