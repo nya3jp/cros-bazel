@@ -836,9 +836,16 @@ def _ebuild_install_action_impl(ctx):
         ),
         "-c",
         checksum,
+        "-t",
+        ctx.executable._xpaktool,
     ])
 
-    inputs = [pkg.file, ctx.executable._installer]
+    for key in ctx.attr.xpak:
+        val = ctx.attr.xpak[key]
+
+        args.add_all(["-x", "%s=%s" % (key, val)])
+
+    inputs = [pkg.file, ctx.executable._installer, ctx.executable._xpaktool]
 
     # The only use of this is to ensure that our checksum is a hash of the
     # transitive dependencies rather than just this file.
@@ -888,11 +895,22 @@ ebuild_install_action = rule(
             The target board name to build the package for.
             """,
         ),
+        xpak = attr.string_dict(
+            doc = """
+            Overrides the specified XPAK values in the binary package before
+            installing.
+            """,
+        ),
         requires = attr.label_list(providers = [_EbuildInstalledInfo]),
         _installer = attr.label(
             default = "//bazel/portage/build_defs:ebuild_installer",
             executable = True,
             cfg = "exec",
+        ),
+        _xpaktool = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/xpaktool"),
         ),
         _action_wrapper = attr.label(
             executable = True,

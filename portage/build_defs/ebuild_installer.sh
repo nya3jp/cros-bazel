@@ -17,17 +17,22 @@ print_usage_and_exit() {
   echo "   -e cmd - Emerge command to execute"
   echo "   -c file - File to write checksum into"
   echo "   -s file - File to checksum"
+  echo "   -t file - path to the xpaktool"
+  echo "   -x key=val - Xpak entries to update"
   exit 1
 }
 
 CHECKSUM_FILES=()
-while getopts "b:d:e:c:s:" OPTNAME; do
+XPAK_UPDATES=()
+while getopts "b:d:e:c:s:t:x:" OPTNAME; do
   case "${OPTNAME}" in
     b) BINPKG="${OPTARG}";;
     d) DEST="${OPTARG}";;
     e) EMERGE_CMD="${OPTARG}";;
     c) CHECKSUM="${OPTARG}";;
     s) CHECKSUM_FILES+=("${OPTARG}");;
+    t) XPAK_TOOL="${OPTARG}";;
+    x) XPAK_UPDATES+=("${OPTARG}");;
     *) print_usage_and_exit;;
   esac
 done
@@ -38,6 +43,7 @@ sudo mkdir -p "$(dirname "${DEST}")"
 # create a symlink for package foo, then foo emerges just fine, but any package
 # that rdepends on it will fail to detect it during emerge.
 sudo cp "${BINPKG}" "${DEST}"
+sudo "${XPAK_TOOL}" update-xpak --binpkg "${DEST}" "${XPAK_UPDATES[@]}"
 sudo chmod 644 "${DEST}"
 
 # Calculate the checksums in parallel with emerging.
