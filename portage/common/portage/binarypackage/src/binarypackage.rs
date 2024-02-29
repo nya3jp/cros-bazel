@@ -25,6 +25,7 @@ pub struct BinaryPackage {
     xpak: HashMap<String, Vec<u8>>,
     xpak_order: Vec<String>,
     category_pf: String,
+    category_p: String,
     slot: String,
 }
 
@@ -67,6 +68,11 @@ impl BinaryPackage {
         )?
         .trim();
         let category_pf = format!("{category}/{pf}");
+
+        // Drop the -rX suffix
+        let regex = regex::Regex::new(r"-r\d+$")?;
+        let category_p = regex.replace(&category_pf, "").to_string();
+
         let slot = std::str::from_utf8(
             xpak.get("SLOT")
                 .with_context(|| "Binary package missing SLOT")?,
@@ -81,6 +87,7 @@ impl BinaryPackage {
             xpak,
             xpak_order,
             category_pf,
+            category_p,
             slot,
         })
     }
@@ -109,9 +116,14 @@ impl BinaryPackage {
         }
     }
 
-    /// Returns the string combining CATEGORY and PF, e.g. "sys-apps/attr-2.5.1".
+    /// Returns the string combining CATEGORY and PF, e.g. "sys-apps/attr-2.5.1-r1".
     pub fn category_pf(&self) -> &str {
         &self.category_pf
+    }
+
+    /// Returns the string combining CATEGORY and P, e.g. "sys-apps/attr-2.5.1".
+    pub fn category_p(&self) -> &str {
+        &self.category_p
     }
 
     /// Returns a tarball reader.

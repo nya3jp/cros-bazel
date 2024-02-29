@@ -197,10 +197,11 @@ fn do_main() -> Result<()> {
     let mut contents: Vec<u8> = Vec::new();
     generate_vdb_contents(&mut contents, &image_dir)?;
 
-    let vdb_dir = get_vdb_dir(
-        &args.output_directory.join(&args.vdb_prefix),
-        binary_package.category_pf(),
-    );
+    // We don't use category_pf() because we want to erase the revision
+    // number from the layer.
+    let category_pf = binary_package.category_p();
+
+    let vdb_dir = get_vdb_dir(&args.output_directory.join(&args.vdb_prefix), category_pf);
 
     // Once a package has been installed, we no longer need a full vdb entry.
     if args.sparse_vdb {
@@ -212,7 +213,7 @@ fn do_main() -> Result<()> {
         tracing::info!("Auditing package hooks...");
 
         let entries = audit_hooks(
-            binary_package.category_pf(),
+            category_pf,
             &Path::new("/").join(&args.vdb_prefix),
             &vdb_dir,
         )?;

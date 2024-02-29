@@ -61,8 +61,20 @@ pub fn create_sparse_vdb(vdb_dir: &Path, package: &BinaryPackage) -> Result<()> 
 
     // Extract xpak.
     for (key, value) in package.xpak().iter() {
+        // Drop the sub-slot since cros-workon packages normally contain the
+        // revision number in the sub-slot.
+        let override_value = if key == "SLOT" {
+            let slot = String::from_utf8(value.clone())
+                .with_context(|| format!("Slot is not UTF-8: {:?}", value))?;
+            let primary_slot = slot.trim_end().split('/').next().unwrap();
+
+            Some(format!("{}/{}\n", primary_slot, primary_slot).into_bytes())
+        } else {
+            None
+        };
+
         if keys.remove(key.as_str()) {
-            std::fs::write(vdb_dir.join(key), value)?;
+            std::fs::write(vdb_dir.join(key), override_value.as_ref().unwrap_or(value))?;
         }
     }
 

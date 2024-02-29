@@ -24,6 +24,7 @@ rust_library(
         "//bazel/portage/common/processes",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bytes",
+        "@alchemy_crates//:regex",
         "@alchemy_crates//:tar",
         "@alchemy_crates//:zstd",
         "@rules_rust//tools/runfiles",

@@ -350,7 +350,9 @@ fn install_package(
 
     let binary_package = BinaryPackage::open(&spec.input_binary_package)
         .with_context(|| format!("Failed to open {}", spec.input_binary_package.display()))?;
-    let category_pf = binary_package.category_pf();
+
+    // We use the category_p as the category_pf because we want to elide the revision number.
+    let category_pf = binary_package.category_p();
 
     tracing::info!("Installing {}", category_pf);
 
