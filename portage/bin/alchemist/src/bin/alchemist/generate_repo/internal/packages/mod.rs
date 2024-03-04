@@ -78,6 +78,7 @@ pub struct EBuildEntry {
     direct_build_target: Option<String>,
     bashrcs: Vec<String>,
     supports_remoteexec: bool,
+    xpak: Vec<(String, String)>,
 }
 
 /// Specifies the config used to generate host packages.
@@ -484,6 +485,23 @@ impl EBuildEntry {
 
         let supports_remoteexec = package.details.inherited.contains("cros-remoteexec");
 
+        let expressions = &package.dependencies.expressions;
+
+        // We omit PDEPEND since it's never supposed to have a sub-slot rebuild
+        // operator.
+        let xpak = vec![
+            ("DEPEND".into(), &expressions.build_target),
+            ("RDEPEND".into(), &expressions.run_target),
+            ("BDEPEND".into(), &expressions.build_host),
+            ("IDEPEND".into(), &expressions.install_host),
+        ];
+
+        let xpak = xpak
+            .into_iter()
+            .filter(|(_k, v)| !v.is_empty())
+            .map(|(k, v)| (k, format!("{v}\n")))
+            .collect();
+
         Ok(Self {
             ebuild_name,
             basename,
@@ -512,6 +530,7 @@ impl EBuildEntry {
             direct_build_target: package.details.direct_build_target.clone(),
             bashrcs,
             supports_remoteexec,
+            xpak,
         })
     }
 }

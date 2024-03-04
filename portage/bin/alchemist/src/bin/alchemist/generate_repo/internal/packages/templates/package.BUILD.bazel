@@ -407,6 +407,13 @@ ebuild_install_action(
         "{{ dep }}_installed_no_pdepends",
         {%- endfor %}
     ],
+    {%- if ebuild.xpak %}
+    xpak = {
+        {%- for xpak in ebuild.xpak %}
+        "{{ xpak.0 }}": "{{ xpak.1 }}",
+        {%- endfor %}
+    },
+    {%- endif %}
     visibility = ["//:__subpackages__"],
 )
 

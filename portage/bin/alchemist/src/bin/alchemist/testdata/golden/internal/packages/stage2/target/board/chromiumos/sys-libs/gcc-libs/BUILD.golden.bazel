@@ -614,6 +614,9 @@ ebuild_install_action(
     package = ":10.2.0",
     requires = [
     ],
+    xpak = {
+        "BDEPEND": "test-cases/inherit\n",
+    },
     visibility = ["//:__subpackages__"],
 )
 

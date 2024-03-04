@@ -601,6 +601,9 @@ ebuild_install_action(
     package = ":2.35-r25",
     requires = [
     ],
+    xpak = {
+        "BDEPEND": "sys-devel/binutils sys-devel/gcc\n",
+    },
     visibility = ["//:__subpackages__"],
 )
 

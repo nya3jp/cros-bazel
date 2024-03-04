@@ -655,6 +655,9 @@ ebuild_install_action(
         "//internal/packages/stage3/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197_installed_no_pdepends",
         "//internal/packages/stage3/target/host/portage-stable/virtual/os-headers:0-r2_installed_no_pdepends",
     ],
+    xpak = {
+        "RDEPEND": "virtual/os-headers sys-libs/glibc sys-libs/libcxx sys-libs/llvm-libunwind sys-devel/binutils dev-lang/go\n",
+    },
     visibility = ["//:__subpackages__"],
 )
 

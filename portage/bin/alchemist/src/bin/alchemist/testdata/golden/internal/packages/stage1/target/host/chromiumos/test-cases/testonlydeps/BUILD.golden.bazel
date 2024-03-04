@@ -640,6 +640,9 @@ ebuild_install_action(
     package = ":1.0",
     requires = [
     ],
+    xpak = {
+        "DEPEND": "simple/aaa\n",
+    },
     visibility = ["//:__subpackages__"],
 )
 
