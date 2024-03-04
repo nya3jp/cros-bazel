@@ -2,20 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result};
 use binarypackage::BinaryPackage;
 use clap::Parser;
 use std::path::PathBuf;
 
 /// Parse a single key-value pair
 fn parse_key_val(s: &str) -> Result<(String, String)> {
-    let v: Vec<_> = s.split('=').collect();
-    ensure!(v.len() == 2, "Invalid key-value: {:?}", s);
-    Ok((v[0].to_string(), v[1].to_string()))
+    s.split_once('=')
+        .with_context(|| format!("Invalid key-value: {:?}", s))
+        .map(|(k, v)| (k.to_string(), v.to_string()))
 }
 
 /// Compares two packages.
-#[derive(Parser, Debug)]
+#[derive(Parser, PartialEq, Eq, Debug)]
 pub struct UpdateXpakArgs {
     /// Portage binary package to update.
     #[arg(long)]
@@ -45,6 +45,30 @@ pub fn do_update_xpak(args: UpdateXpakArgs) -> Result<()> {
 mod tests {
     use super::*;
     use crate::testdata::*;
+
+    #[test]
+    fn parse_args() -> Result<()> {
+        let args = UpdateXpakArgs::try_parse_from(vec![
+            "",
+            "--binpkg",
+            "foo",
+            "Hello=World",
+            "Foo=Bar=Baz",
+        ])?;
+
+        assert_eq!(
+            args,
+            UpdateXpakArgs {
+                binpkg: "foo".into(),
+                values: vec![
+                    ("Hello".into(), "World".into()),
+                    ("Foo".into(), "Bar=Baz".into()),
+                ]
+            }
+        );
+
+        Ok(())
+    }
 
     #[test]
     fn update_package() -> Result<()> {
