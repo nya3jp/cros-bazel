@@ -100,14 +100,15 @@ pub struct PackageSlotDependency {
 }
 
 impl PackageSlotDependency {
-    pub(super) fn new(
-        slot: Option<(String, Option<String>)>,
-        rebuild_on_slot_change: bool,
-    ) -> Self {
+    pub fn new(slot: Option<(String, Option<String>)>, rebuild_on_slot_change: bool) -> Self {
         Self {
             slot,
             rebuild_on_slot_change,
         }
+    }
+
+    pub fn rebuild_on_slot_change(&self) -> bool {
+        self.rebuild_on_slot_change
     }
 
     pub fn matches(&self, slot: &Slot<&str>) -> bool {
@@ -367,6 +368,9 @@ impl PackageDependencyAtom {
     }
     pub fn slot(&self) -> Option<&PackageSlotDependency> {
         self.slot.as_ref()
+    }
+    pub fn set_slot(&mut self, slot: Option<PackageSlotDependency>) {
+        self.slot = slot
     }
     pub fn uses(&self) -> &Vec<PackageUseDependency> {
         self.uses.as_ref()

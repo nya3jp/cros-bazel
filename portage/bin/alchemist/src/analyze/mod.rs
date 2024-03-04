@@ -24,7 +24,7 @@ use crate::{
 
 use self::{
     dependency::{
-        direct::{analyze_direct_dependencies, DirectDependencies},
+        direct::{analyze_direct_dependencies, DependencyExpressions, DirectDependencies},
         indirect::{analyze_indirect_dependencies, IndirectDependencies},
     },
     source::{analyze_sources, PackageSources},
@@ -38,6 +38,7 @@ mod tests;
 
 pub struct PackageDependencies {
     pub direct: DirectDependencies,
+    pub expressions: DependencyExpressions,
     pub indirect: IndirectDependencies,
 }
 
@@ -150,6 +151,7 @@ impl AsPackageRef for MaybePackage {
 /// packages.
 pub struct PackageLocalAnalysis {
     pub direct_dependencies: DirectDependencies,
+    pub expressions: DependencyExpressions,
     pub sources: PackageSources,
     pub bashrcs: Vec<PathBuf>,
 }
@@ -195,12 +197,13 @@ fn analyze_local(
             // dependency error.
             bail!("The package is masked: {}", reason);
         }
-        let direct_dependencies =
+        let (direct_dependencies, expressions) =
             analyze_direct_dependencies(details, cross_compile, host_resolver, target_resolver)?;
         let sources = analyze_sources(config, details, src_dir)?;
         let bashrcs = config.package_bashrcs(&details.as_package_ref());
         Ok(PackageLocalAnalysis {
             direct_dependencies,
+            expressions,
             sources,
             bashrcs,
         })
@@ -325,6 +328,7 @@ pub fn analyze_packages(
                         details,
                         dependencies: PackageDependencies {
                             direct: local.direct_dependencies,
+                            expressions: local.expressions,
                             indirect: global.indirect_dependencies,
                         },
                         sources: local.sources,

@@ -15,7 +15,7 @@ use crate::{
     resolver::PackageResolver,
 };
 
-use super::{analyze_packages, MaybePackage};
+use super::{analyze_packages, dependency::direct::DependencyExpressions, MaybePackage};
 
 /// Provides an easy way to generate an ebuild file.
 struct PackageSpec {
@@ -110,12 +110,15 @@ impl PackageDependenciesDescription {
 
 /// Textual representation of [`MaybePackage`] suitable for comparison.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[allow(clippy::large_enum_variant)]
 enum MaybePackageDescription {
     Ok {
         /// Full package name and version number, e.g. "sys-apps/attr-2.5.1".
         package_name_version: String,
 
         dependencies: PackageDependenciesDescription,
+
+        dependency_expressions: DependencyExpressions,
     },
     Err {
         /// Full package name and version number, e.g. "sys-apps/attr-2.5.1".
@@ -167,6 +170,7 @@ impl From<MaybePackage> for MaybePackageDescription {
                 install_set: describe_package_list(&deps.indirect.install_set),
                 build_host_set: describe_package_list(&deps.indirect.build_host_set),
             },
+            dependency_expressions: deps.expressions.clone(),
         }
     }
 }
@@ -251,6 +255,7 @@ fn test_analyze_packages_single_no_deps() -> Result<()> {
                 install_set: vec!["sys-apps/hello-1".into()],
                 ..PackageDependenciesDescription::EMPTY
             },
+            dependency_expressions: DependencyExpressions::default(),
         }]
     );
 
@@ -299,6 +304,11 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     ],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    build_target: "sys-libs/a".into(),
+                    run_target: "sys-libs/b".into(),
+                    ..DependencyExpressions::default()
+                }
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/a-1".into(),
@@ -309,6 +319,11 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     install_set: vec!["sys-libs/a-1".into(), "sys-libs/ab-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    build_target: "sys-libs/aa".into(),
+                    run_target: "sys-libs/ab".into(),
+                    ..DependencyExpressions::default()
+                }
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/aa-1".into(),
@@ -316,6 +331,7 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     install_set: vec!["sys-libs/aa-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions::default(),
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/ab-1".into(),
@@ -323,6 +339,7 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     install_set: vec!["sys-libs/ab-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions::default(),
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/b-1".into(),
@@ -333,6 +350,11 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     install_set: vec!["sys-libs/b-1".into(), "sys-libs/bb-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    build_target: "sys-libs/ba".into(),
+                    run_target: "sys-libs/bb".into(),
+                    ..DependencyExpressions::default()
+                }
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/ba-1".into(),
@@ -340,6 +362,7 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     install_set: vec!["sys-libs/ba-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions::default(),
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/bb-1".into(),
@@ -347,6 +370,7 @@ fn test_analyze_packages_normal_deps() -> Result<()> {
                     install_set: vec!["sys-libs/bb-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions::default(),
             },
         ]
     );
@@ -385,6 +409,10 @@ fn test_analyze_packages_post_deps() -> Result<()> {
                     ],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    post_target: "sys-libs/a".into(),
+                    ..DependencyExpressions::default()
+                }
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/a-1".into(),
@@ -398,6 +426,11 @@ fn test_analyze_packages_post_deps() -> Result<()> {
                     ],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    run_target: "sys-apps/hello".into(),
+                    post_target: "sys-libs/b".into(),
+                    ..DependencyExpressions::default()
+                }
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/b-1".into(),
@@ -410,6 +443,10 @@ fn test_analyze_packages_post_deps() -> Result<()> {
                     ],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    run_target: "sys-libs/a".into(),
+                    ..DependencyExpressions::default()
+                }
             },
         ]
     );
@@ -448,6 +485,11 @@ fn test_analyze_packages_build_host_deps() -> Result<()> {
                     build_host_set: vec!["dev-lang/gcc-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+
+                dependency_expressions: DependencyExpressions {
+                    build_host: "dev-lang/gcc".into(),
+                    ..DependencyExpressions::default()
+                }
             },
         ]
     );
@@ -486,6 +528,10 @@ fn test_analyze_packages_install_host_deps() -> Result<()> {
                     build_host_set: vec!["sys-apps/coreutils-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    build_target: "sys-libs/libfoo".into(),
+                    ..DependencyExpressions::default()
+                }
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/libfoo-1".into(),
@@ -495,6 +541,10 @@ fn test_analyze_packages_install_host_deps() -> Result<()> {
                     install_set: vec!["sys-libs/libfoo-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions {
+                    install_host: "sys-apps/coreutils".into(),
+                    ..DependencyExpressions::default()
+                }
             },
         ]
     );
@@ -523,6 +573,7 @@ fn test_analyze_packages_install_host_deps_eapi7() -> Result<()> {
                     install_set: vec!["sys-apps/coreutils-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions::default(),
             },
             MaybePackageDescription::Ok {
                 package_name_version: "sys-libs/libfoo-1".into(),
@@ -530,6 +581,7 @@ fn test_analyze_packages_install_host_deps_eapi7() -> Result<()> {
                     install_set: vec!["sys-libs/libfoo-1".into()],
                     ..PackageDependenciesDescription::EMPTY
                 },
+                dependency_expressions: DependencyExpressions::default(),
             },
         ]
     );
@@ -616,6 +668,11 @@ fn test_analyze_packages_indirect_host_deps() -> Result<()> {
                 ],
                 ..PackageDependenciesDescription::EMPTY
             },
+            dependency_expressions: DependencyExpressions {
+                build_target: "sys-libs/a".into(),
+                build_host: "sys-libs/c".into(),
+                ..DependencyExpressions::default()
+            }
         },
     );
 
@@ -655,6 +712,111 @@ fn test_analyze_packages_propagate_errors() -> Result<()> {
                 reason: "The package is masked: REQUIRED_USE not satisfied: host_arch".into(),
             },
         ]
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_analyze_dep_xpak_values() -> Result<()> {
+    let depend = "
+        !!app-crypt/heimdal
+        !cros_host? ( chromeos-base/crosid:= )
+        cros_host? ( chromeos-base/cros-config-host:= )
+        app-arch/libarchive:2=
+        dev-libs/libzip:=
+        >=sys-fs/e2fsprogs-1.46.4-r51[target_arch(-)]
+        || (
+            >=dev-libs/libverto-0.2.5[libev,target_arch(-)]
+            >=dev-libs/libverto-0.2.5[libevent,target_arch(-)]
+        )
+    ";
+    let packages = analyze_packages_for_testing(&[
+        PackageSpec::new("sys-libs/libfoo", "1")?
+            .var("EAPI", "7")
+            .var("DEPEND", depend)
+            .var("RDEPEND", &format!("{depend} sys-apps/coreboot-utils:=")),
+        PackageSpec::new("app-crypt/heimdal", "1")?,
+        PackageSpec::new("chromeos-base/crosid", "2")?.var("SLOT", "0/a"),
+        PackageSpec::new("chromeos-base/cros-config-host", "3")?.var("SLOT", "1/b"),
+        PackageSpec::new("app-arch/libarchive", "4")?.var("SLOT", "2/c"),
+        PackageSpec::new("dev-libs/libzip", "5")?.var("SLOT", "3/d"),
+        PackageSpec::new("sys-fs/e2fsprogs", "1.50")?
+            .var("SLOT", "4/e")
+            .var("IUSE", "target_arch"),
+        PackageSpec::new("dev-libs/libverto", "0.3")?
+            .var("SLOT", "5/f")
+            .var("IUSE", "target_arch libev +libevent"),
+        PackageSpec::new("sys-apps/coreboot-utils", "6")?.var("SLOT", "6/g"),
+    ])?;
+
+    assert_eq!(
+        packages.last().unwrap(),
+        &MaybePackageDescription::Ok {
+            package_name_version: "sys-libs/libfoo-1".into(),
+            dependencies: PackageDependenciesDescription {
+                build_target: vec![
+                    "app-arch/libarchive-4".into(),
+                    "chromeos-base/crosid-2".into(),
+                    "dev-libs/libverto-0.3".into(),
+                    "dev-libs/libzip-5".into(),
+                    "sys-fs/e2fsprogs-1.50".into()
+                ],
+                test_target: vec![
+                    "app-arch/libarchive-4".into(),
+                    "chromeos-base/crosid-2".into(),
+                    "dev-libs/libverto-0.3".into(),
+                    "dev-libs/libzip-5".into(),
+                    "sys-fs/e2fsprogs-1.50".into()
+                ],
+                run_target: vec![
+                    "app-arch/libarchive-4".into(),
+                    "chromeos-base/crosid-2".into(),
+                    "dev-libs/libverto-0.3".into(),
+                    "dev-libs/libzip-5".into(),
+                    "sys-apps/coreboot-utils-6".into(),
+                    "sys-fs/e2fsprogs-1.50".into()
+                ],
+                install_set: vec![
+                    "app-arch/libarchive-4".into(),
+                    "chromeos-base/crosid-2".into(),
+                    "dev-libs/libverto-0.3".into(),
+                    "dev-libs/libzip-5".into(),
+                    "sys-apps/coreboot-utils-6".into(),
+                    "sys-fs/e2fsprogs-1.50".into(),
+                    "sys-libs/libfoo-1".into()
+                ],
+                ..PackageDependenciesDescription::EMPTY
+            },
+            //
+            dependency_expressions: DependencyExpressions {
+                // The any-of constraints should probably be resolved for
+                // build dependencies, but we are keeping portage's behavior
+                // for now.
+                build_target: concat!(
+                    "!!app-crypt/heimdal ",
+                    "chromeos-base/crosid:0/a= ",
+                    "app-arch/libarchive:2/c= ",
+                    "dev-libs/libzip:3/d= ",
+                    ">=sys-fs/e2fsprogs-1.46.4-r51[target_arch(-)] ",
+                    "|| ( >=dev-libs/libverto-0.2.5[libev,target_arch(-)] >=dev-libs/libverto-0.2.5[libevent,target_arch(-)] )"
+                ).into(),
+                run_target: concat!(
+                    "!!app-crypt/heimdal ",
+                    "chromeos-base/crosid:0/a= ",
+                    "app-arch/libarchive:2/c= ",
+                    "dev-libs/libzip:3/d= ",
+                    ">=sys-fs/e2fsprogs-1.46.4-r51[target_arch(-)] ",
+                    // Any-of in runtime deps only makes sense if the
+                    // package didn't link against a specific dep. In theory
+                    // we should have a := in here, but the PMS disallows
+                    // the := operator in any-of constraints.
+                    "|| ( >=dev-libs/libverto-0.2.5[libev,target_arch(-)] >=dev-libs/libverto-0.2.5[libevent,target_arch(-)] ) ",
+                    "sys-apps/coreboot-utils:6/g="
+                ).into(),
+                ..DependencyExpressions::default()
+            }
+        }
     );
 
     Ok(())

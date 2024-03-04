@@ -4,6 +4,7 @@
 
 mod flatten;
 mod hacks;
+mod slot;
 
 use std::sync::Arc;
 
@@ -18,6 +19,7 @@ use crate::{
 use self::{
     flatten::flatten_dependencies,
     hacks::{get_extra_dependencies, is_rust_source_package, DEPEND_AS_BDEPEND_ALLOW_LIST},
+    slot::rewrite_subslot_deps,
 };
 
 /// Analyzed direct dependencies of a package. It is returned by [`analyze_direct_dependencies`].
@@ -42,7 +44,7 @@ pub struct DirectDependencies {
     /// Host packages to install before building the package, aka BDEPEND.
     pub build_host: Vec<Arc<PackageDetails>>,
 
-    /// Host packages to install before installing the package, aaka IDEPEND.
+    /// Host packages to install before installing the package, aka IDEPEND.
     pub install_host: Vec<Arc<PackageDetails>>,
 }
 
@@ -56,6 +58,30 @@ impl DirectDependencies {
             DependencyKind::InstallHost => &self.install_host,
         }
     }
+}
+
+/// A package's *DEPEND expressions.
+///
+/// Contains the value of the *DEPEND keys that would be written into the
+/// binpkg's XPAK. If an atom contained a sub-slot rebuild operator (:=), the
+/// atom is rewritten to contain the best matching slot/sub-slot. This is used
+/// to aid portage in determining when a package should be rebuilt.
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
+pub struct DependencyExpressions {
+    /// Target packages to install before building the package, aka DEPEND.
+    pub build_target: String,
+
+    /// Target packages to install before making the package usable, aka RDEPEND.
+    pub run_target: String,
+
+    /// Target packages to install to make the package usable, aka PDEPEND.
+    pub post_target: String,
+
+    /// Host packages to install before building the package, aka BDEPEND.
+    pub build_host: String,
+
+    /// Host packages to install before installing the package, aka IDEPEND.
+    pub install_host: String,
 }
 
 /// Represents a package dependency type.
@@ -80,7 +106,7 @@ fn extract_dependencies(
     cross_compile: bool,
     resolver: &PackageResolver,
     allow_list: Option<&[&str]>,
-) -> Result<Vec<Arc<PackageDetails>>> {
+) -> Result<(Vec<Arc<PackageDetails>>, String)> {
     extract_dependencies_use(
         details,
         &details.use_map,
@@ -98,7 +124,7 @@ fn extract_dependencies_use(
     cross_compile: bool,
     resolver: &PackageResolver,
     allow_list: Option<&[&str]>,
-) -> Result<Vec<Arc<PackageDetails>>> {
+) -> Result<(Vec<Arc<PackageDetails>>, String)> {
     let var_name = match kind {
         DependencyKind::BuildTarget => Some("DEPEND"),
         DependencyKind::RunTarget => Some("RDEPEND"),
@@ -116,7 +142,11 @@ fn extract_dependencies_use(
     let joined_raw_deps = format!("{} {}", raw_deps, raw_extra_deps);
     let deps = joined_raw_deps.parse::<PackageDependency>()?;
 
-    flatten_dependencies(deps, use_map, resolver, allow_list)
+    let dep_list = flatten_dependencies(deps.clone(), use_map, resolver, allow_list)?;
+
+    let expression = rewrite_subslot_deps(deps, use_map, resolver)?;
+
+    Ok((dep_list, expression))
 }
 
 /// Analyzes ebuild variables to determine direct dependencies of a package.
@@ -125,8 +155,8 @@ pub fn analyze_direct_dependencies(
     cross_compile: bool,
     host_resolver: &PackageResolver,
     target_resolver: &PackageResolver,
-) -> Result<DirectDependencies> {
-    let build_target_deps = extract_dependencies(
+) -> Result<(DirectDependencies, DependencyExpressions)> {
+    let (build_target_deps, build_target_expr) = extract_dependencies(
         details,
         DependencyKind::BuildTarget,
         cross_compile,
@@ -141,7 +171,7 @@ pub fn analyze_direct_dependencies(
         )
     })?;
 
-    let test_target_deps = if details.use_map.contains_key("test") {
+    let (test_target_deps, _test_target_expr) = if details.use_map.contains_key("test") {
         let mut test_use_map = details.use_map.clone();
         test_use_map.insert("test".into(), true);
         // Hack: We often (more than 100 packages) fail to resolve test-only
@@ -159,14 +189,14 @@ pub fn analyze_direct_dependencies(
             target_resolver,
             None,
         );
-        test_deps_result.unwrap_or(build_target_deps.clone())
+        test_deps_result.unwrap_or_else(|_| (build_target_deps.clone(), build_target_expr.clone()))
     } else {
         // The ebuild does not care about use flag, so test deps are the same
         // as build deps.
-        build_target_deps.clone()
+        (build_target_deps.clone(), build_target_expr.clone())
     };
 
-    let run_target_deps = extract_dependencies(
+    let (run_target_deps, run_target_expr) = extract_dependencies(
         details,
         DependencyKind::RunTarget,
         cross_compile,
@@ -181,11 +211,11 @@ pub fn analyze_direct_dependencies(
         )
     })?;
 
-    let build_host_deps = {
+    let (build_host_deps, build_host_expr) = {
         // We query BDEPEND regardless of EAPI because we want our overrides
         // from `get_extra_dependencies` to allow specifying a BDEPEND even
         // if the EAPI doesn't support it.
-        let mut build_host_deps = extract_dependencies(
+        let (mut build_host_deps, build_host_expr) = extract_dependencies(
             details,
             DependencyKind::BuildHost,
             cross_compile,
@@ -220,7 +250,7 @@ pub fn analyze_direct_dependencies(
                 )
             })?;
 
-            for package_details in build_deps_for_host {
+            for package_details in build_deps_for_host.0 {
                 if !build_host_deps.iter().any(|a| {
                     a.as_basic_data().ebuild_path == package_details.as_basic_data().ebuild_path
                 }) {
@@ -229,10 +259,10 @@ pub fn analyze_direct_dependencies(
             }
         }
 
-        build_host_deps
+        (build_host_deps, build_host_expr)
     };
 
-    let install_host_deps = extract_dependencies(
+    let (install_host_deps, install_host_expr) = extract_dependencies(
         details,
         DependencyKind::InstallHost,
         cross_compile,
@@ -270,7 +300,7 @@ pub fn analyze_direct_dependencies(
         run_target_deps
     };
 
-    let post_target_deps = extract_dependencies(
+    let (post_target_deps, post_target_expr) = extract_dependencies(
         details,
         DependencyKind::PostTarget,
         cross_compile,
@@ -285,12 +315,21 @@ pub fn analyze_direct_dependencies(
         )
     })?;
 
-    Ok(DirectDependencies {
-        build_target: build_target_deps,
-        test_target: test_target_deps,
-        run_target: run_target_deps,
-        post_target: post_target_deps,
-        build_host: build_host_deps,
-        install_host: install_host_deps,
-    })
+    Ok((
+        DirectDependencies {
+            build_target: build_target_deps,
+            test_target: test_target_deps,
+            run_target: run_target_deps,
+            post_target: post_target_deps,
+            build_host: build_host_deps,
+            install_host: install_host_deps,
+        },
+        DependencyExpressions {
+            build_target: build_target_expr,
+            run_target: run_target_expr,
+            post_target: post_target_expr,
+            build_host: build_host_expr,
+            install_host: install_host_expr,
+        },
+    ))
 }

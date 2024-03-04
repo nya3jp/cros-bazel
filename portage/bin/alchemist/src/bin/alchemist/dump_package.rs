@@ -121,7 +121,7 @@ pub fn dump_package_main(host: &TargetData, target: Option<&TargetData>, args: A
             );
 
             match analyze_direct_dependencies(&details, cross_compile, &host.resolver, resolver) {
-                Ok(deps) => {
+                Ok((deps, _expressions)) => {
                     dump_deps("BDEPEND", &deps.build_host);
                     dump_deps("IDEPEND", &deps.install_host);
                     dump_deps("DEPEND", &deps.build_target);
