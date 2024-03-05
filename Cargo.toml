@@ -49,7 +49,7 @@ by_address = "1.1.0"
 bytes = "0.4.12"
 bzip2 = "0.4.4"
 # chrono: cargo-bazel doesn't support `default_features = false`
-chrono = { version = "0.4.26", features = ["clock"] }
+chrono = { version = "0.4.34", features = ["clock"] }
 clap = { version = "4.0.29", features = ["derive"] }
 colored = "2.0.0"
 env_logger = "0.9.3"
