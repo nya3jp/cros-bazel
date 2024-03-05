@@ -44,6 +44,6 @@ pkg_tar(
 #   bazel run //:alchemist -- --board=amd64-generic dump-package sys-apps/attr
 alias(
     name = "alchemist",
-    actual = "@alchemist//:release/alchemist",
+    actual = "@alchemist//:alchemist",
     visibility = ["//visibility:private"],
 )
