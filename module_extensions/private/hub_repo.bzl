@@ -35,7 +35,7 @@ If you do, update the repo rule to use alias_and_symlink, then update usages of
 # https://github.com/bazelbuild/bazel/issues/17048#issuecomment-1357752280
 def _hub_repo_impl(repo_ctx):
     content = [
-        'load("@cros//bazel/module_extensions/private:symlink.bzl", "symlink")',
+        'load("@cros//bazel/build_defs:symlink.bzl", "symlink")',
         'load("@cros//bazel/build_defs:always_fail.bzl", "always_fail")',
     ]
 
