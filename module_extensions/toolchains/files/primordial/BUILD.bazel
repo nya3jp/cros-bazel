@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:toolchain.bzl", "rust_stdlib_filegroup")
 load("//bazel/module_extensions/toolchains/files:files.bzl", "FILEGROUPS")
 load("//bazel/module_extensions/toolchains/files:toolchain_sdk.bzl", "toolchain_sdk_filter_files")
 load("//bazel/platforms:platforms.bzl", "HOST_TRIPLE")
@@ -31,18 +30,3 @@ alias(
     )
     for name, includes in FILEGROUPS.items()
 ]
-
-alias(
-    name = "{triple}_rust_stdlibs".format(triple = HOST_TRIPLE),
-    actual = "@toolchain_sdk//:rust_stdlibs_{triple}".format(triple = HOST_TRIPLE),
-)
-
-toolchain_sdk_filter_files(
-    name = "{triple}_rustc_libs".format(triple = HOST_TRIPLE),
-    include = [
-        "usr/lib64/rustlib/{triple}/lib/*.so*".format(triple = HOST_TRIPLE),
-        "usr/x86_64-cros-linux-gnu/lib64/*.so*",
-        "usr/x86_64-cros-linux-gnu/usr/lib64/*.so*",
-        "usr/lib64/*.so",
-    ],
-)

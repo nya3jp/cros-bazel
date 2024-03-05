@@ -1,0 +1,36 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load(":sysroot.bzl", "sysroot_glob")
+
+package(
+    default_visibility = ["//bazel/module_extensions/toolchains:__subpackages__"],
+)
+
+alias(
+    name = "sysroot",
+    # In the future, if we implement a bootstrap stage toolchain, we might replace
+    # this with a select clause based on whether we're bootstrapping.
+    actual = "@toolchain_sdk//:sysroot_files",
+)
+
+sysroot_glob(
+    name = "interp",
+    include = ["/lib64/ld-linux-x86-64.so.2"],
+    sysroot = ":sysroot",
+)
+
+sysroot_glob(
+    name = "libs",
+    include = ["/lib/*.so*"],
+    sysroot = ":sysroot",
+)
+
+filegroup(
+    name = "runtime",
+    srcs = [
+        ":interp",
+        ":libs",
+    ],
+)

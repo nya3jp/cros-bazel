@@ -2,7 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-visibility("//bazel/build_defs")
+"""Functions for helping with globbing for files in starlark rules"""
+
+visibility([
+    "//bazel/build_defs",
+    "//bazel/module_extensions/toolchains/files",
+])
 
 _NO_MATCH_FMT = """The following entries failed to match anything. If this is \
 expected, consider setting allow_entry to True in the filter_files invocation.
@@ -10,8 +15,6 @@ expected, consider setting allow_entry to True in the filter_files invocation.
 
 Example file: "{f}"
 """
-_BAD_STRIP_FMT = 'Unable to strip prefix - the path "{path}" does not start \
-with "{strip_prefix}"'
 
 def glob_matches(path, glob):
     """Determines whether or not a glob matches a given path.
@@ -60,6 +63,17 @@ def glob_matches(path, glob):
     return len(path) in path_uptos
 
 def glob(file_map, include, exclude, allow_empty):
+    """Filters a file map to just the specified glob.
+
+    Args:
+        file_map: (Dict[str, File]) A mapping from human-readable name to file
+        include: (List[str]) See native.glob.include
+        exclude: (List[str]) See native.glob.exclude
+        allow_empty: (bool) See native.glob.allow_empty
+    Returns:
+        (Dict[str, File]) A subset of file_map containing just the files that
+        matched the glob.
+    """
     include = [tuple(glob.split("/")) for glob in include]
     exclude = [tuple(glob.split("/")) for glob in exclude]
 

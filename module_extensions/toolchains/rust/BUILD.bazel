@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("//bazel/build_defs:bool_flag.bzl", "bool_flag")
-load("//bazel/module_extensions/toolchains/rust:rust_toolchain.bzl", "generate_rust_toolchains")
+load("//bazel/module_extensions/toolchains/files:sysroot.bzl", "sysroot_single_file")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -12,4 +12,32 @@ bool_flag(
     default = True,
 )
 
-generate_rust_toolchains()
+sysroot_single_file(
+    name = "cargo",
+    path = "/usr/bin/cargo",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+sysroot_single_file(
+    name = "llvm_cov",
+    path = "/bin/llvm-cov",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+sysroot_single_file(
+    name = "rustc",
+    path = "/usr/bin/rustc",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+sysroot_single_file(
+    name = "rustdoc",
+    path = "/usr/bin/rustdoc",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+sysroot_single_file(
+    name = "rustfmt",
+    path = "/usr/bin/rustfmt",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)

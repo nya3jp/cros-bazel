@@ -118,7 +118,7 @@ use_repo(
 # Ordering matters here. Placing our our toolchains first gives them priority.
 # This means we only fall back to @rust_toolchains if our toolchains don't meet
 # their target_settings.
-register_toolchains("//bazel/module_extensions/toolchains/rust:all")
+register_toolchains("//bazel/module_extensions/toolchains/rust/host:all")
 
 register_toolchains("@rust_toolchains//:all")
 

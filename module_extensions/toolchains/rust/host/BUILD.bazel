@@ -1,0 +1,72 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:toolchain.bzl", "rust_toolchain")
+load("//bazel/module_extensions/toolchains/files:sysroot.bzl", "sysroot_glob")
+load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM")
+
+package(default_visibility = ["//visibility:public"])
+
+# This needs to be defined in the same directory as the sysroot, unfortunately.
+# It declares files as siblings to ones in the sysroot.
+alias(
+    name = "stdlibs",
+    actual = "@toolchain_sdk//:rust_stdlibs_host",
+)
+
+sysroot_glob(
+    name = "stdlibs_files",
+    include = [
+        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.rlib*",
+        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.a*",
+        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.so*",
+    ],
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    visibility = ["//visibility:public"],
+)
+
+sysroot_glob(
+    name = "rustc_libs",
+    include = [
+        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.so*",
+        "/usr/x86_64-cros-linux-gnu/lib64/*.so*",
+        "/usr/x86_64-cros-linux-gnu/usr/lib64/*.so*",
+        "/usr/lib64/*.so*",
+    ],
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+rust_toolchain(
+    name = "toolchain_host_rust",
+    binary_ext = "",
+    cargo = "//bazel/module_extensions/toolchains/rust:cargo",
+    default_edition = "2021",
+    dylib_ext = ".so",
+    exec_triple = HOST_PLATFORM.triple,
+    llvm_cov = "//bazel/module_extensions/toolchains/rust:llvm_cov",
+    rust_doc = "//bazel/module_extensions/toolchains/rust:rustdoc",
+    rust_std = ":stdlibs",
+    rustc = "//bazel/module_extensions/toolchains/rust:rustc",
+    rustc_lib = ":rustc_libs",
+    rustfmt = "//bazel/module_extensions/toolchains/rust:rustfmt",
+    staticlib_ext = ".a",
+    stdlib_linkflags = [
+        "-lpthread",
+        "-ldl",
+        "-lc++",
+    ],
+    target_triple = HOST_PLATFORM.triple,
+)
+
+toolchain(
+    name = "toolchain_host",
+    exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    target_compatible_with = HOST_PLATFORM.constraints,
+    target_settings = ["//bazel/module_extensions/toolchains/rust:hermetic_enabled"],
+    toolchain = ":toolchain_host_rust",
+    toolchain_type = "@rules_rust//rust:toolchain",
+)

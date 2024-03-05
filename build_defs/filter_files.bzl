@@ -2,16 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+"""A glob-like rule that can be used on generated files."""
+
 load("//bazel/build_defs/filter_files:glob.bzl", "glob")
 
 visibility("public")
 
-_NO_MATCH_FMT = """The following entries failed to match anything. If this is \
-expected, consider setting allow_entry to True in the filter_files invocation.
-{globs}
-
-Example file: "{f}"
-"""
 _BAD_STRIP_FMT = 'Unable to strip prefix - the path "{path}" does not start \
 with "{strip_prefix}"'
 
