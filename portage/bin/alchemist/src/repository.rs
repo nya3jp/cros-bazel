@@ -361,9 +361,11 @@ impl RepositorySet {
         let repo_dirs: Vec<&Path> = [primary_repo_dir]
             .into_iter()
             .chain(secondary_repo_dirs)
+            .unique() // b/328284266 - Drop any duplicate repositories.
             .collect();
 
         Self::load_from_dirs(name, &repo_dirs)
+            .with_context(|| format!("name: {name}, repos: {repo_dirs:?}"))
     }
 
     /// Loads repositories from specified repository directory paths.
@@ -1290,6 +1292,79 @@ use-manifests = strict
                 dir.join("third_party/portage-stable/metadata/layout.conf")
                     .as_path(),
             ])?
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn duplicate_repository() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        let root = dir.to_str().unwrap();
+        let makeconf = format!(
+            r#"
+            PORTDIR="{root}/third_party/portage-stable"
+            PORTDIR_OVERLAY="
+            {root}/third_party/chromiumos-overlay
+            {root}/third_party/eclass-overlay
+            {root}/overlays/chipset-stnyridge
+            {root}/overlays/baseboard-grunt
+            {root}/third_party/chromiumos-overlay
+            {root}/overlays/overlay-grunt
+            "
+            "#
+        );
+
+        write_files(
+            dir,
+            [
+                (
+                    "third_party/portage-stable/metadata/layout.conf",
+                    PORTAGE_STABLE_LAYOUT_CONF,
+                ),
+                (
+                    "third_party/eclass-overlay/metadata/layout.conf",
+                    ECLASS_LAYOUT_CONF,
+                ),
+                (
+                    "overlays/chipset-stnyridge/metadata/layout.conf",
+                    CHIPSET_STNYRIDGE_LAYOUT_CONF,
+                ),
+                (
+                    "overlays/overlay-grunt/metadata/layout.conf",
+                    GRUNT_LAYOUT_CONF,
+                ),
+                (
+                    "overlays/baseboard-grunt/metadata/layout.conf",
+                    BASEBOARD_GRUNT_LAYOUT_CONF,
+                ),
+                (
+                    "third_party/chromiumos-overlay/metadata/layout.conf",
+                    CHROMIUMOS_LAYOUT_CONF,
+                ),
+                ("etc/make.conf", &makeconf),
+            ],
+        )?;
+
+        let repo_set = RepositorySet::load("test", dir)?;
+        let repos = repo_set
+            .get_repos()
+            .into_iter()
+            .map(|r| r.name())
+            .collect_vec();
+
+        assert_eq!(
+            repos,
+            vec![
+                "portage-stable",
+                "chromiumos",
+                "eclass-overlay",
+                "chipset-stnyridge",
+                "baseboard-grunt",
+                "grunt",
+            ]
         );
 
         Ok(())
