@@ -16,8 +16,6 @@ PLATFORM_INDEPENDENT_FILES = {
     # For some reason when you use it screws with the include paths.
     "clang": ["usr/bin/clang"],
     "clang_cpp": ["usr/bin/clang++"],
-    # See github.com/bazelbuild/bazel/issues/11122.
-    "clang_selector": ["usr/bin/clang_selector"],
     "compiler_files": [":sysroot_files"],
     "dwp": ["bin/llvm-dwp"],
     "dwp_files": [":sysroot_files"],

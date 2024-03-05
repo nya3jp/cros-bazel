@@ -28,10 +28,3 @@ selects.config_setting_group(
         "//bazel/module_extensions/toolchains/rust:hermetic_enabled",
     ],
 )
-
-# Used by extract_sdk.
-# TODO(b/285459967): See if we can get rid of this file and use clang++ instead.
-exports_files(
-    ["clang_selector.cc"],
-    visibility = ["//visibility:public"],
-)

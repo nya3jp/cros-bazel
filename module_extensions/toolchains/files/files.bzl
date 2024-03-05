@@ -11,7 +11,6 @@ TOOLS = {
     # For some reason when you use it screws with the include paths.
     "clang": "usr/bin/clang",
     "clang_cpp": "usr/bin/clang++",
-    "clang_selector": "usr/bin/clang_selector",
     "cpp": "bin/{triple_no_host}-cpp",
     "dwp": "bin/llvm-dwp",
     "gcov": "bin/{triple_no_host}-gcov",

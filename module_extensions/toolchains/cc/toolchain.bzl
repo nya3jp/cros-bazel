@@ -95,7 +95,7 @@ def generate_cc_toolchain(name, platform, target_settings, package):
         ar = target("ar"),
         cpp = target("cpp"),
         dwp = target("dwp"),
-        gcc = target("clang_selector"),
+        gcc = target("clang_cpp"),
         gcov = target("gcov"),
         ld = target("ld"),
         nm = target("nm"),
