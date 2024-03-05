@@ -4,6 +4,15 @@
 
 visibility("//bazel/build_defs")
 
+_NO_MATCH_FMT = """The following entries failed to match anything. If this is \
+expected, consider setting allow_entry to True in the filter_files invocation.
+{globs}
+
+Example file: "{f}"
+"""
+_BAD_STRIP_FMT = 'Unable to strip prefix - the path "{path}" does not start \
+with "{strip_prefix}"'
+
 def glob_matches(path, glob):
     """Determines whether or not a glob matches a given path.
 
@@ -49,6 +58,31 @@ def glob_matches(path, glob):
             return False
         path_uptos = new_uptos
     return len(path) in path_uptos
+
+def glob(file_map, include, exclude, allow_empty):
+    include = [tuple(glob.split("/")) for glob in include]
+    exclude = [tuple(glob.split("/")) for glob in exclude]
+
+    matched = {k: False for k in include}
+    filtered = {}
+
+    for path_str, f in file_map.items():
+        path = path_str.split("/")
+        for glob in include:
+            if glob_matches(path, glob):
+                if not any([glob_matches(path, g) for g in exclude]):
+                    filtered[path_str] = f
+                    matched[glob] = True
+                    break
+
+    missing_matches = [k for k, v in matched.items() if not v]
+    if missing_matches and not allow_empty:
+        fail(_NO_MATCH_FMT.format(
+            globs = ["/".join(glob) for glob in missing_matches],
+            f = "/".join(path),
+        ))
+
+    return filtered
 
 def _glob_check_impl(ctx):
     path = ctx.attr.path.split("/")
