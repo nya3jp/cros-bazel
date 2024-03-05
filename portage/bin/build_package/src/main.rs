@@ -460,8 +460,11 @@ fn do_main() -> Result<()> {
     write_use_flags(&sysroot, &args.ebuild, &args.use_flags)?;
     write_profile_bashrc(&sysroot, &args.bashrc)?;
 
+    // Run ebuild with `timeout 6h` to debug the deadlock issue. b/327313686
     let mut command = container.command(MAIN_SCRIPT);
     command
+        .arg("timeout")
+        .arg("6h")
         .arg("ebuild")
         .arg("--skip-manifest")
         .arg(args.ebuild.mount_path)
