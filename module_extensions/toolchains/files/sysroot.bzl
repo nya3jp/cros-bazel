@@ -73,3 +73,29 @@ sysroot_single_file = rule(
         path = attr.string(mandatory = True),
     ),
 )
+
+def _sysroot_prebuilt_binary_impl(ctx):
+    file_map = ctx.attr.sysroot[SysrootInfo].file_map
+    exe = file_map[ctx.attr.exe]
+    elf_file = file_map[ctx.attr.exe + ".elf"]
+    runtime = ctx.attr._runtime[DefaultInfo].files
+
+    symlink = ctx.actions.declare_file(ctx.label.name)
+    ctx.actions.symlink(target_file = exe, output = symlink, is_executable = True)
+
+    files = depset([symlink, exe, elf_file], transitive = [runtime])
+    return [DefaultInfo(
+        files = files,
+        runfiles = ctx.runfiles(transitive_files = files),
+        executable = symlink,
+    )]
+
+sysroot_prebuilt_binary = rule(
+    implementation = _sysroot_prebuilt_binary_impl,
+    attrs = dict(
+        sysroot = attr.label(mandatory = True, providers = [SysrootInfo]),
+        exe = attr.string(mandatory = True),
+        _runtime = attr.label(default = "//bazel/module_extensions/toolchains/files:runtime"),
+    ),
+    executable = True,
+)
