@@ -37,7 +37,7 @@ def _build_sdk_impl(ctx):
         output_sdk,
     ])
 
-    direct_inputs = [pkg.file for pkg in install_list]
+    direct_inputs = [pkg.partial for pkg in install_list]
 
     layer_inputs = (
         sdk.layers +

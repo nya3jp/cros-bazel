@@ -94,7 +94,7 @@ def install_deps(
         conflicting_package = slot_key_to_package.get(slot_key)
         if conflicting_package:
             # Skip identical packages.
-            if package.file.path != conflicting_package.file.path:
+            if package.partial.path != conflicting_package.partial.path:
                 fail(
                     ("Slot conflict: cannot install %s and %s that have " +
                      "the same slot key %s") % (
@@ -156,7 +156,7 @@ def install_deps(
         args.add_joined(
             "--install",
             [
-                package.file,
+                package.partial,
                 package.contents.installed,
                 package.contents.staged,
                 output_preinst,
@@ -167,7 +167,7 @@ def install_deps(
         )
 
         inputs.extend([
-            package.file,
+            package.partial,
             package.contents.installed,
             package.contents.staged,
         ])
