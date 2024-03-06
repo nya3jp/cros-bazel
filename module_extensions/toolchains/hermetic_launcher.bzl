@@ -51,6 +51,9 @@ LD_ARGV0_REL="${LD_ARGV0_REL}" exec "${INTERP}" \
 def hermetic_defaultinfo(ctx, files, runfiles, executable, symlink = False):
     out = ctx.actions.declare_file(ctx.label.name)
     extra = [out, executable]
+    files = [out] + files.to_list()
+    if executable in files:
+        files.remove(executable)
 
     # Only actually use this script if we're using the hermetic toolchain.
     # Otherwise we just symlink this to the nonhermetic generated binary.
@@ -71,7 +74,7 @@ def hermetic_defaultinfo(ctx, files, runfiles, executable, symlink = False):
     else:
         runfiles = runfiles.merge(ctx.runfiles(files = extra))
     return DefaultInfo(
-        files = depset([out], transitive = [files]),
+        files = depset(files),
         runfiles = runfiles,
         executable = out,
     )

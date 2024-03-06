@@ -3,11 +3,6 @@
 # found in the LICENSE file.
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load(
-    "@rules_cc//cc:defs.bzl",
-    _cc_binary = "cc_binary",
-    _cc_library = "cc_library",
-)
 load("//bazel/module_extensions/toolchains:hermetic_launcher.bzl", "HERMETIC_ATTRS", "hermetic_defaultinfo")
 
 visibility("public")
@@ -80,41 +75,54 @@ def _hermetic_launcher(is_test):
     """
     wrapper_rule = _hermetic_launcher_test if is_test else _hermetic_launcher_nontest
 
-    def wrapper(name, visibility = None, **kwargs):
-        # The hard part here is determining which kwargs should go to the
-        # cc_binary rule, which should go to the launcher, and which should go
-        # to both.
-        wrapper_args = {}
-        inner_args = {}
-        for k, v in kwargs.items():
-            if k in _COMMON_BUILD_ARGS or k in _COMMON_BIN_ARGS:
-                # Attributes such as testonly are relevant for both the inner
-                # and outer rules.
-                wrapper_args[k] = v
-                inner_args[k] = v
-            elif k in _COMMON_TEST_ARGS:
-                # If this is a non-test rule, this allows bazel itself to handle
-                # the error.
-                wrapper_args[k] = v
-            else:
-                inner_args[k] = v
+    def wrapper(name, visibility = None, features = [], **kwargs):
+        if kwargs.get("linkshared", False):
+            # Shared libraries don't need a launcher.
+            features = features + ["-hermetic_launcher"]
+        if "-hermetic_launcher" in features:
+            # buildifier: disable=native-cc
+            native.cc_binary(
+                name = name,
+                visibility = visibility,
+                features = features,
+                **kwargs
+            )
+        else:
+            # The hard part here is determining which kwargs should go to the
+            # cc_binary rule, which should go to the launcher, and which should go
+            # to both.
+            wrapper_args = {}
+            inner_args = {}
+            for k, v in kwargs.items():
+                if k in _COMMON_BUILD_ARGS or k in _COMMON_BIN_ARGS:
+                    # Attributes such as testonly are relevant for both the inner
+                    # and outer rules.
+                    wrapper_args[k] = v
+                    inner_args[k] = v
+                elif k in _COMMON_TEST_ARGS:
+                    # If this is a non-test rule, this allows bazel itself to handle
+                    # the error.
+                    wrapper_args[k] = v
+                else:
+                    inner_args[k] = v
 
-        _cc_binary(
-            name = name + ".elf",
-            visibility = ["//visibility:private"],
-            **inner_args
-        )
+            # buildifier: disable=native-cc
+            native.cc_binary(
+                name = name + ".elf",
+                visibility = ["//visibility:private"],
+                features = features,
+                **inner_args
+            )
 
-        wrapper_rule(
-            name = name,
-            bin = name + ".elf",
-            enable = "@cros//bazel/module_extensions/toolchains/cc:hermetic",
-            visibility = visibility,
-            **wrapper_args
-        )
+            wrapper_rule(
+                name = name,
+                bin = name + ".elf",
+                enable = "@@//bazel/module_extensions/toolchains/cc:hermetic",
+                visibility = visibility,
+                **wrapper_args
+            )
 
     return wrapper
 
 cc_binary = _hermetic_launcher(is_test = False)
 cc_test = _hermetic_launcher(is_test = True)
-cc_library = _cc_library
