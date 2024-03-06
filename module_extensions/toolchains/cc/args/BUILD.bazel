@@ -1,0 +1,136 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+load("@rules_cc//cc/toolchains:args_list.bzl", "cc_args_list")
+load("@rules_cc//cc/toolchains:format.bzl", "format_arg")
+
+package(default_visibility = [
+    "//bazel/module_extensions/toolchains/cc:__subpackages__",
+])
+
+cc_args(
+    name = "determinism",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+    ],
+    args = [
+        # Make C++ compilation deterministic. Use linkstamping instead of these
+        # compiler symbols.
+        "-Wno-builtin-macro-redefined",
+        "-D__DATE__=\"redacted\"",
+        "-D__TIMESTAMP__=\"redacted\"",
+        "-D__TIME__=\"redacted\"",
+    ],
+)
+
+cc_args_list(
+    name = "hardening",
+    args = [
+        ":hardening_compile",
+        ":hardening_link",
+        ":hardening_link_executable",
+    ],
+)
+
+cc_args(
+    name = "hardening_compile",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+    ],
+    args = [
+        # Conservative choice; -D_FORTIFY_SOURCE=2 may be unsafe in some cases.
+        # We need to undef it before redefining it as some distributions now
+        # have it enabled by default.
+        "-U_FORTIFY_SOURCE",
+        "-D_FORTIFY_SOURCE=1",
+        "-fstack-protector",
+    ],
+)
+
+cc_args(
+    name = "hardening_link",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+    ],
+    args = ["-Wl,-z,relro,-z,now"],
+)
+
+cc_args(
+    name = "hardening_link_executable",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+    ],
+    args = [
+        # TODO: This is enabled in the original file. Investigate
+        # if it should be enabled and why clang complains about
+        # "unused argument during compilation".
+        # "-pie",
+        "-Wl,-z,relro,-z,now",
+    ],
+)
+
+cc_args(
+    name = "warnings",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+    ],
+    args = [
+        # All warnings are enabled. Maybe enable -Werror as well?
+        "-Wall",
+        # Add another warning that is not part of -Wall.
+        "-Wunused-but-set-parameter",
+        # But disable some that are problematic.
+        "-Wno-free-nonheap-object",  # has false positives
+    ],
+)
+
+cc_args(
+    name = "no_canonical_prefixes",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:assemble",
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+    ],
+    args = ["-no-canonical-prefixes"],
+)
+
+cc_args(
+    name = "linker_bin_path",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+    ],
+    # Note: this differs from cros-bazel.eclass.
+    args = [format_arg("--ld-path=%s/bin/ld.lld", "@rules_cc//cc/toolchains/variables:sysroot")],
+)
+
+cc_args(
+    name = "disable_assertions",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+    ],
+    args = ["-DNDEBUG"],
+)
+
+cc_args(
+    name = "link_args",
+    actions = ["@rules_cc//cc/toolchains/actions:link_actions"],
+    args = [
+        "-o",
+        format_arg("%s", "@rules_cc//cc/toolchains/variables:output_execpath"),
+        "-Wl,-S",
+    ],
+    requires_not_none = "@rules_cc//cc/toolchains/variables:output_execpath",
+)

@@ -4,6 +4,8 @@
 
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
+load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -27,4 +29,57 @@ selects.config_setting_group(
         # Hermetic rust only works with hermetic cc.
         "//bazel/module_extensions/toolchains/rust:hermetic_enabled",
     ],
+)
+
+cc_toolchain(
+    name = "toolchain_impl",
+    action_type_configs = [
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:ar",
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:c_compile",
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:cpp_compile",
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:link",
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:strip",
+    ],
+    args = [
+        "//bazel/module_extensions/toolchains/cc/args:determinism",
+        "//bazel/module_extensions/toolchains/cc/args:hardening",
+        "//bazel/module_extensions/toolchains/cc/args:no_canonical_prefixes",
+        "//bazel/module_extensions/toolchains/cc/args:linker_bin_path",
+        "//bazel/module_extensions/toolchains/cc/args:warnings",
+        "//bazel/module_extensions/toolchains/cc/args:link_args",
+    ],
+    compiler = "clang",
+    # TODO: Replace with directory once upstream supports it.
+    cxx_builtin_include_directories = [
+        "%sysroot%/usr/include/c++/v1",
+        "%sysroot%/usr/lib64/clang/16/include",
+    ],
+    # TODO: Replace with directory once upstream supports it.
+    sysroot = "external/_main~toolchains~toolchain_sdk",
+    target_cpu = "",
+    target_libc = "",
+    # These fields are only used for toolchain resolution when using the
+    # old crosstool_top. They're not used when using platforms.
+    target_system_name = "",
+    toolchain_features = [
+        "//bazel/module_extensions/toolchains/cc/features:dbg",
+        "//bazel/module_extensions/toolchains/cc/features:fastbuild",
+        "//bazel/module_extensions/toolchains/cc/features:opt",
+    ],
+    # TODO: Remove after uprev to upstream.
+    toolchain_identifier = "cc_toolchain",
+)
+
+toolchain(
+    name = "toolchain",
+    exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    target_compatible_with = HOST_PLATFORM.constraints,
+    target_settings = [
+        ":hermetic_enabled",
+    ],
+    toolchain = ":toolchain_impl",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )

@@ -1,0 +1,68 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+load("@rules_cc//cc/toolchains:feature.bzl", "cc_feature")
+
+package(default_visibility = [
+    "//bazel/module_extensions/toolchains/cc:__subpackages__",
+])
+
+cc_args(
+    name = "opt_compile_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+    ],
+    args = [
+        "-g0",
+        "-O2",
+        "-ffunction-sections",
+        "-fdata-sections",
+    ],
+)
+
+cc_args(
+    name = "opt_link_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_link_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_nodeps_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:cpp_link_executable",
+    ],
+    args = ["-Wl,--gc-sections"],
+)
+
+cc_feature(
+    name = "opt",
+    args = [
+        ":opt_compile_args",
+        ":opt_link_args",
+        "//bazel/module_extensions/toolchains/cc/args:disable_assertions",
+    ],
+    enabled = False,
+    overrides = "@rules_cc//cc/toolchains/features:opt",
+)
+
+cc_feature(
+    name = "fastbuild",
+    args = [],
+    enabled = False,
+    overrides = "@rules_cc//cc/toolchains/features:fastbuild",
+)
+
+cc_args(
+    name = "dbg_compile_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:c_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+    ],
+    args = ["-g"],
+)
+
+cc_feature(
+    name = "dbg",
+    args = [":dbg_compile_args"],
+    enabled = False,
+    overrides = "@rules_cc//cc/toolchains/features:dbg",
+)

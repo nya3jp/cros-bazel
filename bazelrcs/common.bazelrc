@@ -186,6 +186,8 @@ try-import %workspace%/prebuilts.bazelrc
 common --experimental_downloader_config=bazel/content_mirror/config/developer.cfg
 common:strict_mirror --experimental_downloader_config=bazel/content_mirror/config/strict.cfg
 
+common --@rules_cc//cc/toolchains:experimental_enable_rule_based_toolchains
+
 # Allow user-specific overrides for this repository.
 # Should be at the end of this file so that users can override anything above.
 try-import %workspace%/workspace.bazelrc

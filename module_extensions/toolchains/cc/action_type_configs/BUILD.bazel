@@ -1,0 +1,67 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_cc//cc/toolchains:action_type_config.bzl", "cc_action_type_config")
+
+package(default_visibility = [
+    "//bazel/module_extensions/toolchains/cc:__subpackages__",
+])
+
+# TODO: Minify this. At the moment the whole sysroot is used for every action.
+alias(
+    name = "sysroot",
+    actual = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+cc_action_type_config(
+    name = "ar",
+    action_types = ["@rules_cc//cc/toolchains/actions:ar_actions"],
+    data = [":sysroot"],
+    implies = [
+        "@rules_cc//cc/toolchains/features/legacy:archiver_flags",
+        "@rules_cc//cc/toolchains/features/legacy:linker_param_file",
+    ],
+    tools = ["//bazel/module_extensions/toolchains/cc/tools:ar"],
+)
+
+cc_action_type_config(
+    name = "assemble",
+    action_types = [
+        "@rules_cc//cc/toolchains/actions:assembly_actions",
+    ],
+    data = [":sysroot"],
+    tools = ["//bazel/module_extensions/toolchains/cc/tools:clang"],
+)
+
+cc_action_type_config(
+    name = "c_compile",
+    action_types = ["@rules_cc//cc/toolchains/actions:c_compile"],
+    data = [":sysroot"],
+    tools = ["//bazel/module_extensions/toolchains/cc/tools:clang"],
+)
+
+cc_action_type_config(
+    name = "cpp_compile",
+    action_types = ["@rules_cc//cc/toolchains/actions:cpp_compile_actions"],
+    data = [":sysroot"],
+    tools = ["//bazel/module_extensions/toolchains/cc/tools:clang++"],
+)
+
+cc_action_type_config(
+    name = "link",
+    action_types = ["@rules_cc//cc/toolchains/actions:link_actions"],
+    data = [":sysroot"],
+    implies = [
+        "@rules_cc//cc/toolchains/features/legacy:libraries_to_link",
+        "@rules_cc//cc/toolchains/features/legacy:legacy_link_flags",
+    ],
+    tools = ["//bazel/module_extensions/toolchains/cc/tools:clang++"],
+)
+
+cc_action_type_config(
+    name = "strip",
+    action_types = ["@rules_cc//cc/toolchains/actions:strip"],
+    data = [":sysroot"],
+    tools = ["//bazel/module_extensions/toolchains/cc/tools:strip"],
+)
