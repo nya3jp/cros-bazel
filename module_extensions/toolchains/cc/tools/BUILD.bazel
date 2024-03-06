@@ -4,6 +4,8 @@
 
 load("//bazel/module_extensions/toolchains/files:sysroot.bzl", "sysroot_prebuilt_binary")
 
+package(default_visibility = ["//bazel/module_extensions/toolchains:__subpackages__"])
+
 sysroot_prebuilt_binary(
     name = "ar",
     exe = "/bin/llvm-ar",
@@ -11,13 +13,13 @@ sysroot_prebuilt_binary(
 )
 
 sysroot_prebuilt_binary(
-    name = "clang_c",
+    name = "clang",
     exe = "/usr/bin/clang",
     sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
 )
 
 sysroot_prebuilt_binary(
-    name = "clang_cpp",
+    name = "clang++",
     elf_file = "/usr/bin/clang.elf",
     exe = "/usr/bin/clang++",
     sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
@@ -26,6 +28,12 @@ sysroot_prebuilt_binary(
 sysroot_prebuilt_binary(
     name = "dwp",
     exe = "/bin/llvm-dwp",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+sysroot_prebuilt_binary(
+    name = "ld",
+    exe = "/bin/lld",
     sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
 )
 
@@ -44,6 +52,12 @@ sysroot_prebuilt_binary(
 sysroot_prebuilt_binary(
     name = "objdump",
     exe = "/bin/llvm-objdump",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+)
+
+sysroot_prebuilt_binary(
+    name = "strip",
+    exe = "/bin/llvm-strip",
     sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
 )
 

@@ -4,6 +4,7 @@
 
 """Rules for working with sysroots."""
 
+load("@rules_cc//cc/toolchains:tool.bzl", "cc_tool")
 load("//bazel/build_defs/filter_files:glob.bzl", "glob")
 
 visibility("public")
@@ -74,31 +75,24 @@ sysroot_single_file = rule(
     ),
 )
 
-def _sysroot_prebuilt_binary_impl(ctx):
-    file_map = ctx.attr.sysroot[SysrootInfo].file_map
-    exe = file_map[ctx.attr.exe]
-    elf_file = file_map[ctx.attr.elf_file or (ctx.attr.exe + ".elf")]
-    runtime = ctx.attr._runtime[DefaultInfo].files
+# Temporary rule. This will be integrated into rules_cc later.
+def sysroot_prebuilt_binary(*, name, sysroot, exe, elf_file = None, **kwargs):
+    elf_name = "_%s_elf" % name
+    wrapper_name = "_%s_wrapper" % name
+    sysroot_single_file(
+        name = wrapper_name,
+        sysroot = sysroot,
+        path = exe,
+    )
+    sysroot_single_file(
+        name = elf_name,
+        sysroot = sysroot,
+        path = elf_file or exe + ".elf",
+    )
 
-    # These binaries often care about the name of the symlink.
-    # For example, a symlink clang_cc -> clang++ will not work.
-    symlink = ctx.actions.declare_file(ctx.attr.exe.rsplit("/", 1)[1])
-    ctx.actions.symlink(target_file = exe, output = symlink, is_executable = True)
-
-    files = depset([symlink, exe, elf_file], transitive = [runtime])
-    return [DefaultInfo(
-        files = files,
-        runfiles = ctx.runfiles(transitive_files = files),
-        executable = symlink,
-    )]
-
-sysroot_prebuilt_binary = rule(
-    implementation = _sysroot_prebuilt_binary_impl,
-    attrs = dict(
-        sysroot = attr.label(mandatory = True, providers = [SysrootInfo]),
-        exe = attr.string(mandatory = True),
-        elf_file = attr.string(),
-        _runtime = attr.label(default = "//bazel/module_extensions/toolchains/files:runtime"),
-    ),
-    executable = True,
-)
+    cc_tool(
+        name = name,
+        src = wrapper_name,
+        data = ["//bazel/module_extensions/toolchains/files:runtime", elf_name],
+        **kwargs
+    )
