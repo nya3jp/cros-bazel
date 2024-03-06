@@ -4,7 +4,7 @@
 
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "bash_rlocation")
 
-visibility(["//bazel/cc", "//bazel/module_extensions/toolchains/..."])
+visibility("public")
 
 # Use the same technique used by the toolchain SDK to make their binaries
 # hermetic.
@@ -48,8 +48,8 @@ LD_ARGV0_REL="${LD_ARGV0_REL}" exec "${INTERP}" \
     "$@"
 """
 
-def hermetic_defaultinfo(ctx, files, runfiles, executable, symlink = False):
-    out = ctx.actions.declare_file(ctx.label.name)
+def hermetic_defaultinfo(ctx, files, runfiles, executable, symlink = False, out = None):
+    out = out or ctx.actions.declare_file(ctx.label.name)
     extra = [out, executable]
     files = [out] + files.to_list()
     if executable in files:
