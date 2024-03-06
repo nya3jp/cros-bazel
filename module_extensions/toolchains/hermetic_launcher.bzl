@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS")
+load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS", "bash_rlocation")
 
 visibility(["//bazel/cc", "//bazel/module_extensions/toolchains/..."])
 
@@ -27,7 +27,7 @@ INTERP="$(rlocation _main~toolchains~toolchain_sdk/lib64/ld-linux-x86-64.so.2)"
 LIBS="${INTERP%/lib64/ld-linux-x86-64.so.2}/lib"
 
 SHELL_SCRIPT="$(realpath "${BASH_SOURCE[0]}")"
-BIN="${SHELL_SCRIPT}.elf"
+BIN="${REAL_BIN}"
 LD_ARGV0_REL="$(realpath --relative-to="${INTERP}" "${BIN}")"
 
 # This *should* never happen for a well-configured target.
@@ -59,7 +59,7 @@ def hermetic_defaultinfo(ctx, files, runfiles, executable, symlink = False):
     else:
         ctx.actions.write(
             out,
-            _WRAPPER_CONTENT,
+            _WRAPPER_CONTENT.replace("${REAL_BIN}", bash_rlocation(ctx, executable)),
             is_executable = True,
         )
         extra.extend(ctx.files._libs)
