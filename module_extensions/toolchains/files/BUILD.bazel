@@ -13,6 +13,7 @@ alias(
     # In the future, if we implement a bootstrap stage toolchain, we might replace
     # this with a select clause based on whether we're bootstrapping.
     actual = "@toolchain_sdk//:sysroot_files",
+    visibility = ["//visibility:public"],
 )
 
 sysroot_glob(
@@ -35,4 +36,5 @@ filegroup(
         ":interp",
         ":libs",
     ],
+    visibility = ["//visibility:public"],
 )
