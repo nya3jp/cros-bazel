@@ -5,6 +5,7 @@
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
+load("//bazel/build_defs:bool_flag.bzl", "config_setting_all")
 load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM")
 
 package(default_visibility = ["//visibility:public"])
@@ -12,6 +13,22 @@ package(default_visibility = ["//visibility:public"])
 bool_flag(
     name = "hermetic",
     build_setting_default = True,
+)
+
+config_setting_all(
+    name = "use_hermetic_launcher_config",
+    targets = [
+        ":hermetic_enabled",
+        "//bazel/platforms/constraints:vendor_pc",
+    ],
+)
+
+alias(
+    name = "use_hermetic_launcher",
+    actual = select({
+        ":use_hermetic_launcher_config": "//bazel/build_defs/bool_flag:true",
+        "//conditions:default": "//bazel/build_defs/bool_flag:false",
+    }),
 )
 
 config_setting(

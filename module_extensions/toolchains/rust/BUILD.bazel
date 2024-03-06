@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/build_defs:bool_flag.bzl", "bool_flag")
+load("//bazel/build_defs:bool_flag.bzl", "bool_flag", "config_setting_all")
 load("//bazel/module_extensions/toolchains/files:sysroot.bzl", "sysroot_single_file")
 
 package(default_visibility = ["//visibility:public"])
@@ -10,6 +10,22 @@ package(default_visibility = ["//visibility:public"])
 bool_flag(
     name = "hermetic",
     default = True,
+)
+
+config_setting_all(
+    name = "use_hermetic_launcher_config",
+    targets = [
+        ":hermetic_enabled",
+        "//bazel/platforms/constraints:vendor_pc",
+    ],
+)
+
+alias(
+    name = "use_hermetic_launcher",
+    actual = select({
+        ":use_hermetic_launcher_config": "//bazel/build_defs/bool_flag:true",
+        "//conditions:default": "//bazel/build_defs/bool_flag:false",
+    }),
 )
 
 sysroot_single_file(
