@@ -4,7 +4,7 @@
 
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTRS")
 
-visibility(["//bazel/cc"])
+visibility(["//bazel/cc", "//bazel/module_extensions/toolchains/..."])
 
 # Use the same technique used by the toolchain SDK to make their binaries
 # hermetic.
@@ -77,6 +77,6 @@ def hermetic_defaultinfo(ctx, files, runfiles, executable, symlink = False):
     )
 
 HERMETIC_ATTRS = dict(
-    _interp = attr.label(default = "@toolchain_sdk//:interp", allow_single_file = True),
-    _libs = attr.label(default = "@toolchain_sdk//:libs"),
+    _interp = attr.label(default = "@@//bazel/module_extensions/toolchains/files:interp", allow_single_file = True),
+    _libs = attr.label(default = "@@//bazel/module_extensions/toolchains/files:libs"),
 ) | BASH_RUNFILES_ATTRS

@@ -19,12 +19,14 @@ sysroot_glob(
     name = "interp",
     include = ["/lib64/ld-linux-x86-64.so.2"],
     sysroot = ":sysroot",
+    visibility = ["//visibility:public"],
 )
 
 sysroot_glob(
     name = "libs",
     include = ["/lib/*.so*"],
     sysroot = ":sysroot",
+    visibility = ["//visibility:public"],
 )
 
 filegroup(
