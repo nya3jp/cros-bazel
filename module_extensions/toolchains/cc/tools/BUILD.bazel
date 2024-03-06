@@ -12,13 +12,14 @@ sysroot_prebuilt_binary(
 
 sysroot_prebuilt_binary(
     name = "clang_c",
-    exe = "/usr/bin/clang-16",
+    exe = "/usr/bin/clang",
     sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
 )
 
 sysroot_prebuilt_binary(
     name = "clang_cpp",
-    exe = "/usr/bin/clang++-16",
+    elf_file = "/usr/bin/clang.elf",
+    exe = "/usr/bin/clang++",
     sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
 )
 

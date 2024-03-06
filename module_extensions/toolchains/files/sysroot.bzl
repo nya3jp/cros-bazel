@@ -77,10 +77,12 @@ sysroot_single_file = rule(
 def _sysroot_prebuilt_binary_impl(ctx):
     file_map = ctx.attr.sysroot[SysrootInfo].file_map
     exe = file_map[ctx.attr.exe]
-    elf_file = file_map[ctx.attr.exe + ".elf"]
+    elf_file = file_map[ctx.attr.elf_file or (ctx.attr.exe + ".elf")]
     runtime = ctx.attr._runtime[DefaultInfo].files
 
-    symlink = ctx.actions.declare_file(ctx.label.name)
+    # These binaries often care about the name of the symlink.
+    # For example, a symlink clang_cc -> clang++ will not work.
+    symlink = ctx.actions.declare_file(ctx.attr.exe.rsplit("/", 1)[1])
     ctx.actions.symlink(target_file = exe, output = symlink, is_executable = True)
 
     files = depset([symlink, exe, elf_file], transitive = [runtime])
@@ -95,6 +97,7 @@ sysroot_prebuilt_binary = rule(
     attrs = dict(
         sysroot = attr.label(mandatory = True, providers = [SysrootInfo]),
         exe = attr.string(mandatory = True),
+        elf_file = attr.string(),
         _runtime = attr.label(default = "//bazel/module_extensions/toolchains/files:runtime"),
     ),
     executable = True,
