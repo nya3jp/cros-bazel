@@ -7,7 +7,6 @@
 load("@cros//bazel/module_extensions/toolchains/files:sysroot.bzl", "sysroot")
 load("@cros//bazel/platforms:platforms.bzl", "ALL_PLATFORMS", "HOST_PLATFORM")
 load("@rules_rust//rust:toolchain.bzl", "rust_stdlib_filegroup")
-load("@toolchain_sdk//:symlinks.bzl", "SYMLINKS")
 load("//bazel/module_extensions/toolchains/cc:toolchain.bzl", "generate_cc_toolchains")
 load(":files.bzl", "PLATFORM_DEPENDENT_FILES", "PLATFORM_INDEPENDENT_FILES")
 
@@ -27,7 +26,6 @@ def generate_sdk_files():
             "BUILD.bazel",
             "WORKSPACE",
         ]),
-        symlinks = SYMLINKS,
         strip_prefix = "../_main~toolchains~toolchain_sdk",
     )
 
