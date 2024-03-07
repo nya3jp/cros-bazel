@@ -69,5 +69,8 @@ def extra_sources(*, name, srcs):
     _extra_sources_provider(
         name = name,
         tar = ":%s_tar" % name,
-        visibility = ["@//bazel:internal"],
+        visibility = [
+            "@//bazel:internal",
+            "@portage//:__subpackages__",
+        ],
     )
