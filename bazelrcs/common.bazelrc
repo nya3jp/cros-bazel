@@ -73,6 +73,9 @@ build --cache_computed_file_digests=500000
 # (build_metrics.network_metrics)
 build --experimental_collect_system_network_usage
 
+# Don't pull ebuild sources (e.g. chromium) when cquerying
+cquery --//bazel/portage:omit_ebuild_src
+
 ###
 # Correctness guarantees
 ###
