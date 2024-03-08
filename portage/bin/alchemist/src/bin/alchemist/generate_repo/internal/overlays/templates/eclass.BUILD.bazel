@@ -4,19 +4,14 @@
 
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@//bazel/portage/build_defs:patterns.bzl", "NON_BUILD_FILE_PATTERNS")
 
 # This BUILD file provides targets for an overlay's eclasses.
 
 {%- for eclass in eclasses %}
-# Enumerates files that need to be packed for the "{{ eclass.name }}" eclass.
 pkg_files(
     name = "{{ eclass.name }}_files",
-    srcs = ["{{ eclass.name }}.eclass"] + glob([
-        "{{ eclass.name }}/**",
-    ], exclude = NON_BUILD_FILE_PATTERNS),
+    srcs = ["{{ eclass.name }}.eclass"],
     prefix = "{{ mount_path }}",
-    # Some of extra srcs need to be executable.
     attributes = pkg_attributes(
         mode = "0755",
     ),
