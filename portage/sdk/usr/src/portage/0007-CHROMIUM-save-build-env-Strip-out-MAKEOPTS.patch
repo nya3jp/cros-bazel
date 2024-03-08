@@ -1,0 +1,39 @@
+From 216e0b0ea127e924141fd277bf4927155d1ad286 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Thu, 21 Mar 2024 10:41:38 -0600
+Subject: [PATCH] CHROMIUM: save-build-env: Strip out MAKEOPTS
+
+MAKEOPTS contains a host specific value. If the same package is built
+on a host with different core counts, the binpkgs will have different
+hashes. This change drops MAKEOPTS after src_install so that it's not
+included in final environment.gz.
+
+In the future we can also add reclient variables into this function
+
+BUG=b:266973461
+TEST=BOARD=amd64-generic bazel build @portage//target/sys-libs/zlib
+
+Change-Id: Id6f740cf0b4e088c6f0d9702307494b350eeb765
+---
+ bin/save-ebuild-env.sh | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/bin/save-ebuild-env.sh b/bin/save-ebuild-env.sh
+index cd8602ae0c..cff7469d26 100644
+--- a/bin/save-ebuild-env.sh
++++ b/bin/save-ebuild-env.sh
+@@ -16,6 +16,11 @@ __save_ebuild_env() {
+ 		unset S _E_DESTTREE _E_INSDESTTREE _E_DOCDESTTREE_ _E_EXEDESTTREE_ \
+ 			PORTAGE_DOCOMPRESS_SIZE_LIMIT PORTAGE_DOCOMPRESS \
+ 			PORTAGE_DOCOMPRESS_SKIP PORTAGE_DOSTRIP PORTAGE_DOSTRIP_SKIP
++		# This value contains build host specific configuration. We want
++		# binpkgs generated on different sized hosts to be identical,
++		# so strip this value from the binpkg. It's also not needed for
++		# installing / removing a package.
++		unset MAKEOPTS
+ 		if [[ -n $PYTHONPATH &&
+ 			${PYTHONPATH%%:*} -ef $PORTAGE_PYM_PATH ]] ; then
+ 			if [[ $PYTHONPATH == *:* ]] ; then
+-- 
+2.44.0.396.g6e790dbe36-goog
+
