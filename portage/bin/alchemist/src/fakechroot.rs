@@ -87,13 +87,7 @@ impl PathTranslator {
 
 /// Enters new user/mount namespace to prepare for privileged filesystem
 /// operations such as mount(2) and pivot_root(2).
-fn enter_namespaces(skip_unshare_for_testing: bool) -> Result<()> {
-    // `unshare` fails when executed in test environment.
-    // Users should call [`::testutil::ctor_enter_mount_namespace`] instead.
-    if skip_unshare_for_testing {
-        return Ok(());
-    }
-
+fn enter_namespaces() -> Result<()> {
     let uid = getuid();
     let gid = getgid();
     unshare(CloneFlags::CLONE_NEWUSER | CloneFlags::CLONE_NEWNS)
@@ -435,17 +429,13 @@ pub struct BoardTarget<'a> {
 ///
 /// It returns [`PathTranslator`] that can be used to translate file paths in
 /// the fake chroot to the original paths.
-pub fn enter_fake_chroot(
-    targets: &[&BoardTarget],
-    source_dir: &Path,
-    skip_unshare_for_testing: bool,
-) -> Result<PathTranslator> {
+pub fn enter_fake_chroot(targets: &[&BoardTarget], source_dir: &Path) -> Result<PathTranslator> {
     // Canonicalize `source_dir` so it can be used in symlink targets.
     // Do this before entering the namespace to avoid including "/.old-root" in
     // the resolved path.
     let source_dir = source_dir.canonicalize()?;
 
-    enter_namespaces(skip_unshare_for_testing)?;
+    enter_namespaces()?;
 
     let source_mount_point = Path::new("/mnt/host/source");
     let inside_cros_chroot = source_mount_point.try_exists()?;

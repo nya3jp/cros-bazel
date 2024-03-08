@@ -62,6 +62,20 @@ rust_test(
     ],
 )
 
+rust_test(
+    name = "alchemist_cli_test",
+    size = "small",
+    srcs = glob(["tests/**/*.rs"]),
+    data = [":alchemist"] + glob(["**/testdata/**"]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "//bazel/portage/common/testutil",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
 regen_repo_rule_srcs(
     name = "regen_repo_rule_srcs",
     # The version numbers are stored in this file as well, since the file

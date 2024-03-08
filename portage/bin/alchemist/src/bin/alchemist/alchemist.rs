@@ -13,7 +13,6 @@ use crate::dump_package::dump_package_main;
 use crate::dump_profile::dump_profile_main;
 use crate::generate_repo::generate_repo_main;
 
-use alchemist::common::is_inside_chroot;
 use alchemist::config::makeconf::generate::MAKEOPTS_VALUE;
 use alchemist::data::Vars;
 use alchemist::fakechroot;
@@ -30,9 +29,21 @@ use alchemist::{
     resolver::PackageResolver,
     toolchain::load_toolchains,
 };
-use anyhow::{bail, Result};
-use clap::{Parser, Subcommand};
+use anyhow::{bail, Context, Result};
+use clap::{ArgAction, Parser, Subcommand};
 use tempfile::TempDir;
+
+/// Returns true when running inside ChromeOS SDK chroot.
+/// Do not use this function to change the alchemist's behavior inside/outside
+/// the chroot without allowing the user to make the decision. Instead, you
+/// should look at command line flag values, such as
+/// [`Args::use_portage_site_configs`], whose default values are computed with
+/// this function.
+fn is_inside_chroot() -> Result<bool> {
+    Path::new("/etc/cros_chroot_version")
+        .try_exists()
+        .context("Failed to stat /etc/cros_chroot_version")
+}
 
 #[derive(Parser, Debug)]
 #[command(name = "alchemist")]
@@ -44,7 +55,15 @@ pub struct Args {
     board: Option<String>,
 
     /// Build packages for the host.
-    #[arg(long)]
+    #[arg(
+        long,
+        default_value_t = false,
+        // Following settings are need to allow --flag[=(false|true)].
+        default_missing_value = "true",
+        num_args = 0..=1,
+        require_equals = true,
+        action = ArgAction::Set,
+    )]
     host: bool,
 
     /// Profile of the board.
@@ -59,9 +78,50 @@ pub struct Args {
     #[arg(long, value_name = "PROFILE", default_value = "sdk/bootstrap")]
     host_profile: String,
 
-    // For use in Alchemist's unit tests.
-    #[arg(long, default_value_t = false, hide = true)]
-    skip_unshare_for_testing: bool,
+    /// Uses the Portage site configs found at `/etc` and `/build/$BOARD/etc`.
+    ///
+    /// If this flag is set to false, Portage site configs internally generated
+    /// by alchemist are used to load and evaluate Portage packages. This is
+    /// useful when running alchemist outside the CrOS chroot.
+    ///
+    /// The default value is true if alchemist is running inside the CrOS
+    /// chroot; otherwise false.
+    #[arg(
+        long,
+        default_value_t = is_inside_chroot().unwrap(),
+        // Following settings are need to allow --flag[=(false|true)].
+        default_missing_value = "true",
+        num_args = 0..=1,
+        require_equals = true,
+        action = ArgAction::Set,
+    )]
+    use_portage_site_configs: bool,
+
+    /// Builds first-party 9999 ebuilds even if they are not cros-workon'ed.
+    ///
+    /// Precisely speaking, by setting this flag, alchemist accepts packages
+    /// that are cros-workon'able (inherits cros-workon.eclass),
+    /// non-manually-upreved (CROS_WORKON_MANUAL_UPREV is not set to 1),
+    /// ebuilds whose version is 9999, even if they're marked unstable in
+    /// KEYWORDS.
+    ///
+    /// By setting this flag to true, you can build most of first-party packages
+    /// from the checked out source code, which is much easier to work with.
+    ///
+    /// The default value is true if alchemist is running outside the CrOS
+    /// chroot; otherwise false.
+    ///
+    /// We may change the default value of this flag in the future.
+    #[arg(
+        long,
+        default_value_t = !is_inside_chroot().unwrap(),
+        // Following settings are need to allow --flag[=(false|true)].
+        default_missing_value = "true",
+        num_args = 0..=1,
+        require_equals = true,
+        action = ArgAction::Set,
+    )]
+    force_accept_9999_ebuilds: bool,
 
     /// Path to the ChromiumOS source directory root.
     /// If unset, it is inferred from the current directory.
@@ -115,7 +175,10 @@ fn default_source_dir() -> Result<PathBuf> {
     );
 }
 
-fn build_override_config_source(sysroot: &Path) -> Result<SimpleConfigSource> {
+fn build_override_config_source(
+    sysroot: &Path,
+    use_portage_site_configs: bool,
+) -> Result<SimpleConfigSource> {
     let mut masked = vec![
         // HACK: Mask chromeos-base/chromeos-lacros-9999 as it's not functional.
         PackageMaskUpdate {
@@ -185,12 +248,12 @@ fn build_override_config_source(sysroot: &Path) -> Result<SimpleConfigSource> {
         },
     ];
 
-    // When running inside the chroot, we need to override the PKGDIR,
-    // PORTAGE_TMPDIR, and PORT_LOGDIR that are defined in make.conf.amd64-host
-    // because they are pointing to the BROOT.
+    // When using Portage site configs inside the chroot, we need to override
+    // the PKGDIR, PORTAGE_TMPDIR, and PORT_LOGDIR that are defined in
+    // make.conf.amd64-host because they are pointing to the BROOT.
     // When using fakechroot, we set the values in the generated
     // make.conf.host_setup file.
-    if is_inside_chroot()? {
+    if use_portage_site_configs {
         nodes.push(ConfigNode {
             sources: vec![],
             value: ConfigNodeValue::Vars(Vars::from_iter([
@@ -246,6 +309,8 @@ fn load_board(
     board: &str,
     profile_name: &str,
     root_dir: &Path,
+    use_portage_site_configs: bool,
+    force_accept_9999_ebuilds: bool,
 ) -> Result<TargetData> {
     let repos = Arc::new(repos);
 
@@ -253,7 +318,7 @@ fn load_board(
     let (config, profile_path) = {
         let profile = Profile::load_default(root_dir, &repos)?;
         let site_settings = SiteSettings::load(root_dir)?;
-        let override_source = build_override_config_source(root_dir)?;
+        let override_source = build_override_config_source(root_dir, use_portage_site_configs)?;
 
         let profile_path = profile.profile_path().to_path_buf();
 
@@ -269,9 +334,6 @@ fn load_board(
     };
 
     let config = Arc::new(config);
-
-    // Force accept 9999 ebuilds when running outside a cros chroot.
-    let force_accept_9999_ebuilds = !is_inside_chroot()?;
 
     let loader = Arc::new(CachedPackageLoader::new(PackageLoader::new(
         Arc::clone(evaluator),
@@ -334,7 +396,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     };
 
     // Enter a fake chroot when running outside a cros chroot.
-    let translator = if is_inside_chroot()? {
+    let translator = if args.use_portage_site_configs {
         // TODO: What do we do here?
         PathTranslator::noop()
     } else {
@@ -347,7 +409,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
         } else {
             vec![&host_target]
         };
-        enter_fake_chroot(&targets, &source_dir, args.skip_unshare_for_testing)?
+        enter_fake_chroot(&targets, &source_dir)?
     };
 
     let tools_dir = setup_tools()?;
@@ -419,6 +481,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             board_target.board,
             board_target.profile,
             &root_dir,
+            args.use_portage_site_configs,
+            args.force_accept_9999_ebuilds,
         )?)
     } else {
         None
@@ -432,6 +496,8 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             host_target.board,
             host_target.profile,
             &root_dir,
+            args.use_portage_site_configs,
+            args.force_accept_9999_ebuilds,
         )?,
     };
 
@@ -461,55 +527,4 @@ pub fn alchemist_main(args: Args) -> Result<()> {
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use std::fs::remove_file;
-
-    use super::*;
-    use tempfile::tempdir;
-    use testutil::compare_with_golden_data;
-
-    #[used]
-    #[link_section = ".init_array"]
-    static _CTOR: extern "C" fn() = ::testutil::ctor_enter_mount_namespace;
-
-    const TESTDATA_DIR: &str = "bazel/portage/bin/alchemist/src/bin/alchemist/testdata";
-
-    #[test]
-    fn main_test() -> Result<()> {
-        let temp_dir = tempdir()?;
-        let temp = temp_dir.path();
-        let output_dir = temp.join("portage-repo");
-        let deps_file = temp.join("output_repos.json");
-
-        let input_dir = testutil::rename_bazel_input_testdata(
-            &testutil::runfiles_root()?.join(TESTDATA_DIR).join("input"),
-        )?;
-        let input_dir = input_dir.path().to_str().unwrap().to_owned();
-
-        let args = Args {
-            board: Some("amd64-generic".into()),
-            host: false,
-            profile: "base".into(),
-            host_board: "amd64-host".into(),
-            host_profile: "sdk/bootstrap".into(),
-            source_dir: Some(input_dir),
-            skip_unshare_for_testing: true,
-            command: Commands::GenerateRepo {
-                output_dir: output_dir.clone(),
-                output_repos_json: deps_file,
-            },
-        };
-
-        alchemist_main(args)?;
-
-        // trace.json changes every time we run.
-        remove_file(output_dir.join("trace.json"))?;
-
-        compare_with_golden_data(&output_dir, &Path::new(TESTDATA_DIR).join("golden"))?;
-
-        Ok(())
-    }
 }
