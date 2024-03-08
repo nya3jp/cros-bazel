@@ -749,6 +749,11 @@ _DEBUG_SCRIPT = """
 wd="$(pwd)"
 cd "${wd%%/bazel-out/*}"
 
+# We want to use the same tmpdir as the ebuild action. Otherwise we default to
+# /tmp which might be tmpfs.
+TMPDIR="$(dirname "${RUNFILES_MANIFEST_FILE}")"
+export TMPDIR
+
 # The runfiles manifest file contains relative paths, which are evaluated
 # relative to the working directory. Since we provide our own working directory,
 # we need to use the RUNFILES_DIR instead.
