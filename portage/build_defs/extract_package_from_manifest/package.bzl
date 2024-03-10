@@ -110,7 +110,7 @@ def generate_packages(ctx, binpkgs, manifest_pkgs, fail = fail):
         fail = fail,
     )
 
-    packages_by_path = {binpkg.partial.path: binpkg for binpkg in binpkgs}
+    packages_by_path = {binpkg.file.path: binpkg for binpkg in binpkgs}
     packages_by_uid = {}
     all_files = {}
     for uid, binpkg, manifest_pkg in matches:

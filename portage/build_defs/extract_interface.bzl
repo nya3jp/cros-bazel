@@ -8,7 +8,7 @@ visibility("public")
 
 def _extract_interface_impl(ctx):
     files = ctx.attr.files
-    binpkg = ctx.attr.pkg[BinaryPackageInfo].partial
+    binpkg = ctx.attr.pkg[BinaryPackageInfo].file
     args = ctx.actions.args()
     args.add("--binpkg", binpkg)
     outs = []

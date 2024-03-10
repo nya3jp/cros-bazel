@@ -22,14 +22,14 @@ def _binary_package_impl(ctx):
     )
 
     package_info = BinaryPackageInfo(
-        partial = src,
+        file = src,
         contents = contents,
         package_name = ctx.attr.package_name or ctx.label.name,
         category = ctx.attr.category,
         version = ctx.attr.version,
         slot = slot,
         direct_runtime_deps = tuple([
-            target[BinaryPackageInfo].partial
+            target[BinaryPackageInfo].file
             for target in ctx.attr.runtime_deps
         ]),
     )
@@ -78,14 +78,14 @@ def _add_runtime_deps(ctx):
     original_package_set_info = ctx.attr.binpkg[BinaryPackageSetInfo]
 
     package_info = BinaryPackageInfo(
-        partial = original_package_info.partial,
+        file = original_package_info.file,
         contents = original_package_info.contents,
         category = original_package_info.category,
         package_name = original_package_info.package_name,
         version = original_package_info.version,
         slot = original_package_info.slot,
         direct_runtime_deps = tuple([
-            dep[BinaryPackageInfo].partial
+            dep[BinaryPackageInfo].file
             for dep in ctx.attr.runtime_deps
         ] + list(original_package_info.direct_runtime_deps)),
     )
@@ -97,17 +97,17 @@ def _add_runtime_deps(ctx):
             ] + [original_package_set_info.packages],
             order = "postorder",
         ),
-        partials = depset(
+        files = depset(
             transitive = [
-                dep[BinaryPackageSetInfo].partials
+                dep[BinaryPackageSetInfo].files
                 for dep in ctx.attr.runtime_deps
-            ] + [original_package_set_info.partials],
+            ] + [original_package_set_info.files],
         ),
     )
     return [
         DefaultInfo(
             files = depset([package_info.file]),
-            runfiles = ctx.runfiles(package_set_info.partials.to_list()),
+            runfiles = ctx.runfiles(package_set_info.files.to_list()),
         ),
         package_info,
         package_set_info,

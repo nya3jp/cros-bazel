@@ -13,7 +13,7 @@ def add_install_groups(args, install_groups):
     for group in install_groups:
         args.add_joined(
             "--install-target",
-            [binpkg.partial for binpkg in group],
+            [binpkg.file for binpkg in group],
             join_with = ":",
         )
 
@@ -34,8 +34,8 @@ def calculate_install_groups(install_list, provided_packages):
     """
 
     # The size of provided packages is normally expected to be O(~20) or less.
-    seen = {dep.partial.path: True for dep in provided_packages.to_list()}
-    remaining_packages = [dep for dep in install_list if dep.partial.path not in seen]
+    seen = {dep.file.path: True for dep in provided_packages.to_list()}
+    remaining_packages = [dep for dep in install_list if dep.file.path not in seen]
 
     groups = []
     for _ in range(100):
@@ -60,7 +60,7 @@ def calculate_install_groups(install_list, provided_packages):
             fail("Dependency list is unsatisfiable")
 
         for dep in satisfied_list:
-            seen[dep.partial.path] = True
+            seen[dep.file.path] = True
 
         groups.append(satisfied_list)
         remaining_packages = not_satisfied_list

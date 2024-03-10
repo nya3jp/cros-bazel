@@ -61,7 +61,7 @@ def _extract_impl(ctx):
             outputs.append(direct_info.runfiles)
 
             pkg_args = ctx.actions.args()
-            pkg_args.add("--binpkg", direct_info.binpkg.partial)
+            pkg_args.add("--binpkg", direct_info.binpkg.file)
 
             manifest_file_name = "%s_%s_manifest_content" % (
                 ctx.label.name,
@@ -71,7 +71,7 @@ def _extract_impl(ctx):
             ctx.actions.write(manifest_file, json.encode(manifest_by_uid[uid]))
             pkg_args.add("--manifest", manifest_file)
 
-            inputs = [manifest_file, direct_info.binpkg.partial]
+            inputs = [manifest_file, direct_info.binpkg.file]
 
             # Gather the transitive dependencies of our direct deps, which
             # ensures we don't depend on ourself.

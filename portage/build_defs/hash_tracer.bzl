@@ -149,7 +149,7 @@ def _hash_tracer_impl(target, ctx):
         transitive_outputs.extend(_processes_rule(ctx.rule))
 
     elif ctx.rule.kind in ["ebuild"]:
-        files = [target[BinaryPackageInfo].partial]
+        files = [target[BinaryPackageInfo].file]
 
         direct_outputs.append(_generate_hash_action(ctx, files))
         transitive_outputs.extend(_processes_rule(ctx.rule))
