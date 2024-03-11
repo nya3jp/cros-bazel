@@ -51,7 +51,7 @@ fn is_inside_chroot() -> Result<bool> {
 #[command(about = "Analyzes Portage trees", long_about = None)]
 pub struct Args {
     /// Board name to build packages for.
-    #[arg(short = 'b', long, value_name = "NAME")]
+    #[arg(short = 'b', long, value_name = "NAME", global = true)]
     board: Option<String>,
 
     /// Build packages for the host.
@@ -63,19 +63,31 @@ pub struct Args {
         num_args = 0..=1,
         require_equals = true,
         action = ArgAction::Set,
+        global = true,
     )]
     host: bool,
 
     /// Profile of the board.
-    #[arg(short = 'p', long, value_name = "PROFILE", default_value = "base")]
+    #[arg(
+        short = 'p',
+        long,
+        value_name = "PROFILE",
+        default_value = "base",
+        global = true
+    )]
     profile: String,
 
     /// Name of the host repository.
-    #[arg(long, value_name = "NAME", default_value = "amd64-host")]
+    #[arg(long, value_name = "NAME", default_value = "amd64-host", global = true)]
     host_board: String,
 
     /// Profile name of the host target.
-    #[arg(long, value_name = "PROFILE", default_value = "sdk/bootstrap")]
+    #[arg(
+        long,
+        value_name = "PROFILE",
+        default_value = "sdk/bootstrap",
+        global = true
+    )]
     host_profile: String,
 
     /// Uses the Portage site configs found at `/etc` and `/build/$BOARD/etc`.
@@ -94,6 +106,7 @@ pub struct Args {
         num_args = 0..=1,
         require_equals = true,
         action = ArgAction::Set,
+        global = true,
     )]
     use_portage_site_configs: bool,
 
@@ -120,12 +133,13 @@ pub struct Args {
         num_args = 0..=1,
         require_equals = true,
         action = ArgAction::Set,
+        global = true,
     )]
     force_accept_9999_ebuilds: bool,
 
     /// Path to the ChromiumOS source directory root.
     /// If unset, it is inferred from the current directory.
-    #[arg(short = 's', long, value_name = "DIR")]
+    #[arg(short = 's', long, value_name = "DIR", global = true)]
     source_dir: Option<String>,
 
     #[command(subcommand)]
