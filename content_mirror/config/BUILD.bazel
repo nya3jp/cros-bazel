@@ -1,0 +1,51 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+load("//bazel/build_defs/expand_template:expand_template.bzl", "expand_template")
+
+expand_template(
+    name = "developer",
+    template = "cfg.jinja2",
+    vars = {
+        "unmirrored": "ALLOW",
+    },
+)
+
+expand_template(
+    name = "ci",
+    template = "cfg.jinja2",
+    vars = {
+        # TODO: Update to MIRROR once the content mirror is complete.
+        "unmirrored": "ALLOW",
+    },
+)
+
+expand_template(
+    name = "release",
+    template = "cfg.jinja2",
+    vars = {
+        # TODO: Update to BLOCK once the content mirror is complete.
+        "unmirrored": "ALLOW",
+    },
+)
+
+expand_template(
+    name = "local_server_dev",
+    template = "cfg.jinja2",
+    vars = {
+        "local_server": "localhost:8443",
+        "unmirrored": "MIRROR",
+    },
+)
+
+write_source_files(
+    name = "update",
+    files = {
+        "ci.cfg": ":ci",
+        "developer.cfg": ":developer",
+        "local_server_dev.cfg": ":local_server_dev",
+        "release.cfg": ":release",
+    },
+)

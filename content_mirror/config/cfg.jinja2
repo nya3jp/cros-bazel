@@ -1,0 +1,28 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# AUTO-GENERATED FILE. DO NOT EDIT.
+# To update, edit cfg.jinja2 and run
+# bazel run @@//bazel/content_mirror/config:update
+
+allow storage.googleapis.com
+allow commondatastorage.googleapis.com
+
+rewrite (.*) commondatastorage.googleapis.com/chromeos-localmirror/cros-bazel/mirror/$1
+
+{% if unmirrored == "MIRROR" %}
+  {% if local_server is defined %}
+rewrite (.*) {{ local_server }}/$1
+  {% else %}
+    {# This URL doesn't work yet #}
+rewrite (.*) bazel-content-mirror.com/request_mirror/$1
+  {% endif %}
+block .*
+{% elif unmirrored == "ALLOW" %}
+rewrite (.*) $1
+{% elif unmirrored == "BLOCK" %}
+block .*
+{% else %}
+{{ error("Invalid value for unmirrored: {value}", value=unmirrored) }}
+{% endif %}
