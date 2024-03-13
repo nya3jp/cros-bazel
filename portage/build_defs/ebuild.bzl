@@ -138,6 +138,14 @@ _EBUILD_COMMON_ATTRS = dict(
         providers = [SDKInfo],
         mandatory = True,
     ),
+    base_sdk = attr.label(
+        providers = [SDKInfo],
+        doc = """
+        The SDK used to generate interface library layers. It should contain
+        a minimum number of dependencies to reduce invalidations. If this is
+        unspecified it will default to the value provided by `sdk`.
+        """,
+    ),
     overlays = attr.label(
         providers = [OverlaySetInfo],
         mandatory = True,
@@ -557,6 +565,7 @@ def _ebuild_impl(ctx):
     # Generate contents directories.
     contents = generate_contents(
         ctx = ctx,
+        base_sdk = ctx.attr.base_sdk[SDKInfo] if ctx.attr.base_sdk else ctx.attr.sdk[SDKInfo],
         binary_package = output_binary_package_file,
         # We use a per-ebuild target unique identifier as the prefix. This
         # allows us to erase the version number of the ebuild in the content
@@ -566,6 +575,7 @@ def _ebuild_impl(ctx):
         board = ctx.attr.board,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_extract_package = ctx.executable._extract_package,
+        executable_create_interface_layer = ctx.executable._create_interface_layer,
     )
 
     # Generate interface libraries.
@@ -727,6 +737,11 @@ ebuild = rule(
             same package twice results in identical packages.
             """,
             providers = [BinaryPackageInfo],
+        ),
+        _create_interface_layer = attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/create_interface_layer"),
         ),
         _extract_package = attr.label(
             executable = True,

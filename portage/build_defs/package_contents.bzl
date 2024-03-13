@@ -58,18 +58,72 @@ def _generate_contents_layer(
 
     return output_contents_dir
 
+def _generate_interface_layer(
+        ctx,
+        base_sdk,
+        sysroot,
+        input,
+        output_name,
+        executable_action_wrapper,
+        executable_create_interface_layer):
+    output_contents_dir = ctx.actions.declare_directory(output_name)
+    output_log = ctx.actions.declare_file(output_name + ".log")
+
+    arguments = ctx.actions.args()
+    arguments.add_all([
+        "--log",
+        output_log,
+        executable_create_interface_layer,
+        "--sysroot",
+        sysroot,
+        "--input",
+        input,
+        "--output",
+        output_contents_dir,
+    ], expand_directories = False)
+
+    arguments.add_all(
+        base_sdk.layers,
+        before_each = "--layer",
+        expand_directories = False,
+    )
+
+    ctx.actions.run(
+        inputs = [input] + base_sdk.layers,
+        outputs = [output_contents_dir, output_log],
+        executable = executable_action_wrapper,
+        tools = [executable_create_interface_layer],
+        arguments = [arguments],
+        execution_requirements = {
+            # Disable sandbox to avoid creating a symlink forest.
+            # This does not affect hermeticity since ebuild runs in a container.
+            "no-sandbox": "",
+            # Send SIGTERM instead of SIGKILL on user interruption.
+            "supports-graceful-termination": "",
+        },
+        mnemonic = "GenerateInterfaceLibraryLayer",
+        progress_message = "Generating interface library layer for %{label}",
+    )
+
+    return output_contents_dir
+
 def generate_contents(
         ctx,
+        base_sdk,
         binary_package,
         output_prefix,
         board,
         executable_action_wrapper,
-        executable_extract_package):
+        executable_extract_package,
+        executable_create_interface_layer):
     """
     Defines actions that build contents layers from a binary package.
 
     Args:
         ctx: ctx: A context object passed to the rule implementation.
+        base_sdk: Optional[SDKInfo]: SDK used to generate interface libraries.
+            This SDK should omit any target specific packages to avoid excessive
+            dependencies.
         binary_package: File: Binary package file.
         output_prefix: str: A file name prefix to prepend to output directories
             defined in this function.
@@ -79,6 +133,7 @@ def generate_contents(
             package is to be installed to the host (ROOT="/").
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_extract_package: File: An executable file of extract_package.
+        executable_create_interface_layer: File: An executable file of create_interface_layer.
 
     Returns:
         ContentLayerTypesInfo: A struct suitable to set in
@@ -94,6 +149,32 @@ def generate_contents(
         host = True
 
     prefix = sysroot.lstrip("/")
+
+    internal_installed = _generate_contents_layer(
+        ctx = ctx,
+        binary_package = binary_package,
+        output_name = "%s.%s.sparse.installed.contents" % (output_prefix, name),
+        image_prefix = prefix,
+        vdb_prefix = prefix,
+        host = host,
+        # We don't need most of the vdb once the package has been installed.
+        sparse_vdb = True,
+        drop_revision = True,
+        executable_action_wrapper = executable_action_wrapper,
+        executable_extract_package = executable_extract_package,
+    )
+
+    internal_interface = None
+    if base_sdk:
+        internal_interface = _generate_interface_layer(
+            ctx = ctx,
+            base_sdk = base_sdk,
+            sysroot = sysroot,
+            input = internal_installed,
+            output_name = "%s.%s.interface.contents" % (output_prefix, name),
+            executable_action_wrapper = executable_action_wrapper,
+            executable_create_interface_layer = executable_create_interface_layer,
+        )
 
     return ContentLayerTypesInfo(
         sysroot = sysroot,
@@ -122,21 +203,10 @@ def generate_contents(
                 executable_action_wrapper = executable_action_wrapper,
                 executable_extract_package = executable_extract_package,
             ),
+            interface = None,
         ),
         internal = ContentLayersInfo(
-            installed = _generate_contents_layer(
-                ctx = ctx,
-                binary_package = binary_package,
-                output_name = "%s.%s.sparse.installed.contents" % (output_prefix, name),
-                image_prefix = prefix,
-                vdb_prefix = prefix,
-                host = host,
-                # We don't need most of the vdb once the package has been installed.
-                sparse_vdb = True,
-                drop_revision = True,
-                executable_action_wrapper = executable_action_wrapper,
-                executable_extract_package = executable_extract_package,
-            ),
+            installed = internal_installed,
             staged = _generate_contents_layer(
                 ctx = ctx,
                 binary_package = binary_package,
@@ -150,5 +220,6 @@ def generate_contents(
                 executable_action_wrapper = executable_action_wrapper,
                 executable_extract_package = executable_extract_package,
             ),
+            interface = internal_interface,
         ),
     )

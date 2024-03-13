@@ -17,8 +17,13 @@ def _binary_package_impl(ctx):
         output_prefix = src_basename,
         # Currently all usage of the binary_package rule is for host packages.
         board = "",
+        # TODO: Add the SDK used to generate the interface layers.
+        # This isn't a problem right now since we can't use interface libraries
+        # for host packages anyway.
+        base_sdk = None,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_extract_package = ctx.executable._extract_package,
+        executable_create_interface_layer = ctx.executable._create_interface_layer,
     )
 
     package_info = BinaryPackageInfo(
@@ -64,6 +69,11 @@ binary_package = rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/action_wrapper"),
+        ),
+        "_create_interface_layer": attr.label(
+            executable = True,
+            cfg = "exec",
+            default = Label("//bazel/portage/bin/create_interface_layer"),
         ),
         "_extract_package": attr.label(
             executable = True,

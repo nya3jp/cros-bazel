@@ -101,6 +101,10 @@ ContentLayersInfo = provider(
             File: A durable tree directory containing an installed contents
             layer.
         """,
+        "interface": """
+            Optional[File]: A durable tree directory containing interface
+            libraries derived from the installed contents layer.
+        """,
         "staged": """
             File: A durable tree directory containing a staged contents layer.
         """,
