@@ -36,7 +36,7 @@ def install_deps(
         executable_action_wrapper,
         executable_fast_install_packages,
         progress_message,
-        full_vdb):
+        contents):
     """
     Creates an action which builds file system layers in which the build dependencies are installed.
 
@@ -62,14 +62,12 @@ def install_deps(
         executable_fast_install_packages: File: An executable file of
             fast_install_packages.
         progress_message: str: Progress message for the installation action.
-        full_vdb: bool: If true, the layers will contain a full vdb. Set this
-            to true when building an SDK tarball, or an image where `emerge`
-            could be invoked.
+        contents: str: Defines the types of layer to return. Valid options are:
+            full, sparse, or interface.
 
     Returns:
         struct where:
-            sparse_layers: list[File]: Files representing file system layers.
-                The layers contains full contents, and a sparse vdb.
+            layers: list[File]: Files representing file system layers.
             log_file: File: Log file generated when building the layers.
             trace_file: File: Trace file generated when building the layers.
     """
@@ -131,7 +129,7 @@ def install_deps(
     ])
     args.add("--root-dir=%s" % sysroot)
 
-    if not full_vdb:
+    if contents in ["sparse", "interface"]:
         args.add("--sparse-vdb")
 
     input_layers = sdk.layers + overlays.layers + portage_configs
@@ -153,7 +151,7 @@ def install_deps(
             "%s.postinst" % package_output_prefix,
         )
 
-        if full_vdb:
+        if contents == "full":
             installed_layer = package.contents.full.installed
             staged_layer = package.contents.full.staged
         else:
@@ -189,10 +187,14 @@ def install_deps(
             installed_layer,
             staged_layer,
         ])
+
         outputs.extend([output_preinst, output_postinst])
+
         layers.extend([
             output_preinst,
-            installed_layer,
+            # We swap out the original contents layer with the interface layer
+            # after the postinst layer has been generated.
+            package.contents.internal.interface if contents == "interface" else installed_layer,
             output_postinst,
         ])
 

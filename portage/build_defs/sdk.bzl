@@ -192,7 +192,7 @@ def _sdk_install_deps_impl(ctx):
         executable_fast_install_packages =
             ctx.executable._fast_install_packages,
         progress_message = ctx.attr.progress_message,
-        full_vdb = ctx.attr.full_vdb,
+        contents = ctx.attr.contents,
     )
 
     return [
@@ -223,13 +223,24 @@ sdk_install_deps = rule(
             otherwise they are installed into the host's sysroot.
             """,
         ),
-        "full_vdb": attr.bool(
+        "contents": attr.string(
             doc = """
-            If true, the resulting layers will contain a full vdb. This allows
-            `emerge` to work correctly. Otherwise the layers will contain a vdb
-            which is only suitable for building packages using bazel.
+            Specifies the how complete the dependency layers are.
+
+            Valid options:
+            * full: The layers will contain a full vdb and complete contents.
+                Use this when calling emerge or exporting the layers in an
+                image or tarball.
+            * sparse: The layers will contain a sparse vdb that is only suitable
+                for handling `has_version`. It contain all files in their
+                original state.
+            * interface: Contains a sparse vdb and interface shared objects
+                (shared objects without any code). All binaries and any
+                non-essential files have also been removed. This layer should
+                only be used for building dynamically linked libraries.
             """,
-            default = False,
+            default = "sparse",
+            values = ["full", "sparse", "interface"],
         ),
         "out": attr.string(
             doc = "Output directory name. Defaults to the target name.",

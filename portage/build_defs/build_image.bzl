@@ -41,7 +41,7 @@ def _build_image_impl(ctx):
         executable_fast_install_packages =
             ctx.executable._fast_install_packages,
         progress_message = "Setting up SDK to build image",
-        full_vdb = True,
+        contents = "full",
     )
 
     # Compute arguments and inputs to build_image.
