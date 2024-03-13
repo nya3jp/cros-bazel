@@ -63,9 +63,11 @@ def install_deps(
         progress_message: str: Progress message for the installation action.
 
     Returns:
-        list[File]: Files representing file system layers.
-        list[File]: Log files generated when building the layers.
-        list[File]: Trace files generated when building the layers.
+        struct where:
+            sparse_layers: list[File]: Files representing file system layers.
+                The layers contains full contents, and a sparse vdb.
+            log_file: File: Log file generated when building the layers.
+            trace_file: File: Trace file generated when building the layers.
     """
     sysroot = "/build/%s" % board if board else "/"
 
@@ -200,4 +202,8 @@ def install_deps(
         progress_message = actual_progress_message,
     )
 
-    return new_layers, [output_log_file], [output_profile_file]
+    return struct(
+        sparse_layers = new_layers,
+        log_file = output_log_file,
+        trace_file = output_profile_file,
+    )

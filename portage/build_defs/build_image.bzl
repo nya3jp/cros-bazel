@@ -29,7 +29,7 @@ def _build_image_impl(ctx):
         ],
         order = "postorder",
     )
-    deps_layers, logs, traces = install_deps(
+    deps = install_deps(
         ctx = ctx,
         output_prefix = ctx.attr.output_image_file_name + "-deps",
         board = ctx.attr.board,
@@ -56,12 +56,13 @@ def _build_image_impl(ctx):
         "--image-file-name=" + ctx.attr.image_file_name,
     ])
 
+    # TODO: Do we need to pass in layers that contain the full vdb?
     args.add_all(
-        sdk.layers + deps_layers + overlays.layers,
+        sdk.layers + deps.sparse_layers + overlays.layers,
         format_each = "--layer=%s",
         expand_directories = False,
     )
-    direct_inputs.extend(sdk.layers + deps_layers + overlays.layers)
+    direct_inputs.extend(sdk.layers + deps.sparse_layers + overlays.layers)
 
     args.add_all(ctx.files.files, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(ctx.files.files)
@@ -125,8 +126,8 @@ def _build_image_impl(ctx):
     return [
         DefaultInfo(files = depset([output_image_file])),
         OutputGroupInfo(
-            logs = depset([output_log_file] + logs),
-            traces = depset([output_profile_file] + traces),
+            logs = depset([output_log_file, deps.log_file]),
+            traces = depset([output_profile_file, deps.trace_file]),
         ),
     ]
 
