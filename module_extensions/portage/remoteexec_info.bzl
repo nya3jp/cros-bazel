@@ -10,6 +10,7 @@ _PASSTHROUGH_ENVIRON = [
     "GCE_METADATA_HOST",
     "GCE_METADATA_IP",
     "GCE_METADATA_ROOT",
+    "REPROXY_CFG_FILE",
 ]
 
 def _remoteexec_info_repository_impl(repo_ctx):
