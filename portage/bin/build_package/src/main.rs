@@ -337,6 +337,45 @@ fn do_main() -> Result<()> {
     settings.set_allow_network_access(args.allow_network_access);
 
     if args.allow_network_access {
+        // TODO(b/329422481): Remove this.
+        eprintln!("### Debug log for b/329422481 ###");
+        for path in [
+            Path::new("/etc"),
+            Path::new("/etc/resolv.conf"),
+            Path::new("/etc/hosts"),
+        ] {
+            let metadata = match std::fs::symlink_metadata(path) {
+                Ok(metadata) => metadata,
+                Err(e) => {
+                    if e.kind() == std::io::ErrorKind::NotFound {
+                        eprintln!("{:?} does not exist.", path);
+                        continue;
+                    } else {
+                        return Err(e.into());
+                    }
+                }
+            };
+            let file_type = metadata.file_type();
+            eprintln!(
+                "{:?}: is_file = {}, is_dir = {}, is_symlink = {}, type = {:?}",
+                path,
+                file_type.is_file(),
+                file_type.is_dir(),
+                file_type.is_symlink(),
+                file_type
+            );
+            if file_type.is_symlink() {
+                let target = std::fs::read_link(path)?;
+                eprintln!(
+                    "{:?}: target = {:?}, exists = {}",
+                    path,
+                    target,
+                    target.try_exists()?
+                );
+            }
+        }
+        eprintln!("### End of debug log for b/329422481 ###");
+
         for path in [Path::new("/etc/resolv.conf"), Path::new("/etc/hosts")] {
             if path.try_exists()? {
                 settings.push_bind_mount(BindMount {
