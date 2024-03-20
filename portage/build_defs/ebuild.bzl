@@ -759,6 +759,13 @@ export TMPDIR
 # we need to use the RUNFILES_DIR instead.
 export RUNFILES_DIR="${RUNFILES_MANIFEST_FILE%_manifest}"
 unset RUNFILES_MANIFEST_FILE
+
+if [[ ! -v TERMINFO || ! "${TERMINFO}" =~ ^b64:|^hex: ]]; then
+    # We don't want to depend on the terminfo database in the container.
+    if TERMINFO="$(infocmp -0 -q -Q2)"; then
+        export TERMINFO
+    fi
+fi
 """
 
 def _ebuild_debug_impl(ctx):

@@ -370,6 +370,16 @@ impl<'settings> PreparedContainer<'settings> {
             if let Some(term) = std::env::var_os("TERM") {
                 base_envs.insert("_TERM".into(), term);
             }
+
+            if let Some(terminfo) = std::env::var_os("TERMINFO") {
+                if terminfo
+                    .to_str()
+                    .map(|x| x.starts_with("hex:") || x.starts_with("b64:"))
+                    .unwrap_or(false)
+                {
+                    base_envs.insert("_TERMINFO".into(), terminfo);
+                }
+            }
         }
 
         // A stage directory is the most significant lower directory where we
