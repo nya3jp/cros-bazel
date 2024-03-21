@@ -509,7 +509,7 @@ def _ebuild_impl(ctx):
 
     # Declare outputs.
     output_binary_package_file = ctx.actions.declare_file(
-        src_basename + ".tbz2",
+        src_basename + ".partial.tbz2",
     )
     output_log_file = ctx.actions.declare_file(src_basename + ".log")
     output_profile_file = ctx.actions.declare_file(
@@ -611,7 +611,7 @@ def _ebuild_impl(ctx):
 
     # Compute provider data.
     package_info = BinaryPackageInfo(
-        file = output_binary_package_file,
+        partial = output_binary_package_file,
         metadata = metadata,
         contents = contents,
         category = ctx.attr.category,
@@ -619,7 +619,7 @@ def _ebuild_impl(ctx):
         version = ctx.attr.version,
         slot = ctx.attr.slot,
         direct_runtime_deps = tuple([
-            target[BinaryPackageInfo].file
+            target[BinaryPackageInfo].partial
             for target in ctx.attr.runtime_deps
         ]),
     )
@@ -642,7 +642,7 @@ def _ebuild_impl(ctx):
                 ctx,
                 "portage-profile-test",
                 [
-                    ctx.attr.portage_profile_test_package[BinaryPackageInfo].file,
+                    ctx.attr.portage_profile_test_package[BinaryPackageInfo].partial,
                     output_binary_package_file,
                 ],
             ),
@@ -827,19 +827,18 @@ def _ebuild_install_action_impl(ctx):
     install_log = ctx.actions.declare_file(ctx.label.name + ".log")
     checksum = ctx.actions.declare_file(ctx.label.name + ".sha256sum")
 
-    pkg_name = pkg.category + "/" + pkg.file.basename.rsplit(".", 1)[0]
+    pkg_name = "%s/%s-%s" % (pkg.category, pkg.package_name, pkg.version)
     args = ctx.actions.args()
     args.add_all([
         "--log",
         install_log,
         ctx.executable._installer,
         "-b",
-        pkg.file,
+        pkg.partial,
         "-d",
-        "/build/%s/packages/%s/%s" % (
+        "/build/%s/packages/%s.tbz2" % (
             ctx.attr.board,
-            pkg.category,
-            pkg.file.basename,
+            pkg_name,
         ),
         "-e",
         "emerge-%s --usepkgonly --nodeps --jobs =%s" % (
@@ -857,7 +856,7 @@ def _ebuild_install_action_impl(ctx):
 
         args.add_all(["-x", "%s=%s" % (key, val)])
 
-    inputs = [pkg.file, ctx.executable._installer, ctx.executable._xpaktool]
+    inputs = [pkg.partial, ctx.executable._installer, ctx.executable._xpaktool]
 
     # The only use of this is to ensure that our checksum is a hash of the
     # transitive dependencies rather than just this file.

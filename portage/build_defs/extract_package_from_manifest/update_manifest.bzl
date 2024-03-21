@@ -43,13 +43,13 @@ def _update_manifest_impl(ctx):
     files = [ctx.file.manifest_file, providers_file]
 
     for binpkg in binpkgs:
-        files.append(binpkg.file)
+        files.append(binpkg.partial)
         providers.append(dict(
             category = binpkg.category,
             package_name = binpkg.package_name,
             slot = binpkg.slot,
             version = binpkg.version,
-            uri = binpkg.file.short_path,
+            uri = binpkg.partial.short_path,
             direct_runtime_deps = [dep.short_path for dep in binpkg.direct_runtime_deps],
         ))
     ctx.actions.write(providers_file, json.encode(providers))
@@ -72,7 +72,7 @@ def _update_manifest_impl(ctx):
             manifest = bash_rlocation(ctx, ctx.file.manifest_file),
         ),
         runfiles = ctx.runfiles(
-            files = [binpkg.file for binpkg in binpkgs] + [ctx.file.manifest_file, providers_file],
+            files = [binpkg.partial for binpkg in binpkgs] + [ctx.file.manifest_file, providers_file],
             transitive_files = ctx.attr._buildozer[DefaultInfo].files,
         ),
         data = [ctx.attr._update_manifest],

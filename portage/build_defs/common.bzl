@@ -41,15 +41,19 @@ BinaryPackageInfo, _new_binary_package_info = provider(
             See the provider description for why this field is a tuple, not a
             list.
         """,
-        "file": """
-            File: A binary package file (.tbz2) of this package.
-        """,
         "metadata": """
             File: A json file containing metadata about the package that cannot
             be determined during the analysis phase.
         """,
         "package_name": """
             str: The short name of this package, e.g. "chromeos-chrome".
+        """,
+        "partial": """
+            File: A binary package file (.tbz2) of this package. This package
+            doesn't contain *DEPEND XPAK entries suitable for installation
+            into a portage sysroot. See `ebuild_install_action` for how to
+            populate the XPAK entries and install this package into a portage
+            sysroot.
         """,
         "slot": """
             str: The slot value of this package in the form of "main/sub",
@@ -96,17 +100,19 @@ BinaryPackageSetInfo = provider(
     that covers all transitive runtime dependencies of this package.
     """,
     fields = {
-        "files": """
-            Depset[File]: All Portage binary package files included in this set.
+        "packages": """
+            Depset[BinaryPackageInfo]: All Portage binary packages included in
+            this set.
 
             The Depset must be constructed in a way so that its to_list()
             returns packages in a valid installation order, i.e. a package's
             runtime dependencies are fully satisfied by packages that appear
             before it.
         """,
-        "packages": """
-            Depset[BinaryPackageInfo]: All Portage binary packages included in
-            this set.
+        "partials": """
+            Depset[File]: All Portage binary package files included in this set.
+            These binary packages don't have the required metadata to be
+            installed by portage.
 
             The Depset must be constructed in a way so that its to_list()
             returns packages in a valid installation order, i.e. a package's
@@ -278,8 +284,8 @@ def single_binary_package_set_info(self_package, package_sets):
             transitive = [s.packages for s in package_sets],
             order = "postorder",
         ),
-        files = depset(
-            [self_package.file],
-            transitive = [s.files for s in package_sets],
+        partials = depset(
+            [self_package.partial],
+            transitive = [s.partials for s in package_sets],
         ),
     )

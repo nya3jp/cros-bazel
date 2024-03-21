@@ -330,7 +330,7 @@ def _sdk_install_glibc_impl(ctx):
     layer_inputs = base_sdk.layers
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
 
-    glibc = ctx.attr.glibc[BinaryPackageInfo].file
+    glibc = ctx.attr.glibc[BinaryPackageInfo].partial
     args.add("--glibc", glibc)
 
     inputs = depset(
