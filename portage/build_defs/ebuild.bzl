@@ -856,7 +856,13 @@ def _ebuild_install_action_impl(ctx):
 
         args.add_all(["-x", "%s=%s" % (key, val)])
 
-    inputs = [pkg.partial, ctx.executable._installer, ctx.executable._xpaktool]
+    inputs = [
+        pkg.partial,
+        ctx.executable._installer,
+        ctx.executable._xpaktool,
+        # Forces the action to always run.
+        ctx.file._cache_bust,
+    ]
 
     # The only use of this is to ensure that our checksum is a hash of the
     # transitive dependencies rather than just this file.
@@ -927,6 +933,10 @@ ebuild_install_action = rule(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/action_wrapper"),
+        ),
+        _cache_bust = attr.label(
+            default = Label("@now//:date"),
+            allow_single_file = True,
         ),
     ),
     provides = [_EbuildInstalledInfo],
