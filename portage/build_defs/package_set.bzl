@@ -12,18 +12,18 @@ def _package_set_impl(ctx):
         ],
         order = "postorder",
     )
-    files = depset(
+    partials = depset(
         transitive = [
-            target[BinaryPackageSetInfo].files
+            target[BinaryPackageSetInfo].partials
             for target in ctx.attr.deps
         ],
     )
 
     return [
-        DefaultInfo(files = files),
+        DefaultInfo(files = partials),
         BinaryPackageSetInfo(
             packages = packages,
-            files = files,
+            partials = partials,
         ),
     ]
 

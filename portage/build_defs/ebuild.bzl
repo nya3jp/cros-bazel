@@ -975,7 +975,7 @@ def _ebuild_compare_package_test_impl(ctx):
         fail("Expected two packages, got %d" % (len(ctx.attr.packages)))
 
     inputs = [
-        package[BinaryPackageInfo].file
+        package[BinaryPackageInfo].partial
         for package in ctx.attr.packages
     ]
 
