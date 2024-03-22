@@ -92,7 +92,7 @@ Currently you need to use `/mnt/host/source/chromite/bin/bazel` instead of
 The syntax for specifying a Portage package is:
 
 ```
-@portage//<host|target>/<category>/<package>`.
+@portage//<host|target>/<category>/<package>
 ```
 
 `host` means the build host ([CBUILD]), and `target` means the cross-compiled
