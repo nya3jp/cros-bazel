@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use nom::character::complete::char;
 use nom::character::complete::multispace1;
+use nom::sequence::delimited;
 use nom_regex::lib::nom::multi::separated_list1;
 use nom_regex::str::re_find;
 use once_cell::sync::Lazy;
@@ -13,7 +15,7 @@ use nom::{
     multi::many0, sequence::preceded, IResult,
 };
 
-use crate::bash::expr::{AndOrList, AndOrListItem, BashExpr, SimpleCommand};
+use crate::bash::expr::{AndOrList, AndOrListItem, BashExpr, Command};
 
 /// Matches a sequence of non-quoted characters.
 static UNQUOTED_TOKEN: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^[^|&;<>()$`\\"'\s]+"#).unwrap());
@@ -22,12 +24,35 @@ fn unquoted_token(input: &str) -> IResult<&str, &str> {
     re_find(UNQUOTED_TOKEN.clone())(input)
 }
 
-fn cmd(input: &str) -> IResult<&str, SimpleCommand> {
+fn sub_shell(input: &str) -> IResult<&str, Command> {
+    let (input, and_or_list) = preceded(
+        multispace0,
+        delimited(
+            char('('),
+            and_or_list_expr,
+            preceded(multispace0, char(')')),
+        ),
+    )(input)?;
+
+    Ok((
+        input,
+        Command::SubShell {
+            and_or_list: Box::new(and_or_list),
+        },
+    ))
+}
+
+fn simple_command(input: &str) -> IResult<&str, Command> {
     let (input, tokens) =
         preceded(multispace0, separated_list1(multispace1, unquoted_token))(input)?;
     let tokens = tokens.into_iter().map(|s| s.to_owned()).collect();
 
-    Ok((input, SimpleCommand { tokens }))
+    Ok((input, Command::SimpleCommand { tokens }))
+}
+
+fn cmd(input: &str) -> IResult<&str, Command> {
+    let (input, _) = multispace0(input)?;
+    alt((sub_shell, simple_command))(input)
 }
 
 fn and_expr(input: &str) -> IResult<&str, AndOrListItem> {
@@ -70,6 +95,8 @@ fn and_or_list_expr(input: &str) -> IResult<&str, AndOrList> {
 pub fn expression(input: &str) -> IResult<&str, BashExpr> {
     let (input, and_or_list) = and_or_list_expr(input)?;
 
+    let (input, _) = multispace0(input)?;
+
     let (input, _) = eof(input)?;
 
     let expr = BashExpr { and_or_list };
@@ -101,7 +128,7 @@ mod tests {
         assert_eq!(
             BashExpr {
                 and_or_list: AndOrList {
-                    initial: SimpleCommand {
+                    initial: Command::SimpleCommand {
                         tokens: vec!["true".to_owned()],
                     },
                     ops: vec![],
@@ -120,7 +147,7 @@ mod tests {
         assert_eq!(
             BashExpr {
                 and_or_list: AndOrList {
-                    initial: SimpleCommand {
+                    initial: Command::SimpleCommand {
                         tokens: vec!["false".to_owned()],
                     },
                     ops: vec![],
@@ -139,7 +166,7 @@ mod tests {
         assert_eq!(
             BashExpr {
                 and_or_list: AndOrList {
-                    initial: SimpleCommand {
+                    initial: Command::SimpleCommand {
                         tokens: vec!["echo".to_owned(), "hello".to_owned(), "world".to_owned()],
                     },
                     ops: vec![],
@@ -158,14 +185,14 @@ mod tests {
         assert_eq!(
             BashExpr {
                 and_or_list: AndOrList {
-                    initial: SimpleCommand {
+                    initial: Command::SimpleCommand {
                         tokens: vec!["false".to_owned()],
                     },
                     ops: vec![
-                        AndOrListItem::AndOp(SimpleCommand {
+                        AndOrListItem::AndOp(Command::SimpleCommand {
                             tokens: vec!["echo".to_owned(), "foo".to_owned()],
                         }),
-                        AndOrListItem::OrOp(SimpleCommand {
+                        AndOrListItem::OrOp(Command::SimpleCommand {
                             tokens: vec!["echo".to_owned(), "bar".to_owned()],
                         }),
                     ],
@@ -173,6 +200,43 @@ mod tests {
             },
             expr,
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_sub_shell() -> Result<()> {
+        let exprs = vec![
+            BashExpr::from_str("false && (echo foo || echo bar)")?,
+            BashExpr::from_str("false && ( echo foo || echo bar )")?,
+            BashExpr::from_str("false && ( echo foo||echo bar )")?,
+            BashExpr::from_str("false && (echo foo || echo bar)")?,
+            BashExpr::from_str("false && ( echo foo || echo bar )  ")?,
+        ];
+
+        for expr in exprs {
+            assert_eq!(
+                BashExpr {
+                    and_or_list: AndOrList {
+                        initial: Command::SimpleCommand {
+                            tokens: vec!["false".to_owned()],
+                        },
+                        ops: vec![AndOrListItem::AndOp(Command::SubShell {
+                            and_or_list: AndOrList {
+                                initial: Command::SimpleCommand {
+                                    tokens: vec!["echo".to_owned(), "foo".to_owned()],
+                                },
+                                ops: vec![AndOrListItem::OrOp(Command::SimpleCommand {
+                                    tokens: vec!["echo".to_owned(), "bar".to_owned()],
+                                })]
+                            }
+                            .into()
+                        }),],
+                    }
+                },
+                expr,
+            );
+        }
 
         Ok(())
     }

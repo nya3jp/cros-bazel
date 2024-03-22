@@ -11,7 +11,7 @@ use anyhow::Result;
 
 use super::AndOrList;
 use super::BashExpr;
-use super::SimpleCommand;
+use super::Command;
 
 fn eval_use_command(args: &[String], map: &UseMap) -> Result<bool> {
     if args.len() != 1 {
@@ -29,8 +29,8 @@ fn eval_use_command(args: &[String], map: &UseMap) -> Result<bool> {
     Ok(expect == value)
 }
 
-fn eval_command(cmd: &SimpleCommand, map: &UseMap) -> Result<bool> {
-    Ok(match cmd.tokens.split_first() {
+fn eval_simple_command(tokens: &[String], map: &UseMap) -> Result<bool> {
+    Ok(match tokens.split_first() {
         Some((cmd, args)) => match cmd.as_str() {
             "true" => true,
             "false" => false,
@@ -39,6 +39,13 @@ fn eval_command(cmd: &SimpleCommand, map: &UseMap) -> Result<bool> {
         },
         None => bail!("Empty command"),
     })
+}
+
+fn eval_command(cmd: &Command, map: &UseMap) -> Result<bool> {
+    match cmd {
+        Command::SimpleCommand { tokens } => eval_simple_command(tokens, map),
+        Command::SubShell { and_or_list } => eval_and_or_list(and_or_list, map),
+    }
 }
 
 fn eval_and_or_list(list: &AndOrList, map: &UseMap) -> Result<bool> {

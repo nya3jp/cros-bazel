@@ -14,8 +14,9 @@ use self::parser::expression;
 
 /// A simple bash command
 #[derive(Clone, Debug, Eq, PartialEq)]
-struct SimpleCommand {
-    tokens: Vec<String>,
+enum Command {
+    SimpleCommand { tokens: Vec<String> },
+    SubShell { and_or_list: Box<AndOrList> },
 }
 
 /// An AND-OR list is a sequence of one or more pipelines separated by the
@@ -35,7 +36,7 @@ struct AndOrList {
     /// The first command in the list.
     ///
     /// Its return value will be used when evaluating the remaining `ops`.
-    initial: SimpleCommand,
+    initial: Command,
 
     /// list of && and || operators and commands.
     ops: Vec<AndOrListItem>,
@@ -44,9 +45,9 @@ struct AndOrList {
 #[derive(Clone, Debug, Eq, PartialEq)]
 enum AndOrListItem {
     /// The command will only be ran if the previous command returned success.
-    AndOp(SimpleCommand),
+    AndOp(Command),
     /// The command will only be ran if the previous command returned a failure.
-    OrOp(SimpleCommand),
+    OrOp(Command),
 }
 
 /// Represents a simple bash expression.
@@ -231,6 +232,50 @@ mod tests {
         {
             let map = UseMap::from([("baz".to_owned(), true)]);
             assert!(expr.eval(&map)?, "expr = {:?}", expr);
+        }
+
+        {
+            let map = UseMap::from([
+                ("foo".to_owned(), true),
+                ("bar".to_owned(), false),
+                ("baz".to_owned(), true),
+            ]);
+            assert!(expr.eval(&map)?, "expr = {:?}", expr);
+        }
+
+        {
+            let map = UseMap::from([
+                ("foo".to_owned(), true),
+                ("bar".to_owned(), false),
+                ("baz".to_owned(), false),
+            ]);
+            assert!(!expr.eval(&map)?, "expr = {:?}", expr);
+        }
+
+        {
+            let map = UseMap::from([
+                ("foo".to_owned(), false),
+                ("bar".to_owned(), true),
+                ("baz".to_owned(), false),
+            ]);
+            assert!(!expr.eval(&map)?, "expr = {:?}", expr);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_complex_sub_shell() -> Result<()> {
+        let expr = BashExpr::from_str("use foo && (use bar || use baz)")?;
+
+        {
+            let map = UseMap::from([("foo".to_owned(), true), ("bar".to_owned(), true)]);
+            assert!(expr.eval(&map)?, "expr = {:?}", expr);
+        }
+
+        {
+            let map = UseMap::from([("baz".to_owned(), true)]);
+            assert!(!expr.eval(&map)?, "expr = {:?}", expr);
         }
 
         {
