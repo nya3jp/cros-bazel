@@ -18,7 +18,11 @@ use nix::{
 use processes::status_to_exit_code;
 use run_in_container_lib::RunInContainerConfig;
 use std::{
-    os::fd::{AsRawFd, FromRawFd, OwnedFd},
+    fs::File,
+    os::{
+        fd::{AsRawFd, FromRawFd, OwnedFd},
+        unix::fs::symlink,
+    },
     path::PathBuf,
     process::{Command, ExitCode, Stdio},
 };
@@ -177,9 +181,7 @@ fn enable_loopback_networking() -> Result<()> {
     Ok(())
 }
 
-fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
-    unshare(CloneFlags::CLONE_NEWNS).context("Failed to enter mount namespace")?;
-
+fn mount_filesystems(cfg: &RunInContainerConfig) -> Result<()> {
     // Remount all file systems as private so that we never interact with the
     // original namespace. This is needed when the current process is privileged
     // and did not enter an unprivileged user namespace.
@@ -192,9 +194,70 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     )
     .context("Failed to remount file systems as private")?;
 
-    if !cfg.allow_network_access {
-        enable_loopback_networking()?;
+    // Populate /dev with a minimal set of files. Note that we can't call mknod
+    // to create them as it requires privileges.
+    mount(
+        Some("dev"),
+        &cfg.root_dir.join("dev"),
+        Some("tmpfs"),
+        MsFlags::empty(),
+        Some("mode=0555,size=64k"),
+    )
+    .context("Failed to mount tmpfs at /dev")?;
+
+    for name in ["full", "fuse", "null", "tty", "urandom", "zero"] {
+        let target = cfg.root_dir.join("dev").join(name);
+        File::create(&target).with_context(|| format!("Failed to touch /dev/{name}"))?;
+        mount(
+            Some(format!("/dev/{name}").as_str()),
+            &target,
+            Some(""),
+            MsFlags::MS_BIND,
+            Some(""),
+        )
+        .with_context(|| format!("Failed to bind-mount /dev/{name}"))?;
     }
+    for (name, original) in [
+        ("ptmx", "pts/ptmx"),
+        ("fd", "/proc/self/fd"),
+        ("stdin", "fd/0"),
+        ("stdout", "fd/1"),
+        ("stderr", "fd/2"),
+    ] {
+        symlink(original, cfg.root_dir.join("dev").join(name))
+            .with_context(|| format!("Failed to symlink /dev/{name} to {original}"))?;
+    }
+
+    // Mount /dev/pts.
+    std::fs::create_dir(cfg.root_dir.join("dev/pts")).context("Failed to mkdir /dev/pts")?;
+    mount(
+        Some("devpts"),
+        &cfg.root_dir.join("dev/pts"),
+        Some("devpts"),
+        MsFlags::empty(),
+        Some("newinstance,mode=0620,ptmxmode=0666"),
+    )
+    .context("Failed to mount /dev/pts")?;
+
+    // Mount /dev/shm.
+    std::fs::create_dir(cfg.root_dir.join("dev/shm")).context("Failed to mkdir /dev/shm")?;
+    mount(
+        Some("tmpfs"),
+        &cfg.root_dir.join("dev/shm"),
+        Some("tmpfs"),
+        MsFlags::MS_NODEV | MsFlags::MS_NOSUID,
+        Some(""),
+    )
+    .context("Failed to mount /dev/shm")?;
+
+    mount(
+        Some(""),
+        &cfg.root_dir.join("dev"),
+        Some(""),
+        MsFlags::MS_REMOUNT | MsFlags::MS_RDONLY,
+        Some(""),
+    )
+    .context("Failed to remount /dev read-only")?;
 
     // Mount /proc. It is done here, not in the container crate, because we need
     // to enter a PID namespace to mount one.
@@ -206,6 +269,30 @@ fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
         Some(""),
     )
     .context("Failed to mount /proc")?;
+
+    // Mount read-only tmpfs at /sys. We don't mount the real sysfs there
+    // because it exposes good amount of host details, which can lead to
+    // non-reproducible build results.
+    mount(
+        Some("sys"),
+        &cfg.root_dir.join("sys"),
+        Some("tmpfs"),
+        MsFlags::empty(),
+        Some("ro,mode=0555,size=64k"),
+    )
+    .context("Failed to mount tmpfs on /sys")?;
+
+    Ok(())
+}
+
+fn continue_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
+    unshare(CloneFlags::CLONE_NEWNS).context("Failed to enter mount namespace")?;
+
+    mount_filesystems(&cfg)?;
+
+    if !cfg.allow_network_access {
+        enable_loopback_networking()?;
+    }
 
     // We switch into the root dir so that pivot_root will automatically update
     // our CWD to point to the new root.

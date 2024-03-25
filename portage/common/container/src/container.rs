@@ -476,16 +476,11 @@ impl<'settings> PreparedContainer<'settings> {
             }
         }
 
-        // Bind-mount special file systems. Note that we don't need to umount
-        // them on errors because they're under `root_dir` and recursively
-        // unmounted by `overlayfs_guard`.
-        bind_mount(Path::new("/dev"), &root_dir.path().join("dev"))?.leak();
-        bind_mount(Path::new("/sys"), &root_dir.path().join("sys"))?.leak();
-
-        // Note that we don't mount /proc here but it is mounted by
-        // run_in_container instead. It is because we need privileges on the
-        // current PID namespace to mount one, but entering a new PID namespace
-        // in unit tests is not straightforward as it requires forking.
+        // Note that we don't mount special file systems (/dev, /proc, and /sys)
+        // here but they are mounted by run_in_container instead. It is because
+        // we need privileges on the current PID namespace to mount some of them
+        // but entering a new PID namespace in unit tests is not straightforward
+        // as it requires forking.
 
         Ok(Self {
             settings,
