@@ -41,7 +41,6 @@ sdk_update(
     base = ":sdk_from_archive",
     extra_tarballs = [
         ":extra_tarball",
-        ":remote_toolchain_inputs",
     ],
     visibility = [
         "@//bazel:internal",

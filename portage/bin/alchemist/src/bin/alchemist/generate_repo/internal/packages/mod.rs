@@ -260,8 +260,14 @@ impl EBuildEntry {
                 )
             })
             .collect();
-
         sources.extend(file_sources);
+
+        let supports_remoteexec = package.details.inherited.contains("cros-remoteexec");
+        if supports_remoteexec {
+            // TODO(b/331326051): Remove this hack.
+            sources.push("@//bazel/portage/sdk:remote_toolchain_inputs".to_owned());
+        }
+
         sources.sort();
 
         let cache_sources: Vec<String> = package
@@ -482,8 +488,6 @@ impl EBuildEntry {
                 ))
             })
             .collect::<Result<_>>()?;
-
-        let supports_remoteexec = package.details.inherited.contains("cros-remoteexec");
 
         let expressions = &package.dependencies.expressions;
 
