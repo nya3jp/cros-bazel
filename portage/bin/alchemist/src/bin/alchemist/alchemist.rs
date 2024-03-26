@@ -234,36 +234,10 @@ fn build_override_config_source(
         }
     }
 
-    let mut nodes = vec![
-        ConfigNode {
-            sources: vec![],
-            value: ConfigNodeValue::PackageMasks(masked),
-        },
-        // We run the hooks in the chrome repository rule, so prevent them
-        // from running in the ebuild action. We also have this USE flag hard
-        // coded in build_package.sh.
-        ConfigNode {
-            sources: vec![],
-            value: ConfigNodeValue::Uses(vec![
-                UseUpdate {
-                    kind: UseUpdateKind::Set,
-                    filter: UseUpdateFilter {
-                        atom: Some("chromeos-base/chrome-icu".parse().unwrap()),
-                        stable_only: false,
-                    },
-                    use_tokens: "-runhooks".to_string(),
-                },
-                UseUpdate {
-                    kind: UseUpdateKind::Set,
-                    filter: UseUpdateFilter {
-                        atom: Some("chromeos-base/chromeos-chrome".parse().unwrap()),
-                        stable_only: false,
-                    },
-                    use_tokens: "-runhooks".to_string(),
-                },
-            ]),
-        },
-    ];
+    let mut nodes = vec![ConfigNode {
+        sources: vec![],
+        value: ConfigNodeValue::PackageMasks(masked),
+    }];
 
     // When using Portage site configs inside the chroot, we need to override
     // the PKGDIR, PORTAGE_TMPDIR, and PORT_LOGDIR that are defined in

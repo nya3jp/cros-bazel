@@ -8,10 +8,6 @@ export SYSROOT="${ROOT}"
 export PORTAGE_CONFIGROOT="${ROOT}"
 
 if [[ -d /home/root/chrome_root/src/third_party/depot_tools ]]; then
-  # The src tarball has already had the hooks ran, so no need to run it in the
-  # ebuild. It also won't run in the ebuild since the hooks need to access
-  # the network.
-  export USE="-runhooks ${USE}"
   # Use the CIPD cache provided by the tarball to avoid network access.
   export CIPD_CACHE_DIR="/home/root/chrome_root/.cipd-cache"
 
