@@ -134,7 +134,7 @@ As you can see, it's turtles (SDKs?) all the way down.
 [virtual/target-sdk-implicit-system]: https://chromium.googlesource.com/chromiumos/overlays/chromiumos-overlay/+/refs/heads/main/virtual/target-sdk-implicit-system/target-sdk-implicit-system-9999.ebuild
 [crossdev]: https://wiki.gentoo.org/wiki/Cross_build_environment
 [primordial packages]: https://chromium.googlesource.com/chromiumos/bazel/+/refs/heads/main/portage/bin/alchemist/src/bin/alchemist/generate_repo/common.rs#21
-[list]: https://chromium.googlesource.com/chromiumos/bazel/+/refs/heads/main/portage/bin/alchemist/src/analyze/dependency.rs#550
+[list]: https://chromium.googlesource.com/chromiumos/bazel/+/refs/heads/main/portage/bin/alchemist/src/analyze/dependency/direct/hacks.rs#14
 
 ## Declaring Bazel-specific ebuild/eclass metadata
 
