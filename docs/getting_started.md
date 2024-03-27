@@ -147,7 +147,7 @@ images.
 ### Bazel remote caching with RBE
 
 You can speed up the build by enabling remote Bazel caching with RBE.
-To do this, follow [this instruction](https://chromium.googlesource.com/chromiumos/docs/+/HEAD/developer_guide.md#authenticate-for-remote-bazel-caching-with-rbe_if-applicable)
+To do this, follow [this instruction](https://www.chromium.org/chromium-os/developer-library/guides/development/developer-guide/#authenticate-for-remote-bazel-caching-with-rbe-if-applicable)
 to authenticate.
 
 After authentication, make sure that you restart the Bazel instance by running
