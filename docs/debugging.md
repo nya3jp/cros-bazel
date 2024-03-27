@@ -104,6 +104,61 @@ an interactive console:
 - `--login=after`: after building the package (default)
 - `--login=after-fail`: after failing to build the package
 
+### Dump Alchemist's view of a package
+
+It can be useful to see what Alchemist understands about a package to see why
+the Bazel build is behaving a certain way. You can use this command to dump
+this information for a given package:
+
+`bazel run //:alchemist -- --board ${BOARD} dump-package ${PACKAGE}`
+
+or
+
+`bazel run //:alchemist -- --host dump-package ${PACKAGE}`
+
+Example:
+
+```
+$ bazel run //:alchemist -- --board amd64-generic dump-package sys-apps/portage
+Path:        /mnt/host/source/src/third_party/chromiumos-overlay/sys-apps/portage/portage-2.3.75-r161.ebuild
+Package:    sys-apps/portage
+Version:    2.3.75-r161 (Default)
+Slot:        0/0
+Stable:        true
+Readiness:        OK (not masked)
+USE:        +abi_x86_64 -alpha +amd64 -amd64-fbsd -amd64-linux -arm -arm-linux -arm64 -build -cros_host -cros_workon_tree_e947dfa7fd9f6280412b8b58481e9dcc226465ca -doc -elibc_AIX -elibc_Cygwin -elibc_Darwin -elibc_DragonFly -elibc_FreeBSD -elibc_HPUX -elibc_Interix -elibc_NetBSD -elibc_OpenBSD -elibc_SunOS -elibc_Winnt -elibc_bionic +elibc_glibc -elibc_mingw -elibc_mintlib -elibc_musl -elibc_uclibc -epydoc -gentoo-dev -hppa -hppa-hpux -ia64 -ia64-hpux -ia64-linux +ipc -kernel_AIX -kernel_Darwin -kernel_FreeBSD -kernel_HPUX -kernel_NetBSD -kernel_OpenBSD -kernel_SunOS -kernel_Winnt -kernel_freemint +kernel_linux -m68k -m68k-mint -mips +native-extensions -nios2 -ppc -ppc-aix -ppc-macos -ppc-openbsd -ppc64 -ppc64-linux -prefix -prefix-guest -prefix-stack -python_targets_python3_6 -python_targets_python3_7 +python_targets_python3_8 -python_targets_python3_9 -riscv -rsync-verify -s390 -selinux -sh -sparc -sparc-fbsd -sparc-solaris -sparc64-freebsd -sparc64-solaris -userland_BSD +userland_GNU -x64-cygwin -x64-freebsd -x64-macos -x64-openbsd -x64-solaris -x86 -x86-cygwin -x86-fbsd -x86-freebsd -x86-interix -x86-linux -x86-macos -x86-netbsd -x86-openbsd -x86-solaris -x86-winnt +xattr
+BDEPEND:
+  app-misc/jq-1.7_pre20201109-r1::portage-stable
+  dev-lang/python-3.8.16_p4-r5::chromiumos
+  dev-lang/python-exec-2.4.6-r4::portage-stable
+  dev-python/setuptools-44.0.0::portage-stable
+  dev-vcs/git-2.39.2-r1::portage-stable
+IDEPEND:
+DEPEND:
+  app-arch/tar-1.34-r3::portage-stable
+  dev-lang/python-3.8.16_p4-r5::chromiumos
+  dev-lang/python-3.8.16_p4-r5::chromiumos
+  dev-lang/python-exec-2.4.6-r4::portage-stable
+  dev-lang/python-exec-2.4.6-r4::portage-stable
+  sys-apps/sed-4.8::portage-stable
+  sys-devel/patch-2.7.6-r5::portage-stable
+RDEPEND:
+  app-arch/tar-1.34-r3::portage-stable
+  app-misc/pax-utils-1.3.3::portage-stable
+  app-shells/bash-5.1_p16-r2::portage-stable
+  dev-lang/python-3.8.16_p4-r5::chromiumos
+  dev-lang/python-exec-2.4.6-r4::portage-stable
+  dev-lang/python-exec-2.4.6-r4::portage-stable
+  sys-apps/install-xattr-0.8-r1::portage-stable
+  sys-apps/sed-4.8::portage-stable
+PDEPEND:
+  net-misc/rsync-3.2.7-r2::portage-stable
+  sys-apps/coreutils-8.32-r2::portage-stable
+```
+
+You can also use the `--env` flag to dump the environment variables for the
+package, which can be useful for viewing information such as USE flags.
+
 ### Bad cache results when non-hermetic inputs change
 
 Bazel is able to correctly reuse content from the cache when all inputs are
