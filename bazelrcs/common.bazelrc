@@ -148,6 +148,12 @@ build --config=nohermetic_toolchains
 # Enable printing artifact hashes
 build:hash_tracer --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_tracer,//bazel/portage/build_defs:hash_tracer.bzl%hash_tracer_validator
 
+# Collect all logs produced by all transitive dependencies of the targets
+# specified in the command line. This ensures that Bazel downloads log files
+# from the remote cache even if their corresponding actions are fully cached.
+build:collect_logs --aspects //bazel/portage/build_defs:collect_logs.bzl%collect_logs_aspect
+build:collect_logs --output_groups=+transitive_logs
+
 # Enable build event upload to a backend.
 #
 # Use --config=bes to opt-in results upload.

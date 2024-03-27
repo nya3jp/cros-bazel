@@ -217,6 +217,21 @@ ExtraSourcesInfo = provider(
     },
 )
 
+TransitiveLogsInfo = provider(
+    """
+    Collects log files in transitive dependencies.
+
+    This provider is used by an aspect to collect logs from all transitive
+    dependencies of the targets specified in the command line.
+    """,
+    fields = {
+        "files": """
+            Depset[File]: Log files of the current target and its transitive
+                dependencies.
+        """,
+    },
+)
+
 # rustc flags to enable debug symbols.
 RUSTC_DEBUG_FLAGS = ["--codegen=debuginfo=2"]
 
