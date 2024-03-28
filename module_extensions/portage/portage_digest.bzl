@@ -17,12 +17,7 @@ def _portage_digest_repository_impl(repo_ctx):
 
     # BOARD has the format <board>:<profile>
     board = repo_ctx.os.environ.get("BOARD", "")
-    parts = board.split(":", 1)
-    if len(parts) > 1:
-        board = parts[0]
-        profile = parts[1]
-    else:
-        profile = ""
+    board, _, profile = board.partition(":")
 
     args = [
         alchemist,
