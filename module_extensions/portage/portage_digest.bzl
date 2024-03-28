@@ -53,7 +53,7 @@ portage_digest = repository_rule(
     implementation = _portage_digest_repository_impl,
     environ = [
         # See tools/bazel for where this variable is set
-        "_CACHE_BUST_DATE",
+        "CACHE_BUST_DATE",
         "BOARD",
     ],
     attrs = dict(
