@@ -499,14 +499,8 @@ fn do_main() -> Result<()> {
     write_use_flags(&sysroot, &args.ebuild, &args.use_flags)?;
     write_profile_bashrc(&sysroot, &args.bashrc)?;
 
-    // Run ebuild with `timeout 6h` to debug the deadlock issue. b/327313686
     let mut command = container.command(MAIN_SCRIPT);
     command
-        .arg("timeout")
-        // We don't want a new processes group created, otherwise Ctrl+C and
-        // friends won't be forwarded to the ebuild and its children.
-        .arg("--foreground")
-        .arg("6h")
         .arg("ebuild")
         .arg("--skip-manifest")
         .arg(args.ebuild.mount_path)
