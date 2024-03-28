@@ -28,12 +28,10 @@ pub struct ProfileCompiler<'a> {
 
 const MAKE_DEFAULT_VARIABLES: &[&str; 2] = &["PROFILE_ONLY_VARIABLES", "USE_EXPAND"];
 
-const IGNORED_VARIABLES: &[&str; 2] = &[
+const IGNORED_VARIABLES: &[&str; 1] = &[
     // We don't need a global USE declaration because we inject a
     // per-package package.use.
     "USE",
-    // If MAKEOPTS isn't set, Portage will default it to `-j<cores>`.
-    "MAKEOPTS",
     // TODO: Strip out all RESUMECOMMAND* and FETCHCOMMAND* variables
     // since we don't need them.
 ];
@@ -289,7 +287,6 @@ mod tests {
                 ("USE_EXPAND_VALUES_ARCH".into(), "alpha amd64 amd64-fbsd amd64-linux arm arm-linux arm64".into()),
                 ("USE_EXPAND_VALUES_ELIBC".into(), "FreeBSD glibc musl".into()),
                 ("ROOT".into(), sysroot.into()),
-                ("MAKEOPTS".into(), "-j 32".into()),
                 ("PKG_CONFIG".into(), format!("{sysroot}/build/bin/pkg-config")),
                 ("CQ_BINHOST".into(), "http://foo".to_string()),
             ])),

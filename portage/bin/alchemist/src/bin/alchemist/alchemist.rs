@@ -13,6 +13,7 @@ use crate::dump_package::dump_package_main;
 use crate::dump_profile::dump_profile_main;
 use crate::generate_repo::generate_repo_main;
 
+use alchemist::config::makeconf::generate::MAKEOPTS_VALUE;
 use alchemist::data::Vars;
 use alchemist::fakechroot;
 use alchemist::toolchain::ToolchainConfig;
@@ -282,6 +283,10 @@ fn build_override_config_source(
                     "PORT_LOGDIR".to_string(),
                     format!("{}/tmp/portage/logs/", sysroot.display()),
                 ),
+                // We need to ensure our generated config is identical between
+                // different machines, so we can't use the -j<CORE> value that
+                // is in the make.conf.user.
+                ("MAKEOPTS".to_string(), MAKEOPTS_VALUE.to_string()),
             ])),
         });
     }

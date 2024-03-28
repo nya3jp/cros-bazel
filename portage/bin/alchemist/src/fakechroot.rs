@@ -215,6 +215,8 @@ ARCH="amd64"
 BOARD_OVERLAY="/mnt/host/source/src/overlays/overlay-amd64-host"
 BOARD_USE="amd64-host"
 CHOST="x86_64-pc-linux-gnu"
+# TODO(b/266973461): Remove hard coded -j
+MAKEOPTS="-j32"
 PORTDIR_OVERLAY="/mnt/host/source/src/overlays/overlay-amd64-host"
 "#,
         ),
