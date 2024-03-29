@@ -261,7 +261,6 @@ struct RemoteexecInfo {
     use_remoteexec: bool,
     envs: HashMap<String, String>,
     gcloud_config_dir: Option<PathBuf>,
-    should_use_reproxy_cfg_file_for_ci: bool,
 }
 
 fn do_main() -> Result<()> {
@@ -452,15 +451,6 @@ fn do_main() -> Result<()> {
                 rw: false,
             });
         }
-        envs.push((
-            OsStr::new("SHOULD_USE_REPROXY_CFG_FILE_FOR_CI").into(),
-            OsStr::new(if remoteexec_info.should_use_reproxy_cfg_file_for_ci {
-                "true"
-            } else {
-                "false"
-            })
-            .into(),
-        ));
     }
 
     if let Some(jobserver) = args.jobserver {
