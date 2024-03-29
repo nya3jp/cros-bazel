@@ -11,6 +11,8 @@ import io
 import pathlib
 from typing import Optional
 
+from google.protobuf import json_format
+
 from cros.bazel.portage.bin.metadata import metadata_pb2
 
 
@@ -27,8 +29,9 @@ def main(
         raise AssertionError("Unable to find workspace root")
     out = workspace / "prebuilts.bazelrc"
 
-    metadata = metadata_pb2.Metadata()
-    metadata.ParseFromString(metadata_path.read_bytes())
+    metadata = json_format.Parse(
+        metadata_path.read_bytes(), metadata_pb2.Metadata()
+    )
 
     if disk_cache:
         value = f"{disk_cache}/cas/{metadata.sha256[:2]}/{metadata.sha256}"
