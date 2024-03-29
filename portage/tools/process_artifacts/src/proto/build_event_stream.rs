@@ -78,7 +78,7 @@ pub struct TargetCompletedId {
     pub aspect: Option<String>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
     pub name: String,

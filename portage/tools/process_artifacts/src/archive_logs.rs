@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     io::{Seek, SeekFrom, Write},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
@@ -11,19 +11,50 @@ use std::{
 };
 
 use anyhow::{bail, ensure, Result};
+use itertools::Itertools;
 
 use crate::proto::build_event_stream::{
     BuildEvent, BuildEventId, BuildEventPayload, File, NamedSetOfFiles, NamedSetOfFilesId,
 };
 
-struct FileSetIndex {
-    index: HashMap<NamedSetOfFilesId, NamedSetOfFiles>,
+/// Provides fast merge operations over [`NamedSetOfFiles`].
+///
+/// [`NamedSetOfFiles`] can be deeply nested with duplications (like diamond inheritance).
+/// Therefore, on keeping track of files, it is important to also keep track of named set IDs that
+/// are already merged to the set, in order to avoid repeatedly merging the same named sets.
+#[derive(Clone, Default)]
+struct FastFileSet {
+    // Invariant: named sets are closed over subsets, i.e. all subsets of the named sets are also in
+    // the named sets.
+    children: BTreeMap<NamedSetOfFilesId, NamedSetOfFiles>,
 }
 
-impl<'a, T> From<T> for FileSetIndex
+impl FastFileSet {
+    /// Creates a new empty set.
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    /// Returns an iterator of files included in this set.
+    pub fn files(&self) -> impl Iterator<Item = &File> {
+        self.children
+            .values()
+            .flat_map(|named_set| named_set.files.iter())
+            .sorted()
+            .dedup()
+    }
+}
+
+/// An index of [`BuildEvent`] that provides fast file set operations.
+struct FastFileSetIndex {
+    index: BTreeMap<NamedSetOfFilesId, NamedSetOfFiles>,
+}
+
+impl<'a, T> From<T> for FastFileSetIndex
 where
     T: IntoIterator<Item = &'a BuildEvent>,
 {
+    /// Constructs a new [`FastFileSetIndex`] from an iterator of [`BuildEvent`].
     fn from(into_iter: T) -> Self {
         let index = into_iter
             .into_iter()
@@ -41,22 +72,20 @@ where
     }
 }
 
-impl FileSetIndex {
-    pub fn files(&self, id: &NamedSetOfFilesId) -> Result<Vec<File>> {
-        let mut files: Vec<File> = Vec::new();
-        self.collect_files(id, &mut files)?;
-        Ok(files)
-    }
-
-    fn collect_files(&self, id: &NamedSetOfFilesId, files: &mut Vec<File>) -> Result<()> {
+impl FastFileSetIndex {
+    /// Merges a named set of files to [`FastFileSet`].
+    pub fn merge(&self, mut fs: FastFileSet, id: &NamedSetOfFilesId) -> Result<FastFileSet> {
+        if fs.children.contains_key(id) {
+            return Ok(fs);
+        }
         let Some(entry) = self.index.get(id) else {
             bail!("NamedSetOfFiles {} not found", id.id);
         };
-        files.extend(entry.files.clone());
-        for subset_id in &entry.file_sets {
-            self.collect_files(subset_id, files)?;
+        fs.children.insert(id.clone(), entry.clone());
+        for subset in &entry.file_sets {
+            fs = self.merge(fs, subset)?;
         }
-        Ok(())
+        Ok(fs)
     }
 }
 
@@ -70,9 +99,9 @@ fn path_for_file(file: &File) -> PathBuf {
 }
 
 pub fn archive_logs(output_path: &Path, workspace_dir: &Path, events: &[BuildEvent]) -> Result<()> {
-    let index: FileSetIndex = events.into();
+    let index: FastFileSetIndex = events.into();
 
-    let mut paths: Vec<PathBuf> = Vec::new();
+    let mut fileset = FastFileSet::new();
 
     for event in events {
         let BuildEventId::TargetCompleted(complete_id) = &event.id else {
@@ -89,19 +118,14 @@ pub fn archive_logs(output_path: &Path, workspace_dir: &Path, events: &[BuildEve
                 continue;
             }
             for file_set_id in &output_group.file_sets {
-                for file in index.files(file_set_id)? {
-                    paths.push(path_for_file(&file));
-                }
+                fileset = index.merge(fileset, file_set_id)?;
             }
         }
     }
 
-    paths.sort();
-    paths.dedup();
-
     let mut input_file = tempfile::tempfile()?;
-    for path in paths {
-        input_file.write_all(path.as_os_str().as_bytes())?;
+    for file in fileset.files() {
+        input_file.write_all(path_for_file(file).as_os_str().as_bytes())?;
         input_file.write_all(&[0])?;
     }
     input_file.seek(SeekFrom::Start(0))?;
@@ -312,6 +336,72 @@ mod tests {
         // the other output group.
         std::fs::write(workspace_dir.join("a.txt"), [])?;
 
+        let output_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
+        let output_path = output_path.path();
+
+        archive_logs(output_path, workspace_dir, &events)?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn deeply_nested_named_sets() -> Result<()> {
+        // Create a fibonacci-like structure of named sets.
+        let mut events: Vec<BuildEvent> = vec![
+            BuildEvent {
+                id: BuildEventId::NamedSet(NamedSetOfFilesId {
+                    id: "0".to_string(),
+                }),
+                payload: BuildEventPayload::NamedSetOfFiles(NamedSetOfFiles {
+                    files: vec![],
+                    file_sets: vec![],
+                }),
+            },
+            BuildEvent {
+                id: BuildEventId::NamedSet(NamedSetOfFilesId {
+                    id: "1".to_string(),
+                }),
+                payload: BuildEventPayload::NamedSetOfFiles(NamedSetOfFiles {
+                    files: vec![],
+                    file_sets: vec![],
+                }),
+            },
+        ];
+        for i in 2..=100 {
+            events.push(BuildEvent {
+                id: BuildEventId::NamedSet(NamedSetOfFilesId { id: i.to_string() }),
+                payload: BuildEventPayload::NamedSetOfFiles(NamedSetOfFiles {
+                    files: vec![],
+                    file_sets: vec![
+                        NamedSetOfFilesId {
+                            id: (i - 2).to_string(),
+                        },
+                        NamedSetOfFilesId {
+                            id: (i - 1).to_string(),
+                        },
+                    ],
+                }),
+            })
+        }
+        events.push(BuildEvent {
+            id: BuildEventId::TargetCompleted(TargetCompletedId {
+                label: "//foo".to_string(),
+                aspect: None,
+            }),
+            payload: BuildEventPayload::Completed(TargetComplete {
+                output_group: vec![OutputGroup {
+                    name: "transitive_logs".to_string(),
+                    file_sets: vec![NamedSetOfFilesId {
+                        id: "100".to_string(),
+                    }],
+                    incomplete: false,
+                }],
+                success: true,
+            }),
+        });
+
+        let workspace_dir = tempfile::TempDir::new()?;
+        let workspace_dir = workspace_dir.path();
         let output_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
         let output_path = output_path.path();
 
