@@ -12,9 +12,13 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use commands::{archive_logs::archive_logs, prebuilts::compute_prebuilts};
-use processors::build_event::BuildEventProcessor;
-use proto::build_event_stream::BuildEvent;
+use commands::{
+    archive_logs::archive_logs, diagnose_cache_hits::diagnose_cache_hits,
+    prebuilts::compute_prebuilts,
+};
+use processors::{build_event::BuildEventProcessor, execlog::ExecLogProcessor};
+use prost::Message;
+use proto::{build_event_stream::BuildEvent, spawn::ExecLogEntry};
 
 mod commands;
 mod processors;
@@ -36,6 +40,25 @@ fn load_build_events_jsonl(path: &Path) -> Result<Vec<BuildEvent>> {
     Ok(events)
 }
 
+fn load_compact_execlog(path: &Path) -> Result<Vec<ExecLogEntry>> {
+    let data = std::fs::read(path).with_context(|| format!("Failed to read {}", path.display()))?;
+    let data = zstd::decode_all(data.as_slice())
+        .with_context(|| format!("Failed to decode {}", path.display()))?;
+
+    let mut buf = data.as_slice();
+    let mut entries: Vec<ExecLogEntry> = Vec::new();
+    while !buf.is_empty() {
+        let size = prost::decode_length_delimiter(&mut buf)
+            .context("Corrupted execlog: failed to decode message length")?;
+        let entry = ExecLogEntry::decode(&buf[..size])
+            .context("Corrupted execlog: failed to deserialize ExecLogEntry")?;
+        entries.push(entry);
+        buf = &buf[size..];
+    }
+
+    Ok(entries)
+}
+
 fn get_default_workspace_dir() -> &'static OsStr {
     static CACHE: OnceLock<OsString> = OnceLock::new();
     CACHE.get_or_init(|| std::env::var_os("BUILD_WORKSPACE_DIRECTORY").unwrap_or(".".into()))
@@ -51,8 +74,12 @@ fn get_default_workspace_dir() -> &'static OsStr {
 #[derive(Parser, Debug)]
 struct Args {
     /// Path to the Build Event Protocol JSONL file.
-    #[arg(long, required = true)]
-    build_events_jsonl: PathBuf,
+    #[arg(long)]
+    build_events_jsonl: Option<PathBuf>,
+
+    /// Path to the compact execlog file.
+    #[arg(long)]
+    compact_execlog: Option<PathBuf>,
 
     /// Path to the Bazel workspace where bazel-* symlinks are located.
     /// [default: $BUILD_WORKSPACE_DIRECTORY]
@@ -62,27 +89,64 @@ struct Args {
     /// If set, creates a tarball containing all logs created in the build to this file path.
     /// Compression algorithm is selected by the file name extension (using GNU tar's
     /// --auto-compress option).
-    #[arg(long)]
+    #[arg(long, requires = "build_events_jsonl")]
     archive_logs: Option<PathBuf>,
 
     /// If set, a .bzl file will be generated that contains --@portage//<package>_prebuilt
     /// flags pointing to the CAS for the packages specified in the BEP file..
-    #[arg(long)]
+    #[arg(long, requires = "build_events_jsonl")]
     prebuilts: Option<PathBuf>,
+
+    /// If set, diagnoses cache hits from execlog and write human-readable results to the specified
+    /// file.
+    #[arg(long, requires = "compact_execlog")]
+    diagnose_cache_hits: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let events = load_build_events_jsonl(&args.build_events_jsonl)?;
-    let processor = BuildEventProcessor::from(&events);
+    let events = if let Some(path) = &args.build_events_jsonl {
+        Some(load_build_events_jsonl(path)?)
+    } else {
+        None
+    };
+    let events_processor = events.as_ref().map(BuildEventProcessor::from);
+
+    let execlog = if let Some(path) = &args.compact_execlog {
+        Some(load_compact_execlog(path)?)
+    } else {
+        None
+    };
+    let execlog_processor = execlog.as_ref().map(ExecLogProcessor::from);
 
     if let Some(output_path) = &args.archive_logs {
-        archive_logs(output_path, &args.workspace, &processor)?;
+        archive_logs(
+            output_path,
+            &args.workspace,
+            events_processor
+                .as_ref()
+                .context("--build-events-jsonl must be set")?,
+        )?;
     }
 
     if let Some(output_path) = &args.prebuilts {
-        compute_prebuilts(output_path, &args.workspace, &processor)?;
+        compute_prebuilts(
+            output_path,
+            &args.workspace,
+            events_processor
+                .as_ref()
+                .context("--build-events-jsonl must be set")?,
+        )?;
+    }
+
+    if let Some(output_path) = &args.diagnose_cache_hits {
+        diagnose_cache_hits(
+            output_path,
+            execlog_processor
+                .as_ref()
+                .context("--compact-execlog must be set")?,
+        )?;
     }
 
     Ok(())

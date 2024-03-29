@@ -45,6 +45,7 @@ rust_binary(
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:zstd",
     ],
 )
 

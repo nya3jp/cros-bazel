@@ -3,4 +3,5 @@
 // found in the LICENSE file.
 
 pub mod archive_logs;
+pub mod diagnose_cache_hits;
 pub mod prebuilts;

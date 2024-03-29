@@ -27,6 +27,7 @@ def _generate_cat_action(ctx, files):
         outputs = [output],
         inputs = files,
         arguments = [args],
+        mnemonic = "HashTracer",
         execution_requirements = {
             # We don't cache this because we want to increase the chance of
             # the hash being printed.
