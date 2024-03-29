@@ -85,6 +85,9 @@ pub fn archive_logs(output_path: &Path, workspace_dir: &Path, events: &[BuildEve
             );
         };
         for output_group in &complete.output_group {
+            if output_group.name != "transitive_logs" {
+                continue;
+            }
             for file_set_id in &output_group.file_sets {
                 for file in index.files(file_set_id)? {
                     paths.push(path_for_file(&file));
@@ -132,7 +135,10 @@ mod tests {
     use runfiles::Runfiles;
     use walkdir::WalkDir;
 
-    use crate::load_build_events_jsonl;
+    use crate::{
+        load_build_events_jsonl,
+        proto::build_event_stream::{OutputGroup, TargetComplete, TargetCompletedId},
+    };
 
     use super::*;
 
@@ -228,6 +234,88 @@ mod tests {
                  stage1/target/host/portage-stable/virtual/os-headers/os-headers-0-r2.profile.json",
             ]
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn empty() -> Result<()> {
+        let workspace_dir = tempfile::TempDir::new()?;
+        let workspace_dir = workspace_dir.path();
+
+        let output_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
+        let output_path = output_path.path();
+
+        archive_logs(output_path, workspace_dir, &[])?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn output_group() -> Result<()> {
+        let events = vec![
+            BuildEvent {
+                id: BuildEventId::NamedSet(NamedSetOfFilesId {
+                    id: "a".to_string(),
+                }),
+                payload: BuildEventPayload::NamedSetOfFiles(NamedSetOfFiles {
+                    files: vec![File {
+                        name: "a.txt".to_string(),
+                        path_prefix: vec![],
+                    }],
+                    file_sets: vec![],
+                }),
+            },
+            BuildEvent {
+                id: BuildEventId::NamedSet(NamedSetOfFilesId {
+                    id: "b".to_string(),
+                }),
+                payload: BuildEventPayload::NamedSetOfFiles(NamedSetOfFiles {
+                    files: vec![File {
+                        name: "b.txt".to_string(),
+                        path_prefix: vec![],
+                    }],
+                    file_sets: vec![],
+                }),
+            },
+            BuildEvent {
+                id: BuildEventId::TargetCompleted(TargetCompletedId {
+                    label: "//foo".to_string(),
+                    aspect: None,
+                }),
+                payload: BuildEventPayload::Completed(TargetComplete {
+                    success: true,
+                    output_group: vec![
+                        OutputGroup {
+                            name: "transitive_logs".to_string(),
+                            file_sets: vec![NamedSetOfFilesId {
+                                id: "a".to_string(),
+                            }],
+                            incomplete: false,
+                        },
+                        OutputGroup {
+                            name: "other".to_string(),
+                            file_sets: vec![NamedSetOfFilesId {
+                                id: "b".to_string(),
+                            }],
+                            incomplete: false,
+                        },
+                    ],
+                }),
+            },
+        ];
+
+        let workspace_dir = tempfile::TempDir::new()?;
+        let workspace_dir = workspace_dir.path();
+
+        // Create a.txt, but not b.txt, so that `archive_logs` would fail if it attempts to archive
+        // the other output group.
+        std::fs::write(workspace_dir.join("a.txt"), [])?;
+
+        let output_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
+        let output_path = output_path.path();
+
+        archive_logs(output_path, workspace_dir, &events)?;
 
         Ok(())
     }
