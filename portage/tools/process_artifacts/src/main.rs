@@ -5,7 +5,6 @@
 use std::{
     collections::HashMap,
     ffi::{OsStr, OsString},
-    fs::File,
     io::{BufRead, BufReader, Seek, SeekFrom, Write},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
@@ -15,15 +14,19 @@ use std::{
 
 use anyhow::{bail, ensure, Context, Result};
 use clap::Parser;
+use proto::build_event_stream::{
+    BuildEvent, BuildEventId, BuildEventPayload, File, NamedSetOfFiles, NamedSetOfFilesId,
+};
 
 mod proto;
 
 /// Loads a newline-deliminated JSON file containing Build Event Protocol data.
-fn load_build_events_jsonl(path: &Path) -> Result<Vec<proto::BuildEvent>> {
-    let f = File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+fn load_build_events_jsonl(path: &Path) -> Result<Vec<BuildEvent>> {
+    let f =
+        std::fs::File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
     let f = BufReader::new(f);
 
-    let mut events: Vec<proto::BuildEvent> = Vec::new();
+    let mut events: Vec<BuildEvent> = Vec::new();
     for (i, line) in f.lines().enumerate() {
         let line = line.with_context(|| format!("Failed to parse {}", path.display()))?;
         let event = serde_json::from_str(&line)
@@ -35,21 +38,21 @@ fn load_build_events_jsonl(path: &Path) -> Result<Vec<proto::BuildEvent>> {
 }
 
 struct FileSetIndex {
-    index: HashMap<proto::NamedSetOfFilesId, proto::NamedSetOfFiles>,
+    index: HashMap<NamedSetOfFilesId, NamedSetOfFiles>,
 }
 
 impl<'a, T> From<T> for FileSetIndex
 where
-    T: IntoIterator<Item = &'a proto::BuildEvent>,
+    T: IntoIterator<Item = &'a BuildEvent>,
 {
     fn from(into_iter: T) -> Self {
         let index = into_iter
             .into_iter()
             .filter_map(|event| {
-                let proto::BuildEventId::NamedSet(id) = &event.id else {
+                let BuildEventId::NamedSet(id) = &event.id else {
                     return None;
                 };
-                let proto::BuildEventPayload::NamedSetOfFiles(named_set) = &event.payload else {
+                let BuildEventPayload::NamedSetOfFiles(named_set) = &event.payload else {
                     return None;
                 };
                 Some((id.clone(), named_set.clone()))
@@ -60,17 +63,13 @@ where
 }
 
 impl FileSetIndex {
-    pub fn files(&self, id: &proto::NamedSetOfFilesId) -> Result<Vec<proto::File>> {
-        let mut files: Vec<proto::File> = Vec::new();
+    pub fn files(&self, id: &NamedSetOfFilesId) -> Result<Vec<File>> {
+        let mut files: Vec<File> = Vec::new();
         self.collect_files(id, &mut files)?;
         Ok(files)
     }
 
-    fn collect_files(
-        &self,
-        id: &proto::NamedSetOfFilesId,
-        files: &mut Vec<proto::File>,
-    ) -> Result<()> {
+    fn collect_files(&self, id: &NamedSetOfFilesId, files: &mut Vec<File>) -> Result<()> {
         let Some(entry) = self.index.get(id) else {
             bail!("NamedSetOfFiles {} not found", id.id);
         };
@@ -82,7 +81,7 @@ impl FileSetIndex {
     }
 }
 
-fn path_for_file(file: &proto::File) -> PathBuf {
+fn path_for_file(file: &File) -> PathBuf {
     let mut path = PathBuf::new();
     for prefix in &file.path_prefix {
         path.push(prefix);
@@ -91,20 +90,16 @@ fn path_for_file(file: &proto::File) -> PathBuf {
     path
 }
 
-fn archive_logs(
-    output_path: &Path,
-    workspace_dir: &Path,
-    events: &[proto::BuildEvent],
-) -> Result<()> {
+fn archive_logs(output_path: &Path, workspace_dir: &Path, events: &[BuildEvent]) -> Result<()> {
     let index: FileSetIndex = events.into();
 
     let mut paths: Vec<PathBuf> = Vec::new();
 
     for event in events {
-        let proto::BuildEventId::TargetCompleted(complete_id) = &event.id else {
+        let BuildEventId::TargetCompleted(complete_id) = &event.id else {
             continue;
         };
-        let proto::BuildEventPayload::Completed(complete) = &event.payload else {
+        let BuildEventPayload::Completed(complete) = &event.payload else {
             bail!(
                 "Corrupted BuildEvent: TargetCompleted for {}: payload is something else",
                 complete_id.label
