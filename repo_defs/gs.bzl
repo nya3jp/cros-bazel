@@ -65,6 +65,11 @@ def download_gs_file(repository_ctx):
     if not filename:
         filename = url.split("/")[-1]
 
+    extra_env = dict()
+    internal_boto = repository_ctx.workspace_root.get_child("private-overlays/chromeos-overlay/googlestorage_account.boto")
+    if internal_boto.exists:
+        extra_env["BOTO_CONFIG"] = str(internal_boto)
+
     dest = repository_ctx.path("file/" + filename)
     cmd = [
         repository_ctx.attr._gsutil,
@@ -75,6 +80,7 @@ def download_gs_file(repository_ctx):
     st = repository_ctx.execute(
         cmd,
         working_directory = str(repository_ctx.workspace_root),
+        environment = extra_env,
     )
     if st.return_code:
         fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
