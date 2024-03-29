@@ -2,9 +2,33 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+
+# TODO: Use rust_prost_library instead. We use build.rs for now for
+# rust-analyzer compatibility.
+cargo_build_script(
+    name = "build_script",
+    srcs = ["build.rs"],
+    build_script_env = {
+        "PROTOC": "$(execpath @protobuf//:protoc)",
+        # This is an ugly hack to tell build.rs the include path for well known types.
+        "WELL_KNOWN_TYPES_MARKER": "$(execpath @protobuf//:LICENSE)",
+    },
+    data = [
+        "proto/third_party/spawn.proto",
+        "@protobuf//:LICENSE",
+        "@protobuf//:well_known_type_protos",
+    ],
+    tools = [
+        "@protobuf//:protoc",
+    ],
+    deps = [
+        "@alchemy_crates//:prost-build",
+    ],
+)
 
 rust_binary(
     name = "process_artifacts",
@@ -12,9 +36,12 @@ rust_binary(
     crate_name = "process_artifacts",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
+        ":build_script",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:itertools",
+        "@alchemy_crates//:prost",
+        "@alchemy_crates//:prost-types",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:tempfile",

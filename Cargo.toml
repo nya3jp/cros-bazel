@@ -81,6 +81,9 @@ path_absolutize = { package = "path-absolutize", version = "3.0.14" }
 pathdiff = "0.2.1"
 pretty_assertions = "1.1.0"
 proptest = "1.0.0"
+prost = "0.12.4"
+prost-build = "0.12.4"
+prost-types = "0.12.4"
 protobuf = { version = "2.8.2", features = ["with-bytes"] }
 rand = "0.8.5"
 rayon = "1.6.0"

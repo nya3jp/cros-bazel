@@ -2,6 +2,4 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-pub mod build_event_stream;
-pub mod ebuild_metadata;
-pub mod spawn;
+include!(concat!(env!("OUT_DIR"), "/tools.protos.rs"));
