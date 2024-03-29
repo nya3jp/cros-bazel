@@ -311,3 +311,30 @@ def single_binary_package_set_info(self_package, package_sets):
             transitive = [s.partials for s in package_sets],
         ),
     )
+
+def get_all_deps(ctx):
+    """
+    Collects all dependencies specified in the attributes of the current rule.
+
+    Args:
+        ctx: ctx: Context passed to the current rule implementation function.
+
+    Returns:
+        list[Depset[Target]]: All dependency targets.
+    """
+    deps = []
+    for name in dir(ctx.rule.attr):
+        attr = getattr(ctx.rule.attr, name)
+        if type(attr) == "Target":
+            deps.append(attr)
+        elif type(attr) == "list":
+            for value in attr:
+                if type(value) == "Target":
+                    deps.append(value)
+        elif type(attr) == "dict":
+            for key, value in attr.items():
+                if type(key) == "Target":
+                    deps.append(key)
+                if type(value) == "Target":
+                    deps.append(value)
+    return deps
