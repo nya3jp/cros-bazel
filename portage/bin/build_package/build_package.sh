@@ -17,13 +17,6 @@ if [[ -d /home/root/chrome_root/src/third_party/depot_tools ]]; then
 
   # Tell the chrome ebuilds to use the local source.
   export CHROME_ORIGIN="LOCAL_SOURCE"
-
-  # HACK: Run `git init` to make chrome/src a git repository. `dirmd read`
-  # needs this to know where the chrome source root directory is.
-  # TODO(b/327296393): Remove this hack.
-  if type git; then
-    git -C /home/root/chrome_root/src init
-  fi
 fi
 
 # cros_sdk creates this directory.
