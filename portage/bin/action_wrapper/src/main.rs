@@ -7,6 +7,8 @@ use chrome_trace::{Event, Phase, Trace};
 use clap::Parser;
 use cliutil::{handle_top_level_result, TRACE_DIR_ENV};
 use fileutil::SafeTempDir;
+use nix::sys::resource::{getrusage, Usage, UsageWho};
+use nix::sys::time::TimeValLike;
 use nix::unistd::{getgid, getuid};
 use processes::status_to_exit_code;
 use serde_json::json;
@@ -15,7 +17,7 @@ use std::fs::File;
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, ExitStatus};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 const PROGRAM_NAME: &str = "action_wrapper";
 
@@ -73,7 +75,12 @@ fn ensure_passwordless_sudo() -> Result<()> {
     Ok(())
 }
 
-fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Result<()> {
+fn merge_profiles(
+    input_profiles_dir: &Path,
+    output_profile_file: &Path,
+    origin_time: &SystemTime,
+    rusage: &Usage,
+) -> Result<()> {
     let mut merged_trace = Trace::new();
 
     // Load all profiles and merge events into one trace.
@@ -83,8 +90,9 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
         merged_trace.events.extend(trace.events);
     }
 
-    // Compute timestamp offsets from clock_sync metadata events.
-    let mut clock_offset_by_process_id: HashMap<i64, Duration> = HashMap::new();
+    // Compute base times (i.e. the system time corresponding to ts=0 in each
+    // process) from clock_sync metadata events.
+    let mut base_time_by_process_id: HashMap<i64, SystemTime> = HashMap::new();
     for event in merged_trace.events.iter() {
         if event.phase != Phase::Metadata {
             continue;
@@ -92,58 +100,43 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
         if event.name != "clock_sync" {
             continue;
         }
-        let args_value = match &event.args {
-            Some(a) => a,
-            None => {
-                continue;
-            }
+        let Some(args_value) = &event.args else {
+            continue;
         };
-        let args_object = match args_value.as_object() {
-            Some(o) => o,
-            None => {
-                continue;
-            }
+        let Some(args_object) = args_value.as_object() else {
+            continue;
         };
-        let system_time_number = match args_object.get("system_time") {
-            Some(serde_json::Value::Number(n)) => n,
-            _ => {
-                continue;
-            }
+        let Some(serde_json::Value::Number(system_time_number)) = args_object.get("system_time")
+        else {
+            continue;
         };
-        let system_time = match system_time_number.as_f64() {
-            Some(f) => Duration::from_secs_f64(f),
-            None => {
-                continue;
-            }
+        let Some(system_time_float) = system_time_number.as_f64() else {
+            continue;
         };
-        let offset = system_time - Duration::from_secs_f64(event.timestamp / 1_000_000.0);
-        clock_offset_by_process_id.insert(event.process_id, offset);
+        let system_time = SystemTime::UNIX_EPOCH + Duration::from_secs_f64(system_time_float);
+        let base_time = system_time - Duration::from_secs_f64(event.timestamp / 1_000_000.0);
+        base_time_by_process_id.insert(event.process_id, base_time);
     }
 
     // Update timestamps.
-    if let Some(min_clock_offset) = clock_offset_by_process_id
-        .values()
-        .copied()
-        .reduce(Duration::min)
-    {
-        for event in merged_trace.events.iter_mut() {
-            let clock_offset = match clock_offset_by_process_id.get(&event.process_id) {
-                Some(o) => *o,
-                None => {
-                    // Leave unadjustable entries as-is.
-                    continue;
-                }
-            };
-            event.timestamp += (clock_offset - min_clock_offset).as_secs_f64() * 1_000_000.0;
-        }
+    for event in merged_trace.events.iter_mut() {
+        let Some(base_time) = base_time_by_process_id.get(&event.process_id) else {
+            // Leave unadjustable entries as-is.
+            continue;
+        };
+        event.timestamp += base_time
+            .duration_since(*origin_time)
+            .expect("valid times")
+            .as_secs_f64()
+            * 1_000_000.0;
     }
 
-    // Also add process_sort_index metadata to ensure processes are sorted in
+    // Add process_sort_index metadata to ensure processes are sorted in
     // the execution order.
-    let mut clock_offsets: Vec<(i64, Duration)> = clock_offset_by_process_id.into_iter().collect();
-    clock_offsets.sort_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Clock offset is NaN"));
+    let mut sort_order: Vec<(i64, SystemTime)> = base_time_by_process_id.into_iter().collect();
+    sort_order.sort_by(|(_, a), (_, b)| a.cmp(b));
 
-    for (sort_index, (process_id, _)) in clock_offsets.into_iter().enumerate() {
+    for (sort_index, (process_id, _)) in sort_order.into_iter().enumerate() {
         merged_trace.events.push(Event {
             name: "process_sort_index".to_owned(),
             category: "".to_owned(),
@@ -155,6 +148,51 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
         });
     }
 
+    // Add the action_wrapper process and spans.
+    let clock_sync = origin_time
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("valid time")
+        .as_secs_f64();
+    for (name, args) in [
+        ("process_name", json!({ "name": "action_wrapper" })),
+        ("thread_name", json!({ "name": "info" })),
+        ("clock_sync", json!({ "system_time": clock_sync })),
+    ] {
+        merged_trace.events.push(Event {
+            name: name.to_owned(),
+            category: "".to_owned(),
+            phase: Phase::Metadata,
+            timestamp: 0.0,
+            process_id: 1,
+            thread_id: 1,
+            args: Some(args),
+        });
+    }
+    merged_trace.events.push(Event {
+        name: "action_wrapper".to_owned(),
+        category: "".to_owned(),
+        phase: Phase::Begin,
+        timestamp: 0.0,
+        process_id: 1,
+        thread_id: 1,
+        args: None,
+    });
+    let user_time_usec = rusage.user_time().num_nanoseconds() as f64 / 1000.0;
+    let system_time_usec = rusage.system_time().num_nanoseconds() as f64 / 1000.0;
+    merged_trace.events.push(Event {
+        name: "action_wrapper".to_owned(),
+        category: "".to_owned(),
+        phase: Phase::End,
+        timestamp: origin_time.elapsed().expect("valid time").as_nanos() as f64 / 1000.0,
+        process_id: 1,
+        thread_id: 1,
+        args: Some(json!({
+            "total_time": user_time_usec + system_time_usec,
+            "user_time": user_time_usec,
+            "sys_time": system_time_usec,
+        })),
+    });
+
     // Save merged traces.
     merged_trace.save(File::create(output_profile_file)?)?;
 
@@ -162,6 +200,8 @@ fn merge_profiles(input_profiles_dir: &Path, output_profile_file: &Path) -> Resu
 }
 
 fn do_main(args: &Cli) -> Result<ExitStatus> {
+    let origin_time = SystemTime::now();
+
     let mut command = if args.privileged {
         ensure_passwordless_sudo()?;
         let mut command = Command::new(SUDO_PATH);
@@ -180,23 +220,30 @@ fn do_main(args: &Cli) -> Result<ExitStatus> {
     let status = processes::run(&mut command)?;
     let elapsed = start_time.elapsed();
 
+    let rusage = getrusage(UsageWho::RUSAGE_CHILDREN)?;
+
+    let times = format!(
+        "wall {:.1}s, total {:.1}s, user {:.1}s, sys {:.1}s",
+        elapsed.as_secs_f32(),
+        (rusage.user_time().num_nanoseconds() + rusage.system_time().num_nanoseconds()) as f64
+            / 1_000_000_000.0,
+        rusage.user_time().num_nanoseconds() as f64 / 1_000_000_000.0,
+        rusage.system_time().num_nanoseconds() as f64 / 1_000_000_000.0,
+    );
+
     if let Some(signal_num) = status.signal() {
         let signal_name = match nix::sys::signal::Signal::try_from(signal_num) {
             Ok(signal) => signal.to_string(),
             Err(_) => signal_num.to_string(),
         };
         eprintln!(
-            "{}: Command killed with signal {} in {:.1}s",
-            PROGRAM_NAME,
-            signal_name,
-            elapsed.as_secs_f32()
+            "{}: Command killed with signal {} ({})",
+            PROGRAM_NAME, signal_name, times
         );
     } else if let Some(code) = status.code() {
         eprintln!(
-            "{}: Command exited with code {} in {:.1}s",
-            PROGRAM_NAME,
-            code,
-            elapsed.as_secs_f32()
+            "{}: Command exited with code {} ({})",
+            PROGRAM_NAME, code, times
         );
     } else {
         unreachable!("Unexpected ExitStatus: {:?}", status);
@@ -214,7 +261,7 @@ fn do_main(args: &Cli) -> Result<ExitStatus> {
     }
 
     if let Some(profile_file) = &args.profile {
-        merge_profiles(profiles_dir.path(), profile_file)?;
+        merge_profiles(profiles_dir.path(), profile_file, &origin_time, &rusage)?;
     }
 
     // Propagate the exit status of the command.
@@ -329,7 +376,7 @@ mod tests {
     #[test]
     fn redirected_error() -> Result<()> {
         let log_re = Regex::new(&format!(
-            r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command exited with code 40 in \d+\.\d+s\n"
+            r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command exited with code 40 "
         ))
         .unwrap();
 
@@ -349,7 +396,7 @@ mod tests {
     #[test]
     fn redirected_success() -> Result<()> {
         let log_re = Regex::new(&format!(
-            r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command exited with code 0 in \d+\.\d+s\n"
+            r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command exited with code 0 "
         ))
         .unwrap();
 
@@ -365,7 +412,7 @@ mod tests {
     #[test]
     fn redirected_signal() -> Result<()> {
         let log_re = Regex::new(&format!(
-            r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command killed with signal SIGUSR1 in \d+\.\d+s\n"
+            r"^{TEST_SCRIPT_OUTPUT}{PROGRAM_NAME}: Command killed with signal SIGUSR1 "
         ))
         .unwrap();
 
