@@ -123,8 +123,12 @@ pub fn archive_logs(output_path: &Path, workspace_dir: &Path, events: &[BuildEve
 
     let mut input_file = tempfile::tempfile()?;
     for file in fileset.files() {
-        input_file.write_all(path_for_file(file).as_os_str().as_bytes())?;
-        input_file.write_all(&[0])?;
+        let relative_path = path_for_file(file);
+        // Ignore non-existent files.
+        if workspace_dir.join(&relative_path).try_exists()? {
+            input_file.write_all(relative_path.as_os_str().as_bytes())?;
+            input_file.write_all(&[0])?;
+        }
     }
     input_file.seek(SeekFrom::Start(0))?;
 
@@ -185,15 +189,10 @@ mod tests {
              target/host/chromiumos/sys-kernel/linux-headers/linux-headers-4.14-r92.log",
             "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/stage1/\
              target/host/chromiumos/sys-kernel/linux-headers/linux-headers-4.14-r92.profile.json",
-            "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/stage1/\
-             target/host/portage-stable/virtual/os-headers/os-headers-0-r2.log",
-            "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/stage1/\
-             target/host/portage-stable/virtual/os-headers/os-headers-0-r2.profile.json",
             // We create *.tbz2, but they should not be included in the tarball.
             "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/stage1/\
              target/host/chromiumos/sys-kernel/linux-headers/linux-headers-4.14-r92.tbz2",
-            "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/stage1/\
-             target/host/portage-stable/virtual/os-headers/os-headers-0-r2.tbz2",
+            // We omit artifacts for virtual/os-headers.
         ] {
             let path = workspace_dir.join(relative_path);
             std::fs::create_dir_all(path.parent().unwrap())?;
@@ -250,10 +249,6 @@ mod tests {
                 "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/\
                  stage1/target/host/chromiumos/sys-kernel/linux-headers/\
                  linux-headers-4.14-r92.profile.json",
-                "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/\
-                 stage1/target/host/portage-stable/virtual/os-headers/os-headers-0-r2.log",
-                "bazel-out/k8-fastbuild/bin/external/_main~portage~portage/internal/packages/\
-                 stage1/target/host/portage-stable/virtual/os-headers/os-headers-0-r2.profile.json",
             ]
         );
 
