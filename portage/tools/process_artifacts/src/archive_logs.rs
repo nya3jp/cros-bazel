@@ -104,14 +104,12 @@ pub fn archive_logs(output_path: &Path, workspace_dir: &Path, events: &[BuildEve
     let mut fileset = FastFileSet::new();
 
     for event in events {
-        let BuildEventId::TargetCompleted(complete_id) = &event.id else {
+        let BuildEventId::TargetCompleted(_) = &event.id else {
             continue;
         };
         let BuildEventPayload::Completed(complete) = &event.payload else {
-            bail!(
-                "Corrupted BuildEvent: TargetCompleted for {}: payload is something else",
-                complete_id.label
-            );
+            // This can happen when the target was incomplete due to build errors.
+            continue;
         };
         for output_group in &complete.output_group {
             if output_group.name != "transitive_logs" {

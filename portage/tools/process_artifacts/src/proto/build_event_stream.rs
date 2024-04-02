@@ -59,6 +59,7 @@ pub struct NamedSetOfFiles {
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TargetComplete {
+    #[serde(default)]
     pub success: bool,
     #[serde(default)]
     pub output_group: Vec<OutputGroup>,
@@ -102,10 +103,11 @@ mod tests {
 
     #[test]
     fn test_deserialize() {
+        // NamedSetOfFiles.
         assert_eq!(
             serde_json::from_value::<BuildEvent>(json!({
                 "id": {
-                    "namedSet": {"id":"5"}
+                    "namedSet": {"id": "5"}
                 },
                 "namedSetOfFiles": {
                     "files": [
@@ -135,12 +137,13 @@ mod tests {
             }
         );
 
+        // TargetCompleted.
         assert_eq!(
             serde_json::from_value::<BuildEvent>(json!({
                 "id": {
                     "targetCompleted": {
                         "label": "@portage/some/package:target",
-                        "aspect": "//bazel/portage/build_defs:some.bzl%some_aspect",
+                        "aspect": "//bazel/portage/build_defs:some.bzl%some_aspect"
                     }
                 },
                 "completed": {
@@ -165,9 +168,47 @@ mod tests {
                         name: "all_logs".to_string(),
                         file_sets: vec![NamedSetOfFilesId {
                             id: "0".to_string(),
-                        },],
+                        }],
                         incomplete: false,
-                    },],
+                    }],
+                })
+            }
+        );
+
+        // TargetCompleted for a failed case.
+        assert_eq!(
+            serde_json::from_value::<BuildEvent>(json!({
+                "id": {
+                    "targetCompleted": {
+                        "label": "@portage/some/package:target",
+                        "aspect": "//bazel/portage/build_defs:some.bzl%some_aspect"
+                    },
+                },
+                "completed": {
+                    "outputGroup": [
+                        {
+                            "name": "transitive_logs",
+                            "fileSets": [{"id": "0"}],
+                            "incomplete": true
+                        }
+                    ]
+                }
+            }))
+            .expect("failed to deserialize BuildEvent"),
+            BuildEvent {
+                id: BuildEventId::TargetCompleted(TargetCompletedId {
+                    label: "@portage/some/package:target".to_string(),
+                    aspect: Some("//bazel/portage/build_defs:some.bzl%some_aspect".to_string()),
+                }),
+                payload: BuildEventPayload::Completed(TargetComplete {
+                    success: false,
+                    output_group: vec![OutputGroup {
+                        name: "transitive_logs".to_string(),
+                        file_sets: vec![NamedSetOfFilesId {
+                            id: "0".to_string(),
+                        }],
+                        incomplete: true,
+                    }],
                 })
             }
         );
