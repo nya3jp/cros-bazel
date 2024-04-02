@@ -28,10 +28,13 @@ pub struct ProfileCompiler<'a> {
 
 const MAKE_DEFAULT_VARIABLES: &[&str; 2] = &["PROFILE_ONLY_VARIABLES", "USE_EXPAND"];
 
-const IGNORED_VARIABLES: &[&str; 1] = &[
+const IGNORED_VARIABLES: &[&str; 2] = &[
     // We don't need a global USE declaration because we inject a
     // per-package package.use.
     "USE",
+    // We don't inject ACCEPT_LICENSE because it's not evaluated when
+    // invoking ebuild.
+    "ACCEPT_LICENSE",
     // TODO: Strip out all RESUMECOMMAND* and FETCHCOMMAND* variables
     // since we don't need them.
 ];
@@ -280,6 +283,7 @@ mod tests {
                 ("ELIBC".into(), "glibc".into()),
                 ("PORTDIR".into(), repo.base_dir().to_string_lossy().into()),
                 ("ACCEPT_KEYWORDS".into(), "amd64".into()),
+                ("ACCEPT_LICENSE".into(), "* -@EULA".into()),
                 ("PYTHON_TARGETS".into(), "python3_6".into()),
                 ("PROFILE_ONLY_VARIABLES".into(), "ARCH ELIBC IUSE_IMPLICIT USE_EXPAND_IMPLICIT USE_EXPAND_UNPREFIXED USE_EXPAND_VALUES_ARCH USE_EXPAND_VALUES_ELIBC".into()),
                 ("USE_EXPAND_UNPREFIXED".into(), "ARCH".into()),
