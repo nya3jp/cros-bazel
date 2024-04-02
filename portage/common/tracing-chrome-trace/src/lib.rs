@@ -98,7 +98,8 @@ impl ChromeTraceLayer {
         let start_clock = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("System time is before UNIX epoch")
-            .as_secs_f64();
+            .as_secs_f64()
+            * 1_000_000.0;
 
         let info = CurrentThreadInfo::get();
 

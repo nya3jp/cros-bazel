@@ -113,7 +113,8 @@ fn merge_profiles(
         let Some(system_time_float) = system_time_number.as_f64() else {
             continue;
         };
-        let system_time = SystemTime::UNIX_EPOCH + Duration::from_secs_f64(system_time_float);
+        let system_time =
+            SystemTime::UNIX_EPOCH + Duration::from_secs_f64(system_time_float / 1_000_000.0);
         let base_time = system_time - Duration::from_secs_f64(event.timestamp / 1_000_000.0);
         base_time_by_process_id.insert(event.process_id, base_time);
     }
@@ -152,7 +153,8 @@ fn merge_profiles(
     let clock_sync = origin_time
         .duration_since(SystemTime::UNIX_EPOCH)
         .expect("valid time")
-        .as_secs_f64();
+        .as_secs_f64()
+        * 1_000_000.0;
     for (name, args) in [
         ("process_name", json!({ "name": "action_wrapper" })),
         ("thread_name", json!({ "name": "info" })),
