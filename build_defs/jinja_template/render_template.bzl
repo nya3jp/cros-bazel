@@ -76,22 +76,26 @@ def render_template(*, name, vars = None, **kwargs):
         **kwargs
     )
 
-def render_template_to_source(*, name, out, vars = None, **kwargs):
+def render_template_to_source(*, name, out, template, vars = None, vars_file = None, **kwargs):
     """Expands a jinja2 template to a source file.
 
     Args:
         name: (str) The name of the build rule
         out: (str) The filename to output to.
+        template: (Label) The jinja_template target to render.
         vars: (Mapping[str, json-able]) A mapping from variable names to values.
           Values must be able to be converted to json.
+        vars_file: (Label) json file containing variables
         **kwargs: kwargs to pass to _expand_template
     """
+    kwargs.setdefault("visibility", ["//visibility:private"])
     generated_name = "_%s_generated" % name
     render_template(
         name = generated_name,
         regen_name = name,
         vars = vars,
-        visibility = ["//visibility:private"],
+        vars_file = vars_file,
+        template = template,
         **kwargs
     )
 
@@ -100,5 +104,5 @@ def render_template_to_source(*, name, out, vars = None, **kwargs):
         files = {
             out: generated_name,
         },
-        visibility = ["//visibility:private"],
+        **kwargs
     )
