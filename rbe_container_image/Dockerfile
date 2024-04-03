@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# TODO: Switch to distroless base image after cc toolchains are fully hermetic
+# TODO: Switch to distroless base image after cc toolchains are hermetic
 FROM ubuntu:22.04
-# TODO: Remove after cc toolchains are fully hermetic
+# TODO: Remove after cc toolchains are hermetic
 RUN apt-get update && yes | apt-get install -y build-essential
