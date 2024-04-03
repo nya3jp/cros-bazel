@@ -1909,13 +1909,14 @@ dependencies = [
 
 [[package]]
 name = "testutil"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "fileutil",
  "libc",
  "nix",
  "once_cell",
+ "runfiles",
  "tempfile",
  "walkdir",
 ]

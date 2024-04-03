@@ -1,20 +1,24 @@
+# AUTO GENERATED - DO NOT EDIT!
+# To update, run "bazel run @@//bazel/portage/common/testutil:generate_cargo_toml"
 [package]
 name = "testutil"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-fileutil = { path = "../fileutil" }
-anyhow.workspace = true
-libc.workspace = true
-once_cell.workspace = true
-walkdir.workspace = true
+anyhow = { package = "anyhow", workspace = true }
+fileutil = { package = "fileutil", path = "../fileutil" }
+libc = { package = "libc", workspace = true }
+runfiles = { package = "runfiles", workspace = true }
+walkdir = { package = "walkdir", workspace = true }
+
 
 [dev-dependencies]
-nix.workspace = true
-tempfile.workspace = true
+nix = { package = "nix", workspace = true }
+once_cell = { package = "once_cell", workspace = true }
+tempfile = { package = "tempfile", workspace = true }
+
 
 [features]
-bazel = []
+# For now, features are not supported. We can, at request, add support for them,
+# but for the time being, no-one actually needs them.

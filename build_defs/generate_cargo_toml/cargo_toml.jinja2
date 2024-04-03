@@ -1,0 +1,32 @@
+{%- macro uri(metadata) -%}
+  {%- if metadata.relative != None -%}
+    path = "{{ metadata.relative }}"
+  {%- elif metadata.has_manifest -%}
+    workspace = true
+  {%- else -%}
+    {{ fail("Unsupported dependency: " + metadata.alias) }}
+  {%- endif -%}
+{%- endmacro -%}
+
+{% macro dependencies(deps) -%}
+  {% for package, metadata in deps.items() %}
+{{ metadata.alias }} = { package = "{{ package }}", {{ uri(metadata) }} }
+  {% endfor %}
+{%- endmacro -%}
+
+# AUTO GENERATED - DO NOT EDIT!
+# To update, run "bazel run {{ label }}"
+[package]
+name = "{{ name }}"
+version = "1.0.0"
+edition = "{{ edition }}"
+
+[dependencies]
+{{ dependencies(deps) }}
+
+[dev-dependencies]
+{{ dependencies(dev_deps) }}
+
+[features]
+# For now, features are not supported. We can, at request, add support for them,
+# but for the time being, no-one actually needs them.

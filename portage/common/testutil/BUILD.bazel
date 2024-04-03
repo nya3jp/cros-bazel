@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 filegroup(
@@ -24,7 +25,6 @@ rust_library(
         "//bazel/portage/common/fileutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:libc",
-        "@alchemy_crates//:once_cell",
         "@alchemy_crates//:walkdir",
         "@rules_rust//tools/runfiles",
     ],
@@ -39,6 +39,13 @@ rust_test(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:nix",
+        "@alchemy_crates//:once_cell",
         "@alchemy_crates//:tempfile",
     ],
+)
+
+generate_cargo_toml(
+    name = "generate_cargo_toml",
+    crate = ":testutil",
+    test = ":testutil_test",
 )
