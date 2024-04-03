@@ -122,6 +122,8 @@ register_toolchains("//bazel/module_extensions/toolchains/rust/host:all")
 
 register_toolchains("@rust_toolchains//:all")
 
+register_toolchains("@rules_rust//proto/protobuf:default-proto-toolchain")
+
 cargo_bazel_bootstrap = use_extension("@rules_rust//crate_universe/private/module_extensions:cargo_bazel_bootstrap.bzl", "cargo_bazel_bootstrap")
 use_repo(cargo_bazel_bootstrap, "cargo_bazel_bootstrap")
 
