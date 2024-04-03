@@ -63,11 +63,6 @@ def main(args: List[str]):
         # Let bazel display its own error listing available commands.
         os.execv(bazel_real, [bazel_real, *startup_options])
 
-    # Used to force the alchemist_digest repo rule to re-run every
-    # invocation.
-    cache_bust_date = os.environ.get("CACHE_BUST_DATE", f"{time.time():.9f}")
-    command_options.append(f"--repo_env=CACHE_BUST_DATE={cache_bust_date}")
-
     # Append the current ci.chromium.org build id, if this is a CI build.
     # More info:
     # https://chromium.googlesource.com/infra/luci/luci-py/+/HEAD/client/LUCI_CONTEXT.md
@@ -147,6 +142,8 @@ def main(args: List[str]):
             stderr=subprocess.DEVNULL,
             close_fds=True,
         )
+
+    (workspace / "bazel/.now").write_text(f"{time.time()}")
 
     argv_real = [
         bazel_real,

@@ -935,7 +935,7 @@ ebuild_install_action = rule(
             default = Label("//bazel/portage/bin/action_wrapper"),
         ),
         _cache_bust = attr.label(
-            default = Label("@now//:date"),
+            default = Label("//bazel:now"),
             allow_single_file = True,
         ),
     ),

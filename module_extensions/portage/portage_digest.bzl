@@ -8,6 +8,7 @@ exports_files(["board", "digest", "profile"])
 
 def _portage_digest_repository_impl(repo_ctx):
     """Repository rule to generate a digest of the boards overlays."""
+    repo_ctx.path(repo_ctx.attr._cache_bust)
 
     # Keep all the ctx.path calls first to avoid expensive restarts
     alchemist = repo_ctx.path(repo_ctx.attr.alchemist)
@@ -53,11 +54,11 @@ portage_digest = repository_rule(
     implementation = _portage_digest_repository_impl,
     environ = [
         # See tools/bazel for where this variable is set
-        "CACHE_BUST_DATE",
         "BOARD",
     ],
     attrs = dict(
         alchemist = attr.label(allow_single_file = True),
+        _cache_bust = attr.label(default = "//bazel:now", allow_single_file = True),
     ),
     local = True,
 )

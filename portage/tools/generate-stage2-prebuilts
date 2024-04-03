@@ -81,7 +81,7 @@ do
 
     readarray -t EBUILD_TARGETS < <(
         set -x
-        bazel cquery --repo_env=CACHE_BUST_DATE=none \
+        bazel cquery \
             --//bazel/portage:omit_ebuild_src \
             "kind(ebuild, deps(${TARGET}))" || kill "$$"
     )

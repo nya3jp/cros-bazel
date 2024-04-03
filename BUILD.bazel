@@ -20,3 +20,11 @@ package_group(
         "//",
     ],
 )
+
+# This file is filled with a timestamp in tools/bazel on each bazel invocation.
+# Thus, depending on this file will ensure that your action always runs.
+filegroup(
+    name = "now",
+    srcs = [".now"],
+    visibility = ["//visibility:public"],
+)

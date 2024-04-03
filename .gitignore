@@ -5,3 +5,4 @@
 /bazel-*
 /.mypy_cache
 /target/
+/.now
