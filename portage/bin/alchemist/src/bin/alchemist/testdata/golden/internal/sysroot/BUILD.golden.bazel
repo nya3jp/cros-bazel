@@ -1,0 +1,13 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/portage/build_defs:sysroot.bzl", "sysroot_create")
+
+sysroot_create(
+    name = "amd64-generic_sysroot",
+    board = "amd64-generic",
+    visibility = ["//visibility:public"],
+)

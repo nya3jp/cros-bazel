@@ -8,3 +8,4 @@ pub mod packages;
 pub mod portage_config;
 pub mod sdk;
 pub mod sources;
+pub mod sysroot;

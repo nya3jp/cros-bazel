@@ -47,6 +47,7 @@ use self::{
             SdkBaseConfig, SdkHostConfig, SdkTargetConfig,
         },
         sources::generate_internal_sources,
+        sysroot::generate_sysroot_build_file,
     },
     public::{generate_public_images, generate_public_packages},
 };
@@ -535,6 +536,10 @@ pub fn generate_repo_main(
             .expect("src_dir '{src_dir:?} to have a parent"),
         output_dir,
     )?;
+
+    if let Some(target) = target {
+        generate_sysroot_build_file(target, output_dir)?;
+    }
 
     eprintln!("Generated @portage.");
     Ok(())
