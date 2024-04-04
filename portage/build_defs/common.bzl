@@ -181,6 +181,13 @@ SDKInfo = provider(
     },
 )
 
+SysrootInfo = provider(
+    "A sysroot in the permanent SDK where packages are installed.",
+    fields = {
+        "output": "File: (Empty) file to chain dependencies.",
+    },
+)
+
 EbuildLibraryInfo = provider(
     "Ebuild library info",
     fields = {

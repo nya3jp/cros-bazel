@@ -10,6 +10,12 @@ sh_binary(
     visibility = ["//visibility:public"],
 )
 
+sh_binary(
+    name = "setup_board",
+    srcs = ["setup_board.sh"],
+    visibility = ["//visibility:public"],
+)
+
 py_binary(
     name = "update_prebuilts",
     srcs = ["update_prebuilts.py"],
