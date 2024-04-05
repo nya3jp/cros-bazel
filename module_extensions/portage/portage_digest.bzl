@@ -58,7 +58,12 @@ portage_digest = repository_rule(
     ],
     attrs = dict(
         alchemist = attr.label(allow_single_file = True),
-        _cache_bust = attr.label(default = "//bazel:now", allow_single_file = True),
+        _cache_bust = attr.label(
+            # We need to point to the actual file, since we can't use a file
+            # group from a repository rule.
+            default = "//bazel:.now",
+            allow_single_file = True,
+        ),
     ),
     local = True,
 )
