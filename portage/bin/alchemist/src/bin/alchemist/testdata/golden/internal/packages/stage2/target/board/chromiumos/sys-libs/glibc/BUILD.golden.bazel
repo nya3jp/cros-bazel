@@ -614,6 +614,7 @@ ebuild_install_action(
     name = "2.35-r25_installed_no_pdepends",
     board = "amd64-generic",
     package = ":2.35-r25",
+    sysroot = "//internal/sysroot:amd64-generic_sysroot",
     requires = [
     ],
     xpak = {

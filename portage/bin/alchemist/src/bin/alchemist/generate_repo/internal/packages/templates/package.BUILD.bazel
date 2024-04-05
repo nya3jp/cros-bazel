@@ -402,6 +402,7 @@ ebuild_install_action(
     name = "{{ ebuild.version }}_installed_no_pdepends",
     board = "{{ target_board }}",
     package = ":{{ ebuild.version }}",
+    sysroot = "//internal/sysroot:{{ target_board }}_sysroot",
     requires = [
         {%- for dep in ebuild.runtime_deps %}
         "{{ dep }}_installed_no_pdepends",

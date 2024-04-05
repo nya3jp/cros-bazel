@@ -6,7 +6,7 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
-load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "ExtraSourcesInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "compute_file_arg", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "ExtraSourcesInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "SysrootInfo", "compute_file_arg", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
 load("//bazel/transitions:primordial.bzl", "primordial_transition")
@@ -861,6 +861,7 @@ def _ebuild_install_action_impl(ctx):
         pkg.partial,
         ctx.executable._installer,
         ctx.executable._xpaktool,
+        ctx.attr.sysroot[SysrootInfo].output,
         # Forces the action to always run.
         ctx.file._cache_bust,
     ]
@@ -912,6 +913,10 @@ ebuild_install_action = rule(
             doc = """
             The target board name to build the package for.
             """,
+        ),
+        sysroot = attr.label(
+            providers = [SysrootInfo],
+            mandatory = True,
         ),
         xpak = attr.string_dict(
             doc = """

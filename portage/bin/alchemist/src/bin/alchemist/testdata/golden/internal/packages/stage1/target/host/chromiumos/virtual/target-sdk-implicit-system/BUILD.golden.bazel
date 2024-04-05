@@ -647,6 +647,7 @@ ebuild_install_action(
     name = "1-r4_installed_no_pdepends",
     board = "amd64-host",
     package = ":1-r4",
+    sysroot = "//internal/sysroot:amd64-host_sysroot",
     requires = [
         "//internal/packages/stage1/target/host/chromiumos/dev-lang/go:1.20.5_installed_no_pdepends",
         "//internal/packages/stage1/target/host/chromiumos/sys-devel/binutils:2.39_installed_no_pdepends",

@@ -635,6 +635,7 @@ ebuild_install_action(
     name = "1-r4_installed_no_pdepends",
     board = "amd64-generic",
     package = ":1-r4",
+    sysroot = "//internal/sysroot:amd64-generic_sysroot",
     requires = [
         "//internal/packages/stage2/target/board/chromiumos/sys-devel/binutils:2.39_installed_no_pdepends",
         "//internal/packages/stage2/target/board/chromiumos/sys-libs/libcxx:16.0_pre484197_installed_no_pdepends",

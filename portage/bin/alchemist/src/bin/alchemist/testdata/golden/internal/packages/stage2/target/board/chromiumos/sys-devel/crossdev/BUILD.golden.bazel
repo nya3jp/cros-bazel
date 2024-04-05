@@ -599,6 +599,7 @@ ebuild_install_action(
     name = "20211027_installed_no_pdepends",
     board = "amd64-generic",
     package = ":20211027",
+    sysroot = "//internal/sysroot:amd64-generic_sysroot",
     requires = [
     ],
     visibility = ["//:__subpackages__"],

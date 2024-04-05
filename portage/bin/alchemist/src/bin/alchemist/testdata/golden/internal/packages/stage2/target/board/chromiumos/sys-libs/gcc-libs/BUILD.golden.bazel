@@ -612,6 +612,7 @@ ebuild_install_action(
     name = "10.2.0_installed_no_pdepends",
     board = "amd64-generic",
     package = ":10.2.0",
+    sysroot = "//internal/sysroot:amd64-generic_sysroot",
     requires = [
     ],
     xpak = {
