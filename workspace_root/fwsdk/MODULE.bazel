@@ -2,10 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# We don't need to name our module, but the default is __main__, which isn't
-# very meaningful.
+# Use the name "cros" because that'll make it easier to merge the module files
+# down the line.
 module(
-    name = "fwsdk",
+    name = "cros",
     version = "0.1",
 )
 
