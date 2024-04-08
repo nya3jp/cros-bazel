@@ -17,6 +17,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import tempfile
 import time
 from typing import List, NoReturn, Optional
 
@@ -28,6 +29,11 @@ def fail(msg: str) -> NoReturn:
     """Aborts the script execution with the supplied message."""
     print(f"ERROR: {msg}", file=sys.stderr)
     sys.exit(1)
+
+
+def is_inside_chroot() -> bool:
+    """Checks if we're inside the CrOS chroot."""
+    return pathlib.Path("/etc/cros_chroot_version").exists()
 
 
 def get_workspace() -> pathlib.Path:
@@ -74,6 +80,8 @@ class BazelOptions:
     command_options_and_args: List[str]
     # Start-up options to be passed to the nested Bazel server.
     nested_startup_options: List[str]
+    # Whether to override the convenience symlinks.
+    override_convenience_symlinks: bool
 
 
 def compute_options(
@@ -92,27 +100,25 @@ def compute_options(
         None if we failed to compute options and should fall back to the real
         Bazel; otherwise, computed options.
     """
-    startup_options = []
+    common_startup_options = []
 
     # Allow users to have a bazelrc file shared between all chromiumos
     # checkouts, since ~/.bazelrc also has non-chromiumos stuff.
     chromiumos_rc = os.path.expanduser("~/.chromiumos.bazelrc")
     if os.path.exists(chromiumos_rc):
-        startup_options.append(f"--bazelrc={chromiumos_rc}")
+        common_startup_options.append(f"--bazelrc={chromiumos_rc}")
 
-    checksum = hashlib.md5(str(workspace).encode("utf-8")).hexdigest()
-    output_base = os.path.expanduser(
-        f"~/.cache/bazel/_bazel_{getpass.getuser()}/{checksum}"
-    )
+    output_base_override = None
 
     # Parse the command line.
     command = None
     command_options_and_args = None
     for i, arg in enumerate(args):
         if arg.startswith("--"):
-            startup_options.append(arg)
             if arg.startswith("--output_base="):
-                output_base = arg.split("=", 1)[1]
+                output_base_override = arg.split("=", 1)[1]
+            else:
+                common_startup_options.append(arg)
         else:
             command = args[i]
             command_options_and_args = args[i + 1 :]
@@ -129,12 +135,42 @@ def compute_options(
         command_options_and_args.insert(0, opt)
         nested_command_options.append(opt)
 
-    # Compute the repository rule environment for the nested bazel.
-    nested_output_base = f"{output_base}_nested"
-    nested_startup_options = startup_options + [
-        "--output_base",
-        nested_output_base,
+    # Compute the output base.
+    if output_base_override:
+        output_base = pathlib.Path(output_base_override)
+        override_convenience_symlinks = False
+    elif is_inside_chroot():
+        # Override convenience symlinks when we're inside the CrOS chroot so
+        # that they are accessible outside the chroot. Set the output base to a
+        # directory under the source checkout so that its relative paths from
+        # the workspace is stable.
+        # It is important to use different output base directories when we're
+        # inside/outside the chroot. They contain a server PID file, and we're
+        # in different PID namespaces inside/outside the chroot, so the Bazel
+        # client gets confused and kills the Bazel server abruptly if we share
+        # the output base directory.
+        output_base = workspace.parent / ".cache/bazel/out"
+        override_convenience_symlinks = True
+    else:
+        # This is the standard location of the output base directory.
+        workspace_hash = hashlib.md5(str(workspace).encode("utf-8")).hexdigest()
+        user = getpass.getuser()
+        output_base = (
+            pathlib.Path.home() / f".cache/bazel/_bazel_{user}/{workspace_hash}"
+        )
+        override_convenience_symlinks = False
+
+    if override_convenience_symlinks:
+        command_options_and_args.insert(0, "--config=no_convenience_symlinks")
+
+    nested_output_base = pathlib.Path(str(output_base) + "_nested")
+
+    startup_options = [*common_startup_options, f"--output_base={output_base}"]
+    nested_startup_options = [
+        *common_startup_options,
+        f"--output_base={nested_output_base}",
     ]
+
     # --host_jvm_debug is likely intended for outer bazel invocation, so do not
     # pass this arg to nested_bazel_opts.
     base_command = [bazel_real, *nested_startup_options]
@@ -143,7 +179,7 @@ def compute_options(
     nested_data = {
         "base_command": base_command,
         "common_opts": nested_command_options,
-        "nested_output_base": nested_output_base,
+        "nested_output_base": str(nested_output_base),
     }
     command_options_and_args.insert(
         0, f"--repo_env=NESTED_BAZEL={json.dumps(nested_data)}"
@@ -154,7 +190,50 @@ def compute_options(
         command=command,
         command_options_and_args=command_options_and_args,
         nested_startup_options=nested_startup_options,
+        override_convenience_symlinks=override_convenience_symlinks,
     )
+
+
+def update_convenience_symlinks(
+    bazel_real: str, startup_options: List[str], workspace: pathlib.Path
+) -> None:
+    """Updates convenience symlinks (bazel-*) in the workspace."""
+    bazel_bin = pathlib.Path(
+        subprocess.check_output(
+            [
+                bazel_real,
+                *startup_options,
+                "info",
+                "bazel-bin",
+            ]
+        )
+        .decode("utf-8")
+        .strip()
+    )
+    # TODO: Use Path.relative_to(walk_up=True) once we switch to Python 3.12+.
+    relative_bazel_bin = pathlib.Path(os.path.relpath(bazel_bin, workspace))
+    relative_bazel_out = relative_bazel_bin.parent.parent
+    relative_bazel_src = relative_bazel_out.parent
+    relative_bazel_testlogs = relative_bazel_bin.parent / "testlogs"
+
+    for name, target in (
+        ("bazel-bin", relative_bazel_bin),
+        ("bazel-out", relative_bazel_out),
+        ("bazel-src", relative_bazel_src),
+        ("bazel-testlogs", relative_bazel_testlogs),
+    ):
+        try:
+            need_update = os.readlink(workspace / name) != str(target)
+        except OSError:
+            need_update = True
+        if need_update:
+            # Replace the symlink atomically.
+            with tempfile.TemporaryDirectory(
+                dir=workspace, prefix=".symlink."
+            ) as stage_dir:
+                stage_link = pathlib.Path(stage_dir) / name
+                stage_link.symlink_to(target)
+                stage_link.rename(workspace / name)
 
 
 def maintain_nested_bazel(bazel_real: str, options: BazelOptions) -> None:
@@ -198,10 +277,16 @@ def main(args: List[str]) -> NoReturn:
         fail("BAZEL_REAL must be set.")
 
     workspace = get_workspace()
+
     options = compute_options(args, bazel_real, workspace)
     if options is None:
         # Let bazel display its own error listing available commands.
         os.execv(bazel_real, [bazel_real, *args])
+
+    if options.override_convenience_symlinks:
+        update_convenience_symlinks(
+            bazel_real, options.startup_options, workspace
+        )
 
     maintain_nested_bazel(bazel_real, options)
 
