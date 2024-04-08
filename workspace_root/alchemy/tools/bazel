@@ -8,6 +8,7 @@
 This script adds various chromeos-specific command-line options.
 """
 
+import dataclasses
 import getpass
 import hashlib
 import itertools
@@ -17,18 +18,20 @@ import pathlib
 import subprocess
 import sys
 import time
-from typing import List
+from typing import List, NoReturn, Optional
 
 
 _INVOCATION_NAME_PREFIX = "invocations/build-"
 
 
-def fail(msg: str):
+def fail(msg: str) -> NoReturn:
+    """Aborts the script execution with the supplied message."""
     print(f"ERROR: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
 def get_workspace() -> pathlib.Path:
+    """Returns the Bazel workspace path."""
     cwd = pathlib.Path.cwd()
     for parent in itertools.chain([cwd], cwd.parents):
         if parent.joinpath(".repo").is_dir():
@@ -36,88 +39,118 @@ def get_workspace() -> pathlib.Path:
     fail("Working directory is not a bazel workspace")
 
 
-def main(args: List[str]):
-    # We expect BAZEL_REAL to be set by Bazel.
-    bazel_real = os.environ.get("BAZEL_REAL", None)
-    if not bazel_real:
-        fail("BAZEL_REAL must be set.")
+def get_current_build_url() -> Optional[str]:
+    """Returns the current build URL if this is a CI build."""
+    # Scrape the LUCI build ID from LUCI_CONTEXT.
+    # More info:
+    # https://chromium.googlesource.com/infra/luci/luci-py/+/HEAD/client/LUCI_CONTEXT.md
+    #
+    # TODO(b/311706335): Read the buildbucket ID from BAPI instead of
+    # LUCI_CONTEXT when that's available.
+    luci_context = os.environ.get("LUCI_CONTEXT", None)
+    if luci_context is None:
+        return None
+    # Match the ID group: "invocations/build-<ID>" from the resultDB field.
+    with open(luci_context, "r", encoding="utf-8") as f:
+        invocation_name = json.load(f)["resultdb"]["current_invocation"]["name"]
+    if not invocation_name.startswith(_INVOCATION_NAME_PREFIX):
+        fail(f"Invalid invocation name {invocation_name!r}")
+    buildbucket_id = int(invocation_name[len(_INVOCATION_NAME_PREFIX) :])
+    return f"https://ci.chromium.org/ui/b/{buildbucket_id}"
+
+
+@dataclasses.dataclass(frozen=True)
+class BazelOptions:
+    """Computed options for the main/nested Bazel server."""
+
+    # Start-up options to be passed to the main Bazel server.
+    startup_options: List[str]
+    # The command to be passed to the main Bazel server.
+    command: str
+    # Arguments of the command, including options and positional arguments.
+    command_options_and_args: List[str]
+    # Start-up options to be passed to the nested Bazel server.
+    nested_startup_options: List[str]
+
+
+def compute_options(
+    args: List[str],
+    bazel_real: str,
+    workspace: pathlib.Path,
+) -> Optional[BazelOptions]:
+    """Computes options for the real Bazel invocation.
+
+    Args:
+        args: Arguments passed to the current bazel wrapper.
+        bazel_real: The path of the real Bazel binary.
+        workspace: The path of the current workspace.
+
+    Returns:
+        None if we failed to compute options and should fall back to the real
+        Bazel; otherwise, computed options.
+    """
+    startup_options = []
 
     # Allow users to have a bazelrc file shared between all chromiumos
     # checkouts, since ~/.bazelrc also has non-chromiumos stuff.
-    startup_options = []
     chromiumos_rc = os.path.expanduser("~/.chromiumos.bazelrc")
     if os.path.exists(chromiumos_rc):
         startup_options.append(f"--bazelrc={chromiumos_rc}")
 
+    # Parse the command line.
     command = None
-    command_options = []
-    nested_command_options = []
+    command_options_and_args = None
     for i, arg in enumerate(args):
         if arg.startswith("--"):
             startup_options.append(arg)
         else:
             command = args[i]
-            command_args = args[i + 1 :]
+            command_options_and_args = args[i + 1 :]
             break
     if command is None:
-        # Let bazel display its own error listing available commands.
-        os.execv(bazel_real, [bazel_real, *startup_options])
+        return None
+    assert command_options_and_args is not None
 
-    # Append the current ci.chromium.org build id, if this is a CI build.
-    # More info:
-    # https://chromium.googlesource.com/infra/luci/luci-py/+/HEAD/client/LUCI_CONTEXT.md
-    #
-    # TODO(b/311706335): Read the buildbucket ID from BAPI instead of
-    # LUCI_CONTEXT
-    # when that's available.
-    luci_context = os.environ.get("LUCI_CONTEXT", None)
-    if luci_context is not None:
-        # Match the ID group: "invocations/build-<ID>" from the resultDB field.
-        with open(luci_context, "r", encoding="utf-8") as f:
-            invocation_name = json.load(f)["resultdb"]["current_invocation"][
-                "name"
-            ]
-            if not invocation_name.startswith(_INVOCATION_NAME_PREFIX):
-                fail(f"Invalid invocation name {invocation_name!r}")
-            buildbucket_id = int(
-                invocation_name[len(_INVOCATION_NAME_PREFIX) :]
-            )
-            opt = (
-                "--build_metadata=cros/luci/build_url="
-                f"https://ci.chromium.org/ui/b/{buildbucket_id}"
-            )
-            command_options.append(opt)
-            nested_command_options.append(opt)
+    nested_command_options = []
 
-    workspace = get_workspace()
+    current_build_url = get_current_build_url()
+    if current_build_url:
+        opt = f"--build_metadata=cros/luci/build_url={current_build_url}"
+        command_options_and_args.insert(0, opt)
+        nested_command_options.append(opt)
+
+    # Compute the repository rule environment for the nested bazel.
     checksum = hashlib.md5(str(workspace).encode("utf-8")).hexdigest()
     nested_output_base = os.path.expanduser(
         f"~/.cache/bazel/bazel_{getpass.getuser()}/{checksum}_nested"
     )
-    nested_base_command = [
-        bazel_real,
+    nested_startup_options = startup_options + [
         "--output_base",
         nested_output_base,
-        *startup_options,
     ]
-    build = [
-        *nested_base_command,
-        "build",
-        *nested_command_options,
-        "--platforms=@@//bazel/platforms:host",
-    ]
-    command_options.append(f"--repo_env=NESTED_BAZEL_CMD={json.dumps(build)}")
-    nested_opts = {
-        "base_command": nested_base_command,
+    nested_data = {
+        "base_command": [bazel_real, *nested_startup_options],
         "common_opts": nested_command_options,
         "nested_output_base": nested_output_base,
     }
-    command_options.append(f"--repo_env=NESTED_BAZEL={json.dumps(nested_opts)}")
+    command_options_and_args.insert(
+        0, f"--repo_env=NESTED_BAZEL={json.dumps(nested_data)}"
+    )
 
-    if command == "shutdown":
+    return BazelOptions(
+        startup_options=startup_options,
+        command=command,
+        command_options_and_args=command_options_and_args,
+        nested_startup_options=nested_startup_options,
+    )
+
+
+def maintain_nested_bazel(bazel_real: str, options: BazelOptions) -> None:
+    """Brings up or shuts down the nested bazel server as needed."""
+    if options.command == "shutdown":
         print("Shutting down nested bazel server")
         subprocess.run(
-            [*nested_base_command, "shutdown", *nested_command_options],
+            [bazel_real, *options.nested_startup_options, "shutdown"],
             check=True,
         )
         print("Shutting down main bazel server")
@@ -136,23 +169,42 @@ def main(args: List[str]):
         # * Is very rare.
         # pylint: disable=consider-using-with
         subprocess.Popen(
-            [*nested_base_command, "version", *nested_command_options],
+            [bazel_real, *options.nested_startup_options, "version"],
+            # Suppress stdout/stderr to avoid the confusing two "starting bazel
+            # server and connecting".
             stdout=subprocess.DEVNULL,
-            # Otherwise we get two "starting bazel server and connecting".
             stderr=subprocess.DEVNULL,
             close_fds=True,
         )
 
+
+def main(args: List[str]) -> NoReturn:
+    """The main function of the script."""
+    # We expect BAZEL_REAL to be set by Bazel.
+    bazel_real = os.environ.get("BAZEL_REAL", None)
+    if not bazel_real:
+        fail("BAZEL_REAL must be set.")
+
+    workspace = get_workspace()
+    options = compute_options(args, bazel_real, workspace)
+    if options is None:
+        # Let bazel display its own error listing available commands.
+        os.execv(bazel_real, [bazel_real, *args])
+
+    maintain_nested_bazel(bazel_real, options)
+
+    # Update the .now file on every bazel invocation for forced cache-busting.
     (workspace / "bazel/.now").write_text(f"{time.time()}")
 
-    argv_real = [
+    os.execv(
         bazel_real,
-        *startup_options,
-        command,
-        *command_options,
-        *command_args,
-    ]
-    os.execv(bazel_real, argv_real)
+        [
+            bazel_real,
+            *options.startup_options,
+            options.command,
+            *options.command_options_and_args,
+        ],
+    )
 
 
 if __name__ == "__main__":
