@@ -12,6 +12,30 @@ module(
 # Language independent stuff.
 bazel_dep(name = "bazel_skylib", version = "1.4.2")
 
+# Python support
+PY_VERSION = "3.10"
+
+bazel_dep(name = "rules_python", version = "0.31.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = PY_VERSION,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "zephyr_py_deps",
+    python_version = PY_VERSION,
+    requirements_lock = "//platform/rules_cros_firmware/cros_firmware:zephyr-requirements-lock.txt",
+)
+pip.parse(
+    hub_name = "hdctools_py_deps",
+    python_version = PY_VERSION,
+    requirements_lock = "//platform/rules_cros_firmware/cros_firmware:hdctools-requirements-lock.txt",
+)
+use_repo(pip, "hdctools_py_deps", "zephyr_py_deps")
+
 # Rust support
 bazel_dep(name = "rules_rust", version = "0.20.1")
 local_path_override(
