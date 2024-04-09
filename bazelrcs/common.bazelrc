@@ -180,6 +180,9 @@ build --flag_alias=prebuilt_disk_cache=//bazel/portage:prebuilt_disk_cache
 build:update_prebuilts --aspects=//bazel/portage/build_defs:update_prebuilts.bzl%update_prebuilts --output_groups=+prebuilt_materialized
 try-import %workspace%/prebuilts.bazelrc
 
+common --experimental_downloader_config=bazel/content_mirror/config/developer.cfg
+common:strict_mirror --experimental_downloader_config=bazel/content_mirror/config/strict.cfg
+
 # Allow user-specific overrides for this repository.
 # Should be at the end of this file so that users can override anything above.
 try-import %workspace%/workspace.bazelrc

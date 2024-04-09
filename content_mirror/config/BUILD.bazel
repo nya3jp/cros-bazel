@@ -50,6 +50,15 @@ render_template(
     },
 )
 
+render_template(
+    name = "strict",
+    regen_name = "update",
+    template = ":cfg",
+    vars = {
+        "unmirrored": "BLOCK",
+    },
+)
+
 write_source_files(
     name = "update",
     files = {
@@ -57,5 +66,6 @@ write_source_files(
         "developer.cfg": ":developer",
         "local_server_dev.cfg": ":local_server_dev",
         "release.cfg": ":release",
+        "strict.cfg": ":strict",
     },
 )
