@@ -3,37 +3,47 @@
 # found in the LICENSE file.
 
 load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
-load("//bazel/build_defs/expand_template:expand_template.bzl", "expand_template")
+load("//bazel/build_defs/jinja_template:jinja_template.bzl", "jinja_template")
+load("//bazel/build_defs/jinja_template:render_template.bzl", "render_template")
 
-expand_template(
+jinja_template(
+    name = "cfg",
+    src = "cfg.jinja2",
+)
+
+render_template(
     name = "developer",
-    template = "cfg.jinja2",
+    regen_name = "update",
+    template = ":cfg",
     vars = {
         "unmirrored": "ALLOW",
     },
 )
 
-expand_template(
+render_template(
     name = "ci",
-    template = "cfg.jinja2",
+    regen_name = "update",
+    template = ":cfg",
     vars = {
         # TODO: Update to MIRROR once the content mirror is complete.
         "unmirrored": "ALLOW",
     },
 )
 
-expand_template(
+render_template(
     name = "release",
-    template = "cfg.jinja2",
+    regen_name = "update",
+    template = ":cfg",
     vars = {
         # TODO: Update to BLOCK once the content mirror is complete.
         "unmirrored": "ALLOW",
     },
 )
 
-expand_template(
+render_template(
     name = "local_server_dev",
-    template = "cfg.jinja2",
+    regen_name = "update",
+    template = ":cfg",
     vars = {
         "local_server": "localhost:8443",
         "unmirrored": "MIRROR",

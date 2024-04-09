@@ -1,0 +1,11 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# AUTO-GENERATED FILE. DO NOT EDIT.
+# To update, run:
+# bazel run //bazel/build_defs/jinja_template:include_render
+
+including template
+foo = bar
+included template

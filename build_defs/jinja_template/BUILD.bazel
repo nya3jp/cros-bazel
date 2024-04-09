@@ -1,0 +1,53 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_python//python:defs.bzl", "py_binary")
+load(":jinja_template.bzl", "jinja_template")
+load(":render_template.bzl", "render_template_to_source")
+
+py_binary(
+    name = "render_template",
+    srcs = ["render_template.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@pip//jinja2",
+        "@rules_python//python/runfiles",
+    ],
+)
+
+jinja_template(
+    name = "simple",
+    src = "testdata/simple.jinja2",
+)
+
+jinja_template(
+    name = "include",
+    src = "testdata/include.jinja2",
+    deps = [":simple"],
+)
+
+render_template_to_source(
+    name = "simple_render_from_json",
+    out = "testdata/simple.out",
+    template = ":simple",
+    vars_file = "testdata/simple.in.json",
+)
+
+render_template_to_source(
+    name = "simple_render_from_vars",
+    out = "testdata/simple.out",
+    template = ":simple",
+    vars = {
+        "foo": "bar",
+    },
+)
+
+render_template_to_source(
+    name = "include_render",
+    out = "testdata/include.out",
+    template = ":include",
+    vars = {
+        "foo": "bar",
+    },
+)
