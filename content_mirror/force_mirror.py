@@ -3,184 +3,185 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Starts up an HTTPS server and writes a bazelrc file that uses that server.
+"""Mirrors any content that is not yet mirrored.
 
-The bazelrc configuration attempts to read from the mirror, and if that fails,
-attempts to read from the local server.
-
-The local server attempts to mirror the file, then returns a 301 redirect to the
-mirror.
+Attempts to build targets in strict mode, and parses stderr to determine which
+files are missing from the mirror, mirroring them as required.
 """
 
 import argparse
-import enum
-import http
-import http.server
+import asyncio
+import concurrent.futures
+import getpass
 import logging
+import os
 import pathlib
-import ssl
+import re
+import shutil
 import subprocess
+import sys
 import tempfile
-from typing import Optional
+from typing import List, Optional, Tuple
 import urllib
 import urllib.request
 
 
-_MIRROR_PREFIX = "chromeos-localmirror/cros-bazel/mirror"
-
-_BAZELRC = """
-common --experimental_downloader_config={downloader_config}
-startup --host_jvm_args=-Djavax.net.ssl.trustStore={cacerts}
-startup --host_jvm_args=-Djavax.net.ssl.trustStorePassword=changeit
-"""
-
-
-class Mode(enum.Enum):
-    """What to do with the next line in a file"""
-
-    UNTOUCHED = 0
-    COMMENT_NEXT = 1
-    UNCOMMENT_NEXT = 2
+_DOWNLOAD_CACHE = "/tmp/cros_mirror_repo_cache"
+# pylint: disable=line-too-long
+_PREFIX = "https://commondatastorage.googleapis.com/chromeos-localmirror/cros-bazel/mirror/"
+_DOWNLOAD_ERROR = re.compile(
+    f"Error downloading \\[{_PREFIX}(.*?)\\] to .*: GET returned 404 Not Found$"
+)
 
 
-_LINES_TO_MODE = {
-    "# Comment-during-mirroring:": Mode.COMMENT_NEXT,
-    "# Uncomment-during-mirroring:": Mode.UNCOMMENT_NEXT,
-}
+if sys.version_info < (3, 11):
+    ExceptionGroup = lambda _, exceptions: Exception(exceptions)
 
 
-def _mirror(src, dst):
-    logging.info("Mirroring %s to %s", src, dst)
-    with tempfile.TemporaryDirectory() as temp_dir:
-        local = pathlib.Path(temp_dir, "file")
-        urllib.request.urlretrieve(src, local)
-        subprocess.run(
-            ["gsutil", "cp", "-n", "-a", "public-read", str(local), dst],
-            check=True,
-        )
+class MirrorError(Exception):
+    """Errors during mirroring of content"""
 
 
-class _RequestHandler(http.server.BaseHTTPRequestHandler):
-    """A handler that mirrors all requests then redirects to the mirror."""
-
-    def respond(self, code: int, hdrs):
-        self.send_response(code)
-        for k, v in hdrs.items():
-            self.send_header(k, v)
-        self.end_headers()
-
-    def do_GET(self):
-        path = self.path[1:]
-        orig_url = f"https://{path}"
-        mirror_url = (
-            f"https://commondatastorage.googleapis.com/{_MIRROR_PREFIX}/{path}"
-        )
-        mirror_gs_url = f"gs://{_MIRROR_PREFIX}/{path}"
-
-        try:
-            _mirror(orig_url, mirror_gs_url)
-        except urllib.error.HTTPError as e:
-            logging.error(
-                "Error while trying to access original file %s", orig_url
-            )
-            self.respond(e.code, e.hdrs)
-
-        # Avoid caching
-        self.respond(301, {"Location": mirror_url})
-
-    def do_HEAD(self):
-        # We never send the file content back to the user.
-        # Thus, HEAD and GET are equivelant for us.
-        self.do_GET()
+def _mirror(uri: str) -> Tuple[str, Optional[MirrorError]]:
+    src = f"https://{uri}"
+    dst = f"gs://chromeos-localmirror/cros-bazel/mirror/{uri}"
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            local = pathlib.Path(temp_dir, "file")
+            try:
+                urllib.request.urlretrieve(src, local)
+            except BaseException as e:
+                raise MirrorError(f"Unable to download from {src}") from e
+            try:
+                subprocess.run(
+                    [
+                        "gsutil",
+                        "cp",
+                        "-n",
+                        "-a",
+                        "public-read",
+                        str(local),
+                        dst,
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=True,
+                )
+            except BaseException as e:
+                raise MirrorError(f"Unable to upload to {dst}") from e
+    except MirrorError as e:
+        return uri, e
+    return uri, None
 
 
-def _start_server(port: int, certfile: pathlib.Path, keyfile: pathlib.Path):
-    server_address = ("localhost", port)
-    httpd = http.server.HTTPServer(server_address, _RequestHandler)
-    ctx = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_SERVER)
-    ctx.load_cert_chain(certfile=certfile, keyfile=keyfile)
-    httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
-    httpd.serve_forever()
+async def _mirror_missing(args: List[str]) -> int:
+    logging.info("Running %s", " ".join(args))
+    ps = await asyncio.create_subprocess_exec(
+        *args,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
 
+    futures = []
+    requests = set()
 
-def _generate_config(src: pathlib.Path, port: int, dst: pathlib.Path):
-    content = src.read_text(encoding="utf-8").replace("{PORT}", str(port))
-    new_config = []
-    mode = Mode.UNTOUCHED
-    for line in content.splitlines():
-        if mode == Mode.UNTOUCHED:
-            new_config.append(line)
-        elif mode == Mode.COMMENT_NEXT:
-            new_config.append(f"# {line}")
-        elif mode == Mode.UNCOMMENT_NEXT:
-            new_config.append(line.lstrip("# "))
-        mode = _LINES_TO_MODE.get(line, Mode.UNTOUCHED)
-    dst.write_text("\n".join(new_config), encoding="utf-8")
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        while True:
+            line = await ps.stderr.readline()
+            if not line:
+                break
+            line = line.decode("utf-8").rstrip()
+            print(line, file=sys.stderr)
+
+            download_err = _DOWNLOAD_ERROR.search(line)
+            if download_err is not None:
+                uri = download_err.group(1)
+                if uri not in requests:
+                    futures.append(executor.submit(_mirror, uri))
+                    requests.add(uri)
+
+        # Wait for bazel to complete before reporting any errors for mirroring.
+        # This ensures we can't get interspersed mirroring logs and bazel logs.
+        returncode = await ps.wait()
+
+        errors = []
+        for fut in concurrent.futures.as_completed(futures):
+            uri, err = fut.result()
+            if err is None:
+                logging.info("Mirroring succeeded: %s", uri)
+            else:
+                errors.append(err)
+
+    if len(errors) == 1:
+        raise errors[0]
+    elif errors:
+        raise ExceptionGroup(f"Failed to mirror {len(errors)} files", errors)
+    elif returncode and not futures:
+        logging.critical("bazel failed for a reason unrelated to mirroring")
+        sys.exit(1)
+    return len(futures)
 
 
 def main(
-    port: int, certs_dir: Optional[pathlib.Path], out: Optional[pathlib.Path]
+    args: List[str],
+    expunge: bool,
+    clear_download_cache: bool,
 ):
-    src_dir = pathlib.Path(__file__).parent
+    output_base = os.path.expanduser(
+        f"~/.cache/bazel/_bazel_{getpass.getuser()}/force_mirror"
+    )
+    common_args = [
+        "bazel",
+        f"--output_base={output_base}",
+    ]
+    if expunge:
+        logging.info("Running bazel clean --expunge")
+        subprocess.run([*common_args, "clean", "--expunge"], check=True)
+        logging.info("bazel output directory is cleaned")
+    if clear_download_cache:
+        logging.info("Clearing bazel download cache")
+        shutil.rmtree(_DOWNLOAD_CACHE)
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_dir = pathlib.Path(temp_dir)
-        if not certs_dir:
-            certs_dir = temp_dir / "certs"
-        if not certs_dir.is_dir():
-            gen_certs = src_dir / "gen_certs.sh"
-            subprocess.run([str(gen_certs), str(certs_dir)], check=True)
+    bazel_args = [
+        *common_args,
+        "build",
+        # This way we can collect multiple download errors at once.
+        "--keep_going",
+        "--noremote_upload_local_results",
+        # Error out if we haven't successfully downloaded.
+        "--config=strict_mirror",
+        # If we use the regular repository cache, this won't work properly.
+        f"--repository_cache={_DOWNLOAD_CACHE}",
+        # We don't actually need to build to verify that we mirrored
+        # successfully.
+        "--nobuild",
+        *args,
+    ]
 
-        mirror_downloader_out = temp_dir / "mirror_downloader.cfg"
-        _generate_config(
-            src=src_dir / "bazel_downloader.cfg",
-            port=port,
-            dst=mirror_downloader_out,
-        )
-
-        out_real = temp_dir / "force_mirror.bazelrc"
-
-        out_real.write_text(
-            _BAZELRC.format(
-                downloader_config=mirror_downloader_out,
-                cacerts=certs_dir / "cacerts",
-            )
-        )
-        if out:
-            # Ensure that the symlink is broken when the temporary directory is
-            # cleaned up.
-            out.unlink(missing_ok=True)
-            out.symlink_to(out_real)
-        else:
-            out = out_real
-
-        print(f"Run bazel --bazelrc={out} to force mirroring")
-
-        _start_server(
-            port=port,
-            certfile=certs_dir / "BazelContentMirrorServer.crt",
-            keyfile=certs_dir / "BazelContentMirrorServer.key",
-        )
+    loop = asyncio.get_event_loop()
+    while True:
+        n_mirrored = loop.run_until_complete(_mirror_missing(bazel_args))
+        if n_mirrored == 0:
+            break
+        logging.info("Mirrored %d urls", n_mirrored)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser()
+
     parser.add_argument(
-        "--port", help="The port to start the server on", default=4443
-    )
-    parser.add_argument(
-        "--certs_dir",
-        help="A directory generated by gen_certs.sh",
-        type=pathlib.Path,
-        default=None,
-    )
-    parser.add_argument(
-        "--out",
-        help="The path to the bazelrc file to output",
-        type=pathlib.Path,
-        default=None,
+        "--expunge",
+        action="store_true",
+        help="Runs 'bazel clean --expunge' before attempting to mirror",
     )
 
-    main(**vars(parser.parse_args()))
+    parser.add_argument(
+        "--clear_download_cache",
+        action="store_true",
+        help="Deletes the download cache before attempting to mirror",
+    )
+
+    parsed, leftover = parser.parse_known_args()
+    main(args=leftover, **vars(parsed))
