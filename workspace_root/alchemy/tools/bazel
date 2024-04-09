@@ -97,12 +97,19 @@ def compute_options(
     if os.path.exists(chromiumos_rc):
         startup_options.append(f"--bazelrc={chromiumos_rc}")
 
+    checksum = hashlib.md5(str(workspace).encode("utf-8")).hexdigest()
+    output_base = os.path.expanduser(
+        f"~/.cache/bazel/_bazel_{getpass.getuser()}/{checksum}"
+    )
+
     # Parse the command line.
     command = None
     command_options_and_args = None
     for i, arg in enumerate(args):
         if arg.startswith("--"):
             startup_options.append(arg)
+            if arg.startswith("--output_base="):
+                output_base = arg.split("=", 1)[1]
         else:
             command = args[i]
             command_options_and_args = args[i + 1 :]
@@ -120,10 +127,7 @@ def compute_options(
         nested_command_options.append(opt)
 
     # Compute the repository rule environment for the nested bazel.
-    checksum = hashlib.md5(str(workspace).encode("utf-8")).hexdigest()
-    nested_output_base = os.path.expanduser(
-        f"~/.cache/bazel/bazel_{getpass.getuser()}/{checksum}_nested"
-    )
+    nested_output_base = f"{output_base}_nested"
     nested_startup_options = startup_options + [
         "--output_base",
         nested_output_base,
