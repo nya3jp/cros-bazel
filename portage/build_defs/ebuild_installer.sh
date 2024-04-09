@@ -42,9 +42,11 @@ sudo mkdir -p "$(dirname "${DEST}")"
 # Ideally we'd just use a symlink here for performance reasons. However, if you
 # create a symlink for package foo, then foo emerges just fine, but any package
 # that rdepends on it will fail to detect it during emerge.
-sudo cp "${BINPKG}" "${DEST}"
-sudo "${XPAK_TOOL}" update-xpak --binpkg "${DEST}" "${XPAK_UPDATES[@]}"
-sudo chmod 644 "${DEST}"
+# We use a tmp file so portage doesn't pick up the partial binpkg.
+sudo cp "${BINPKG}" "${DEST}.tmp"
+sudo "${XPAK_TOOL}" update-xpak --binpkg "${DEST}.tmp" "${XPAK_UPDATES[@]}"
+sudo chmod 644 "${DEST}.tmp"
+sudo mv "${DEST}.tmp" "${DEST}"
 
 # Calculate the checksums in parallel with emerging.
 (cat "${BINPKG}" "${CHECKSUM_FILES[@]}" | sha256sum > "${CHECKSUM}" ) &
