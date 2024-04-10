@@ -7,10 +7,7 @@
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 alias(
     name = "1.0",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0",
-    }),
+    actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -18,10 +15,7 @@ alias(
 )
 alias(
     name = "1.0_debug",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0_debug",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_debug",
-    }),
+    actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_debug",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -29,10 +23,7 @@ alias(
 )
 alias(
     name = "1.0_package_set",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0_package_set",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_package_set",
-    }),
+    actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_package_set",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -40,10 +31,7 @@ alias(
 )
 alias(
     name = "1.0_install",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0_install",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_install",
-    }),
+    actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_install",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -51,10 +39,7 @@ alias(
 )
 alias(
     name = "1.0_installed",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0_installed",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_installed",
-    }),
+    actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_installed",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -62,10 +47,7 @@ alias(
 )
 alias(
     name = "1.0_install_list",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0_install_list",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_install_list",
-    }),
+    actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_install_list",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -166,7 +148,7 @@ always_fail(
 )
 test_suite(
     name = "1.0_test",
-    tests = [ "//internal/packages/stage1/target/board/chromiumos/test-cases/failure:1.0_test" ],
+    tests = [ "//internal/packages/stage2/target/board/chromiumos/test-cases/failure:1.0_test" ],
     visibility = ["@//bazel:internal"],
 )
 test_suite(

@@ -6,10 +6,7 @@
 
 alias(
     name = "17.0_pre498229-r9",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9",
-    }),
+    actual = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -17,10 +14,7 @@ alias(
 )
 alias(
     name = "17.0_pre498229-r9_debug",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_debug",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_debug",
-    }),
+    actual = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_debug",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -28,10 +22,7 @@ alias(
 )
 alias(
     name = "17.0_pre498229-r9_package_set",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_package_set",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_package_set",
-    }),
+    actual = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_package_set",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -39,10 +30,7 @@ alias(
 )
 alias(
     name = "17.0_pre498229-r9_install",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_install",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_install",
-    }),
+    actual = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_install",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -50,10 +38,7 @@ alias(
 )
 alias(
     name = "17.0_pre498229-r9_installed",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_installed",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_installed",
-    }),
+    actual = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_installed",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",
@@ -61,10 +46,7 @@ alias(
 )
 alias(
     name = "17.0_pre498229-r9_install_list",
-    actual = select({
-        "@//bazel/portage:stage1": "//internal/packages/stage1/target/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_install_list",
-        "@//bazel/portage:stage2": "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_install_list",
-    }),
+    actual = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/compiler-rt:17.0_pre498229-r9_install_list",
     visibility = [
         "//images:__pkg__",
         "@//bazel:internal",

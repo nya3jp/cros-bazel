@@ -45,26 +45,19 @@ lazy_static! {
 }
 
 #[derive(Serialize)]
-pub enum SelectValue<'a> {
-    Single(Cow<'a, str>),
-    // Generates a bazel select() statement with key -> value.
-    Select(Vec<(Cow<'a, str>, Cow<'a, str>)>),
-}
-
-#[derive(Serialize)]
-pub struct AliasEntry<'a> {
+struct AliasEntry<'a> {
     name: Cow<'a, str>,
-    actual: SelectValue<'a>,
+    actual: Cow<'a, str>,
 }
 
 #[derive(Serialize)]
-pub struct TestSuiteEntry<'a> {
+struct TestSuiteEntry<'a> {
     name: Cow<'a, str>,
     test_name: Cow<'a, str>,
 }
 
 #[derive(Serialize)]
-pub struct EbuildFailureEntry<'a> {
+struct EbuildFailureEntry<'a> {
     name: Cow<'a, str>,
     error: Cow<'a, str>,
 }
@@ -78,8 +71,7 @@ struct BuildTemplateContext<'a> {
 
 fn generate_public_package(
     maybe_packages: &[&MaybePackage],
-    targets: &[TargetConfig],
-    test_prefix: &str,
+    package_prefix: &str,
     package_output_dir: &Path,
 ) -> Result<()> {
     create_dir_all(package_output_dir)?;
@@ -104,24 +96,14 @@ fn generate_public_package(
         ] {
             aliases.push(AliasEntry {
                 name: Cow::from(format!("{}{}", version, suffix)),
-                actual: SelectValue::Select(
-                    targets
-                        .iter()
-                        .map(|target| {
-                            (
-                                Cow::from(format!("@//bazel/portage:{}", target.config)),
-                                Cow::from(format!(
-                                    "//internal/packages/{}/{}/{}:{}{}",
-                                    target.prefix,
-                                    maybe_package.as_basic_data().repo_name,
-                                    maybe_package.as_basic_data().package_name,
-                                    version,
-                                    suffix,
-                                )),
-                            )
-                        })
-                        .collect(),
-                ),
+                actual: Cow::from(format!(
+                    "//internal/packages/{}/{}/{}:{}{}",
+                    package_prefix,
+                    maybe_package.as_basic_data().repo_name,
+                    maybe_package.as_basic_data().package_name,
+                    version,
+                    suffix,
+                )),
             });
         }
         // The test_suite's tests attribute is not configurable, so we can't
@@ -131,7 +113,7 @@ fn generate_public_package(
             name: Cow::from(format!("{}_test", version)),
             test_name: Cow::from(format!(
                 "//internal/packages/{}/{}/{}:{}_test",
-                test_prefix,
+                package_prefix,
                 maybe_package.as_basic_data().repo_name,
                 maybe_package.as_basic_data().package_name,
                 version,
@@ -167,7 +149,7 @@ fn generate_public_package(
         .into_owned();
     aliases.push(AliasEntry {
         name: Cow::from(&short_package_name),
-        actual: SelectValue::Single(get_actual_target("")),
+        actual: get_actual_target(""),
     });
     for suffix in [
         "debug",
@@ -179,12 +161,12 @@ fn generate_public_package(
         if suffix != short_package_name {
             aliases.push(AliasEntry {
                 name: Cow::from(suffix),
-                actual: SelectValue::Single(get_actual_target(&format!("_{}", suffix))),
+                actual: get_actual_target(&format!("_{}", suffix)),
             });
         }
         aliases.push(AliasEntry {
             name: Cow::from(format!("{}_{}", short_package_name, suffix)),
-            actual: SelectValue::Single(get_actual_target(&format!("_{}", suffix))),
+            actual: get_actual_target(&format!("_{}", suffix)),
         });
     }
     if short_package_name != "test" {
@@ -240,17 +222,10 @@ pub struct TargetConfig<'a> {
 }
 
 /// Generates the public aliases for packages.
-///
-/// # Arguments
-///
-/// * test_prefix: The package prefix to use for testing targets. We can't use
-///   a switch statement with `test_suite`, so we can only define one stage
-///   to run tests for.
 #[instrument(skip_all)]
 pub fn generate_public_packages(
     all_packages: &[MaybePackage],
-    targets: &[TargetConfig],
-    test_prefix: &str,
+    package_prefix: &str,
     output_dir: &Path,
 ) -> Result<()> {
     let packages_by_name = join_by_package_name(all_packages);
@@ -260,7 +235,7 @@ pub fn generate_public_packages(
         .into_par_iter()
         .try_for_each(|(package_name, maybe_packages)| {
             let package_output_dir = output_dir.join(package_name);
-            generate_public_package(&maybe_packages, targets, test_prefix, &package_output_dir)
+            generate_public_package(&maybe_packages, package_prefix, &package_output_dir)
         })
 }
 

@@ -384,21 +384,7 @@ pub fn generate_stages(
     )?;
 
     // Generate public aliases
-    generate_public_packages(
-        &host_packages,
-        &[
-            public::TargetConfig {
-                config: "stage1",
-                prefix: "stage1/target/host",
-            },
-            public::TargetConfig {
-                config: "stage2",
-                prefix: "stage2/host",
-            },
-        ],
-        "stage2/host",
-        &output_dir.join("host"),
-    )?;
+    generate_public_packages(&host_packages, "stage2/host", &output_dir.join("host"))?;
 
     all_packages.extend(host_packages);
 
@@ -465,17 +451,7 @@ pub fn generate_stages(
 
         generate_public_packages(
             &target_packages,
-            &[
-                public::TargetConfig {
-                    config: "stage1",
-                    prefix: "stage1/target/board",
-                },
-                public::TargetConfig {
-                    config: "stage2",
-                    prefix: "stage2/target/board",
-                },
-            ],
-            "stage1/target/board",
+            "stage2/target/board",
             &output_dir.join("target"),
         )?;
 

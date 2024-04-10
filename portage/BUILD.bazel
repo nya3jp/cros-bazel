@@ -4,25 +4,6 @@
 
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 
-string_flag(
-    name = "default_stage",
-    build_setting_default = "stage2",
-)
-
-config_setting(
-    name = "stage1",
-    flag_values = {
-        ":default_stage": "stage1",
-    },
-)
-
-config_setting(
-    name = "stage2",
-    flag_values = {
-        ":default_stage": "stage2",
-    },
-)
-
 bool_flag(
     name = "compiled_profiles",
     build_setting_default = True,
