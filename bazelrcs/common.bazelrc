@@ -73,8 +73,8 @@ build --cache_computed_file_digests=500000
 # (build_metrics.network_metrics)
 build --experimental_collect_system_network_usage
 
-# Don't pull ebuild sources (e.g. chromium) when cquerying
-cquery --//bazel/portage:omit_ebuild_src
+# Don't pull ebuild sources (e.g. chromium) and stage1 SDK tarball when querying
+cquery --//bazel/portage:omit_ebuild_src --//bazel/portage/sdk:omit_stage1_tarball
 
 ###
 # Correctness guarantees
