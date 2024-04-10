@@ -254,12 +254,10 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
             inputs: Depset[File]: Inputs to action_wrapper.
     """
     args = ctx.actions.args()
+    args.use_param_file(param_file_arg = "@%s", use_always = True)
+    args.set_param_file_format("multiline")
     direct_inputs = []
     transitive_inputs = []
-
-    # Path to build_package
-
-    args.add(compute_file_arg(ctx.executable._build_package, use_runfiles))
 
     # Basic arguments
     if ctx.attr.board:
@@ -400,6 +398,8 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
 
     inputs = depset(direct_inputs, transitive = transitive_inputs)
     return struct(
+        # Path to build_package
+        executable = compute_file_arg(ctx.executable._build_package, use_runfiles),
         args = args,
         inputs = inputs,
     )
@@ -549,6 +549,7 @@ def _ebuild_impl(ctx):
             output_log_file,
             "--profile",
             output_profile_file,
+            build_package_args.executable,
         ])
         ctx.actions.run(
             inputs = build_package_args.inputs,
@@ -797,7 +798,7 @@ def _ebuild_debug_impl(ctx):
         ctx,
         out = output_debug_script,
         binary = ctx.executable._action_wrapper,
-        args = build_package_args.args,
+        args = [build_package_args.executable, build_package_args.args],
         content_prefix = _DEBUG_SCRIPT,
         runfiles = ctx.runfiles(transitive_files = build_package_args.inputs),
     )
@@ -956,7 +957,7 @@ def _ebuild_test_impl(ctx):
         ctx,
         out = output_runner_script,
         binary = ctx.executable._action_wrapper,
-        args = build_package_args.args,
+        args = [build_package_args.executable, build_package_args.args],
         runfiles = ctx.runfiles(transitive_files = build_package_args.inputs),
     )
 

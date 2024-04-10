@@ -125,35 +125,38 @@ def wrap_binary_with_args(ctx, out, binary, args, content_prefix = "", runfiles 
         executable = binary_files[0]
 
     if type(args) == "Args":
-        # You can't read args in bazel rules. So instead we write the args to a
-        # file and read from that file at runtime.
-        basename = out.basename.rsplit(".", 1)[0]
+        args = [args]
 
-        # We could define a separate executable target, but that would mean that
-        # users would need to add something like this attribute to their rule:
-        # _write_to_file = attr.label(default=Label("//bazel/bash:write_to_file"))
-        write_to_file = ctx.actions.declare_file(basename + "_write_to_file.sh")
-        ctx.actions.write(write_to_file, _WRITE_TO_FILE, is_executable = True)
-        args_file = ctx.actions.declare_file(basename + "_args.txt")
-        args_file_args = ctx.actions.args()
-        args_file_args.add(args_file)
-        ctx.actions.run(
-            outputs = [args_file],
-            executable = write_to_file,
-            arguments = [args_file_args, args],
-        )
-        runfiles = runfiles.merge(ctx.runfiles(files = [args_file]))
-        args = "$(cat %s)" % bash_rlocation(ctx, args_file)
-    else:
-        new_args = []
-        for arg in args:
-            if type(arg) == "File":
-                new_args.append('"%s"' % (bash_rlocation(ctx, arg)))
-            elif type(arg) == "string":
-                new_args.append("'%s'" % (arg))
-            else:
-                fail("Unknown type '%s' for arg '%s'" % (type(arg), arg))
-        args = " ".join(new_args)
+    new_args = []
+    write_to_file = None
+    for i, arg in enumerate(args):
+        if type(arg) == "File":
+            new_args.append('"%s"' % (bash_rlocation(ctx, arg)))
+        elif type(arg) == "string":
+            new_args.append("'%s'" % (arg))
+        elif type(arg) == "Args":
+            # You can't read args in bazel rules. So instead we write the args to a
+            # file and read from that file at runtime.
+            basename = out.basename.rsplit(".", 1)[0]
+            if not write_to_file:
+                # We could define a separate executable target, but that would mean that
+                # users would need to add something like this attribute to their rule:
+                # _write_to_file = attr.label(default=Label("//bazel/bash:write_to_file"))
+                write_to_file = ctx.actions.declare_file(basename + "_write_to_file.sh")
+                ctx.actions.write(write_to_file, _WRITE_TO_FILE, is_executable = True)
+            args_file = ctx.actions.declare_file(basename + "_args_%s.txt" % i)
+            args_file_args = ctx.actions.args()
+            args_file_args.add(args_file)
+            ctx.actions.run(
+                outputs = [args_file],
+                executable = write_to_file,
+                arguments = [args_file_args, arg],
+            )
+            runfiles = runfiles.merge(ctx.runfiles(files = [args_file]))
+            new_args.append("$(cat %s)" % bash_rlocation(ctx, args_file))
+        else:
+            fail("Unknown type '%s' for arg '%s'" % (type(arg), arg))
+    args = " ".join(new_args)
     return generate_bash_script(
         ctx,
         out,
