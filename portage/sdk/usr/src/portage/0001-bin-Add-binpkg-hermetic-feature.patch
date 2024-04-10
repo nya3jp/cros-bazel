@@ -13,11 +13,11 @@ Change-Id: Ie88deacdbfc006705c973a9c1cdf726cb5bba514
 ---
  bin/misc-functions.sh                  | 23 ++++++++++++++++++++++-
  bin/phase-functions.sh                 |  7 ++++++-
- bin/save-ebuild-env.sh                 |  7 +++++++
+ bin/save-ebuild-env.sh                 |  9 +++++++++
  lib/portage/const.py                   |  1 +
  lib/portage/dbapi/vartree.py           |  3 +++
  lib/portage/package/ebuild/doebuild.py |  5 ++++-
- 6 files changed, 43 insertions(+), 3 deletions(-)
+ 6 files changed, 45 insertions(+), 3 deletions(-)
 
 diff --git a/usr/lib/portage/PYTHON_VERSION/misc-functions.sh b/usr/lib/portage/PYTHON_VERSION/misc-functions.sh
 index 3df7df653..ddbe92c87 100755
@@ -68,10 +68,10 @@ index 3df7df653..ddbe92c87 100755
  	assert "failed to pack binary package: '$PORTAGE_BINPKG_TMPFILE'"
  	PYTHONPATH=${PORTAGE_PYTHONPATH:-${PORTAGE_PYM_PATH}} \
 diff --git a/usr/lib/portage/PYTHON_VERSION/phase-functions.sh b/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
-index 82daedd08..0a0c3037a 100644
+index 9bb9aea90..5f3b4893b 100644
 --- a/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
 +++ b/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
-@@ -708,7 +708,12 @@ __dyn_install() {
+@@ -707,7 +707,12 @@ __dyn_install() {
  
  	# Use safe cwd, avoiding unsafe import for bug #469338.
  	cd "${PORTAGE_PYM_PATH}"
@@ -86,7 +86,7 @@ index 82daedd08..0a0c3037a 100644
  		"${PORTAGE_BUILDDIR}"/build-info/environment
  	assert "__save_ebuild_env failed"
 diff --git a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
-index cd8602ae0..232b16689 100644
+index cd8602ae0..159580d0b 100644
 --- a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
 +++ b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
 @@ -10,6 +10,9 @@
@@ -99,12 +99,14 @@ index cd8602ae0..232b16689 100644
  __save_ebuild_env() {
  	(
  	if has --exclude-init-phases $* ; then
-@@ -26,6 +29,10 @@ __save_ebuild_env() {
+@@ -26,6 +29,12 @@ __save_ebuild_env() {
  		fi
  	fi
  
 +	if has --exclude-non-hermetic $* ; then
 +		unset EPOCHREALTIME EPOCHSECONDS SRANDOM
++		# reclient-related variables
++        unset USE_REMOTEEXEC GCE_METADATA_HOST REPROXY_CFG_FILE
 +	fi
 +
  	# misc variables inherited from the calling environment
@@ -123,10 +125,10 @@ index ac5a3c646..eca983668 100644
  	"buildsyspkg",
  	"candy",
 diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py
-index d38d8a502..e327c204f 100644
+index 1d9e00496..15835c01f 100644
 --- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py
 +++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py
-@@ -4798,6 +4798,9 @@ class dblink(object):
+@@ -4812,6 +4812,9 @@ class dblink(object):
  		else:
  			mergelist = stufftomerge[:]
  
@@ -137,10 +139,10 @@ index d38d8a502..e327c204f 100644
  
  			relative_path = mergelist.pop()
 diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
-index db39caa56..1dbffd3dd 100644
+index 2a73d8c26..4c3637e3e 100644
 --- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
 +++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
-@@ -1993,7 +1993,10 @@ def _post_src_install_write_metadata(settings):
+@@ -2010,7 +2010,10 @@ def _post_src_install_write_metadata(settings):
  		'BUILD_TIME'), encoding=_encodings['fs'], errors='strict'),
  		mode='w', encoding=_encodings['repo.content'],
  		errors='strict') as f:
@@ -153,5 +155,5 @@ index db39caa56..1dbffd3dd 100644
  	use = frozenset(settings['PORTAGE_USE'].split())
  	for k in _vdb_use_conditional_keys:
 -- 
-2.38.1.431.g37b22c650d-goog
+2.44.0.478.gd926399ef9-goog
 
