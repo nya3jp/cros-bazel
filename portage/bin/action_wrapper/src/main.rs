@@ -75,9 +75,16 @@ fn ensure_passwordless_sudo() -> Result<()> {
     Ok(())
 }
 
+fn in_unix_seconds(t: &SystemTime) -> f64 {
+    t.duration_since(SystemTime::UNIX_EPOCH)
+        .expect("Timestamp before the UNIX epoch")
+        .as_secs_f64()
+}
+
 fn merge_profiles(
     input_profiles_dir: &Path,
     output_profile_file: &Path,
+    origin_instant: &Instant,
     origin_time: &SystemTime,
     rusage: &Usage,
 ) -> Result<()> {
@@ -125,11 +132,8 @@ fn merge_profiles(
             // Leave unadjustable entries as-is.
             continue;
         };
-        event.timestamp += base_time
-            .duration_since(*origin_time)
-            .expect("valid times")
-            .as_secs_f64()
-            * 1_000_000.0;
+        event.timestamp +=
+            (in_unix_seconds(base_time) - in_unix_seconds(origin_time)) * 1_000_000.0;
     }
 
     // Add process_sort_index metadata to ensure processes are sorted in
@@ -150,11 +154,7 @@ fn merge_profiles(
     }
 
     // Add the action_wrapper process and spans.
-    let clock_sync = origin_time
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .expect("valid time")
-        .as_secs_f64()
-        * 1_000_000.0;
+    let clock_sync = in_unix_seconds(origin_time) * 1_000_000.0;
     for (name, args) in [
         ("process_name", json!({ "name": "action_wrapper" })),
         ("thread_name", json!({ "name": "info" })),
@@ -185,7 +185,7 @@ fn merge_profiles(
         name: "action_wrapper".to_owned(),
         category: "".to_owned(),
         phase: Phase::End,
-        timestamp: origin_time.elapsed().expect("valid time").as_nanos() as f64 / 1000.0,
+        timestamp: origin_instant.elapsed().as_nanos() as f64 / 1000.0,
         process_id: 1,
         thread_id: 1,
         args: Some(json!({
@@ -202,6 +202,7 @@ fn merge_profiles(
 }
 
 fn do_main(args: &Cli) -> Result<ExitStatus> {
+    let origin_instant = Instant::now();
     let origin_time = SystemTime::now();
 
     let mut command = if args.privileged {
@@ -263,7 +264,13 @@ fn do_main(args: &Cli) -> Result<ExitStatus> {
     }
 
     if let Some(profile_file) = &args.profile {
-        merge_profiles(profiles_dir.path(), profile_file, &origin_time, &rusage)?;
+        merge_profiles(
+            profiles_dir.path(),
+            profile_file,
+            &origin_instant,
+            &origin_time,
+            &rusage,
+        )?;
     }
 
     // Propagate the exit status of the command.
