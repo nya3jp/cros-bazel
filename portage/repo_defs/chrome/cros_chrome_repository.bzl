@@ -30,6 +30,13 @@ def _git(ctx, repo, args, msg = None):
     cmd = ["git", "-C", repo] + args
     return _exec(ctx, cmd, msg, retries = 1)
 
+def _exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, **kwargs):
+    """Runs the specified command in a luci context which uses the GCE metadata host for authentication if needed"""
+    wrapper = []
+    if ctx.os.environ.get("GCE_METADATA_HOST"):
+        wrapper = ["luci-auth", "context", "-service-account-json", ":gce", "--"]
+    _exec(ctx, wrapper + cmd, msg, **kwargs)
+
 def _cros_chrome_repository_impl(ctx):
     """Repository rule that downloads the Chromium/Chrome source."""
 
@@ -79,7 +86,7 @@ def _cros_chrome_repository_impl(ctx):
     # reproducible.
     ctx.file(paths.join(pwd, "src/third_party/depot_tools/.disable_auto_update"), "")
 
-    _exec(
+    _exec_with_gce_context_if_needed(
         ctx,
         [
             depot_tools_path.get_child("gclient"),
@@ -101,7 +108,7 @@ def _cros_chrome_repository_impl(ctx):
     )
 
     # This command will populate the cipd cache and create a python venv.
-    _exec(
+    _exec_with_gce_context_if_needed(
         ctx,
         [depot_tools_path.get_child("ensure_bootstrap")],
         "Downloading depot_tools dependencies",
@@ -112,7 +119,7 @@ def _cros_chrome_repository_impl(ctx):
     )
 
     # Run the hooks with the depot tools pinned by chromium.
-    _exec(
+    _exec_with_gce_context_if_needed(
         ctx,
         [
             depot_tools_path.get_child("gclient"),
@@ -203,15 +210,6 @@ def _cros_chrome_repository_impl(ctx):
         ZSTD_NBTHREADS = "0",
         msg = "Tarring up Chromium src",
     )
-    if ctx.attr.internal:
-        # We split the src into two tarballs to make it clear that one is only
-        # meant for internal consumption.
-        _exec(
-            ctx,
-            tar_common + ["--file", "src-internal.tar.zst", "src-internal"],
-            ZSTD_NBTHREADS = "0",
-            msg = "Tarring up Chrome src",
-        )
 
     _exec(
         ctx,
@@ -232,8 +230,6 @@ def _cros_chrome_repository_impl(ctx):
     ctx.delete(".gclient_previous_sync_commits")
     ctx.delete(".vpython-root")
     ctx.delete("src")
-    if ctx.attr.internal:
-        ctx.delete("src-internal")
 
     ctx.file("WORKSPACE", "workspace(name = \"{name}\")\n".format(name = ctx.name))
     ctx.template("BUILD.bazel", ctx.attr._build_file)
@@ -241,7 +237,7 @@ def _cros_chrome_repository_impl(ctx):
 _cros_sdk_repository_attrs = {
     "internal": attr.bool(
         doc = """If true download Chrome if false download Chromium.""",
-        default = False,
+        mandatory = True,
     ),
     "remote": attr.string(
         doc = "The URI of the remote Chromium Git repository",

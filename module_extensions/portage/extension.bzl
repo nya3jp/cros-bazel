@@ -55,7 +55,6 @@ def _portage_deps_impl(module_ctx):
         default_targets = {
             "cipd-cache": "//:cipd-cache",
             "src": "//:src",
-            "src_internal": "//:src_internal",
         },
     )
     repo_repository = hub.wrap_rule(

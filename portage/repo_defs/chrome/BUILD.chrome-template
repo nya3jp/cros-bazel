@@ -12,11 +12,6 @@ alias(
 )
 
 alias(
-    name = "src-internal",
-    actual = "src-internal.tar.zst",
-)
-
-alias(
     name = "cipd-cache",
     actual = "cipd-cache.tar.zst",
 )

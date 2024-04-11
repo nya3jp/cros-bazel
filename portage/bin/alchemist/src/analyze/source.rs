@@ -37,6 +37,15 @@ use super::restrict::analyze_restricts;
 /// i.e., 113.0.5623.0
 pub type ChromeVersion = String;
 
+/// Represents the type of the chrome source code.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub enum ChromeType {
+    /// Chrome source code without internal bits.
+    Public,
+    /// Chrome source code with internal bits.
+    Internal,
+}
+
 /// Represents an origin of local source code.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub enum PackageLocalSource {
@@ -52,7 +61,7 @@ pub enum PackageLocalSource {
     /// Chromite source code at `/mnt/host/source/chromite`.
     Chromite,
     /// Chrome source code.
-    Chrome(ChromeVersion),
+    Chrome(ChromeVersion, ChromeType),
     /// depot_tools at /mnt/host/source/src/chromium/depot_tools.
     DepotTools,
 }
@@ -342,8 +351,12 @@ fn apply_local_sources_workarounds(
             .map_or(false, |main| main != "9999")
     {
         let version = details.as_basic_data().version.main().join(".");
-        // TODO: We need USE flags to add src-internal.
-        local_sources.push(PackageLocalSource::Chrome(version));
+        let chrome_type = if *details.use_map.get("chrome_internal").unwrap_or(&false) {
+            ChromeType::Internal
+        } else {
+            ChromeType::Public
+        };
+        local_sources.push(PackageLocalSource::Chrome(version, chrome_type));
     }
 
     // Building chromium source requires depot_tools.

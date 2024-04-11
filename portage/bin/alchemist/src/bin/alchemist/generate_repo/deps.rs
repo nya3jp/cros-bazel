@@ -4,7 +4,7 @@
 
 use std::{fs::File, path::Path};
 
-use alchemist::analyze::source::{PackageLocalSource, PackageSources};
+use alchemist::analyze::source::{ChromeType, PackageLocalSource, PackageSources};
 use anyhow::Result;
 use itertools::Itertools;
 use serde::Serialize;
@@ -39,7 +39,11 @@ enum Repository {
         tree: String,
     },
     #[allow(clippy::enum_variant_names)]
-    CrosChromeRepository { name: String, tag: String },
+    CrosChromeRepository {
+        name: String,
+        tag: String,
+        internal: bool,
+    },
 }
 
 pub fn generate_deps_file(all_sources: &[&PackageSources], out: &Path) -> Result<()> {
@@ -99,14 +103,22 @@ fn generate_deps(all_sources: &[&PackageSources]) -> Result<Vec<Repository>> {
         .iter()
         .flat_map(|sources| &sources.local_sources)
         .filter_map(|origin| match origin {
-            PackageLocalSource::Chrome(version) => Some(version),
+            PackageLocalSource::Chrome(version, chrome_type) => Some((version, chrome_type)),
             _ => None,
         })
         .unique()
         .sorted()
-        .map(|version| Repository::CrosChromeRepository {
-            name: format!("chrome-{}", version),
-            tag: version.clone(),
+        .map(|(version, chrome_type)| match chrome_type {
+            ChromeType::Public => Repository::CrosChromeRepository {
+                name: format!("chrome-{}", version),
+                tag: version.clone(),
+                internal: false,
+            },
+            ChromeType::Internal => Repository::CrosChromeRepository {
+                name: format!("chrome-internal-{}", version),
+                tag: version.clone(),
+                internal: true,
+            },
         });
 
     Ok(unique_dists.chain(repos).chain(chrome).collect())
