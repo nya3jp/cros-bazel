@@ -11,7 +11,7 @@ chrome_trace = { path = "../chrome_trace" }
 nix.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
-tracing-subscriber.workspace = true
+tracing_subscriber.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

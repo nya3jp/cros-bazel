@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 anyhow.workspace = true
 nix.workspace = true
-signal-hook.workspace = true
+signal_hook.workspace = true
 tracing.workspace = true
