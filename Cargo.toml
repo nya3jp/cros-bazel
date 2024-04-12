@@ -1,8 +1,8 @@
-# This file isn't used by bazel, and is only used to allow the rust tooling
-# to work correctly.
+# AUTO-GENERATED FILE. DO NOT EDIT.
+# To update, run:
+# bazel run //bazel:generate_cargo_files
 
 [workspace]
-# List all local crates required by repo rules here.
 members = [
     "portage/bin/action_wrapper",
     "portage/bin/build_image",
@@ -37,16 +37,18 @@ members = [
     "portage/common/testutil",
     "portage/common/tracing_chrome_trace",
     "portage/tools/process_artifacts",
-    "rust/alchemy_crates",
     "rust/examples",
     "rust/ide_support",
     "rust/runfiles",
 ]
 
+exclude = [
+  "rust/alchemy_crates"
+]
+
 [workspace.dependencies]
 runfiles = { path = "rust/runfiles" }
 
-# List third-party deps here.
 anyhow = { version = "1.0.66", features = ["backtrace"] }
 base64 = "0.20.0"
 by_address = "1.1.0"

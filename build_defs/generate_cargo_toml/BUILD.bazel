@@ -2,10 +2,31 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/build_defs/jinja_template:jinja_template.bzl", "jinja_template")
 
 jinja_template(
     name = "cargo_toml",
     src = "cargo_toml.jinja2",
+    visibility = ["//visibility:public"],
+)
+
+jinja_template(
+    name = "workspace_cargo_toml",
+    src = "workspace_cargo_toml.jinja2",
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "generate_workspace_lock",
+    srcs = ["generate_workspace_lock.py"],
+    data = ["@rust_host_tools//:cargo"],
+    visibility = ["//visibility:public"],
+    deps = ["@rules_python//python/runfiles"],
+)
+
+py_binary(
+    name = "generate_workspace_vars",
+    srcs = ["generate_workspace_vars.py"],
     visibility = ["//visibility:public"],
 )
