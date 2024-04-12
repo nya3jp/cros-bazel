@@ -4,4 +4,3 @@
 
 # Allow custom cc toolchains.
 build --incompatible_enable_cc_toolchain_resolution
-common --experimental_isolated_extension_usages

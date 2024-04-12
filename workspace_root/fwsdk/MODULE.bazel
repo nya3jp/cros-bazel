@@ -51,15 +51,3 @@ rust.toolchain(
 )
 
 register_toolchains("//platform/ti50/common/toolchain:dauntless_rust")
-
-fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
-use_repo(
-    fwsdk_deps,
-    "compiler-builtins",
-    "coreboot_sdk",
-    "cros-sdk",
-    "depot_tools",
-    "ec_devutils",
-    "shflags",
-    "ti50-sdk",
-)
