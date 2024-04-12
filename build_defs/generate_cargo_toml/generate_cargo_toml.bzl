@@ -6,6 +6,7 @@
 
 load("@rules_rust//rust:rust_common.bzl", "CrateInfo", "DepInfo")
 load("//bazel/build_defs/jinja_template:render_template.bzl", "render_template_to_source")
+load(":workspace_metadata.bzl", "MemberInfo")
 
 visibility("//bazel/build_defs")
 
@@ -72,15 +73,27 @@ def _crate_metadata_impl(ctx):
     out = ctx.actions.declare_file(ctx.label.name + ".json")
     ctx.actions.write(out, json.encode(metadata))
 
-    return [DefaultInfo(files = depset([out]))]
+    crates = ctx.attr.tests + [ctx.attr.crate]
+    return [
+        DefaultInfo(files = depset([out])),
+        MemberInfo(
+            manifest = ctx.file.manifest,
+            srcs = depset(transitive = [
+                crate[CrateInfo].srcs
+                for crate in crates
+            ]),
+        ),
+    ]
 
 _crate_metadata = rule(
     implementation = _crate_metadata_impl,
     attrs = dict(
         alias = attr.string(mandatory = True),
         crate = attr.label(mandatory = True, providers = [CrateInfo, DepInfo]),
-        tests = attr.label_list(providers = [DepInfo]),
+        tests = attr.label_list(providers = [CrateInfo, DepInfo]),
+        manifest = attr.label(allow_single_file = [".toml"], mandatory = True),
     ),
+    provides = [MemberInfo],
 )
 
 def generate_cargo_toml(*, name, crate, tests = [], enabled = True):
@@ -92,23 +105,24 @@ def generate_cargo_toml(*, name, crate, tests = [], enabled = True):
         tests: (List[Label]) The labels for the test.
         enabled: (bool) Whether this is actually enabled.
     """
-    metadata_name = "_%s_metadata" % name
-    generated_name = "_%s_generated" % name
+    generated_name = "generate_%s" % name
 
     _crate_metadata(
-        name = metadata_name,
-        alias = name,
+        name = name,
+        alias = generated_name,
+        manifest = "Cargo.toml",
         testonly = True,
         crate = crate,
         tests = tests,
-        visibility = ["//visibility:private"],
+        visibility = ["//bazel:__pkg__"],
     )
 
     if enabled:
         render_template_to_source(
-            name = name,
+            name = generated_name,
             out = "Cargo.toml",
             template = "//bazel/build_defs/generate_cargo_toml:cargo_toml",
-            vars_file = metadata_name,
+            vars_file = name,
             testonly = True,
+            visibility = ["//visibility:private"],
         )

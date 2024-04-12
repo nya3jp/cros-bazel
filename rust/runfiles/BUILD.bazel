@@ -22,7 +22,7 @@ rust_test(
 )
 
 generate_cargo_toml(
-    name = "generate_cargo_toml",
+    name = "cargo_toml",
     crate = ":runfiles",
     tests = [":runfiles_test"],
 )

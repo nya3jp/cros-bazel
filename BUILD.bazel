@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("//bazel/build_defs/generate_cargo_toml:workspace_metadata.bzl", "cargo_workspace")
+
 # The group of non-generated packages considered internal to Alchemy.
 # If you need to make a non-generated Alchemy target accessible from other
 # non-generated Alchemy targets, this is a good default. Of course it's even
@@ -27,4 +29,14 @@ filegroup(
     name = "now",
     srcs = [".now"],
     visibility = ["//visibility:public"],
+)
+
+cargo_workspace(
+    name = "cargo_workspace",
+    testonly = True,
+    lockfile = "//bazel/rust/alchemy_crates:Cargo.lock",
+    manifest = "//bazel/rust/alchemy_crates:Cargo.toml",
+    members = [
+        "//bazel/portage/common/testutil:cargo_toml",
+    ],
 )
