@@ -6,6 +6,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_binary(
@@ -101,4 +102,11 @@ py_test(
     ],
     python_version = "PY3",
     deps = [":portageq"],
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":fast_install_packages",
+    enabled = False,
+    tests = [":fast_install_packages_test"],
 )

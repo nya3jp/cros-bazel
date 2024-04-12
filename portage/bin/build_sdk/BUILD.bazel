@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 
 rust_binary(
     name = "build_sdk",
@@ -17,4 +18,10 @@ rust_binary(
         "@alchemy_crates//:clap",
         "@rules_rust//tools/runfiles",
     ],
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":build_sdk",
+    enabled = False,
 )

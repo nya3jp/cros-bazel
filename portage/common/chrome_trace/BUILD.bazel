@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 filegroup(
@@ -34,4 +35,11 @@ rust_test(
     deps = [
         "@alchemy_crates//:lazy_static",
     ],
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":chrome_trace",
+    enabled = False,
+    tests = [":chrome_trace_test"],
 )

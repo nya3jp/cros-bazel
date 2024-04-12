@@ -2,7 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_library(
@@ -46,4 +48,11 @@ py_binary(
     name = "wrap_elf",
     srcs = ["wrap_elf.py"],
     deps = ["@chromite//:lddtree"],
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":package",
+    enabled = False,
+    tests = [":package_test"],
 )

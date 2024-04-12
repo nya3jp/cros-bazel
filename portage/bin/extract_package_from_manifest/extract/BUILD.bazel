@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_binary(
@@ -20,4 +21,10 @@ rust_binary(
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
     ],
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":extract",
+    enabled = False,
 )

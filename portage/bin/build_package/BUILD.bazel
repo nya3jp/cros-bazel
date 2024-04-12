@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_binary(
@@ -34,4 +35,11 @@ rust_test(
     size = "small",
     crate = ":build_package",
     rustc_flags = RUSTC_DEBUG_FLAGS,
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":build_package",
+    enabled = False,
+    tests = [":build_package_test"],
 )

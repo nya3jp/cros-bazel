@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("//bazel/portage/build_defs:extract_interface.bzl", "extract_interface")
 
@@ -40,4 +41,11 @@ extract_interface(
         "/bin/nano": "nano",
     },
     pkg = "//bazel/portage/common/testdata:nano",
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":extract_interface",
+    enabled = False,
+    tests = [":extract_interface_test"],
 )
