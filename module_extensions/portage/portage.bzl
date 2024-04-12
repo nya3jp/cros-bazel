@@ -53,6 +53,10 @@ def _portage_impl(repo_ctx):
     if profile:
         args.extend(["--profile", profile])
 
+    use_flags = repo_ctx.os.environ.get("USE")
+    if use_flags:
+        args.append("--use-flags=%s" % use_flags)
+
     args.extend([
         "generate-repo",
         "--output-dir",
@@ -89,6 +93,7 @@ portage = repository_rule(
         #
         # Set this flag to 1 to enable the @portage symlink.
         "ENABLE_PORTAGE_TAB_COMPLETION",
+        "USE",
     ],
     # Do not set this to true. It will force the evaluation to happen every
     # bazel invocation for unknown reasons...

@@ -67,6 +67,10 @@ pub struct Args {
     )]
     host: bool,
 
+    /// USE flags to override.
+    #[arg(long, global = true)]
+    use_flags: Option<String>,
+
     /// Profile of the board.
     #[arg(
         short = 'p',
@@ -323,6 +327,7 @@ fn load_board(
     board: &str,
     profile_name: &str,
     root_dir: &Path,
+    use_flags: Option<String>,
     use_portage_site_configs: bool,
     force_accept_9999_ebuilds: bool,
 ) -> Result<TargetData> {
@@ -336,15 +341,28 @@ fn load_board(
 
         let profile_path = profile.profile_path().to_path_buf();
 
-        (
-            ConfigBundle::from_sources(vec![
-                // The order matters.
-                Box::new(profile) as Box<dyn ConfigSource>,
-                Box::new(site_settings) as Box<dyn ConfigSource>,
-                Box::new(override_source) as Box<dyn ConfigSource>,
-            ]),
-            profile_path,
-        )
+        let mut config_sources = vec![
+            // The order matters.
+            Box::new(profile) as Box<dyn ConfigSource>,
+            Box::new(site_settings) as Box<dyn ConfigSource>,
+            Box::new(override_source) as Box<dyn ConfigSource>,
+        ];
+        if let Some(flags) = use_flags {
+            let use_override = SimpleConfigSource::new(vec![ConfigNode {
+                sources: vec![],
+                value: ConfigNodeValue::Uses(vec![UseUpdate {
+                    kind: UseUpdateKind::Set,
+                    filter: UseUpdateFilter {
+                        atom: None,
+                        stable_only: false,
+                    },
+                    use_tokens: flags,
+                }]),
+            }]);
+            config_sources.push(Box::new(use_override) as Box<dyn ConfigSource>);
+        }
+
+        (ConfigBundle::from_sources(config_sources), profile_path)
     };
 
     let config = Arc::new(config);
@@ -495,6 +513,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             board_target.board,
             board_target.profile,
             &root_dir,
+            args.use_flags.clone(),
             args.use_portage_site_configs,
             args.force_accept_9999_ebuilds,
         )?)
@@ -510,6 +529,7 @@ pub fn alchemist_main(args: Args) -> Result<()> {
             host_target.board,
             host_target.profile,
             &root_dir,
+            args.use_flags,
             args.use_portage_site_configs,
             args.force_accept_9999_ebuilds,
         )?,
