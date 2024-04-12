@@ -4,8 +4,8 @@
 
 def _chromite_impl(repo_ctx):
     # Callers can use checked-out Chromite by invoking bazel with
-    # `--repo_env=use_pinned_chromite=false`
-    use_pinned_chromite = repo_ctx.os.environ.get("use_pinned_chromite") not in ["false", "False"]
+    # `USE_PINNED_CHROMITE=false`
+    use_pinned_chromite = repo_ctx.os.environ.get("USE_PINNED_CHROMITE") not in ["false", "False"]
 
     if use_pinned_chromite:
         repo_ctx.download_and_extract(
@@ -22,5 +22,5 @@ def _chromite_impl(repo_ctx):
 
 chromite = repository_rule(
     implementation = _chromite_impl,
-    environ = ["use_pinned_chromite"],
+    environ = ["USE_PINNED_CHROMITE"],
 )
