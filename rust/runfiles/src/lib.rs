@@ -57,6 +57,12 @@ pub struct Runfiles {
     repo_mapping: Option<RepoMapping>,
 }
 
+// For the sake of ide autocompletion.
+// This allows cargo to build.
+pub fn find_runfiles_dir() -> io::Result<PathBuf> {
+    todo!();
+}
+
 impl Runfiles {
     /// Creates a manifest based Runfiles object when
     /// RUNFILES_MANIFEST_ONLY environment variable is present,

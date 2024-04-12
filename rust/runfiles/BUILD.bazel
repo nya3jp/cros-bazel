@@ -3,10 +3,11 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 
 rust_library(
     name = "runfiles",
-    srcs = ["runfiles.rs"],
+    srcs = glob(["src/*.rs"]),
     visibility = ["//visibility:public"],
 )
 
@@ -18,4 +19,10 @@ rust_test(
         "//bazel/module_extensions/toolchains/files/primordial:x86_64-pc-linux-gnu_cargo",
     ],
     deps = ["@alchemy_crates//:anyhow"],
+)
+
+generate_cargo_toml(
+    name = "generate_cargo_toml",
+    crate = ":runfiles",
+    tests = [":runfiles_test"],
 )

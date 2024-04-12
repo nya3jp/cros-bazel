@@ -169,6 +169,7 @@ crate.from_cargo(
         "//bazel/rust/alchemy_crates:Cargo.toml",
         "//bazel/rust/examples:Cargo.toml",
         "//bazel/rust/ide_support:Cargo.toml",
+        "//bazel/rust/runfiles:Cargo.toml",
         "//bazel:Cargo.toml",
     ],
 )
