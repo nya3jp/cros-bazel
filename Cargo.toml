@@ -5,6 +5,7 @@
 [workspace]
 members = [
     "portage/bin/action_wrapper",
+    "portage/bin/alchemist",
     "portage/bin/build_image",
     "portage/bin/build_package",
     "portage/bin/build_sdk",

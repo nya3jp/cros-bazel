@@ -40,6 +40,7 @@ cargo_workspace(
     manifest = "//bazel/rust/alchemy_crates:Cargo.toml",
     members = [
         "//bazel/portage/bin/action_wrapper:cargo_toml",
+        "//bazel/portage/bin/alchemist:cargo_toml",
         "//bazel/portage/bin/build_image:cargo_toml",
         "//bazel/portage/bin/build_package:cargo_toml",
         "//bazel/portage/bin/build_sdk:cargo_toml",
@@ -93,9 +94,9 @@ cargo_workspace_lock(
 
 write_source_files(
     name = "generate_cargo_files",
+    testonly = True,
     files = {
         "Cargo.lock": ":cargo_lock",
         "Cargo.toml": ":cargo_toml",
     },
-    testonly = True,
 )
