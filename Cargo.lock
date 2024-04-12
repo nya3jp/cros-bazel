@@ -7,7 +7,7 @@ name = "action_wrapper"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "chrome-trace",
+ "chrome_trace",
  "clap",
  "cliutil",
  "fileutil",
@@ -284,7 +284,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "chrome-trace"
+name = "chrome_trace"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
@@ -357,8 +357,8 @@ dependencies = [
  "shell-escape",
  "tempfile",
  "tracing",
- "tracing-chrome-trace",
  "tracing-subscriber",
+ "tracing_chrome_trace",
 ]
 
 [[package]]
@@ -2044,18 +2044,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tracing-chrome-trace"
-version = "0.1.0"
-dependencies = [
- "chrome-trace",
- "nix",
- "serde_json",
- "tempfile",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "tracing-core"
 version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2105,6 +2093,18 @@ dependencies = [
  "tracing-core",
  "tracing-log",
  "tracing-serde",
+]
+
+[[package]]
+name = "tracing_chrome_trace"
+version = "0.1.0"
+dependencies = [
+ "chrome_trace",
+ "nix",
+ "serde_json",
+ "tempfile",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 [package]
-name = "chrome-trace"
+name = "chrome_trace"
 version = "0.1.0"
 edition = "2021"
 

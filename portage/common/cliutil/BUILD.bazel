@@ -22,7 +22,7 @@ rust_library(
     visibility = ["//visibility:public"],
     deps = [
         "//bazel/portage/common/fileutil",
-        "//bazel/portage/common/tracing-chrome-trace",
+        "//bazel/portage/common/tracing_chrome_trace",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:itertools",

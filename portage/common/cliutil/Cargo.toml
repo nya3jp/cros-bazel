@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tracing-chrome-trace = { path = "../tracing-chrome-trace" }
+tracing_chrome_trace = { path = "../tracing_chrome_trace" }
 fileutil = { path = "../fileutil" }
 
 anyhow.workspace = true

@@ -15,7 +15,7 @@ filegroup(
 )
 
 rust_library(
-    name = "chrome-trace",
+    name = "chrome_trace",
     srcs = glob(["src/*.rs"]),
     crate_name = "chrome_trace",
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -27,9 +27,9 @@ rust_library(
 )
 
 rust_test(
-    name = "chrome-trace_test",
+    name = "chrome_trace_test",
     size = "small",
-    crate = ":chrome-trace",
+    crate = ":chrome_trace",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:lazy_static",

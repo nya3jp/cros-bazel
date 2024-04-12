@@ -669,8 +669,8 @@ _DEV_SRCS_NO_LOCK = [
 ]
 
 _SHARED_CRATE_FILES = [
-    "//bazel/portage/common/chrome-trace:Cargo.toml",
-    "//bazel/portage/common/chrome-trace:src/lib.rs",
+    "//bazel/portage/common/chrome_trace:Cargo.toml",
+    "//bazel/portage/common/chrome_trace:src/lib.rs",
     "//bazel/portage/common/cliutil:Cargo.toml",
     "//bazel/portage/common/cliutil:src/config.rs",
     "//bazel/portage/common/cliutil:src/lib.rs",
@@ -692,8 +692,8 @@ _SHARED_CRATE_FILES = [
     "//bazel/portage/common/testutil:src/lib.rs",
     "//bazel/portage/common/testutil:src/namespace.rs",
     "//bazel/portage/common/testutil:src/testdata.rs",
-    "//bazel/portage/common/tracing-chrome-trace:Cargo.toml",
-    "//bazel/portage/common/tracing-chrome-trace:src/lib.rs",
+    "//bazel/portage/common/tracing_chrome_trace:Cargo.toml",
+    "//bazel/portage/common/tracing_chrome_trace:src/lib.rs",
 ]
 
 _LOCK = "//bazel/portage/bin/alchemist:Cargo.lock"

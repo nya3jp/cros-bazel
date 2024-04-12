@@ -1,12 +1,12 @@
 [package]
-name = "tracing-chrome-trace"
+name = "tracing_chrome_trace"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrome-trace = { path = "../chrome-trace" }
+chrome_trace = { path = "../chrome_trace" }
 
 nix.workspace = true
 serde_json.workspace = true

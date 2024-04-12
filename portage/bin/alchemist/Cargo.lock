@@ -188,7 +188,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "chrome-trace"
+name = "chrome_trace"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -243,7 +243,7 @@ dependencies = [
  "nix",
  "shell-escape",
  "tracing",
- "tracing-chrome-trace",
+ "tracing_chrome_trace",
  "tracing-subscriber",
 ]
 
@@ -1390,10 +1390,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "tracing-chrome-trace"
+name = "tracing_chrome_trace"
 version = "0.1.0"
 dependencies = [
- "chrome-trace",
+ "chrome_trace",
  "nix",
  "serde_json",
  "tracing",

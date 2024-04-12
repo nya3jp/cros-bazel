@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_binary(
     name = "action_wrapper",
@@ -11,7 +11,7 @@ rust_binary(
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//visibility:public"],
     deps = [
-        "//bazel/portage/common/chrome-trace",
+        "//bazel/portage/common/chrome_trace",
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/fileutil",
         "//bazel/portage/common/processes",

@@ -15,7 +15,7 @@ filegroup(
 )
 
 rust_library(
-    name = "tracing-chrome-trace",
+    name = "tracing_chrome_trace",
     srcs = glob(["src/*.rs"]),
     crate_name = "tracing_chrome_trace",
     rustc_flags = RUSTC_DEBUG_FLAGS,
@@ -23,7 +23,7 @@ rust_library(
         "//bazel/portage/common/cliutil:__pkg__",
     ],
     deps = [
-        "//bazel/portage/common/chrome-trace",
+        "//bazel/portage/common/chrome_trace",
         "@alchemy_crates//:nix",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:tracing",
@@ -32,9 +32,9 @@ rust_library(
 )
 
 rust_test(
-    name = "tracing-chrome-trace_test",
+    name = "tracing_chrome_trace_test",
     size = "small",
-    crate = ":tracing-chrome-trace",
+    crate = ":tracing_chrome_trace",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:tempfile",
