@@ -47,5 +47,5 @@ rust_test(
 generate_cargo_toml(
     name = "generate_cargo_toml",
     crate = ":testutil",
-    test = ":testutil_test",
+    tests = [":testutil_test"],
 )

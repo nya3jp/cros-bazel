@@ -2,7 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test", "rust_test_suite")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 filegroup(
@@ -43,10 +44,10 @@ rust_test(
     ],
 )
 
-rust_test_suite(
-    name = "cliutil_integration_tests",
+rust_test(
+    name = "cli_main_test",
     size = "small",
-    srcs = glob(["tests/**/*.rs"]),
+    srcs = ["tests/cli_main_test.rs"],
     data = ["//bazel/portage/common/cliutil/testdata:demo"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
@@ -54,5 +55,15 @@ rust_test_suite(
         "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:regex",
+    ],
+)
+
+generate_cargo_toml(
+    name = "generate_cargo_toml",
+    crate = ":cliutil",
+    enabled = False,
+    tests = [
+        ":cli_main_test",
+        ":cliutil_test",
     ],
 )

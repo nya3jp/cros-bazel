@@ -53,11 +53,11 @@ def _crate_metadata_impl(ctx):
     dir = crate.output.short_path.split("/")[:-1]
 
     deps = _calculate_dependencies(ctx.attr.crate[DepInfo], dir)
-    dev_deps = {
-        k: v
-        for k, v in _calculate_dependencies(ctx.attr.test[DepInfo], dir).items()
-        if k not in deps
-    }
+    dev_deps = {}
+    for test in ctx.attr.tests:
+        for k, v in _calculate_dependencies(test[DepInfo], dir).items():
+            if k not in deps:
+                dev_deps[k] = v
 
     metadata = struct(
         name = crate.name,
@@ -78,18 +78,19 @@ _crate_metadata = rule(
     implementation = _crate_metadata_impl,
     attrs = dict(
         alias = attr.string(mandatory = True),
-        crate = attr.label(mandatory = True),
-        test = attr.label(),
+        crate = attr.label(mandatory = True, providers = [CrateInfo, DepInfo]),
+        tests = attr.label_list(providers = [DepInfo]),
     ),
 )
 
-def generate_cargo_toml(*, name, crate, test = None):
+def generate_cargo_toml(*, name, crate, tests = [], enabled = True):
     """Generates a Cargo.toml file, and writes it back to version control.
 
     Args:
         name: (str) The name of the rule
         crate: (Label) The label for the binary / library.
-        test: (Optional[Label]) The label for the test.
+        tests: (List[Label]) The labels for the test.
+        enabled: (bool) Whether this is actually enabled.
     """
     metadata_name = "_%s_metadata" % name
     generated_name = "_%s_generated" % name
@@ -99,14 +100,15 @@ def generate_cargo_toml(*, name, crate, test = None):
         alias = name,
         testonly = True,
         crate = crate,
-        test = test,
+        tests = tests,
         visibility = ["//visibility:private"],
     )
 
-    render_template_to_source(
-        name = name,
-        out = "Cargo.toml",
-        template = "//bazel/build_defs/generate_cargo_toml:cargo_toml",
-        vars_file = metadata_name,
-        testonly = True,
-    )
+    if enabled:
+        render_template_to_source(
+            name = name,
+            out = "Cargo.toml",
+            template = "//bazel/build_defs/generate_cargo_toml:cargo_toml",
+            vars_file = metadata_name,
+            testonly = True,
+        )
