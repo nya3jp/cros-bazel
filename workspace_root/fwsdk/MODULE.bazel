@@ -11,7 +11,6 @@ module(
 
 # Language independent stuff.
 bazel_dep(name = "bazel_skylib", version = "1.4.2")
-bazel_dep(name = "platforms", version = "0.0.9")
 
 # Python support
 PY_VERSION = "3.10"
@@ -50,42 +49,8 @@ rust.toolchain(
     extra_target_triples = ["riscv32imc-unknown-none-elf"],
     versions = ["1.66.1"],
 )
-rust.host_tools(
-    edition = "2021",
-    version = "1.77.0",
-)
 
 register_toolchains("//platform/ti50/common/toolchain:dauntless_rust")
-
-# Eventually this will be merged with metallurgy crates.
-crate = use_extension(
-    "@rules_rust//crate_universe:extension.bzl",
-    "crate",
-    isolate = True,
-)
-crate.from_cargo(
-    name = "ti50_rust_deps",
-    cargo_lockfile = "//platform/ti50/common:toolchain/no_std_deps/Cargo.lock",
-    manifests = [
-        "//platform/ti50/common:toolchain/no_std_deps/Cargo.toml",
-    ],
-    supported_platform_triples = [
-        "riscv32imc-unknown-none-elf",
-        "x86_64-unknown-linux-gnu",
-    ],
-)
-crate.from_cargo(
-    name = "ti50_std_rust_deps",
-    cargo_lockfile = "//platform/ti50/common:toolchain/std_deps/Cargo.lock",
-    manifests = [
-        "//platform/ti50/common:toolchain/std_deps/Cargo.toml",
-    ],
-    supported_platform_triples = [
-        "riscv32imc-unknown-none-elf",
-        "x86_64-unknown-linux-gnu",
-    ],
-)
-use_repo(crate, "ti50_rust_deps", "ti50_std_rust_deps")
 
 fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
 use_repo(
