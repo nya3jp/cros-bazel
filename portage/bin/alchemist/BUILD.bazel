@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
-load("//bazel/bash:defs.bzl", "custom_args_binary", "custom_args_test", "sh_runfiles_binary")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 load(":src.bzl", "ALCHEMIST_BAZEL_LIB_SRCS")
 
@@ -73,57 +72,5 @@ rust_test(
         "@alchemy_crates//:pretty_assertions",
         "@alchemy_crates//:proptest",
         "@alchemy_crates//:shell-escape",
-    ],
-)
-
-sh_runfiles_binary(
-    name = "cargo",
-    src = "cargo.sh",
-    data = [
-        ":srcs",
-        "@rust_host_tools//:cargo",
-        "@rust_host_tools//:rustc",
-        "@rust_host_tools//:rustdoc",
-    ],
-)
-
-custom_args_binary(
-    name = "build",
-    binary = ":cargo",
-    binary_args = [
-        "build",
-        "--package",
-        "alchemist",
-    ],
-)
-
-# Note that running "bazel build :alchemist" won't build alchemist.
-# To do that, run "bazel build :build"
-custom_args_binary(
-    name = "alchemist",
-    binary = ":cargo",
-    binary_args = [
-        "run",
-        "--package",
-        "alchemist",
-        "--",
-    ],
-)
-
-custom_args_test(
-    name = "alchemist_test",
-    # If it's not cached, it can be quite slow to download all the dependencies.
-    size = "medium",
-    binary = ":cargo",
-    binary_args = [
-        "test",
-        "--package",
-        "alchemist",
-    ],
-    # We require network access to download from crates.io, and require
-    # disabling the sandbox to write them to the local cache of the registry.
-    tags = [
-        "no-sandbox",
-        "requires-network",
     ],
 )
