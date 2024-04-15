@@ -145,10 +145,6 @@ build:nohermetic_rust --no//bazel/module_extensions/toolchains/rust:hermetic
 
 build --config=nohermetic_toolchains
 
-# Used by tools/bazel to prevent Bazel from creating convenience symlinks
-# (bazel-*).
-common:no_convenience_symlinks --experimental_convenience_symlinks=ignore
-
 # Enable printing artifact hashes
 build:hash_tracer --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_tracer,//bazel/portage/build_defs:hash_tracer.bzl%hash_tracer_validator
 
