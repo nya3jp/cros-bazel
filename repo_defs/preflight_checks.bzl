@@ -10,8 +10,8 @@ def _prominent_fail(message):
     """Similar to fail, but prints a message prominently."""
     fail("\n\n" + "*" * 80 + "\n" + message + "\n" + "*" * 80 + "\n\n")
 
-def _preflight_check_fail(reason):
-    """Reports a preflight check failure."""
+def _misconfiguration_fail(reason):
+    """Reports a preflight check failure due to the user's misconfiguration."""
     _prominent_fail(
         reason +
         "\n\nPlease read the following guide to set up your environment " +
@@ -19,27 +19,41 @@ def _preflight_check_fail(reason):
         "https://chromium.googlesource.com/chromiumos/bazel/+/HEAD/README.md",
     )
 
-def _preflight_checks_impl(repo_ctx):
-    """Performs preflight checks."""
-    failure = None
+def _do_preflight_checks(repo_ctx):
+    # Skip all preflight checks for nested bazel.
+    if repo_ctx.os.environ.get("IS_NESTED_BAZEL") == "1":
+        return
 
+    # Ensure we're inside the CrOS chroot.
     if repo_ctx.os.environ.get("ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT") != "1":
         if not repo_ctx.path("/etc/cros_chroot_version").exists:
-            failure = "Bazel was run outside CrOS chroot."
+            _misconfiguration_fail("Bazel was run outside CrOS chroot.")
 
+    # Ensure we're invoked via the wrapper script.
     if repo_ctx.os.environ.get("CHROMITE_BAZEL_WRAPPER") != "1":
-        failure = "Bazel was run without the proper wrapper."
+        _misconfiguration_fail("Bazel was run without the proper wrapper.")
 
+    # Ensure third_party/llvm-project is checked out.
     llvm_path = repo_ctx.workspace_root.get_child("third_party/llvm-project")
     if not llvm_path.exists:
-        failure = "third_party/llvm-project is not checked out.\n" + \
-                  "Did you run `repo init` with `-g default,bazel`?"
+        _misconfiguration_fail(
+            "third_party/llvm-project is not checked out.\n" +
+            "Did you run `repo init` with `-g default,bazel`?",
+        )
 
-    if repo_ctx.os.environ.get("IS_NESTED_BAZEL") == "1":
-        failure = None
+    # Ensure the execroot is not overlayfs.
+    result = repo_ctx.execute(["stat", "--format=%T", "--file-system", "."], timeout = 10)
+    if result.return_code != 0:
+        _prominent_fail(
+            "statvfs execroot failed: " + result.stderr + result.stdout,
+        )
+    if result.stdout.strip() == "overlayfs":
+        _misconfiguration_fail("The execroot must not be overlayfs.")
 
-    if failure != None:
-        _preflight_check_fail(failure)
+def _preflight_checks_impl(repo_ctx):
+    """Performs preflight checks."""
+
+    _do_preflight_checks(repo_ctx)
 
     # Create an empty repository.
     repo_ctx.file("BUILD.bazel", "")
@@ -62,7 +76,7 @@ preflight_checks = repository_rule(
 )
 
 def _symlinks_unavailable_impl(_repo_ctx):
-    _preflight_check_fail("Bazel was run without the proper wrapper.")
+    _misconfiguration_fail("Bazel was run without the proper wrapper.")
 
 symlinks_unavailable = repository_rule(
     implementation = _symlinks_unavailable_impl,
