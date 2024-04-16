@@ -81,11 +81,6 @@ def _cros_chrome_repository_impl(ctx):
     vpython_root = paths.join(pwd, ".vpython-root")
     depot_tools_path = ctx.workspace_root.get_child("chromium/depot_tools")
 
-    # When running hooks `update_depot_tools_toggle.py` will write this file
-    # with a timestamp. By writing it ourselves we can keep the tarball
-    # reproducible.
-    ctx.file(paths.join(pwd, "src/third_party/depot_tools/.disable_auto_update"), "")
-
     _exec_with_gce_context_if_needed(
         ctx,
         [
@@ -106,6 +101,13 @@ def _cros_chrome_repository_impl(ctx):
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
         DEPOT_TOOLS_UPDATE = "0",
     )
+
+    # When running hooks `update_depot_tools_toggle.py` will write this file
+    # with a timestamp. By writing it ourselves we can keep the tarball
+    # reproducible.
+    ctx.file(paths.join(pwd, "src/third_party/depot_tools/.disable_auto_update"), "")
+    if ctx.attr.internal:
+        ctx.file(paths.join(pwd, "src/third_party/devtools-frontend-internal/third_party/depot_tools/.disable_auto_update"), "")
 
     # This command will populate the cipd cache and create a python venv.
     _exec_with_gce_context_if_needed(
