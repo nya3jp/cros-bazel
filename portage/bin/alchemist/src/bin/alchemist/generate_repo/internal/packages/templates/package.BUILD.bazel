@@ -421,8 +421,8 @@ ebuild_install_action(
 filegroup(
     name = "{{ ebuild.version }}_installed",
     srcs = [
-        {%- for dep in ebuild.install_set %}
-        "{{ dep }}_installed_no_pdepends",
+        {%- for pkg in ebuild.install_set %}
+        "{{ pkg }}_installed_no_pdepends",
         {%- endfor %}
     ],
     visibility = ["//:__subpackages__"],
@@ -451,8 +451,8 @@ ebuild_compare_package_test(
 test_suite(
     name = "{{ ebuild.version }}_package_set_hermetic_test",
     tests = [
-        {%- for dep in ebuild.install_set %}
-        "{{ dep }}_hermetic_test",
+        {%- for pkg in ebuild.install_set %}
+        "{{ pkg }}_hermetic_test",
         {%- endfor %}
     ],
     visibility = ["//:__subpackages__"],
@@ -461,8 +461,8 @@ test_suite(
 package_set(
     name = "{{ ebuild.version }}_package_set",
     deps = [
-        {%- for dep in ebuild.install_set %}
-        "{{ dep }}",
+        {%- for pkg in ebuild.install_set %}
+        "{{ pkg }}",
         {%- endfor %}
     ],
     visibility = ["//:__subpackages__"],
