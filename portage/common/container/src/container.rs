@@ -16,6 +16,7 @@ use std::{
 use anyhow::{bail, ensure, Context, Result};
 use durabletree::DurableTree;
 use fileutil::{resolve_symlink_forest, SafeTempDir, SafeTempDirBuilder};
+use nix::sys::statfs::{statfs, OVERLAYFS_SUPER_MAGIC};
 use run_in_container_lib::{BindMountConfig, RunInContainerConfig};
 use strum_macros::EnumString;
 use tracing::info_span;
@@ -27,6 +28,16 @@ use crate::{
 
 const DEFAULT_PATH: &str = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:\
     /sbin:/bin:/opt/bin:/mnt/host/source/chromite/bin:/mnt/host/depot_tools";
+
+fn ensure_not_overlayfs(path: &Path) -> Result<()> {
+    let st = statfs(path).with_context(|| format!("statfs failed for {}", path.display()))?;
+    ensure!(
+        st.filesystem_type() != OVERLAYFS_SUPER_MAGIC,
+        "{} must not be overlayfs!",
+        path.display()
+    );
+    Ok(())
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumString, strum_macros::Display)]
 #[strum(serialize_all = "kebab-case")]
@@ -231,12 +242,16 @@ impl ContainerSettings {
                 Ok(())
             }
             LayerType::Dir => {
+                ensure_not_overlayfs(path)?;
                 self.lower_dirs.push(path.to_owned());
                 self.reusable_archive_dir = None;
                 Ok(())
             }
             LayerType::DurableTree => {
                 let durable_tree = DurableTree::expand(path)?;
+                for dir in durable_tree.layers() {
+                    ensure_not_overlayfs(dir)?;
+                }
                 self.lower_dirs
                     .extend(durable_tree.layers().into_iter().map(ToOwned::to_owned));
                 self.durable_trees.push(durable_tree);
@@ -358,6 +373,8 @@ pub struct PreparedContainer<'settings> {
 
 impl<'settings> PreparedContainer<'settings> {
     fn new(settings: &'settings ContainerSettings, upper_dir: SafeTempDir) -> Result<Self> {
+        ensure_not_overlayfs(&settings.mutable_base_dir)?;
+
         let mut base_envs: BTreeMap<OsString, OsString> = BTreeMap::from_iter([
             ("PATH".into(), DEFAULT_PATH.into()),
             // Always enable Rust backtrace.
@@ -1025,6 +1042,59 @@ mod tests {
         })?;
 
         assert_content(&mut settings.prepare()?, Path::new("/hello.txt"), "world")?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_ensure_lower_dirs_not_overlayfs() -> Result<()> {
+        let tmp_dir = SafeTempDir::new()?;
+        let tmp_dir = tmp_dir.path();
+
+        let empty_dir = tmp_dir.join("empty");
+        let mount_dir = tmp_dir.join("mount");
+        let lower_dir = tmp_dir.join("lower");
+        let upper_dir = tmp_dir.join("upper");
+        let scratch_dir = tmp_dir.join("scratch");
+
+        for dir in [&empty_dir, &mount_dir, &lower_dir, &upper_dir, &scratch_dir] {
+            std::fs::create_dir(dir)?;
+        }
+
+        let mut settings = ContainerSettings::new();
+        settings.push_layer(&empty_dir)?;
+
+        // Pushing a directory layer on overlayfs fails.
+        let _guard = mount_overlayfs(&mount_dir, &[&lower_dir], &upper_dir, &scratch_dir)?;
+        assert!(settings.push_layer(&mount_dir).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_ensure_mutable_base_dir_not_overlayfs() -> Result<()> {
+        let tmp_dir = SafeTempDir::new()?;
+        let tmp_dir = tmp_dir.path();
+
+        let empty_dir = tmp_dir.join("empty");
+        let mount_dir = tmp_dir.join("mount");
+        let lower_dir = tmp_dir.join("lower");
+        let upper_dir = tmp_dir.join("upper");
+        let scratch_dir = tmp_dir.join("scratch");
+
+        for dir in [&empty_dir, &mount_dir, &lower_dir, &upper_dir, &scratch_dir] {
+            std::fs::create_dir(dir)?;
+        }
+
+        let mut settings = ContainerSettings::new();
+        settings.push_layer(&empty_dir)?;
+
+        assert!(settings.prepare().is_ok());
+
+        // Preparation fails if the mutable base directory is on overlayfs.
+        let _guard = mount_overlayfs(&mount_dir, &[&lower_dir], &upper_dir, &scratch_dir)?;
+        settings.set_mutable_base_dir(&mount_dir);
+        assert!(settings.prepare().is_err());
 
         Ok(())
     }
