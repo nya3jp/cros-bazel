@@ -41,8 +41,12 @@ pkg_mkdirs(
 write_file(
     name = "chromeos_version_stub",
     content = [
-        "#!/bin/sh",
-        "container-bailout \"chromeos/config/chromeos_version.sh was called without explicit dependency declaration\"",
+        "#!/bin/bash",
+        "container-bailout \"chromeos/config/chromeos_version.sh was called " +
+        "without explicit dependency declaration! Read " +
+        "https://chromium.googlesource.com/chromiumos/bazel/+/HEAD/docs/" +
+        "debugging.md#Implicit-build_time-dependencies-are-missing " +
+        "for how to add them.\"",
     ],
     is_executable = True,
     out = "chromeos_version_stub.sh",
