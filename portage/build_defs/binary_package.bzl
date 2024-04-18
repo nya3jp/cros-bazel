@@ -106,7 +106,7 @@ def _add_runtime_deps(ctx):
     )
     return [
         DefaultInfo(
-            files = depset([package_info.file]),
+            files = depset([package_info.partial]),
             runfiles = ctx.runfiles(package_set_info.partials.to_list()),
         ),
         package_info,
