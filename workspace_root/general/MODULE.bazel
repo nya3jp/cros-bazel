@@ -9,6 +9,16 @@ module(
     version = "0.1",
 )
 
+local_path_override(
+    module_name = "rules_cc",
+    path = "../bazel_deps/rules_cc",
+)
+
+local_path_override(
+    module_name = "rules_rust",
+    path = "../bazel_deps/rules_rust",
+)
+
 # Language independent stuff.
 bazel_dep(name = "aspect_bazel_lib", version = "1.36.0")
 bazel_dep(name = "bazel_skylib", version = "1.4.2")
@@ -93,10 +103,6 @@ use_repo(pip, "pip")
 
 # Rust support
 bazel_dep(name = "rules_rust", version = "0.20.1")
-local_path_override(
-    module_name = "rules_rust",
-    path = "../bazel_deps/rules_rust",
-)
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
