@@ -107,7 +107,7 @@ def main():
         build,
     )
 
-    chrome_label = "@portage//chromeos-base/chromeos-chrome"
+    chrome_label = "@portage//target/chromeos-base/chromeos-chrome"
     chrome_actual_labels = _resolve_alias(chrome_label)
     prebuilt_labels = [label + "_prebuilt" for label in chrome_actual_labels]
     logging.info("Prebuilt labels are %s", prebuilt_labels)
