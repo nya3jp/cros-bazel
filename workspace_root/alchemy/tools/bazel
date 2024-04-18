@@ -34,7 +34,10 @@ def get_workspace() -> pathlib.Path:
     """Returns the Bazel workspace path."""
     cwd = pathlib.Path.cwd()
     for parent in itertools.chain([cwd], cwd.parents):
-        if parent.joinpath(".repo").is_dir():
+        if (
+            parent.joinpath(".repo").is_dir()
+            or parent.joinpath(".supermanifest").is_file()
+        ):
             return parent.joinpath("src").resolve()
     fail("Working directory is not a bazel workspace")
 
