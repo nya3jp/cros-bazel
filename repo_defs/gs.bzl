@@ -53,6 +53,8 @@ GS_ATTRS = {
     ),
 }
 
+_MAX_RETRIES = 2
+
 def download_gs_file(repository_ctx):
     repository_ctx.report_progress("Downloading from GS.")
     repository_ctx.execute(["mkdir", "file"])
@@ -77,13 +79,22 @@ def download_gs_file(repository_ctx):
         url,
         dest,
     ]
-    st = repository_ctx.execute(
-        cmd,
-        working_directory = str(repository_ctx.workspace_root),
-        environment = extra_env,
-    )
-    if st.return_code:
-        fail("Error running command %s:\n%s%s" % (cmd, st.stdout, st.stderr))
+
+    for attempt_num in range(_MAX_RETRIES + 1):
+        st = repository_ctx.execute(
+            cmd,
+            working_directory = str(repository_ctx.workspace_root),
+            environment = extra_env,
+        )
+        if st.return_code:
+            error_msg = "Error on attempt %s/%s: Error running command %s:\n%s%s" % \
+                        (attempt_num + 1, _MAX_RETRIES + 1, cmd, st.stdout, st.stderr)
+            if attempt_num < _MAX_RETRIES:
+                print("%s\nRetrying." % (error_msg))
+            else:
+                fail(error_msg)
+        else:
+            break
 
     template = _NON_EXECUTABLE_TEMPLATE
     if repository_ctx.attr.executable:
