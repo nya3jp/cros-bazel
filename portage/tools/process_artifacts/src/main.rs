@@ -14,10 +14,12 @@ use anyhow::{Context, Result};
 use archive_logs::archive_logs;
 use build_event_processor::BuildEventProcessor;
 use clap::Parser;
+use prebuilts::compute_prebuilts;
 use proto::build_event_stream::BuildEvent;
 
 mod archive_logs;
 mod build_event_processor;
+mod prebuilts;
 mod proto;
 
 /// Loads a newline-deliminated JSON file containing Build Event Protocol data.
@@ -64,6 +66,11 @@ struct Args {
     /// --auto-compress option).
     #[arg(long)]
     archive_logs: Option<PathBuf>,
+
+    /// If set, a .bzl file will be generated that contains --@portage//<package>_prebuilt
+    /// flags pointing to the CAS for the packages specified in the BEP file..
+    #[arg(long)]
+    prebuilts: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
@@ -74,6 +81,10 @@ fn main() -> Result<()> {
 
     if let Some(output_path) = &args.archive_logs {
         archive_logs(output_path, &args.workspace, &processor)?;
+    }
+
+    if let Some(output_path) = &args.prebuilts {
+        compute_prebuilts(output_path, &args.workspace, &processor)?;
     }
 
     Ok(())

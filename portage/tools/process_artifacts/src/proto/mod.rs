@@ -3,3 +3,4 @@
 // found in the LICENSE file.
 
 pub mod build_event_stream;
+pub mod ebuild_metadata;
