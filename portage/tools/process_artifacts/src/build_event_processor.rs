@@ -8,7 +8,8 @@ use anyhow::{bail, Result};
 use itertools::Itertools;
 
 use crate::proto::build_event_stream::{
-    BuildEvent, BuildEventId, BuildEventPayload, File, NamedSetOfFiles, NamedSetOfFilesId,
+    BuildEvent, BuildEventId, BuildEventPayload, CommandLineSectionType, File, NamedSetOfFiles,
+    NamedSetOfFilesId,
 };
 
 /// Provides fast merge operations over [`NamedSetOfFiles`].
@@ -132,11 +133,60 @@ impl BuildEventProcessor<'_> {
 
         Ok(fileset.files().map(path_for_file).collect())
     }
+
+    /// Gets the value of the flag passed to the bazel command.
+    ///
+    /// i.e., Given `bazel build --remote_instance_name=foo`, this would
+    /// search the flags passed after the `build` command.
+    pub fn get_command_flag(&self, flag: &str) -> Option<&str> {
+        for event in self.events {
+            let BuildEventId::StructuredCommandLine(_) = &event.id else {
+                continue;
+            };
+            let BuildEventPayload::StructuredCommandLine(command_line) = &event.payload else {
+                continue;
+            };
+
+            if command_line.command_line_label != "canonical" {
+                continue;
+            }
+
+            let Some(command_line_section) = command_line
+                .sections
+                .iter()
+                .find(|section| section.section_label == "command options")
+            else {
+                continue;
+            };
+
+            let CommandLineSectionType::OptionList(option_list) =
+                &command_line_section.section_type
+            else {
+                continue;
+            };
+
+            let Some(option_item) = option_list
+                .option
+                .iter()
+                .filter(|option| option.option_name == flag)
+                .last()
+            else {
+                continue;
+            };
+
+            return Some(option_item.option_value.as_str());
+        }
+
+        None
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::proto::build_event_stream::{OutputGroup, TargetComplete, TargetCompletedId};
+    use crate::proto::build_event_stream::{
+        ChunkList, CommandLineSection, CommandLineSectionType, OptionItem, OptionList, OutputGroup,
+        StructuredCommandLine, StructuredCommandLineId, TargetComplete, TargetCompletedId,
+    };
 
     use super::*;
 
@@ -274,6 +324,69 @@ mod tests {
                 .map(|i| PathBuf::from(format!("{i}.txt")))
                 .sorted()
                 .collect_vec(),
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn get_command_line_flag() -> Result<()> {
+        let events: Vec<BuildEvent> = vec![
+            BuildEvent {
+                id: BuildEventId::StructuredCommandLine(StructuredCommandLineId {
+                    command_line_label: "canonical".to_string(),
+                }),
+                payload: BuildEventPayload::StructuredCommandLine(StructuredCommandLine {
+                    command_line_label: "canonical".to_string(),
+                    sections: vec![
+                        CommandLineSection {
+                            section_label: "executable".to_string(),
+                            section_type: CommandLineSectionType::ChunkList(ChunkList {
+                                chunk: vec!["bazel".to_string()]
+                            })
+                        },
+                        CommandLineSection {
+                            section_label: "startup options".to_string(),
+                            section_type: CommandLineSectionType::OptionList(OptionList {
+                                option: vec![
+                                    OptionItem {
+                                        combined_form: "--max_idle_secs=10800".to_string(),
+                                        option_name: "max_idle_secs".to_string(),
+                                        option_value: "10800".to_string()
+                                    }
+                                ]
+                            })
+                        },
+                        CommandLineSection {
+                            section_label: "command".to_string(),
+                            section_type: CommandLineSectionType::ChunkList(ChunkList {
+                                chunk: vec!["build".to_string()]
+                            })
+                        },
+
+                        CommandLineSection {
+                            section_label: "command options".to_string(),
+                            section_type: CommandLineSectionType::OptionList(OptionList {
+                                option: vec![
+                                    OptionItem {
+                                        combined_form: "--remote_instance_name=projects/chromeos-bot/instances/cros-rbe-nonrelease".to_string(),
+                                        option_name: "remote_instance_name".to_string(),
+                                        option_value: "projects/chromeos-bot/instances/cros-rbe-nonrelease".to_string()
+                                    }
+                                ]
+                            })
+                        },
+                    ]
+                })
+            }
+        ];
+
+        let processor = BuildEventProcessor::from(&events);
+        let remote_instance_name = processor.get_command_flag("remote_instance_name");
+
+        assert_eq!(
+            remote_instance_name,
+            Some("projects/chromeos-bot/instances/cros-rbe-nonrelease"),
         );
 
         Ok(())

@@ -5,6 +5,7 @@
 //! Defines types corresponding to Build Event Protocol protobuf messages.
 //!
 //! See: https://github.com/bazelbuild/bazel/blob/HEAD/src/main/java/com/google/devtools/build/lib/buildeventstream/proto/build_event_stream.proto
+//! See: https://github.com/bazelbuild/bazel/blob/HEAD/src/main/protobuf/command_line.proto
 
 use serde::Deserialize;
 
@@ -34,6 +35,7 @@ pub struct BuildEvent {
 pub enum BuildEventId {
     NamedSet(NamedSetOfFilesId),
     TargetCompleted(TargetCompletedId),
+    StructuredCommandLine(StructuredCommandLineId),
     #[serde(untagged)]
     Other(PhantomValue),
 }
@@ -43,6 +45,7 @@ pub enum BuildEventId {
 pub enum BuildEventPayload {
     NamedSetOfFiles(NamedSetOfFiles),
     Completed(TargetComplete),
+    StructuredCommandLine(StructuredCommandLine),
     #[serde(untagged)]
     Other(PhantomValue),
 }
@@ -63,6 +66,56 @@ pub struct TargetComplete {
     pub success: bool,
     #[serde(default)]
     pub output_group: Vec<OutputGroup>,
+}
+
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StructuredCommandLineId {
+    pub command_line_label: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StructuredCommandLine {
+    #[serde(default)]
+    pub command_line_label: String,
+    pub sections: Vec<CommandLineSection>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandLineSection {
+    #[serde(default)]
+    pub section_label: String,
+    #[serde(flatten)]
+    pub section_type: CommandLineSectionType,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CommandLineSectionType {
+    ChunkList(ChunkList),
+    OptionList(OptionList),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChunkList {
+    pub chunk: Vec<String>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionList {
+    pub option: Vec<OptionItem>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptionItem {
+    pub combined_form: String,
+    pub option_name: String,
+    pub option_value: String,
 }
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Deserialize)]
@@ -209,6 +262,117 @@ mod tests {
                         }],
                         incomplete: true,
                     }],
+                })
+            }
+        );
+
+        // TargetCompleted for a failed case.
+        assert_eq!(
+            serde_json::from_value::<BuildEvent>(json!({
+              "id": {
+                "structuredCommandLine": {
+                  "commandLineLabel": "canonical"
+                }
+              },
+              "structuredCommandLine": {
+                "commandLineLabel": "canonical",
+                "sections": [
+                  {
+                    "sectionLabel": "executable",
+                    "chunkList": {
+                      "chunk": [
+                        "bazel"
+                      ]
+                    }
+                  },
+                  {
+                    "sectionLabel": "startup options",
+                    "optionList": {
+                      "option": [
+                        {
+                          "combinedForm": "--max_idle_secs=10800",
+                          "optionName": "max_idle_secs",
+                          "optionValue": "10800",
+                          "effectTags": [
+                            "EAGERNESS_TO_EXIT",
+                            "LOSES_INCREMENTAL_STATE"
+                          ]
+                        },
+                      ]
+                    }
+                  },
+                  {
+                    "sectionLabel": "command",
+                    "chunkList": {
+                      "chunk": [
+                        "build"
+                      ]
+                    }
+                  },
+                  {
+                    "sectionLabel": "command options",
+                    "optionList": {
+                      "option": [
+                        {
+                          "combinedForm": "--remote_instance_name=projects/chromeos-bot/instances/cros-rbe-nonrelease",
+                          "optionName": "remote_instance_name",
+                          "optionValue": "projects/chromeos-bot/instances/cros-rbe-nonrelease",
+                          "effectTags": [
+                            "UNKNOWN"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }))
+            .expect("failed to deserialize BuildEvent"),
+            BuildEvent {
+                id: BuildEventId::StructuredCommandLine(StructuredCommandLineId {
+                    command_line_label: "canonical".to_string(),
+                }),
+                payload: BuildEventPayload::StructuredCommandLine(StructuredCommandLine {
+                    command_line_label: "canonical".to_string(),
+                    sections: vec![
+                        CommandLineSection {
+                            section_label: "executable".to_string(),
+                            section_type: CommandLineSectionType::ChunkList(ChunkList {
+                                chunk: vec!["bazel".to_string()]
+                            })
+                        },
+                        CommandLineSection {
+                            section_label: "startup options".to_string(),
+                            section_type: CommandLineSectionType::OptionList(OptionList {
+                                option: vec![
+                                    OptionItem {
+                                        combined_form: "--max_idle_secs=10800".to_string(),
+                                        option_name: "max_idle_secs".to_string(),
+                                        option_value: "10800".to_string()
+                                    }
+                                ]
+                            })
+                        },
+                        CommandLineSection {
+                            section_label: "command".to_string(),
+                            section_type: CommandLineSectionType::ChunkList(ChunkList {
+                                chunk: vec!["build".to_string()]
+                            })
+                        },
+
+                        CommandLineSection {
+                            section_label: "command options".to_string(),
+                            section_type: CommandLineSectionType::OptionList(OptionList {
+                                option: vec![
+                                    OptionItem {
+                                        combined_form: "--remote_instance_name=projects/chromeos-bot/instances/cros-rbe-nonrelease".to_string(),
+                                        option_name: "remote_instance_name".to_string(),
+                                        option_value: "projects/chromeos-bot/instances/cros-rbe-nonrelease".to_string()
+                                    }
+                                ]
+                            })
+                        },
+                    ]
                 })
             }
         );
