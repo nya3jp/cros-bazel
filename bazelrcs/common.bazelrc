@@ -150,6 +150,13 @@ build:hash_tracer --aspects //bazel/portage/build_defs:hash_tracer.bzl%hash_trac
 build:collect_logs --aspects //bazel/portage/build_defs:collect_logs.bzl%collect_logs_aspect
 build:collect_logs --output_groups=+transitive_logs
 
+# Collect all ebuild metadata produced by all transitive dependencies of the
+# targets specified in the command line. This ensures that Bazel downloads the
+# metadata files from the remote cache even if their corresponding actions are
+# fully cached.
+build:collect_ebuild_metadata --aspects //bazel/portage/build_defs:collect_ebuild_metadata.bzl%collect_ebuild_metadata_aspect
+build:collect_ebuild_metadata --output_groups=+ebuild_metadata
+
 # Enable build event upload to a backend.
 #
 # Use --config=bes to opt-in results upload.
