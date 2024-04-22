@@ -6,15 +6,6 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
-filegroup(
-    name = "srcs",
-    srcs = glob(
-        ["**"],
-        exclude = ["BUILD.bazel"],
-    ),
-    visibility = ["//bazel/portage/bin/alchemist:__pkg__"],
-)
-
 rust_library(
     name = "cliutil",
     srcs = glob(["src/*.rs"]),

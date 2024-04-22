@@ -4,19 +4,10 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
-load(":src.bzl", "ALCHEMIST_BAZEL_LIB_SRCS")
 
 exports_files(
     ["Cargo.toml"],
     visibility = ["//bazel/rust:__pkg__"],
-)
-
-# Even with --deleted_packages, glob(["src/**"]) won't pick up on any packages
-# with build files. However, --deleted_packages does allow you to explicitly
-# write ":foo/BUILD.bazel".
-filegroup(
-    name = "srcs",
-    srcs = ALCHEMIST_BAZEL_LIB_SRCS + ["//bazel/portage/bin/alchemist/src/bin/alchemist:srcs"],
 )
 
 rust_library(

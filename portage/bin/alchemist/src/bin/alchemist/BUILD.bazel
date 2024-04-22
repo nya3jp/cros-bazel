@@ -3,29 +3,15 @@
 # found in the LICENSE file.
 
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
-load("//bazel/module_extensions/helpers:regen_repo_rule_srcs.bzl", "regen_repo_rule_srcs")
-load("//bazel/portage/bin/alchemist:src.bzl", "ALCHEMIST_BAZEL_BIN_SRCS")
+load("//bazel/build_defs/jinja_template:jinja_template.bzl", "jinja_template")
+load("//bazel/build_defs/jinja_template:render_template.bzl", "render_template_to_source")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
-
-filegroup(
-    name = "srcs",
-    srcs = ALCHEMIST_BAZEL_BIN_SRCS,
-    visibility = ["//bazel/portage/bin/alchemist:__pkg__"],
-)
+load(":calculate_repo_rule_srcs.bzl", "calculate_repo_rule_srcs")
 
 rust_binary(
     name = "alchemist",
     srcs = glob(["**/*.rs"]),
-    compile_data = glob(
-        [
-            "**/*",
-        ],
-        exclude = [
-            "**/*.rs",
-            "**/testdata/**",
-            "BUILD.bazel",
-        ],
-    ),
+    compile_data = glob(["generate_repo/**/templates/*"]),
     deps = [
         "//bazel/portage/bin/alchemist:alchemist_lib",
         "//bazel/portage/common/cliutil",
@@ -76,18 +62,25 @@ rust_test(
     ],
 )
 
-regen_repo_rule_srcs(
-    name = "regen_repo_rule_srcs",
-    # The version numbers are stored in this file as well, since the file
-    # contains entries such as:
-    # alias(name = "anyhow", actual = "@anyhow__<version>//:anyhow")
-    extra_deps = [
+jinja_template(
+    name = "repo_rule_srcs_template",
+    src = "repo_rule_srcs.jinja2",
+)
+
+calculate_repo_rule_srcs(
+    name = "repo_rule_srcs_json",
+    target = "@portage",
+    variable = "ALCHEMIST_REPO_RULE_SRCS",
+    deps = [
+        ":alchemist",
         "@alchemy_crates//:BUILD.bazel",
         "@cargo_bazel_bootstrap//:BUILD.bazel",
-        "//bazel:Cargo.toml",
-        "//bazel:Cargo.lock",
     ],
-    output = "bazel/portage/bin/alchemist/src/bin/alchemist/src.bzl",
-    target = "//bazel/portage/bin/alchemist/src/bin/alchemist",
-    variable = "ALCHEMIST_REPO_RULE_SRCS",
+)
+
+render_template_to_source(
+    name = "generate_repo_rule_srcs",
+    out = "repo_rule_srcs.bzl",
+    template = ":repo_rule_srcs_template",
+    vars_file = ":repo_rule_srcs_json",
 )
