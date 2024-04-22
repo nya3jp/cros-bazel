@@ -3,127 +3,25 @@
 // found in the LICENSE file.
 
 use std::{
-    collections::BTreeMap,
     io::{Seek, SeekFrom, Write},
     os::unix::ffi::OsStrExt,
-    path::{Path, PathBuf},
+    path::Path,
     process::Command,
 };
 
-use anyhow::{bail, ensure, Result};
-use itertools::Itertools;
+use anyhow::{ensure, Result};
 
-use crate::proto::build_event_stream::{
-    BuildEvent, BuildEventId, BuildEventPayload, File, NamedSetOfFiles, NamedSetOfFilesId,
-};
+use crate::build_event_processor::BuildEventProcessor;
 
-/// Provides fast merge operations over [`NamedSetOfFiles`].
-///
-/// [`NamedSetOfFiles`] can be deeply nested with duplications (like diamond inheritance).
-/// Therefore, on keeping track of files, it is important to also keep track of named set IDs that
-/// are already merged to the set, in order to avoid repeatedly merging the same named sets.
-#[derive(Clone, Default)]
-struct FastFileSet {
-    // Invariant: named sets are closed over subsets, i.e. all subsets of the named sets are also in
-    // the named sets.
-    children: BTreeMap<NamedSetOfFilesId, NamedSetOfFiles>,
-}
-
-impl FastFileSet {
-    /// Creates a new empty set.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    /// Returns an iterator of files included in this set.
-    pub fn files(&self) -> impl Iterator<Item = &File> {
-        self.children
-            .values()
-            .flat_map(|named_set| named_set.files.iter())
-            .sorted()
-            .dedup()
-    }
-}
-
-/// An index of [`BuildEvent`] that provides fast file set operations.
-struct FastFileSetIndex {
-    index: BTreeMap<NamedSetOfFilesId, NamedSetOfFiles>,
-}
-
-impl<'a, T> From<T> for FastFileSetIndex
-where
-    T: IntoIterator<Item = &'a BuildEvent>,
-{
-    /// Constructs a new [`FastFileSetIndex`] from an iterator of [`BuildEvent`].
-    fn from(into_iter: T) -> Self {
-        let index = into_iter
-            .into_iter()
-            .filter_map(|event| {
-                let BuildEventId::NamedSet(id) = &event.id else {
-                    return None;
-                };
-                let BuildEventPayload::NamedSetOfFiles(named_set) = &event.payload else {
-                    return None;
-                };
-                Some((id.clone(), named_set.clone()))
-            })
-            .collect();
-        Self { index }
-    }
-}
-
-impl FastFileSetIndex {
-    /// Merges a named set of files to [`FastFileSet`].
-    pub fn merge(&self, mut fs: FastFileSet, id: &NamedSetOfFilesId) -> Result<FastFileSet> {
-        if fs.children.contains_key(id) {
-            return Ok(fs);
-        }
-        let Some(entry) = self.index.get(id) else {
-            bail!("NamedSetOfFiles {} not found", id.id);
-        };
-        fs.children.insert(id.clone(), entry.clone());
-        for subset in &entry.file_sets {
-            fs = self.merge(fs, subset)?;
-        }
-        Ok(fs)
-    }
-}
-
-fn path_for_file(file: &File) -> PathBuf {
-    let mut path = PathBuf::new();
-    for prefix in &file.path_prefix {
-        path.push(prefix);
-    }
-    path.push(&file.name);
-    path
-}
-
-pub fn archive_logs(output_path: &Path, workspace_dir: &Path, events: &[BuildEvent]) -> Result<()> {
-    let index: FastFileSetIndex = events.into();
-
-    let mut fileset = FastFileSet::new();
-
-    for event in events {
-        let BuildEventId::TargetCompleted(_) = &event.id else {
-            continue;
-        };
-        let BuildEventPayload::Completed(complete) = &event.payload else {
-            // This can happen when the target was incomplete due to build errors.
-            continue;
-        };
-        for output_group in &complete.output_group {
-            if output_group.name != "transitive_logs" {
-                continue;
-            }
-            for file_set_id in &output_group.file_sets {
-                fileset = index.merge(fileset, file_set_id)?;
-            }
-        }
-    }
+pub fn archive_logs(
+    output_path: &Path,
+    workspace_dir: &Path,
+    events: &BuildEventProcessor,
+) -> Result<()> {
+    let files = events.output_group_files("transitive_logs")?;
 
     let mut input_file = tempfile::tempfile()?;
-    for file in fileset.files() {
-        let relative_path = path_for_file(file);
+    for relative_path in files {
         // Ignore non-existent files.
         if workspace_dir.join(&relative_path).try_exists()? {
             input_file.write_all(relative_path.as_os_str().as_bytes())?;
@@ -163,7 +61,10 @@ mod tests {
 
     use crate::{
         load_build_events_jsonl,
-        proto::build_event_stream::{OutputGroup, TargetComplete, TargetCompletedId},
+        proto::build_event_stream::{
+            BuildEvent, BuildEventId, BuildEventPayload, File, NamedSetOfFiles, NamedSetOfFilesId,
+            OutputGroup, TargetComplete, TargetCompletedId,
+        },
     };
 
     use super::*;
@@ -174,6 +75,8 @@ mod tests {
         let events = load_build_events_jsonl(
             &runfiles.rlocation("cros/bazel/portage/tools/process_artifacts/testdata/bep.jsonl"),
         )?;
+
+        let processor = BuildEventProcessor::from(&events);
 
         // Set up a workspace directory containing fake artifacts.
         let workspace_dir = tempfile::TempDir::new()?;
@@ -203,7 +106,7 @@ mod tests {
         let output_path = output_path.path();
 
         // Create an archive.
-        archive_logs(output_path, workspace_dir, &events)?;
+        archive_logs(output_path, workspace_dir, &processor)?;
 
         // Extract a generated archive and inspect the contents.
         let extract_dir = tempfile::TempDir::new()?;
@@ -263,7 +166,10 @@ mod tests {
         let output_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
         let output_path = output_path.path();
 
-        archive_logs(output_path, workspace_dir, &[])?;
+        let events: Vec<BuildEvent> = vec![];
+        let processor = BuildEventProcessor::from(&events);
+
+        archive_logs(output_path, workspace_dir, &processor)?;
 
         Ok(())
     }
@@ -322,6 +228,8 @@ mod tests {
             },
         ];
 
+        let processor = BuildEventProcessor::from(&events);
+
         let workspace_dir = tempfile::TempDir::new()?;
         let workspace_dir = workspace_dir.path();
 
@@ -332,7 +240,7 @@ mod tests {
         let output_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
         let output_path = output_path.path();
 
-        archive_logs(output_path, workspace_dir, &events)?;
+        archive_logs(output_path, workspace_dir, &processor)?;
 
         Ok(())
     }
@@ -393,12 +301,14 @@ mod tests {
             }),
         });
 
+        let processor = BuildEventProcessor::from(&events);
+
         let workspace_dir = tempfile::TempDir::new()?;
         let workspace_dir = workspace_dir.path();
         let output_path = tempfile::Builder::new().suffix(".tar.gz").tempfile()?;
         let output_path = output_path.path();
 
-        archive_logs(output_path, workspace_dir, &events)?;
+        archive_logs(output_path, workspace_dir, &processor)?;
 
         Ok(())
     }

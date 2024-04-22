@@ -12,10 +12,12 @@ use std::{
 
 use anyhow::{Context, Result};
 use archive_logs::archive_logs;
+use build_event_processor::BuildEventProcessor;
 use clap::Parser;
 use proto::build_event_stream::BuildEvent;
 
 mod archive_logs;
+mod build_event_processor;
 mod proto;
 
 /// Loads a newline-deliminated JSON file containing Build Event Protocol data.
@@ -68,9 +70,10 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let events = load_build_events_jsonl(&args.build_events_jsonl)?;
+    let processor = BuildEventProcessor::from(&events);
 
     if let Some(output_path) = &args.archive_logs {
-        archive_logs(output_path, &args.workspace, &events)?;
+        archive_logs(output_path, &args.workspace, &processor)?;
     }
 
     Ok(())
