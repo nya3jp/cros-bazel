@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_rust//proto/protobuf:defs.bzl", "rust_proto_library")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
 load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 
@@ -80,22 +78,6 @@ rust_test(
     name = "use_third_party_crate_test",
     size = "small",
     crate = ":use_third_party_crate",
-)
-
-proto_library(
-    name = "example_proto",
-    srcs = ["example.proto"],
-)
-
-rust_proto_library(
-    name = "example_rust_proto",
-    deps = [":example_proto"],
-)
-
-rust_binary(
-    name = "use_proto",
-    srcs = ["use_proto.rs"],
-    deps = [":example_rust_proto"],
 )
 
 generate_cargo_toml(

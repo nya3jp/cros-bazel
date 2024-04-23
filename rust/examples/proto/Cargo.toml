@@ -1,0 +1,19 @@
+# AUTO GENERATED - DO NOT EDIT!
+# To update, run "bazel run @@//bazel/rust/examples/proto:generate_cargo_toml"
+[package]
+name = "proto"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+
+
+[dev-dependencies]
+# example_rust_proto contains generated source code, so is not being added.
+# This means that this package will fail to build with cargo, and thus cargo
+# will fail to completely analyze it.
+protobuf = { package = "protobuf", workspace = true }
+
+[features]
+# For now, features are not supported. We can, at request, add support for them,
+# but for the time being, no-one actually needs them.
