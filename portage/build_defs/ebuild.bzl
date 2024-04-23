@@ -452,6 +452,7 @@ def _generate_ebuild_validation_action(ctx, binpkg):
         validation_file,
         "--package",
         binpkg,
+        "--check-non-hermetic-variables",
     ])
     args.add_joined("--use-flags", ctx.attr.use_flags, join_with = ",", omit_if_empty = False)
 
