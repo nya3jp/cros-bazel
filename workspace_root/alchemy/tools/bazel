@@ -135,8 +135,13 @@ def compute_options(
         "--output_base",
         nested_output_base,
     ]
+    # --host_jvm_debug is likely intended for outer bazel invocation, so do not
+    # pass this arg to nested_bazel_opts.
+    base_command = [bazel_real, *nested_startup_options]
+    if "--host_jvm_debug" in base_command:
+        base_command.remove("--host_jvm_debug")
     nested_data = {
-        "base_command": [bazel_real, *nested_startup_options],
+        "base_command": base_command,
         "common_opts": nested_command_options,
         "nested_output_base": nested_output_base,
     }
