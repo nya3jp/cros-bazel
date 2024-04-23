@@ -4,10 +4,14 @@
 
 use anyhow::{bail, Context, Result};
 use binarypackage::BinaryPackage;
+use bzip2::read::BzDecoder;
 use clap::Parser;
 use itertools::Itertools;
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
+use std::io::Read;
 use std::path::PathBuf;
 
 fn use_flag_arg_parser(
@@ -48,6 +52,11 @@ pub struct ValidatePackageArgs {
     #[arg(long, hide = true)]
     touch: Option<PathBuf>,
 
+    /// Checks if the environment has non-hermetic variables declared.
+    /// e.g., MAKEOPTS, SRANDOM, etc.
+    #[arg(long)]
+    check_non_hermetic_variables: bool,
+
     /// Do not exit abnormally on finding package differences
     #[arg(long)]
     report_only: bool,
@@ -77,6 +86,68 @@ fn extract_iuse_effective_flags(package: &binarypackage::BinaryPackage) -> Resul
     )?;
 
     Ok(use_flags.split_whitespace().collect())
+}
+
+fn extract_environment(pkg: &BinaryPackage) -> Result<String> {
+    let bz2_env = pkg
+        .xpak()
+        .get("environment.bz2")
+        .context("Failed to locate environment.bz2")?;
+
+    let mut decoder = BzDecoder::new(bz2_env.as_slice());
+
+    let mut env = String::new();
+    decoder
+        .read_to_string(&mut env)
+        .context("Failed to decompress environment.bz2")?;
+
+    Ok(env)
+}
+
+/// Inspects the environment for a `declare VARIABLE` statement and returns it.
+///
+/// This function only tries to be best effort. It doesn't try and parse
+/// bash functions.
+fn contains_declare<'a>(env: &'a str, var: &str) -> Option<&'a str> {
+    lazy_static! {
+        static ref RE: Regex =
+            Regex::new(r"(?m)^declare(:?\s+-[\w\-]+)?\s+([\w_]+)(?:=.*$|$)").unwrap();
+    }
+
+    RE.captures_iter(env)
+        .find(|c| &c[2] == var)
+        .map(|c| c.get(0).unwrap().as_str())
+}
+
+fn validate_env(package: &BinaryPackage) -> Result<()> {
+    let env = extract_environment(package)?;
+
+    let errors = [
+        "EPOCHREALTIME",
+        "EPOCHSECONDS",
+        "GCE_METADATA_HOST",
+        "MAKEOPTS",
+        "NINJAOPTS",
+        "REPROXY_CFG_FILE",
+        "SRANDOM",
+        "USE_REMOTEEXEC",
+    ]
+    .into_iter()
+    .filter_map(|var| {
+        contains_declare(&env, var).map(|declare_line| {
+            format!(
+                "Found non hermetic variable {} in environment.bz2: {}",
+                var, declare_line
+            )
+        })
+    })
+    .collect_vec();
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        bail!(errors.join("\n"))
+    }
 }
 
 pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
@@ -154,6 +225,12 @@ pub fn do_validate_package(args: ValidatePackageArgs) -> Result<()> {
         }
     }
 
+    if args.check_non_hermetic_variables {
+        if let Err(env_error) = validate_env(&package) {
+            report(format_args!("{}", env_error))?;
+        }
+    }
+
     if let Some(touch) = args.touch {
         File::create(&touch).with_context(|| format!("touch file: {touch:?}"))?;
     }
@@ -183,6 +260,7 @@ mod tests {
                 touch: Some(PathBuf::from("touch")),
                 use_flags: None,
                 report_only: false,
+                check_non_hermetic_variables: false,
             }
         );
 
@@ -209,6 +287,7 @@ mod tests {
                     ("bar".to_string(), false)
                 ])),
                 report_only: false,
+                check_non_hermetic_variables: false,
             }
         );
 
@@ -232,6 +311,7 @@ mod tests {
                 touch: None,
                 use_flags: Some(HashMap::new()),
                 report_only: false,
+                check_non_hermetic_variables: false,
             }
         );
 
@@ -359,6 +439,7 @@ mod tests {
                 ("x86-winnt".into(), false),
             ])),
             report_only: false,
+            check_non_hermetic_variables: false,
         };
 
         do_validate_package(args)?;
@@ -373,6 +454,7 @@ mod tests {
             touch: None,
             use_flags: Some(HashMap::from([("foo".into(), true), ("bar".into(), false)])),
             report_only: false,
+            check_non_hermetic_variables: false,
         };
 
         assert!(do_validate_package(args).is_err());
@@ -387,6 +469,7 @@ mod tests {
             touch: None,
             use_flags: Some(HashMap::from([("foo".into(), true), ("bar".into(), false)])),
             report_only: true,
+            check_non_hermetic_variables: true,
         };
 
         do_validate_package(args)?;
@@ -406,11 +489,79 @@ mod tests {
             touch: Some(validation.clone()),
             use_flags: None,
             report_only: false,
+            check_non_hermetic_variables: false,
         };
 
         do_validate_package(args)?;
 
         assert!(validation.exists());
+
+        Ok(())
+    }
+
+    #[test]
+    fn declare_match() -> Result<()> {
+        let matches = [
+            ("declare -- foo", true),
+            ("declare -- foo=\"\"", true),
+            ("declare -x foo=\"\"", true),
+            ("declare -i foo=\"0\"", true),
+            ("declare foo", true),
+            ("declare foo=\"bar\"", true),
+            ("foo()", false),
+            // Assume we are in a function.
+            ("  declare -x foo", false),
+        ];
+
+        for (env, expected) in matches {
+            let actual = contains_declare(env, "foo");
+            assert_eq!(
+                actual,
+                if expected { Some(env) } else { None },
+                "env: '{}'",
+                env
+            );
+        }
+
+        assert_eq!(
+            contains_declare(
+                r#"declare baz
+declare foo="Hello"
+declare bar
+"#,
+                "foo"
+            ),
+            Some("declare foo=\"Hello\"")
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn package_conatins_invalid_environment() -> Result<()> {
+        let package = BinaryPackage::open(&testdata(BINPKG)?)?;
+
+        match validate_env(&package) {
+            Ok(_) => bail!("Package should fail validation!"),
+            Err(e) => assert!(
+                e.to_string().starts_with(
+r#"Found non hermetic variable EPOCHREALTIME in environment.bz2: declare -- EPOCHREALTIME="1665539747.245142"
+Found non hermetic variable EPOCHSECONDS in environment.bz2: declare -- EPOCHSECONDS="1665539747"
+Found non hermetic variable MAKEOPTS in environment.bz2: declare -x MAKEOPTS="-j96"
+Found non hermetic variable SRANDOM in environment.bz2: declare -i SRANDOM="1404730306""#),
+                "{}",
+                e
+            ),
+        };
+
+        Ok(())
+    }
+
+    #[test]
+    fn package_conatins_valid_environment() -> Result<()> {
+        let package = BinaryPackage::open(&testdata(BINPKG_CLEAN_ENV)?)?;
+
+        validate_env(&package)?;
 
         Ok(())
     }

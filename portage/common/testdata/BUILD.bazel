@@ -13,6 +13,7 @@ exports_files(
         "nano.tbz2",
         "nano-diff-xpak.tbz2",
         "nano-diff-tar.tbz2",
+        "nano-clean-env.tbz2",
         "sysroot.bzl",
     ],
 )

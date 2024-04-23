@@ -18,6 +18,8 @@ rust_binary(
         "@alchemy_crates//:bzip2",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:itertools",
+        "@alchemy_crates//:lazy_static",
+        "@alchemy_crates//:regex",
         "@alchemy_crates//:tempfile",
     ],
 )
@@ -28,6 +30,7 @@ rust_test(
     crate = ":xpaktool",
     data = [
         "//bazel/portage/common/testdata:nano.tbz2",
+        "//bazel/portage/common/testdata:nano-clean-env.tbz2",
         "//bazel/portage/common/testdata:nano-diff-tar.tbz2",
         "//bazel/portage/common/testdata:nano-diff-xpak.tbz2",
     ],
