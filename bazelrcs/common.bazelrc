@@ -91,6 +91,7 @@ build --action_env=RUST_BACKTRACE=1
 # Allows actions to detect that they're running as a bazel action rather than as
 # a binary directly (eg. bazel run / test).
 build --action_env=IS_BAZEL_ACTION=1
+common --check_direct_dependencies=error
 
 # These are symlinked elsewhere.
 build --deleted_packages=bazel/workspace_root

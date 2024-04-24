@@ -10,7 +10,7 @@ module(
 )
 
 # Language independent stuff.
-bazel_dep(name = "bazel_skylib", version = "1.4.2")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
 
 # Python support
 PY_VERSION = "3.10"
