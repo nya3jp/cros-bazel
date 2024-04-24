@@ -1,7 +1,7 @@
-From a70c690f546a85011bc6ba40d649bbfda3b51a18 Mon Sep 17 00:00:00 2001
+From e50a9c6890076e6a7350d66c99053a02ea854d6f Mon Sep 17 00:00:00 2001
 From: Raul E Rangel <rrangel@chromium.org>
 Date: Thu, 22 Feb 2024 13:24:44 -0700
-Subject: [PATCH] CHROMIUM: Restrict has_version to simple atoms
+Subject: [PATCH 6/8] CHROMIUM: Restrict has_version to simple atoms
 
 In the bazel builds we are pruning the vdb so we can avoid excessive
 cache busting on ebuild changes that don't affect the output.
@@ -58,5 +58,5 @@ index fa6d1ea168..036d02939e 100644
  			atom = atom.evaluate_conditionals(use)
  
 -- 
-2.44.0.rc0.258.g7320e95886-goog
+2.44.0.769.g3c40516874-goog
 

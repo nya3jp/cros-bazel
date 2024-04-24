@@ -1,7 +1,7 @@
-From 2d9f7f9cabe5308e8f732e19649668fa3eb4ccf2 Mon Sep 17 00:00:00 2001
+From 22df1595a94f2ee9bdb9c85a500e6216b5e360a0 Mon Sep 17 00:00:00 2001
 From: Raul E Rangel <rrangel@chromium.org>
 Date: Wed, 9 Nov 2022 14:44:32 -0700
-Subject: [PATCH 1/2] bin: Add binpkg-hermetic feature
+Subject: [PATCH 5/8] CHROMIUM: bin: Add binpkg-hermetic feature
 
 This feature will strip all timestamps from the binpkg resulting in
 a hermetic build.
@@ -11,36 +11,17 @@ TEST=emerge libftdi twice and compare the binpkgs
 
 Change-Id: Ie88deacdbfc006705c973a9c1cdf726cb5bba514
 ---
- bin/misc-functions.sh                  | 23 ++++++++++++++++++++++-
- bin/phase-functions.sh                 |  7 ++++++-
- bin/save-ebuild-env.sh                 |  9 +++++++++
+ bin/misc-functions.sh                  | 13 ++++++++++++-
  lib/portage/const.py                   |  1 +
- lib/portage/dbapi/vartree.py           |  3 +++
+ lib/portage/dbapi/vartree.py           |  4 ++++
  lib/portage/package/ebuild/doebuild.py |  5 ++++-
- 6 files changed, 45 insertions(+), 3 deletions(-)
+ 4 files changed, 21 insertions(+), 2 deletions(-)
 
 diff --git a/usr/lib/portage/PYTHON_VERSION/misc-functions.sh b/usr/lib/portage/PYTHON_VERSION/misc-functions.sh
-index 3df7df653..ddbe92c87 100755
+index d0b317c63c..c89ac12896 100755
 --- a/usr/lib/portage/PYTHON_VERSION/misc-functions.sh
 +++ b/usr/lib/portage/PYTHON_VERSION/misc-functions.sh
-@@ -187,6 +187,16 @@ install_qa_check() {
- 			echo "${arch:3};${obj};${soname};${rpath};${needed}" >> "${PORTAGE_BUILDDIR}"/build-info/NEEDED.ELF.2
- 		done }
- 
-+		if has binpkg-hermetic ${FEATURES}; then
-+			local needed
-+			for needed in "$PORTAGE_BUILDDIR"/build-info/NEEDED{,.ELF.2}
-+			do
-+				if [[ -f "${needed}" ]]; then
-+					sort -o "${needed}" "${needed}"
-+				fi
-+			done
-+		fi
-+
- 		[ -n "${QA_SONAME_NO_SYMLINK}" ] && \
- 			echo "${QA_SONAME_NO_SYMLINK}" > \
- 			"${PORTAGE_BUILDDIR}"/build-info/QA_SONAME_NO_SYMLINK
-@@ -456,6 +466,17 @@ __dyn_package() {
+@@ -462,6 +462,17 @@ __dyn_package() {
  	local tar_options=""
  	[[ $PORTAGE_VERBOSE = 1 ]] && tar_options+=" -v"
  	has xattr ${FEATURES} && [[ $(tar --help 2> /dev/null) == *--xattrs* ]] && tar_options+=" --xattrs"
@@ -58,7 +39,7 @@ index 3df7df653..ddbe92c87 100755
  	# Sandbox is disabled in case the user wants to use a symlink
  	# for $PKGDIR and/or $PKGDIR/All.
  	export SANDBOX_ON="0"
-@@ -475,7 +496,7 @@ __dyn_package() {
+@@ -481,7 +492,7 @@ __dyn_package() {
  
  	[ -z "${PORTAGE_COMPRESSION_COMMAND}" ] && \
          die "PORTAGE_COMPRESSION_COMMAND is unset"
@@ -67,53 +48,8 @@ index 3df7df653..ddbe92c87 100755
  		$PORTAGE_COMPRESSION_COMMAND > "$PORTAGE_BINPKG_TMPFILE"
  	assert "failed to pack binary package: '$PORTAGE_BINPKG_TMPFILE'"
  	PYTHONPATH=${PORTAGE_PYTHONPATH:-${PORTAGE_PYM_PATH}} \
-diff --git a/usr/lib/portage/PYTHON_VERSION/phase-functions.sh b/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
-index 9bb9aea90..5f3b4893b 100644
---- a/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
-+++ b/usr/lib/portage/PYTHON_VERSION/phase-functions.sh
-@@ -707,7 +707,12 @@ __dyn_install() {
- 
- 	# Use safe cwd, avoiding unsafe import for bug #469338.
- 	cd "${PORTAGE_PYM_PATH}"
--	__save_ebuild_env --exclude-init-phases | __filter_readonly_variables \
-+	local -a exclude_hermetic=()
-+	if has binpkg-hermetic ${FEATURES}; then
-+		exclude_hermetic+=("--exclude-non-hermetic")
-+	fi
-+	__save_ebuild_env --exclude-init-phases "${exclude_hermetic[@]}" \
-+		| __filter_readonly_variables \
- 		--filter-path --filter-sandbox --allow-extra-vars > \
- 		"${PORTAGE_BUILDDIR}"/build-info/environment
- 	assert "__save_ebuild_env failed"
-diff --git a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
-index cd8602ae0..159580d0b 100644
---- a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
-+++ b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
-@@ -10,6 +10,9 @@
- # be excluded from the output. These function are not needed for installation
- # or removal of the packages, and can therefore be safely excluded.
- #
-+# --exclude-non-hermetic causes EPOCHREALTIME EPOCHSECONDS SRANDOM to be
-+# excluded from the output.
-+#
- __save_ebuild_env() {
- 	(
- 	if has --exclude-init-phases $* ; then
-@@ -26,6 +29,12 @@ __save_ebuild_env() {
- 		fi
- 	fi
- 
-+	if has --exclude-non-hermetic $* ; then
-+		unset EPOCHREALTIME EPOCHSECONDS SRANDOM
-+		# reclient-related variables
-+        unset USE_REMOTEEXEC GCE_METADATA_HOST REPROXY_CFG_FILE
-+	fi
-+
- 	# misc variables inherited from the calling environment
- 	unset COLORTERM DISPLAY EDITOR LESS LESSOPEN LOGNAME LS_COLORS PAGER \
- 		TERM TERMCAP USER ftp_proxy http_proxy no_proxy
 diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/const.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/const.py
-index ac5a3c646..eca983668 100644
+index ac5a3c646c..eca9836687 100644
 --- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/const.py
 +++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/const.py
 @@ -127,6 +127,7 @@ SUPPORTED_FEATURES       = frozenset([
@@ -125,13 +61,14 @@ index ac5a3c646..eca983668 100644
  	"buildsyspkg",
  	"candy",
 diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py
-index 1d9e00496..15835c01f 100644
+index 1d9e004969..da26ce5fda 100644
 --- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py
 +++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/dbapi/vartree.py
-@@ -4812,6 +4812,9 @@ class dblink(object):
+@@ -4812,6 +4812,10 @@ class dblink(object):
  		else:
  			mergelist = stufftomerge[:]
  
++		# TODO(b/308661552): Remove this once we switch to fast package installation.
 +		if "binpkg-hermetic" in self.settings.features:
 +			mergelist.sort()
 +
@@ -139,7 +76,7 @@ index 1d9e00496..15835c01f 100644
  
  			relative_path = mergelist.pop()
 diff --git a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
-index 2a73d8c26..4c3637e3e 100644
+index 2a73d8c265..4c3637e3ea 100644
 --- a/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
 +++ b/usr/PYTHON_LIBDIR/PYTHON_VERSION/site-packages/portage/package/ebuild/doebuild.py
 @@ -2010,7 +2010,10 @@ def _post_src_install_write_metadata(settings):
@@ -155,5 +92,5 @@ index 2a73d8c26..4c3637e3e 100644
  	use = frozenset(settings['PORTAGE_USE'].split())
  	for k in _vdb_use_conditional_keys:
 -- 
-2.44.0.478.gd926399ef9-goog
+2.44.0.769.g3c40516874-goog
 

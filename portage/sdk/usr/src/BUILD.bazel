@@ -8,7 +8,11 @@ pkg_files(
     name = "src",
     srcs = glob(
         ["**/*"],
-        exclude = ["BUILD.bazel"],
+        exclude = [
+            "BUILD.bazel",
+            "portage/fix-paths.sh",
+            "portage/README.md",
+        ],
     ),
     attributes = pkg_attributes(
         mode = "0644",

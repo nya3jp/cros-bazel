@@ -1,0 +1,46 @@
+From 94e751c8e65e3226ac065565cc0a88169e145ec0 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Wed, 24 Apr 2024 14:18:31 -0600
+Subject: [PATCH 3/8] FROMLIST: BACKPORT: misc-functions.sh: Sort NEEDED and
+ NEEDED.ELF.2
+
+I've noticed that scalelf doesn't produce deterministic output. This
+change adds a sort to the NEEDED and NEEDED.ELF.2 files to remove a
+source of non-determinism when building binpkgs.
+
+This change was cherry picked from:
+https://chromium-review.googlesource.com/c/chromiumos/third_party/portage_tool/+/4018820/2/bin/misc-functions.sh
+
+Bug: https://bugs.gentoo.org/914441
+Signed-off-by: Raul E Rangel <rrangel@chromium.org>
+
+(am from https://github.com/gentoo/portage/pull/1317/commits/226706be474405e449a21aae1f88da7484517ea1)
+
+BUG=b:281732865
+TEST=bazel build \@portage//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.37-r7_hermetic_test
+
+Change-Id: Ic84d8c3605f5609aa605fcfe52caef34d271ffdc
+---
+ bin/misc-functions.sh | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/usr/lib/portage/PYTHON_VERSION/misc-functions.sh b/usr/lib/portage/PYTHON_VERSION/misc-functions.sh
+index 3df7df6537..d0b317c63c 100755
+--- a/usr/lib/portage/PYTHON_VERSION/misc-functions.sh
++++ b/usr/lib/portage/PYTHON_VERSION/misc-functions.sh
+@@ -187,6 +187,12 @@ install_qa_check() {
+ 			echo "${arch:3};${obj};${soname};${rpath};${needed}" >> "${PORTAGE_BUILDDIR}"/build-info/NEEDED.ELF.2
+ 		done }
+ 
++		# scanelf's output ordering is non-deterministic.
++		local needed
++		for needed in "${PORTAGE_BUILDDIR}"/build-info/NEEDED{,.ELF.2}; do
++			LC_ALL=C sort -o "${needed}" "${needed}"
++		done
++
+ 		[ -n "${QA_SONAME_NO_SYMLINK}" ] && \
+ 			echo "${QA_SONAME_NO_SYMLINK}" > \
+ 			"${PORTAGE_BUILDDIR}"/build-info/QA_SONAME_NO_SYMLINK
+-- 
+2.44.0.769.g3c40516874-goog
+

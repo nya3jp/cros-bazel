@@ -1,0 +1,33 @@
+From 118b331e4ea9bcc636d0cde9c4aca9fbacf81f24 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Wed, 24 Apr 2024 15:23:33 -0600
+Subject: [PATCH 4/8] CHROMIUM: Remove reclient specific variables from binpkgs
+
+These contain host specific values. We don't want them as part of the
+binpkg.
+
+BUG=b:325621291, b:281732865
+TEST=bazel build \@portage//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.37-r7_hermetic_test
+
+Change-Id: Id1654f255ad83d27c7117fad2bee393358e9307b
+---
+ bin/save-ebuild-env.sh | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
+index 0a6bca2fcc..99dae2700b 100644
+--- a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
++++ b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
+@@ -34,6 +34,9 @@ __save_ebuild_env() {
+ 		# These variables are constantly changing. Strip them so we
+ 		# don't introduce non-reproducible data into the binpkg.
+ 		unset EPOCHREALTIME EPOCHSECONDS SRANDOM
++
++		# CrOS: reclient-related variables
++		unset USE_REMOTEEXEC GCE_METADATA_HOST REPROXY_CFG_FILE
+ 	fi
+ 
+ 	# misc variables inherited from the calling environment
+-- 
+2.44.0.769.g3c40516874-goog
+

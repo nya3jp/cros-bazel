@@ -1,0 +1,40 @@
+From 88ca5806cae533db76182a27201b1dffd89ea469 Mon Sep 17 00:00:00 2001
+From: Raul E Rangel <rrangel@chromium.org>
+Date: Wed, 24 Apr 2024 12:49:02 -0600
+Subject: [PATCH 2/8] FROMLIST: BACKPORT: save-build-env: Strip out
+ non-reproducible variables
+
+Bash provides access to the time and a random data via variables. We
+don't want to persist these values when generating a binpkg.
+
+Bug: https://bugs.gentoo.org/914441
+Signed-off-by: Raul E Rangel <rrangel@chromium.org>
+
+(am from https://github.com/gentoo/portage/pull/1311/commits/745a4df5274c146862819753ca13e62cfcd2a83e)
+
+BUG=b:281732865
+TEST=bazel build \@portage//internal/packages/stage1/target/host/chromiumos/sys-libs/glibc:2.37-r7_hermetic_test
+
+Change-Id: I901c28ab2c6d2d699320e11b215382ec505f0037
+---
+ bin/save-ebuild-env.sh | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
+index c79a59b42b..0a6bca2fcc 100644
+--- a/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
++++ b/usr/lib/portage/PYTHON_VERSION/save-ebuild-env.sh
+@@ -30,6 +30,10 @@ __save_ebuild_env() {
+ 		# identical, so strip them from the binpkg. It's also not needed
+ 		# for installing / removing a package.
+ 		unset MAKEOPTS NINJAOPTS
++
++		# These variables are constantly changing. Strip them so we
++		# don't introduce non-reproducible data into the binpkg.
++		unset EPOCHREALTIME EPOCHSECONDS SRANDOM
+ 	fi
+ 
+ 	# misc variables inherited from the calling environment
+-- 
+2.44.0.769.g3c40516874-goog
+
