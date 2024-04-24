@@ -8,7 +8,7 @@ mod testdata;
 mod update_xpak;
 mod validate_package;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use binarypackage::BinaryPackage;
 use clap::{Parser, Subcommand};
 use cliutil::{cli_main, ConfigBuilder};
@@ -48,6 +48,13 @@ struct ExtractXpakArgs {
 }
 
 fn do_main() -> Result<()> {
+    // Bazel will execute the command in the runfiles directory. This breaks
+    // relative paths passed into the command. Fix this by switching to the
+    // original directory.
+    if let Ok(orig_cwd) = std::env::var("BUILD_WORKING_DIRECTORY") {
+        std::env::set_current_dir(&orig_cwd).with_context(|| format!("cd {orig_cwd}"))?;
+    };
+
     let cli = Cli::try_parse()?;
     match cli.commands {
         Commands::ExtractXpak(args) => do_extract_xpak(args),
