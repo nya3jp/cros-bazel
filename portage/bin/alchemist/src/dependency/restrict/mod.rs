@@ -50,13 +50,7 @@ pub enum RestrictAtom {
     InstallSources,
 
     /// Files in SRC_URI will not be downloaded from the GENTOO_MIRRORS.
-    #[strum(
-        serialize = "mirror",
-
-        // Portage also supports this to work around some bad ebuilds
-        // TODO(b/271845160): Remove this once we rebase on ToT
-        serialize = "nomirror"
-    )]
+    #[strum(serialize = "mirror")]
     Mirror,
 
     /// Disables the network namespace for a specific package.
