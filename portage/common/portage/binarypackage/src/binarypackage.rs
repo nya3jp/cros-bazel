@@ -37,7 +37,7 @@ pub struct Slot {
 impl BinaryPackage {
     /// Opens a Portage binary package file.
     pub fn open(path: &Path) -> Result<Self> {
-        let mut file = File::open(path)?;
+        let mut file = File::open(path).with_context(|| format!("open {path:?}"))?;
         let metadata = std::fs::metadata(path)?;
         let size = metadata.size();
 
