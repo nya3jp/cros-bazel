@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
-load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load(":common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load(":install_deps.bzl", "install_deps")
 
@@ -69,16 +68,12 @@ sdk_from_archive = rule(
             cfg = "exec",
             default = Label("//bazel/portage/bin/action_wrapper"),
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
         "_sdk_from_archive": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/sdk_from_archive"),
         ),
     },
-    cfg = primordial_transition,
 )
 
 def _sdk_update_impl(ctx):
@@ -165,16 +160,12 @@ sdk_update = rule(
             cfg = "exec",
             default = Label("//bazel/portage/bin/action_wrapper"),
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
         "_sdk_update": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/sdk_update"),
         ),
     },
-    cfg = primordial_transition,
 )
 
 def _sdk_install_deps_impl(ctx):

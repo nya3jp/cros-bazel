@@ -9,23 +9,8 @@ load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "ExtraSourcesInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "SysrootInfo", "compute_file_arg", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
-load("//bazel/transitions:primordial.bzl", "primordial_transition")
 
 _CCACHE_DIR_LABEL = "//bazel/portage:ccache_dir"
-
-# The stage1 SDK will need to be built with ebuild_primordial.
-# After that, they can use the ebuild rule.
-# This ensures that we don't build the stage1 targets twice.
-def maybe_primordial_rule(attrs, **kwargs):
-    return (
-        rule(attrs = attrs, **kwargs),
-        rule(cfg = primordial_transition, attrs = dict(
-            _allowlist_function_transition = attr.label(
-                default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-            ),
-            **attrs
-        ), **kwargs),
-    )
 
 # Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
 _EBUILD_COMMON_ATTRS = dict(
@@ -663,7 +648,7 @@ def _ebuild_impl(ctx):
         package_set_info,
     ] + interface_library_providers
 
-ebuild, ebuild_primordial = maybe_primordial_rule(
+ebuild = rule(
     implementation = _ebuild_impl,
     doc = "Builds a Portage binary package from an ebuild file.",
     attrs = dict(
@@ -804,7 +789,7 @@ def _ebuild_debug_impl(ctx):
     )
 
 # TODO(b/298889830): Remove this rule once chromite starts using install_list.
-ebuild_debug, ebuild_debug_primordial = maybe_primordial_rule(
+ebuild_debug = rule(
     implementation = _ebuild_debug_impl,
     executable = True,
     doc = "Enters the ephemeral chroot to build a Portage binary package in.",
@@ -966,7 +951,7 @@ def _ebuild_test_impl(ctx):
         runfiles = ctx.runfiles(transitive_files = build_package_args.inputs),
     )
 
-ebuild_test, ebuild_primordial_test = maybe_primordial_rule(
+ebuild_test = rule(
     implementation = _ebuild_test_impl,
     doc = "Runs ebuild tests.",
     attrs = dict(
@@ -998,7 +983,7 @@ def _ebuild_compare_package_test_impl(ctx):
         runfiles = ctx.runfiles(transitive_files = depset(inputs)),
     )
 
-ebuild_compare_package_test, ebuild_compare_package_primordial_test = maybe_primordial_rule(
+ebuild_compare_package_test = rule(
     implementation = _ebuild_compare_package_test_impl,
     doc = """
     Compares two binary packages and ensures they are identical. This test is

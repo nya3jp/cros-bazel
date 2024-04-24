@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
-load("//bazel/transitions:primordial.bzl", "primordial_transition")
 load(":common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
 load(":install_groups.bzl", "add_install_groups", "calculate_install_groups")
 
@@ -132,14 +131,10 @@ build_sdk = rule(
             cfg = "exec",
             default = Label("//bazel/portage/bin/action_wrapper"),
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
-        ),
         "_build_sdk": attr.label(
             executable = True,
             cfg = "exec",
             default = Label("//bazel/portage/bin/build_sdk"),
         ),
     },
-    cfg = primordial_transition,
 )
