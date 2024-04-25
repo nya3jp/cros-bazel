@@ -47,6 +47,32 @@ config_setting(
     },
 )
 
+# This flag is useful if you want to verify that all packages are hermetic.
+# When enabled an additional target with the suffix `_hermetic_test_package`
+# will be built and compared for each ebuild target.
+#
+# The advantage of setting this flag vs invoking the `<ebuild>_hermetic_test`
+# targets is that this happens as a validator so it will check all transitive
+# dependencies as well.
+bool_flag(
+    name = "enable_hermetic_validator",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "hermetic_validator_enabled",
+    flag_values = {
+        ":enable_hermetic_validator": "True",
+    },
+)
+
+config_setting(
+    name = "hermetic_validator_disabled",
+    flag_values = {
+        ":enable_hermetic_validator": "False",
+    },
+)
+
 string_flag(
     name = "prebuilt_disk_cache",
     build_setting_default = "",

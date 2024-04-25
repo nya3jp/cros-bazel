@@ -142,6 +142,10 @@ ebuild(
         "@//bazel/portage:portage_config_validator_enabled": ":20211027_portage_profile_test_package",
         "@//bazel/portage:portage_config_validator_disabled": None,
     }),
+    hermetic_test_package = select({
+        "@//bazel/portage:hermetic_validator_enabled": ":20211027_hermetic_test_package",
+        "@//bazel/portage:hermetic_validator_disabled": None,
+    }),
     visibility = ["//:__subpackages__"],
 )
 
@@ -694,14 +698,6 @@ ebuild_compare_package_test(
         ":20211027_hermetic_test_package",
     ],
     size="small",
-)
-
-test_suite(
-    name = "20211027_package_set_hermetic_test",
-    tests = [
-        "//internal/packages/stage1/target/board/chromiumos/sys-devel/crossdev:20211027_hermetic_test",
-    ],
-    visibility = ["//:__subpackages__"],
 )
 
 package_set(

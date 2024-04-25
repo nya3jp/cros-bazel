@@ -371,6 +371,10 @@ ebuild(
         "@//bazel/portage:portage_config_validator_enabled": ":{{ ebuild.version }}_portage_profile_test_package",
         "@//bazel/portage:portage_config_validator_disabled": None,
     }),
+    hermetic_test_package = select({
+        "@//bazel/portage:hermetic_validator_enabled": ":{{ ebuild.version }}_hermetic_test_package",
+        "@//bazel/portage:hermetic_validator_disabled": None,
+    }),
     {%- endif %}
     visibility = ["//:__subpackages__"],
 )
@@ -446,16 +450,6 @@ ebuild_compare_package_test(
         ":{{ ebuild.version }}_hermetic_test_package",
     ],
     size="small",
-)
-
-test_suite(
-    name = "{{ ebuild.version }}_package_set_hermetic_test",
-    tests = [
-        {%- for pkg in ebuild.install_set %}
-        "{{ pkg }}_hermetic_test",
-        {%- endfor %}
-    ],
-    visibility = ["//:__subpackages__"],
 )
 
 package_set(
