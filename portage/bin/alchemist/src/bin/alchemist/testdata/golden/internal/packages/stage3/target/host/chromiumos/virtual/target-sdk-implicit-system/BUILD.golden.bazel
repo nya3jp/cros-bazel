@@ -6,7 +6,7 @@
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
@@ -145,6 +145,12 @@ ebuild(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="virtual/target-sdk-implicit-system",
+            is_host=True,
+        )
+    ],
     prebuilt = ":1-r4_prebuilt",
     portage_profile_test_package = select({
         "@//bazel/portage:portage_config_validator_enabled": ":1-r4_portage_profile_test_package",
@@ -247,6 +253,12 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="virtual/target-sdk-implicit-system",
+            is_host=True,
+        )
+    ],
     visibility = ["//:__subpackages__"],
 )
 
@@ -367,6 +379,12 @@ ebuild(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_hermetic_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="virtual/target-sdk-implicit-system",
+            is_host=True,
+        )
+    ],
     prebuilt = ":1-r4_hermetic_test_package_prebuilt",
     visibility = ["//:__subpackages__"],
 )
@@ -462,6 +480,12 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_hermetic_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="virtual/target-sdk-implicit-system",
+            is_host=True,
+        )
+    ],
     visibility = ["//:__subpackages__"],
 )
 
@@ -566,6 +590,12 @@ ebuild(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_portage_profile_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="virtual/target-sdk-implicit-system",
+            is_host=True,
+        )
+    ],
     prebuilt = ":1-r4_portage_profile_test_package_prebuilt",
     visibility = ["//:__subpackages__"],
 )
@@ -645,6 +675,12 @@ ebuild_debug(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_portage_profile_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="virtual/target-sdk-implicit-system",
+            is_host=True,
+        )
+    ],
     visibility = ["//:__subpackages__"],
 )
 ebuild_install_action(
@@ -758,6 +794,12 @@ ebuild_test(
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="virtual/target-sdk-implicit-system",
+            is_host=True,
+        )
+    ],
     # Bazel sandbox interferes with restoring permissions in durable trees.
     tags = ["no-sandbox"],
     visibility = ["//:__subpackages__"],
