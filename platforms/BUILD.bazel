@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load(":platforms.bzl", "ALL_PLATFORMS")
+load(":platforms.bzl", "HOST_PLATFORM", "TARGET_PLATFORMS")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -11,5 +11,40 @@ package(default_visibility = ["//visibility:public"])
         name = platform_info.name,
         constraint_values = platform_info.constraints,
     )
-    for platform_info in ALL_PLATFORMS
+    for platform_info in TARGET_PLATFORMS
+]
+
+platform(
+    name = HOST_PLATFORM.name,
+    constraint_values = HOST_PLATFORM.constraints,
+    exec_properties = {
+        "cache-silo-key": "cros-bazel",
+    },
+)
+
+constraint_setting(name = "rbe_core_count")
+
+[
+    constraint_value(
+        name = "rbe_%s_cores" % core_count,
+        constraint_setting = ":rbe_core_count",
+    )
+    for core_count in (2, 4, 8, 16, 32)
+]
+
+[
+    platform(
+        name = "rbe_%s_core_platform" % core_count,
+        constraint_values = [":rbe_%s_cores" % core_count],
+        exec_properties = {
+            "OSFamily": "Linux",
+            "container-image": "docker://us-central1-docker.pkg.dev/kokoro-container-bakery/chromeos-rbe/ubuntu2204@sha256:ffe321a9efecee9918f897913443286d5efa656d3a6e510e92114d194ce5e519",
+            "dockerPrivileged": "true",
+            "label:core_count": str(core_count),
+            "label:orchestrator": "bazel",
+            "label:package_accelerator": "bazel",
+        },
+        parents = [HOST_PLATFORM.name],
+    )
+    for core_count in (2, 4, 8, 16, 32)
 ]

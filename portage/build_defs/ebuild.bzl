@@ -9,8 +9,10 @@ load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
 load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "ExtraSourcesInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "SysrootInfo", "compute_file_arg", "relative_path_in_package", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
+load("ebuild_sizing.bzl", "HOST", "PACKAGE_TO_CORE_COUNT", "TARGET")
 
 _CCACHE_DIR_LABEL = "//bazel/portage:ccache_dir"
+_DEFAULT_CORES = 8
 
 # Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
 _EBUILD_COMMON_ATTRS = dict(
@@ -748,6 +750,21 @@ ebuild = rule(
         **_EBUILD_COMMON_ATTRS
     ),
 )
+
+def ebuild_exec_contraint(portage_package_name, is_host):
+    host_or_target = HOST if is_host else TARGET
+    size_mapping = PACKAGE_TO_CORE_COUNT.get(
+        portage_package_name,
+        {
+            HOST: _DEFAULT_CORES,
+            TARGET: _DEFAULT_CORES,
+        },
+    )
+    core_count = size_mapping.get(
+        host_or_target,
+        max(size_mapping.values()),
+    )
+    return "@//bazel/platforms:rbe_%s_cores" % core_count
 
 _DEBUG_SCRIPT = """
 # Arguments passed in during build time are passed in relative to the execroot,

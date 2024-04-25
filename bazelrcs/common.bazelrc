@@ -99,6 +99,7 @@ query --deleted_packages=bazel/workspace_root
 
 ### Toolchain resolution.
 build --host_platform=//bazel/platforms:host
+build --extra_execution_platforms=//bazel/platforms:rbe_2_core_platform,//bazel/platforms:rbe_4_core_platform,//bazel/platforms:rbe_8_core_platform,//bazel/platforms:rbe_16_core_platform,//bazel/platforms:rbe_32_core_platform
 # Use platforms instead of crostool_top to resolve C++ toolchains.
 build --incompatible_enable_cc_toolchain_resolution
 
