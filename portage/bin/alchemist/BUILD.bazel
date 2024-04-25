@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 exports_files(
@@ -63,5 +63,21 @@ rust_test(
         "@alchemy_crates//:pretty_assertions",
         "@alchemy_crates//:proptest",
         "@alchemy_crates//:shell-escape",
+    ],
+)
+
+rust_test_suite(
+    name = "integration_tests",
+    srcs = glob(["tests/**"]),
+    data = [
+        "//bazel/portage/bin/alchemist/src/bin/alchemist:testdata",
+    ],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "//bazel/portage/bin/alchemist/src/bin/alchemist",
+        "//bazel/portage/common/testutil",
+        "//bazel/rust/runfiles",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:tempfile",
     ],
 )

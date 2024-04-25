@@ -47,7 +47,6 @@ ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/public/templates/package.BUILD.bazel",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo/templates/root.BUILD.bazel",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:main.rs",
-    "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:tests/test.rs",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:ver_rs.rs",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:ver_test.rs",
     "@cros//bazel/portage/bin/alchemist:BUILD.bazel",

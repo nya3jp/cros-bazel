@@ -12,6 +12,9 @@ rust_binary(
     name = "alchemist",
     srcs = glob(["**/*.rs"]),
     compile_data = glob(["generate_repo/**/templates/*"]),
+    visibility = [
+        "//bazel/portage/bin/alchemist:__pkg__",
+    ],
     deps = [
         "//bazel/portage/bin/alchemist:alchemist_lib",
         "//bazel/portage/common/cliutil",
@@ -32,33 +35,27 @@ rust_binary(
     ],
 )
 
+filegroup(
+    name = "testdata",
+    srcs = glob([
+        "**/testdata/**",
+    ]),
+    visibility = [
+        "//bazel/portage/bin/alchemist:__pkg__",
+    ],
+)
+
 rust_test(
     name = "alchemist_test",
     size = "small",
     crate = ":alchemist",
-    data = glob([
-        "**/testdata/**",
-    ]),
+    data = [":testdata"],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "//bazel/portage/common/testutil",
         "@alchemy_crates//:pretty_assertions",
         "@alchemy_crates//:proptest",
         "@alchemy_crates//:url",
-    ],
-)
-
-rust_test(
-    name = "alchemist_cli_test",
-    size = "small",
-    srcs = glob(["tests/**/*.rs"]),
-    data = [":alchemist"] + glob(["**/testdata/**"]),
-    rustc_flags = RUSTC_DEBUG_FLAGS,
-    deps = [
-        "//bazel/portage/common/testutil",
-        "@alchemy_crates//:anyhow",
-        "@alchemy_crates//:tempfile",
-        "@rules_rust//tools/runfiles",
     ],
 )
 

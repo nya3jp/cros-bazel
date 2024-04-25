@@ -2,7 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::{path::Path, process::Command};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use anyhow::{ensure, Result};
 use runfiles::Runfiles;
@@ -23,9 +26,13 @@ fn test_generate_repo() -> Result<()> {
     )?;
     let input_dir = input_dir.path();
 
-    let runfiles = Runfiles::create()?;
-    let alchemist_path =
-        runfiles.rlocation("cros/bazel/portage/bin/alchemist/src/bin/alchemist/alchemist");
+    let alchemist_path = match option_env!("CARGO_BIN_EXE_alchemist") {
+        Some(path) => PathBuf::from(path),
+        None => {
+            let runfiles = Runfiles::create()?;
+            runfiles.rlocation("cros/bazel/portage/bin/alchemist/src/bin/alchemist/alchemist")
+        }
+    };
 
     let status = Command::new(alchemist_path)
         .args([
