@@ -14,12 +14,12 @@ use super::DependencyKind;
 pub static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 22] = [
     "app-misc/jq",
     "app-portage/elt-patches",
+    "dev-build/meson",
     "dev-lang/perl",
     "dev-perl/XML-Parser",
     "dev-python/m2crypto",
     "dev-python/setuptools",
     "dev-util/cmake",
-    "dev-util/meson",
     "dev-util/meson-format-array",
     "dev-util/ninja",
     "dev-vcs/git", // TODO: We need to make cros-workon stop calling `git`.
@@ -295,7 +295,7 @@ pub fn get_extra_dependencies(
         ("media-libs/opencv", DependencyKind::BuildHost) => "dev-libs/protobuf",
 
         /* We need to upgrade distutils-r1 to latest from upstream */
-        ("dev-util/meson", DependencyKind::RunTarget) => "dev-python/setuptools",
+        ("dev-build/meson", DependencyKind::RunTarget) => "dev-python/setuptools",
 
         /*
          * checking for curl-config... no
