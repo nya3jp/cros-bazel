@@ -190,4 +190,18 @@ sym usr/bin/helloworld.symlink -> helloworld 0
 
         Ok(())
     }
+
+    #[test]
+    fn test_create_sparse_vdb() -> Result<()> {
+        let package = open_test_binary_package()?;
+
+        let vdb_dir = TempDir::new()?;
+        let vdb_dir = vdb_dir.path();
+        create_sparse_vdb(vdb_dir, &package)?;
+
+        let golden_dir = Path::new("bazel/portage/common/portage/vdb/testdata/golden/sparse-vdb");
+        compare_with_golden_data(vdb_dir, golden_dir)?;
+
+        Ok(())
+    }
 }
