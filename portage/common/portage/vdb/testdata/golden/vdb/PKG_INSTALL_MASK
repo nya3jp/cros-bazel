@@ -1,1 +1,1 @@
-/usr/lib*/*.la /etc/init.d /etc/conf.d /etc/logrotate.d
+/usr/lib*/*.la /etc/init.d /etc/conf.d /etc/logrotate.d /*/LC_MESSAGES/*.mo
