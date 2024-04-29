@@ -69,6 +69,20 @@ pub fn create_sparse_vdb(vdb_dir: &Path, package: &BinaryPackage) -> Result<()> 
             let primary_slot = slot.trim_end().split('/').next().unwrap();
 
             Some(format!("{}/{}\n", primary_slot, primary_slot).into_bytes())
+        } else if key == "IUSE" {
+            let iuse = String::from_utf8(value.clone())
+                .with_context(|| format!("IUSE is not UTF-8: {:?}", value))?;
+
+            // We drop the cros_workon_tree IUSE since we don't want to cache
+            // bust all reverse dependencies when source hashes change that
+            // result in the same binary outputs.
+            let iuse = iuse
+                .split_whitespace()
+                .filter(|iuse| !iuse.starts_with("cros_workon_tree_"))
+                .collect::<Vec<_>>()
+                .join(" ");
+
+            Some(iuse.into_bytes())
         } else {
             None
         };
