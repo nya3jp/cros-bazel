@@ -1,0 +1,129 @@
+#!/bin/bash
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+set -eu -o pipefail
+
+declare OPTIONS=b:
+declare LONGOPTIONS=board:,debug
+
+usage() {
+	echo "Fetches the prebuilts.bzl for the specified board from the"
+	echo "snapshot builder that built the current manifest snapshot."
+	echo
+	echo "Usage:"
+	echo "$0 --board <board> [--debug]" >&2
+}
+
+if ! PARSED="$(getopt --options="${OPTIONS}" --longoptions="${LONGOPTIONS}" --name "$0" -- "$@")"; then
+	usage
+	exit 2
+fi
+
+eval set -- "${PARSED}"
+unset PARSED
+
+while true; do
+	case "$1" in
+		-b|--board)
+			BOARD="$2"
+			shift 2
+			;;
+		--debug)
+			set -x
+			shift
+			;;
+		-h|--help)
+			usage
+			exit 0
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "Unknown args: $*"
+			usage
+			exit 3
+			;;
+	esac
+done
+
+if [[ ! -v BOARD ]]; then
+	usage
+	exit 1
+fi
+
+load_bazel_info() {
+	declare -gA BAZEL
+	while IFS=': ' read -r key value
+	do
+	    BAZEL["${key}"]="${value}"
+	done < <(bazel info)
+}
+
+load_bazel_info
+
+WORKSPACE_ROOT="${BAZEL[workspace]}"
+
+SNAPSHOT_HASH="$(git -C "${WORKSPACE_ROOT}/../.repo/manifests" rev-parse HEAD)"
+GIT_HOST="$(git -C "${WORKSPACE_ROOT}/../.repo/manifests" remote get-url origin)"
+GIT_HOST="${GIT_HOST#*://}"
+
+echo "Looking for the ${BOARD} snapshot builder that build manifest hash ${SNAPSHOT_HASH}." >&2
+
+REQUEST='{
+  "requests": [
+    {
+      "searchBuilds": {
+        "mask": {
+          "fields": "createTime,endTime,id,startTime,status"
+        },
+        "pageSize": 1,
+        "predicate": {
+          "builder": {
+            "bucket": "postsubmit",
+            "builder": "'"${BOARD}-"'bazel-snapshot",
+            "project": "chromeos"
+          },
+          "tags": [
+            {
+              "key": "buildset",
+              "value": "commit/gitiles/'"${GIT_HOST}"'/+/'"${SNAPSHOT_HASH}"'"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}'
+
+RESPONSE="$(bb batch -host cr-buildbucket.appspot.com <<<"${REQUEST}")"
+BBID="$(jq --raw-output '.responses[].searchBuilds | select(.builds) | .builds[].id' <<< "${RESPONSE}")"
+if [[ -z "${BBID}" ]]; then
+	echo "Failed to find ${BOARD} snapshot builder for manifest hash ${SNAPSHOT_HASH}."
+	echo "This could be caused by using a private manifest's hash to lookup a build that used a public manifest."
+	exit 1
+fi
+
+PROPERTIES="$(bb get "${BBID}" -json -fields='output.properties')"
+STATUS="$(jq --raw-output '.status' <<<"${PROPERTIES}")"
+
+if [[ "${STATUS}" == "STARTED" ]]; then
+	echo "http://go/bbid/${BBID} is still running. prebuilts.bzl is not available yet."
+	exit 1
+fi
+
+
+ARTIFACT_LINK="$(jq --raw-output '.output.properties.artifact_link' <<<"${PROPERTIES}")"
+if [[ -z "${ARTIFACT_LINK}" ]]; then
+	echo "http://go/bbid/${BBID} is missing artifact_link"
+	exit 1
+fi
+
+# TODO(rrangel): Fix the file extension in the recipe.
+gsutil cp "${ARTIFACT_LINK}/prebuilts.bzl" "${WORKSPACE_ROOT}/prebuilts.bazelrc"
+
+echo "Prebuilt manifest successfully downloaded to ${WORKSPACE_ROOT}/prebuilts.bazelrc."
+echo "Use \`--config=prebuilts\` to use them."
