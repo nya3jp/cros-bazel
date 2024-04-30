@@ -60,6 +60,14 @@ test_best_version() {
   assert test -z "$(best_version -b pkg/ccc)"
 }
 
+test_keepdir() {
+  set -x
+  keepdir /foo
+
+  ls -alh "${ED}/foo"
+  assert test -f "${ED}/foo/.keep_${CATEGORY}_${PN}_${SLOT}"
+}
+
 pkg_setup() {
   local cases=() f
   # Gather a list of functions prefixed with "test_".

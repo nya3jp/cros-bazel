@@ -206,6 +206,20 @@ best_version() {
     portageq best_version "${root}" "$@"
 }
 
+keepdir() {
+  if [[ "$#" -ne 1 ]]; then
+    eerror "Usage: keepdir <path>"
+    return 1
+  fi
+
+  local dir="${ED}/$1"
+
+  mkdir -p "${dir}" || die "Failed to create ${dir}"
+  local keep
+  keep="${dir}/.keep_${CATEGORY}_${PN}_${SLOT}"
+  touch "${keep}" || die "Failed to touch ${keep}"
+}
+
 # ver_cut, ver_rs, ver_test are included in environment.
 
 ################################################################################
