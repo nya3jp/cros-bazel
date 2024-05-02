@@ -47,10 +47,17 @@ rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
     extra_target_triples = ["riscv32imc-unknown-none-elf"],
-    versions = ["1.66.1"],
+    versions = ["1.70.0"],
 )
 
-register_toolchains("//platform/ti50/common/toolchain:dauntless_rust")
+register_toolchains("//platform/ti50/common/toolchain:all")
+
+use_repo(
+    rust,
+    "rust_toolchains",
+)
+
+register_toolchains("@rust_toolchains//:all")
 
 fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
 use_repo(
