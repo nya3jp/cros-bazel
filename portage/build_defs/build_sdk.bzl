@@ -10,7 +10,7 @@ def _build_sdk_impl(ctx):
 
     output_prefix = ctx.attr.name
 
-    output_sdk = ctx.actions.declare_file(output_prefix + ".tar.zst")
+    output_sdk = ctx.actions.declare_directory(output_prefix)
     output_log_file = ctx.actions.declare_file(output_prefix + ".log")
 
     args = ctx.actions.args()
@@ -18,10 +18,11 @@ def _build_sdk_impl(ctx):
         "--log",
         output_log_file,
         ctx.executable._build_sdk,
-        "--board=" + ctx.attr.board,
+        "--board",
+        ctx.attr.board,
         "--output",
         output_sdk,
-    ])
+    ], expand_directories = False)
 
     layer_inputs = (
         sdk.layers +
@@ -45,6 +46,7 @@ def _build_sdk_impl(ctx):
             "supports-graceful-termination": "",
         },
         mnemonic = "BuildSDK",
+        progress_message = "Building SDK %{output}",
     )
 
     return [
@@ -54,6 +56,7 @@ def _build_sdk_impl(ctx):
         ),
         SDKInfo(
             layers = [output_sdk],
+            packages = depset(),
         ),
     ]
 

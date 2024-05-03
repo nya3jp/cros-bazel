@@ -5,7 +5,7 @@
 # found in the LICENSE file.
 
 load("@//bazel/portage/build_defs:build_sdk.bzl", "build_sdk")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_install_deps", "sdk_update")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_update")
 
 sdk_install_deps(
     name = "packages",
@@ -32,7 +32,7 @@ sdk_install_deps(
 )
 
 build_sdk(
-    name = "tarball",
+    name = "base",
     board = "amd64-host", # TODO: Pass in as a parameter.
     overlays = "//internal/overlays:host",
     portage_config = select({
@@ -46,13 +46,6 @@ build_sdk(
         ],
     }),
     sdk = ":packages",
-    visibility = ["//visibility:private"],
-)
-
-sdk_from_archive(
-    name = "base",
-    src = ":tarball",
-    progress_message = "Extracting %{label}",
     visibility = ["//visibility:private"],
 )
 

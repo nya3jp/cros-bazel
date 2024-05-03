@@ -13,6 +13,7 @@ rust_binary(
     deps = [
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/container",
+        "//bazel/portage/common/durabletree",
         "//bazel/portage/common/fileutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",

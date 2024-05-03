@@ -34,11 +34,10 @@ echo bazel > "${ROOT}/etc/cros_chroot_version"
 # we extract it.
 chmod 755 "${ROOT}"
 
-# We need to run fakeroot so the tarball contains the correct UIDs.
-# We can't use --remove-files because we get overlayfs IO errors on some files.
-# Exclude /usr/share/{doc,man} because they pull in a bunch of files we don't
-# need. Evaluate setting INSTALL_MASK instead.
-time fakeroot tar \
+# Copy the sysroot into the output directory so we can create a new durable
+# tree. We don't invoke fakeroot since we only need to copy the xattrs to
+# preserve ownership.
+time tar \
   --format gnu \
   --sort name \
   --mtime "1970-1-1 00:00Z" \
@@ -55,4 +54,4 @@ time fakeroot tar \
   --exclude="./etc/make.conf.*" \
   --exclude="./etc/portage" \
   . | \
-  zstd -3 --long -T0 --force -o "/mnt/host/.build_sdk/output.tar.zst"
+  tar -x -C "/mnt/host/.build_sdk/output"

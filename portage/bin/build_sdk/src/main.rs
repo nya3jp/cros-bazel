@@ -6,8 +6,9 @@ use anyhow::{ensure, Context, Result};
 use clap::Parser;
 use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
+use durabletree::DurableTree;
 use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
-use std::fs::File;
+
 use std::{path::PathBuf, process::ExitCode};
 
 const MAIN_SCRIPT: &str = "/mnt/host/.build_sdk/build_sdk.sh";
@@ -51,15 +52,16 @@ fn do_main() -> Result<()> {
         rw: false,
     });
 
-    // Create the output file, then drop the reference to close the handle.
-    // We need the file to exist so the bind mount will work.
-    drop(File::create(&args.output)?);
+    fileutil::remove_dir_all_with_chmod(&args.output)
+        .with_context(|| format!("rm -r {:?}", args.output))?;
+
+    std::fs::create_dir_all(&args.output).with_context(|| format!("mkdir -p {:?}", args.output))?;
 
     // We want the container to directly write to the output file to avoid
     // copying the tarball from /tmp to the output root.
     settings.push_bind_mount(BindMount {
-        source: args.output,
-        mount_path: PathBuf::from("/mnt/host/.build_sdk/output.tar.zst"),
+        source: args.output.clone(),
+        mount_path: PathBuf::from("/mnt/host/.build_sdk/output"),
         rw: true,
     });
 
@@ -70,6 +72,8 @@ fn do_main() -> Result<()> {
 
     let status = command.status()?;
     ensure!(status.success());
+
+    DurableTree::convert(&args.output)?;
 
     Ok(())
 }

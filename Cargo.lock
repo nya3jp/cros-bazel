@@ -251,6 +251,7 @@ dependencies = [
  "clap",
  "cliutil",
  "container",
+ "durabletree",
  "fileutil",
  "runfiles",
 ]
