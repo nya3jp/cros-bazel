@@ -11,7 +11,7 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
-use fileutil::SafeTempDir;
+use fileutil::{with_permissions, SafeTempDir};
 use nix::mount::{mount, umount2, MntFlags, MsFlags};
 use tracing::{instrument, warn};
 
@@ -104,7 +104,10 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
     }
 
     // Mark as restored.
-    xattr::set(root_dir, RESTORED_XATTR, &[] as &[u8])?;
+    with_permissions(root_dir, 0o755, || {
+        xattr::set(root_dir, RESTORED_XATTR, &[] as &[u8])
+            .with_context(|| format!("Failed to set {} on {}", RESTORED_XATTR, root_dir.display()))
+    })?;
 
     Ok(())
 }
