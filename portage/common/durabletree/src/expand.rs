@@ -4,7 +4,7 @@
 
 use std::{
     fs::{create_dir, remove_dir, set_permissions, symlink_metadata, File},
-    io::ErrorKind,
+    io::{BufReader, ErrorKind},
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -74,8 +74,9 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
 
     let raw_dir = root_dir.join(RAW_DIR_NAME);
 
-    let manifest: DurableTreeManifest =
-        serde_json::from_reader(File::open(root_dir.join(MANIFEST_FILE_NAME))?)?;
+    let manifest: DurableTreeManifest = serde_json::from_reader(BufReader::new(File::open(
+        root_dir.join(MANIFEST_FILE_NAME),
+    )?))?;
     for (relative_path, file_manifest) in manifest.files {
         let path = raw_dir.join(&relative_path);
 
