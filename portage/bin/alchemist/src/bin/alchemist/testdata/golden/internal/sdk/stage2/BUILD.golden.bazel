@@ -5,11 +5,13 @@
 # found in the LICENSE file.
 
 load("@//bazel/portage/build_defs:build_sdk.bzl", "build_sdk")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_update")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_from_archive", "sdk_install_deps", "sdk_update")
 
-build_sdk(
-    name = "tarball",
-    board = "amd64-host", # TODO: Delete this since we don't really need it.
+sdk_install_deps(
+    name = "packages",
+    out = "packages",
+    base = "//internal/sdk/stage1/target/host",
+    board = "amd64-host", # TODO: Pass in as a parameter.
     overlays = "//internal/overlays:host",
     portage_config = select({
         "@//bazel/portage:compiled_profiles_enabled": [
@@ -24,7 +26,24 @@ build_sdk(
     target_deps = [
         "//internal/packages/stage1/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4",
     ],
-    sdk = "//internal/sdk/stage1/target/host:base",
+    visibility = ["//visibility:private"],
+)
+
+build_sdk(
+    name = "tarball",
+    board = "amd64-host", # TODO: Pass in as a parameter.
+    overlays = "//internal/overlays:host",
+    portage_config = select({
+        "@//bazel/portage:compiled_profiles_enabled": [
+            "//internal/portage-config/host:lite",
+            "//internal/portage-config/target/host",
+        ],
+        "@//bazel/portage:compiled_profiles_disabled": [
+            "//internal/portage-config/host:orig",
+            "//internal/portage-config/target/host:full",
+        ],
+    }),
+    sdk = ":packages",
     visibility = ["//visibility:private"],
 )
 

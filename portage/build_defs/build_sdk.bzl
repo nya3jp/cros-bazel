@@ -3,23 +3,10 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
-load(":common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
-load(":install_groups.bzl", "add_install_groups", "calculate_install_groups")
+load(":common.bzl", "OverlaySetInfo", "SDKInfo")
 
 def _build_sdk_impl(ctx):
     sdk = ctx.attr.sdk[SDKInfo]
-
-    install_set = depset(
-        transitive = [dep[BinaryPackageSetInfo].packages for dep in ctx.attr.target_deps],
-        order = "postorder",
-    )
-
-    install_list = install_set.to_list()
-
-    progress_message = ctx.attr.progress_message.replace(
-        "{dep_count}",
-        str(len(install_list)),
-    )
 
     output_prefix = ctx.attr.name
 
@@ -36,8 +23,6 @@ def _build_sdk_impl(ctx):
         output_sdk,
     ])
 
-    direct_inputs = [pkg.partial for pkg in install_list]
-
     layer_inputs = (
         sdk.layers +
         ctx.attr.overlays[OverlaySetInfo].layers +
@@ -45,17 +30,9 @@ def _build_sdk_impl(ctx):
         ctx.files.portage_config
     )
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
-    direct_inputs.extend(layer_inputs)
-
-    install_groups = calculate_install_groups(
-        install_list,
-        provided_packages = depset(),
-    )
-
-    add_install_groups(args, install_groups)
 
     ctx.actions.run(
-        inputs = depset(direct_inputs),
+        inputs = depset(layer_inputs),
         outputs = [output_sdk, output_log_file],
         executable = ctx.executable._action_wrapper,
         tools = [ctx.executable._build_sdk],
@@ -67,8 +44,7 @@ def _build_sdk_impl(ctx):
             # Send SIGTERM instead of SIGKILL on user interruption.
             "supports-graceful-termination": "",
         },
-        mnemonic = "InstallDeps",
-        progress_message = progress_message,
+        mnemonic = "BuildSDK",
     )
 
     return [
@@ -119,12 +95,6 @@ build_sdk = rule(
             """,
             mandatory = True,
             providers = [SDKInfo],
-        ),
-        "target_deps": attr.label_list(
-            doc = """
-            Packages that will be used to create the new SDK.
-            """,
-            providers = [BinaryPackageSetInfo],
         ),
         "_action_wrapper": attr.label(
             executable = True,

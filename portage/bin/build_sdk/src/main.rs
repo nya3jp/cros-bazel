@@ -5,7 +5,7 @@
 use anyhow::{ensure, Context, Result};
 use clap::Parser;
 use cliutil::cli_main;
-use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings, InstallGroup};
+use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
 use std::fs::File;
 use std::{path::PathBuf, process::ExitCode};
@@ -22,9 +22,6 @@ struct Cli {
     #[arg(long, required = true)]
     board: String,
 
-    #[arg(long)]
-    install_target: Vec<InstallGroup>,
-
     /// The path of output file.
     /// A .tar.zst suffix is expected
     #[arg(long, required = true)]
@@ -37,11 +34,11 @@ fn do_main() -> Result<()> {
     // Use the output directory's parent as a tmpdir.
     // /tmp isn't always suitable because it might not be a real filesystem.
     let mutable_base_dir = SafeTempDirBuilder::new()
-        .base_dir(&args.output.parent().context("output missing parent")?)
+        .base_dir(args.output.parent().context("output missing parent")?)
         .build()?;
 
     let mut settings = ContainerSettings::new();
-    settings.set_mutable_base_dir(&mutable_base_dir.path());
+    settings.set_mutable_base_dir(mutable_base_dir.path());
     settings.apply_common_args(&args.common)?;
 
     let runfiles = runfiles::Runfiles::create()?;
@@ -66,19 +63,10 @@ fn do_main() -> Result<()> {
         rw: true,
     });
 
-    let target_packages_dir: PathBuf = ["/build", &args.board, "packages"].iter().collect();
-
-    let (mounts, envs) =
-        InstallGroup::get_mounts_and_env(&args.install_target, target_packages_dir)?;
-    for mount in mounts {
-        settings.push_bind_mount(mount);
-    }
-
     let mut container = settings.prepare()?;
 
     let mut command = container.command(MAIN_SCRIPT);
     command.env("BOARD", &args.board);
-    command.envs(envs);
 
     let status = command.status()?;
     ensure!(status.success());

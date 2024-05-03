@@ -263,10 +263,7 @@ pub fn generate_stages(
         &SdkBaseConfig {
             name: "stage2",
             source_package_prefix: "stage1/target/host",
-            // We use the `host:base` target because the stage1 SDK
-            // `host` target lists all the primordial packages for the
-            // target, and we don't want those pre-installed.
-            source_sdk: "stage1/target/host:base",
+            source_sdk: "stage1/target/host",
             source_repo_set: &host.repos,
             packages: vec![&implicit_system_package],
             package_suffix: None,
@@ -373,10 +370,7 @@ pub fn generate_stages(
         &SdkBaseConfig {
             name: "stage4",
             source_package_prefix: "stage3/target/host",
-            // We use the `host:base` target because the stage3 SDK
-            // `host` target lists all the primordial packages for the
-            // target, and we don't want those pre-installed.
-            source_sdk: "stage3/target/host:base",
+            source_sdk: "stage3/target/host",
             source_repo_set: &host.repos,
             packages: vec![&implicit_system_package],
             package_suffix: None,
