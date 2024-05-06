@@ -20,7 +20,7 @@ local_path_override(
 )
 
 # Language independent stuff.
-bazel_dep(name = "aspect_bazel_lib", version = "1.36.0")
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.3")
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
 bazel_dep(name = "gazelle", version = "0.33.0")
 bazel_dep(name = "googletest", version = "1.14.0")
