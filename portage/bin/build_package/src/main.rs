@@ -283,10 +283,10 @@ fn do_main() -> Result<()> {
     }
     settings.apply_common_args(&args.common)?;
 
-    let runfiles = runfiles::Runfiles::create()?;
+    let r = runfiles::Runfiles::create()?;
 
     settings.push_bind_mount(BindMount {
-        source: runfiles.rlocation("cros/bazel/portage/bin/build_package/build_package.sh"),
+        source: runfiles::rlocation!(r, "cros/bazel/portage/bin/build_package/build_package.sh"),
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });

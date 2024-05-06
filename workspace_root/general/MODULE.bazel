@@ -111,15 +111,14 @@ rust.toolchain(
     rustfmt_version = "1.75.0",
     versions = ["1.75.0"],
 )
-rust.host_tools(
+use_repo(rust, "rust_toolchains")
+
+rust_host_tools = use_extension("@rules_rust//rust:extensions.bzl", "rust_host_tools")
+rust_host_tools.host_tools(
     edition = "2021",
     version = "1.75.0",
 )
-use_repo(
-    rust,
-    "rust_host_tools",
-    "rust_toolchains",
-)
+use_repo(rust_host_tools, "rust_host_tools")
 
 # Ordering matters here. Placing our our toolchains first gives them priority.
 # This means we only fall back to @rust_toolchains if our toolchains don't meet

@@ -56,20 +56,22 @@ fn do_main() -> Result<()> {
     let mut settings = ContainerSettings::new();
     settings.apply_common_args(&args.common)?;
 
-    let runfiles = runfiles::Runfiles::create()?;
+    let r = runfiles::Runfiles::create()?;
 
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(
-            &runfiles.rlocation("cros/bazel/portage/bin/build_image/container_files/edb_chromeos"),
-        )?,
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/build_image/container_files/edb_chromeos"
+        ))?,
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("var/cache/edb/chromeos"),
         rw: false,
     });
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(&runfiles.rlocation(
-            "cros/bazel/portage/bin/build_image/container_files/package.accept_keywords",
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/build_image/container_files/package.accept_keywords"
         ))?,
         mount_path: Path::new("/build")
             .join(&args.board)
@@ -77,20 +79,20 @@ fn do_main() -> Result<()> {
         rw: false,
     });
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(
-            &runfiles
-                .rlocation("cros/bazel/portage/bin/build_image/container_files/package.provided"),
-        )?,
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/build_image/container_files/package.provided"
+        ))?,
         mount_path: Path::new("/build")
             .join(&args.board)
             .join("etc/portage/profile/package.provided"),
         rw: false,
     });
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(
-            &runfiles
-                .rlocation("cros/bazel/portage/bin/build_image/container_files/build_image.sh"),
-        )?,
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/build_image/container_files/build_image.sh"
+        ))?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });

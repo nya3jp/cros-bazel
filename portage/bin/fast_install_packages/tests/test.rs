@@ -51,8 +51,9 @@ fn run_extract_package(
 ) -> Result<SafeTempDir> {
     let out_dir = temp_dir_for_testing()?;
 
-    let runfiles = Runfiles::create()?;
-    let program_path = runfiles.rlocation("cros/bazel/portage/bin/extract_package/extract_package");
+    let r = Runfiles::create()?;
+    let program_path =
+        runfiles::rlocation!(r, "cros/bazel/portage/bin/extract_package/extract_package");
     let status = Command::new(program_path)
         .arg("--input-binary-package")
         .arg(binary_package)
@@ -93,10 +94,12 @@ fn run_fast_install_packages(
     specs: &[&InstallSpec],
     extra_args: &[&str],
 ) -> Result<()> {
-    let runfiles = Runfiles::create()?;
+    let r = Runfiles::create()?;
 
-    let program_path =
-        runfiles.rlocation("cros/bazel/portage/bin/fast_install_packages/fast_install_packages");
+    let program_path = runfiles::rlocation!(
+        r,
+        "cros/bazel/portage/bin/fast_install_packages/fast_install_packages"
+    );
 
     let mut command = Command::new(program_path);
     command
@@ -216,14 +219,16 @@ fn fast_install_packages(
 /// Creates a fake SDK container containing a minimal set of files, e.g.
 /// drive_binary_package.sh, so that fast_install_packages works.
 fn create_fake_sdk_container() -> Result<ContainerSettings> {
-    let runfiles = Runfiles::create()?;
+    let r = Runfiles::create()?;
     let mut settings = ContainerSettings::new();
-    settings.push_layer(
-        &runfiles.rlocation("alpine-minirootfs/file/alpine-minirootfs-3.18.3-x86_64.tar.gz"),
-    )?;
-    settings.push_layer(
-        &runfiles.rlocation("cros/bazel/portage/bin/fast_install_packages/fake_sdk_extras.tar"),
-    )?;
+    settings.push_layer(&runfiles::rlocation!(
+        r,
+        "alpine-minirootfs/file/alpine-minirootfs-3.18.3-x86_64.tar.gz"
+    ))?;
+    settings.push_layer(&runfiles::rlocation!(
+        r,
+        "cros/bazel/portage/bin/fast_install_packages/fake_sdk_extras.tar"
+    ))?;
     Ok(settings)
 }
 
@@ -233,8 +238,8 @@ fn create_binary_package(
     contents_dir: &Path,
     extra_environment: &str,
 ) -> Result<NamedTempFile> {
-    let runfiles = Runfiles::create()?;
-    let zstd_path = runfiles.rlocation("zstd/zstd");
+    let r = Runfiles::create()?;
+    let zstd_path = runfiles::rlocation!(r, "zstd/zstd");
 
     let binary_package_file = tempfile::Builder::new().suffix(".tbz2").tempfile()?;
 

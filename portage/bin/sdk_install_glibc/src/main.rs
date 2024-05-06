@@ -41,7 +41,7 @@ fn do_main() -> Result<()> {
     settings.set_mutable_base_dir(mutable_base_dir.path());
     settings.apply_common_args(&args.common)?;
 
-    let runfiles = runfiles::Runfiles::create()?;
+    let r = runfiles::Runfiles::create()?;
 
     let glibc_binpkg = resolve_symlink_forest(&args.glibc)?;
     settings.push_bind_mount(BindMount {
@@ -51,9 +51,10 @@ fn do_main() -> Result<()> {
     });
 
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(
-            &runfiles.rlocation("cros/bazel/portage/bin/sdk_install_glibc/setup.sh"),
-        )?,
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/sdk_install_glibc/setup.sh"
+        ))?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });

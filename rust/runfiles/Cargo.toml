@@ -9,7 +9,6 @@ edition = "2021"
 
 
 [dev-dependencies]
-anyhow = { package = "anyhow", workspace = true }
 
 
 [features]

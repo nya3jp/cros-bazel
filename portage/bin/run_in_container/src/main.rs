@@ -70,7 +70,7 @@ pub fn main() -> ExitCode {
 
 fn enter_namespace(cfg: RunInContainerConfig) -> Result<ExitCode> {
     let r = runfiles::Runfiles::create()?;
-    let dumb_init_path = r.rlocation("files/dumb_init");
+    let dumb_init_path = runfiles::rlocation!(r, "files/dumb_init");
 
     // Enter various namespaces except mount/PID namespace.
     let mut unshare_flags = CloneFlags::CLONE_NEWIPC | CloneFlags::CLONE_NEWUTS;

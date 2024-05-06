@@ -2,27 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library")
 load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 
+# This is used solely for cargo. This is just copied from rules_rust/tool/runfiles/runfiles.rs.
 rust_library(
     name = "runfiles",
-    srcs = glob(["src/*.rs"]),
-    visibility = ["//visibility:public"],
-)
-
-rust_test(
-    name = "runfiles_test",
-    size = "small",
-    crate = ":runfiles",
-    data = glob(["testdata/**"]) + [
-        "//bazel/module_extensions/toolchains/rust:cargo",
-    ],
-    deps = ["@alchemy_crates//:anyhow"],
+    srcs = ["src/lib.rs"],
+    # Use @rules_rust//tools/runfiles.
+    visibility = ["//visibility:private"],
 )
 
 generate_cargo_toml(
     name = "cargo_toml",
     crate = ":runfiles",
-    tests = [":runfiles_test"],
+    enabled = True,
 )

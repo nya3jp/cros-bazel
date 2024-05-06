@@ -14,12 +14,12 @@ rust_library(
     visibility = ["//bazel/portage/bin:__subpackages__"],
     deps = [
         "//bazel/portage/common/processes",
-        "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:path-absolutize",
         "@alchemy_crates//:pathdiff",
         "@alchemy_crates//:tar",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
@@ -32,7 +32,7 @@ rust_test(
     deps = [
         "//bazel/portage/common/fileutil",
         "//bazel/portage/common/portage/binarypackage",
-        "//bazel/rust/runfiles",
+        "@rules_rust//tools/runfiles",
     ],
 )
 

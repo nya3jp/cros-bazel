@@ -46,7 +46,7 @@ fn read_logs(path: &Path) -> Result<Vec<String>> {
 
 fn run_cli_main_test(env: &[(&str, &str)]) -> Result<Output> {
     let r = runfiles::Runfiles::create()?;
-    let demo = r.rlocation("cros/bazel/portage/common/cliutil/testdata/demo");
+    let demo = runfiles::rlocation!(r, "cros/bazel/portage/common/cliutil/testdata/demo");
 
     let mut cmd = Command::new(demo);
     cmd.env("RUST_BACKTRACE", "0");

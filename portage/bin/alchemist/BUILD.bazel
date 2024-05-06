@@ -77,9 +77,9 @@ rust_test_suite(
     deps = [
         "//bazel/portage/bin/alchemist/src/bin/alchemist",
         "//bazel/portage/common/testutil",
-        "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
     ],
 )
 

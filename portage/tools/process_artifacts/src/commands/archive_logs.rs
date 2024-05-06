@@ -71,10 +71,11 @@ mod tests {
 
     #[test]
     fn basic() -> Result<()> {
-        let runfiles = Runfiles::create()?;
-        let events = load_build_events_jsonl(
-            &runfiles.rlocation("cros/bazel/portage/tools/process_artifacts/testdata/bep.jsonl"),
-        )?;
+        let r = Runfiles::create()?;
+        let events = load_build_events_jsonl(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/tools/process_artifacts/testdata/bep.jsonl"
+        ))?;
 
         let processor = BuildEventProcessor::from(&events);
 

@@ -176,7 +176,7 @@ impl FileEntry {
     fn install_local(&self, cache: &mut Cache, install_dir: &Path) -> Result<()> {
         for (dest, src) in &self.dest_src_map {
             let dest = get_install_path(install_dir, dest);
-            let src = cache.runfiles.rlocation(src);
+            let src = runfiles::rlocation!(cache.runfiles, src);
             cache.create_dir(dest.parent().context("File must have parent")?)?;
             debug!("Copying file from {src:?} to {dest:?}");
             std::fs::copy(&src, &dest)?;

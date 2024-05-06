@@ -1705,9 +1705,6 @@ dependencies = [
 [[package]]
 name = "runfiles"
 version = "1.0.0"
-dependencies = [
- "anyhow",
-]
 
 [[package]]
 name = "rust-bazel-examples"

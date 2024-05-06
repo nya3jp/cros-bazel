@@ -29,17 +29,20 @@ fn do_main() -> Result<()> {
 
     let r = Runfiles::create()?;
 
-    let fakefs = r.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
+    let fakefs = runfiles::rlocation!(r, "cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
     if !fakefs.try_exists()? {
         bail!("{} doesn't exist", fakefs.display());
     }
 
-    let fakefs_preload = r.rlocation("cros/bazel/portage/bin/fakefs/preload/libfakefs_preload.so");
+    let fakefs_preload = runfiles::rlocation!(
+        r,
+        "cros/bazel/portage/bin/fakefs/preload/libfakefs_preload.so"
+    );
     if !fakefs_preload.try_exists()? {
         bail!("{} doesn't exist", fakefs_preload.display());
     }
 
-    let zstd = r.rlocation("zstd/zstd");
+    let zstd = runfiles::rlocation!(r, "zstd/zstd");
     if !zstd.try_exists()? {
         bail!("{} doesn't exist", zstd.display());
     }

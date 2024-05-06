@@ -42,12 +42,13 @@ fn do_main() -> Result<()> {
     settings.set_mutable_base_dir(mutable_base_dir.path());
     settings.apply_common_args(&args.common)?;
 
-    let runfiles = runfiles::Runfiles::create()?;
+    let r = runfiles::Runfiles::create()?;
 
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(
-            &runfiles.rlocation("cros/bazel/portage/bin/build_sdk/build_sdk.sh"),
-        )?,
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/build_sdk/build_sdk.sh"
+        ))?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });

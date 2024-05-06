@@ -162,7 +162,7 @@ fn update_remote_manifest(
         .collect::<Result<_>>()?;
 
     let r = runfiles::Runfiles::create()?;
-    let extractor = r.rlocation(EXTRACTOR).canonicalize()?;
+    let extractor = runfiles::rlocation!(r, EXTRACTOR).canonicalize()?;
     std::fs::create_dir_all(out.join("extractor"))?;
     let extractor_dst = format!("extractor/{}.tar.gz", checksum(&extractor)?);
     std::os::unix::fs::symlink(extractor, out.join(&extractor_dst))?;

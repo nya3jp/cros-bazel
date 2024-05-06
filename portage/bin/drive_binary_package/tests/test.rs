@@ -26,9 +26,11 @@ fn run_drive_binary_package(
 ) -> Result<Output> {
     let temp_dir = TempDir::new()?;
     let temp_dir = temp_dir.path();
-    let runfiles = Runfiles::create()?;
-    let program_path =
-        runfiles.rlocation("cros/bazel/portage/bin/drive_binary_package/drive_binary_package.sh");
+    let r = Runfiles::create()?;
+    let program_path = runfiles::rlocation!(
+        r,
+        "cros/bazel/portage/bin/drive_binary_package/drive_binary_package.sh"
+    );
     let path_with_fakes = format!(
         "bazel/portage/bin/drive_binary_package/testdata/fakes:{}",
         std::env::var("PATH")?

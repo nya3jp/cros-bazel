@@ -39,7 +39,10 @@ fn do_main() -> Result<()> {
         if ext == OsStr::new("xz") {
             command.arg("-Ipixz");
         } else if ext == OsStr::new("zst") {
-            command.arg(format!("-I{}", r.rlocation("zstd/zstd").display()));
+            command.arg(format!(
+                "-I{}",
+                runfiles::rlocation!(r, "zstd/zstd").display()
+            ));
         } else {
             bail!("Unsupported extension: {:?}", ext);
         }

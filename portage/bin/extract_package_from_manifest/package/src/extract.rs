@@ -112,7 +112,7 @@ mod tests {
             ),
         ] {
             let out = fileutil::SafeTempDir::new()?;
-            let pkg = extract_binpkg(&r.rlocation(path), out.path())?;
+            let pkg = extract_binpkg(&runfiles::rlocation!(r, path), out.path())?;
             assert_eq!(pkg, want);
         }
         Ok(())

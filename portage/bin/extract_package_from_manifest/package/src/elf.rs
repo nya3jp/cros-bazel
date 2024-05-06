@@ -86,7 +86,7 @@ pub(crate) fn wrap_elf_files<'a>(
         return Ok(Default::default());
     }
     let r = runfiles::Runfiles::create()?;
-    let mut cmd = Command::new(r.rlocation(WRAP_ELF));
+    let mut cmd = Command::new(runfiles::rlocation!(r, WRAP_ELF));
     cmd.arg("--sysroot")
         .arg(root)
         .arg("--ld-library-path")

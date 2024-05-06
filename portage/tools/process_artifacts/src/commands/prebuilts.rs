@@ -101,10 +101,11 @@ mod tests {
     fn basic() -> Result<()> {
         let testdata_path = PathBuf::from("cros/bazel/portage/tools/process_artifacts/testdata");
 
-        let runfiles = Runfiles::create()?;
-        let events = load_build_events_jsonl(
-            &runfiles.rlocation(testdata_path.join("ebuild_metadata.bep.jsonl")),
-        )?;
+        let r = Runfiles::create()?;
+        let events = load_build_events_jsonl(&runfiles::rlocation!(
+            r,
+            testdata_path.join("ebuild_metadata.bep.jsonl")
+        ))?;
 
         let processor = BuildEventProcessor::from(&events);
 
@@ -125,9 +126,7 @@ mod tests {
         ] {
             let path = workspace_dir.join(relative_path);
             std::fs::create_dir_all(path.parent().unwrap())?;
-            std::fs::copy(&runfiles.rlocation(
-                testdata_path.join(test_path)
-            ), path)?;
+            std::fs::copy(&runfiles::rlocation!(r, testdata_path.join(test_path)), path)?;
         }
 
         let tmpdir = tempdir()?;
@@ -158,10 +157,11 @@ mod tests {
     fn missing_metadata() -> Result<()> {
         let testdata_path = PathBuf::from("cros/bazel/portage/tools/process_artifacts/testdata");
 
-        let runfiles = Runfiles::create()?;
-        let events = load_build_events_jsonl(
-            &runfiles.rlocation(testdata_path.join("ebuild_metadata.bep.jsonl")),
-        )?;
+        let r = Runfiles::create()?;
+        let events = load_build_events_jsonl(&runfiles::rlocation!(
+            r,
+            testdata_path.join("ebuild_metadata.bep.jsonl")
+        ))?;
 
         let processor = BuildEventProcessor::from(&events);
 
@@ -179,9 +179,7 @@ mod tests {
         ] {
             let path = workspace_dir.join(relative_path);
             std::fs::create_dir_all(path.parent().unwrap())?;
-            std::fs::copy(&runfiles.rlocation(
-                testdata_path.join(test_path)
-            ), path)?;
+            std::fs::copy(&runfiles::rlocation!(r, testdata_path.join(test_path)), path)?;
         }
 
         let tmpdir = tempdir()?;

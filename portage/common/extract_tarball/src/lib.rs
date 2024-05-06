@@ -152,7 +152,7 @@ mod tests {
 
     fn binary_package() -> Result<BinaryPackage> {
         let r = runfiles::Runfiles::create()?;
-        BinaryPackage::open(&r.rlocation(BINARY_PKG_RUNFILE))
+        BinaryPackage::open(&runfiles::rlocation!(r, BINARY_PKG_RUNFILE))
     }
 
     #[test]

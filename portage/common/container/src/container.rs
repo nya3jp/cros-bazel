@@ -486,10 +486,10 @@ impl<'settings> PreparedContainer<'settings> {
         }
 
         // Copy `setup.sh` to `/.setup.sh`.
-        let runfiles = runfiles::Runfiles::create()?;
+        let r = runfiles::Runfiles::create()?;
         let setup_sh_path = stage_dir.path().join(".setup.sh");
         std::fs::copy(
-            runfiles.rlocation("cros/bazel/portage/common/container/setup.sh"),
+            runfiles::rlocation!(r, "cros/bazel/portage/common/container/setup.sh"),
             &setup_sh_path,
         )?;
         std::fs::set_permissions(&setup_sh_path, PermissionsExt::from_mode(0o755))?;
@@ -708,9 +708,11 @@ impl<'container> ContainerCommand<'container> {
         };
 
         // Now it's time to start a container!
-        let runfiles = runfiles::Runfiles::create()?;
-        let run_in_container_path =
-            runfiles.rlocation("cros/bazel/portage/bin/run_in_container/run_in_container");
+        let r = runfiles::Runfiles::create()?;
+        let run_in_container_path = runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/run_in_container/run_in_container"
+        );
         let status = processes::run(
             Command::new(run_in_container_path)
                 .arg("--config")
@@ -730,10 +732,10 @@ mod tests {
     /// Bind-mounts a statically-linked bash to the container.
     /// This is required for the container to work properly.
     fn bind_mount_bash(settings: &mut ContainerSettings) -> Result<()> {
-        let runfiles = runfiles::Runfiles::create()?;
+        let r = runfiles::Runfiles::create()?;
         settings.push_bind_mount(BindMount {
             mount_path: PathBuf::from("/bin/bash"),
-            source: runfiles.rlocation("files/bash-static"),
+            source: runfiles::rlocation!(r, "files/bash-static"),
             rw: false,
         });
         Ok(())
@@ -956,7 +958,7 @@ mod tests {
         DurableTree::cool_down_for_testing(durable_tree_dir)?;
 
         let hello_path = Path::new("/hello.txt");
-        let runfiles = runfiles::Runfiles::create()?;
+        let r = runfiles::Runfiles::create()?;
 
         // Push the directory layer.
         settings.push_layer(layer_dir.path())?;
@@ -967,10 +969,10 @@ mod tests {
         )?;
 
         // Push the archive layer.
-        settings.push_layer(
-            &runfiles
-                .rlocation("cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"),
-        )?;
+        settings.push_layer(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"
+        ))?;
         assert_content(
             &mut settings.prepare()?,
             hello_path,
@@ -1026,19 +1028,19 @@ mod tests {
         // Create a directory for a directory layer.
         let layer_dir = create_layer_dir()?;
 
-        let runfiles = runfiles::Runfiles::create()?;
+        let r = runfiles::Runfiles::create()?;
 
         // Push an archive layer, a directory layer, and another archive layer.
         // ContainerSettings should not merge non-adjacent archive layers.
-        settings.push_layer(
-            &runfiles
-                .rlocation("cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"),
-        )?;
+        settings.push_layer(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"
+        ))?;
         settings.push_layer(layer_dir.path())?;
-        settings.push_layer(
-            &runfiles
-                .rlocation("cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"),
-        )?;
+        settings.push_layer(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"
+        ))?;
 
         assert_content(
             &mut settings.prepare()?,
@@ -1059,7 +1061,7 @@ mod tests {
             "This file is from the directory layer.\n",
         )?;
 
-        let runfiles = runfiles::Runfiles::create()?;
+        let r = runfiles::Runfiles::create()?;
 
         settings.push_layer(layer_dir.path())?;
 
@@ -1079,10 +1081,10 @@ mod tests {
         let contents = read_to_string(upper.path().join("world.txt"))?;
         assert_eq!(contents, "Hello World!");
 
-        settings.push_layer(
-            &runfiles
-                .rlocation("cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"),
-        )?;
+        settings.push_layer(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"
+        ))?;
 
         let mount = settings.mount()?;
 

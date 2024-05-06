@@ -35,10 +35,13 @@ fn run_extract_package(
 ) -> Result<SafeTempDir> {
     let raw_out_dir = SafeTempDir::new()?;
 
-    let runfiles = Runfiles::create()?;
-    let program_path = runfiles.rlocation("cros/bazel/portage/bin/extract_package/extract_package");
-    let binary_package_path = runfiles
-        .rlocation("cros/bazel/portage/bin/extract_package/testdata/extract-test-1.2.3.tbz2");
+    let r = Runfiles::create()?;
+    let program_path =
+        runfiles::rlocation!(r, "cros/bazel/portage/bin/extract_package/extract_package");
+    let binary_package_path = runfiles::rlocation!(
+        r,
+        "cros/bazel/portage/bin/extract_package/testdata/extract-test-1.2.3.tbz2"
+    );
     let status = Command::new(program_path)
         .arg("--input-binary-package")
         .arg(&binary_package_path)

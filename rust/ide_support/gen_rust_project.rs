@@ -31,9 +31,9 @@ fn main() -> Result<()> {
     env_logger::init();
     let r = runfiles::Runfiles::create()?;
 
-    let gen_rust_project = r.rlocation("rules_rust/tools/rust_analyzer/gen_rust_project");
-    let cquery_path = r
-        .rlocation("cros/bazel/rust/ide_support/get_outputs.bzl")
+    let gen_rust_project =
+        runfiles::rlocation!(r, "rules_rust/tools/rust_analyzer/gen_rust_project");
+    let cquery_path = runfiles::rlocation!(r, "cros/bazel/rust/ide_support/get_outputs.bzl")
         .to_string_lossy()
         .to_string();
 

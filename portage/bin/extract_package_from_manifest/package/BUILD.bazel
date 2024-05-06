@@ -18,12 +18,12 @@ rust_library(
         "//bazel/portage/common/extract_tarball",
         "//bazel/portage/common/portage/binarypackage",
         "//bazel/portage/common/portage/version",
-        "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:regex",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
+        "@rules_rust//tools/runfiles",
     ],
 )
 

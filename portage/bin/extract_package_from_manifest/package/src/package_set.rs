@@ -235,9 +235,9 @@ mod tests {
 
         let r = runfiles::Runfiles::create()?;
 
-        let glibc_tbz2 = r.rlocation("files/testdata_glibc");
-        let ncurses_tbz2 = r.rlocation("files/testdata_ncurses");
-        let nano_tbz2 = r.rlocation("files/testdata_nano");
+        let glibc_tbz2 = runfiles::rlocation!(r, "files/testdata_glibc");
+        let ncurses_tbz2 = runfiles::rlocation!(r, "files/testdata_ncurses");
+        let nano_tbz2 = runfiles::rlocation!(r, "files/testdata_nano");
 
         let request_header_regexes = vec![Regex::new("/usr/include")?];
         let want_headers = BTreeSet::from([PathBuf::from("/usr/include")]);

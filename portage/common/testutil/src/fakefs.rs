@@ -11,7 +11,7 @@ use std::process::Command;
 pub fn fakefs_path() -> Result<PathBuf> {
     let r = Runfiles::create()?;
 
-    let fakefs = r.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
+    let fakefs = runfiles::rlocation!(r, "cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
     if !fakefs.try_exists()? {
         bail!("{} doesn't exist", fakefs.display());
     }

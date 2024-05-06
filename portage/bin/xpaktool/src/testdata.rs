@@ -12,7 +12,10 @@ pub const BINPKG_CLEAN_ENV: &str = "nano-clean-env.tbz2";
 
 pub fn testdata(path: impl AsRef<Path>) -> Result<PathBuf> {
     match runfiles::Runfiles::create() {
-        Ok(r) => Ok(r.rlocation(Path::new("cros/bazel/portage/common/testdata").join(path))),
+        Ok(r) => Ok(runfiles::rlocation!(
+            r,
+            Path::new("cros/bazel/portage/common/testdata").join(path)
+        )),
         Err(_) => Ok(Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../common/testdata")
             .join(path)),

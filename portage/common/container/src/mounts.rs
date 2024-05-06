@@ -145,10 +145,12 @@ pub(crate) fn mount_overlayfs(
         short_lower_dirs.push(name);
     }
 
-    let runfiles = runfiles::Runfiles::create()?;
-    let helper_path = runfiles
-        .rlocation("cros/bazel/portage/bin/overlayfs_mount_helper/overlayfs_mount_helper")
-        .canonicalize()?;
+    let r = runfiles::Runfiles::create()?;
+    let helper_path = runfiles::rlocation!(
+        r,
+        "cros/bazel/portage/bin/overlayfs_mount_helper/overlayfs_mount_helper"
+    )
+    .canonicalize()?;
 
     // overlayfs supports up to 500 lower directories, but we often want to go beyond that.
     // We workaround it by stacking two overlayfs. This way, we can support up to 250,000 lower

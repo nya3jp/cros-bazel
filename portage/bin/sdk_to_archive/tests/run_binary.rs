@@ -61,13 +61,16 @@ fn tar_round_trip() -> Result<()> {
     let input = tmp_dir.join("root");
     create_sysroot(&input)?;
 
-    let status = Command::new(r.rlocation(Path::new(BASE_DIR).join("sdk_to_archive")))
-        .env("RUST_BACKTRACE", "full")
-        .arg("--layer")
-        .arg(&input)
-        .arg("--output")
-        .arg(&output)
-        .status()?;
+    let status = Command::new(runfiles::rlocation!(
+        r,
+        Path::new(BASE_DIR).join("sdk_to_archive")
+    ))
+    .env("RUST_BACKTRACE", "full")
+    .arg("--layer")
+    .arg(&input)
+    .arg("--output")
+    .arg(&output)
+    .status()?;
 
     assert!(status.success());
 

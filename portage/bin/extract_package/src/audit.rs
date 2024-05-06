@@ -70,9 +70,9 @@ struct AuditfuseDaemon {
 
 impl AuditfuseDaemon {
     pub fn start(audit_file: &Path, orig_dir: &Path, mount_dir: &Path) -> Result<Self> {
-        let runfiles = Runfiles::create()?;
+        let r = Runfiles::create()?;
         let auditfuse_path =
-            runfiles.rlocation("cros/bazel/portage/bin/auditfuse/auditfuse_/auditfuse");
+            runfiles::rlocation!(r, "cros/bazel/portage/bin/auditfuse/auditfuse_/auditfuse");
 
         let status = Command::new(auditfuse_path)
             .arg("--verbose")
@@ -138,15 +138,17 @@ fn drive_binary_package_with_auditfuse(
     let mut settings = ContainerSettings::new();
     settings.push_layer(fuse_dir)?;
 
-    let runfiles = Runfiles::create()?;
+    let r = Runfiles::create()?;
     settings.push_bind_mount(BindMount {
-        source: runfiles.rlocation("files/bash-static"),
+        source: runfiles::rlocation!(r, "files/bash-static"),
         mount_path: PathBuf::from("/bin/bash"),
         rw: false,
     });
     settings.push_bind_mount(BindMount {
-        source: runfiles
-            .rlocation("cros/bazel/portage/bin/drive_binary_package/drive_binary_package.sh"),
+        source: runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/drive_binary_package/drive_binary_package.sh"
+        ),
         mount_path: PathBuf::from("/bin/drive_binary_package.sh"),
         rw: false,
     });

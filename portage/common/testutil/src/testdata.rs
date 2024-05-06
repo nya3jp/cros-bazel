@@ -32,8 +32,7 @@ pub fn workspace_root() -> Result<PathBuf> {
 
 #[cfg(feature = "bazel")]
 pub fn runfiles_root() -> Result<PathBuf> {
-    let r = runfiles::Runfiles::create()?;
-    Ok(r.rlocation("cros"))
+    Ok(runfiles::rlocation!(runfiles::Runfiles::create()?, "cros"))
 }
 
 #[cfg(not(feature = "bazel"))]

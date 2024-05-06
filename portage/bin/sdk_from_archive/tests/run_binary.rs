@@ -15,9 +15,12 @@ fn base_test(input: &str, expected_status: i32) -> Result<()> {
 
     let output_dir = SafeTempDir::new()?;
 
-    let mut command = Command::new(r.rlocation(Path::new(BASE_DIR).join("sdk_from_archive")));
+    let mut command = Command::new(runfiles::rlocation!(
+        r,
+        Path::new(BASE_DIR).join("sdk_from_archive")
+    ));
 
-    let input = r.rlocation(Path::new(BASE_DIR).join(input));
+    let input = runfiles::rlocation!(r, Path::new(BASE_DIR).join(input));
 
     command
         .arg("--input")

@@ -29,8 +29,11 @@ fn test_generate_repo() -> Result<()> {
     let alchemist_path = match option_env!("CARGO_BIN_EXE_alchemist") {
         Some(path) => PathBuf::from(path),
         None => {
-            let runfiles = Runfiles::create()?;
-            runfiles.rlocation("cros/bazel/portage/bin/alchemist/src/bin/alchemist/alchemist")
+            let r = Runfiles::create()?;
+            runfiles::rlocation!(
+                r,
+                "cros/bazel/portage/bin/alchemist/src/bin/alchemist/alchemist"
+            )
         }
     };
 

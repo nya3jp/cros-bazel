@@ -24,7 +24,6 @@ rust_binary(
         "//bazel/portage/common/cliutil",
         "//bazel/portage/common/fileutil",
         "//bazel/portage/common/processes",
-        "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:chrono",
         "@alchemy_crates//:clap",
@@ -34,6 +33,7 @@ rust_binary(
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:sha2",
+        "@rules_rust//tools/runfiles",
     ],
 )
 

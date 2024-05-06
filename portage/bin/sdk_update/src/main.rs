@@ -38,7 +38,7 @@ fn do_main() -> Result<()> {
     settings.set_mutable_base_dir(mutable_base_dir.path());
     settings.apply_common_args(&args.common)?;
 
-    let runfiles = runfiles::Runfiles::create()?;
+    let r = runfiles::Runfiles::create()?;
 
     let tarballs_dir = Path::new("/stage/tarballs");
 
@@ -53,9 +53,10 @@ fn do_main() -> Result<()> {
     }
 
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(
-            &runfiles.rlocation("cros/bazel/portage/bin/sdk_update/setup.sh"),
-        )?,
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/sdk_update/setup.sh"
+        ))?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
     });

@@ -148,11 +148,13 @@ impl BinaryPackage {
     /// Extracts the contents of the archive to the specified directory.
     /// It uses fakefs to apply ownership information.
     pub fn extract_image(&mut self, output_dir: &Path, use_fakefs: bool) -> Result<()> {
-        let runfiles = Runfiles::create()?;
-        let fakefs_path = runfiles.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
-        let preload_path =
-            runfiles.rlocation("cros/bazel/portage/bin/fakefs/preload/libfakefs_preload.so");
-        let zstd_path = runfiles.rlocation("zstd/zstd");
+        let r = Runfiles::create()?;
+        let fakefs_path = runfiles::rlocation!(r, "cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
+        let preload_path = runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/fakefs/preload/libfakefs_preload.so"
+        );
+        let zstd_path = runfiles::rlocation!(r, "zstd/zstd");
 
         let mut tarball = self.new_tarball_reader()?;
 
@@ -326,9 +328,10 @@ mod tests {
     use super::*;
 
     fn testfile() -> Result<PathBuf> {
-        let runfiles = Runfiles::create()?;
-        Ok(runfiles.rlocation(
-            "cros/bazel/portage/common/portage/binarypackage/testdata/binpkg-test-1.2.3.tbz2",
+        let r = Runfiles::create()?;
+        Ok(runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/common/portage/binarypackage/testdata/binpkg-test-1.2.3.tbz2"
         ))
     }
 
@@ -399,8 +402,8 @@ mod tests {
         let mut bp = binary_package()?;
 
         // Just ensure that tar accepts the tarball without any error.
-        let runfiles = Runfiles::create()?;
-        let zstd_path = runfiles.rlocation("zstd/zstd");
+        let r = Runfiles::create()?;
+        let zstd_path = runfiles::rlocation!(r, "zstd/zstd");
         let mut tar = Command::new(locate_system_binary("tar")?)
             .arg("-I")
             .arg(&zstd_path)
@@ -430,8 +433,8 @@ mod tests {
         assert!(hello_path.try_exists()?);
 
         // File ownership info should be available via fakefs.
-        let runfiles = Runfiles::create()?;
-        let fakefs_path = runfiles.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
+        let r = Runfiles::create()?;
+        let fakefs_path = runfiles::rlocation!(r, "cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
         let output = Command::new(fakefs_path)
             .arg("stat")
             .arg("--format=%u:%g")

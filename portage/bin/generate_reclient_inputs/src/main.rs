@@ -29,11 +29,12 @@ fn do_main() -> Result<()> {
     let mut settings = ContainerSettings::new();
     settings.apply_common_args(&args.common)?;
 
-    let runfiles = runfiles::Runfiles::create()?;
+    let r = runfiles::Runfiles::create()?;
 
     settings.push_bind_mount(BindMount {
-        source: resolve_symlink_forest(&runfiles.rlocation(
-            "cros/bazel/portage/bin/generate_reclient_inputs/generate_reclient_inputs.sh",
+        source: resolve_symlink_forest(&runfiles::rlocation!(
+            r,
+            "cros/bazel/portage/bin/generate_reclient_inputs/generate_reclient_inputs.sh"
         ))?,
         mount_path: PathBuf::from(MAIN_SCRIPT),
         rw: false,
