@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use std::{
+    collections::BTreeSet,
     fmt::Display,
     fs::DirBuilder,
     os::unix::fs::DirBuilderExt,
@@ -99,6 +100,7 @@ fn drive_binary_package_with_auditfuse(
     cpf: &str,
     root_dir: &Path,
     vdb_dir: &Path,
+    lookup_allowlist: &BTreeSet<&Path>,
 ) -> Result<NamedTempFile> {
     let stage_dir = TempDir::new()?;
     let stage_dir = stage_dir.path();
@@ -106,8 +108,20 @@ fn drive_binary_package_with_auditfuse(
     let mut builder = DirBuilder::new();
     builder.mode(0o755);
     builder.recursive(true);
+
     for name in MOCK_DIRS {
         builder.create(stage_dir.join(name))?;
+    }
+
+    // Directories listed in the lookup allowlist must exist. See `filter_audit_entry`.
+    for rel_path in lookup_allowlist {
+        builder.create(
+            stage_dir.join(
+                rel_path
+                    .strip_prefix("/")
+                    .with_context(|| format!("Must be an absolute path: {}", rel_path.display()))?,
+            ),
+        )?;
     }
 
     let audit_file = tempfile::Builder::new()
@@ -217,48 +231,59 @@ fn parse_audit_file(path: &Path) -> Result<Vec<AuditEntry>> {
         .collect::<Result<Vec<_>>>()
 }
 
-const LOOKUP_ALLOWLIST: &[&str] = &[
-    "/DURABLE_TREE", // Needed internally to mount containers
-    "/bin",
-    "/dev",
-    "/host", // Needed internally to mount containers
-    "/proc",
-    "/sys",
+/// A static list of directories allowlisted for lookup.
+const LOOKUP_ALLOWED_DIRS: &[&str] = &[
+    // Directories listed here must satisfy certain conditions to avoid false positives.
+    // See comments in [`filter_audit_entry`] for details.
+    "/bin", "/dev",
+    // /host is used for pivot_root during the setup of a container, but is empty afterwards.
+    "/host", "/proc", "/sys",
 ];
 
-fn filter_audit_entry(entry: &AuditEntry, vdb_root_dir: &Path) -> bool {
-    if entry.access_type == AccessType::Lookup {
-        // Allow allowlisted files.
-        if let Some(path) = entry.path.to_str() {
-            if LOOKUP_ALLOWLIST.contains(&path) {
-                return false;
-            }
-        }
-
-        // Allow looking up the VDB directory of the current package and its ancestors.
-        if vdb_root_dir.ancestors().any(|p| entry.path == p) {
-            return false;
-        }
+fn filter_audit_entry(
+    entry: &AuditEntry,
+    vdb_root_dir: &Path,
+    lookup_allowlist: &BTreeSet<&Path>,
+) -> bool {
+    // It is known to safe to ignore an entry in the following cases:
+    //
+    // 1. Ignoring a lookup of a directory or a file that universally exists on a functioning system
+    //    (e.g. /bin). In the case of a directory, it must exist at the time of auditing; otherwise,
+    //    ignoring a lookup may result in false negatives. For example, if a lookup of /bin is
+    //    ignored while the directory does not exist, stat("/bin/ls") incorrectly leaves no audit
+    //    entry because the kernel does not look up /bin/ls after failing to look up /bin.
+    // 2. Ignoring a lookup or readdir of all descendant directories/files under a directory that
+    //    is known to exclusively belong to the current package (e.g. VDB directory).
+    if entry.access_type == AccessType::Lookup && lookup_allowlist.contains(entry.path.as_path()) {
+        return false;
     }
-
-    // Allow inspecting the VDB directory of the current package.
     if entry.path.starts_with(vdb_root_dir) {
         return false;
     }
-
+    // HACK: /DURABLE_TREE is a regular file looked up internally by the durabletree crate on
+    // setting up a container.
+    if entry.path == Path::new("/DURABLE_TREE") {
+        return false;
+    }
     true
 }
 
 pub fn audit_hooks(cpf: &str, root_dir: &Path, vdb_dir: &Path) -> Result<Vec<AuditEntry>> {
-    let audit_file = drive_binary_package_with_auditfuse(cpf, root_dir, vdb_dir)?;
+    let vdb_root_dir = get_vdb_dir(root_dir, cpf);
+    let lookup_allowlist: BTreeSet<&Path> = LOOKUP_ALLOWED_DIRS
+        .iter()
+        .map(Path::new)
+        .chain(vdb_root_dir.ancestors())
+        .collect();
+
+    let audit_file =
+        drive_binary_package_with_auditfuse(cpf, root_dir, vdb_dir, &lookup_allowlist)?;
 
     let entries = parse_audit_file(audit_file.path())?;
 
-    let vdb_root_dir = get_vdb_dir(root_dir, cpf);
-
     let entries = entries
         .into_iter()
-        .filter(|e| filter_audit_entry(e, &vdb_root_dir))
+        .filter(|e| filter_audit_entry(e, &vdb_root_dir, &lookup_allowlist))
         .collect();
 
     Ok(entries)
@@ -310,7 +335,7 @@ PF=test-1
         )?;
         std::fs::write(vdb_dir.join("repository"), "chromiumos")?;
 
-        audit_hooks("virtual/test-1", Path::new("/"), vdb_dir)
+        audit_hooks("virtual/test-1", Path::new("/build/amd64-generic"), vdb_dir)
     }
 
     #[test]
@@ -459,6 +484,61 @@ pkg_postinst() {
     }
 
     #[test]
+    fn test_audit_hooks_allowlist() -> Result<()> {
+        let entries = run_audit_hooks(
+            r#"
+do_lookup() {
+    # These entries are ignored.
+    : < /DURABLE_TREE
+    : < /bin
+    : < /dev
+    : < /host
+    : < /proc
+    : < /sys
+    : < ${ROOT}
+    : < ${ROOT}/var
+    : < ${ROOT}/var/db
+    : < ${ROOT}/var/db/pkg
+    : < ${ROOT}/var/db/pkg/virtual
+    : < ${ROOT}/var/db/pkg/virtual/test-1
+    : < ${ROOT}/var/db/pkg/virtual/test-1/foo
+    : < ${ROOT}/var/db/pkg/virtual/test-1/foo/bar
+
+    # These entries are detected.
+    : < /usr
+    : < /var/cache
+    : < ${ROOT}/usr
+    : < ${ROOT}/var/cache
+}
+
+pkg_setup() {
+    do_lookup
+}
+
+pkg_preinst() {
+    do_lookup
+}
+
+pkg_postinst() {
+    do_lookup
+}
+"#,
+        )?;
+        assert_eq!(
+            entries,
+            vec![
+                lookup("/usr"),
+                lookup("/var"),
+                lookup("/var/cache"),
+                lookup("/build/amd64-generic/usr"),
+                // /build/amd64-generic/var is ignored because it's an ancestor of the VDB dir.
+                lookup("/build/amd64-generic/var/cache"),
+            ],
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_audit_hooks_allow_vdb() -> Result<()> {
         // Reading from the VDB directory of the current package is allowed.
         let entries = run_audit_hooks(
@@ -500,7 +580,7 @@ pkg_setup() {
 }
 "#,
         )?;
-        assert_eq!(entries, vec![lookup("/etc"), lookup("/etc/foobar.conf"),]);
+        assert_eq!(entries, vec![lookup("/etc"), lookup("/etc/foobar.conf")]);
         Ok(())
     }
 }
