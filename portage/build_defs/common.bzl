@@ -26,15 +26,16 @@ BinaryPackageInfo, _new_binary_package_info = provider(
             str: The category of this package, e.g. "chromeos-base".
         """,
         "contents": """
-            ContentsLayersInfo: Locates installed/staged contents layers that
-            are used to implement fast package installation.
+            ContentLayerTypesInfo: Locates the full/internal and
+            installed/staged contents layers that are used to implement fast
+            package installation.
 
-            Since a BinaryPackageInfo contains exactly one ContentsLayersInfo,
-            a binary package can be installed only to a single sysroot directory
-            that is specified statically in the rule building BinaryPackageInfo.
-            An implication of this is that, when building a host package, we
-            have to statically choose whether to install it to "/" or
-            "/build/amd64-host".
+            Since a BinaryPackageInfo contains exactly one
+            ContentLayerTypesInfo, a binary package can be installed only to a
+            single sysroot directory that is specified statically in the rule
+            building BinaryPackageInfo. An implication of this is that, when
+            building a host package, we have to statically choose whether to
+            install it to "/" or "/build/amd64-host".
         """,
         "direct_runtime_deps": """
             tuple[File]: Direct runtime dependencies of the package.
@@ -66,12 +67,34 @@ BinaryPackageInfo, _new_binary_package_info = provider(
     init = _binary_package_info_init,
 )
 
-ContentsLayersInfo = provider(
+ContentLayerTypesInfo = provider(
     """
-    Locates an installed/staged contents layer for a package.
+    Locates a the full/internal contents layers for a package.
 
     This is an essentially a named struct. It always appears in an attribute of
     BinaryPackageInfo.
+    """,
+    fields = {
+        "full": """
+            ContentLayersInfo: The layers to use when building an SDK tarball
+            or a full OS image. These layers contain the full vdb that is
+            required for `emerge` to function correctly.
+        """,
+        "internal": """
+            ContentLayersInfo: The layers to use when building other packages
+            using bazel. These layers have a vdb that drops the revision number
+            and non-essential entries.
+        """,
+        "sysroot": """
+            str: A sysroot directory path where the package is installed. It
+            must be either "/build/<board>" or "/".
+        """,
+    },
+)
+
+ContentLayersInfo = provider(
+    """
+    Locates an installed/staged contents layer for a package.
     """,
     fields = {
         "installed": """
@@ -80,10 +103,6 @@ ContentsLayersInfo = provider(
         """,
         "staged": """
             File: A durable tree directory containing a staged contents layer.
-        """,
-        "sysroot": """
-            str: A sysroot directory path where the package is installed. It
-            must be either "/build/<board>" or "/".
         """,
     },
 )

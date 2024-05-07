@@ -57,6 +57,13 @@ struct Cli {
     /// Most of the vdb is not needed after a package has been installed.
     #[arg(long)]
     sparse_vdb: bool,
+
+    /// Discard the revision from the vdb path.
+    ///
+    /// Useful to avoid rebuilding transitive deps on revbumps if the outputs
+    /// of the package don't change.
+    #[arg(long)]
+    drop_revision: bool,
 }
 
 fn read_xattrs(path: &Path) -> Result<HashMap<OsString, Vec<u8>>> {
@@ -197,9 +204,11 @@ fn do_main() -> Result<()> {
     let mut contents: Vec<u8> = Vec::new();
     generate_vdb_contents(&mut contents, &image_dir)?;
 
-    // We don't use category_pf() because we want to erase the revision
-    // number from the layer.
-    let category_pf = binary_package.category_p();
+    let category_pf = if args.drop_revision {
+        binary_package.category_p()
+    } else {
+        binary_package.category_pf()
+    };
 
     let vdb_dir = get_vdb_dir(&args.output_directory.join(&args.vdb_prefix), category_pf);
 

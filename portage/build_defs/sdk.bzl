@@ -188,18 +188,17 @@ def _sdk_install_deps_impl(ctx):
         executable_fast_install_packages =
             ctx.executable._fast_install_packages,
         progress_message = ctx.attr.progress_message,
+        full_vdb = ctx.attr.full_vdb,
     )
 
-    layers = deps.sparse_layers
-
     return [
-        DefaultInfo(files = depset(layers)),
+        DefaultInfo(files = depset(deps.layers)),
         OutputGroupInfo(
             logs = depset([deps.log_file]),
             traces = depset([deps.trace_file]),
         ),
         SDKInfo(
-            layers = sdk.layers + layers,
+            layers = sdk.layers + deps.layers,
             packages = depset(transitive = [sdk.packages, install_set]),
         ),
     ]
@@ -219,6 +218,14 @@ sdk_install_deps = rule(
             If set, the packages are installed into the board's sysroot,
             otherwise they are installed into the host's sysroot.
             """,
+        ),
+        "full_vdb": attr.bool(
+            doc = """
+            If true, the resulting layers will contain a full vdb. This allows
+            `emerge` to work correctly. Otherwise the layers will contain a vdb
+            which is only suitable for building packages using bazel.
+            """,
+            default = False,
         ),
         "out": attr.string(
             doc = "Output directory name. Defaults to the target name.",

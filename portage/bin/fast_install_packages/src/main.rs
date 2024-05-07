@@ -341,6 +341,7 @@ fn install_package(
     root_dir: &Path,
     mutable_base_dir: &Path,
     ensure_skip_hooks: bool,
+    drop_revision: bool,
 ) -> Result<()> {
     let _span = info_span!(
         "install",
@@ -352,7 +353,11 @@ fn install_package(
         .with_context(|| format!("Failed to open {}", spec.input_binary_package.display()))?;
 
     // We use the category_p as the category_pf because we want to elide the revision number.
-    let category_pf = binary_package.category_p();
+    let category_pf = if drop_revision {
+        binary_package.category_p()
+    } else {
+        binary_package.category_pf()
+    };
 
     tracing::info!("Installing {}", category_pf);
 
@@ -466,6 +471,12 @@ struct Args {
     /// Abort if we have to run hooks. Used for testing.
     #[arg(long)]
     ensure_skip_hooks: bool,
+
+    /// Discard the revision when computing the vdb path.
+    ///
+    /// Set this to true if the input layers also had their revision numbers dropped.
+    #[arg(long)]
+    drop_revision: bool,
 }
 
 fn do_main() -> Result<()> {
@@ -503,6 +514,7 @@ fn do_main() -> Result<()> {
             &args.root_dir,
             tmpfs.path(),
             args.ensure_skip_hooks,
+            args.drop_revision,
         )?;
     }
 

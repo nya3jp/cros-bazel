@@ -41,6 +41,7 @@ def _build_image_impl(ctx):
         executable_fast_install_packages =
             ctx.executable._fast_install_packages,
         progress_message = "Setting up SDK to build image",
+        full_vdb = True,
     )
 
     # Compute arguments and inputs to build_image.
@@ -56,13 +57,12 @@ def _build_image_impl(ctx):
         "--image-file-name=" + ctx.attr.image_file_name,
     ])
 
-    # TODO: Do we need to pass in layers that contain the full vdb?
     args.add_all(
-        sdk.layers + deps.sparse_layers + overlays.layers,
+        sdk.layers + deps.layers + overlays.layers,
         format_each = "--layer=%s",
         expand_directories = False,
     )
-    direct_inputs.extend(sdk.layers + deps.sparse_layers + overlays.layers)
+    direct_inputs.extend(sdk.layers + deps.layers + overlays.layers)
 
     args.add_all(ctx.files.files, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(ctx.files.files)

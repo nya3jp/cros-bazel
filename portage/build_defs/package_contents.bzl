@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "ContentsLayersInfo")
+load("common.bzl", "ContentLayerTypesInfo", "ContentLayersInfo")
 
 def _generate_contents_layer(
         ctx,
@@ -12,6 +12,7 @@ def _generate_contents_layer(
         vdb_prefix,
         host,
         sparse_vdb,
+        drop_revision,
         executable_action_wrapper,
         executable_extract_package):
     output_contents_dir = ctx.actions.declare_directory(output_name)
@@ -32,6 +33,9 @@ def _generate_contents_layer(
 
     if sparse_vdb:
         arguments.add("--sparse-vdb")
+
+    if drop_revision:
+        arguments.add("--drop-revision")
 
     if host:
         arguments.add("--host")
@@ -77,7 +81,7 @@ def generate_contents(
         executable_extract_package: File: An executable file of extract_package.
 
     Returns:
-        ContentsLayersInfo: A struct suitable to set in
+        ContentLayerTypesInfo: A struct suitable to set in
             BinaryPackageInfo.contents.
     """
     if board:
@@ -91,30 +95,60 @@ def generate_contents(
 
     prefix = sysroot.lstrip("/")
 
-    return ContentsLayersInfo(
+    return ContentLayerTypesInfo(
         sysroot = sysroot,
-        installed = _generate_contents_layer(
-            ctx = ctx,
-            binary_package = binary_package,
-            output_name = "%s.%s.installed.contents" % (output_prefix, name),
-            image_prefix = prefix,
-            vdb_prefix = prefix,
-            host = host,
-            # We don't need most of the vdb once the package has been installed.
-            sparse_vdb = True,
-            executable_action_wrapper = executable_action_wrapper,
-            executable_extract_package = executable_extract_package,
+        full = ContentLayersInfo(
+            installed = _generate_contents_layer(
+                ctx = ctx,
+                binary_package = binary_package,
+                output_name = "%s.%s.full.installed.contents" % (output_prefix, name),
+                image_prefix = prefix,
+                vdb_prefix = prefix,
+                host = host,
+                sparse_vdb = False,
+                drop_revision = False,
+                executable_action_wrapper = executable_action_wrapper,
+                executable_extract_package = executable_extract_package,
+            ),
+            staged = _generate_contents_layer(
+                ctx = ctx,
+                binary_package = binary_package,
+                output_name = "%s.%s.full.staged.contents" % (output_prefix, name),
+                image_prefix = ".image",
+                vdb_prefix = prefix,
+                host = host,
+                sparse_vdb = False,
+                drop_revision = False,
+                executable_action_wrapper = executable_action_wrapper,
+                executable_extract_package = executable_extract_package,
+            ),
         ),
-        staged = _generate_contents_layer(
-            ctx = ctx,
-            binary_package = binary_package,
-            output_name = "%s.%s.staged.contents" % (output_prefix, name),
-            image_prefix = ".image",
-            vdb_prefix = prefix,
-            host = host,
-            # We need the full vdb so we can run the install hooks.
-            sparse_vdb = False,
-            executable_action_wrapper = executable_action_wrapper,
-            executable_extract_package = executable_extract_package,
+        internal = ContentLayersInfo(
+            installed = _generate_contents_layer(
+                ctx = ctx,
+                binary_package = binary_package,
+                output_name = "%s.%s.sparse.installed.contents" % (output_prefix, name),
+                image_prefix = prefix,
+                vdb_prefix = prefix,
+                host = host,
+                # We don't need most of the vdb once the package has been installed.
+                sparse_vdb = True,
+                drop_revision = True,
+                executable_action_wrapper = executable_action_wrapper,
+                executable_extract_package = executable_extract_package,
+            ),
+            staged = _generate_contents_layer(
+                ctx = ctx,
+                binary_package = binary_package,
+                output_name = "%s.%s.sparse.staged.contents" % (output_prefix, name),
+                image_prefix = ".image",
+                vdb_prefix = prefix,
+                host = host,
+                # We need the full vdb so we can run the install hooks.
+                sparse_vdb = False,
+                drop_revision = True,
+                executable_action_wrapper = executable_action_wrapper,
+                executable_extract_package = executable_extract_package,
+            ),
         ),
     )

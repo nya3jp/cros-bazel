@@ -35,7 +35,8 @@ def install_deps(
         install_set,
         executable_action_wrapper,
         executable_fast_install_packages,
-        progress_message):
+        progress_message,
+        full_vdb):
     """
     Creates an action which builds file system layers in which the build dependencies are installed.
 
@@ -61,6 +62,9 @@ def install_deps(
         executable_fast_install_packages: File: An executable file of
             fast_install_packages.
         progress_message: str: Progress message for the installation action.
+        full_vdb: bool: If true, the layers will contain a full vdb. Set this
+            to true when building an SDK tarball, or an image where `emerge`
+            could be invoked.
 
     Returns:
         struct where:
@@ -125,6 +129,9 @@ def install_deps(
     ])
     args.add("--root-dir=%s" % sysroot)
 
+    if not full_vdb:
+        args.add("--drop-revision")
+
     input_layers = sdk.layers + overlays.layers + portage_configs
     args.add_all(
         input_layers,
@@ -133,7 +140,7 @@ def install_deps(
     )
     inputs = input_layers[:]
 
-    new_layers = []
+    layers = []
 
     for i, package in enumerate(install_list):
         package_output_prefix = "%s.%d" % (output_prefix, i)
@@ -143,6 +150,13 @@ def install_deps(
         output_postinst = ctx.actions.declare_directory(
             "%s.postinst" % package_output_prefix,
         )
+
+        if full_vdb:
+            installed_layer = package.contents.full.installed
+            staged_layer = package.contents.full.staged
+        else:
+            installed_layer = package.contents.internal.installed
+            staged_layer = package.contents.internal.staged
 
         if package.contents.sysroot != sysroot:
             fail(
@@ -159,8 +173,8 @@ def install_deps(
             "--install",
             [
                 package.partial,
-                package.contents.installed,
-                package.contents.staged,
+                installed_layer,
+                staged_layer,
                 output_preinst,
                 output_postinst,
             ],
@@ -170,13 +184,13 @@ def install_deps(
 
         inputs.extend([
             package.partial,
-            package.contents.installed,
-            package.contents.staged,
+            installed_layer,
+            staged_layer,
         ])
         outputs.extend([output_preinst, output_postinst])
-        new_layers.extend([
+        layers.extend([
             output_preinst,
-            package.contents.installed,
+            installed_layer,
             output_postinst,
         ])
 
@@ -203,7 +217,7 @@ def install_deps(
     )
 
     return struct(
-        sparse_layers = new_layers,
+        layers = layers,
         log_file = output_log_file,
         trace_file = output_profile_file,
     )
