@@ -19,12 +19,6 @@ if [[ -d /home/root/chrome_root/src/third_party/depot_tools ]]; then
   export CHROME_ORIGIN="LOCAL_SOURCE"
 fi
 
-# cros_sdk creates this directory.
-# This is needed for stage1 build because otherwise it fails trying to create
-# /var/cache/distfiles/ccache/tmp
-# TODO(b/277646771): Disable ccache to see if this can be removed.
-mkdir -p /var/cache/chromeos-cache/distfiles
-
 export FEATURES="${FEATURES} fakeroot"
 
 exec "$@"

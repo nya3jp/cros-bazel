@@ -53,6 +53,8 @@ fn do_main() -> Result<()> {
         "--exclude=./etc/make.conf",
         "--exclude=./etc/make.conf.*",
         "--exclude=./etc/portage",
+        // This is a symlink to `chromeos-cache/distfiles` which we don't have.
+        "--exclude=./var/cache/distfiles",
         "-C",
         &args.output.to_string_lossy(),
     ]);
