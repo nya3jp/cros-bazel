@@ -26,9 +26,9 @@ const envName = "AUDITFUSE_DAEMONIZE_STEP"
 // If err is not nil, the current process should exit abnormally immediately.
 // If exit is true, the current process should exit normally immediately.
 // If exit is false, the current process will become a daemon. Perform
-// necessary setups and call Stop once it's done. Note that, at this point,
-// stdin/stdout are connected to /dev/null and stderr is connected to a pipe
-// where you can possibly write error messages.
+// necessary setups and call Stop once it's done.
+//
+// Daemonization fails if a daemon process exits without calling Finish.
 func Start() (exit bool, err error) {
 	step := os.Getenv(envName)
 	switch step {
@@ -48,7 +48,11 @@ func Start() (exit bool, err error) {
 		cmd.Env = []string{
 			fmt.Sprintf("%s=2", envName),
 		}
-		cmd.Stderr = w
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.ExtraFiles = []*os.File{
+			w, // Set the writer end of the pipe to FD 3.
+		}
 		cmd.SysProcAttr = &syscall.SysProcAttr{
 			Setsid: true,
 		}
@@ -58,14 +62,11 @@ func Start() (exit bool, err error) {
 
 		w.Close()
 
-		c, err := io.Copy(os.Stderr, r)
-		if err != nil {
-			return false, err
-		}
+		b, _ := io.ReadAll(r)
+		r.Close()
 
-		// Exit abnormally if the daemon process wrote something to stderr.
-		if c > 0 {
-			return false, errors.New("daemon wrote something to stderr")
+		if string(b) != "ok" {
+			return false, errors.New("failed to start daemon")
 		}
 
 		// Exit the current process now.
@@ -91,7 +92,11 @@ func Start() (exit bool, err error) {
 		cmd.Env = []string{
 			fmt.Sprintf("%s=3", envName),
 		}
+		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+		cmd.ExtraFiles = []*os.File{
+			os.NewFile(3, "<pipe>"),
+		}
 		if err := cmd.Start(); err != nil {
 			return false, err
 		}
@@ -109,13 +114,16 @@ func Start() (exit bool, err error) {
 
 // Finish finishes daemonizing the current process.
 //
-// Call Start before calling Finish. Finish closes stderr (precisely, it is
-// connected to stderr) so you cannot report errors once it returns. Finish
-// changes the current working directory to /, so make sure to resolve relative
-// file paths beforehand.
+// Call Finish in the daemon process once initialization is complete. It
+// communicates the initialization success to the first process, and let it exit
+// normally.
+// Finish changes the current working directory to /, so make sure to resolve
+// relative file paths beforehand.
 func Finish() {
 	os.Chdir("/")
-	// Dup stdout to stderr, which should redirect it to /dev/null.
-	// This should trigger the first process to exit.
-	unix.Dup2(1, 2)
+
+	// Writing "ok" and closing the pipe tells success to the first process.
+	w := os.NewFile(3, "<pipe>")
+	io.WriteString(w, "ok")
+	w.Close()
 }

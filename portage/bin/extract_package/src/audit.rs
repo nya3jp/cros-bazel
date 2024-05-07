@@ -74,6 +74,7 @@ impl AuditfuseDaemon {
             runfiles.rlocation("cros/bazel/portage/bin/auditfuse/auditfuse_/auditfuse");
 
         let status = Command::new(auditfuse_path)
+            .arg("--verbose")
             .arg("--output")
             .arg(audit_file)
             .arg(orig_dir)

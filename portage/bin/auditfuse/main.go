@@ -7,7 +7,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -66,10 +65,6 @@ var app = &cli.App{
 		}
 		origDir := args[0]
 		mountDir := args[1]
-
-		if (verbose || debug) && !foreground {
-			return errors.New("--verbose and --debug are valid only with --foreground")
-		}
 
 		if !foreground {
 			if exit, err := daemonize.Start(); err != nil {
