@@ -125,11 +125,6 @@ fn can_skip_install_hooks(staged_contents_dir: &Path, cpf: &str, root_dir: &Path
     // TODO: Avoid assuming that the staged contents dir is a durable tree.
     let tree = DurableTree::expand(staged_contents_dir)?;
 
-    // TODO(b/338093333): Remove this hack.
-    if cpf.starts_with("sys-apps/baselayout-") {
-        return Ok(false);
-    }
-
     for layer_dir in tree.layers().iter().rev() {
         let vdb_dir = get_vdb_dir(
             &layer_dir.join(
