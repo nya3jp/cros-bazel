@@ -260,3 +260,138 @@ fn invalid_options() -> Result<()> {
 
     Ok(())
 }
+
+// Verify that all ebuild-specific functions defined in PMS are provided.
+#[test]
+fn ebuild_functions() -> Result<()> {
+    // All ebuild-specific functions defined in PMS 8.
+    // https://projects.gentoo.org/pms/8/pms.html#x1-12000012.3
+    const FUNCS: &[&str] = &[
+        // 12.3.1 Failure behavior and related commands
+        "nonfatal",
+        // 12.3.3 Sandbox commands
+        "addread",
+        "addwrite",
+        "addpredict",
+        "adddeny",
+        // 12.3.4 Package manager query commands
+        "has_version",
+        "best_version",
+        // 12.3.5 Output commands
+        "einfo",
+        "einfon",
+        "elog",
+        "ewarn",
+        "eqawarn",
+        "eerror",
+        "ebegin",
+        "eend",
+        // 12.3.6 Error commands
+        "die",
+        "assert",
+        // 12.3.7 Patch commands
+        "eapply",
+        "eapply_user",
+        // 12.3.8 Build commands
+        "econf",
+        "emake",
+        "einstall",
+        // 12.3.9 Installation commands
+        "dobin",
+        "doconfd",
+        "dodir",
+        "dodoc",
+        "doenvd",
+        "doexe",
+        "dohard",
+        "doheader",
+        "dohtml",
+        "doinfo",
+        "doinitd",
+        "doins",
+        "dolib.a",
+        "dolib.so",
+        "dolib",
+        "doman",
+        "domo",
+        "dosbin",
+        "dosym",
+        "fowners",
+        "fperms",
+        "keepdir",
+        "newbin",
+        "newconfd",
+        "newdoc",
+        "newenvd",
+        "newexe",
+        "newheader",
+        "newinitd",
+        "newins",
+        "newlib.a",
+        "newlib.so",
+        "newman",
+        "newsbin",
+        // 12.3.10 Commands affecting install destinations
+        "into",
+        "insinto",
+        "exeinto",
+        "docinto",
+        "insopts",
+        "diropts",
+        "exeopts",
+        "libopts",
+        // 12.3.11 Commands controlling manipulation of files in the staging area
+        "docompress",
+        "dostrip",
+        // 12.3.12 USE list functions
+        "use",
+        "usev",
+        "useq",
+        "use_with",
+        "use_enable",
+        "usex",
+        "in_iuse",
+        // 12.3.13 Text list functions
+        "has",
+        "hasv",
+        "hasq",
+        // 12.3.14 Version manipulation and comparison commands
+        // These functions are provided in the binary package's environment.
+        // "ver_cut",
+        // "ver_rs",
+        // "ver_test",
+        // 12.3.15 Misc commands
+        "dosed",
+        "unpack",
+        // "inherit", // Already resolved in the binary package's environment.
+        "default",
+        "einstalldocs",
+        "get_libdir",
+        // 12.3.16 Debug commands
+        "debug-print",
+        "debug-print-function",
+        "debug-print-section",
+    ];
+
+    let root_dir = TempDir::new()?;
+    let root_dir = root_dir.path();
+    let image_dir = &root_dir.join(".image");
+    std::fs::create_dir_all(image_dir)?;
+
+    let extra_environment = r#"
+    pkg_setup() {
+        for name in %FUNCS%; do
+            if ! type -t "${name}" > /dev/null 2>&1; then
+                echo "FAIL: ${name} is not provided!"
+                exit 1
+            fi
+        done
+    }
+    "#
+    .to_string()
+    .replace("%FUNCS%", &FUNCS.join(" "));
+
+    create_test_vdb(root_dir, &extra_environment)?;
+    run_drive_binary_package(root_dir, image_dir, &["-n"], &["setup"])?;
+    Ok(())
+}

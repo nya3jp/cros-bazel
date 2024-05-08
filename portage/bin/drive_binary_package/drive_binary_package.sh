@@ -229,7 +229,37 @@ keepdir() {
   touch "${keep}" || die "Failed to touch ${keep}"
 }
 
+default() {
+  : # Nothing to do in pkg_* phases.
+}
+
 # ver_cut, ver_rs, ver_test are included in environment.
+
+# Ignore sandbox commands.
+for name in addread addwrite addpredict adddeny; do
+  eval "${name}() { :; }"
+done
+unset name
+
+# Other commands are rarely used in pkg_preinst/pkg_postinst. We implement them
+# as needed.
+# https://projects.gentoo.org/pms/8/pms.html#x1-12000012.3
+for name in \
+    nonfatal \
+    assert \
+    eapply eapply_user \
+    econf emake einstall \
+    dobin doconfd dodir dodoc doenvd doexe dohard doheader dohtml doinfo \
+    doinitd doins dolib.a dolib.so dolib doman domo dosbin dosym fowners \
+    fperms newbin newconfd newdoc newenvd newexe newheader newinitd \
+    newins newlib.a newlib.so newman newsbin \
+    into insinto exeinto docinto insopts diropts exeopts libopts \
+    docompress dostrip \
+    dosed unpack einstalldocs get_libdir
+do
+  eval "${name}() { __dbp_internal_error '${name} not implemented'; }"
+done
+unset name
 
 ################################################################################
 # Define private functions
