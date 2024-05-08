@@ -399,7 +399,7 @@ impl<'settings> PreparedContainer<'settings> {
             }
         }
 
-        // A stage directory is the most significant lower directory where we
+        // A stage directory is the most significant upper directory where we
         // inject necessary files/directories.
         let stage_dir = SafeTempDirBuilder::new()
             .base_dir(&settings.mutable_base_dir)
@@ -407,7 +407,7 @@ impl<'settings> PreparedContainer<'settings> {
             .build()?;
 
         // Create mount points for essential top-level directories.
-        for d in ["dev", "proc", "sys", "tmp", "host"] {
+        for d in ["dev", "proc", "sys", "host"] {
             std::fs::create_dir(stage_dir.path().join(d))?;
         }
 

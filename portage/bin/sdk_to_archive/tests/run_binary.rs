@@ -91,8 +91,6 @@ fn tar_round_trip() -> Result<()> {
 
     let listing = list_tar(&output)?;
 
-    // TODO(rrangel): Fix the /tmp permissions. The "staging" directory is
-    // ordered incorrectly, so we lose our permissions.
     assert_eq!(
         r#"drwxr-xr-x 0/0               0 1970-01-01 00:00 ./
 drwxr-x--- 0/0               0 1970-01-01 00:00 ./etc/
@@ -100,7 +98,7 @@ drwxr-x--- 0/0               0 1970-01-01 00:00 ./etc/
 drwxr-xr-x 0/0               0 1970-01-01 00:00 ./home/
 drwxr-x--- 1000/2000         0 1970-01-01 00:00 ./home/bob/
 -rw-r--r-- 1000/2000         0 1970-01-01 00:00 ./home/bob/.bashrc
-drwxr-xr-x 0/0               0 1970-01-01 00:00 ./tmp/
+drwxrwxrwt 0/0               0 1970-01-01 00:00 ./tmp/
 "#,
         listing
     );
