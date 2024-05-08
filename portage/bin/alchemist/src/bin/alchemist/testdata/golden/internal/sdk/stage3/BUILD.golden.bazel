@@ -5,6 +5,7 @@
 # found in the LICENSE file.
 
 load("@//bazel/portage/build_defs:build_sdk.bzl", "build_sdk")
+load("@//bazel/portage/build_defs:sdk_to_archive.bzl", "sdk_to_archive")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_update")
 
 sdk_install_deps(
@@ -47,6 +48,11 @@ build_sdk(
     }),
     sdk = ":packages",
     visibility = ["//visibility:private"],
+)
+
+sdk_to_archive(
+    name = "tarball",
+    sdk = ":base",
 )
 
 # This is required so we can monkey patch portage.

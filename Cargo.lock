@@ -1689,6 +1689,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sdk_to_archive"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "cliutil",
+ "container",
+ "fileutil",
+ "processes",
+ "runfiles",
+]
+
+[[package]]
 name = "sdk_update"
 version = "0.1.0"
 dependencies = [

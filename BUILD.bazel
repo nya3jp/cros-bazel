@@ -55,6 +55,7 @@ cargo_workspace(
         "//bazel/portage/bin/overlayfs_mount_helper:cargo_toml",
         "//bazel/portage/bin/run_in_container:cargo_toml",
         "//bazel/portage/bin/sdk_from_archive:cargo_toml",
+        "//bazel/portage/bin/sdk_to_archive:cargo_toml",
         "//bazel/portage/bin/sdk_install_glibc:cargo_toml",
         "//bazel/portage/bin/sdk_update:cargo_toml",
         "//bazel/portage/bin/xpaktool:cargo_toml",

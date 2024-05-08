@@ -1,0 +1,16 @@
+[package]
+name = "sdk_to_archive"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cliutil = { path = "../../common/cliutil" }
+container = { path = "../../common/container" }
+fileutil = { path = "../../common/fileutil" }
+processes = { path = "../../common/processes" }
+
+anyhow.workspace = true
+clap.workspace = true
+runfiles.workspace = true

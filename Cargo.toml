@@ -21,6 +21,7 @@ members = [
     "portage/bin/run_in_container",
     "portage/bin/sdk_from_archive",
     "portage/bin/sdk_install_glibc",
+    "portage/bin/sdk_to_archive",
     "portage/bin/sdk_update",
     "portage/bin/xpaktool",
     "portage/common/chrome_trace",
