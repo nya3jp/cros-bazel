@@ -216,7 +216,7 @@ keepdir() {
 
   mkdir -p "${dir}" || die "Failed to create ${dir}"
   local keep
-  keep="${dir}/.keep_${CATEGORY}_${PN}_${SLOT}"
+  keep="${dir}/.keep_${CATEGORY}_${PN?}_${SLOT?}"
   touch "${keep}" || die "Failed to touch ${keep}"
 }
 

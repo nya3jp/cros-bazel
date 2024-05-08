@@ -14,10 +14,13 @@ use runfiles::Runfiles;
 use tempfile::TempDir;
 use vdb::get_vdb_dir;
 
+const TEST_CPF: &str = "foo/bar-1.2.3";
+const TEST_PF: &str = "bar-1.2.3";
+const TEST_PN: &str = "bar";
+
 fn run_drive_binary_package(
     root_dir: &Path,
     image_dir: &Path,
-    cpf: &str,
     extra_options: &[&str],
     phases: &[&str],
 ) -> Result<Output> {
@@ -38,7 +41,7 @@ fn run_drive_binary_package(
         .arg("-t")
         .arg(temp_dir)
         .arg("-p")
-        .arg(cpf)
+        .arg(TEST_CPF)
         .args(extra_options)
         .args(phases)
         .env("PATH", path_with_fakes)
@@ -54,8 +57,8 @@ fn run_drive_binary_package(
 }
 
 /// Creates a VDB for testing with the specified environment.
-fn create_test_vdb(root_dir: &Path, cpf: &str, extra_environment: &str) -> Result<()> {
-    let vdb_dir = get_vdb_dir(root_dir, cpf);
+fn create_test_vdb(root_dir: &Path, extra_environment: &str) -> Result<()> {
+    let vdb_dir = get_vdb_dir(root_dir, TEST_CPF);
     std::fs::create_dir_all(&vdb_dir)?;
 
     std::fs::write(vdb_dir.join("repository"), "chromiumos")?;
@@ -63,15 +66,12 @@ fn create_test_vdb(root_dir: &Path, cpf: &str, extra_environment: &str) -> Resul
     let mut environment = File::create(vdb_dir.join("environment.raw"))?;
     write!(
         &mut environment,
-        "EAPI=7\nPF={}\n{}",
-        cpf.split_once('/').unwrap().1,
-        extra_environment
+        "EAPI=7\nPF={}\nPN={}\nSLOT=0\n{}",
+        TEST_PF, TEST_PN, extra_environment
     )?;
 
     Ok(())
 }
-
-const TEST_CPF: &str = "foo/bar-1.2.3";
 
 /// Verify the case where no hook is defined.
 #[test]
@@ -81,14 +81,8 @@ fn no_hooks() -> Result<()> {
     let image_dir = &root_dir.join(".image");
     std::fs::create_dir_all(image_dir)?;
 
-    create_test_vdb(root_dir, TEST_CPF, "")?;
-    run_drive_binary_package(
-        root_dir,
-        image_dir,
-        TEST_CPF,
-        &[],
-        &["setup", "preinst", "postinst"],
-    )?;
+    create_test_vdb(root_dir, "")?;
+    run_drive_binary_package(root_dir, image_dir, &[], &["setup", "preinst", "postinst"])?;
 
     Ok(())
 }
@@ -103,7 +97,6 @@ fn print_messages() -> Result<()> {
 
     create_test_vdb(
         root_dir,
-        TEST_CPF,
         r#"
     pkg_setup() {
         echo "this is pkg_setup"
@@ -116,13 +109,8 @@ fn print_messages() -> Result<()> {
     }
     "#,
     )?;
-    let output = run_drive_binary_package(
-        root_dir,
-        image_dir,
-        TEST_CPF,
-        &[],
-        &["setup", "preinst", "postinst"],
-    )?;
+    let output =
+        run_drive_binary_package(root_dir, image_dir, &[], &["setup", "preinst", "postinst"])?;
 
     let stdout = String::from_utf8(output.stdout)?;
     assert!(stdout.contains("this is pkg_setup"), "stdout:\n{}", stdout);
@@ -150,7 +138,6 @@ fn keep_environment() -> Result<()> {
 
     create_test_vdb(
         root_dir,
-        TEST_CPF,
         r#"
     MY_COUNTER=0
     pkg_setup() {
@@ -169,7 +156,7 @@ fn keep_environment() -> Result<()> {
     )?;
 
     for (phase, expected_counter) in [("setup", "0"), ("preinst", "1"), ("postinst", "2")] {
-        let output = run_drive_binary_package(root_dir, image_dir, TEST_CPF, &[], &[phase])?;
+        let output = run_drive_binary_package(root_dir, image_dir, &[], &[phase])?;
 
         let stdout = String::from_utf8(output.stdout)?;
         let expect = format!("MY_COUNTER={}", expected_counter);
@@ -193,7 +180,6 @@ fn modify_file_system() -> Result<()> {
 
     create_test_vdb(
         root_dir,
-        TEST_CPF,
         r#"
     pkg_setup() {
         touch "${ROOT}/pkg_setup"
@@ -207,13 +193,7 @@ fn modify_file_system() -> Result<()> {
     }
     "#,
     )?;
-    run_drive_binary_package(
-        root_dir,
-        image_dir,
-        TEST_CPF,
-        &[],
-        &["setup", "preinst", "postinst"],
-    )?;
+    run_drive_binary_package(root_dir, image_dir, &[], &["setup", "preinst", "postinst"])?;
 
     assert!(root_dir.join("pkg_setup").exists());
     assert!(root_dir.join("pkg_preinst").exists());
@@ -235,14 +215,8 @@ fn ebuild_function_tests() -> Result<()> {
         "bazel/portage/bin/drive_binary_package/testdata/ebuild_function_tests.sh",
     )?;
 
-    create_test_vdb(root_dir, TEST_CPF, &test_script)?;
-    run_drive_binary_package(
-        root_dir,
-        image_dir,
-        TEST_CPF,
-        &[],
-        &["setup", "preinst", "postinst"],
-    )?;
+    create_test_vdb(root_dir, &test_script)?;
+    run_drive_binary_package(root_dir, image_dir, &[], &["setup", "preinst", "postinst"])?;
 
     Ok(())
 }
@@ -257,14 +231,13 @@ fn no_clobber() -> Result<()> {
 
     create_test_vdb(
         root_dir,
-        TEST_CPF,
         r#"
     pkg_setup() {
         export MY_"NEW"_VARIABLE=defined
     }
     "#,
     )?;
-    run_drive_binary_package(root_dir, image_dir, TEST_CPF, &["-n"], &["setup"])?;
+    run_drive_binary_package(root_dir, image_dir, &["-n"], &["setup"])?;
 
     let environment =
         std::fs::read_to_string(get_vdb_dir(root_dir, TEST_CPF).join("environment.raw"))?;
