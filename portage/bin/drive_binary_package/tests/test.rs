@@ -245,3 +245,18 @@ fn no_clobber() -> Result<()> {
 
     Ok(())
 }
+
+// Verify that invalid options result in internal errors.
+#[test]
+fn invalid_options() -> Result<()> {
+    let root_dir = TempDir::new()?;
+    let root_dir = root_dir.path();
+    let image_dir = &root_dir.join(".image");
+    std::fs::create_dir_all(image_dir)?;
+
+    create_test_vdb(root_dir, "")?;
+    let error = run_drive_binary_package(root_dir, image_dir, &["-X"], &["setup"]).unwrap_err();
+    assert!(error.to_string().contains("INTERNAL ERROR"), "{error}");
+
+    Ok(())
+}

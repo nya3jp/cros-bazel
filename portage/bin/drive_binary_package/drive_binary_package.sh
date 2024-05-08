@@ -7,21 +7,30 @@
 # A shell script called by fast_install_packages to drive a binary package
 # hooks.
 
+# Aborts the package hook execution with exit code 125 for an internal error,
+# which means that the execution failed because of bugs in drive_binary_package,
+# not those in the binary package environment.
+__dbp_internal_error() {
+  echo "INTERNAL ERROR: $1" >&2
+  exit 125
+}
+
 ################################################################################
 # Parse command line arguments
 ################################################################################
 
 __dbp_print_usage_and_exit() {
-  exec >&2
-  echo "usage: $0 [options] PHASES"
-  echo "options:"
-  echo "  -r dir    root directory aka \$ROOT (required)"
-  echo "  -d dir    package image directory (required)"
-  echo "  -t dir    ebuild temporary directory aka \$T (required)"
-  echo "  -p cpf    package CPF like sys-apps/attr-1.0 (required)"
-  echo "  -n        do not update environment.raw on exit"
-  echo "  -v        enable verbose logging"
-  exit 2
+  __dbp_internal_error "wrong arguments
+
+usage: $0 [options] PHASES
+options:
+  -r dir    root directory aka \$ROOT (required)
+  -d dir    package image directory (required)
+  -t dir    ebuild temporary directory aka \$T (required)
+  -p cpf    package CPF like sys-apps/attr-1.0 (required)
+  -n        do not update environment.raw on exit
+  -v        enable verbose logging
+"
 }
 
 __dbp_root_dir=
@@ -331,3 +340,5 @@ __dbp_main "$@"
 if (( __dbp_save_env )); then
   __dbp_dump_environment > "${__dbp_vdb_dir}/environment.raw"
 fi
+
+exit 0

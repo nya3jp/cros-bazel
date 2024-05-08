@@ -12,7 +12,7 @@ use std::{
     str::FromStr,
 };
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use container::{BindMount, ContainerSettings};
 use nix::mount::{umount2, MntFlags};
 use runfiles::Runfiles;
@@ -157,9 +157,7 @@ fn drive_binary_package_with_auditfuse(
     });
 
     let mut container = settings.prepare()?;
-    // Ignore the exit status of drive_binary_package.sh. Hooks may abort due to
-    // lack of necessary files for example.
-    let _ = container
+    let status = container
         .command("/bin/drive_binary_package.sh")
         .arg("-r")
         .arg(root_dir)
@@ -174,6 +172,12 @@ fn drive_binary_package_with_auditfuse(
         // Prevent bash from accessing the locale DB on printing messages.
         .env("LC_ALL", "C")
         .status()?;
+
+    // We can basically ignore the exit status of drive_binary_package.sh because hooks may abort,
+    // e.g. due to lack of necessary files. We specially handle the internal error case though.
+    if status.code() == Some(125) {
+        bail!("drive_binary_package.sh failed for an internal error!");
+    }
 
     Ok(audit_file)
 }
