@@ -53,7 +53,10 @@ GS_ATTRS = {
     ),
 }
 
-_MAX_RETRIES = 2
+# We'd like to use a value of 2 here, but due to b/338670280 we're hitting
+# semi-frequent failures with that value. Let's bump to 4 retries (5 total
+# tries) to try to work around the problem.
+_MAX_RETRIES = 4
 
 def download_gs_file(repository_ctx):
     repository_ctx.report_progress("Downloading from GS.")
