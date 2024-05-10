@@ -8,9 +8,10 @@ exports_files(["board", "digest", "profile"])
 
 def _portage_digest_repository_impl(repo_ctx):
     """Repository rule to generate a digest of the boards overlays."""
-    repo_ctx.path(repo_ctx.attr._cache_bust)
 
     # Keep all the ctx.path calls first to avoid expensive restarts
+    repo_ctx.path(repo_ctx.attr._cache_bust)
+    repo_ctx.path(repo_ctx.attr.preflight_checks_ok)
     alchemist = repo_ctx.path(repo_ctx.attr.alchemist)
 
     # --source-dir needs the repo root, not just the `src` directory
@@ -58,6 +59,7 @@ portage_digest = repository_rule(
     ],
     attrs = dict(
         alchemist = attr.label(allow_single_file = True),
+        preflight_checks_ok = attr.label(allow_single_file = True),
         _cache_bust = attr.label(
             # We need to point to the actual file, since we can't use a file
             # group from a repository rule.

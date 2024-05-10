@@ -6,8 +6,8 @@
 # Instead, modify src/MODULE.bazel and src/bazel/module_extensions/...
 # Preflight checks are the only exception because we want to run them eagerly.
 
-load("//bazel/repo_defs:preflight_checks.bzl", "preflight_checks")
+load("//bazel/repo_defs:preflight_checks.bzl", "basic_preflight_checks")
 
-preflight_checks(name = "preflight_checks")
+basic_preflight_checks(name = "basic_preflight_checks")
 
-load("@preflight_checks//:ok.bzl", "ok")  # @unused
+load("@basic_preflight_checks//:ok.bzl", "ok")  # @unused

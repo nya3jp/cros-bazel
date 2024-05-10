@@ -16,9 +16,13 @@ load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
 load("//bazel/portage/bin/alchemist/src/bin/alchemist:repo_rule_srcs.bzl", "ALCHEMIST_REPO_RULE_SRCS")
 load("//bazel/portage/repo_defs/chrome:cros_chrome_repository.bzl", _cros_chrome_repository = "cros_chrome_repository")
 load("//bazel/repo_defs:nested_bazel.bzl", "nested_bazel")
+load("//bazel/repo_defs:preflight_checks.bzl", "portage_preflight_checks")
 load("//bazel/repo_defs:repo_repository.bzl", _repo_repository = "repo_repository")
 
 def _portage_impl(module_ctx):
+    portage_preflight_checks(
+        name = "portage_preflight_checks",
+    )
     nested_bazel(
         name = "alchemist",
         target = "//bazel/portage/bin/alchemist/src/bin/alchemist",
@@ -27,6 +31,7 @@ def _portage_impl(module_ctx):
     portage_digest(
         name = "portage_digest",
         alchemist = "@alchemist//:alchemist",
+        preflight_checks_ok = "@portage_preflight_checks//:ok.bzl",
     )
     remoteexec_info(
         name = "remoteexec_info",

@@ -19,27 +19,14 @@ def _misconfiguration_fail(reason):
         "https://chromium.googlesource.com/chromiumos/bazel/+/HEAD/README.md",
     )
 
-def _do_preflight_checks(repo_ctx):
+def _do_basic_preflight_checks(repo_ctx):
     # Skip all preflight checks for nested bazel.
     if repo_ctx.os.environ.get("IS_NESTED_BAZEL") == "1":
         return
 
-    # Ensure we're inside the CrOS chroot.
-    if repo_ctx.os.environ.get("ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT") != "1":
-        if not repo_ctx.path("/etc/cros_chroot_version").exists:
-            _misconfiguration_fail("Bazel was run outside CrOS chroot.")
-
     # Ensure we're invoked via the wrapper script.
     if repo_ctx.os.environ.get("CHROMITE_BAZEL_WRAPPER") != "1":
         _misconfiguration_fail("Bazel was run without the proper wrapper.")
-
-    # Ensure third_party/llvm-project is checked out.
-    llvm_path = repo_ctx.workspace_root.get_child("third_party/llvm-project")
-    if not llvm_path.exists:
-        _misconfiguration_fail(
-            "third_party/llvm-project is not checked out.\n" +
-            "Did you run `repo init` with `-g default,bazel`?",
-        )
 
     # Ensure the execroot is not overlayfs.
     result = repo_ctx.execute(["stat", "--format=%T", "--file-system", "."], timeout = 10)
@@ -50,28 +37,65 @@ def _do_preflight_checks(repo_ctx):
     if result.stdout.strip() == "overlayfs":
         _misconfiguration_fail("The execroot must not be overlayfs.")
 
-def _preflight_checks_impl(repo_ctx):
-    """Performs preflight checks."""
+def _basic_preflight_checks_impl(repo_ctx):
+    """Performs basic preflight checks."""
 
-    _do_preflight_checks(repo_ctx)
+    _do_basic_preflight_checks(repo_ctx)
 
     # Create an empty repository.
     repo_ctx.file("BUILD.bazel", "")
     repo_ctx.file("ok.bzl", "ok = True")
 
-preflight_checks = repository_rule(
-    implementation = _preflight_checks_impl,
+basic_preflight_checks = repository_rule(
+    implementation = _basic_preflight_checks_impl,
     attrs = {},
     environ = [
-        "ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT",
         "CHROMITE_BAZEL_WRAPPER",
         "IS_NESTED_BAZEL",
     ],
     local = True,
     doc = """
-    Performs preflight checks to provide friendly diagnostics to users.
+    Performs basic preflight checks to provide friendly diagnostics to users.
 
     This rule should be called at the very beginning of WORKSPACE.bazel.
+    """,
+)
+
+def _do_portage_preflight_checks(repo_ctx):
+    # Ensure we're inside the CrOS chroot.
+    if repo_ctx.os.environ.get("ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT") != "1":
+        if not repo_ctx.path("/etc/cros_chroot_version").exists:
+            _misconfiguration_fail("Bazel was run outside CrOS chroot.")
+
+    # Ensure third_party/llvm-project is checked out.
+    llvm_path = repo_ctx.workspace_root.get_child("third_party/llvm-project")
+    if not llvm_path.exists:
+        _misconfiguration_fail(
+            "third_party/llvm-project is not checked out.\n" +
+            "Did you run `repo init` with `-g default,bazel`?",
+        )
+
+def _portage_preflight_checks_impl(repo_ctx):
+    """Performs preflight checks before generating @portage."""
+
+    _do_portage_preflight_checks(repo_ctx)
+
+    # Create an empty repository.
+    repo_ctx.file("BUILD.bazel", "")
+    repo_ctx.file("ok.bzl", "ok = True")
+
+portage_preflight_checks = repository_rule(
+    implementation = _portage_preflight_checks_impl,
+    attrs = {},
+    environ = [
+        "ALCHEMY_EXPERIMENTAL_OUTSIDE_CHROOT",
+    ],
+    local = True,
+    doc = """
+    Performs preflight checks before generating @portage to provide friendly
+    diagnostics to users.
+
+    This rule should be called in the module extension generating @portage.
     """,
 )
 
