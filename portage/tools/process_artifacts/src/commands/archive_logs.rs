@@ -11,14 +11,14 @@ use std::{
 
 use anyhow::{ensure, Result};
 
-use crate::build_event_processor::BuildEventProcessor;
+use crate::processors::build_event::BuildEventProcessor;
 
 pub fn archive_logs(
     output_path: &Path,
     workspace_dir: &Path,
-    events: &BuildEventProcessor,
+    processor: &BuildEventProcessor,
 ) -> Result<()> {
-    let files = events.output_group_files("transitive_logs")?;
+    let files = processor.get_output_group_files("transitive_logs")?;
 
     let mut input_file = tempfile::tempfile()?;
     for relative_path in files {

@@ -11,15 +11,13 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use archive_logs::archive_logs;
-use build_event_processor::BuildEventProcessor;
 use clap::Parser;
-use prebuilts::compute_prebuilts;
+use commands::{archive_logs::archive_logs, prebuilts::compute_prebuilts};
+use processors::build_event::BuildEventProcessor;
 use proto::build_event_stream::BuildEvent;
 
-mod archive_logs;
-mod build_event_processor;
-mod prebuilts;
+mod commands;
+mod processors;
 mod proto;
 
 /// Loads a newline-deliminated JSON file containing Build Event Protocol data.

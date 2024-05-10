@@ -110,7 +110,7 @@ fn path_for_file(file: &File) -> PathBuf {
 
 impl BuildEventProcessor<'_> {
     /// Returns the workspace relative path to all files in the specified output group.
-    pub fn output_group_files(&self, output_group_name: &str) -> Result<Vec<PathBuf>> {
+    pub fn get_output_group_files(&self, output_group_name: &str) -> Result<Vec<PathBuf>> {
         let mut fileset = FastFileSet::new();
 
         for event in self.events {
@@ -244,7 +244,7 @@ mod tests {
             },
         ];
 
-        let files = BuildEventProcessor::from(&events).output_group_files("transitive_logs")?;
+        let files = BuildEventProcessor::from(&events).get_output_group_files("transitive_logs")?;
 
         assert_eq!(files, vec![PathBuf::from("a.txt")]);
 
@@ -316,7 +316,7 @@ mod tests {
             }),
         });
 
-        let files = BuildEventProcessor::from(&events).output_group_files("transitive_logs")?;
+        let files = BuildEventProcessor::from(&events).get_output_group_files("transitive_logs")?;
 
         assert_eq!(
             files.into_iter().sorted().collect_vec(),

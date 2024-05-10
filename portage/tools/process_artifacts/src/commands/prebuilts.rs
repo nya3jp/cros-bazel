@@ -8,7 +8,7 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use itertools::Itertools;
 
-use crate::{build_event_processor::BuildEventProcessor, proto::ebuild_metadata::EbuildMetadata};
+use crate::{processors::build_event::BuildEventProcessor, proto::ebuild_metadata::EbuildMetadata};
 
 const PREBUILT_HEADER: &str = r#"# Provides the CAS location for all ebuild binary packages
 # used by the build. This is useful when modifying primordial code such as
@@ -37,12 +37,12 @@ pub fn compute_prebuilts(
 
     let Some(remote_instance_name) = processor.get_command_flag("remote_instance_name") else {
         write!(output, "# --remote_instance_name was not set.")?;
-        return Ok(())
+        return Ok(());
     };
 
     write!(output, "{PREBUILT_HEADER}")?;
 
-    let metadata_files = processor.output_group_files("ebuild_metadata")?;
+    let metadata_files = processor.get_output_group_files("ebuild_metadata")?;
 
     let metadata = metadata_files
         .into_iter()
