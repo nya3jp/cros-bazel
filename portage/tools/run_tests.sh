@@ -27,9 +27,11 @@ fi
 
 set -x
 
-  # Despite the name, bazel test also builds non-test targets if they're listed.
+# Despite the name, bazel test also builds non-test targets if they're listed.
+# TODO: Once github.com/bazelbuild/bazel/issues/22355 is resolved, remove
+#  medium from the test size filters.
 exec bazel test \
-    --test_size_filters=small \
+    --test_size_filters=small,medium \
     --config=format \
     --keep_going \
     "$@" \
