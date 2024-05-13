@@ -1,0 +1,17 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_rust//proto/prost:defs.bzl", "rust_prost_library")
+
+proto_library(
+    name = "example_proto",
+    srcs = ["example.proto"],
+)
+
+rust_prost_library(
+    name = "example_rust_proto",
+    proto = ":example_proto",
+    visibility = ["//bazel/rust/examples/prost:__pkg__"],
+)

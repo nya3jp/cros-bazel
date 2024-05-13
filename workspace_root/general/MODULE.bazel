@@ -128,7 +128,9 @@ register_toolchains("//bazel/module_extensions/toolchains/rust/host:all")
 
 register_toolchains("@rust_toolchains//:all")
 
-register_toolchains("//bazel/module_extensions/toolchains/rust/proto:rust_proto_toolchain")
+register_toolchains("//bazel/module_extensions/toolchains/rust/proto:proto_toolchain")
+
+register_toolchains("//bazel/module_extensions/toolchains/rust/proto:prost_toolchain")
 
 cargo_bazel_bootstrap = use_extension("@rules_rust//crate_universe/private/module_extensions:cargo_bazel_bootstrap.bzl", "cargo_bazel_bootstrap")
 use_repo(cargo_bazel_bootstrap, "cargo_bazel_bootstrap")
@@ -143,6 +145,14 @@ crate.from_cargo(
 crate.annotation(
     build_script_env = {"FORCE_C_COMPILER": "1"},
     crate = "bzip2-sys",
+)
+crate.annotation(
+    crate = "protoc-gen-tonic",
+    gen_all_binaries = True,
+)
+crate.annotation(
+    crate = "protoc-gen-prost",
+    gen_all_binaries = True,
 )
 crate.annotation(
     crate = "chrono",

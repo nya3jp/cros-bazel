@@ -1,0 +1,15 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+rust_test(
+    name = "proto_test",
+    size = "small",
+    srcs = ["src/lib.rs"],
+    deps = [
+        "//bazel/rust/examples/prost/proto:example_rust_proto",
+        "@alchemy_crates//:prost",
+    ],
+)

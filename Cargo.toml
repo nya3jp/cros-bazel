@@ -84,6 +84,8 @@ proptest = "1.0.0"
 prost = "0.12.4"
 prost-build = "0.12.4"
 prost-types = "0.12.4"
+protoc-gen-prost = "0.3.1"
+protoc-gen-tonic = "0.4.0"
 protobuf = { version = "2.8.2", features = ["with-bytes"] }
 rand = "0.8.5"
 rayon = "1.6.0"
@@ -105,6 +107,9 @@ tinytemplate = "1.2.1"
 tls-api = "0.1.22"
 tls-api-stub = "0.1.22"
 toml = "0.8.8"
+tokio = { version = "1.37.0", features = ["full"] }
+tokio-stream = "0.1.15"
+tonic = "0.11.0"
 tracing = "0.1.37"
 tracing_chrome = { package = "tracing-chrome", version = "0.7.1" }
 tracing_subscriber = { package = "tracing-subscriber", version = "0.3.17", features = ["env-filter", "json"] }
