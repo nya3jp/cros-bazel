@@ -1794,6 +1794,7 @@ dependencies = [
  "fileutil",
  "processes",
  "runfiles",
+ "testutil",
 ]
 
 [[package]]

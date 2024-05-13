@@ -46,6 +46,7 @@ rust_test_suite(
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
+        "//bazel/portage/common/testutil",
         "//bazel/rust/runfiles",
         "@alchemy_crates//:anyhow",
     ],

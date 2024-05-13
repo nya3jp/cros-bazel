@@ -2,13 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use runfiles::Runfiles;
 use std::fs::{create_dir_all, set_permissions};
 use std::fs::{File, Permissions};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use testutil::fakefs_chown;
 
 const BASE_DIR: &str = "cros/bazel/portage/bin/sdk_to_archive";
 
@@ -28,25 +29,6 @@ fn list_tar(path: &Path) -> Result<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 
-fn fake_chown(user_group: &str, path: &Path) -> Result<()> {
-    let r = Runfiles::create()?;
-
-    let fakefs = r.rlocation("cros/bazel/portage/bin/fakefs/fakefs_/fakefs");
-    if !fakefs.try_exists()? {
-        bail!("{} doesn't exist", fakefs.display());
-    }
-
-    let status = Command::new(fakefs)
-        .arg("chown")
-        .arg(user_group)
-        .arg(path)
-        .status()?;
-
-    assert!(status.success());
-
-    Ok(())
-}
-
 fn create_sysroot(root: &Path) -> Result<()> {
     for (dir, perms) in [
         ("", 0o755),
@@ -62,8 +44,8 @@ fn create_sysroot(root: &Path) -> Result<()> {
     File::create(root.join("./etc/init.conf"))?;
     File::create(root.join("./home/bob/.bashrc"))?;
 
-    fake_chown("1000:2000", &root.join("home/bob"))?;
-    fake_chown("1000:2000", &root.join("home/bob/.bashrc"))?;
+    fakefs_chown("1000:2000", &root.join("home/bob"))?;
+    fakefs_chown("1000:2000", &root.join("home/bob/.bashrc"))?;
 
     Ok(())
 }
