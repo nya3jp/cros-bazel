@@ -53,7 +53,7 @@ GS_ATTRS = {
     ),
 }
 
-# We'd like to use a value of 2 here, but due to b/338670280 we're hitting
+# We'd like to use a value of 2 here, but due to b/338103561 we're hitting
 # semi-frequent failures with that value. Let's bump to 4 retries (5 total
 # tries) to try to work around the problem.
 _MAX_RETRIES = 4
