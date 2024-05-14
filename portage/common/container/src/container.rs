@@ -308,6 +308,51 @@ impl ContainerSettings {
         PreparedContainer::new(self, upper_dir)
     }
 
+    /// Mounts an `overlayfs` file system using the layers that were pushed
+    /// into the container settings.
+    ///
+    /// This function is useful if you only want to access the container's
+    /// layers. The mount doesn't include any of the auxiliary files and
+    /// directories required to invoke a command in the container.
+    ///
+    /// The returned [`ContainerFileSystem`] will contain the path where the
+    /// file system is mounted.
+    pub fn mount(&self) -> Result<ContainerFileSystem> {
+        let root_dir = SafeTempDirBuilder::new()
+            .base_dir(&self.mutable_base_dir)
+            .prefix("root.")
+            .build()?;
+
+        let scratch_dir = SafeTempDirBuilder::new()
+            .base_dir(&self.mutable_base_dir)
+            .prefix("scratch.")
+            .build()?;
+
+        let upper_dir = SafeTempDirBuilder::new()
+            .base_dir(&self.mutable_base_dir)
+            .prefix("upper.")
+            .build()?;
+
+        let mount_guard = mount_overlayfs(
+            root_dir.path(),
+            &self
+                .lower_dirs
+                .iter()
+                .map(PathBuf::as_path)
+                .collect::<Vec<_>>(),
+            upper_dir.path(),
+            scratch_dir.path(),
+        )?;
+
+        Ok(ContainerFileSystem {
+            _settings: self,
+            _mount_guard: mount_guard,
+            root_dir,
+            _scratch_dir: scratch_dir,
+            upper_dir,
+        })
+    }
+
     fn request_archive_dir(&mut self) -> Result<PathBuf> {
         if let Some(reusable_archive_dir) = &self.reusable_archive_dir {
             Ok(reusable_archive_dir.clone())
@@ -338,6 +383,35 @@ impl ContainerSettings {
 impl Default for ContainerSettings {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Represents an `overlayfs` file system.
+///
+/// Use [`ContainerSettings::path`] to get the path where the file system is
+/// mounted. When you are done with the file system, you can drop the object,
+/// or you can call [`ContainerSettings::into_upper`] to get the `overlayfs`
+/// upper layer.
+pub struct ContainerFileSystem<'settings> {
+    // Note: The order of fields matters here!
+    // `_mount_guard` must come before the `root_dir`, `scratch_dir`, etc so
+    // that the overlayfs is unmounted before removing the backing directories.
+    _settings: &'settings ContainerSettings,
+    _mount_guard: MountGuard,
+    root_dir: SafeTempDir,
+    _scratch_dir: SafeTempDir,
+    upper_dir: SafeTempDir,
+}
+
+impl ContainerFileSystem<'_> {
+    /// The directory where the file system is mounted.
+    pub fn path(&self) -> &Path {
+        self.root_dir.path()
+    }
+
+    /// Unmounts the `overlayfs` filesystem and returns the upper layer.
+    pub fn into_upper(self) -> SafeTempDir {
+        self.upper_dir
     }
 }
 
@@ -649,7 +723,7 @@ impl<'container> ContainerCommand<'container> {
 
 #[cfg(test)]
 mod tests {
-    use std::os::unix::fs::symlink;
+    use std::{fs::read_to_string, io::Write, os::unix::fs::symlink};
 
     use super::*;
 
@@ -971,6 +1045,60 @@ mod tests {
             Path::new("/hello.txt"),
             "This file is from the archive layer.",
         )?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_mount() -> Result<()> {
+        let mut settings = ContainerSettings::new();
+
+        let layer_dir = create_layer_dir()?;
+        std::fs::write(
+            layer_dir.path().join("world.txt"),
+            "This file is from the directory layer.\n",
+        )?;
+
+        let runfiles = runfiles::Runfiles::create()?;
+
+        settings.push_layer(layer_dir.path())?;
+
+        let mount = settings.mount()?;
+
+        let contents = read_to_string(mount.path().join("hello.txt"))?;
+        assert_eq!(contents, "This file is from the directory layer.\n");
+
+        let contents = read_to_string(mount.path().join("world.txt"))?;
+        assert_eq!(contents, "This file is from the directory layer.\n");
+
+        // Write file to the mount.
+        File::create(mount.path().join("world.txt"))?.write_all(b"Hello World!")?;
+
+        let upper = mount.into_upper();
+
+        let contents = read_to_string(upper.path().join("world.txt"))?;
+        assert_eq!(contents, "Hello World!");
+
+        settings.push_layer(
+            &runfiles
+                .rlocation("cros/bazel/portage/common/container/testdata/layer-archive.tar.zst"),
+        )?;
+
+        let mount = settings.mount()?;
+
+        let contents = read_to_string(mount.path().join("hello.txt"))?;
+        assert_eq!(contents, "This file is from the archive layer.\n");
+
+        let contents = read_to_string(mount.path().join("world.txt"))?;
+        assert_eq!(contents, "This file is from the directory layer.\n");
+
+        // Write file to the mount.
+        File::create(mount.path().join("world.txt"))?.write_all(b"Hello World!")?;
+
+        let upper = mount.into_upper();
+
+        let contents = read_to_string(upper.path().join("world.txt"))?;
+        assert_eq!(contents, "Hello World!");
 
         Ok(())
     }
