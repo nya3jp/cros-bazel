@@ -5,8 +5,8 @@
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use cliutil::cli_main;
-use container::{enter_mount_namespace, CommonArgs, ContainerSettings};
-use fileutil::SafeTempDirBuilder;
+use container::{enter_mount_namespace, ContainerSettings};
+use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
 use runfiles::Runfiles;
 
 use std::path::PathBuf;
@@ -15,8 +15,9 @@ use std::process::{Command, ExitCode};
 #[derive(Parser, Debug)]
 #[clap()]
 struct Cli {
-    #[command(flatten)]
-    common: CommonArgs,
+    /// Adds a file system layer to be added to the archive.
+    #[arg(long)]
+    pub layer: Vec<PathBuf>,
 
     /// A path where the tarball is written.
     #[arg(long, required = true)]
@@ -51,11 +52,12 @@ fn do_main() -> Result<()> {
 
     let mut settings = ContainerSettings::new();
     settings.set_mutable_base_dir(mutable_base_dir.path());
-    settings.apply_common_args(&args.common)?;
 
-    let container = settings.prepare()?;
+    for layer in args.layer {
+        settings.push_layer(&resolve_symlink_forest(&layer)?)?;
+    }
 
-    let root_dir = container.root_dir();
+    let mount = settings.mount()?;
 
     let mut command = Command::new(fakefs);
     command.arg("--preload");
@@ -69,20 +71,13 @@ fn do_main() -> Result<()> {
     command.arg(&args.output);
 
     command.arg("-C");
-    command.arg(root_dir);
+    command.arg(mount.path());
 
     // Ensure reproducible output.
     command.arg("--format=gnu");
     command.arg("--sort=name");
     command.arg("--mtime=1970-01-01 00:00:00Z");
     command.arg("--numeric-owner");
-
-    // Exclude files and directories crated by the container.
-    command.arg("--exclude=.setup.sh");
-    command.arg("--exclude=./dev");
-    command.arg("--exclude=./host");
-    command.arg("--exclude=./proc");
-    command.arg("--exclude=./sys");
 
     command.arg(".");
 
