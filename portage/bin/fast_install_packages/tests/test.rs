@@ -17,7 +17,8 @@ use itertools::Itertools;
 use processes::locate_system_binary;
 use runfiles::Runfiles;
 use std::{
-    fs::{OpenOptions, Permissions},
+    ffi::OsString,
+    fs::{read_dir, OpenOptions, Permissions},
     io::{Read, Write},
     os::unix::prelude::PermissionsExt,
     path::Path,
@@ -46,6 +47,7 @@ fn run_extract_package(
     image_prefix: &str,
     vdb_prefix: &str,
     host: bool,
+    sparse_vdb: bool,
 ) -> Result<SafeTempDir> {
     let out_dir = temp_dir_for_testing()?;
 
@@ -61,6 +63,11 @@ fn run_extract_package(
         .arg("--vdb-prefix")
         .arg(vdb_prefix)
         .args(if host { &["--host"][..] } else { &[][..] })
+        .args(if sparse_vdb {
+            &["--sparse-vdb"][..]
+        } else {
+            &[][..]
+        })
         .status()?;
     ensure!(status.success(), "extract_package failed: {:?}", status);
 
@@ -160,8 +167,15 @@ fn fast_install_packages(
     let host = prefix.is_empty();
     let mut guards: Vec<InstalledGuard> = Vec::new();
     for binary_package in binary_packages {
-        let installed_contents_dir = run_extract_package(binary_package, prefix, prefix, host)?;
-        let staged_contents_dir = run_extract_package(binary_package, ".image", prefix, host)?;
+        let installed_contents_dir = run_extract_package(
+            binary_package,
+            prefix,
+            prefix,
+            host,
+            extra_args.iter().contains(&"--sparse-vdb"),
+        )?;
+        let staged_contents_dir =
+            run_extract_package(binary_package, ".image", prefix, host, false)?;
         let preinst_dir = temp_dir_for_testing()?;
         let postinst_dir = temp_dir_for_testing()?;
         guards.push(InstalledGuard {
@@ -252,6 +266,9 @@ fn create_binary_package(
         ("PF", Vec::from(pf)),
         ("SLOT", DEFAULT_SLOT.into()),
         ("environment.bz2", environment_bz2),
+        ("EAPI", Vec::from("7")),
+        ("IUSE", Vec::from("foo bar")),
+        ("USE", Vec::from("foo")),
     ];
 
     // Serialize XPAK to bytes.
@@ -431,6 +448,85 @@ obj etc/foo.d/1.conf 8cf8b414c945a7607f156bbc5849e8cf 0
 obj etc/foo.d/3.conf 3a812a6dcc0d5773cf315a66884a156c 0
 "
     );
+    Ok(())
+}
+
+/// Tries installing a package with hooks.
+#[test]
+fn test_install_hooks_sparse_vdb() -> Result<()> {
+    let mut settings = create_fake_sdk_container()?;
+
+    // Create a binary package that contains /etc/foo.d/1.conf.
+    let contents_dir = TempDir::new()?;
+    let contents_dir = contents_dir.path();
+    std::fs::create_dir_all(contents_dir.join("etc/foo.d"))?;
+    std::fs::write(
+        contents_dir.join("etc/foo.d/1.conf"),
+        "this is a bad config\n",
+    )?;
+
+    // Define hooks that modify the file system.
+    let extra_environment = r#"
+    pkg_setup() {
+        mkdir -p "${ROOT}/etc/foo.d"
+        # Create 2.conf. This file will not be recorded in CONTENTS.
+        echo "goodbye, world" > "${ROOT}/etc/foo.d/2.conf"
+    }
+    pkg_preinst() {
+        export FOO=bar
+        # Rewrite 1.conf from the package contents.
+        sed -i 's/bad/good/' "${D}/etc/foo.d/1.conf"
+        # Rewrite 2.conf we created in pkg_setup.
+        sed -i 's/goodbye/hello/' "${ROOT}/etc/foo.d/2.conf"
+        # Create 3.conf. This file will be recorded in CONTENTS.
+        echo "looks good to me" > "${D}/etc/foo.d/3.conf"
+    }
+    pkg_postinst() {
+        if [[ "${FOO}" != "bar" ]]; then
+            die "FOO is missing"
+        fi
+        # Merge all configs under /etc/foo.d/ to /etc/foo.conf.
+        cat "${ROOT}"/etc/foo.d/*.conf > "${ROOT}/etc/foo.conf"
+    }
+    "#;
+
+    let binary_package =
+        create_binary_package("sys-apps/foo-1.0", contents_dir, extra_environment)?;
+
+    let _guards = fast_install_packages(
+        &mut settings,
+        &[binary_package.path()],
+        Path::new("/build/eve"),
+        &["--sparse-vdb"],
+    )?;
+
+    // Verify the contents of /build/eve/etc/foo.conf.
+    let container = settings.prepare()?;
+    let conf = std::fs::read_to_string(container.root_dir().join("build/eve/etc/foo.conf"))?;
+    assert_eq!(
+        conf,
+        "this is a good config\nhello, world\nlooks good to me\n"
+    );
+
+    // Inspect VDB.
+    let vdb_path = get_vdb_dir(&container.root_dir().join("build/eve"), "sys-apps/foo-1.0");
+
+    let mut vdb_index = read_dir(vdb_path)?
+        .map(|e| Ok(e?.file_name()))
+        .collect::<Result<Vec<_>>>()?;
+    vdb_index.sort();
+
+    assert_eq!(
+        vdb_index,
+        &[
+            OsString::from("EAPI"),
+            OsString::from("IUSE"),
+            OsString::from("SLOT"),
+            OsString::from("USE"),
+            OsString::from("repository"),
+        ]
+    );
+
     Ok(())
 }
 

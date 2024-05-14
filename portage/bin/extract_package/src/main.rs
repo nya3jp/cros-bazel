@@ -240,12 +240,9 @@ fn do_main() -> Result<()> {
                 tracing::info!("{}", entry);
             }
         }
-    }
 
-    // We write the CONTENTS file regardless of sparse_vdb because it
-    // doesn't result in unnecessary cache busting (since it's derived from the
-    // input files), and it's also used by the find-missing-deps.sh hook.
-    std::fs::write(vdb_dir.join("CONTENTS"), contents)?;
+        std::fs::write(vdb_dir.join("CONTENTS"), contents)?;
+    }
 
     if args.host {
         // HACK: Rename directories that collide with well-known symlinks.

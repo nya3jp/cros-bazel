@@ -130,7 +130,7 @@ def install_deps(
     args.add("--root-dir=%s" % sysroot)
 
     if not full_vdb:
-        args.add("--drop-revision")
+        args.add("--sparse-vdb")
 
     input_layers = sdk.layers + overlays.layers + portage_configs
     args.add_all(

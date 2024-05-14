@@ -15,7 +15,7 @@ use itertools::Itertools;
 use nix::mount::{mount, umount2, MntFlags, MsFlags};
 use runfiles::Runfiles;
 use std::{
-    fs::{File, Permissions},
+    fs::{remove_dir_all, File, Permissions},
     io::ErrorKind,
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
@@ -231,20 +231,38 @@ fn run_pkg_setup_and_preinst(
     Ok(())
 }
 
+/// Removes the empty ancestor directories between the `child_dir` and the `root_dir`.
+fn remove_empty_ancestors(root_dir: &Path, child_dir: &Path) -> Result<()> {
+    for dir in child_dir.ancestors() {
+        if dir == root_dir {
+            break;
+        }
+        match std::fs::remove_dir(dir) {
+            Err(e) if e.kind() == ErrorKind::NotFound => {}
+            Err(e) if e.raw_os_error() == Some(libc::ENOTEMPTY) => break,
+            other => other?,
+        }
+    }
+
+    Ok(())
+}
+
 /// Post-processes a preinst layer and returns an initial upper directory to be used to run
 /// pkg_postinst.
 ///
 /// After running pkg_setup/pkg_preinst, we have to post-process the preinst layer for some reasons:
 /// - Migrate modifications to $D (= "/.image") to the postinst layer so that they're applied
 ///   correctly to the package installation result.
-/// - We have to update CONTENTS file in VDB if there was any modification to $D. If there is
-///   nothing, we can simply use CONTENTS from the installed contents layer.
+/// - We have to update CONTENTS file in VDB if there were any modification to $D and
+///  `sparse_vdb` is not set. If there are no changes we can simply use CONTENTS from the
+///   installed contents layer.
 fn mangle_preinst_layer(
     settings: &ContainerSettings,
     preinst_dir: &Path,
     root_dir: &Path,
     category_pf: &str,
     mutable_base_dir: &Path,
+    sparse_vdb: bool,
 ) -> Result<SafeTempDir> {
     let _span = info_span!("mangle_preinst_layer").entered();
 
@@ -259,15 +277,19 @@ fn mangle_preinst_layer(
     let mut updated_contents: Option<Vec<u8>> = None;
     let preinst_image_dir = preinst_dir.join(STAGE_DIR_NAME);
     if preinst_image_dir.is_dir() {
-        let _span = info_span!("recompute_contents").entered();
+        if !sparse_vdb {
+            let _span = info_span!("recompute_contents").entered();
 
-        // We have to recompute CONTENTS in the VDB directory.
-        updated_contents = {
-            let container = settings.prepare()?;
-            let mut contents = Vec::new();
-            generate_vdb_contents(&mut contents, &container.root_dir().join(STAGE_DIR_NAME))?;
-            Some(contents)
-        };
+            // We have to recompute CONTENTS in the VDB directory.
+            updated_contents = {
+                let container = settings.prepare()?;
+                let mut contents = Vec::new();
+                generate_vdb_contents(&mut contents, &container.root_dir().join(STAGE_DIR_NAME))?;
+                Some(contents)
+            };
+        }
+
+        let _span = info_span!("move_contents").entered();
 
         // Use the image directory as the initial contents of the postinst upper directory.
         // This effectively applies preinst modifications to $D to the installed files.
@@ -289,6 +311,9 @@ fn mangle_preinst_layer(
     let preinst_vdb_dir = preinst_dir.join(relative_vdb_dir);
     let postinst_vdb_dir = postinst_upper_dir.path().join(relative_vdb_dir);
 
+    // We do this even though `sparse_vdb` is set because the postinst hook
+    // might need this data. We instead strip the vdb after the postinst hook
+    // has been run.
     if preinst_vdb_dir.exists() {
         std::fs::create_dir_all(&postinst_vdb_dir)?;
         move_directory(&preinst_vdb_dir, &postinst_vdb_dir)?;
@@ -301,16 +326,7 @@ fn mangle_preinst_layer(
     }
 
     // Remove unnecessary directories from the preinst layer we created for VDB.
-    for dir in preinst_vdb_dir.ancestors() {
-        if dir == preinst_dir {
-            break;
-        }
-        match std::fs::remove_dir(dir) {
-            Err(e) if e.kind() == ErrorKind::NotFound => {}
-            Err(e) if e.raw_os_error() == Some(libc::ENOTEMPTY) => break,
-            other => other?,
-        }
-    }
+    remove_empty_ancestors(preinst_dir, &preinst_vdb_dir)?;
 
     Ok(postinst_upper_dir)
 }
@@ -341,7 +357,7 @@ fn install_package(
     root_dir: &Path,
     mutable_base_dir: &Path,
     ensure_skip_hooks: bool,
-    drop_revision: bool,
+    sparse_vdb: bool,
 ) -> Result<()> {
     let _span = info_span!(
         "install",
@@ -353,7 +369,7 @@ fn install_package(
         .with_context(|| format!("Failed to open {}", spec.input_binary_package.display()))?;
 
     // We use the category_p as the category_pf because we want to elide the revision number.
-    let category_pf = if drop_revision {
+    let category_pf = if sparse_vdb {
         binary_package.category_p()
     } else {
         binary_package.category_pf()
@@ -407,6 +423,7 @@ fn install_package(
         root_dir,
         category_pf,
         mutable_base_dir,
+        sparse_vdb,
     )?;
 
     // Create an empty file to hide /.image. This file will be removed from the layer later.
@@ -424,6 +441,26 @@ fn install_package(
         category_pf,
         postinst_upper_dir,
     )?;
+
+    // When working with sparse vdbs, we drop any of the vdb modifications performed by the
+    // hooks since we only have a few entries in a sparse vdb, and they are considered
+    // immutable.
+    if sparse_vdb {
+        let vdb_dir = get_vdb_dir(
+            root_dir
+                .strip_prefix("/")
+                .expect("--root-dir must return an absolute path"),
+            category_pf,
+        );
+        let post_vdb_dir = spec.output_postinst_dir.join(vdb_dir);
+
+        remove_dir_all(&post_vdb_dir).with_context(|| format!("rm -rf {post_vdb_dir:?}"))?;
+
+        remove_empty_ancestors(
+            &spec.output_postinst_dir,
+            post_vdb_dir.parent().expect("vdb to have a parent"),
+        )?;
+    }
 
     // Add the postinst layer to the container so that packages installed later can see
     // modifications made by pkg_postinst.
@@ -472,11 +509,12 @@ struct Args {
     #[arg(long)]
     ensure_skip_hooks: bool,
 
-    /// Discard the revision when computing the vdb path.
+    /// Specifies if we are working with sparse vdbs.
     ///
-    /// Set this to true if the input layers also had their revision numbers dropped.
+    /// This will drop the revision number from the vdb, and it will also skip
+    /// generating a new `CONTENTS` entry.
     #[arg(long)]
-    drop_revision: bool,
+    sparse_vdb: bool,
 }
 
 fn do_main() -> Result<()> {
@@ -514,7 +552,7 @@ fn do_main() -> Result<()> {
             &args.root_dir,
             tmpfs.path(),
             args.ensure_skip_hooks,
-            args.drop_revision,
+            args.sparse_vdb,
         )?;
     }
 

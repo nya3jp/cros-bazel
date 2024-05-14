@@ -27,7 +27,12 @@ fn flatten_layers(layer_dirs: &[&Path], out_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn run_extract_package(image_prefix: &str, vdb_prefix: &str, host: bool) -> Result<SafeTempDir> {
+fn run_extract_package(
+    image_prefix: &str,
+    vdb_prefix: &str,
+    host: bool,
+    sparse_vdb: bool,
+) -> Result<SafeTempDir> {
     let raw_out_dir = SafeTempDir::new()?;
 
     let runfiles = Runfiles::create()?;
@@ -44,6 +49,11 @@ fn run_extract_package(image_prefix: &str, vdb_prefix: &str, host: bool) -> Resu
         .arg("--vdb-prefix")
         .arg(vdb_prefix)
         .args(if host { &["--host"][..] } else { &[][..] })
+        .args(if sparse_vdb {
+            &["--sparse-vdb"][..]
+        } else {
+            &[][..]
+        })
         .status()?;
     ensure!(status.success(), "extract_package failed: {:?}", status);
 
@@ -71,7 +81,7 @@ fn list_files_under(dir: &Path) -> Result<Vec<String>> {
 
 #[test]
 fn installed_image_for_target() -> Result<()> {
-    let out_dir = run_extract_package("build/foo", "build/foo", false)?;
+    let out_dir = run_extract_package("build/foo", "build/foo", false, false)?;
     assert_eq!(
         list_files_under(out_dir.path())?,
         vec![
@@ -113,7 +123,7 @@ fn installed_image_for_target() -> Result<()> {
 
 #[test]
 fn installed_image_for_host() -> Result<()> {
-    let out_dir = run_extract_package("", "", true)?;
+    let out_dir = run_extract_package("", "", true, false)?;
     assert_eq!(
         list_files_under(out_dir.path())?,
         vec![
@@ -154,8 +164,48 @@ fn installed_image_for_host() -> Result<()> {
 }
 
 #[test]
+fn sparse_vdb_installed_image_for_target() -> Result<()> {
+    let out_dir = run_extract_package("build/foo", "build/foo", false, true)?;
+    assert_eq!(
+        list_files_under(out_dir.path())?,
+        vec![
+            "build/foo/bin/helloworld",
+            "build/foo/lib/helloworld",
+            "build/foo/usr/bin/helloworld",
+            "build/foo/usr/lib/helloworld",
+            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/EAPI",
+            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/IUSE",
+            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/SLOT",
+            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/USE",
+            "build/foo/var/db/pkg/virtual/extract-test-1.2.3/repository"
+        ]
+    );
+    Ok(())
+}
+
+#[test]
+fn sparse_vdb_installed_image_for_host() -> Result<()> {
+    let out_dir = run_extract_package("", "", true, true)?;
+    assert_eq!(
+        list_files_under(out_dir.path())?,
+        vec![
+            "bin/helloworld",
+            "lib64/helloworld", // rewrote lib->lib64
+            "usr/bin/helloworld",
+            "usr/lib64/helloworld", // rewrote lib->lib64
+            "var/db/pkg/virtual/extract-test-1.2.3/EAPI",
+            "var/db/pkg/virtual/extract-test-1.2.3/IUSE",
+            "var/db/pkg/virtual/extract-test-1.2.3/SLOT",
+            "var/db/pkg/virtual/extract-test-1.2.3/USE",
+            "var/db/pkg/virtual/extract-test-1.2.3/repository"
+        ]
+    );
+    Ok(())
+}
+
+#[test]
 fn staged_image_for_target() -> Result<()> {
-    let out_dir = run_extract_package(".image", "build/foo", false)?;
+    let out_dir = run_extract_package(".image", "build/foo", false, false)?;
     assert_eq!(
         list_files_under(out_dir.path())?,
         vec![
@@ -197,7 +247,7 @@ fn staged_image_for_target() -> Result<()> {
 
 #[test]
 fn staged_image_for_host() -> Result<()> {
-    let out_dir = run_extract_package(".image", "", true)?;
+    let out_dir = run_extract_package(".image", "", true, false)?;
     assert_eq!(
         list_files_under(out_dir.path())?,
         vec![
