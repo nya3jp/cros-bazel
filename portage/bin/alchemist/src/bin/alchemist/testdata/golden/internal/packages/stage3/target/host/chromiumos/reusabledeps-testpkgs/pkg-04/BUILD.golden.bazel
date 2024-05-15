@@ -1,0 +1,697 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+alias(
+    name = "1.0_host_deps",
+    actual = "//internal/sdk/stage3/target/host",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1.0_deps",
+    actual = "1.0_host_deps",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1.0_test_deps",
+    actual = "1.0_host_deps",
+    visibility = ["//visibility:private"],
+)
+
+string_flag(
+    name = "1.0_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "1.0_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_incremental_enabled",
+    flag_values = {":1.0_incremental": "true"},
+)
+
+write_file(
+    name = "1.0_cache_marker",
+    out = "1.0_incremental/MARKER",
+)
+
+bool_flag(
+    name = "1.0_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_ccache_enabled_local",
+    flag_values = {
+        ":1.0_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "1.0",
+    ebuild = "pkg-04-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "reusabledeps-testpkgs",
+    package_name = "pkg-04",
+    version = "1.0",
+    slot = "0/0",
+    index = 0,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_incremental_enabled": ":1.0_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="reusabledeps-testpkgs/pkg-04",
+            is_host=True,
+        )
+    ],
+    prebuilt = ":1.0_prebuilt",
+    portage_profile_test_package = select({
+        "@//bazel/portage:portage_config_validator_enabled": ":1.0_portage_profile_test_package",
+        "@//bazel/portage:portage_config_validator_disabled": None,
+    }),
+    hermetic_test_package = select({
+        "@//bazel/portage:hermetic_validator_enabled": ":1.0_hermetic_test_package",
+        "@//bazel/portage:hermetic_validator_disabled": None,
+    }),
+    generate_interface_libraries = True,
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "1.0_including_provided",
+    binpkg = ":1.0",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "1.0_debug",
+    ebuild = "pkg-04-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "reusabledeps-testpkgs",
+    package_name = "pkg-04",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_incremental_enabled": ":1.0_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="reusabledeps-testpkgs/pkg-04",
+            is_host=True,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+string_flag(
+    name = "1.0_hermetic_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "1.0_hermetic_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_hermetic_test_package_incremental_enabled",
+    flag_values = {":1.0_hermetic_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "1.0_hermetic_test_package_cache_marker",
+    out = "1.0_hermetic_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "1.0_hermetic_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_hermetic_test_package_ccache_enabled_local",
+    flag_values = {
+        ":1.0_hermetic_test_package_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "1.0_hermetic_test_package",
+    suffix = "_hermetic_test_package",
+    ebuild = "pkg-04-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "reusabledeps-testpkgs",
+    package_name = "pkg-04",
+    version = "1.0",
+    slot = "0/0",
+    index = 1,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_hermetic_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="reusabledeps-testpkgs/pkg-04",
+            is_host=True,
+        )
+    ],
+    prebuilt = ":1.0_hermetic_test_package_prebuilt",
+    generate_interface_libraries = True,
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "1.0_hermetic_test_package_including_provided",
+    binpkg = ":1.0",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "1.0_hermetic_test_package_debug",
+    suffix = "_hermetic_test_package",
+    ebuild = "pkg-04-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "reusabledeps-testpkgs",
+    package_name = "pkg-04",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_hermetic_test_package_incremental_enabled": ":1.0_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_hermetic_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="reusabledeps-testpkgs/pkg-04",
+            is_host=True,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+string_flag(
+    name = "1.0_portage_profile_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "1.0_portage_profile_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_portage_profile_test_package_incremental_enabled",
+    flag_values = {":1.0_portage_profile_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "1.0_portage_profile_test_package_cache_marker",
+    out = "1.0_portage_profile_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "1.0_portage_profile_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_portage_profile_test_package_ccache_enabled_local",
+    flag_values = {
+        ":1.0_portage_profile_test_package_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "1.0_portage_profile_test_package",
+    suffix = "_portage_profile_test_package",
+    ebuild = "pkg-04-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "reusabledeps-testpkgs",
+    package_name = "pkg-04",
+    version = "1.0",
+    slot = "0/0",
+    index = 2,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:host-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_portage_profile_test_package_incremental_enabled": ":1.0_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_portage_profile_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="reusabledeps-testpkgs/pkg-04",
+            is_host=True,
+        )
+    ],
+    prebuilt = ":1.0_portage_profile_test_package_prebuilt",
+    generate_interface_libraries = True,
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "1.0_portage_profile_test_package_including_provided",
+    binpkg = ":1.0",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "1.0_portage_profile_test_package_debug",
+    suffix = "_portage_profile_test_package",
+    ebuild = "pkg-04-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "reusabledeps-testpkgs",
+    package_name = "pkg-04",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:host-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/host:full",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_portage_profile_test_package_incremental_enabled": ":1.0_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_portage_profile_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="reusabledeps-testpkgs/pkg-04",
+            is_host=True,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+ebuild_install_action(
+    name = "1.0_installed_no_pdepends",
+    board = "amd64-host",
+    package = ":1.0",
+    sysroot = "//internal/sysroot:amd64-host_sysroot",
+    requires = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "1.0_installed",
+    srcs = [
+        "//internal/packages/stage3/target/host/chromiumos/reusabledeps-testpkgs/pkg-04:1.0_installed_no_pdepends",
+    ],
+    visibility = ["//:__subpackages__"],
+)
+ebuild_test(
+    name = "1.0_test",
+    ebuild = "pkg-04-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "reusabledeps-testpkgs",
+    package_name = "pkg-04",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-host",
+    sdk = ":1.0_test_deps",
+    overlays = "//internal/overlays:host",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="reusabledeps-testpkgs/pkg-04",
+            is_host=True,
+        )
+    ],
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_compare_package_test(
+    name = "1.0_hermetic_test",
+    packages = [
+        ":1.0",
+        ":1.0_hermetic_test_package",
+    ],
+    size="small",
+)
+
+package_set(
+    name = "1.0_package_set",
+    deps = [
+        "//internal/packages/stage3/target/host/chromiumos/reusabledeps-testpkgs/pkg-04:1.0",
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+

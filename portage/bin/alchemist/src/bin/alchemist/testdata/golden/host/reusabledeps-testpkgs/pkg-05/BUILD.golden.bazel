@@ -1,0 +1,157 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+alias(
+    name = "1.0",
+    actual = "//internal/packages/stage2/host/chromiumos/reusabledeps-testpkgs/pkg-05:1.0",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "1.0_debug",
+    actual = "//internal/packages/stage2/host/chromiumos/reusabledeps-testpkgs/pkg-05:1.0_debug",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "1.0_package_set",
+    actual = "//internal/packages/stage2/host/chromiumos/reusabledeps-testpkgs/pkg-05:1.0_package_set",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "1.0_install",
+    actual = "//internal/packages/stage2/host/chromiumos/reusabledeps-testpkgs/pkg-05:1.0_install",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "1.0_installed",
+    actual = "//internal/packages/stage2/host/chromiumos/reusabledeps-testpkgs/pkg-05:1.0_installed",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "1.0_install_list",
+    actual = "//internal/packages/stage2/host/chromiumos/reusabledeps-testpkgs/pkg-05:1.0_install_list",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "pkg-05",
+    actual = ":1.0",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "debug",
+    actual = ":1.0_debug",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "pkg-05_debug",
+    actual = ":1.0_debug",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "package_set",
+    actual = ":1.0_package_set",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "pkg-05_package_set",
+    actual = ":1.0_package_set",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "install",
+    actual = ":1.0_install",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "pkg-05_install",
+    actual = ":1.0_install",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "installed",
+    actual = ":1.0_installed",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "pkg-05_installed",
+    actual = ":1.0_installed",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "install_list",
+    actual = ":1.0_install_list",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "pkg-05_install_list",
+    actual = ":1.0_install_list",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+test_suite(
+    name = "1.0_test",
+    tests = [ "//internal/packages/stage2/host/chromiumos/reusabledeps-testpkgs/pkg-05:1.0_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "test",
+    tests = [ ":1.0_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "pkg-05_test",
+    tests = [ ":1.0_test" ],
+    visibility = ["@//bazel:internal"],
+)
