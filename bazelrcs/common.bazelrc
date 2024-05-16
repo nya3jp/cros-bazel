@@ -127,10 +127,9 @@ build:format --config=rustfmt
 build:rustfmt --
 # build:rustfmt --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect --output_groups=+rustfmt_checks
 
-# When building rust, also add rustc output formatted as json to the bazel
-# outputs, so that it can be picked up by rust-analyzer.
-# This isn't needed by CQ - only by local builds, but the cost is negligible.
-build --@rules_rust//:rustc_output_diagnostics --output_groups=+rustc_output,+rustc_rmeta_output
+# When building rust, ensure that the generated sources are materialized to disk.
+# This allows rust-analyzer to see the generated sources, giving us proper IDE support.
+build --output_groups=+rust_generated_srcs
 
 # This will be removed when it becomes the default.
 build:hermetic_toolchains --config=hermetic_cc --config=hermetic_rust
