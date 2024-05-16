@@ -379,14 +379,9 @@ fn reproducible() -> Result<()> {
             simple_dir("", 0o555),
             simple_file("DURABLE_TREE", 0o555, EMPTY_HASH),
             simple_file(
-                "extra.tar.zst",
-                0o555,
-                "723dd57d71df40fd207807e1ea96740c535e8ad160cb040ba555ae8273cba8e8"
-            ),
-            simple_file(
                 "manifest.json",
                 0o555,
-                "8893c37c3a03a2b39d9979670f299a564a25fbaa1239eacacf5d5831e5df9ef1"
+                "d783f15ee6714fcb609111012c918f87a68ff0b7af024cdb1c431f66fea82d4e"
             ),
             simple_dir("raw", 0o555),
             simple_dir("raw/dir", 0o555),

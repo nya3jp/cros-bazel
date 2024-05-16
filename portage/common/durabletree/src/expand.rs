@@ -3,23 +3,24 @@
 // found in the LICENSE file.
 
 use std::{
-    fs::{create_dir, remove_dir, set_permissions, symlink_metadata, File},
+    collections::BTreeMap,
+    fs::{remove_dir, set_permissions, File},
     io::{BufReader, ErrorKind},
-    os::unix::prelude::PermissionsExt,
+    os::unix::{fs::symlink, prelude::PermissionsExt},
     path::{Path, PathBuf},
-    process::{Command, Stdio},
 };
 
 use anyhow::{bail, Context, Result};
 use fileutil::{with_permissions, SafeTempDir};
-use nix::mount::{mount, umount2, MntFlags, MsFlags};
+use nix::{
+    mount::{mount, umount2, MntFlags, MsFlags},
+    sys::stat::{mknod, Mode, SFlag},
+};
 use tracing::{instrument, warn};
 
 use crate::{
-    consts::{
-        EXTRA_TARBALL_FILE_NAME, MANIFEST_FILE_NAME, MARKER_FILE_NAME, RAW_DIR_NAME, RESTORED_XATTR,
-    },
-    manifest::DurableTreeManifest,
+    consts::{MANIFEST_FILE_NAME, MARKER_FILE_NAME, RAW_DIR_NAME, RESTORED_XATTR},
+    manifest::{DurableTreeManifest, FileEntry},
     util::DirLock,
 };
 
@@ -42,9 +43,114 @@ impl Drop for ExtraDir {
     }
 }
 
+fn restore_user_xattrs_and_permissions(
+    path: &Path,
+    mode: u32,
+    user_xattrs: &BTreeMap<String, Vec<u8>>,
+) -> Result<()> {
+    // First set a writable permission for restoring xattrs.
+    set_permissions(path, PermissionsExt::from_mode(0o755))
+        .with_context(|| format!("chmod 755 {}", path.display()))?;
+
+    // Restore user xattrs.
+    for (key, value) in user_xattrs {
+        xattr::set(path, key, value).with_context(|| format!("setxattr {}", path.display()))?;
+    }
+
+    // Restore permissions.
+    set_permissions(path, PermissionsExt::from_mode(mode))
+        .with_context(|| format!("chmod {:03o} {}", mode, path.display()))?;
+
+    Ok(())
+}
+
 /// Restores the raw directory if not yet.
 #[instrument]
-fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
+fn maybe_restore_raw_directory(root_dir: &Path, manifest: &DurableTreeManifest) -> Result<()> {
+    // Check if the raw directory is already restored.
+    if let Ok(Some(_)) = xattr::get(root_dir, RESTORED_XATTR) {
+        // Already restored.
+        return Ok(());
+    }
+
+    let raw_dir = root_dir.join(RAW_DIR_NAME);
+
+    for (relative_path, entry) in &manifest.files {
+        let path = raw_dir.join(relative_path);
+
+        match entry {
+            FileEntry::Regular { mode, user_xattrs } => {
+                restore_user_xattrs_and_permissions(&path, *mode, user_xattrs)?;
+            }
+            FileEntry::Directory { mode, user_xattrs } => {
+                // Recreate directories as Bazel might delete empty ones.
+                match std::fs::create_dir(&path) {
+                    Err(err) if err.kind() == ErrorKind::AlreadyExists => {}
+                    other => other.with_context(|| format!("mkdir {}", path.display()))?,
+                };
+                restore_user_xattrs_and_permissions(&path, *mode, user_xattrs)?;
+            }
+            FileEntry::Symlink { .. } | FileEntry::Whiteout => {}
+        }
+    }
+
+    // Mark as restored.
+    with_permissions(root_dir, 0o755, || {
+        xattr::set(root_dir, RESTORED_XATTR, &[] as &[u8])
+            .with_context(|| format!("Failed to set {} on {}", RESTORED_XATTR, root_dir.display()))
+    })?;
+
+    Ok(())
+}
+
+/// Create an extra directory containing special files (symlinks and whiteouts).
+#[instrument]
+fn create_extra_dir(manifest: &DurableTreeManifest) -> Result<ExtraDir> {
+    let dir = SafeTempDir::new()?;
+
+    mount(
+        Some(""),
+        dir.path(),
+        Some("tmpfs"),
+        MsFlags::empty(),
+        Some("mode=0755"),
+    )
+    .context("Failed to mount tmpfs for extra dir")?;
+
+    let extra_dir = ExtraDir {
+        dir: Some(dir.into_path()),
+    };
+
+    for (relative_path, entry) in &manifest.files {
+        let path = extra_dir.path().join(relative_path);
+        let parent_dir = path.parent().unwrap();
+
+        match entry {
+            FileEntry::Regular { .. } | FileEntry::Directory { .. } => {}
+            FileEntry::Symlink { target } => {
+                std::fs::create_dir_all(parent_dir)
+                    .with_context(|| format!("mkdir -p {}", parent_dir.display()))?;
+                symlink(target, &path)
+                    .with_context(|| format!("ln -s {} {}", target, path.display()))?;
+            }
+            FileEntry::Whiteout => {
+                std::fs::create_dir_all(parent_dir)
+                    .with_context(|| format!("mkdir -p {}", parent_dir.display()))?;
+                mknod(&path, SFlag::S_IFCHR, Mode::from_bits(0o644).unwrap(), 0)
+                    .with_context(|| format!("mknod {} c 0 0", path.display()))?;
+            }
+        }
+    }
+
+    Ok(extra_dir)
+}
+
+pub fn expand_impl(root_dir: &Path) -> Result<ExtraDir> {
+    // Ensure that the directory is a durable tree.
+    if !root_dir.join(MARKER_FILE_NAME).try_exists()? {
+        bail!("{} is not a durable tree", root_dir.display());
+    }
+
     // Resolve symlinks. Otherwise xattr syscalls might attempt to read/update
     // xattrs of symlinks, not their destination.
     let root_dir = root_dir.canonicalize()?;
@@ -66,96 +172,11 @@ fn maybe_restore_raw_directory(root_dir: &Path) -> Result<()> {
         );
     }
 
-    // Check if the raw directory is already restored.
-    if let Ok(Some(_)) = xattr::get(root_dir, RESTORED_XATTR) {
-        // Already restored.
-        return Ok(());
-    }
-
-    let raw_dir = root_dir.join(RAW_DIR_NAME);
-
     let manifest: DurableTreeManifest = serde_json::from_reader(BufReader::new(File::open(
         root_dir.join(MANIFEST_FILE_NAME),
     )?))?;
-    for (relative_path, file_manifest) in manifest.files {
-        let path = raw_dir.join(&relative_path);
 
-        // Check if the file path exists. If not, it is a directory
-        // ignored by the Bazel cache.
-        match symlink_metadata(&path) {
-            Err(err) if err.kind() == ErrorKind::NotFound => {
-                create_dir(&path)
-                    .with_context(|| format!("Restoring directory {}", path.display()))?;
-            }
-            other => {
-                other?;
-            }
-        };
+    maybe_restore_raw_directory(root_dir, &manifest)?;
 
-        // Restore permissions.
-        set_permissions(&path, PermissionsExt::from_mode(file_manifest.mode))
-            .with_context(|| format!("Setting permissions to {}", &relative_path))?;
-
-        // Restore user xattrs.
-        for (key, value) in file_manifest.user_xattrs {
-            xattr::set(&path, key, &value)
-                .with_context(|| format!("Setting xattrs to {}", &relative_path))?;
-        }
-    }
-
-    // Mark as restored.
-    with_permissions(root_dir, 0o755, || {
-        xattr::set(root_dir, RESTORED_XATTR, &[] as &[u8])
-            .with_context(|| format!("Failed to set {} on {}", RESTORED_XATTR, root_dir.display()))
-    })?;
-
-    Ok(())
-}
-
-/// Extracts the extra tarball into a temporary directory and returns its path.
-#[instrument]
-fn extract_extra_files(root_dir: &Path) -> Result<ExtraDir> {
-    let dir = SafeTempDir::new()?;
-
-    mount(
-        Some(""),
-        dir.path(),
-        Some("tmpfs"),
-        MsFlags::empty(),
-        Some("mode=0755"),
-    )
-    .context("Failed to mount tmpfs for extra dir")?;
-
-    let extra_dir = ExtraDir {
-        dir: Some(dir.into_path()),
-    };
-
-    // TODO: Avoid depending on the system-installed tar(1).
-    // It's not too bad though as it is so popular in Linux systems.
-    let mut child = Command::new("tar")
-        .args(["--extract", "--preserve-permissions"])
-        .current_dir(extra_dir.path())
-        .stdin(Stdio::piped())
-        .spawn()?;
-
-    let stdin = child.stdin.take().unwrap();
-    zstd::stream::copy_decode(File::open(root_dir.join(EXTRA_TARBALL_FILE_NAME))?, stdin)?;
-
-    let status = child.wait()?;
-    if !status.success() {
-        bail!("tar failed: {:?}", status);
-    }
-
-    Ok(extra_dir)
-}
-
-pub fn expand_impl(root_dir: &Path) -> Result<ExtraDir> {
-    // Ensure that the directory is a durable tree.
-    if !root_dir.join(MARKER_FILE_NAME).try_exists()? {
-        bail!("{} is not a durable tree", root_dir.display());
-    }
-
-    maybe_restore_raw_directory(root_dir)?;
-
-    extract_extra_files(root_dir)
+    create_extra_dir(&manifest)
 }

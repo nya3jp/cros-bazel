@@ -7,122 +7,17 @@ use fileutil::get_user_xattrs_map;
 use fileutil::SafeTempDirBuilder;
 use itertools::Itertools;
 use std::{
-    collections::HashSet,
-    fs::{read_link, rename, set_permissions, File, Metadata, Permissions},
+    fs::{rename, set_permissions, File, Metadata, Permissions},
     os::unix::prelude::*,
-    path::{Path, PathBuf},
+    path::Path,
 };
-use tar::{EntryType, Header, HeaderMode};
 use tracing::instrument;
 
 use crate::{
-    consts::{
-        EXTRA_TARBALL_FILE_NAME, MANIFEST_FILE_NAME, MARKER_FILE_NAME, MODE_MASK, RAW_DIR_NAME,
-    },
-    manifest::{DurableTreeManifest, FileManifest},
+    consts::{MANIFEST_FILE_NAME, MARKER_FILE_NAME, MODE_MASK, RAW_DIR_NAME},
+    manifest::{DurableTreeManifest, FileEntry},
     util::DirLock,
 };
-
-struct ExtraTarballBuilder {
-    raw_dir: PathBuf,
-    tar_builder: tar::Builder<zstd::Encoder<'static, File>>,
-    written_dirs: HashSet<PathBuf>,
-}
-
-impl ExtraTarballBuilder {
-    pub fn new(root_dir: &Path) -> Result<Self> {
-        let file = File::create(root_dir.join(EXTRA_TARBALL_FILE_NAME))?;
-        let zstd_encoder = zstd::Encoder::new(file, 0)?;
-        let mut tar_builder = tar::Builder::new(zstd_encoder);
-        tar_builder.mode(HeaderMode::Deterministic); // for reproducibility.
-
-        let mut builder = Self {
-            raw_dir: root_dir.join(RAW_DIR_NAME),
-            tar_builder,
-            written_dirs: HashSet::new(),
-        };
-
-        // Always include the root directory in the tarball. Otherwise we might set
-        // a wrong permissions to the root directory.
-        builder.ensure_ancestors(Path::new("_"))?;
-
-        Ok(builder)
-    }
-
-    pub fn finish(self) -> Result<()> {
-        let encoder = self.tar_builder.into_inner()?;
-        let file = encoder.finish()?;
-        file.sync_all()?;
-        Ok(())
-    }
-
-    pub fn move_into_tarball(&mut self, relative_path: &Path, metadata: &Metadata) -> Result<()> {
-        let file_type = metadata.file_type();
-        let dot_relative_path = Path::new(".").join(relative_path);
-
-        self.ensure_ancestors(relative_path)?;
-
-        if file_type.is_file() || file_type.is_dir() {
-            bail!("Regular files and directories are not supported in extra tarballs");
-        } else if file_type.is_symlink() {
-            let target = read_link(self.raw_dir.join(relative_path))?;
-
-            let mut header = Header::new_gnu();
-            header.set_entry_type(EntryType::Symlink);
-            header.set_mode(metadata.mode() & MODE_MASK);
-            self.tar_builder
-                .append_link(&mut header, dot_relative_path, target)?;
-        } else if file_type.is_char_device() {
-            if metadata.rdev() != 0 {
-                bail!(
-                    "Unsupported character device file (rdev=0x{:x}); \
-                    only whiteout files can be created without CAP_MKNOD",
-                    metadata.rdev()
-                );
-            }
-
-            let mut header = Header::new_gnu();
-            header.set_path(dot_relative_path)?;
-            header.set_entry_type(EntryType::Char);
-            header.set_device_major(0)?;
-            header.set_device_minor(0)?;
-            header.set_mode(metadata.mode() & MODE_MASK);
-            header.set_cksum();
-            self.tar_builder.append(&header, &[] as &[u8])?;
-        } else {
-            bail!("Unsupported file type {:?}", file_type);
-        }
-
-        fileutil::remove_file_with_chmod(&self.raw_dir.join(relative_path))?;
-        Ok(())
-    }
-
-    fn ensure_ancestors(&mut self, relative_path: &Path) -> Result<()> {
-        // Write all ancestor directories if not written yet.
-        // rev() to write parents before children.
-        for dir in relative_path
-            .ancestors()
-            .skip(1)
-            .collect::<Vec<_>>()
-            .into_iter()
-            .rev()
-        {
-            if self.written_dirs.contains(dir) {
-                break;
-            }
-            let metadata = self.raw_dir.join(dir).metadata()?;
-            let mut header = Header::new_gnu();
-            header.set_path(Path::new(".").join(dir))?;
-            header.set_entry_type(EntryType::Directory);
-            header.set_mode(metadata.mode() & MODE_MASK);
-            header.set_cksum();
-            // Don't use `append_dir` as it drops some mode bits.
-            self.tar_builder.append(&header, &[] as &[u8])?;
-            self.written_dirs.insert(dir.to_owned());
-        }
-        Ok(())
-    }
-}
 
 /// Renames a given directory to the `raw` subdirectory under itself.
 /// For example, the original directory is at `/path/to/dir`, it is renamed to
@@ -153,46 +48,72 @@ fn pivot_to_raw_subdir(root_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn build_manifest_and_extra_tarball_impl(
+/// Processes a file. It removes a file if it is neither a regular file or a directory,
+/// and returns [`FileEntry`] to be recorded in the manifest file.
+fn process_file(path: &Path, metadata: &Metadata) -> Result<FileEntry> {
+    if metadata.is_file() || metadata.is_dir() {
+        let mode = metadata.mode() & MODE_MASK;
+
+        set_permissions(path, Permissions::from_mode(0o755))
+            .with_context(|| format!("chmod 755 {}", path.display()))?;
+
+        let user_xattrs = get_user_xattrs_map(path)?;
+
+        Ok(if metadata.is_file() {
+            FileEntry::Regular { mode, user_xattrs }
+        } else {
+            FileEntry::Directory { mode, user_xattrs }
+        })
+    } else if metadata.is_symlink() {
+        let symlink_target = path
+            .read_link()
+            .with_context(|| format!("readlink {}", path.display()))?;
+        let symlink_target = symlink_target
+            .to_str()
+            .with_context(|| format!("readlink {}: not valid UTF-8", path.display()))?;
+        std::fs::remove_file(path).with_context(|| format!("rm {}", path.display()))?;
+
+        Ok(FileEntry::Symlink {
+            target: symlink_target.to_string(),
+        })
+    } else if metadata.file_type().is_char_device() && metadata.rdev() == 0 {
+        std::fs::remove_file(path).with_context(|| format!("rm {}", path.display()))?;
+
+        Ok(FileEntry::Whiteout)
+    } else {
+        bail!(
+            "Unsupported file type {:?}: {}",
+            metadata.file_type(),
+            path.display()
+        );
+    }
+}
+
+fn build_manifest_impl(
     raw_dir: &Path,
     relative_path: &Path,
     manifest: &mut DurableTreeManifest,
-    extra_builder: &mut ExtraTarballBuilder,
 ) -> Result<()> {
-    let full_path = raw_dir.join(relative_path);
-    let metadata = std::fs::symlink_metadata(&full_path)?;
+    let path = raw_dir.join(relative_path);
+    let metadata = std::fs::symlink_metadata(&path)?;
 
-    if metadata.is_file() || metadata.is_dir() {
-        let mode = metadata.mode() & MODE_MASK;
-        let user_xattrs = get_user_xattrs_map(&full_path)?;
-        manifest.files.insert(
-            relative_path
-                .to_str()
-                .ok_or_else(|| anyhow!("Non-UTF8 filename: {:?}", relative_path))?
-                .to_owned(),
-            FileManifest { mode, user_xattrs },
-        );
-    } else {
-        extra_builder.move_into_tarball(relative_path, &metadata)?;
-        return Ok(());
-    }
-
-    // Ensure full access to the file so that Bazel can read the file/directory later.
-    std::fs::set_permissions(&full_path, Permissions::from_mode(0o755))?;
+    let file_manifest = process_file(&path, &metadata)?;
+    manifest.files.insert(
+        relative_path
+            .to_str()
+            .ok_or_else(|| anyhow!("Non-UTF8 filename: {:?}", relative_path))?
+            .to_owned(),
+        file_manifest,
+    );
 
     if metadata.is_dir() {
-        let entries = std::fs::read_dir(full_path)?
+        let entries = std::fs::read_dir(&path)?
             .collect::<std::io::Result<Vec<_>>>()?
             .into_iter()
             // Sort entries to make the output deterministic.
             .sorted_by(|a, b| a.file_name().cmp(&b.file_name()));
         for entry in entries {
-            build_manifest_and_extra_tarball_impl(
-                raw_dir,
-                &relative_path.join(entry.file_name()),
-                manifest,
-                extra_builder,
-            )?;
+            build_manifest_impl(raw_dir, &relative_path.join(entry.file_name()), manifest)?;
         }
     }
 
@@ -202,21 +123,13 @@ fn build_manifest_and_extra_tarball_impl(
 /// Scans files under the raw directory and builds a manifest JSON and an extra
 /// tarball file.
 #[instrument]
-fn build_manifest_and_extra_tarball(root_dir: &Path) -> Result<()> {
+fn build_manifest(root_dir: &Path) -> Result<()> {
     let raw_dir = root_dir.join(RAW_DIR_NAME);
-
     let mut manifest: DurableTreeManifest = Default::default();
-    let mut extra_builder = ExtraTarballBuilder::new(root_dir)?;
 
-    build_manifest_and_extra_tarball_impl(
-        &raw_dir,
-        Path::new(""),
-        &mut manifest,
-        &mut extra_builder,
-    )?;
+    build_manifest_impl(&raw_dir, Path::new(""), &mut manifest)?;
 
     serde_json::to_writer(File::create(root_dir.join(MANIFEST_FILE_NAME))?, &manifest)?;
-    extra_builder.finish()?;
 
     Ok(())
 }
@@ -241,7 +154,7 @@ pub fn convert_impl(root_dir: &Path) -> Result<()> {
     }
 
     pivot_to_raw_subdir(root_dir)?;
-    build_manifest_and_extra_tarball(root_dir)?;
+    build_manifest(root_dir)?;
 
     // Mark as hot initially.
     set_permissions(root_dir, Permissions::from_mode(0o700))?;

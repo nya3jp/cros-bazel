@@ -54,9 +54,6 @@ use walkdir::WalkDir;
 /// - `raw/...`: A directory containing regular files and directories.
 /// - `manifest.json`: A JSON file that records original permissions and user
 ///   xattrs of files in the raw directory.
-/// - `extra.tar.zst`: A zstd-compressed tarball containing special files that
-///   cannot be part of Bazel tree artifacts, such as symlinks and character
-///   device files.
 ///
 /// These files are always created even if they're empty.
 ///
@@ -70,9 +67,8 @@ use walkdir::WalkDir;
 /// a durable tree, we restore metadata according to the manifest JSON.
 ///
 /// Bazel also forgets empty directories in the raw directory when it uploads a
-/// durable tree to the remote cache. We can detect them by checking if a file
-/// path in the manifest actually exists in the raw directory; if it's missing,
-/// it is an empty directory removed by Bazel, so we recreate it.
+/// durable tree to the remote cache. We can detect them by checking if a
+/// directory path in the manifest actually exists in the raw directory.
 ///
 /// Since restoration is a heavy task when the tree contains thousands of files,
 /// we record in the top directory's xattrs whether we have already restored and
@@ -101,23 +97,6 @@ use walkdir::WalkDir;
 /// If you need to expand a hot durable tree in unit tests, you can use
 /// [`DurableTree::cool_down_for_testing`] to simulate the "cool down" process
 /// of Bazel.
-///
-/// ## Limitations
-///
-/// We don't record xattrs in the extra tarball because the tar library we're
-/// using now doesn't support the PAX format needed to record xattrs:
-/// https://github.com/alexcrichton/tar-rs/issues/102
-///
-/// This is fine for now because the extra tarball only contains special files
-/// that we can't set xattrs to (besides ancestor directories of special files;
-/// see the next section).
-///
-/// ## Layer ordering
-///
-/// The same directory might be recorded in both the raw directory and the extra
-/// tarball. Due to the limitations mentioned above, directories in the extra
-/// archive might be missing some metadata. Therefore the raw directory must
-/// take precedence over the extra tarball.
 pub struct DurableTree {
     _extra_dir: ExtraDir,
 
