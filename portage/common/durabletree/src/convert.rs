@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 use anyhow::{anyhow, bail, Context, Result};
+use fileutil::get_user_xattrs_map;
 use fileutil::SafeTempDirBuilder;
 use itertools::Itertools;
 use std::{
@@ -19,7 +20,7 @@ use crate::{
         EXTRA_TARBALL_FILE_NAME, MANIFEST_FILE_NAME, MARKER_FILE_NAME, MODE_MASK, RAW_DIR_NAME,
     },
     manifest::{DurableTreeManifest, FileManifest},
-    util::{get_user_xattrs_map, DirLock},
+    util::DirLock,
 };
 
 struct ExtraTarballBuilder {

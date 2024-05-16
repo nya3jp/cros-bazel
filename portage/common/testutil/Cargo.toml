@@ -8,8 +8,12 @@ edition = "2021"
 [dependencies]
 anyhow = { package = "anyhow", workspace = true }
 fileutil = { package = "fileutil", path = "../fileutil" }
+hex = { package = "hex", workspace = true }
+itertools = { package = "itertools", workspace = true }
 libc = { package = "libc", workspace = true }
 runfiles = { package = "runfiles", workspace = true }
+serde = { package = "serde", workspace = true }
+sha2 = { package = "sha2", workspace = true }
 walkdir = { package = "walkdir", workspace = true }
 
 

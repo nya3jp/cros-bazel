@@ -14,13 +14,13 @@ use crate::{convert::convert_impl, expand::expand_impl};
 use anyhow::Result;
 use consts::{MARKER_FILE_NAME, RAW_DIR_NAME};
 use expand::ExtraDir;
+use fileutil::list_user_xattrs;
 use std::{
     fs::set_permissions,
     os::unix::prelude::PermissionsExt,
     path::{Path, PathBuf},
 };
 use tracing::instrument;
-use util::list_user_xattrs;
 use walkdir::WalkDir;
 
 /// Works with *a durable tree*, a special directory format designed to preserve

@@ -6,8 +6,10 @@ mod fakefs;
 mod golden;
 mod namespace;
 mod testdata;
+mod tree;
 
 pub use fakefs::*;
 pub use golden::*;
 pub use namespace::*;
 pub use testdata::*;
+pub use tree::*;

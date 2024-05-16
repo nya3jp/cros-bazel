@@ -19,6 +19,7 @@ rust_library(
         "@alchemy_crates//:tempfile",
         "@alchemy_crates//:tracing",
         "@alchemy_crates//:walkdir",
+        "@alchemy_crates//:xattr",
     ],
 )
 

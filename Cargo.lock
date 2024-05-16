@@ -757,6 +757,7 @@ dependencies = [
  "tempfile",
  "tracing",
  "walkdir",
+ "xattr 1.0.0",
 ]
 
 [[package]]
@@ -2009,10 +2010,14 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "fileutil",
+ "hex",
+ "itertools",
  "libc",
  "nix",
  "once_cell",
  "runfiles",
+ "serde",
+ "sha2",
  "tempfile",
  "walkdir",
 ]

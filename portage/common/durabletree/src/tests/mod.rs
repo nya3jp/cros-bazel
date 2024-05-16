@@ -4,6 +4,7 @@
 
 mod testutil;
 
+use ::testutil::{describe_tree, simple_dir, simple_file, FileDescription, EMPTY_HASH};
 use anyhow::Result;
 use fileutil::SafeTempDir;
 use std::{
@@ -16,9 +17,7 @@ use walkdir::WalkDir;
 
 use crate::{
     consts::{MODE_MASK, RAW_DIR_NAME},
-    tests::testutil::{
-        describe_tree, simple_dir, simple_file, CommandRunOk, FileDescription, EMPTY_HASH,
-    },
+    tests::testutil::CommandRunOk,
     DurableTree,
 };
 

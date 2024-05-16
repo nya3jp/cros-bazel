@@ -18,7 +18,11 @@ rust_library(
     deps = [
         "//bazel/portage/common/fileutil",
         "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:hex",
+        "@alchemy_crates//:itertools",
         "@alchemy_crates//:libc",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:sha2",
         "@alchemy_crates//:walkdir",
         "@rules_rust//tools/runfiles",
     ],

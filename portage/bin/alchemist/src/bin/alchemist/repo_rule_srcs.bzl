@@ -120,6 +120,7 @@ ALCHEMIST_REPO_RULE_SRCS = [
     "@cros//bazel/portage/common/fileutil:src/remove.rs",
     "@cros//bazel/portage/common/fileutil:src/symlink_forest.rs",
     "@cros//bazel/portage/common/fileutil:src/tempdir.rs",
+    "@cros//bazel/portage/common/fileutil:src/xattr.rs",
     "@cros//bazel/portage/common/portage/version:BUILD.bazel",
     "@cros//bazel/portage/common/portage/version:src/lib.rs",
     "@cros//bazel/portage/common/portage/version:src/version.rs",

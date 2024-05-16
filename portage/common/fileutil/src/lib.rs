@@ -7,7 +7,9 @@ mod r#move;
 mod remove;
 mod symlink_forest;
 mod tempdir;
+mod xattr;
 
+pub use crate::xattr::*;
 pub use dualpath::DualPath;
 pub use r#move::*;
 pub use remove::*;
