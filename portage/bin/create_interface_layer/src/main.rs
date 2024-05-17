@@ -66,8 +66,10 @@ fn is_excluded_directory(sysroot: impl AsRef<Path>, dir: impl AsRef<Path>) -> bo
             "sbin",
             "usr/bin",
             "usr/sbin",
+            "usr/libexec",
             "usr/local/bin",
             "usr/local/sbin",
+            "usr/local/libexec",
             // We don't want any debug symbols since they contain line numbers.
             "usr/lib/debug",
         ],
