@@ -60,8 +60,7 @@ def extra_sources(*, name, srcs):
     pkg_tar(
         name = "%s_tar" % name,
         srcs = [":%s_files" % name],
-        compressor = "@//bazel/portage/repo_defs/zstd",
-        compressor_args = "--threads=0",
+        compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
         extension = "tar.zst",
         visibility = ["//visibility:private"],
     )

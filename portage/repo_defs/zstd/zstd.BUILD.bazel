@@ -50,3 +50,25 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [":lib"],
 )
+
+cc_binary(
+    name = "pzstd",
+    srcs = glob([
+        "contrib/pzstd/*.cpp",
+        "contrib/pzstd/*.h",
+        "contrib/pzstd/utils/*.cpp",
+        "contrib/pzstd/utils/*.h",
+        "programs/util.c",
+        "programs/*.h",
+    ]),
+    includes = [
+        "contrib/pzstd",
+        "contrib/pzstd/utils",
+        "programs",
+        "lib",
+        "lib/common",
+    ],
+    features = FEATURES,
+    visibility = ["//visibility:public"],
+    deps = [":lib"],
+)

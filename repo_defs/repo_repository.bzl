@@ -27,8 +27,10 @@ def _repo_repository_impl(ctx):
     if not ctx.which("tar"):
         fail("tar was not found on the path")
 
-    if not ctx.which("zstd"):
-        fail("zstd was not found on the path")
+    # TODO(b/342064824): Stop using `pzstd` found on the system.
+    pzstd = ctx.which("pzstd")
+    if not pzstd:
+        fail("pzstd was not found on the path")
 
     if not ctx.which("git"):
         fail("git was not found on the path")
@@ -104,7 +106,7 @@ def _repo_repository_impl(ctx):
             "--group",
             "0",
             "--numeric-owner",
-            "--auto-compress",
+            "-I{}".format(pzstd),
             "--remove-files",
         ]
         dest_file = "%s.tar.zst" % (ctx.attr.tree)

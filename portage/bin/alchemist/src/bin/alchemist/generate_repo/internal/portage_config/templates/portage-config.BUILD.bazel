@@ -10,8 +10,7 @@ load("@//bazel/portage/build_defs:overlay.bzl", "overlay", "overlay_set")
 pkg_tar(
     name = "{{ config.name }}",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     {%- if config.files %}
     files = {
         {%- for file in config.files %}

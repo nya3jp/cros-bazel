@@ -154,7 +154,7 @@ impl BinaryPackage {
             r,
             "cros/bazel/portage/bin/fakefs/preload/libfakefs_preload.so"
         );
-        let zstd_path = runfiles::rlocation!(r, "zstd/zstd");
+        let pzstd_path = runfiles::rlocation!(r, "zstd/pzstd");
 
         let mut tarball = self.new_tarball_reader()?;
 
@@ -178,7 +178,7 @@ impl BinaryPackage {
 
         let mut child = command
             .arg("-I")
-            .arg(&zstd_path)
+            .arg(&pzstd_path)
             .arg("-C")
             .arg(output_dir)
             .stdin(Stdio::piped())

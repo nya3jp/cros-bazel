@@ -10,8 +10,7 @@ load("@//bazel/portage/build_defs:overlay.bzl", "overlay", "overlay_set")
 pkg_tar(
     name = "orig",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     files = {
         "orig.make.conf.board_setup": "/etc/make.conf.board_setup",
         "orig.make.conf.host_setup": "/etc/make.conf.host_setup",
@@ -26,8 +25,7 @@ pkg_tar(
 pkg_tar(
     name = "lite",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     files = {
         "lite.make.conf": "/etc/portage/make.conf",
         "lite.make.defaults": "/etc/portage/make.profile/make.defaults",
@@ -39,8 +37,7 @@ pkg_tar(
 pkg_tar(
     name = "host",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     files = {
         "host.make.conf": "/etc/make.conf",
         "host.make.defaults": "/etc/portage/make.profile/make.defaults",
@@ -52,8 +49,7 @@ pkg_tar(
 pkg_tar(
     name = "full",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     files = {
         "full.make.conf.board_setup": "/etc/make.conf.board_setup",
         "full.make.conf.host_setup": "/etc/make.conf.host_setup",

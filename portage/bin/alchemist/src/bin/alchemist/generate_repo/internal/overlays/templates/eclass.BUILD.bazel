@@ -23,8 +23,7 @@ pkg_files(
 pkg_tar(
     name = "{{ eclass.name }}",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     srcs = [":{{ eclass.name }}_files"],
     visibility = ["//:__subpackages__"],
 )

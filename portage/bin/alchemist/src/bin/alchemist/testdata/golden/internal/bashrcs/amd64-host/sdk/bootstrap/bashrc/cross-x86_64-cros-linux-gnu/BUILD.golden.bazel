@@ -9,8 +9,7 @@ load("@//bazel/portage/build_defs:bashrc.bzl", "bashrc")
 pkg_tar(
     name = "glibc.sh_layer",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     files = {
         "0": "/mnt/host/source/src/overlays/overlay-amd64-host/profiles/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu/glibc.sh",
     },

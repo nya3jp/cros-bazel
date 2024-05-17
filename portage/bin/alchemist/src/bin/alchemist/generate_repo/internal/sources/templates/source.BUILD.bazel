@@ -105,8 +105,7 @@ pkg_tar(
     srcs = [
         ":__filegroup__",
     ],
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     extension = "tar.zst",
     visibility = ["//visibility:private"],
 )
@@ -117,8 +116,7 @@ pkg_tar(
     srcs = [
         ":__single_files_filegroup__",
     ],
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     extension = "tar.zst",
     visibility = [
         "//internal/packages:__subpackages__",

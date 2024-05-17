@@ -27,8 +27,7 @@ pkg_files(
 pkg_tar(
     name = "layer",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     srcs = [":files"],
     visibility = ["//visibility:private"],
 )
@@ -51,8 +50,7 @@ pkg_files(
 pkg_tar(
     name = "layer-full",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     srcs = [":files-full"],
     visibility = ["//visibility:private"],
 )

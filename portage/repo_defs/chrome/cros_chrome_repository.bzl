@@ -46,6 +46,11 @@ def _cros_chrome_repository_impl(ctx):
     if not tar:
         fail("tar was not found on the path")
 
+    # TODO(b/342064824): Stop using `pzstd` found on the system.
+    pzstd = ctx.which("pzstd")
+    if not pzstd:
+        fail("pzstd was not found on the path")
+
     ctx.template(".gclient", ctx.attr._gclient_template, {
         "{internal}": str(ctx.attr.internal),
         "{tag}": ctx.attr.tag,
@@ -152,7 +157,7 @@ def _cros_chrome_repository_impl(ctx):
         "0",
         "--numeric-owner",
         "--exclude-vcs",
-        "--auto-compress",
+        "-I{}".format(pzstd),
         "--create",
         # r: Apply transformation to regular archive members.
         # S: Do not apply transformation to symbolic link targets.

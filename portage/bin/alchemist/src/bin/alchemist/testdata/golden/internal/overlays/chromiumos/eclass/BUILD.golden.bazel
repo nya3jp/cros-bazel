@@ -23,8 +23,7 @@ pkg_files(
 pkg_tar(
     name = "myclass",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     srcs = [":myclass_files"],
     visibility = ["//:__subpackages__"],
 )
@@ -45,8 +44,7 @@ pkg_files(
 pkg_tar(
     name = "mysuper",
     extension = "tar.zst",
-    compressor = "@//bazel/portage/repo_defs/zstd",
-    compressor_args = "--threads=0",
+    compressor = "@//bazel/portage/repo_defs/zstd:pzstd",
     srcs = [":mysuper_files"],
     visibility = ["//:__subpackages__"],
 )

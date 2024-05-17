@@ -10,7 +10,7 @@ rust_binary(
     name = "sdk_from_archive",
     srcs = glob(["src/*.rs"]),
     data = [
-        "//bazel/portage/repo_defs/zstd",
+        "//bazel/portage/repo_defs/zstd:pzstd",
     ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = [

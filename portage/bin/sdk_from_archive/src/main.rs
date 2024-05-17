@@ -41,7 +41,7 @@ fn do_main() -> Result<()> {
         } else if ext == OsStr::new("zst") {
             command.arg(format!(
                 "-I{}",
-                runfiles::rlocation!(r, "zstd/zstd").display()
+                runfiles::rlocation!(r, "zstd/pzstd").display()
             ));
         } else {
             bail!("Unsupported extension: {:?}", ext);

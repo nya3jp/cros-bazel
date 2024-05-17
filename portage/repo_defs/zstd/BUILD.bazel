@@ -9,3 +9,11 @@ alias(
         "//visibility:public",
     ],
 )
+
+alias(
+    name = "pzstd",
+    actual = "@zstd//:pzstd",
+    visibility = [
+        "//visibility:public",
+    ],
+)
