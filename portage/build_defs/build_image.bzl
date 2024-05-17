@@ -69,7 +69,7 @@ def _build_image_impl(ctx):
 
     target_package_files = depset(
         transitive = [
-            packages[BinaryPackageSetInfo].files
+            packages[BinaryPackageSetInfo].partials
             for packages in ctx.attr.target_packages
         ],
     )
@@ -78,7 +78,7 @@ def _build_image_impl(ctx):
 
     host_package_files = depset(
         transitive = [
-            packages[BinaryPackageSetInfo].files
+            packages[BinaryPackageSetInfo].partials
             for packages in ctx.attr.host_packages
         ],
     )
