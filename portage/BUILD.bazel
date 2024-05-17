@@ -4,18 +4,6 @@
 
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 
-bool_flag(
-    name = "compiled_profiles",
-    build_setting_default = True,
-)
-
-config_setting(
-    name = "compiled_profiles_enabled",
-    flag_values = {
-        ":compiled_profiles": "True",
-    },
-)
-
 # This flag is useful when you are comparing packages built using alchemist's
 # compiled profiles and packages built using portage profiles. When enabled
 # an additional target with the suffix `_portage_profile_test_package` will be

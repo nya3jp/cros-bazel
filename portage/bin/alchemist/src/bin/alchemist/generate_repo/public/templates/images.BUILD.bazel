@@ -21,12 +21,10 @@ build_image(
     image_to_build = "base",
     output_image_file_name = "chromiumos_minimal_image",
     overlays = "//internal/overlays:board",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
     override_base_packages = [
         "sys-apps/baselayout",
         "sys-kernel/chromeos-kernel-5_15",
@@ -54,12 +52,10 @@ build_image(
     image_to_build = "base",
     output_image_file_name = "chromiumos_base_image",
     overlays = "//internal/overlays:board",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
     sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
         "@portage//target/virtual/target-os:package_set",
@@ -81,12 +77,10 @@ build_image(
     image_to_build = "dev",
     output_image_file_name = "chromiumos_image",
     overlays = "//internal/overlays:board",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
     sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
         "@portage//target/virtual/target-os:package_set",
@@ -109,12 +103,10 @@ build_image(
     image_to_build = "test",
     output_image_file_name = "chromiumos_test_image",
     overlays = "//internal/overlays:board",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
     sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
         "@portage//target/virtual/target-os:package_set",

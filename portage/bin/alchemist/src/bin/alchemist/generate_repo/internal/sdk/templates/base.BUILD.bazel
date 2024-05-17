@@ -12,12 +12,10 @@ sdk_install_deps(
     base = "{{ sdk }}",
     board = "amd64-host", # TODO: Pass in as a parameter.
     overlays = "{{ overlay_set }}",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/host",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
     target_deps = [
         {%- for target in targets %}
         "{{ target }}",
@@ -30,12 +28,10 @@ build_sdk(
     name = "base",
     board = "amd64-host", # TODO: Pass in as a parameter.
     overlays = "{{ overlay_set }}",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/host",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
     sdk = ":packages",
     visibility = ["//visibility:private"],
 )

@@ -17,11 +17,9 @@ sdk_install_deps(
     out = "gcc-libs-10.2.0_host_deps",
     base = "//internal/sdk/stage2/target/board",
     overlays = "//internal/overlays:host",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
     target_deps = [
         "//internal/packages/stage2/host/chromiumos/test-cases/inherit:1.0",
     ],
@@ -112,27 +110,21 @@ ebuild(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-generic/base:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":10.2.0_incremental_enabled": ":10.2.0_cache_marker",
         "//conditions:default": None,
@@ -206,27 +198,21 @@ ebuild_debug(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-generic/base:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":10.2.0_incremental_enabled": ":10.2.0_cache_marker",
         "//conditions:default": None,
@@ -318,27 +304,21 @@ ebuild(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-generic/base:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":10.2.0_hermetic_test_package_incremental_enabled": ":10.2.0_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -405,27 +385,21 @@ ebuild_debug(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-generic/base:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":10.2.0_hermetic_test_package_incremental_enabled": ":10.2.0_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -680,27 +654,21 @@ ebuild_test(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
     sdk = ":10.2.0_test_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/board",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-generic/base:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
     ccache = selects.with_or({
         ("@//bazel/portage:ccache_enabled_global", ":10.2.0_ccache_enabled_local"): True,
         "//conditions:default": False,

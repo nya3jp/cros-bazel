@@ -99,9 +99,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     {%- if full_config %}
     inject_use_flags = False,
     {%- else %}
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     {%- endif %}
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     {%- if target_board %}
@@ -124,27 +122,21 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
         {%- endif %}
     ],
     {%- else %}
-    portage_config = select({
+    portage_config = [
         {%- if target_board %}
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/{{ target_portage_config }}",
-        ],
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/{{ target_portage_config }}",
         {%- else %}
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
+        "//internal/portage-config/host",
         {%- endif %}
-    }),
+    ],
     {%- endif -%}
     {%- if not full_config %}
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
+    bashrcs = [
         {%- for bashrc in ebuild.bashrcs %}
-            "{{ bashrc }}",
+        "{{ bashrc }}",
         {%- endfor %}
-        ],
-    }),
+    ],
     {%- endif %}
     {%- if ebuild.allow_network_access %}
     # This ebuild declares RESTRICT="network-sandbox".
@@ -215,11 +207,9 @@ sdk_install_deps(
     out = "{{ ebuild.basename }}_host_deps",
     base = "{{ ebuild.sdk }}",
     overlays = "{{ host_overlay_set }}",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
     target_deps = [
         {%- if ebuild.provided_host_build_deps %}
         # The following packages are provided by the SDK:
@@ -254,12 +244,10 @@ sdk_install_deps(
     base = "{{ ebuild.version }}_host_deps",
     board = "{{ target_board }}",
     overlays = "{{ target_overlay_set }}",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/{{ target_portage_config }}",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/{{ target_portage_config }}",
+    ],
     target_deps = [
         {%- for dep in ebuild.target_build_deps %}
         "{{ dep }}",
@@ -284,12 +272,10 @@ sdk_install_deps(
     board = "{{ target_board }}",
     {%- endif %}
     overlays = "{{ target_overlay_set }}",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/{{ target_portage_config }}",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/{{ target_portage_config }}",
+    ],
     target_deps = [
         {%- for dep in ebuild.target_test_deps %}
         "{{ dep }}",

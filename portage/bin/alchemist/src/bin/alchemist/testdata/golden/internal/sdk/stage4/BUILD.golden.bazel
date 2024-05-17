@@ -14,12 +14,10 @@ sdk_install_deps(
     base = "//internal/sdk/stage3/target/host",
     board = "amd64-host", # TODO: Pass in as a parameter.
     overlays = "//internal/overlays:host",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/host",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
     target_deps = [
         "//internal/packages/stage3/target/host/chromiumos/virtual/target-sdk-implicit-system:1-r4",
     ],
@@ -30,12 +28,10 @@ build_sdk(
     name = "base",
     board = "amd64-host", # TODO: Pass in as a parameter.
     overlays = "//internal/overlays:host",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host:lite",
-            "//internal/portage-config/target/host",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/host",
+    ],
     sdk = ":packages",
     visibility = ["//visibility:private"],
 )

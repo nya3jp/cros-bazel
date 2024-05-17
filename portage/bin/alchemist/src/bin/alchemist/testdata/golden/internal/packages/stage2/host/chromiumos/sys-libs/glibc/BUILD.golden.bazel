@@ -17,11 +17,9 @@ sdk_install_deps(
     out = "glibc-2.35-r25_host_deps",
     base = "//internal/sdk/stage2/host",
     overlays = "//internal/overlays:host",
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
     target_deps = [
         # The following packages are provided by the SDK:
         # * sys-devel/binutils-2.39
@@ -114,25 +112,19 @@ ebuild(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
         "//conditions:default": None,
@@ -206,25 +198,19 @@ ebuild_debug(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
         "//conditions:default": None,
@@ -316,25 +302,19 @@ ebuild(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -401,25 +381,19 @@ ebuild_debug(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
     incremental_cache_marker = select({
         ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
         "//conditions:default": None,
@@ -650,25 +624,19 @@ ebuild_test(
         "-prefix-stack",
         "-userland_BSD",
     ],
-    inject_use_flags = select({
-        "@//bazel/portage:compiled_profiles_enabled": True,
-    }),
+    inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     sdk = ":2.35-r25_test_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
-    portage_config = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/portage-config/host",
-        ],
-    }),
-    bashrcs = select({
-        "@//bazel/portage:compiled_profiles_enabled": [
-            "//internal/bashrcs/chromiumos/base:profile.bashrc",
-            "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
-        ],
-    }),
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
+    ],
     ccache = selects.with_or({
         ("@//bazel/portage:ccache_enabled_global", ":2.35-r25_ccache_enabled_local"): True,
         "//conditions:default": False,

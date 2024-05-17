@@ -5,8 +5,13 @@
 # The list of files that are only needed when invoking emerge. We don't need
 # these when building a package since alchemist has performed the analysis.
 OVERLAY_ANALYSIS_FILE_PATTERN = [
+    "profiles/**/bashrc/**",
+    "profiles/**/eapi",
+    "profiles/**/make.defaults",
     "profiles/**/package.accept_keywords",
     "profiles/**/package.accept_keywords/**",
+    "profiles/**/package.bashrc",
+    "profiles/**/package.bashrc/**",
     "profiles/**/package.keywords",
     "profiles/**/package.keywords/**",
     "profiles/**/package.mask",
@@ -15,17 +20,6 @@ OVERLAY_ANALYSIS_FILE_PATTERN = [
     "profiles/**/package.provided/**",
     "profiles/**/package.unmask",
     "profiles/**/package.unmask/**",
-    "profiles/**/packages",
-]
-
-# Compliments the above OVERLAY_ANALYSIS_FILE_PATTERN and lists all additional
-# files that portage uses to compute the effective USE flags for a package.
-OVERLAY_USE_FILE_PATTERN = [
-    "profiles/**/bashrc/**",
-    "profiles/**/eapi",
-    "profiles/**/make.defaults",
-    "profiles/**/package.bashrc",
-    "profiles/**/package.bashrc/**",
     "profiles/**/package.use",
     "profiles/**/package.use/**",
     "profiles/**/package.use.force",
@@ -36,6 +30,7 @@ OVERLAY_USE_FILE_PATTERN = [
     "profiles/**/package.use.stable.force/**",
     "profiles/**/package.use.stable.mask",
     "profiles/**/package.use.stable.mask/**",
+    "profiles/**/packages",
     "profiles/**/parent",
     "profiles/**/profile.bashrc",
     "profiles/**/use.force",
