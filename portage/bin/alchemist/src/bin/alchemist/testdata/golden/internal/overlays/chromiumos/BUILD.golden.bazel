@@ -96,11 +96,6 @@ pkg_files(
                       OVERLAY_ANALYSIS_FILE_PATTERN +
                       OVERLAY_USE_FILE_PATTERN,
         ),
-        "@//bazel/portage:compiled_profiles_disabled": glob(
-            ["profiles/**"],
-            exclude = OVERLAY_EXCLUDE +
-                      OVERLAY_ANALYSIS_FILE_PATTERN,
-        ),
     }),
     prefix = "mnt/host/source/src/third_party/chromiumos-overlay",
     renames = {
@@ -137,7 +132,6 @@ pkg_files(
         "sys-boot/grub/files/sbat.csv",
     ] + glob(OVERLAY_ANALYSIS_FILE_PATTERN) + select({
         "@//bazel/portage:compiled_profiles_enabled": glob(OVERLAY_USE_FILE_PATTERN),
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     prefix = "mnt/host/source/src/third_party/chromiumos-overlay",
     strip_prefix = strip_prefix.from_pkg(),

@@ -124,10 +124,6 @@ sdk_install_deps(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/{{ name }}",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/{{ name }}:full",
-        ],
     }),
     target_deps = [
     {%- for package in primordial_deps %}

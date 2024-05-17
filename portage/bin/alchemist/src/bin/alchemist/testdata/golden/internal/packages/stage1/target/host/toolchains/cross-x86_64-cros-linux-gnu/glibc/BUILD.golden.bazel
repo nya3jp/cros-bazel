@@ -104,7 +104,6 @@ ebuild(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
@@ -117,10 +116,6 @@ ebuild(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/host",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/host:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
@@ -128,7 +123,6 @@ ebuild(
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
@@ -205,7 +199,6 @@ ebuild_debug(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
@@ -218,10 +211,6 @@ ebuild_debug(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/host",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/host:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
@@ -229,7 +218,6 @@ ebuild_debug(
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":2.35-r25_incremental_enabled": ":2.35-r25_cache_marker",
@@ -324,7 +312,6 @@ ebuild(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
@@ -337,10 +324,6 @@ ebuild(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/host",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/host:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
@@ -348,7 +331,6 @@ ebuild(
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
@@ -418,7 +400,6 @@ ebuild_debug(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
@@ -431,10 +412,6 @@ ebuild_debug(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/host",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/host:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
@@ -442,7 +419,6 @@ ebuild_debug(
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":2.35-r25_hermetic_test_package_incremental_enabled": ":2.35-r25_hermetic_test_package_cache_marker",
@@ -698,7 +674,6 @@ ebuild_test(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
@@ -711,10 +686,6 @@ ebuild_test(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/host",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/host:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
@@ -722,7 +693,6 @@ ebuild_test(
             "//internal/bashrcs/amd64-host/sdk/bootstrap:profile.bashrc",
             "//internal/bashrcs/amd64-host/sdk/bootstrap/bashrc/cross-x86_64-cros-linux-gnu:glibc.sh",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     ccache = selects.with_or({
         ("@//bazel/portage:ccache_enabled_global", ":2.35-r25_ccache_enabled_local"): True,

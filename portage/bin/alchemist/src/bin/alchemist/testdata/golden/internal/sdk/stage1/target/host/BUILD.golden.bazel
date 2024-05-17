@@ -124,10 +124,6 @@ sdk_install_deps(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/host",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/host:full",
-        ],
     }),
     target_deps = [
         "//internal/packages/stage1/target/host/chromiumos/sys-kernel/linux-headers:4.14",

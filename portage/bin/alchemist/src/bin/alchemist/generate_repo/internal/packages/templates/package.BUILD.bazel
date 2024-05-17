@@ -101,7 +101,6 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     {%- else %}
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     {%- endif %}
     files = glob(["cros/**", "files/**", "*.bashrc"]),
@@ -131,16 +130,9 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
             "//internal/portage-config/host:lite",
             "//internal/portage-config/{{ target_portage_config }}",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/{{ target_portage_config }}:full",
-        ],
         {%- else %}
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
-        ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:full",
         ],
         {%- endif %}
     }),
@@ -152,7 +144,6 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
             "{{ bashrc }}",
         {%- endfor %}
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     {%- endif %}
     {%- if ebuild.allow_network_access %}
@@ -228,9 +219,6 @@ sdk_install_deps(
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:full",
-        ]
     }),
     target_deps = [
         {%- if ebuild.provided_host_build_deps %}
@@ -271,10 +259,6 @@ sdk_install_deps(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/{{ target_portage_config }}",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/{{ target_portage_config }}:full",
-        ],
     }),
     target_deps = [
         {%- for dep in ebuild.target_build_deps %}
@@ -304,10 +288,6 @@ sdk_install_deps(
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/{{ target_portage_config }}",
-        ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/{{ target_portage_config }}:full",
         ],
     }),
     target_deps = [

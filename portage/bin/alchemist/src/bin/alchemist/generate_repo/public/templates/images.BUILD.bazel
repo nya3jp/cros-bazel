@@ -26,10 +26,6 @@ build_image(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
-        ],
     }),
     override_base_packages = [
         "sys-apps/baselayout",
@@ -63,10 +59,6 @@ build_image(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
-        ],
     }),
     sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
@@ -93,10 +85,6 @@ build_image(
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
-        ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
         ],
     }),
     sdk = "//internal/sdk/stage2/target/board",
@@ -125,10 +113,6 @@ build_image(
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
-        ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
         ],
     }),
     sdk = "//internal/sdk/stage2/target/board",

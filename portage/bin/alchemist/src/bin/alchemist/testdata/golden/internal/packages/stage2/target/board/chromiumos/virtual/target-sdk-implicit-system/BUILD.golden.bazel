@@ -110,7 +110,6 @@ ebuild(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -123,17 +122,12 @@ ebuild(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-generic/base:profile.bashrc",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1-r4_incremental_enabled": ":1-r4_cache_marker",
@@ -216,7 +210,6 @@ ebuild_debug(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -229,17 +222,12 @@ ebuild_debug(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-generic/base:profile.bashrc",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1-r4_incremental_enabled": ":1-r4_cache_marker",
@@ -340,7 +328,6 @@ ebuild(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -353,17 +340,12 @@ ebuild(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-generic/base:profile.bashrc",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1-r4_hermetic_test_package_incremental_enabled": ":1-r4_hermetic_test_package_cache_marker",
@@ -439,7 +421,6 @@ ebuild_debug(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -452,17 +433,12 @@ ebuild_debug(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-generic/base:profile.bashrc",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     incremental_cache_marker = select({
         ":1-r4_hermetic_test_package_incremental_enabled": ":1-r4_hermetic_test_package_cache_marker",
@@ -746,7 +722,6 @@ ebuild_test(
     ],
     inject_use_flags = select({
         "@//bazel/portage:compiled_profiles_enabled": True,
-        "@//bazel/portage:compiled_profiles_disabled": False,
     }),
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
@@ -759,17 +734,12 @@ ebuild_test(
             "//internal/portage-config/host:lite",
             "//internal/portage-config/target/board",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [
-            "//internal/portage-config/host:orig",
-            "//internal/portage-config/target/board:full",
-        ],
     }),
     bashrcs = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/bashrcs/chromiumos/base:profile.bashrc",
             "//internal/bashrcs/amd64-generic/base:profile.bashrc",
         ],
-        "@//bazel/portage:compiled_profiles_disabled": [],
     }),
     ccache = selects.with_or({
         ("@//bazel/portage:ccache_enabled_global", ":1-r4_ccache_enabled_local"): True,

@@ -16,13 +16,6 @@ config_setting(
     },
 )
 
-config_setting(
-    name = "compiled_profiles_disabled",
-    flag_values = {
-        ":compiled_profiles": "False",
-    },
-)
-
 # This flag is useful when you are comparing packages built using alchemist's
 # compiled profiles and packages built using portage profiles. When enabled
 # an additional target with the suffix `_portage_profile_test_package` will be
