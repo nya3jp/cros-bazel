@@ -35,16 +35,16 @@ use crate::alchemist::TargetData;
 
 use self::{
     deps::generate_deps_file,
-    internal::bashrcs::generate_internal_bashrcs,
-    internal::overlays::generate_internal_overlays,
-    internal::packages::{
-        generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
-    },
     internal::{
+        bashrcs::generate_internal_bashrcs,
+        overlays::generate_internal_overlays,
+        packages::{
+            generate_internal_packages, PackageHostConfig, PackageTargetConfig, PackageType,
+        },
         portage_config::generate_portage_config,
         sdk::{
             generate_base_sdk, generate_host_sdk, generate_stage1_sdk, generate_target_sdk,
-            SdkBaseConfig, SdkHostConfig, SdkTargetConfig,
+            SdkBaseConfig, SdkHostConfig, SdkTargetConfig, SdkTargetHostConfig,
         },
         sources::generate_internal_sources,
         sysroot::generate_sysroot_build_file,
@@ -330,13 +330,15 @@ pub fn generate_stages(
     generate_target_sdk(
         &SdkTargetConfig {
             base: "stage3:bootstrap",
-            host_prefix: "TODO: REMOVE ME. Only used then target_primary_toolchain is set",
-            host_resolver: &host.resolver,
             name: "stage3/target/host",
             board: &host.board,
             target_repo_set: &host.repos,
             target_resolver: &host.resolver,
-            target_primary_toolchain: None,
+            target_primary_toolchain: host
+                .toolchains
+                .primary()
+                .context("Host is missing primary toolchain")?,
+            host: None,
         },
         output_dir,
     )?;
@@ -410,18 +412,18 @@ pub fn generate_stages(
         generate_target_sdk(
             &SdkTargetConfig {
                 base: "stage2",
-                host_prefix: "stage2/host",
-                host_resolver: &host.resolver,
                 name: "stage2/target/board",
                 board: &target.board,
                 target_repo_set: &target.repos,
                 target_resolver: &target.resolver,
-                target_primary_toolchain: Some(
-                    target
-                        .toolchains
-                        .primary()
-                        .context("Target is missing primary toolchain")?,
-                ),
+                target_primary_toolchain: target
+                    .toolchains
+                    .primary()
+                    .context("Target is missing primary toolchain")?,
+                host: Some(SdkTargetHostConfig {
+                    prefix: "stage2/host",
+                    resolver: &host.resolver,
+                }),
             },
             output_dir,
         )?;

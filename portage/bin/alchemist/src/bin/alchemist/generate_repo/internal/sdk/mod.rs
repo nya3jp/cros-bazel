@@ -409,6 +409,16 @@ pub fn generate_host_sdk(config: &SdkHostConfig, out: &Path) -> Result<()> {
     Ok(())
 }
 
+pub struct SdkTargetHostConfig<'a> {
+    /// The package prefix for host packages.
+    ///
+    /// i.e., stage2/host
+    pub prefix: &'a str,
+
+    /// The host resolver used to lookup toolchain packages.
+    pub resolver: &'a PackageResolver,
+}
+
 pub struct SdkTargetConfig<'a> {
     /// The base SDK to derive this SDK from.
     pub base: &'a str,
@@ -421,14 +431,6 @@ pub struct SdkTargetConfig<'a> {
     /// i.e., //internal/sdk/<name>
     pub name: &'a str,
 
-    /// The package prefix for host packages.
-    ///
-    /// i.e., stage2/host
-    pub host_prefix: &'a str,
-
-    /// The host resolver used to lookup toolchain packages.
-    pub host_resolver: &'a PackageResolver,
-
     /// The name of the target board.
     pub board: &'a str,
 
@@ -438,9 +440,12 @@ pub struct SdkTargetConfig<'a> {
     /// Target resolver for looking up primordial packages.
     pub target_resolver: &'a PackageResolver,
 
-    /// Target toolchain that will be used to generate the cross-compiler
-    /// layer. If None, then no cross-compiler tools will be included.
-    pub target_primary_toolchain: Option<&'a Toolchain>,
+    // The primary toolchain used by the target.
+    pub target_primary_toolchain: &'a Toolchain,
+
+    // The host config where the cross compiler tools will be sourced. If unset
+    // no cross compilers will be added.
+    pub host: Option<SdkTargetHostConfig<'a>>,
 }
 
 #[derive(Serialize, Debug)]
@@ -478,19 +483,19 @@ pub fn generate_target_sdk(config: &SdkTargetConfig, out: &Path) -> Result<()> {
             .map(|p| package_details_to_target_path(p, config.name))
             .sorted()
             .collect(),
-        cross_compiler: match config.target_primary_toolchain {
-            Some(target_primary_toolchain) => Some(SdkTargetCrossCompileContext {
-                primary_triple: &target_primary_toolchain.name,
+        cross_compiler: match &config.host {
+            Some(host) => Some(SdkTargetCrossCompileContext {
+                primary_triple: &config.target_primary_toolchain.name,
                 glibc_target: package_details_to_target_path(
-                    &*get_cross_glibc(target_primary_toolchain, config.host_resolver)?,
-                    config.host_prefix,
+                    &*get_cross_glibc(config.target_primary_toolchain, host.resolver)?,
+                    host.prefix,
                 ),
                 toolchain_deps: get_toolchain_packages(
-                    target_primary_toolchain,
-                    config.host_resolver,
+                    config.target_primary_toolchain,
+                    host.resolver,
                 )?
                 .iter()
-                .map(|p| package_details_to_target_path(p, config.host_prefix))
+                .map(|p| package_details_to_target_path(p, host.prefix))
                 .sorted()
                 .collect(),
             }),
