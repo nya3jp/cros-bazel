@@ -22,14 +22,10 @@ use std::{
 };
 use std::{str::FromStr, sync::Arc};
 use tera::Tera;
-use tracing::instrument;
 
-use crate::{
-    alchemist::TargetData,
-    generate_repo::common::{
-        package_details_to_target_path, repository_set_to_target_path, PRIMORDIAL_PACKAGES,
-        TOOLCHAIN_PACKAGE_NAMES,
-    },
+use crate::generate_repo::common::{
+    package_details_to_target_path, repository_set_to_target_path, PRIMORDIAL_PACKAGES,
+    TOOLCHAIN_PACKAGE_NAMES,
 };
 
 use super::super::common::AUTOGENERATE_NOTICE;
@@ -43,11 +39,6 @@ lazy_static! {
             .unwrap();
         tera.add_raw_template("portage-tool", include_str!("templates/portage-tool"))
             .unwrap();
-        tera.add_raw_template(
-            "stage1.BUILD.bazel",
-            include_str!("templates/stage1.BUILD.bazel"),
-        )
-        .unwrap();
         tera.add_raw_template(
             "base.BUILD.bazel",
             include_str!("templates/base.BUILD.bazel"),
@@ -228,71 +219,6 @@ fn get_toolchain_packages(
         .collect::<Result<_>>()
 }
 
-fn generate_sdk_build(prefix: &str, target: &TargetData, out: &Path) -> Result<()> {
-    let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();
-
-    let context = SdkTemplateContext {
-        name: &Path::new(prefix)
-            .file_name()
-            .with_context(|| format!("Invalid prefix: {prefix}"))?
-            .to_string_lossy(),
-        board: &target.board,
-        overlay_set: &repository_set_to_target_path(&target.repos),
-        primary_triple: target.toolchains.primary().map(|t| t.name.as_str()),
-        triples: target
-            .toolchains
-            .toolchains
-            .iter()
-            // TODO: We only have the prebuilds for the following two
-            // toolchains defined. Add the rest of the prebuilds and then
-            // remove this.
-            .filter(|t| {
-                t.name == "x86_64-cros-linux-gnu"
-                    || t.name == "aarch64-cros-linux-gnu"
-                    || t.name == "armv7a-cros-linux-gnueabihf"
-            })
-            .map(|t| t.name.as_ref())
-            .collect(),
-        wrappers,
-        target_deps: get_primordial_packages(&target.resolver)?
-            .iter()
-            .map(|p| {
-                format!(
-                    "//internal/packages/{}/{}/{}:{}",
-                    prefix,
-                    p.as_basic_data().repo_name,
-                    p.as_basic_data().package_name,
-                    p.as_basic_data().version
-                )
-            })
-            .collect(),
-    };
-
-    let mut file = File::create(out.join("BUILD.bazel"))?;
-    file.write_all(AUTOGENERATE_NOTICE.as_bytes())?;
-    TEMPLATES.render_to(
-        "stage1.BUILD.bazel",
-        &tera::Context::from_serialize(context)?,
-        file,
-    )?;
-
-    Ok(())
-}
-
-#[instrument(skip_all)]
-pub fn generate_stage1_sdk(prefix: &str, target: &TargetData, out: &Path) -> Result<()> {
-    let out = out.join("internal/sdk").join(prefix);
-
-    create_dir_all(&out)?;
-
-    generate_sdk_build(prefix, target, &out)?;
-    if let Some(toolchain) = target.toolchains.primary() {
-        generate_wrappers(&target.board, &toolchain.name, &out)?;
-    }
-
-    Ok(())
-}
-
 pub struct SdkBaseConfig<'a> {
     /// The name of the SDK to generate.
     ///
@@ -456,6 +382,7 @@ struct SdkTargetContext<'a> {
     target_overlay_set: &'a str,
     primordial_deps: Vec<String>,
     cross_compiler: Option<SdkTargetCrossCompileContext<'a>>,
+    wrappers: Vec<&'a str>,
 }
 
 #[derive(Serialize, Debug)]
@@ -466,16 +393,24 @@ struct SdkTargetCrossCompileContext<'a> {
 }
 
 pub fn generate_target_sdk(config: &SdkTargetConfig, out: &Path) -> Result<()> {
+    let wrappers = WRAPPER_DEFS.iter().map(|def| def.name).collect();
+
     let out = out.join("internal/sdk").join(config.name);
 
     create_dir_all(&out)?;
+
+    generate_wrappers(config.board, &config.target_primary_toolchain.name, &out)?;
 
     let context = SdkTargetContext {
         name: &Path::new(config.name)
             .file_name()
             .context("Cannot compute name")?
             .to_string_lossy(),
-        base: &format!("//internal/sdk/{}", config.base),
+        base: &if config.base.starts_with('@') {
+            config.base.to_string()
+        } else {
+            format!("//internal/sdk/{}", config.base)
+        },
         board: config.board,
         target_overlay_set: &repository_set_to_target_path(config.target_repo_set),
         primordial_deps: get_primordial_packages(config.target_resolver)?
@@ -501,6 +436,7 @@ pub fn generate_target_sdk(config: &SdkTargetConfig, out: &Path) -> Result<()> {
             }),
             None => None,
         },
+        wrappers,
     };
 
     let mut file = File::create(out.join("BUILD.bazel"))?;

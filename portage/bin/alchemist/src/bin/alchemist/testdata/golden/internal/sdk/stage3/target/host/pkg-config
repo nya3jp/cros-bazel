@@ -1,0 +1,24 @@
+#!/bin/bash
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+PKG_CONFIG_LIBDIR=$(printf '%s:' "/build/amd64-host"/usr/*/pkgconfig)
+export PKG_CONFIG_LIBDIR
+
+export PKG_CONFIG_SYSROOT_DIR="/build/amd64-host"
+
+# Portage will get confused and try to "help" us by exporting this.
+# Undo that logic.
+unset PKG_CONFIG_PATH
+
+# TODO: Consider using pkgconf cross-personalities instead
+# See https://github.com/pkgconf/pkgconf/issues/264
+export PKG_CONFIG_SYSTEM_INCLUDE_PATH="/usr/include:/build/amd64-host/usr/include"
+
+# https://github.com/pkgconf/pkgconf/issues/205
+export PKG_CONFIG_FDO_SYSROOT_RULES=1
+
+# Use full path to bypass automated wrapper checks that block `pkg-config`.
+# https://crbug.com/985180
+exec /usr/bin/pkg-config "$@"

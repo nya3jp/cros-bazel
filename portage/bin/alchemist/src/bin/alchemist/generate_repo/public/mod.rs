@@ -106,9 +106,7 @@ fn generate_public_package(
                 )),
             });
         }
-        // The test_suite's tests attribute is not configurable, so we can't
-        // use a select. We also can't generate aliases to a test_suite.
-        // For now we keep stage1 hard coded until we officially switch over.
+
         test_suites.push(TestSuiteEntry {
             name: Cow::from(format!("{}_test", version)),
             test_name: Cow::from(format!(

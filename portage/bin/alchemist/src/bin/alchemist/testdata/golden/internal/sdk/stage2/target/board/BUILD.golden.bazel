@@ -6,6 +6,104 @@
 
 load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
 load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_glibc", "sdk_install_deps")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
+
+pkg_mklink(
+    name = "portage_hooks",
+    link_name = "portage/hooks",
+    target = "/mnt/host/source/src/scripts/hooks",
+)
+
+pkg_filegroup(
+    name = "etc",
+    prefix = "build/amd64-generic/etc",
+    srcs = [
+        ":portage_hooks",
+    ],
+)
+
+# Create /usr/share/aclocal to make autoconf work.
+# TODO: Figure out why this is needed.
+pkg_mkdirs(
+    name = "aclocal",
+    dirs = ["build/amd64-generic/usr/share/aclocal"],
+)
+
+pkg_files(
+    name = "wrappers_build_bin",
+    srcs = [
+        "pkg-config",
+        "emerge",
+        "ebuild",
+        "eclean",
+        "emaint",
+        "equery",
+        "portageq",
+        "qcheck",
+        "qdepends",
+        "qfile",
+        "qlist",
+        "qmerge",
+        "qsize",
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "build/amd64-generic/build/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
+pkg_files(
+    name = "wrappers_usr_local_bin",
+    srcs = [
+        "pkg-config",
+        "emerge",
+        "ebuild",
+        "eclean",
+        "emaint",
+        "equery",
+        "portageq",
+        "qcheck",
+        "qdepends",
+        "qfile",
+        "qlist",
+        "qmerge",
+        "qsize",
+    ],
+    renames = {
+        "pkg-config": "pkg-config-amd64-generic",
+        "emerge": "emerge-amd64-generic",
+        "ebuild": "ebuild-amd64-generic",
+        "eclean": "eclean-amd64-generic",
+        "emaint": "emaint-amd64-generic",
+        "equery": "equery-amd64-generic",
+        "portageq": "portageq-amd64-generic",
+        "qcheck": "qcheck-amd64-generic",
+        "qdepends": "qdepends-amd64-generic",
+        "qfile": "qfile-amd64-generic",
+        "qlist": "qlist-amd64-generic",
+        "qmerge": "qmerge-amd64-generic",
+        "qsize": "qsize-amd64-generic",
+    },
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "usr/local/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
+pkg_tar(
+    name = "board_extra_tarball",
+    srcs = [
+        ":aclocal",
+        ":etc",
+        ":wrappers_build_bin",
+        ":wrappers_usr_local_bin",
+    ],
+    extension = "tar",
+    visibility = ["//:__subpackages__"],
+)
 
 # We use the toolchain name as the target name, so toolchain SDK layers don't
 # get clobbered when building boards with different toolchains.
@@ -34,15 +132,11 @@ sdk_install_glibc(
     glibc = "//internal/packages/stage2/host/toolchains/cross-x86_64-cros-linux-gnu/glibc:2.35-r25",
     visibility = ["//visibility:private"],
 )
-
 sdk_extend(
     name = "base",
     base = ":glibc",
     extra_tarballs = [
-        # TODO(b/278728702): Stop using the stage1 board_extra_tarball and
-        # generate it here instead. Or figure out a better place to put it
-        # so it can be shared between the stages.
-        "//internal/sdk/stage1/target/board:board_extra_tarball",
+        ":board_extra_tarball",
     ],
     visibility = ["//:__subpackages__"],
 )

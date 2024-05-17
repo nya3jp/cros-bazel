@@ -15,12 +15,12 @@ build_image(
         "@chromite//:src",
     ],
     host_packages = [
-        "@portage//internal/sdk/stage1/target/board:cross-packages",
+        # TODO: Figure out what we need.
     ],
     image_file_name = "chromiumos_base_image",
     image_to_build = "base",
     output_image_file_name = "chromiumos_minimal_image",
-    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    overlays = "//internal/overlays:board",
     portage_config = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
@@ -35,7 +35,7 @@ build_image(
         "sys-apps/baselayout",
         "sys-kernel/chromeos-kernel-5_15",
     ],
-    sdk = "@portage//internal/sdk/stage1/target/board",
+    sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
         "@portage//target/sys-apps/baselayout",
         "@portage//target/sys-kernel/chromeos-kernel-5_15",
@@ -52,12 +52,12 @@ build_image(
         "@chromite//:src",
     ],
     host_packages = [
-        "@portage//internal/sdk/stage1/target/board:cross-packages",
+        # TODO: Figure out what we need.
     ],
     image_file_name = "chromiumos_base_image",
     image_to_build = "base",
     output_image_file_name = "chromiumos_base_image",
-    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    overlays = "//internal/overlays:board",
     portage_config = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
@@ -68,7 +68,7 @@ build_image(
             "//internal/portage-config/target/board:full",
         ],
     }),
-    sdk = "@portage//internal/sdk/stage1/target/board",
+    sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
         "@portage//target/virtual/target-os:package_set",
     ],
@@ -83,12 +83,12 @@ build_image(
         "@chromite//:src",
     ],
     host_packages = [
-        "@portage//internal/sdk/stage1/target/board:cross-packages",
+        # TODO: Figure out what we need.
     ],
     image_file_name = "chromiumos_image",
     image_to_build = "dev",
     output_image_file_name = "chromiumos_image",
-    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    overlays = "//internal/overlays:board",
     portage_config = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
@@ -99,7 +99,7 @@ build_image(
             "//internal/portage-config/target/board:full",
         ],
     }),
-    sdk = "@portage//internal/sdk/stage1/target/board",
+    sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
         "@portage//target/virtual/target-os:package_set",
         "@portage//target/virtual/target-os-dev:package_set",
@@ -115,12 +115,12 @@ build_image(
         "@chromite//:src",
     ],
     host_packages = [
-        "@portage//internal/sdk/stage1/target/board:cross-packages",
+        # TODO: Figure out what we need.
     ],
     image_file_name = "chromiumos_test_image",
     image_to_build = "test",
     output_image_file_name = "chromiumos_test_image",
-    overlays = "@portage//internal/sdk/stage1/target/board:overlays",
+    overlays = "//internal/overlays:board",
     portage_config = select({
         "@//bazel/portage:compiled_profiles_enabled": [
             "//internal/portage-config/host:lite",
@@ -131,7 +131,7 @@ build_image(
             "//internal/portage-config/target/board:full",
         ],
     }),
-    sdk = "@portage//internal/sdk/stage1/target/board",
+    sdk = "//internal/sdk/stage2/target/board",
     target_packages = [
         "@portage//target/virtual/target-os:package_set",
         "@portage//target/virtual/target-os-dev:package_set",

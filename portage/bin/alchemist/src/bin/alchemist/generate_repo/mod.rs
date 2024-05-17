@@ -43,8 +43,8 @@ use self::{
         },
         portage_config::generate_portage_config,
         sdk::{
-            generate_base_sdk, generate_host_sdk, generate_stage1_sdk, generate_target_sdk,
-            SdkBaseConfig, SdkHostConfig, SdkTargetConfig, SdkTargetHostConfig,
+            generate_base_sdk, generate_host_sdk, generate_target_sdk, SdkBaseConfig,
+            SdkHostConfig, SdkTargetConfig, SdkTargetHostConfig,
         },
         sources::generate_internal_sources,
         sysroot::generate_sysroot_build_file,
@@ -222,7 +222,21 @@ pub fn generate_stages(
         compute_provided_packages(&packages_by_path, &implicit_system_package)?;
 
     // Generate the SDK used by the stage1/target/host packages.
-    generate_stage1_sdk("stage1/target/host", host, output_dir)?;
+    generate_target_sdk(
+        &SdkTargetConfig {
+            base: "@//bazel/portage/sdk:stage1",
+            name: "stage1/target/host",
+            board: &host.board,
+            target_repo_set: &host.repos,
+            target_resolver: &host.resolver,
+            target_primary_toolchain: host
+                .toolchains
+                .primary()
+                .context("Host is missing primary toolchain")?,
+            host: None,
+        },
+        output_dir,
+    )?;
 
     // Generate the packages that will be built using the Stage 1 SDK.
     // These packages will be used to generate the Stage 2 SDK.
@@ -387,25 +401,6 @@ pub fn generate_stages(
 
     if let Some(target) = target {
         let target_packages = load_packages(host, target, src_dir)?;
-
-        generate_stage1_sdk("stage1/target/board", target, output_dir)?;
-
-        generate_internal_packages(
-            // The same comment applies here as the stage1/target/host packages.
-            // We don't know what packages are installed in the Stage 1 SDK,
-            // so we can't support BDEPENDs.
-            &PackageType::CrossRoot {
-                host: None,
-                target: PackageTargetConfig {
-                    board: &target.board,
-                    prefix: "stage1/target/board",
-                    repo_set: &target.repos,
-                },
-            },
-            translator,
-            &target_packages,
-            output_dir,
-        )?;
 
         // Generate the stage 2 target board SDK. This will be used to build
         // all the target's packages.

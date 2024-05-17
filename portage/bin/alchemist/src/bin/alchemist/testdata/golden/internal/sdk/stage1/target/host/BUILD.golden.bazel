@@ -5,8 +5,7 @@
 # found in the LICENSE file.
 
 load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
-load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_glibc", "sdk_install_deps")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_deps")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 
@@ -106,12 +105,6 @@ pkg_tar(
     visibility = ["//:__subpackages__"],
 )
 
-# Needed for the build_image targets
-alias(
-    name = "overlays",
-    actual = "//internal/overlays:host-full",
-    visibility = ["//images:__pkg__"],
-)
 sdk_extend(
     name = "base",
     base = "@//bazel/portage/sdk:stage1",
@@ -143,6 +136,5 @@ sdk_install_deps(
         "//internal/packages/stage1/target/host/chromiumos/sys-libs/llvm-libunwind:16.0_pre484197",
         "//internal/packages/stage1/target/host/portage-stable/virtual/os-headers:0-r2",
     ],
-    progress_message = "Installing {dep_count} stage 1 primordial packages for amd64-host",
     visibility = ["//:__subpackages__"],
 )

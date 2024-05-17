@@ -4,7 +4,6 @@
 
 load("//bazel/module_extensions/private:hub_repo.bzl", "hub_init")
 load("//bazel/portage/common/testdata:prebuilts.bzl", "portage_testdata_prebuilts")
-load("//bazel/portage/repo_defs/prebuilts:repositories.bzl", "prebuilts_dependencies")
 load("//bazel/portage/sdk:repositories.bzl", "cros_sdk_repositories")
 
 def _files_impl(module_ctx):
@@ -48,7 +47,6 @@ def _files_impl(module_ctx):
         executable = True,
     )
 
-    prebuilts_dependencies(http_file = hub.http_file.alias_only)
     cros_sdk_repositories(http_file = hub.http_file.alias_only)
 
     portage_testdata_prebuilts(

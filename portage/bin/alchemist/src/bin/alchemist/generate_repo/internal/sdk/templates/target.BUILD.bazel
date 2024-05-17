@@ -3,7 +3,75 @@
 # found in the LICENSE file.
 
 load("@//bazel/portage/build_defs:overlay.bzl", "overlay_set")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", "sdk_install_glibc", "sdk_install_deps")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_extend", {% if cross_compiler %}"sdk_install_glibc", {% endif %}"sdk_install_deps")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
+
+pkg_mklink(
+    name = "portage_hooks",
+    link_name = "portage/hooks",
+    target = "/mnt/host/source/src/scripts/hooks",
+)
+
+pkg_filegroup(
+    name = "etc",
+    prefix = "build/{{ board }}/etc",
+    srcs = [
+        ":portage_hooks",
+    ],
+)
+
+# Create /usr/share/aclocal to make autoconf work.
+# TODO: Figure out why this is needed.
+pkg_mkdirs(
+    name = "aclocal",
+    dirs = ["build/{{ board }}/usr/share/aclocal"],
+)
+
+pkg_files(
+    name = "wrappers_build_bin",
+    srcs = [
+        {%- for name in wrappers %}
+        "{{ name }}",
+        {%- endfor %}
+    ],
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "build/{{ board }}/build/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
+pkg_files(
+    name = "wrappers_usr_local_bin",
+    srcs = [
+        {%- for name in wrappers %}
+        "{{ name }}",
+        {%- endfor %}
+    ],
+    renames = {
+        {%- for name in wrappers %}
+        "{{ name }}": "{{ name }}-{{ board }}",
+        {%- endfor %}
+    },
+    strip_prefix = strip_prefix.from_pkg(),
+    prefix = "usr/local/bin",
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+)
+
+pkg_tar(
+    name = "board_extra_tarball",
+    srcs = [
+        ":aclocal",
+        ":etc",
+        ":wrappers_build_bin",
+        ":wrappers_usr_local_bin",
+    ],
+    extension = "tar",
+    visibility = ["//:__subpackages__"],
+)
 
 {% if cross_compiler -%}
 # We use the toolchain name as the target name, so toolchain SDK layers don't
@@ -35,16 +103,13 @@ sdk_install_glibc(
     visibility = ["//visibility:private"],
 )
 {%- set base = ":glibc" %}
-{%- endif %}
+{% endif -%}
 
 sdk_extend(
     name = "base",
     base = "{{ base }}",
     extra_tarballs = [
-        # TODO(b/278728702): Stop using the stage1 board_extra_tarball and
-        # generate it here instead. Or figure out a better place to put it
-        # so it can be shared between the stages.
-        "//internal/sdk/stage1/target/{{ name }}:board_extra_tarball",
+        ":board_extra_tarball",
     ],
     visibility = ["//:__subpackages__"],
 )
