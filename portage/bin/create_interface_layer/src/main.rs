@@ -58,6 +58,7 @@ fn is_excluded_directory(sysroot: impl AsRef<Path>, dir: impl AsRef<Path>) -> bo
     directory_matches(
         sysroot,
         &[
+            "usr/share/doc",
             "usr/share/info",
             "usr/share/man",
             // We shouldn't be executing any non-host binaries.
