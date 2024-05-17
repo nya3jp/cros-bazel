@@ -1,0 +1,93 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test", "rust_test_suite")
+load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
+load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
+
+rust_binary(
+    name = "create_interface_layer",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "create_interface_layer",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = [
+        "//bazel:internal",
+        "@portage//:__subpackages__",
+    ],
+    deps = [
+        "//bazel/portage/common/cliutil",
+        "//bazel/portage/common/container",
+        "//bazel/portage/common/durabletree",
+        "//bazel/portage/common/fileutil",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:clap",
+        "@alchemy_crates//:rayon",
+        "@alchemy_crates//:regex",
+        "@alchemy_crates//:walkdir",
+        "@alchemy_crates//:xattr",
+    ],
+)
+
+rust_test(
+    name = "create_interface_layer_test",
+    size = "small",
+    crate = ":create_interface_layer",
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+)
+
+rust_test_suite(
+    name = "integration_tests",
+    size = "small",
+    srcs = glob(["tests/**/*.rs"]),
+    data = [
+        ":create_interface_layer",
+        # Provides llvm-ifs in our tests.
+        "//bazel/portage/sdk:sdk_from_archive",
+    ] + glob([
+        "testdata/input/**",
+        "testdata/golden/**",
+    ]),
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "//bazel/portage/common/container",
+        "//bazel/portage/common/durabletree",
+        "//bazel/portage/common/fileutil",
+        "//bazel/portage/common/testutil",
+        "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:serde",
+        "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:tempfile",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+cc_library(
+    name = "simple_lib",
+    srcs = ["simple_lib.c"],
+)
+
+# Only used to construct the test data.
+# If changing the library please copy the output into testdata.
+# $ bazel build //bazel/portage/bin/create_interface_layer:simple_lib
+# $ cp bazel-bin/bazel/portage/bin/create_interface_layer/simple_lib.so \
+#   bazel/portage/bin/create_interface_layer/testdata/input/build/board/usr/lib/simple_lib.so.0.0.0
+# $ cp bazel-bin/bazel/portage/bin/create_interface_layer/simple_lib.so \
+#   bazel/portage/bin/create_interface_layer/testdata/input/build/board/usr/lib64/simple_lib.so.0.0.0
+cc_shared_library(
+    name = "simple_lib_shared",
+    shared_lib_name = "simple_lib.so",
+    deps = [":simple_lib"],
+)
+
+generate_cargo_toml(
+    name = "cargo_toml",
+    crate = ":create_interface_layer",
+    enabled = False,
+    tests = [
+        ":create_interface_layer_test",
+        # TODO(b/340865986): Add support for integration tests
+        # ":integration_tests"
+    ],
+)
