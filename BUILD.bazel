@@ -44,7 +44,6 @@ cargo_workspace(
         "//bazel/portage/bin/build_image:cargo_toml",
         "//bazel/portage/bin/build_package:cargo_toml",
         "//bazel/portage/bin/build_sdk:cargo_toml",
-        "//bazel/portage/bin/create_interface_layer:cargo_toml",
         "//bazel/portage/bin/drive_binary_package:cargo_toml",
         "//bazel/portage/bin/extract_interface:cargo_toml",
         "//bazel/portage/bin/extract_package:cargo_toml",

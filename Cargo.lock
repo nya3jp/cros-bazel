@@ -488,27 +488,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "create_interface_layer"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "cliutil",
- "container",
- "durabletree",
- "fileutil",
- "rayon",
- "regex",
- "runfiles",
- "serde",
- "serde_json",
- "tempfile",
- "testutil",
- "walkdir",
- "xattr 1.0.0",
-]
-
-[[package]]
 name = "crossbeam-deque"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -62,7 +62,6 @@ sdk_from_archive(
         ":omit_stage1_tarball_enabled": ":fake_sdk_tarball",
     }),
     progress_message = "Extracting bootstrap SDK tarball",
-    visibility = ["@//bazel:internal"],
 )
 
 remote_toolchain_inputs(

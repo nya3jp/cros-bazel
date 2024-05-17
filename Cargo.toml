@@ -9,7 +9,6 @@ members = [
     "portage/bin/build_image",
     "portage/bin/build_package",
     "portage/bin/build_sdk",
-    "portage/bin/create_interface_layer",
     "portage/bin/drive_binary_package",
     "portage/bin/extract_interface",
     "portage/bin/extract_package",
