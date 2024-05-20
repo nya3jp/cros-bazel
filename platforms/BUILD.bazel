@@ -38,7 +38,7 @@ constraint_setting(name = "rbe_core_count")
         constraint_values = [":rbe_%s_cores" % core_count],
         exec_properties = {
             "OSFamily": "Linux",
-            "container-image": "docker://us-central1-docker.pkg.dev/kokoro-container-bakery/chromeos-rbe/ubuntu2204@sha256:ffe321a9efecee9918f897913443286d5efa656d3a6e510e92114d194ce5e519",
+            "container-image": "docker://us-central1-docker.pkg.dev/kokoro-container-bakery/chromeos-rbe/ubuntu2204@sha256:05d11830e1574b0a6ef3820fd6e5f03d86fff265cac9656dd71bd189f711eb3d",
             "dockerPrivileged": "true",
             "label:core_count": str(core_count),
             "label:orchestrator": "bazel",
