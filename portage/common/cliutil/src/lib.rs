@@ -88,7 +88,7 @@ pub fn handle_top_level_result<T: Termination>(result: Result<T, anyhow::Error>)
                 // https://github.com/clap-rs/clap/blob/29f22c193c484031f1444cca4b0ed41315db82a1/clap_builder/src/util/mod.rs#L30
                 ExitCode::from(2)
             } else {
-                eprintln!("FATAL: {}: {:#}", get_current_process_name(), error);
+                eprintln!("FATAL: {}: {:?}", get_current_process_name(), error);
                 ExitCode::FAILURE
             }
         }
