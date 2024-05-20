@@ -17,6 +17,8 @@ def _build_sdk_impl(ctx):
     args.add_all([
         "--log",
         output_log_file,
+        "--temp-dir",
+        output_log_file.dirname + "/tmp",
         ctx.executable._build_sdk,
         "--board",
         ctx.attr.board,

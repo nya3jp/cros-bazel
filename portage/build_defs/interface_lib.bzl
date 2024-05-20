@@ -148,6 +148,8 @@ def generate_interface_libraries(
         "--log",
         output_log,
         # TODO: Enable profiling.
+        "--temp-dir",
+        output_log.dirname + "/tmp",
         extract_interface_executable,
         "--binpkg",
         input_binary_package_file,

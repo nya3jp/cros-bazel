@@ -19,6 +19,7 @@ rust_binary(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
         "@alchemy_crates//:nix",
+        "@alchemy_crates//:path-absolutize",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:tempfile",
     ],

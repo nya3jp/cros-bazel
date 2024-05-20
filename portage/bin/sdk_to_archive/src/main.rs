@@ -47,14 +47,7 @@ fn do_main() -> Result<()> {
         bail!("{} doesn't exist", zstd.display());
     }
 
-    // Use the parent directory as a tmpdir. /tmp isn't always suitable because
-    // it might not be a real filesystem.
-    let mutable_base_dir = SafeTempDirBuilder::new()
-        .base_dir(args.output.parent().context("output missing parent")?)
-        .build()?;
-
     let mut settings = ContainerSettings::new();
-    settings.set_mutable_base_dir(mutable_base_dir.path());
 
     for layer in args.layer {
         settings.push_layer(&resolve_symlink_forest(&layer)?)?;

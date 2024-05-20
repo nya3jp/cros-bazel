@@ -7,7 +7,7 @@ use clap::Parser;
 use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use durabletree::DurableTree;
-use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
+use fileutil::resolve_symlink_forest;
 
 use std::{path::PathBuf, process::ExitCode};
 
@@ -32,14 +32,7 @@ struct Cli {
 fn do_main() -> Result<()> {
     let args = Cli::try_parse()?;
 
-    // Use the output directory's parent as a tmpdir.
-    // /tmp isn't always suitable because it might not be a real filesystem.
-    let mutable_base_dir = SafeTempDirBuilder::new()
-        .base_dir(args.output.parent().context("output missing parent")?)
-        .build()?;
-
     let mut settings = ContainerSettings::new();
-    settings.set_mutable_base_dir(mutable_base_dir.path());
     settings.apply_common_args(&args.common)?;
 
     let r = runfiles::Runfiles::create()?;

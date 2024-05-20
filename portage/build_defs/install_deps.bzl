@@ -125,6 +125,8 @@ def install_deps(
         output_log_file,
         "--profile",
         output_profile_file,
+        "--temp-dir",
+        output_log_file.dirname + "/tmp",
         executable_fast_install_packages,
     ])
     args.add("--root-dir=%s" % sysroot)

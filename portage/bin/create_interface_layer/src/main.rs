@@ -8,15 +8,16 @@ use clap::{command, Parser};
 use cliutil::{cli_main, expanded_args_os};
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use durabletree::DurableTree;
-use fileutil::{remove_dir_all_with_chmod, with_permissions, SafeTempDirBuilder};
+use fileutil::{remove_dir_all_with_chmod, with_permissions};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use regex::Regex;
 use std::io::Write;
+use tempfile::NamedTempFile;
 use walkdir::WalkDir;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::format;
-use std::fs::{read_link, File};
+use std::fs::read_link;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::Path;
 use std::{os::unix::process::ExitStatusExt, path::PathBuf, process::ExitCode};
@@ -247,7 +248,6 @@ fn copy_files(
 }
 
 fn create_interface_libraries(
-    mutable_base_dir: &Path,
     args: &CommonArgs,
     src_root: &Path,
     dest_root: &Path,
@@ -255,7 +255,6 @@ fn create_interface_libraries(
 ) -> Result<()> {
     // We use the SDK container to invoke llvm-ifs.
     let mut sdk = ContainerSettings::new();
-    sdk.set_mutable_base_dir(mutable_base_dir);
     sdk.apply_common_args(args)?;
 
     sdk.push_bind_mount(BindMount {
@@ -270,15 +269,14 @@ fn create_interface_libraries(
         rw: true,
     });
 
-    let work_list_path = mutable_base_dir.join("libraries");
-    let mut work_list = File::create(&work_list_path)?;
+    let mut work_list = NamedTempFile::new()?;
     libraries
         .iter()
         .try_for_each(|path| write!(work_list, "{}\0", path.display()))?;
 
     sdk.push_bind_mount(BindMount {
         mount_path: WORK_LIST.into(),
-        source: work_list_path,
+        source: work_list.path().to_path_buf(),
         rw: false,
     });
 
@@ -348,12 +346,7 @@ fn do_main() -> Result<()> {
     remove_dir_all_with_chmod(&args.output)
         .with_context(|| format!("rm -rf {:?}", &args.output))?;
 
-    let mutable_base_dir = SafeTempDirBuilder::new()
-        .base_dir(args.output.parent().context("output missing parent")?)
-        .build()?;
-
     let mut input = ContainerSettings::new();
-    input.set_mutable_base_dir(mutable_base_dir.path());
     input.push_layer(&args.input)?;
     let input = input.mount()?;
 
@@ -364,7 +357,6 @@ fn do_main() -> Result<()> {
     copy_files(input.path(), &args.output, &work.files_to_copy)?;
 
     create_interface_libraries(
-        mutable_base_dir.path(),
         &args.common,
         input.path(),
         &args.output,

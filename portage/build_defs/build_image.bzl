@@ -100,6 +100,8 @@ def _build_image_impl(ctx):
         "--privileged-output",
         output_image_file,
         ctx.executable._build_image,
+        "--temp-dir",
+        output_log_file.dirname + "/tmp",
     ])
 
     # Define the main action.

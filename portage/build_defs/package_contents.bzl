@@ -22,6 +22,8 @@ def _generate_contents_layer(
     arguments.add_all([
         "--log",
         output_log,
+        "--temp-dir",
+        output_log.dirname + "/tmp",
         executable_extract_package,
         "--input-binary-package",
         binary_package,

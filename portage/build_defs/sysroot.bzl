@@ -12,6 +12,8 @@ def _sysroot_create_impl(ctx):
     args.add_all([
         "--log",
         log,
+        "--temp-dir",
+        log.dirname + "/tmp",
         ctx.executable._setup_board,
         "-b",
         ctx.attr.board,

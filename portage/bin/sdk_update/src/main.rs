@@ -7,7 +7,7 @@ use clap::Parser;
 use cliutil::cli_main;
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use durabletree::DurableTree;
-use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
+use fileutil::resolve_symlink_forest;
 use std::{
     path::{Path, PathBuf},
     process::ExitCode,
@@ -32,10 +32,7 @@ struct Cli {
 fn do_main() -> Result<()> {
     let args = Cli::try_parse()?;
 
-    let mutable_base_dir = SafeTempDirBuilder::new().base_dir(&args.output).build()?;
-
     let mut settings = ContainerSettings::new();
-    settings.set_mutable_base_dir(mutable_base_dir.path());
     settings.apply_common_args(&args.common)?;
 
     let r = runfiles::Runfiles::create()?;
@@ -71,9 +68,6 @@ fn do_main() -> Result<()> {
     // Move the upper directory contents to the output directory.
     fileutil::move_dir_contents(&container.into_upper_dir(), &args.output)
         .with_context(|| "Failed to move the upper dir.")?;
-
-    // Delete the mutable base directory that contains the upper directory.
-    drop(mutable_base_dir);
 
     container::clean_layer(&args.output).with_context(|| "Failed to clean the output dir.")?;
 

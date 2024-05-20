@@ -485,6 +485,7 @@ def _ebuild_compare_package(ctx, name, packages):
 
     args = ctx.actions.args()
     args.add("--log", log_file)
+    args.add("--temp-dir", log_file.dirname + "/tmp")
     args.add(compute_file_arg(ctx.executable._xpaktool, use_runfiles = False))
     args.add("compare-packages")
     args.add_all(packages)
@@ -545,6 +546,8 @@ def _ebuild_impl(ctx):
             output_log_file,
             "--profile",
             output_profile_file,
+            "--temp-dir",
+            output_log_file.dirname + "/tmp",
             build_package_args.executable,
         ])
         ctx.actions.run(
@@ -815,6 +818,9 @@ def _ebuild_debug_impl(ctx):
     # Declare outputs.
     output_debug_script = ctx.actions.declare_file(src_basename + "_debug.sh")
 
+    action_wrapper_args = ctx.actions.args()
+    action_wrapper_args.add("--temp-dir=.")
+
     # Compute arguments and inputs to run build_package.
     # While we include all relevant input files in the wrapper script's
     # runfiles, we embed execroot paths in the script, not runfiles paths, so
@@ -838,7 +844,7 @@ def _ebuild_debug_impl(ctx):
         ctx,
         out = output_debug_script,
         binary = ctx.executable._action_wrapper,
-        args = [build_package_args.executable, build_package_args.args],
+        args = [action_wrapper_args, build_package_args.executable, build_package_args.args],
         content_prefix = _DEBUG_SCRIPT,
         runfiles = ctx.runfiles(transitive_files = build_package_args.inputs),
     )
@@ -873,6 +879,8 @@ def _ebuild_install_action_impl(ctx):
     args.add_all([
         "--log",
         install_log,
+        "--temp-dir",
+        install_log.dirname + "/tmp",
         ctx.executable._installer,
         "-b",
         pkg.partial,
@@ -994,6 +1002,9 @@ def _ebuild_test_impl(ctx):
     # Declare outputs.
     output_runner_script = ctx.actions.declare_file(src_basename + "_test.sh")
 
+    action_wrapper_args = ctx.actions.args()
+    action_wrapper_args.add("--temp-dir=.")
+
     # Compute arguments and inputs to run build_package.
     build_package_args = _compute_build_package_args(ctx, output_file = None, use_runfiles = True)
     build_package_args.args.add("--test")
@@ -1002,7 +1013,7 @@ def _ebuild_test_impl(ctx):
         ctx,
         out = output_runner_script,
         binary = ctx.executable._action_wrapper,
-        args = [build_package_args.executable, build_package_args.args],
+        args = [action_wrapper_args, build_package_args.executable, build_package_args.args],
         runfiles = ctx.runfiles(transitive_files = build_package_args.inputs),
     )
 

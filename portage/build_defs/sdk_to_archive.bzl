@@ -16,6 +16,8 @@ def _sdk_to_archive_impl(ctx):
         output_log,
         "--profile",
         output_profile,
+        "--temp-dir",
+        output_log.dirname + "/tmp",
         ctx.executable._sdk_to_archive,
         "--output",
         output_tarball,

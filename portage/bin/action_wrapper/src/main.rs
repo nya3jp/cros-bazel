@@ -10,6 +10,7 @@ use fileutil::SafeTempDir;
 use nix::sys::resource::{getrusage, Usage, UsageWho};
 use nix::sys::time::TimeValLike;
 use nix::unistd::{getgid, getuid};
+use path_absolutize::Absolutize;
 use processes::status_to_exit_code;
 use serde_json::json;
 use std::collections::HashMap;
@@ -53,6 +54,12 @@ struct Cli {
     /// can access those files.
     #[arg(long)]
     privileged_output: Vec<PathBuf>,
+
+    /// Sets $TMPDIR to the given path. If it is an relative path, it is
+    /// resolved to an absolute path before setting. If the directory does not
+    /// exist, it is created.
+    #[arg(long)]
+    temp_dir: PathBuf,
 
     /// If set, print this before and after the wrapped command.
     #[arg(long)]
@@ -205,19 +212,43 @@ fn do_main(args: &Cli) -> Result<ExitStatus> {
     let origin_instant = Instant::now();
     let origin_time = SystemTime::now();
 
+    let temp_dir = args.temp_dir.absolutize().with_context(|| {
+        format!(
+            "Failed to canonicalize --temp-dir: {}",
+            args.temp_dir.display()
+        )
+    })?;
+    std::fs::create_dir_all(&temp_dir)
+        .with_context(|| format!("mkdir -p {}", temp_dir.display()))?;
+    std::env::set_var("TMPDIR", temp_dir.as_os_str());
+
+    let profiles_dir = SafeTempDir::new()?;
+
+    let extra_envs = [(
+        TRACE_DIR_ENV,
+        profiles_dir.path().to_string_lossy().into_owned(),
+    )];
+
     let mut command = if args.privileged {
         ensure_passwordless_sudo()?;
         let mut command = Command::new(SUDO_PATH);
-        command.arg("--preserve-env").args(&args.command_line);
+        command
+            .args(["/usr/bin/env", "-i"])
+            .args(std::env::vars_os().map(|(key, value)| {
+                let mut key_value = key;
+                key_value.push("=");
+                key_value.push(value);
+                key_value
+            }))
+            .args(extra_envs.map(|(key, value)| format!("{}={}", key, value)))
+            .args(&args.command_line);
         command
     } else {
         let mut command = Command::new(&args.command_line[0]);
         command.args(&args.command_line[1..]);
+        command.envs(extra_envs);
         command
     };
-
-    let profiles_dir = SafeTempDir::new()?;
-    command.env(TRACE_DIR_ENV, profiles_dir.path());
 
     let start_time = Instant::now();
     let status = processes::run(&mut command)?;
@@ -356,11 +387,14 @@ mod tests {
 
     fn run_action_wrapper(termination_kind: TerminationKind) -> Result<ActionWrapperOutputs> {
         let out_file = NamedTempFile::new()?;
+        let temp_dir = SafeTempDir::new()?;
 
         let mut command = Command::new(ACTION_WRAPPER_PATH);
         command
             .arg("--log")
             .arg(out_file.path())
+            .arg("--temp-dir")
+            .arg(temp_dir.path())
             .arg("bazel/portage/bin/action_wrapper/testdata/test_script.sh")
             .arg(format!("{termination_kind}"))
             .arg("ONE")
@@ -441,10 +475,13 @@ mod tests {
     #[test]
     fn no_such_command() -> Result<()> {
         let out_file = NamedTempFile::new()?;
+        let temp_dir = SafeTempDir::new()?;
 
         let output = Command::new(ACTION_WRAPPER_PATH)
             .arg("--log")
             .arg(out_file.path())
+            .arg("--temp-dir")
+            .arg(temp_dir.path())
             .arg("/no/such/command")
             .output()?;
 
