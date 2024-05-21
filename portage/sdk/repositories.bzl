@@ -5,9 +5,9 @@
 def cros_sdk_repositories(http_file):
     http_file(
         name = "cros-sdk",
-        sha256 = "abf5b12a9db937914150fd5b053fa49ef81491a6a6e63c615af844d6e270d46a",
-        urls = ["https://storage.googleapis.com/chromiumos-sdk/cros-sdk-2024.04.25.140026.tar.xz"],
-        downloaded_file_path = "sdk.tar.xz",
+        sha256 = "a55a4bff8772d34560207a1092652b234a6d8691c2e2e1d8adae0bf59997bf29",
+        urls = ["https://storage.googleapis.com/chromiumos-sdk/cros-sdk-2024.05.14.66151.tar.zst"],
+        downloaded_file_path = "sdk.tar.zst",
     )
 
     http_file(
