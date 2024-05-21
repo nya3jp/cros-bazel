@@ -93,6 +93,23 @@ pub struct BazelSpecificMetadata {
     /// `//bazel/portage/build_defs:extra_sources.bzl`. The rule defines a set of files to be used
     /// as extra sources.
     pub extra_sources: HashSet<String>,
+
+    /// The package supports dynamically linking against interface only shared objects.
+    ///
+    /// Enabling this will result in all build-time dependencies of the package having their
+    /// shared objects (.so) stripped of all code. All static libraries (.a) and executables
+    /// (/bin, /usr/bin, etc) will also be omitted. By pruning the dependencies, the package will
+    /// not have to rebuild unless the interface of the dependencies change.
+    ///
+    /// You must set this to `false` if your package performs any kind of static linking,
+    /// otherwise the required files won't be present.
+    ///
+    /// Format: You can specify either `true`, `false`, or a shell expression. The shell
+    /// expression is used to test USE flags. i.e., `use static` or `use !foo && use bar`.
+    ///
+    /// This value can also be declared on an `eclass` and it will apply to all packages that
+    /// inherit from it.
+    pub supports_interface_libraries: Option<String>,
 }
 
 /// Defines the TOML metadata file format.
@@ -112,7 +129,7 @@ impl TomlMetadata {
         let eclass_config_paths = eclass_paths
             .iter()
             .map(|eclass_path| eclass_path.with_extension("toml"));
-        let config_paths = std::iter::once(ebuild_config_path).chain(eclass_config_paths);
+        let config_paths = eclass_config_paths.chain(std::iter::once(ebuild_config_path));
 
         // Load configs.
         let mut merged_metadata: TomlMetadata = Default::default();
@@ -124,16 +141,56 @@ impl TomlMetadata {
                     return Err(e).context(format!("Failed to read {}", config_path.display()))
                 }
             };
-            let metadata: TomlMetadata = toml::from_str(&toml_content)
-                .with_context(|| format!("Failed to parse {}", config_path.display()))?;
-            merged_metadata.merge(metadata);
+
+            // We manually parse the toml to allow supports_interface_libraries
+            // to specify a boolean or a string.
+            let table: toml::Table = toml::from_str(&toml_content)?;
+            for (key, value) in table.into_iter() {
+                match key.as_str() {
+                    "bazel" => match value {
+                        toml::Value::Table(table) => merged_metadata.merge(table)?,
+                        _ => bail!("Expected table for bazel key"),
+                    },
+                    other => {
+                        bail!("Unknown top level key {other}");
+                    }
+                }
+            }
         }
 
         Ok(merged_metadata)
     }
 
-    fn merge(&mut self, other: Self) {
-        self.bazel.extra_sources.extend(other.bazel.extra_sources);
+    fn merge(&mut self, table: toml::Table) -> Result<()> {
+        for (key, value) in table {
+            match key.as_str() {
+                "extra_sources" => match value {
+                    toml::Value::Array(items) => {
+                        for item in items {
+                            if let toml::Value::String(item) = item {
+                                self.bazel.extra_sources.insert(item);
+                            } else {
+                                bail!("Expected string type for `extra_sources` items.")
+                            }
+                        }
+                    }
+                    _ => bail!("Unknown value type for `extra_sources`."),
+                },
+                "supports_interface_libraries" => match value {
+                    toml::Value::String(value) => {
+                        self.bazel.supports_interface_libraries = Some(value)
+                    }
+                    toml::Value::Boolean(value) => {
+                        // Translate the bool to a string so we can keep a single
+                        // code path.
+                        self.bazel.supports_interface_libraries = Some(value.to_string())
+                    }
+                    _ => bail!("Unknown value type for `supports_interface_libraries`."),
+                },
+                &_ => bail!("Unknown key {}", key),
+            }
+        }
+        Ok(())
     }
 }
 
@@ -440,6 +497,8 @@ impl CachedPackageLoader {
 mod tests {
     #![allow(clippy::bool_assert_comparison)]
 
+    use std::str::FromStr;
+
     use tempfile::TempDir;
 
     use crate::repository::{RepositoryLayout, RepositorySet};
@@ -652,6 +711,7 @@ REQUIRED_USE="|| ( foo !bar )"
                 "//platform2/common-mk:sources",
                 "//scripts:sources",
             ]
+            supports_interface_libraries = true
         "#,
         )?;
 
@@ -702,6 +762,7 @@ REQUIRED_USE="|| ( foo !bar )"
                     "//scripts:sources".into(),
                     "@chromite//:sources".into(),
                 ]),
+                supports_interface_libraries: Some("true".to_string()),
             }
         );
         Ok(())
@@ -733,5 +794,157 @@ KEYWORDS="*"
         )
         .expect("load_package should return success despite the parse error");
         matches!(maybe_details, MaybePackageDetails::Err(_));
+    }
+
+    fn write_toml(package_toml: &str, eclass_toml: &[(&str, &str)]) -> Result<TomlMetadata> {
+        let temp_dir = TempDir::new()?;
+        let temp_dir = temp_dir.path();
+
+        let ebuild_dir = temp_dir.join("sys-apps/hello");
+        std::fs::create_dir_all(&ebuild_dir)?;
+
+        let ebuild_path = ebuild_dir.join("hello-1.0.ebuild");
+        std::fs::write(ebuild_dir.join("hello.toml"), package_toml)?;
+
+        let eclass_dir = temp_dir.join("eclass");
+        std::fs::create_dir_all(&eclass_dir)?;
+        let mut eclass_paths = vec![];
+        for (key, value) in eclass_toml {
+            std::fs::write(eclass_dir.join(format!("{key}.toml")), value)?;
+
+            let eclass_path = eclass_dir.join(format!("{key}.eclass"));
+            eclass_paths.push(eclass_path);
+        }
+
+        TomlMetadata::load(
+            &EBuildBasicData {
+                repo_name: "repo".to_string(),
+                ebuild_path,
+                package_name: "sys-apps/hello".into(),
+                short_package_name: "hello".into(),
+                category_name: "sys-apps".into(),
+                version: Version::from_str("1.0")?,
+            },
+            &eclass_paths.iter().map(|p| p.as_path()).collect_vec(),
+        )
+    }
+
+    #[test]
+    fn test_empty_toml_parsing() -> Result<()> {
+        assert_eq!(
+            write_toml("", &[])?,
+            TomlMetadata {
+                bazel: BazelSpecificMetadata {
+                    extra_sources: HashSet::from([]),
+                    supports_interface_libraries: None,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_bool_toml_parsing() -> Result<()> {
+        assert_eq!(
+            write_toml(
+                r#"
+[bazel]
+supports_interface_libraries = false
+                "#,
+                &[]
+            )?,
+            TomlMetadata {
+                bazel: BazelSpecificMetadata {
+                    extra_sources: HashSet::from([]),
+                    supports_interface_libraries: Some("false".to_string()),
+                }
+            }
+        );
+
+        assert_eq!(
+            write_toml(
+                r#"
+[bazel]
+supports_interface_libraries = true
+                "#,
+                &[]
+            )?,
+            TomlMetadata {
+                bazel: BazelSpecificMetadata {
+                    extra_sources: HashSet::from([]),
+                    supports_interface_libraries: Some("true".to_string()),
+                }
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_str_toml_parsing() -> Result<()> {
+        assert_eq!(
+            write_toml(
+                r#"
+[bazel]
+supports_interface_libraries = "use !static"
+                "#,
+                &[]
+            )?,
+            TomlMetadata {
+                bazel: BazelSpecificMetadata {
+                    extra_sources: HashSet::from([]),
+                    supports_interface_libraries: Some("use !static".to_string()),
+                }
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_toml_overrides() -> Result<()> {
+        assert_eq!(
+            write_toml(
+                "",
+                &[(
+                    "foo",
+                    r#"
+[bazel]
+supports_interface_libraries = true
+"#
+                )]
+            )?,
+            TomlMetadata {
+                bazel: BazelSpecificMetadata {
+                    extra_sources: HashSet::from([]),
+                    supports_interface_libraries: Some("true".to_string()),
+                }
+            }
+        );
+
+        // Verify packages can override the eclasses.
+        assert_eq!(
+            write_toml(
+                r#"
+                [bazel]
+supports_interface_libraries = false
+                "#,
+                &[(
+                    "foo",
+                    r#"
+[bazel]
+supports_interface_libraries = true
+"#
+                )]
+            )?,
+            TomlMetadata {
+                bazel: BazelSpecificMetadata {
+                    extra_sources: HashSet::from([]),
+                    supports_interface_libraries: Some("false".to_string()),
+                }
+            }
+        );
+
+        Ok(())
     }
 }

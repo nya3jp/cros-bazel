@@ -5,14 +5,16 @@
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
+    str::FromStr,
     sync::Arc,
 };
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use rayon::prelude::*;
 use tracing::instrument;
 
 use crate::{
+    bash::expr::BashExpr,
     config::bundle::ConfigBundle,
     dependency::package::{AsPackageRef, PackageRef},
     ebuild::{
@@ -59,6 +61,9 @@ pub struct Package {
     /// bashrc files defined by package.bashrc. They are ordered in the sequence
     /// that they should be executed.
     pub bashrcs: Vec<PathBuf>,
+
+    /// The package supports building with interface libraries.
+    pub supports_interface_libraries: bool,
 }
 
 #[allow(dead_code)]
@@ -154,6 +159,7 @@ pub struct PackageLocalAnalysis {
     pub expressions: DependencyExpressions,
     pub sources: PackageSources,
     pub bashrcs: Vec<PathBuf>,
+    pub supports_interface_libraries: bool,
 }
 
 impl AsRef<DirectDependencies> for PackageLocalAnalysis {
@@ -201,11 +207,26 @@ fn analyze_local(
             analyze_direct_dependencies(details, cross_compile, host_resolver, target_resolver)?;
         let sources = analyze_sources(config, details, src_dir)?;
         let bashrcs = config.package_bashrcs(&details.as_package_ref());
+
+        let supports_interface_libraries =
+            if let Some(expr) = &details.bazel_metadata.supports_interface_libraries {
+                BashExpr::from_str(expr)
+                    .with_context(|| {
+                        format!(
+                            "Error parsing `supports_interface_libraries` expression '{}'",
+                            expr
+                        )
+                    })?
+                    .eval(&details.use_map)?
+            } else {
+                true
+            };
         Ok(PackageLocalAnalysis {
             direct_dependencies,
             expressions,
             sources,
             bashrcs,
+            supports_interface_libraries,
         })
     })();
     match result {
@@ -333,6 +354,7 @@ pub fn analyze_packages(
                         },
                         sources: local.sources,
                         bashrcs: local.bashrcs,
+                        supports_interface_libraries: local.supports_interface_libraries,
                     }))
                 }
                 (MaybePackageDetails::Err(error), _, _) => {

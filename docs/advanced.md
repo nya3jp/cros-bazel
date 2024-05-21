@@ -185,6 +185,27 @@ Below is the format of the TOML file:
 # When multiple TOML files set this metadata for a package, values are simply
 # merged.
 extra_sources = ["//platform2/common-mk:sources"]
+
+# The package supports dynamically linking against interface only shared objects.
+#
+# When enabled (the default) this will result in all build-time dependencies of
+# the package having their shared objects (.so) stripped of all code. All static
+# libraries (.a) and executables (/bin, /usr/bin, etc) will also be omitted. By
+# pruning the dependencies, the package will not have to rebuild unless the
+# interface of the dependencies change.
+#
+# You must set this to `false` if your package performs any kind of static
+# linking, otherwise the required files won't be present.
+#
+# Format: You can specify either `true`, `false`, or a shell expression. The
+# shell expression is used to test USE flags. i.e., `use static` or
+# `use !foo && use bar`.
+#
+# This value can also be declared on an `eclass` and it will apply to all
+# packages that inherit from it.
+supports_interface_libraries = false
+# or
+supports_interface_libraries = "use !static"
 ```
 
 ## Bazel Build Event Services

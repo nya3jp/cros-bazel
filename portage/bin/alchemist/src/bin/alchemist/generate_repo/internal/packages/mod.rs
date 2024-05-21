@@ -79,6 +79,7 @@ pub struct EBuildEntry {
     bashrcs: Vec<String>,
     supports_remoteexec: bool,
     xpak: Vec<(String, String)>,
+    supports_interface_libraries: bool,
 }
 
 /// Specifies the config used to generate host packages.
@@ -542,6 +543,7 @@ impl EBuildEntry {
             bashrcs,
             supports_remoteexec,
             xpak,
+            supports_interface_libraries: package.supports_interface_libraries,
         })
     }
 }
