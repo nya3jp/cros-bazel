@@ -75,6 +75,8 @@ def _generate_interface_layer(
     arguments.add_all([
         "--log",
         output_log,
+        "--temp-dir",
+        output_log.dirname + "/tmp",
         executable_create_interface_layer,
         "--sysroot",
         sysroot,
