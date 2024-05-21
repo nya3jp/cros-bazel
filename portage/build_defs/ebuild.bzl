@@ -662,6 +662,18 @@ def _ebuild_impl(ctx):
             ),
         )
 
+    if ctx.attr.non_interface_test_package:
+        validation_files.append(
+            _ebuild_compare_package(
+                ctx,
+                "non-interface-test",
+                [
+                    ctx.attr.non_interface_test_package[BinaryPackageInfo].partial,
+                    output_binary_package_file,
+                ],
+            ),
+        )
+
     return [
         DefaultInfo(files = depset(
             [output_binary_package_file] +
@@ -738,6 +750,16 @@ ebuild = rule(
             Setting this field will add a validator that compares this package
             to the specified one. This is useful to validate that building the
             same package twice results in identical packages.
+            """,
+            providers = [BinaryPackageInfo],
+        ),
+        non_interface_test_package = attr.label(
+            doc = """
+            A package built using non-interface library layers.
+
+            Setting this field will add a validator that compares this package
+            to the specified one. This is useful to validate that building a
+            package with interface libraries results in identical packages.
             """,
             providers = [BinaryPackageInfo],
         ),

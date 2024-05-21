@@ -79,7 +79,7 @@ pub struct EBuildEntry {
     bashrcs: Vec<String>,
     supports_remoteexec: bool,
     xpak: Vec<(String, String)>,
-    supports_interface_libraries: bool,
+    use_interface_libraries: bool,
 }
 
 /// Specifies the config used to generate host packages.
@@ -514,6 +514,17 @@ impl EBuildEntry {
             .map(|(k, v)| (k, format!("{v}\n")))
             .collect();
 
+        // Skip using interface libraries for host tools (for now).
+        // If a package doesn't declare any DEPEND atoms then we can skip
+        // generating any of the interface library targets.
+        let use_interface_libraries = if let PackageType::CrossRoot { target, .. } = target {
+            package.supports_interface_libraries
+                && !target_build_deps.is_empty()
+                && target.board != "amd64-host"
+        } else {
+            false
+        };
+
         Ok(Self {
             ebuild_name,
             basename,
@@ -543,7 +554,7 @@ impl EBuildEntry {
             bashrcs,
             supports_remoteexec,
             xpak,
-            supports_interface_libraries: package.supports_interface_libraries,
+            use_interface_libraries,
         })
     }
 }

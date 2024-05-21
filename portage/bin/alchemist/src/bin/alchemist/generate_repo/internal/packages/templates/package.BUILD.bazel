@@ -13,7 +13,7 @@ load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False, full_config=False, index=0) -%}
+{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False, full_config=False, index=0, use_interface_libraries=False) -%}
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
@@ -105,7 +105,14 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     {%- if target_board %}
     board = "{{ target_board }}",
     {%- endif %}
+    {%- if use_interface_libraries %}
+    sdk = select({
+        "@//bazel/portage:interface_libraries_enabled": ":{{ ebuild.version }}_interface_deps",
+        "@//bazel/portage:interface_libraries_disabled": ":{{ ebuild.version }}_deps",
+    }),
+    {%- else %}
     sdk = ":{{ ebuild.version }}{{ sdk_suffix }}",
+    {%- endif %}
     overlays = "{{ target_overlay_set }}{% if full_config %}-full{% endif %}",
     eclasses = [
         {%- for eclass in ebuild.eclasses %}
@@ -223,7 +230,7 @@ sdk_install_deps(
     ],
     visibility = ["//visibility:private"],
 )
-{%- else -%}
+{% else -%}
 alias(
     name = "{{ ebuild.version }}_host_deps",
     {%- if ebuild.provided_host_build_deps %}
@@ -235,12 +242,18 @@ alias(
     actual = "{{ ebuild.sdk }}",
     visibility = ["//visibility:private"],
 )
-{%- endif %}
+{% endif -%}
 
-{% if ebuild.target_build_deps -%}
+{%- if ebuild.use_interface_libraries %}
+    {%- set suffixes = ["", "_interface"] -%}
+{% else %}
+    {%- set suffixes = [""] -%}
+{% endif -%}
+{%- for suffix in suffixes %}
+    {%- if ebuild.target_build_deps %}
 sdk_install_deps(
-    name = "{{ ebuild.version }}_deps",
-    out = "{{ ebuild.basename }}_deps",
+    name = "{{ ebuild.version }}{{ suffix }}_deps",
+    out = "{{ ebuild.basename }}{{ suffix }}_deps",
     base = "{{ ebuild.version }}_host_deps",
     board = "{{ target_board }}",
     overlays = "{{ target_overlay_set }}",
@@ -253,17 +266,21 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
+        {%- if suffix == "_interface" %}
+    contents = "interface",
+        {%- endif %}
     visibility = ["//visibility:private"],
 )
-{%- else -%}
+    {%- else %}
 alias(
-    name = "{{ ebuild.version }}_deps",
+    name = "{{ ebuild.version }}{{ suffix }}_deps",
     actual = "{{ ebuild.version }}_host_deps",
     visibility = ["//visibility:private"],
 )
-{%- endif %}
+    {%- endif %}
+{% endfor -%}
 
-{% if ebuild.target_test_deps -%}
+{%- if ebuild.target_test_deps %}
 sdk_install_deps(
     name = "{{ ebuild.version }}_test_deps",
     out = "{{ ebuild.basename }}_test_deps",
@@ -283,7 +300,7 @@ sdk_install_deps(
     ],
     visibility = ["//visibility:private"],
 )
-{% else -%}
+{% else %}
 alias(
     name = "{{ ebuild.version }}_test_deps",
     actual = "{{ ebuild.version }}_host_deps",
@@ -291,11 +308,23 @@ alias(
 )
 {% endif %}
 
-{%- for suffix in ["","_hermetic_test_package", "_portage_profile_test_package"] %}
+{%- if ebuild.use_interface_libraries %}
+    {%- set suffixes = ["", "_hermetic_test_package", "_portage_profile_test_package", "_non_interface_test_package"] -%}
+{% else %}
+    {%- set suffixes = ["", "_hermetic_test_package", "_portage_profile_test_package"] -%}
+{% endif -%}
+
+{%- for suffix in suffixes %}
     {%- if suffix == "_portage_profile_test_package" %}
         {%- set full_config = True -%}
     {% else %}
         {%- set full_config = False -%}
+    {% endif -%}
+
+    {%- if ebuild.use_interface_libraries and suffix != "_non_interface_test_package" %}
+        {%- set use_interface_libraries = True -%}
+    {% else %}
+        {%- set use_interface_libraries = False -%}
     {% endif %}
 string_flag(
     name = "{{ ebuild.version }}{{ suffix }}_prebuilt",
@@ -336,7 +365,14 @@ ebuild(
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True, full_config=full_config, index=ebuild_count) }}
+    {{ self::ebuild_args(
+        ebuild=ebuild,
+        suffix=suffix,
+        allow_incremental=True,
+        full_config=full_config,
+        index=ebuild_count,
+        use_interface_libraries=use_interface_libraries,
+    ) }}
     prebuilt = ":{{ ebuild.version }}{{ suffix }}_prebuilt",
     {%- if suffix == "" %}
     portage_profile_test_package = select({
@@ -347,6 +383,12 @@ ebuild(
         "@//bazel/portage:hermetic_validator_enabled": ":{{ ebuild.version }}_hermetic_test_package",
         "@//bazel/portage:hermetic_validator_disabled": None,
     }),
+        {%- if ebuild.use_interface_libraries %}
+    non_interface_test_package = select({
+        "@//bazel/portage:interface_libraries_validator_enabled": ":{{ ebuild.version }}_non_interface_test_package",
+        "@//bazel/portage:interface_libraries_validator_disabled": None,
+    }),
+        {%- endif %}
     {%- endif %}
     visibility = ["//:__subpackages__"],
 )
@@ -367,7 +409,13 @@ ebuild_debug(
     {%- if suffix %}
     suffix = "{{ suffix }}",
     {%- endif %}
-    {{ self::ebuild_args(ebuild=ebuild, suffix=suffix, allow_incremental=True, full_config=full_config) }}
+    {{ self::ebuild_args(
+        ebuild=ebuild,
+        suffix=suffix,
+        allow_incremental=True,
+        full_config=full_config,
+        use_interface_libraries=use_interface_libraries,
+    ) }}
     visibility = ["//:__subpackages__"],
 )
 {% endfor -%}

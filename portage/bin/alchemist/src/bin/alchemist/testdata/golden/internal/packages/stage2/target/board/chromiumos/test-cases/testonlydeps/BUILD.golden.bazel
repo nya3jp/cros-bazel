@@ -35,6 +35,23 @@ sdk_install_deps(
 )
 
 sdk_install_deps(
+    name = "1.0_interface_deps",
+    out = "testonlydeps-1.0_interface_deps",
+    base = "1.0_host_deps",
+    board = "amd64-generic",
+    overlays = "//internal/overlays:board",
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    target_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/simple/aaa:1.0",
+    ],
+    contents = "interface",
+    visibility = ["//visibility:private"],
+)
+
+sdk_install_deps(
     name = "1.0_test_deps",
     out = "testonlydeps-1.0_test_deps",
     base = "1.0_host_deps",
@@ -128,7 +145,10 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = select({
+        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
+        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    }),
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -162,6 +182,10 @@ ebuild(
     hermetic_test_package = select({
         "@//bazel/portage:hermetic_validator_enabled": ":1.0_hermetic_test_package",
         "@//bazel/portage:hermetic_validator_disabled": None,
+    }),
+    non_interface_test_package = select({
+        "@//bazel/portage:interface_libraries_validator_enabled": ":1.0_non_interface_test_package",
+        "@//bazel/portage:interface_libraries_validator_disabled": None,
     }),
     visibility = ["//:__subpackages__"],
 )
@@ -217,7 +241,10 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = select({
+        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
+        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    }),
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -324,7 +351,10 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = select({
+        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
+        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    }),
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -406,7 +436,10 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = select({
+        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
+        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    }),
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -513,7 +546,10 @@ ebuild(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = select({
+        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
+        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    }),
     overlays = "//internal/overlays:board-full",
     eclasses = [
     ],
@@ -591,7 +627,10 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = select({
+        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
+        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    }),
     overlays = "//internal/overlays:board-full",
     eclasses = [
     ],
@@ -605,6 +644,195 @@ ebuild_debug(
     }),
     ccache = selects.with_or({
         ("@//bazel/portage:ccache_enabled_global", ":1.0_portage_profile_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="test-cases/testonlydeps",
+            is_host=False,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+string_flag(
+    name = "1.0_non_interface_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "1.0_non_interface_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_non_interface_test_package_incremental_enabled",
+    flag_values = {":1.0_non_interface_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "1.0_non_interface_test_package_cache_marker",
+    out = "1.0_non_interface_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "1.0_non_interface_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "1.0_non_interface_test_package_ccache_enabled_local",
+    flag_values = {
+        ":1.0_non_interface_test_package_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "1.0_non_interface_test_package",
+    suffix = "_non_interface_test_package",
+    ebuild = "testonlydeps-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "testonlydeps",
+    version = "1.0",
+    slot = "0/0",
+    index = 3,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-test",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_non_interface_test_package_incremental_enabled": ":1.0_non_interface_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_non_interface_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="test-cases/testonlydeps",
+            is_host=False,
+        )
+    ],
+    prebuilt = ":1.0_non_interface_test_package_prebuilt",
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "1.0_non_interface_test_package_including_provided",
+    binpkg = ":1.0",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "1.0_non_interface_test_package_debug",
+    suffix = "_non_interface_test_package",
+    ebuild = "testonlydeps-1.0.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "test-cases",
+    package_name = "testonlydeps",
+    version = "1.0",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-test",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":1.0_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":1.0_non_interface_test_package_incremental_enabled": ":1.0_non_interface_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":1.0_non_interface_test_package_ccache_enabled_local"): True,
         "//conditions:default": False,
     }),
     exec_compatible_with = [

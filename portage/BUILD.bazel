@@ -120,3 +120,48 @@ string_flag(
     build_setting_default = "",
     visibility = ["//visibility:public"],
 )
+
+bool_flag(
+    name = "enable_interface_libraries",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "interface_libraries_enabled",
+    flag_values = {
+        ":enable_interface_libraries": "True",
+    },
+)
+
+config_setting(
+    name = "interface_libraries_disabled",
+    flag_values = {
+        ":enable_interface_libraries": "False",
+    },
+)
+
+# This flag is useful if you want to verify packages built using interface
+# libraries are identical to those built without using interface libraries.
+#
+# When enabled an additional target with the suffix `_non_interface_test_package`
+# will be built and compared for each ebuild target.
+#
+# Ensure you also set --//bazel/portage:enable_interface_libraries.
+bool_flag(
+    name = "enable_interface_libraries_validator",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "interface_libraries_validator_enabled",
+    flag_values = {
+        ":enable_interface_libraries_validator": "True",
+    },
+)
+
+config_setting(
+    name = "interface_libraries_validator_disabled",
+    flag_values = {
+        ":enable_interface_libraries_validator": "False",
+    },
+)
