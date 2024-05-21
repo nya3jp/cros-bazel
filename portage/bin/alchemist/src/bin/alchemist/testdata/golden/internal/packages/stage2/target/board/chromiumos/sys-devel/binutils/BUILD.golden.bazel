@@ -29,6 +29,7 @@ alias(
     actual = "2.39_host_deps",
     visibility = ["//visibility:private"],
 )
+
 string_flag(
     name = "2.39_prebuilt",
     build_setting_default = "",

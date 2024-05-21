@@ -283,20 +283,20 @@ sdk_install_deps(
     ],
     visibility = ["//visibility:private"],
 )
-{%- else -%}
+{% else -%}
 alias(
     name = "{{ ebuild.version }}_test_deps",
     actual = "{{ ebuild.version }}_host_deps",
     visibility = ["//visibility:private"],
 )
-{%- endif %}
+{% endif %}
 
 {%- for suffix in ["","_hermetic_test_package", "_portage_profile_test_package"] %}
-{%- if suffix == "_portage_profile_test_package" %}
-{%- set full_config = True -%}
-{% else %}
-{%- set full_config = False -%}
-{% endif %}
+    {%- if suffix == "_portage_profile_test_package" %}
+        {%- set full_config = True -%}
+    {% else %}
+        {%- set full_config = False -%}
+    {% endif %}
 string_flag(
     name = "{{ ebuild.version }}{{ suffix }}_prebuilt",
     build_setting_default = "",
