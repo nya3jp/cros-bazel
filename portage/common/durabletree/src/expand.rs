@@ -65,7 +65,7 @@ fn restore_user_xattrs_and_permissions(
 }
 
 /// Restores the raw directory if not yet.
-#[instrument]
+#[instrument(skip(manifest))] // don't record the huge manifest argument
 fn maybe_restore_raw_directory(root_dir: &Path, manifest: &DurableTreeManifest) -> Result<()> {
     // Check if the raw directory is already restored.
     if let Ok(Some(_)) = xattr::get(root_dir, RESTORED_XATTR) {
@@ -104,7 +104,7 @@ fn maybe_restore_raw_directory(root_dir: &Path, manifest: &DurableTreeManifest) 
 }
 
 /// Create an extra directory containing special files (symlinks and whiteouts).
-#[instrument]
+#[instrument(skip(manifest))] // don't record the huge manifest argument
 fn create_extra_dir(manifest: &DurableTreeManifest) -> Result<ExtraDir> {
     let dir = SafeTempDir::new()?;
 
