@@ -1,0 +1,22 @@
+{
+  "folders": [
+    { "path": "src" },
+  ],
+  "extensions": {
+    "recommendations": [
+      "kentsommer-software.bazel-goto-build",
+      "bazelbuild.vscode-bazel"
+    ]
+  },
+  "settings": {
+    "bazel.lsp.enabled": true,
+    "bazel.lsp.command": "bazel-lsp",
+    "bazel.lsp.args": [],
+    "bazel.commandLine.queryExpression": "//...",
+    "bazel.queriesShareServer": false
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": []
+  }
+}

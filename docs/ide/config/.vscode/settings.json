@@ -1,0 +1,19 @@
+{
+  "files.exclude": {
+    "@portage": true,
+    "aosp": true,
+    "bazel/target": true,
+    "chromium": true,
+    "config": true,
+    "infra": true,
+    "infra_virtualenv": true,
+    "overlays": true,
+    "platform": true,
+    "platform2": true,
+    "project_public": true,
+    "repohooks": true,
+    "scripts": true,
+    "third_party": true,
+    "website": true
+  }
+}

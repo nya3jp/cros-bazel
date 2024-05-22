@@ -1,0 +1,12 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "configure",
+    srcs = ["configure.py"],
+    data = glob(["config/**"]),
+    deps = ["@rules_python//python/runfiles"],
+)
