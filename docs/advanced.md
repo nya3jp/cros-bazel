@@ -203,6 +203,8 @@ extra_sources = ["//platform2/common-mk:sources"]
 #
 # This value can also be declared on an `eclass` and it will apply to all
 # packages that inherit from it.
+#
+# If multiple declarations are found, they are all ANDed together.
 supports_interface_libraries = false
 # or
 supports_interface_libraries = "use !static"

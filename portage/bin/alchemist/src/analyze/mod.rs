@@ -5,16 +5,14 @@
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    str::FromStr,
     sync::Arc,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use rayon::prelude::*;
 use tracing::instrument;
 
 use crate::{
-    bash::expr::BashExpr,
     config::bundle::ConfigBundle,
     dependency::package::{AsPackageRef, PackageRef},
     ebuild::{
@@ -208,19 +206,10 @@ fn analyze_local(
         let sources = analyze_sources(config, details, src_dir)?;
         let bashrcs = config.package_bashrcs(&details.as_package_ref());
 
-        let supports_interface_libraries =
-            if let Some(expr) = &details.bazel_metadata.supports_interface_libraries {
-                BashExpr::from_str(expr)
-                    .with_context(|| {
-                        format!(
-                            "Error parsing `supports_interface_libraries` expression '{}'",
-                            expr
-                        )
-                    })?
-                    .eval(&details.use_map)?
-            } else {
-                true
-            };
+        let supports_interface_libraries = details
+            .bazel_metadata
+            .eval_supports_interface_libraries(&details.use_map)?;
+
         Ok(PackageLocalAnalysis {
             direct_dependencies,
             expressions,
