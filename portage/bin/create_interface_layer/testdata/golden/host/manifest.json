@@ -25,6 +25,20 @@
     }
   },
   {
+    "File": {
+      "path": "build/bin/x86_64-cros-linux-gnu-gpg-error-config",
+      "mode": 493,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
+    "File": {
+      "path": "build/bin/x86_64-cros-linux-gnu-libassuan-config",
+      "mode": 493,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
     "Dir": {
       "path": "etc",
       "mode": 493
@@ -50,8 +64,36 @@
     }
   },
   {
+    "Symlink": {
+      "path": "usr/bin/curl-config",
+      "mode": 511,
+      "target": "x86_64-cros-linux-gnu-curl-config"
+    }
+  },
+  {
+    "Symlink": {
+      "path": "usr/bin/gpg-error-config",
+      "mode": 511,
+      "target": "x86_64-cros-linux-gnu-gpg-error-config"
+    }
+  },
+  {
+    "File": {
+      "path": "usr/bin/libassuan-config",
+      "mode": 493,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
     "File": {
       "path": "usr/bin/x86_64-cros-linux-gnu-curl-config",
+      "mode": 493,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
+    "File": {
+      "path": "usr/bin/x86_64-cros-linux-gnu-gpg-error-config",
       "mode": 493,
       "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }

@@ -94,6 +94,43 @@ fn is_build_bin(sysroot: impl AsRef<Path>, path: impl AsRef<Path>) -> bool {
     directory_matches(sysroot, &["build/bin"], path)
 }
 
+/// Finds the real `${name}-config` script given `${CHOST}-${name}-config`.
+///
+/// The `${CHOST}-${name}-config` scripts in `${SYSROOT}/build/bin` invoke the
+/// `${SYSROOT}/usr/bin/${name}-config` scripts. Since we don't know the CHOST
+/// and a CHOST can have any number of components, we split the `chost_config`
+/// and iterate from the end trying to find a matching script in
+/// `${SYSROOT}/usr/bin`. This is the same algorithm that `config_wrapper` uses
+/// when the wrapper script is actually invoked.
+fn find_real_config_script(
+    root: &Path,
+    sysroot: &Path,
+    chost_config: &str,
+) -> Result<Option<(PathBuf, std::fs::Metadata)>> {
+    const MIN_CHOST_COMPONENTS: usize = 2;
+    const MIN_SCRIPT_COMPONENTS: usize = 2;
+
+    let components: Vec<_> = chost_config.split('-').collect();
+
+    if components.len() < MIN_CHOST_COMPONENTS + MIN_SCRIPT_COMPONENTS {
+        return Ok(None);
+    }
+
+    let sysroot_usr_bin = sysroot.join("usr/bin");
+
+    for start in (MIN_CHOST_COMPONENTS..=components.len() - MIN_SCRIPT_COMPONENTS).rev() {
+        let script_name = components[start..].join("-");
+
+        let script_path = sysroot_usr_bin.join(script_name);
+
+        if let Ok(script_metadata) = root.join(&script_path).symlink_metadata() {
+            return Ok(Some((script_path, script_metadata)));
+        }
+    }
+
+    Ok(None)
+}
+
 /// All paths are relative to root.
 struct WorkItems {
     directories_to_create: BTreeSet<PathBuf>,
@@ -150,14 +187,30 @@ fn traverse_input(root: &Path, sysroot: &Path) -> Result<WorkItems> {
             } else if is_build_bin(sysroot, relative_path) && is_config.is_match(file_name_str) {
                 files_to_copy.insert(relative_path.to_path_buf(), entry.file_type());
 
-                // The ${CHOST}-config scripts in /build/bin call into the scripts in
-                // /usr/bin. Since we excluded `/usr/bin` above, we manually add the
-                // files if they exist.
-                let usr_bin = sysroot.join("usr/bin");
-                let relative_config_path = usr_bin.join(file_name_str);
-                if let Ok(config_metadata) = root.join(&relative_config_path).symlink_metadata() {
-                    files_to_copy.insert(relative_config_path, config_metadata.file_type());
-                    directories_to_create.insert(usr_bin);
+                if let Some((script_path, script_metadata)) =
+                    find_real_config_script(root, sysroot, file_name_str)?
+                {
+                    // Some scripts are symlinks, so copy the target too if it exists.
+                    if script_metadata.file_type().is_symlink() {
+                        let link = read_link(root.join(&script_path))
+                            .with_context(|| format!("readlink {script_path:?}"))?;
+                        if link.has_root() {
+                            // This would be a strange thing to find, so just bail.
+                            bail!("Absolute {link:?} symlink for {script_path:?} is not supported");
+                        }
+
+                        let relative_target = script_path.with_file_name(link);
+                        let real_target = root.join(&relative_target);
+
+                        if let Ok(target_metadata) = real_target.symlink_metadata() {
+                            files_to_copy.insert(relative_target, target_metadata.file_type());
+                        }
+                    }
+
+                    if let Some(parent) = script_path.parent() {
+                        directories_to_create.insert(parent.to_path_buf());
+                    }
+                    files_to_copy.insert(script_path, script_metadata.file_type());
                 }
             } else {
                 // Copy other support files.
