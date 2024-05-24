@@ -62,6 +62,9 @@ pub struct Package {
 
     /// The package supports building with interface libraries.
     pub supports_interface_libraries: bool,
+
+    /// The package should build an interface layer.
+    pub generate_interface_libraries: bool,
 }
 
 #[allow(dead_code)]
@@ -158,6 +161,7 @@ pub struct PackageLocalAnalysis {
     pub sources: PackageSources,
     pub bashrcs: Vec<PathBuf>,
     pub supports_interface_libraries: bool,
+    pub generate_interface_libraries: bool,
 }
 
 impl AsRef<DirectDependencies> for PackageLocalAnalysis {
@@ -210,12 +214,17 @@ fn analyze_local(
             .bazel_metadata
             .eval_supports_interface_libraries(&details.use_map)?;
 
+        let generate_interface_libraries = details
+            .bazel_metadata
+            .eval_generate_interface_libraries(&details.use_map)?;
+
         Ok(PackageLocalAnalysis {
             direct_dependencies,
             expressions,
             sources,
             bashrcs,
             supports_interface_libraries,
+            generate_interface_libraries,
         })
     })();
     match result {
@@ -344,6 +353,7 @@ pub fn analyze_packages(
                         sources: local.sources,
                         bashrcs: local.bashrcs,
                         supports_interface_libraries: local.supports_interface_libraries,
+                        generate_interface_libraries: local.generate_interface_libraries,
                     }))
                 }
                 (MaybePackageDetails::Err(error), _, _) => {

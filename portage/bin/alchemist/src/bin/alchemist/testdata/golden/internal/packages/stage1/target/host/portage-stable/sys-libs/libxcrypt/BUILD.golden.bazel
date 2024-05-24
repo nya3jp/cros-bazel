@@ -141,6 +141,7 @@ ebuild(
         "@//bazel/portage:hermetic_validator_enabled": ":4.4.28_hermetic_test_package",
         "@//bazel/portage:hermetic_validator_disabled": None,
     }),
+    generate_interface_libraries = True,
     visibility = ["//:__subpackages__"],
 )
 
@@ -327,6 +328,7 @@ ebuild(
         )
     ],
     prebuilt = ":4.4.28_hermetic_test_package_prebuilt",
+    generate_interface_libraries = True,
     visibility = ["//:__subpackages__"],
 )
 
@@ -510,6 +512,7 @@ ebuild(
         )
     ],
     prebuilt = ":4.4.28_portage_profile_test_package_prebuilt",
+    generate_interface_libraries = True,
     visibility = ["//:__subpackages__"],
 )
 

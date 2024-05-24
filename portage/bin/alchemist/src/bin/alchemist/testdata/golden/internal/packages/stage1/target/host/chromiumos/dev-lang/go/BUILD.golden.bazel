@@ -141,6 +141,7 @@ ebuild(
         "@//bazel/portage:hermetic_validator_enabled": ":1.20.5_hermetic_test_package",
         "@//bazel/portage:hermetic_validator_disabled": None,
     }),
+    generate_interface_libraries = True,
     interface_library_allowlist = [
         "/usr/lib/baz.a",
     ],
@@ -330,6 +331,7 @@ ebuild(
         )
     ],
     prebuilt = ":1.20.5_hermetic_test_package_prebuilt",
+    generate_interface_libraries = True,
     interface_library_allowlist = [
         "/usr/lib/baz.a",
     ],
@@ -516,6 +518,7 @@ ebuild(
         )
     ],
     prebuilt = ":1.20.5_portage_profile_test_package_prebuilt",
+    generate_interface_libraries = True,
     interface_library_allowlist = [
         "/usr/lib/baz.a",
     ],

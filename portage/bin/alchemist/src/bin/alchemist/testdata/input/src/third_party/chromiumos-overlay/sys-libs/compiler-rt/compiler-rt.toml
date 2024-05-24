@@ -1,0 +1,2 @@
+[bazel]
+generate_interface_libraries = false

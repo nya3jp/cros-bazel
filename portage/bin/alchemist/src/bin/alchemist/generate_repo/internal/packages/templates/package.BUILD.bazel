@@ -390,6 +390,7 @@ ebuild(
     }),
         {%- endif %}
     {%- endif %}
+    generate_interface_libraries = {%if ebuild.generate_interface_libraries %}True{% else %}False{% endif %},
     {%- if ebuild.interface_library_allowlist %}
     interface_library_allowlist = [
         {%- for file in ebuild.interface_library_allowlist %}

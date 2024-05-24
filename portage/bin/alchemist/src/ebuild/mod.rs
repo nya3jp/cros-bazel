@@ -146,6 +146,29 @@ pub struct BazelSpecificMetadata {
     /// inherit from it. If multiple declarations are found they are all ANDed together.
     supports_interface_libraries: Vec<BashExpr>,
 
+    /// The package should generate interface libraries that can be used by the reverse
+    /// dependencies of this package.
+    ///
+    /// When enabled, you will allow the reverse dependencies of this package to build using
+    /// interface libraries (.so files that have had their code stripped). All binaries and
+    /// static libraries are also pruned and not accessible to the reverse dependencies while
+    /// building. This has the advantage of only cache busting the reverse dependencies
+    /// when a library interface changes.
+    ///
+    /// You must set this to `false` if your package only generates static libraries, or
+    /// switch your package to produce .so files instead. If your package is a hybrid
+    /// and produces both .so and .a files, or .a and executables, you might consider using
+    /// `interface_library_allowlist` to still get some benefits of interface libraries.
+    ///
+    /// Format: You can specify either `true`, `false`, or a shell expression. The shell
+    /// expression is used to test USE flags. i.e., `use static` or `use !foo && use bar`.
+    ///
+    /// This value can also be declared on an `eclass` and it will propagate to all packages that
+    /// inherit from it.
+    ///
+    /// If multiple declarations are found they are all ANDed together.
+    generate_interface_libraries: Vec<BashExpr>,
+
     /// The static libraries that we allow into the interface library layers.
     ///
     /// You may want to do this if your package generates static libraries that
@@ -169,6 +192,19 @@ impl BazelSpecificMetadata {
 
         Ok(true)
     }
+
+    /// Evaluates the `generate_interface_libraries` expressions.
+    pub fn eval_generate_interface_libraries(&self, use_map: &UseMap) -> Result<bool> {
+        for expr in &self.generate_interface_libraries {
+            if !expr.eval(use_map).with_context(|| {
+                format!("Failed evaluating {:?} with use map: {:?}", expr, use_map)
+            })? {
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
+    }
 }
 
 /// Defines the Bazel table found in a single TOML file.
@@ -180,6 +216,7 @@ impl BazelSpecificMetadata {
 struct SingleBazelSpecificMetadata {
     extra_sources: Option<Vec<String>>,
     supports_interface_libraries: Option<BashExpr>,
+    generate_interface_libraries: Option<BashExpr>,
     interface_library_allowlist: Option<Vec<PathBuf>>,
 }
 
@@ -228,6 +265,8 @@ impl BazelSpecificMetadata {
             }
             self.supports_interface_libraries
                 .extend(other.supports_interface_libraries);
+            self.generate_interface_libraries
+                .extend(other.generate_interface_libraries);
             if let Some(interface_library_allowlist) = other.interface_library_allowlist {
                 self.interface_library_allowlist
                     .extend(interface_library_allowlist);
@@ -806,6 +845,7 @@ REQUIRED_USE="|| ( foo !bar )"
                 ]),
                 supports_interface_libraries: vec![BashExpr::from_str("true")?],
                 interface_library_allowlist: HashSet::from([]),
+                generate_interface_libraries: vec![],
             }
         );
         Ok(())
@@ -881,6 +921,7 @@ KEYWORDS="*"
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![],
             interface_library_allowlist: HashSet::from([]),
+            generate_interface_libraries: vec![],
         };
 
         assert_eq!(write_toml("", &[])?, metadata);
@@ -895,6 +936,7 @@ KEYWORDS="*"
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("false")?],
             interface_library_allowlist: HashSet::from([]),
+            generate_interface_libraries: vec![],
         };
 
         assert_eq!(
@@ -914,6 +956,7 @@ supports_interface_libraries = false
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("true")?],
             interface_library_allowlist: HashSet::from([]),
+            generate_interface_libraries: vec![],
         };
 
         assert_eq!(
@@ -938,6 +981,7 @@ supports_interface_libraries = true
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("use !static")?],
             interface_library_allowlist: HashSet::from([]),
+            generate_interface_libraries: vec![BashExpr::from_str("use !static")?],
         };
 
         assert_eq!(
@@ -945,6 +989,7 @@ supports_interface_libraries = true
                 r#"
 [bazel]
 supports_interface_libraries = "use !static"
+generate_interface_libraries = "use !static"
                 "#,
                 &[]
             )?,
@@ -953,9 +998,13 @@ supports_interface_libraries = "use !static"
 
         assert!(!metadata
             .eval_supports_interface_libraries(&HashMap::from([("static".into(), true)]))?);
+        assert!(!metadata
+            .eval_generate_interface_libraries(&HashMap::from([("static".into(), true)]))?);
 
         assert!(metadata
             .eval_supports_interface_libraries(&HashMap::from([("static".into(), false)]))?);
+        assert!(metadata
+            .eval_generate_interface_libraries(&HashMap::from([("static".into(), false)]))?);
 
         Ok(())
     }
@@ -966,6 +1015,7 @@ supports_interface_libraries = "use !static"
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("true")?],
             interface_library_allowlist: HashSet::from([]),
+            generate_interface_libraries: vec![BashExpr::from_str("true")?],
         };
 
         assert_eq!(
@@ -976,6 +1026,7 @@ supports_interface_libraries = "use !static"
                     r#"
 [bazel]
 supports_interface_libraries = true
+generate_interface_libraries = true
 "#
                 )]
             )?,
@@ -983,6 +1034,7 @@ supports_interface_libraries = true
         );
 
         assert!(metadata.eval_supports_interface_libraries(&HashMap::from([]))?);
+        assert!(metadata.eval_generate_interface_libraries(&HashMap::from([]))?);
 
         let metadata = BazelSpecificMetadata {
             extra_sources: HashSet::from([]),
@@ -991,6 +1043,10 @@ supports_interface_libraries = true
                 BashExpr::from_str("false")?,
             ],
             interface_library_allowlist: HashSet::from([]),
+            generate_interface_libraries: vec![
+                BashExpr::from_str("true")?,
+                BashExpr::from_str("false")?,
+            ],
         };
 
         // Verify packages can override the eclasses.
@@ -999,12 +1055,14 @@ supports_interface_libraries = true
                 r#"
                 [bazel]
 supports_interface_libraries = false
+generate_interface_libraries = false
                 "#,
                 &[(
                     "foo",
                     r#"
 [bazel]
 supports_interface_libraries = true
+generate_interface_libraries = true
 "#
                 )]
             )?,
@@ -1026,6 +1084,7 @@ supports_interface_libraries = true
                 PathBuf::from("/usr/lib/foo.a"),
                 PathBuf::from("/usr/lib/bar.a"),
             ]),
+            generate_interface_libraries: vec![],
         };
 
         assert_eq!(
