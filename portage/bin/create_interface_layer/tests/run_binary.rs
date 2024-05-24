@@ -5,7 +5,7 @@
 use anyhow::{bail, Context, Result};
 use container::ContainerSettings;
 use durabletree::DurableTree;
-use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
+use fileutil::{resolve_symlink_forest, SafeTempDir, SafeTempDirBuilder};
 use runfiles::Runfiles;
 use serde::Serialize;
 use testutil::{compare_with_golden_data, describe_tree, fakefs_chown};
@@ -16,7 +16,7 @@ use std::fs::{File, Permissions};
 use std::io::BufWriter;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 
 // These tests need to run in an user namespace so that the current process UID/GID are 0.
 #[used]
@@ -99,23 +99,22 @@ fn durabletree_to_manifest(mutable_base_dir: &Path, input: &Path, manifest: &Pat
     Ok(())
 }
 
-fn compare_input_layer_to_golden(
+fn invoke_command(
     input_layer: &Path,
     sysroot: &Path,
-    golden_file: &Path,
-) -> Result<()> {
+    extra_args: &[&str],
+) -> Result<(SafeTempDir, PathBuf, ExitStatus)> {
     let tmp_dir = SafeTempDirBuilder::new()
         .base_dir(&PathBuf::from(
             std::env::var("TEST_TMPDIR").context("TEST_TMPDIR is not set")?,
         ))
         .build()?;
-    let tmp_dir = tmp_dir.path();
 
-    let output = tmp_dir.join("output");
+    let output = tmp_dir.path().join("output");
 
     let input_layer = resolve_symlink_forest(&lookup_runfile(input_layer)?)?;
 
-    let real_input_layer = tmp_dir.join("input");
+    let real_input_layer = tmp_dir.path().join("input");
     setup_input_layer(&input_layer, sysroot, &real_input_layer)?;
 
     let status = Command::new(lookup_runfile(
@@ -129,12 +128,24 @@ fn compare_input_layer_to_golden(
     .arg(&real_input_layer)
     .arg("--output")
     .arg(&output)
+    .arg("--include")
+    .arg("/usr/lib64/always.a")
+    .args(extra_args)
     .status()?;
 
+    Ok((tmp_dir, output, status))
+}
+
+fn compare_input_layer_to_golden(
+    input_layer: &Path,
+    sysroot: &Path,
+    golden_file: &Path,
+) -> Result<()> {
+    let (tmp_dir, output, status) = invoke_command(input_layer, sysroot, &[])?;
     assert!(status.success());
 
-    let manifest_path = tmp_dir.join("manifest.json");
-    durabletree_to_manifest(tmp_dir, &output, &manifest_path)?;
+    let manifest_path = tmp_dir.path().join("manifest.json");
+    durabletree_to_manifest(tmp_dir.path(), &output, &manifest_path)?;
 
     // Use the following to regenerate the golden data:
     // ALCHEMY_REGENERATE_GOLDEN=1 bazel run :integration_tests_tests/run_binary
@@ -150,6 +161,18 @@ fn test_board_sysroot() -> Result<()> {
         Path::new("/build/board"),
         Path::new("bazel/portage/bin/create_interface_layer/testdata/golden/board/manifest.json"),
     )?;
+    Ok(())
+}
+
+#[test]
+fn test_board_sysroot_bad_include_path() -> Result<()> {
+    assert!(invoke_command(
+        &Path::new(BASE_DIR).join("testdata/input"),
+        Path::new("/build/board"),
+        &["--include", "/does/not/exist.a"]
+    )
+    .is_ok());
+
     Ok(())
 }
 

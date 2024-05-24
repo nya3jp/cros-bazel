@@ -15,7 +15,7 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 use walkdir::WalkDir;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::format;
 use std::fs::read_link;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
@@ -43,6 +43,12 @@ struct Cli {
     // Output directory where the contents will be saved as a durable tree.
     #[arg(long)]
     output: PathBuf,
+
+    // Files that will always be included in the interface layer.
+    //
+    // This path is relative to the sysroot, and must start with a `/`.
+    #[arg(long)]
+    include: Vec<PathBuf>,
 }
 
 /// Returns true if `path` is inside the `sysroot` and in one of the `dirs`.
@@ -94,6 +100,19 @@ fn is_build_bin(sysroot: impl AsRef<Path>, path: impl AsRef<Path>) -> bool {
     directory_matches(sysroot, &["build/bin"], path)
 }
 
+fn matches_always_copy<'a>(
+    sysroot: &Path,
+    always_copy: &HashSet<&'a Path>,
+    path: &Path,
+) -> Option<&'a Path> {
+    let Ok(sysroot_relative_path) = path.strip_prefix(sysroot) else {
+        return None;
+    };
+
+    // Copies the reference, not the data.
+    always_copy.get(sysroot_relative_path).copied()
+}
+
 /// Finds the real `${name}-config` script given `${CHOST}-${name}-config`.
 ///
 /// The `${CHOST}-${name}-config` scripts in `${SYSROOT}/build/bin` invoke the
@@ -138,10 +157,17 @@ struct WorkItems {
     interface_libraries: BTreeSet<PathBuf>,
 }
 
-fn traverse_input(root: &Path, sysroot: &Path) -> Result<WorkItems> {
+fn traverse_input(
+    root: &Path,
+    sysroot: &Path,
+    always_copy_paths: &HashSet<&Path>,
+) -> Result<WorkItems> {
     let mut directories_to_create: BTreeSet<PathBuf> = BTreeSet::new();
     let mut files_to_copy: BTreeMap<PathBuf, std::fs::FileType> = BTreeMap::new();
     let mut interface_libraries: BTreeSet<PathBuf> = BTreeSet::new();
+
+    // Track which paths we have found so we can raise an error if we can't find any.
+    let mut found_always_copy_paths = HashSet::new();
 
     let is_so = Regex::new(r"\.so(\.[0-9]+)*$")?;
     let is_config = Regex::new(r"-config$")?;
@@ -166,12 +192,21 @@ fn traverse_input(root: &Path, sysroot: &Path) -> Result<WorkItems> {
                     format!("{:?} is not a valid string", relative_path.file_name())
                 })?;
 
-            if in_library_path(sysroot, relative_path) {
+            if let Some(always_copy_path) =
+                matches_always_copy(sysroot, always_copy_paths, relative_path)
+            {
+                found_always_copy_paths.insert(always_copy_path);
+
+                files_to_copy.insert(relative_path.to_path_buf(), entry.file_type());
+            } else if in_library_path(sysroot, relative_path) {
                 // We don't want to modify or omit any toolchain libraries
                 // since they are needed when compiling.
                 //
                 // We also don't want to modify the rust crate registry since cargo
-                // validates the checksums
+                // validates the checksums.
+                //
+                // TODO(rrangel): Evaluate if we can move these into the pacakge
+                // metadata instead.
                 if is_toolchain_lib(sysroot, relative_path)
                     || is_rust_registry(sysroot, relative_path)
                 {
@@ -223,6 +258,19 @@ fn traverse_input(root: &Path, sysroot: &Path) -> Result<WorkItems> {
                 }
             }
         }
+    }
+
+    let missing_always_copy_paths: Vec<_> = always_copy_paths
+        .difference(&found_always_copy_paths)
+        .collect();
+    if !missing_always_copy_paths.is_empty() {
+        bail!(
+            "The following required paths were not found: {:?}",
+            missing_always_copy_paths
+                .into_iter()
+                .map(|relative_path| Path::new("/").join(relative_path))
+                .collect::<Vec<_>>()
+        );
     }
 
     Ok(WorkItems {
@@ -403,7 +451,16 @@ fn do_main() -> Result<()> {
     input.push_layer(&args.input)?;
     let input = input.mount()?;
 
-    let work = traverse_input(input.path(), sysroot)?;
+    let always_include = &args
+        .include
+        .iter()
+        .map(|p| {
+            p.strip_prefix("/")
+                .with_context(|| format!("--include paths must start with `/`, got {p:?}"))
+        })
+        .collect::<Result<_>>()?;
+
+    let work = traverse_input(input.path(), sysroot, always_include)?;
 
     create_empty_directories(&args.output, &work.directories_to_create)?;
 
