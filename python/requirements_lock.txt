@@ -128,6 +128,10 @@ platformdirs==3.0.0 \
     --hash=sha256:8a1228abb1ef82d788f74139988b137e78692984ec7b08eaa6c65f1723af28f9 \
     --hash=sha256:b1d5eb14f221506f50d6604a561f4c5786d9e80355219694a1b244bcd96f4567
     # via pylint
+pyelftools==0.31 \
+    --hash=sha256:c774416b10310156879443b81187d182d8d9ee499660380e645918b50bc88f99 \
+    --hash=sha256:f52de7b3c7e8c64c8abc04a79a1cf37ac5fb0b8a49809827130b858944840607
+    # via -r bazel/python/requirements.txt
 pylint==2.16.1 \
     --hash=sha256:bad9d7c36037f6043a1e848a43004dfd5ea5ceb05815d713ba56ca4503a9fe37 \
     --hash=sha256:ffe7fa536bb38ba35006a7c8a6d2efbfdd3d95bbf21199cad31f76b1c50aaf30

@@ -1,0 +1,19 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+
+py_library(
+    name = "elf_analyzer",
+    srcs = ["elf_analyzer.py"],
+    deps = ["@pip//pyelftools"],
+)
+
+py_test(
+    name = "elf_analyzer_test",
+    size = "small",
+    srcs = ["elf_analyzer_test.py"],
+    data = ["//bazel/module_extensions/toolchains/files:libs"],
+    deps = [":elf_analyzer"],
+)
