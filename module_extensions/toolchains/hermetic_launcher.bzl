@@ -20,10 +20,16 @@ source "${RUNFILES_DIR:-/dev/null}/$f" 2>/dev/null || \\
   { echo>&2 "ERROR: cannot find $f"; exit 1; }; f=; set -e
 # --- end runfiles.bash initialization v3 ---
 
+not_found_error() {
+    echo "$1. Did you remember to pass the runfiles through transitively." >&2
+    # ENOENT
+    exit 2
+}
+
 set -e
 set -uo pipefail
 
-INTERP="$(rlocation _main~toolchains~toolchain_sdk/lib64/ld-linux-x86-64.so.2)"
+INTERP="$(rlocation _main~toolchains~toolchain_sdk/lib64/ld-linux-x86-64.so.2 || not_found_error 'Unable to find interpreter')"
 LIBS="${INTERP%/lib64/ld-linux-x86-64.so.2}/lib"
 
 SHELL_SCRIPT="$(realpath "${BASH_SOURCE[0]}")"
@@ -36,11 +42,10 @@ LD_ARGV0_REL="$(realpath --relative-to="${INTERP}" "${BIN}")"
 # * foo.sh (finds foo.elf from `realpath "${BASH_SOURCE[0]}`)
 # * foo.elf
 if [[ ! -f "${BIN}" ]]; then
-    echo "Unable to find ${BIN}. Did you remember to pass the runfiles through transitively." >&2
-    exit 1
+    not_found_error "Unable to find ${BIN}"
 fi
 
-LD_ARGV0_REL="${LD_ARGV0_REL}" exec "${INTERP}" \
+LD_DEBUG="${LD_HERMETIC_DEBUG:-}" LD_ARGV0_REL="${LD_ARGV0_REL}" exec "${INTERP}" \
     --argv0 "$0" \
     --library-path "${LIBS}" \
     --inhibit-rpath '' \
