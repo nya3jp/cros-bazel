@@ -63,7 +63,7 @@ sysroot_prebuilt_binary(
 
 sysroot_prebuilt_binary(
     name = "cpp",
-    exe = "/usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-cpp",
+    exe = "/usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-cpp.real",
     sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
 )
 

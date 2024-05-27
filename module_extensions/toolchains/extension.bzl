@@ -12,8 +12,8 @@ def _toolchains_impl(module_ctx):
     # different outputs to extracting the http_file directly.
     http_file(
         name = "toolchain_sdk_tarball",
-        url = "https://storage.googleapis.com/chromiumos-sdk/2023/05/x86_64-cros-linux-gnu-2023.05.04.004234.tar.xz",
-        sha256 = "99cbebb56f82a299aad54e6fdc0f1215b5544003ee53ab2e3c701970d659c6d0",
+        url = "https://storage.googleapis.com/chromiumos-sdk/2024/05/x86_64-cros-linux-gnu-2024.05.25.66621.tar.xz",
+        integrity = "sha256-raqmmpbuPeIKdeyWbjlSXGfBikTwlDH1iKMWlKl6pe0=",
     )
 
     extract_sdk(
