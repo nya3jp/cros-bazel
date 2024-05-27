@@ -52,6 +52,7 @@ cc_toolchain(
     name = "toolchain_impl",
     action_type_configs = [
         "//bazel/module_extensions/toolchains/cc/action_type_configs:ar",
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:assemble",
         "//bazel/module_extensions/toolchains/cc/action_type_configs:c_compile",
         "//bazel/module_extensions/toolchains/cc/action_type_configs:cpp_compile",
         "//bazel/module_extensions/toolchains/cc/action_type_configs:link",
