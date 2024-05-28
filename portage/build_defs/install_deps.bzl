@@ -190,11 +190,16 @@ def install_deps(
 
         outputs.extend([output_preinst, output_postinst])
 
-        layers.extend([
-            output_preinst,
+        if contents == "interface" and package.contents.internal.interface:
             # We swap out the original contents layer with the interface layer
             # after the postinst layer has been generated.
-            package.contents.internal.interface if contents == "interface" else installed_layer,
+            content_layer = package.contents.internal.interface
+        else:
+            content_layer = installed_layer
+
+        layers.extend([
+            output_preinst,
+            content_layer,
             output_postinst,
         ])
 

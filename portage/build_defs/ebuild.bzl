@@ -576,6 +576,7 @@ def _ebuild_impl(ctx):
         # cache bust all its reverse dependencies.
         output_prefix = str(ctx.attr.index),
         board = ctx.attr.board,
+        generate_interface_libraries = ctx.attr.generate_interface_libraries,
         interface_library_allowlist = ctx.attr.interface_library_allowlist,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_extract_package = ctx.executable._extract_package,
@@ -763,6 +764,15 @@ ebuild = rule(
             package with interface libraries results in identical packages.
             """,
             providers = [BinaryPackageInfo],
+        ),
+        generate_interface_libraries = attr.bool(
+            doc = """
+            If the package should generate interface libraries that can be used
+            by the reverse dependencies of this package.
+
+            You should set this to false if your package only generates static
+            libraries (`.a`).
+            """,
         ),
         interface_library_allowlist = attr.string_list(
             allow_empty = True,

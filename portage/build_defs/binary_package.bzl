@@ -21,6 +21,7 @@ def _binary_package_impl(ctx):
         # This isn't a problem right now since we can't use interface libraries
         # for host packages anyway.
         base_sdk = None,
+        generate_interface_libraries = False,
         interface_library_allowlist = [],
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_extract_package = ctx.executable._extract_package,

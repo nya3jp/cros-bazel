@@ -124,6 +124,7 @@ def generate_contents(
         binary_package,
         output_prefix,
         board,
+        generate_interface_libraries,
         interface_library_allowlist,
         executable_action_wrapper,
         executable_extract_package,
@@ -143,6 +144,7 @@ def generate_contents(
             non-empty, the package is to be installed to the corresponding
             sysroot (ROOT="/build/<board>"). If it is an empty string, the
             package is to be installed to the host (ROOT="/").
+        generate_interface_libraries: bool: Generate an interface layer.
         interface_library_allowlist: List[str]: A list of files that will be
             included in the interface layer.
         executable_action_wrapper: File: An executable file of action_wrapper.
@@ -179,7 +181,7 @@ def generate_contents(
     )
 
     internal_interface = None
-    if base_sdk:
+    if base_sdk and generate_interface_libraries:
         internal_interface = _generate_interface_layer(
             ctx = ctx,
             base_sdk = base_sdk,
