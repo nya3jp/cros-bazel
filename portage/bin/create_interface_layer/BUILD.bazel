@@ -60,6 +60,7 @@ rust_test_suite(
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
         "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:walkdir",
         "@rules_rust//tools/runfiles",
     ],
 )

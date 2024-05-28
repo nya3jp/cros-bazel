@@ -9,6 +9,7 @@ use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
 use runfiles::Runfiles;
 use serde::Serialize;
 use testutil::{compare_with_golden_data, describe_tree, fakefs_chown};
+use walkdir::WalkDir;
 
 use std::fs::set_permissions;
 use std::fs::{File, Permissions};
@@ -46,6 +47,24 @@ fn setup_input_layer(src: &Path, sysroot: &Path, dest: &Path) -> Result<()> {
             .strip_prefix("/")
             .context("sysroot must be absolute")?,
     );
+
+    // Copy the group permission bits to other so that we can replicate a more
+    // relaxed umask.
+    // i.e., 640 -> 644, 750 -> 755.
+    for entry in WalkDir::new(dest) {
+        let entry = entry?;
+        let metadata = entry
+            .metadata()
+            .with_context(|| format!("stat {:?}", entry.path()))?;
+
+        let orig_mode = metadata.permissions().mode();
+        let mode = orig_mode | ((orig_mode & 0o070) >> 3);
+
+        if mode != orig_mode {
+            set_permissions(entry.path(), Permissions::from_mode(mode))
+                .with_context(|| format!("chmod {:o} {:?}", mode, entry.path()))?;
+        }
+    }
 
     set_permissions(sysroot.join("var/tmp"), Permissions::from_mode(0o1777))
         .with_context(|| format!("chmod 1777 {}", sysroot.join("var/tmp").display()))?;
