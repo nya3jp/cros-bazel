@@ -65,6 +65,26 @@
   },
   {
     "Dir": {
+      "path": "build/board/lib64",
+      "mode": 493
+    }
+  },
+  {
+    "File": {
+      "path": "build/board/lib64/simple_lib.so",
+      "mode": 420,
+      "hash": "2c0d6557f6e958744491b974c80b1e6daa75d2d533fd07fdb437b3445bd5f163"
+    }
+  },
+  {
+    "File": {
+      "path": "build/board/lib64/simple_lib.so.ifs",
+      "mode": 420,
+      "hash": "60a5bc775e316bdd2ab0565d4504664a626908c4e8e4b7c6f472fa06b13d893f"
+    }
+  },
+  {
+    "Dir": {
       "path": "build/board/usr",
       "mode": 493
     }

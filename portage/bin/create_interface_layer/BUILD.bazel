@@ -77,6 +77,8 @@ cc_library(
 #   bazel/portage/bin/create_interface_layer/testdata/input/build/board/usr/lib/simple_lib.so.0.0.0
 # $ cp bazel-bin/bazel/portage/bin/create_interface_layer/simple_lib.so \
 #   bazel/portage/bin/create_interface_layer/testdata/input/build/board/usr/lib64/simple_lib.so.0.0.0
+# $ cp bazel-bin/bazel/portage/bin/create_interface_layer/simple_lib.so \
+#   bazel/portage/bin/create_interface_layer/testdata/input/build/board/lib64/simple_lib.so
 cc_shared_library(
     name = "simple_lib_shared",
     shared_lib_name = "simple_lib.so",

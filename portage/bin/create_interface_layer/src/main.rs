@@ -93,7 +93,7 @@ fn is_rust_registry(sysroot: impl AsRef<Path>, path: impl AsRef<Path>) -> bool {
 }
 
 fn in_library_path(sysroot: impl AsRef<Path>, path: impl AsRef<Path>) -> bool {
-    directory_matches(sysroot, &["usr/lib", "usr/lib64"], path)
+    directory_matches(sysroot, &["lib64", "usr/lib", "usr/lib64"], path)
 }
 
 fn is_build_bin(sysroot: impl AsRef<Path>, path: impl AsRef<Path>) -> bool {
