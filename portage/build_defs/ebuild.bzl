@@ -576,6 +576,7 @@ def _ebuild_impl(ctx):
         # cache bust all its reverse dependencies.
         output_prefix = str(ctx.attr.index),
         board = ctx.attr.board,
+        interface_library_allowlist = ctx.attr.interface_library_allowlist,
         executable_action_wrapper = ctx.executable._action_wrapper,
         executable_extract_package = ctx.executable._extract_package,
         executable_create_interface_layer = ctx.executable._create_interface_layer,
@@ -762,6 +763,18 @@ ebuild = rule(
             package with interface libraries results in identical packages.
             """,
             providers = [BinaryPackageInfo],
+        ),
+        interface_library_allowlist = attr.string_list(
+            allow_empty = True,
+            doc = """
+            Absolute path to static libraries that will be included in the
+            "interface" layer created for this package.
+
+            This should only contain `.a` files that are considered part of the
+            interface of the package. e.g., protobuf produces a `.a` that needs
+            to be linked into the executable, while the bulk of the code is
+            provided by a `.so`.
+            """,
         ),
         _create_interface_layer = attr.label(
             executable = True,

@@ -390,6 +390,13 @@ ebuild(
     }),
         {%- endif %}
     {%- endif %}
+    {%- if ebuild.interface_library_allowlist %}
+    interface_library_allowlist = [
+        {%- for file in ebuild.interface_library_allowlist %}
+        "{{ file }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
     visibility = ["//:__subpackages__"],
 )
 

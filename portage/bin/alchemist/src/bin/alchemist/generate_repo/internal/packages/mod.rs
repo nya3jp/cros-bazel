@@ -80,6 +80,7 @@ pub struct EBuildEntry {
     supports_remoteexec: bool,
     xpak: Vec<(String, String)>,
     use_interface_libraries: bool,
+    interface_library_allowlist: Vec<PathBuf>,
 }
 
 /// Specifies the config used to generate host packages.
@@ -525,6 +526,15 @@ impl EBuildEntry {
             false
         };
 
+        let interface_library_allowlist = package
+            .details
+            .bazel_metadata
+            .interface_library_allowlist
+            .iter()
+            .sorted()
+            .cloned()
+            .collect();
+
         Ok(Self {
             ebuild_name,
             basename,
@@ -555,6 +565,7 @@ impl EBuildEntry {
             supports_remoteexec,
             xpak,
             use_interface_libraries,
+            interface_library_allowlist,
         })
     }
 }

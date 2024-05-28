@@ -66,6 +66,7 @@ def _generate_interface_layer(
         sysroot,
         input,
         output_name,
+        interface_library_allowlist,
         executable_action_wrapper,
         executable_create_interface_layer):
     output_contents_dir = ctx.actions.declare_directory(output_name)
@@ -89,6 +90,12 @@ def _generate_interface_layer(
     arguments.add_all(
         base_sdk.layers,
         before_each = "--layer",
+        expand_directories = False,
+    )
+
+    arguments.add_all(
+        interface_library_allowlist,
+        before_each = "--include",
         expand_directories = False,
     )
 
@@ -117,6 +124,7 @@ def generate_contents(
         binary_package,
         output_prefix,
         board,
+        interface_library_allowlist,
         executable_action_wrapper,
         executable_extract_package,
         executable_create_interface_layer):
@@ -135,6 +143,8 @@ def generate_contents(
             non-empty, the package is to be installed to the corresponding
             sysroot (ROOT="/build/<board>"). If it is an empty string, the
             package is to be installed to the host (ROOT="/").
+        interface_library_allowlist: List[str]: A list of files that will be
+            included in the interface layer.
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_extract_package: File: An executable file of extract_package.
         executable_create_interface_layer: File: An executable file of create_interface_layer.
@@ -176,6 +186,7 @@ def generate_contents(
             sysroot = sysroot,
             input = internal_installed,
             output_name = "%s.%s.interface.contents" % (output_prefix, name),
+            interface_library_allowlist = interface_library_allowlist,
             executable_action_wrapper = executable_action_wrapper,
             executable_create_interface_layer = executable_create_interface_layer,
         )

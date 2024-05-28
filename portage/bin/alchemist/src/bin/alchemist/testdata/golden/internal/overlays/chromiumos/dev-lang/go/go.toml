@@ -1,0 +1,4 @@
+[bazel]
+interface_library_allowlist = [
+    "/usr/lib/baz.a",
+]

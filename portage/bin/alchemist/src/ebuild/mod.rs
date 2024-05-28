@@ -145,6 +145,15 @@ pub struct BazelSpecificMetadata {
     /// This value can also be declared on an `eclass` and it will propagate to all packages that
     /// inherit from it. If multiple declarations are found they are all ANDed together.
     supports_interface_libraries: Vec<BashExpr>,
+
+    /// The static libraries that we allow into the interface library layers.
+    ///
+    /// You may want to do this if your package generates static libraries that
+    /// always need to be consumed when linking against this package. Ideally
+    /// everything would be dynamically linked, but some packages are hybrids.
+    ///
+    /// The path is relative to the sysroot.
+    pub interface_library_allowlist: HashSet<PathBuf>,
 }
 
 impl BazelSpecificMetadata {
@@ -171,6 +180,7 @@ impl BazelSpecificMetadata {
 struct SingleBazelSpecificMetadata {
     extra_sources: Option<Vec<String>>,
     supports_interface_libraries: Option<BashExpr>,
+    interface_library_allowlist: Option<Vec<PathBuf>>,
 }
 
 /// Defines the TOML metadata file format.
@@ -218,6 +228,10 @@ impl BazelSpecificMetadata {
             }
             self.supports_interface_libraries
                 .extend(other.supports_interface_libraries);
+            if let Some(interface_library_allowlist) = other.interface_library_allowlist {
+                self.interface_library_allowlist
+                    .extend(interface_library_allowlist);
+            }
         }
     }
 }
@@ -791,6 +805,7 @@ REQUIRED_USE="|| ( foo !bar )"
                     "@chromite//:sources".into(),
                 ]),
                 supports_interface_libraries: vec![BashExpr::from_str("true")?],
+                interface_library_allowlist: HashSet::from([]),
             }
         );
         Ok(())
@@ -865,6 +880,7 @@ KEYWORDS="*"
         let metadata = BazelSpecificMetadata {
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![],
+            interface_library_allowlist: HashSet::from([]),
         };
 
         assert_eq!(write_toml("", &[])?, metadata);
@@ -878,6 +894,7 @@ KEYWORDS="*"
         let metadata = BazelSpecificMetadata {
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("false")?],
+            interface_library_allowlist: HashSet::from([]),
         };
 
         assert_eq!(
@@ -896,6 +913,7 @@ supports_interface_libraries = false
         let metadata = BazelSpecificMetadata {
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("true")?],
+            interface_library_allowlist: HashSet::from([]),
         };
 
         assert_eq!(
@@ -919,6 +937,7 @@ supports_interface_libraries = true
         let metadata = BazelSpecificMetadata {
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("use !static")?],
+            interface_library_allowlist: HashSet::from([]),
         };
 
         assert_eq!(
@@ -946,6 +965,7 @@ supports_interface_libraries = "use !static"
         let metadata = BazelSpecificMetadata {
             extra_sources: HashSet::from([]),
             supports_interface_libraries: vec![BashExpr::from_str("true")?],
+            interface_library_allowlist: HashSet::from([]),
         };
 
         assert_eq!(
@@ -970,6 +990,7 @@ supports_interface_libraries = true
                 BashExpr::from_str("true")?,
                 BashExpr::from_str("false")?,
             ],
+            interface_library_allowlist: HashSet::from([]),
         };
 
         // Verify packages can override the eclasses.
@@ -991,6 +1012,43 @@ supports_interface_libraries = true
         );
 
         assert!(!metadata.eval_supports_interface_libraries(&HashMap::from([]))?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_toml_interface_library_allowlist() -> Result<()> {
+        let metadata = BazelSpecificMetadata {
+            extra_sources: HashSet::from([]),
+            supports_interface_libraries: vec![],
+            interface_library_allowlist: HashSet::from([
+                PathBuf::from("/usr/lib/baz.a"),
+                PathBuf::from("/usr/lib/foo.a"),
+                PathBuf::from("/usr/lib/bar.a"),
+            ]),
+        };
+
+        assert_eq!(
+            write_toml(
+                r#"
+[bazel]
+interface_library_allowlist = [
+    "/usr/lib/baz.a",
+]
+"#,
+                &[(
+                    "foo",
+                    r#"
+[bazel]
+interface_library_allowlist = [
+    "/usr/lib/foo.a",
+    "/usr/lib/bar.a",
+]
+"#
+                )]
+            )?,
+            metadata
+        );
 
         Ok(())
     }
