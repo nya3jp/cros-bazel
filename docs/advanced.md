@@ -136,6 +136,88 @@ As you can see, it's turtles (SDKs?) all the way down.
 [primordial packages]: https://chromium.googlesource.com/chromiumos/bazel/+/refs/heads/main/portage/bin/alchemist/src/bin/alchemist/generate_repo/common.rs#21
 [list]: https://chromium.googlesource.com/chromiumos/bazel/+/refs/heads/main/portage/bin/alchemist/src/analyze/dependency/direct/hacks.rs#14
 
+## Interface Libraries
+
+When bazel executes an action, it hashes all the inputs and uses the resulting
+hashes to compute a cache key. If any of those inputs change, then it causes a
+cache bust, and the action needs to be re-run. This can have dire consequences
+when making changes to packages lower in the dep graph as it causes a lot of
+rebuilds.
+
+The best way to fix this is to prune any unnecessary dependencies. We can do
+this in one of two ways:
+
+*   Prune the whole package. This is ideal since it flattens the dependency
+    graph.
+*   Be clever and prune the files installed by a package's dependencies to
+    reduce the likelihood of cache busting. This is what we will be calling
+    "Interface Libraries" or "Interface Layers".
+
+Gentoo Portage was originally built with the assumption that everything is
+dynamically linked, and for the most part this remains true. When an executable
+or library is linked, the linker verifies that all the necessary symbols are
+provided by the specified libraries. In the case of shared libraries, the linker
+doesn't actually need any of the data/code contained in the library, only the
+exported symbols. This means that replacing the `.so` files with stub files that
+only contain the exported symbols (the interface) allows us to avoid rebuilding
+reverse dependencies when the library is modified, as long as the interface
+remains consistent. The [llvm-ifs] tool does just that.
+
+Take the following example:
+```
+┌──────────────────┐
+│                  │
+│  crash-reporter  │
+│                  │
+└─────────┬────────┘
+          │DEPEND + RDEPEND
+          │
+ ┌────────▼────────┐
+ │                 │    /usr/lib64/libsegmentation.so
+ │ libsegmentation │    /usr/sbin/feature_check
+ │                 │
+ └───────┬─────────┘
+         │
+         │DEPEND + RDEPEND
+         │
+     ┌───▼───┐         /usr/sbin/vpd
+     │  vpd  │         /usr/lib64/libvpd.so
+     └───┬───┘
+         │
+         │DEPEND + RDEPEND
+         │
+  ┌──────▼─────┐
+  │            │       /usr/lib64/libflashrom.so.1.0.0
+  │  flashrom  │       /usr/lib64/libflashrom.a
+  │            │       /sbin/flashrom
+  └────────────┘
+```
+
+When building `crash-reporter`, we need to install `libsegmentation`, `vpd`, and
+`flashrom` into the ephemeral chroot. If `flashrom`'s' source changes, we need
+to rebuild `vpd`, `libsegmentation`, and `crash-reporter`. This is both
+inefficient, and unnecessary. If, when building `crash-reporter` we replace
+`libsegmentation.so`, `libvpd.so`, and `libflashrom.so.1.0.0` with a stub, we
+can insulate `crash-reporter` from changes to the library code.
+
+We can take this a step further. ChromeOS leverages cross-compilation for board
+packages (CBUILD != CHOST). The CHOST binaries aren't executable on the CBUILD
+machine. If the binaries can't be executed, we can make the assumption that they
+aren't used. This allows us to also strip out `/sbin/flashrom`, `/usr/sbin/vpd`,
+and `/usr/sbin/feature_check`. This further insulates `crash-reporter` from any
+code changes that occur in those binaries.
+
+Additionally, we strip out any split-debug symbols and
+`/usr/share/{man,doc,info}`. See [create_interface_layer] for the details.
+
+While the above assumptions work most of the time, some packages only produce
+static libraries or need to bundle the contents of other packages. For these
+cases, we provide metadata annotations allowing a package to control interface
+layer generation or consumption. See the metadata annotations below.
+
+[llvm-ifs]: https://llvm.org/docs/CommandGuide/llvm-ifs.html
+[create_interface_layer]: https://chromium.googlesource.com/chromiumos/bazel/+/HEAD/portage/bin/create_interface_layer/src/main.rs
+
 ## Declaring Bazel-specific ebuild/eclass metadata
 
 Our Portage-to-Bazel translator (aka Alchemist) evaluates ebuilds and eclasses

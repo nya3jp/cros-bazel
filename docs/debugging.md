@@ -36,6 +36,46 @@ Make sure you declare proper `DEPEND`/`BDEPEND` in your ebuild/eclasses.
 - [Adding a missing DEPEND](https://crrev.com/c/4840362)
 - [Adding a missing BDEPEND](https://crrev.com/c/4983365)
 
+### Missing files despite correct dependency declarations
+
+**Cause**: Bazel by default will build packages with [Interface Library]
+dependencies.
+
+We perform the following modifications to the build-time dependencies that are
+"installed" into the ephemeral chroot that is used to build the package:
+
+*   All executables in `/bin`, `/usr/bin`, etc will be omitted.
+*   All static libraries (`.a`) in `/lib`, `/usr/lib`, etc will be omitted.
+*   All shared libraries (`.so`) in `/lib`, `/usr/lib`, etc will be stripped of
+    all code leaving only the public interface.
+*   All debug symbols will be omitted.
+*   `/usr/share/{doc,info,man}` will be omitted.
+
+**Symptom**: Any of the files listed above are missing.
+
+**Solutions**:
+
+1.  If the dependency only produces static libraries or doesn't benefit from
+    creating interface layers, set the `generate_interface_libraries` property
+    to `false` in the dependency's [Bazel-specific metadata].
+2.  If the dependency produces static helper libraries that always need to be
+    linked, in addition to shared objects, there are still benefits from using
+    interface libraries. You can add the static libraries to the
+    `interface_library_allowlist` in the dependency's [Bazel-specific metadata]
+    to keep them in the interface layer.
+3.  If your package needs all its dependencies in their pristine form because
+    it's bundling them or using qemu to execute the binaries, set the
+    `supports_interface_libraries` property to `false` in your package's
+    [Bazel-specific metadata].
+4.  If you control the dependency, evaluate switching to generating shared
+    objects instead of static libraries.
+
+**Example fixes**:
+
+-   [Adding interface library metadata](https://crrev.com/c/5571562)
+
+[Interface Library]: ./advanced.md#interface-libraries
+
 ### Implicit build-time dependencies are missing
 
 **Cause**:
