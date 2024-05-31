@@ -72,6 +72,13 @@
     }
   },
   {
+    "File": {
+      "path": "lib64/simple_versioned_lib.so",
+      "mode": 420,
+      "hash": "baf4ce26b0305010fac007b6b04d64bea3f0a2987fb533776336372b4de658fb"
+    }
+  },
+  {
     "Dir": {
       "path": "usr",
       "mode": 493

@@ -23,6 +23,7 @@ rust_binary(
         "//bazel/portage/common/fileutil",
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:elf",
         "@alchemy_crates//:rayon",
         "@alchemy_crates//:regex",
         "@alchemy_crates//:tempfile",
@@ -35,7 +36,14 @@ rust_test(
     name = "create_interface_layer_test",
     size = "small",
     crate = ":create_interface_layer",
+    data = [
+        ":simple_lib_shared",
+        ":simple_versioned_lib_shared",
+    ],
     rustc_flags = RUSTC_DEBUG_FLAGS,
+    deps = [
+        "@rules_rust//tools/runfiles",
+    ],
 )
 
 rust_test_suite(
@@ -70,9 +78,16 @@ cc_library(
     srcs = ["simple_lib.c"],
 )
 
+cc_library(
+    name = "simple_versioned_lib",
+    srcs = ["simple_versioned_lib.c"],
+    additional_linker_inputs = ["simple_versioned_lib.lds"],
+    linkopts = ["-Wl,--version-script,$(execpath simple_versioned_lib.lds)"],
+)
+
 # Only used to construct the test data.
 # If changing the library please copy the output into testdata.
-# $ bazel build //bazel/portage/bin/create_interface_layer:simple_lib
+# $ bazel build //bazel/portage/bin/create_interface_layer:simple_lib_shared
 # $ cp bazel-bin/bazel/portage/bin/create_interface_layer/simple_lib.so \
 #   bazel/portage/bin/create_interface_layer/testdata/input/build/board/usr/lib/simple_lib.so.0.0.0
 # $ cp bazel-bin/bazel/portage/bin/create_interface_layer/simple_lib.so \
@@ -83,6 +98,15 @@ cc_shared_library(
     name = "simple_lib_shared",
     shared_lib_name = "simple_lib.so",
     deps = [":simple_lib"],
+)
+
+# $ bazel build //bazel/portage/bin/create_interface_layer:simple_versioned_lib_shared
+# $ cp bazel-bin/bazel/portage/bin/create_interface_layer/simple_versioned_lib.so \
+#   bazel/portage/bin/create_interface_layer/testdata/input/build/board/lib64/simple_versioned_lib.so
+cc_shared_library(
+    name = "simple_versioned_lib_shared",
+    shared_lib_name = "simple_versioned_lib.so",
+    deps = [":simple_versioned_lib"],
 )
 
 generate_cargo_toml(

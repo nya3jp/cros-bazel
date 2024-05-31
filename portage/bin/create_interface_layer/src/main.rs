@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+mod elf;
+
 use anyhow::bail;
 use anyhow::{ensure, Context, Result};
 use clap::{command, Parser};
@@ -9,7 +11,7 @@ use cliutil::{cli_main, expanded_args_os};
 use container::{enter_mount_namespace, BindMount, CommonArgs, ContainerSettings};
 use durabletree::DurableTree;
 use fileutil::{remove_dir_all_with_chmod, with_permissions};
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use rayon::iter::{Either, IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use regex::Regex;
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -17,10 +19,12 @@ use walkdir::WalkDir;
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::format;
-use std::fs::read_link;
+use std::fs::{read_link, FileType};
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::Path;
 use std::{os::unix::process::ExitStatusExt, path::PathBuf, process::ExitCode};
+
+use self::elf::has_versioned_symbols;
 
 const INPUT: &str = "/.input";
 const WORK_LIST: &str = "/.work";
@@ -352,7 +356,7 @@ fn create_interface_libraries(
     args: &CommonArgs,
     src_root: &Path,
     dest_root: &Path,
-    libraries: &BTreeSet<PathBuf>,
+    libraries: &BTreeSet<&PathBuf>,
 ) -> Result<()> {
     // We use the SDK container to invoke llvm-ifs.
     let mut sdk = ContainerSettings::new();
@@ -420,6 +424,40 @@ fn create_interface_libraries(
     Ok(())
 }
 
+/// Partitions the libraries into two sets:
+/// * Libraries that do expose versioned symbols.
+/// * Libraries that don't expose any versioned symbols.
+fn partition_libraries<'a>(
+    src_root: &Path,
+    libraries: &'a BTreeSet<PathBuf>,
+) -> Result<(BTreeMap<PathBuf, FileType>, BTreeSet<&'a PathBuf>)> {
+    let libraries = libraries
+        .into_par_iter()
+        .map(|library| {
+            let path = &src_root.join(library);
+            Ok((
+                library,
+                path.metadata()
+                    .with_context(|| format!("stat {path:?}"))?
+                    .file_type(),
+                has_versioned_symbols(path).with_context(|| {
+                    format!("Failed to parse {:?}, is it a valid ELF file?", library)
+                })?,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(libraries
+        .into_par_iter()
+        .partition_map(|(library, file_type, versioned)| {
+            if versioned {
+                Either::Left((library.clone(), file_type))
+            } else {
+                Either::Right(library)
+            }
+        }))
+}
+
 fn finalize_directory_permissions(
     src_root: &Path,
     dest_root: &Path,
@@ -466,11 +504,20 @@ fn do_main() -> Result<()> {
 
     copy_files(input.path(), &args.output, &work.files_to_copy)?;
 
+    // TODO(b/344001490): When llvm-ifs can generate interface libraries for versioned
+    // symbols, then we can delete this chunk of code.
+    let (versioned_libraries, unversioned_libraries) =
+        partition_libraries(input.path(), &work.interface_libraries)?;
+    if !versioned_libraries.is_empty() {
+        eprintln!("b/344001490: Can't generate interface libraries for the following because they contain versioned symbols:");
+        copy_files(input.path(), &args.output, &versioned_libraries)?;
+    }
+
     create_interface_libraries(
         &args.common,
         input.path(),
         &args.output,
-        &work.interface_libraries,
+        &unversioned_libraries,
     )?;
 
     finalize_directory_permissions(input.path(), &args.output, &work.directories_to_create)?;

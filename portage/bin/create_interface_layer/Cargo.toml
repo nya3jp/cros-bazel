@@ -13,6 +13,7 @@ fileutil = { path = "../../common/fileutil" }
 
 anyhow.workspace = true
 clap.workspace = true
+elf.workspace = true
 regex.workspace = true
 rayon.workspace = true
 tempfile.workspace = true
