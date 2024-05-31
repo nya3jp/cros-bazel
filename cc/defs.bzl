@@ -2,8 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load("//bazel/module_extensions/toolchains:hermetic_launcher.bzl", "HERMETIC_ATTRS", "hermetic_defaultinfo")
+"""Rules for creating hermetic C++ binaries"""
+
+load(
+    "//bazel/module_extensions/toolchains/hermetic_launcher:hermetic_launcher.bzl",
+    "create_hermetic_launcher_nontest",
+    "create_hermetic_launcher_test",
+)
 
 visibility("public")
 
@@ -42,38 +47,14 @@ _COMMON_TEST_ARGS = [
     "local",
 ]
 
-def _hermetic_launcher_impl(ctx):
-    info = ctx.attr.bin[DefaultInfo]
-    return [hermetic_defaultinfo(
-        ctx,
-        files = info.files,
-        executable = ctx.executable.bin,
-        runfiles = info.default_runfiles,
-        symlink = not ctx.attr.enable[BuildSettingInfo].value,
-    )]
-
-_WRAPPER_KWARGS = dict(
-    implementation = _hermetic_launcher_impl,
-    attrs = dict(
-        bin = attr.label(mandatory = True, executable = True, cfg = "exec"),
-        enable = attr.label(mandatory = True, providers = [BuildSettingInfo]),
-    ) | HERMETIC_ATTRS,
-    executable = True,
-)
-
-_hermetic_launcher_nontest = rule(**_WRAPPER_KWARGS)
-_hermetic_launcher_test = rule(test = True, **_WRAPPER_KWARGS)
-
-def _hermetic_launcher(is_test):
+def _hermetic_launcher(wrapper_rule):
     """Generates a macro that wraps a rule to ensure it runs hermetically.
 
     Args:
-        rule_type: rule: The rule to wrap (eg. cc_binary).
-        is_test: bool: Whether the rule is a test rule.
+        wrapper_rule: rule: The rule to wrap (eg. cc_binary).
     Returns:
         A macro wrapping the rule with a hermetic launcher.
     """
-    wrapper_rule = _hermetic_launcher_test if is_test else _hermetic_launcher_nontest
 
     def wrapper(name, visibility = None, features = [], **kwargs):
         if kwargs.get("linkshared", False):
@@ -106,9 +87,11 @@ def _hermetic_launcher(is_test):
                 else:
                     inner_args[k] = v
 
+            real_name = "_%s_real" % name
+
             # buildifier: disable=native-cc
             native.cc_binary(
-                name = name + ".elf",
+                name = real_name,
                 visibility = ["//visibility:private"],
                 features = features,
                 **inner_args
@@ -116,13 +99,13 @@ def _hermetic_launcher(is_test):
 
             wrapper_rule(
                 name = name,
-                bin = name + ".elf",
-                enable = "@@//bazel/module_extensions/toolchains/cc:hermetic",
+                bin = real_name,
+                enable = "@@//bazel/module_extensions/toolchains/cc:use_hermetic_launcher",
                 visibility = visibility,
                 **wrapper_args
             )
 
     return wrapper
 
-cc_binary = _hermetic_launcher(is_test = False)
-cc_test = _hermetic_launcher(is_test = True)
+cc_binary = _hermetic_launcher(create_hermetic_launcher_nontest)
+cc_test = _hermetic_launcher(create_hermetic_launcher_test)

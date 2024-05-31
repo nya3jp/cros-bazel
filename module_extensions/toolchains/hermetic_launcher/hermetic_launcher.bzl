@@ -49,7 +49,7 @@ def hermetic_defaultinfo(ctx, files, runfiles, executable, enabled = True, out =
         ctx.actions.symlink(output = out, target_file = executable)
         return DefaultInfo(
             files = depset(files),
-            runfiles = runfiles.merge(files = [out]),
+            runfiles = runfiles.merge(ctx.runfiles(files = [out])),
             executable = out,
         )
 
