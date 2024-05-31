@@ -2,7 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+py_binary(
+    name = "create_hermetic_launcher",
+    srcs = ["create_hermetic_launcher.py"],
+    visibility = ["//visibility:public"],
+    deps = [":elf_analyzer"],
+)
 
 py_library(
     name = "elf_analyzer",
