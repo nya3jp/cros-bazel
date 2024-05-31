@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@bazel_skylib//rules/directory:glob.bzl", "directory_glob")
 load("@rules_rust//rust:toolchain.bzl", "rust_toolchain")
-load("//bazel/module_extensions/toolchains/files:sysroot.bzl", "sysroot_glob")
 load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM")
 
 package(default_visibility = ["//visibility:public"])
@@ -15,26 +15,26 @@ alias(
     actual = "@toolchain_sdk//:rust_stdlibs_host",
 )
 
-sysroot_glob(
+directory_glob(
     name = "stdlibs_files",
-    include = [
-        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.rlib*",
-        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.a*",
-        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.so*",
+    srcs = [
+        "usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.a*",
+        "usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.rlib*",
+        "usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.so*",
     ],
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
     visibility = ["//visibility:public"],
 )
 
-sysroot_glob(
+directory_glob(
     name = "rustc_libs",
-    include = [
-        "/usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.so*",
-        "/usr/x86_64-cros-linux-gnu/lib64/*.so*",
-        "/usr/x86_64-cros-linux-gnu/usr/lib64/*.so*",
-        "/usr/lib64/*.so*",
+    srcs = [
+        "usr/lib64/*.so*",
+        "usr/lib64/rustlib/x86_64-pc-linux-gnu/lib/*.so*",
+        "usr/x86_64-cros-linux-gnu/lib64/*.so*",
+        "usr/x86_64-cros-linux-gnu/usr/lib64/*.so*",
     ],
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
 )
 
 rust_toolchain(

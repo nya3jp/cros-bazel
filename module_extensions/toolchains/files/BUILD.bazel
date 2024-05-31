@@ -2,32 +2,37 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load(":sysroot.bzl", "sysroot_glob")
+load("@bazel_skylib//rules/directory:glob.bzl", "directory_glob")
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
 
 package(
-    default_visibility = ["//bazel/module_extensions/toolchains:__subpackages__"],
+    default_visibility = ["//visibility:public"],
 )
 
 alias(
     name = "sysroot",
     # In the future, if we implement a bootstrap stage toolchain, we might replace
     # this with a select clause based on whether we're bootstrapping.
-    actual = "@toolchain_sdk//:sysroot_files",
+    actual = "@toolchain_sdk//:sysroot",
     visibility = ["//visibility:public"],
 )
 
-sysroot_glob(
+directory_glob(
     name = "interp",
-    include = ["/lib64/ld-linux-x86-64.so.2"],
-    sysroot = ":sysroot",
-    visibility = ["//visibility:public"],
+    srcs = ["lib64/ld-linux-x86-64.so.2"],
+    directory = ":sysroot",
 )
 
-sysroot_glob(
+subdirectory(
+    name = "libs_dir",
+    parent = ":sysroot",
+    path = "lib",
+)
+
+directory_glob(
     name = "libs",
-    include = ["/lib/*.so*"],
-    sysroot = ":sysroot",
-    visibility = ["//visibility:public"],
+    srcs = ["*.so*"],
+    directory = ":libs_dir",
 )
 
 filegroup(
@@ -36,5 +41,4 @@ filegroup(
         ":interp",
         ":libs",
     ],
-    visibility = ["//visibility:public"],
 )
