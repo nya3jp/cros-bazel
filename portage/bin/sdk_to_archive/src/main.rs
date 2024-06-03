@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use clap::Parser;
 use cliutil::cli_main;
 use container::{enter_mount_namespace, ContainerSettings};
-use fileutil::{resolve_symlink_forest, SafeTempDirBuilder};
+use fileutil::resolve_symlink_forest;
 use runfiles::Runfiles;
 
 use std::path::PathBuf;
