@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "SDKInfo")
+load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo")
 
 HashTracerInfo = provider(
     """
@@ -138,15 +138,10 @@ def _hash_tracer_impl(target, ctx):
     ]:
         direct_outputs.append(_generate_hash_action(ctx, target.files))
 
-    elif ctx.rule.kind in ["build_sdk", "sdk_update", "sdk_install_deps", "sdk_from_archive"]:
-        layers = target[SDKInfo].layers
+    elif ctx.rule.kind in ["build_sdk", "sdk_from_archive"]:
+        layers = target.files
 
-        # We only want to hash the layer that the rule created.
-        # TODO: Refactor rules to return only newly created layers in their
-        # DefaultInfo provider.
-        last_layer = layers[-1]
-
-        direct_outputs.append(_generate_hash_action(ctx, [last_layer]))
+        direct_outputs.append(_generate_hash_action(ctx, layers))
         transitive_outputs.extend(_processes_rule(ctx.rule))
 
     elif ctx.rule.kind in ["ebuild"]:
