@@ -2,73 +2,83 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/module_extensions/toolchains/files:sysroot.bzl", "sysroot_prebuilt_binary")
+load("@rules_cc//cc/toolchains:directory_tool.bzl", "cc_directory_tool")
 
 package(default_visibility = ["//bazel/module_extensions/toolchains:__subpackages__"])
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "ar",
-    exe = "bin/llvm-ar",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["bin/llvm-ar.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "bin/llvm-ar",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "clang",
-    exe = "usr/bin/clang",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["usr/bin/clang.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "usr/bin/clang",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "clang++",
-    elf_file = "usr/bin/clang.elf",
-    exe = "usr/bin/clang++",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["usr/bin/clang.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "usr/bin/clang++",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "dwp",
-    exe = "bin/llvm-dwp",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["bin/llvm-dwp.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "bin/llvm-dwp",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "ld",
-    exe = "bin/lld",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["bin/lld.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "bin/lld",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "nm",
-    exe = "bin/llvm-nm",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["bin/llvm-nm.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "bin/llvm-nm",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "objcopy",
-    exe = "bin/llvm-objcopy",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["bin/llvm-objcopy.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "bin/llvm-objcopy",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "objdump",
-    exe = "bin/llvm-objdump",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["bin/llvm-objdump.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "bin/llvm-objdump",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "strip",
-    exe = "bin/llvm-strip",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["bin/llvm-strip.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "bin/llvm-strip",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "cpp",
-    exe = "usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-cpp.real",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-cpp.real.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-cpp.real",
 )
 
-sysroot_prebuilt_binary(
+cc_directory_tool(
     name = "gcov",
-    exe = "usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-gcov",
-    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
+    data = ["usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-gcov.elf"],
+    directory = "//bazel/module_extensions/toolchains/files:sysroot",
+    executable = "usr/x86_64-pc-linux-gnu/x86_64-cros-linux-gnu/gcc-bin/10.2.0/x86_64-cros-linux-gnu-gcov",
 )
