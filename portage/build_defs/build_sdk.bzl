@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
-load(":common.bzl", "OverlaySetInfo", "SDKInfo")
+load(":common.bzl", "OverlaySetInfo", "SDKInfo", "SDKLayer", "sdk_to_layer_list")
 
 def _build_sdk_impl(ctx):
     sdk = ctx.attr.sdk[SDKInfo]
@@ -27,7 +27,7 @@ def _build_sdk_impl(ctx):
     ], expand_directories = False)
 
     layer_inputs = (
-        sdk.layers +
+        sdk_to_layer_list(sdk) +
         ctx.attr.overlays[OverlaySetInfo].layers +
         ctx.files.extra_tarballs +
         ctx.files.portage_config
@@ -57,7 +57,9 @@ def _build_sdk_impl(ctx):
             logs = depset([output_log_file]),
         ),
         SDKInfo(
-            layers = [output_sdk],
+            layers = [
+                SDKLayer(file = output_sdk),
+            ],
             packages = depset(),
         ),
     ]

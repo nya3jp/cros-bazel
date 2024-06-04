@@ -6,7 +6,7 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load("//bazel/bash:defs.bzl", "BASH_RUNFILES_ATTR", "wrap_binary_with_args")
-load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "ExtraSourcesInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "SysrootInfo", "compute_file_arg", "relative_path_in_package", "single_binary_package_set_info")
+load("//bazel/portage/build_defs:common.bzl", "BashrcInfo", "BinaryPackageInfo", "BinaryPackageSetInfo", "EbuildLibraryInfo", "ExtraSourcesInfo", "OverlayInfo", "OverlaySetInfo", "SDKInfo", "SysrootInfo", "compute_file_arg", "relative_path_in_package", "sdk_to_layer_list", "single_binary_package_set_info")
 load("//bazel/portage/build_defs:interface_lib.bzl", "add_interface_library_args", "generate_interface_libraries")
 load("//bazel/portage/build_defs:package_contents.bzl", "generate_contents")
 load("ebuild_sizing.bzl", "HOST", "PACKAGE_TO_CORE_COUNT", "TARGET")
@@ -305,7 +305,7 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
     sdk = ctx.attr.sdk[SDKInfo]
     overlays = ctx.attr.overlays[OverlaySetInfo]
     layer_inputs = (
-        sdk.layers +
+        sdk_to_layer_list(sdk) +
         overlays.layers +
         ctx.files.eclasses +
         ctx.files.portage_config +

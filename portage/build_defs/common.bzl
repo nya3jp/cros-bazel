@@ -191,11 +191,10 @@ SDKInfo = provider(
     """,
     fields = {
         "layers": """
-            File[]: A list of files each of which represents a file system layer
-            of the SDK. A layer file can be a directory or a tar file (.tar or
-            .tar.zst). Layers are ordered from lower to upper; in other words,
-            a file from a layer can be overridden by one in another layer that
-            appears later in the list.
+            SDKLayer[]: A list of filesystem layers. A layer file can be a
+            directory or a tar file (.tar or .tar.zst). Layers are ordered from
+            lower to upper; in other words, a file from a layer can be
+            overridden by one in another layer that appears later in the list.
         """,
         "packages": """
             Depset[BinaryPackageInfo]: The packages that are installed in the
@@ -204,6 +203,17 @@ SDKInfo = provider(
     },
 )
 
+SDKLayer = provider(
+    """
+    Represents a single layer in an SDK.
+    """,
+    fields = {
+        "file": """
+            File: Represents a filesystem layer of the SDK. A layer file can be
+            a directory or a tar file (.tar or .tar.zst).
+        """,
+    },
+)
 SysrootInfo = provider(
     "A sysroot in the permanent SDK where packages are installed.",
     fields = {
@@ -361,3 +371,15 @@ def get_all_deps(ctx):
                 if type(value) == "Target":
                     deps.append(value)
     return deps
+
+def sdk_to_layer_list(sdk):
+    """
+    Returns a list of filesystem layers that make up the SDK.
+
+    Args:
+        sdk: SDKInfo: The SDK Info.
+
+    Returns:
+        list[File]: All the layers for the SDK.
+    """
+    return [layer.file for layer in sdk.layers]

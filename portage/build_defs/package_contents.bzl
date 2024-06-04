@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("common.bzl", "ContentLayerTypesInfo", "ContentLayersInfo")
+load("common.bzl", "ContentLayerTypesInfo", "ContentLayersInfo", "sdk_to_layer_list")
 
 def _generate_contents_layer(
         ctx,
@@ -87,8 +87,10 @@ def _generate_interface_layer(
         output_contents_dir,
     ], expand_directories = False)
 
+    layers = sdk_to_layer_list(base_sdk)
+
     arguments.add_all(
-        base_sdk.layers,
+        layers,
         before_each = "--layer",
         expand_directories = False,
     )
@@ -100,7 +102,7 @@ def _generate_interface_layer(
     )
 
     ctx.actions.run(
-        inputs = [input] + base_sdk.layers,
+        inputs = [input] + layers,
         outputs = [output_contents_dir, output_log],
         executable = executable_action_wrapper,
         tools = [executable_create_interface_layer],

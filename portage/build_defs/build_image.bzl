@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
-load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
+load("//bazel/portage/build_defs:common.bzl", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo", "sdk_to_layer_list")
 load("//bazel/portage/build_defs:install_deps.bzl", "install_deps")
 
 def _build_image_impl(ctx):
@@ -57,12 +57,18 @@ def _build_image_impl(ctx):
         "--image-file-name=" + ctx.attr.image_file_name,
     ])
 
+    layers = (
+        sdk_to_layer_list(sdk) +
+        [layer.file for layer in deps.layers] +
+        overlays.layers
+    )
+
     args.add_all(
-        sdk.layers + deps.layers + overlays.layers,
+        layers,
         format_each = "--layer=%s",
         expand_directories = False,
     )
-    direct_inputs.extend(sdk.layers + deps.layers + overlays.layers)
+    direct_inputs.extend(layers)
 
     args.add_all(ctx.files.files, format_each = "--layer=%s", expand_directories = False)
     direct_inputs.extend(ctx.files.files)

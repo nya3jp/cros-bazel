@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
-load(":common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo")
+load(":common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo", "SDKLayer", "sdk_to_layer_list")
 load(":install_deps.bzl", "install_deps")
 
 def _sdk_from_archive_impl(ctx):
@@ -47,7 +47,9 @@ def _sdk_from_archive_impl(ctx):
             traces = depset([output_profile]),
         ),
         SDKInfo(
-            layers = [output_root],
+            layers = [
+                SDKLayer(file = output_root),
+            ],
             packages = depset(),
         ),
     ]
@@ -98,7 +100,7 @@ def _sdk_update_impl(ctx):
     ], expand_directories = False)
 
     base_sdk = ctx.attr.base[SDKInfo]
-    layer_inputs = base_sdk.layers
+    layer_inputs = sdk_to_layer_list(base_sdk)
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
 
     args.add_all(ctx.files.extra_tarballs, format_each = "--install-tarball=%s")
@@ -133,7 +135,9 @@ def _sdk_update_impl(ctx):
             traces = depset([output_profile]),
         ),
         SDKInfo(
-            layers = base_sdk.layers + [output_root],
+            layers = base_sdk.layers + [
+                SDKLayer(file = output_root),
+            ],
             packages = base_sdk.packages,
         ),
     ]
@@ -196,7 +200,9 @@ def _sdk_install_deps_impl(ctx):
     )
 
     return [
-        DefaultInfo(files = depset(deps.layers)),
+        DefaultInfo(files = depset(
+            [layer.file for layer in deps.layers],
+        )),
         OutputGroupInfo(
             logs = depset([deps.log_file]),
             traces = depset([deps.trace_file]),
@@ -288,7 +294,10 @@ def _sdk_extend_impl(ctx):
     sdk = ctx.attr.base[SDKInfo]
 
     sdk = SDKInfo(
-        layers = sdk.layers + ctx.files.extra_tarballs,
+        layers = sdk.layers + [
+            SDKLayer(file = layer)
+            for layer in ctx.files.extra_tarballs
+        ],
         packages = sdk.packages,
     )
 
@@ -342,7 +351,7 @@ def _sdk_install_glibc_impl(ctx):
     ], expand_directories = False)
 
     base_sdk = ctx.attr.base[SDKInfo]
-    layer_inputs = base_sdk.layers
+    layer_inputs = sdk_to_layer_list(base_sdk)
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
 
     glibc = ctx.attr.glibc[BinaryPackageInfo].partial
@@ -378,7 +387,9 @@ def _sdk_install_glibc_impl(ctx):
             traces = depset([output_profile]),
         ),
         SDKInfo(
-            layers = base_sdk.layers + [output_root],
+            layers = base_sdk.layers + [
+                SDKLayer(file = output_root),
+            ],
             packages = depset(
                 [ctx.attr.glibc[BinaryPackageInfo]],
                 transitive = [base_sdk.packages],
@@ -437,7 +448,10 @@ def _remote_toolchain_inputs(ctx):
         output,
     ], expand_directories = False)
 
-    layer_inputs = ctx.attr.sdk[SDKInfo].layers + [ctx.file._chromite_src]
+    layer_inputs = (
+        sdk_to_layer_list(ctx.attr.sdk[SDKInfo]) +
+        [ctx.file._chromite_src]
+    )
     args.add_all(layer_inputs, format_each = "--layer=%s", expand_directories = False)
 
     inputs = depset(

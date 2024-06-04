@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("common.bzl", "SDKLayer", "sdk_to_layer_list")
+
 def _compute_slot_key(package):
     """
     Computes a slot key from BinaryPackageInfo.
@@ -67,7 +69,7 @@ def install_deps(
 
     Returns:
         struct where:
-            layers: list[File]: Files representing file system layers.
+            layers: list[SDKLayer]: Layers used to build the SDK.
             log_file: File: Log file generated when building the layers.
             trace_file: File: Trace file generated when building the layers.
     """
@@ -132,7 +134,7 @@ def install_deps(
     if contents in ["sparse", "interface"]:
         args.add("--sparse-vdb")
 
-    input_layers = sdk.layers + overlays.layers + portage_configs
+    input_layers = sdk_to_layer_list(sdk) + overlays.layers + portage_configs
     args.add_all(
         input_layers,
         format_each = "--layer=%s",
@@ -198,9 +200,9 @@ def install_deps(
             content_layer = installed_layer
 
         layers.extend([
-            output_preinst,
-            content_layer,
-            output_postinst,
+            SDKLayer(file = output_preinst),
+            SDKLayer(file = content_layer),
+            SDKLayer(file = output_postinst),
         ])
 
     actual_progress_message = progress_message.replace(
