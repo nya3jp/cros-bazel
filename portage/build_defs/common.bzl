@@ -212,6 +212,10 @@ SDKLayer = provider(
             File: Represents a filesystem layer of the SDK. A layer file can be
             a directory or a tar file (.tar or .tar.zst).
         """,
+        "interface_file": """
+            Option[File]: If present, it contains an interface library layer
+            derived from the `file`.
+        """,
     },
 )
 SysrootInfo = provider(
@@ -372,14 +376,23 @@ def get_all_deps(ctx):
                     deps.append(value)
     return deps
 
-def sdk_to_layer_list(sdk):
+def sdk_to_layer_list(sdk, interface_layers = False):
     """
     Returns a list of filesystem layers that make up the SDK.
 
     Args:
         sdk: SDKInfo: The SDK Info.
+        interface_layers: bool: Prefer returning interface layers if they are
+            available.
 
     Returns:
         list[File]: All the layers for the SDK.
     """
-    return [layer.file for layer in sdk.layers]
+    layers = []
+    for layer in sdk.layers:
+        interface_file = getattr(layer, "interface_file", None)
+        if interface_layers and interface_file:
+            layers.append(interface_file)
+        else:
+            layers.append(layer.file)
+    return layers

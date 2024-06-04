@@ -164,6 +164,11 @@ _EBUILD_COMMON_ATTRS = dict(
         The bashrc files to execute for the package.
         """,
     ),
+    use_interface_libraries = attr.bool(
+        doc = """
+        When true, the package will be built using interface library layers.
+        """,
+    ),
     _action_wrapper = attr.label(
         executable = True,
         cfg = "exec",
@@ -305,7 +310,7 @@ def _compute_build_package_args(ctx, output_file, use_runfiles):
     sdk = ctx.attr.sdk[SDKInfo]
     overlays = ctx.attr.overlays[OverlaySetInfo]
     layer_inputs = (
-        sdk_to_layer_list(sdk) +
+        sdk_to_layer_list(sdk, interface_layers = ctx.attr.use_interface_libraries) +
         overlays.layers +
         ctx.files.eclasses +
         ctx.files.portage_config +

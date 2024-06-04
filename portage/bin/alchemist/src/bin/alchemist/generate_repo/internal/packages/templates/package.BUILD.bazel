@@ -105,13 +105,12 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     {%- if target_board %}
     board = "{{ target_board }}",
     {%- endif %}
-    {%- if use_interface_libraries %}
-    sdk = select({
-        "@//bazel/portage:interface_libraries_enabled": ":{{ ebuild.version }}_interface_deps",
-        "@//bazel/portage:interface_libraries_disabled": ":{{ ebuild.version }}_deps",
-    }),
-    {%- else %}
     sdk = ":{{ ebuild.version }}{{ sdk_suffix }}",
+    {%- if use_interface_libraries %}
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
+    }),
     {%- endif %}
     overlays = "{{ target_overlay_set }}{% if full_config %}-full{% endif %}",
     eclasses = [
@@ -244,16 +243,10 @@ alias(
 )
 {% endif -%}
 
-{%- if ebuild.use_interface_libraries %}
-    {%- set suffixes = ["", "_interface"] -%}
-{% else %}
-    {%- set suffixes = [""] -%}
-{% endif -%}
-{%- for suffix in suffixes %}
-    {%- if ebuild.target_build_deps %}
+{%- if ebuild.target_build_deps %}
 sdk_install_deps(
-    name = "{{ ebuild.version }}{{ suffix }}_deps",
-    out = "{{ ebuild.basename }}{{ suffix }}_deps",
+    name = "{{ ebuild.version }}_deps",
+    out = "{{ ebuild.basename }}_deps",
     base = "{{ ebuild.version }}_host_deps",
     board = "{{ target_board }}",
     overlays = "{{ target_overlay_set }}",
@@ -266,19 +259,18 @@ sdk_install_deps(
         "{{ dep }}",
         {%- endfor %}
     ],
-        {%- if suffix == "_interface" %}
+    {%- if ebuild.use_interface_libraries %}
     contents = "interface",
-        {%- endif %}
+    {%- endif %}
     visibility = ["//visibility:private"],
 )
-    {%- else %}
+{% else %}
 alias(
-    name = "{{ ebuild.version }}{{ suffix }}_deps",
+    name = "{{ ebuild.version }}_deps",
     actual = "{{ ebuild.version }}_host_deps",
     visibility = ["//visibility:private"],
 )
-    {%- endif %}
-{% endfor -%}
+{% endif -%}
 
 {%- if ebuild.target_test_deps %}
 sdk_install_deps(

@@ -31,22 +31,6 @@ sdk_install_deps(
     target_deps = [
         "//internal/packages/stage2/target/board/chromiumos/simple/aaa:1.0",
     ],
-    visibility = ["//visibility:private"],
-)
-
-sdk_install_deps(
-    name = "1.0_interface_deps",
-    out = "testonlydeps-1.0_interface_deps",
-    base = "1.0_host_deps",
-    board = "amd64-generic",
-    overlays = "//internal/overlays:board",
-    portage_config = [
-        "//internal/portage-config/host:lite",
-        "//internal/portage-config/target/board",
-    ],
-    target_deps = [
-        "//internal/packages/stage2/target/board/chromiumos/simple/aaa:1.0",
-    ],
     contents = "interface",
     visibility = ["//visibility:private"],
 )
@@ -145,9 +129,10 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = select({
-        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
-        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    sdk = ":1.0_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
     }),
     overlays = "//internal/overlays:board",
     eclasses = [
@@ -242,9 +227,10 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = select({
-        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
-        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    sdk = ":1.0_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
     }),
     overlays = "//internal/overlays:board",
     eclasses = [
@@ -352,9 +338,10 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = select({
-        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
-        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    sdk = ":1.0_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
     }),
     overlays = "//internal/overlays:board",
     eclasses = [
@@ -438,9 +425,10 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = select({
-        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
-        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    sdk = ":1.0_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
     }),
     overlays = "//internal/overlays:board",
     eclasses = [
@@ -548,9 +536,10 @@ ebuild(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = select({
-        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
-        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    sdk = ":1.0_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
     }),
     overlays = "//internal/overlays:board-full",
     eclasses = [
@@ -630,9 +619,10 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = select({
-        "@//bazel/portage:interface_libraries_enabled": ":1.0_interface_deps",
-        "@//bazel/portage:interface_libraries_disabled": ":1.0_deps",
+    sdk = ":1.0_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
     }),
     overlays = "//internal/overlays:board-full",
     eclasses = [

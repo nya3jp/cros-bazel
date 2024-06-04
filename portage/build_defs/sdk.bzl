@@ -240,10 +240,16 @@ sdk_install_deps = rule(
             * sparse: The layers will contain a sparse vdb that is only suitable
                 for handling `has_version`. It contain all files in their
                 original state.
-            * interface: Contains a sparse vdb and interface shared objects
-                (shared objects without any code). All binaries and any
-                non-essential files have also been removed. This layer should
-                only be used for building dynamically linked libraries.
+            * interface: When set, it has the same effect as `sparse`, but in
+                addition it will also enable interface library layers for the
+                specified packages. An interface library layer is a layer with a
+                sparse vdb and interface shared objects (shared objects without
+                any code). All binaries and any non-essential files have also
+                been removed. This layer should only be used for building
+                dynamically linked libraries.
+
+                An ebuild can choose to build with interface layers by setting
+                `use_interface_libraries=True`.
             """,
             default = "sparse",
             values = ["full", "sparse", "interface"],

@@ -64,8 +64,10 @@ def install_deps(
         executable_fast_install_packages: File: An executable file of
             fast_install_packages.
         progress_message: str: Progress message for the installation action.
-        contents: str: Defines the types of layer to return. Valid options are:
-            full, sparse, or interface.
+        contents: str: Defines the types of layers to return. Valid options are:
+            full, sparse, or interface. When interface is set, it has the same
+            effect as sparse, but it also adds the `interface_file` to the
+            SDKLayer.
 
     Returns:
         struct where:
@@ -156,9 +158,15 @@ def install_deps(
         if contents == "full":
             installed_layer = package.contents.full.installed
             staged_layer = package.contents.full.staged
+            interface_layer = None
         else:
             installed_layer = package.contents.internal.installed
             staged_layer = package.contents.internal.staged
+
+            if contents == "interface":
+                interface_layer = package.contents.internal.interface
+            else:
+                interface_layer = None
 
         if package.contents.sysroot != sysroot:
             fail(
@@ -192,16 +200,9 @@ def install_deps(
 
         outputs.extend([output_preinst, output_postinst])
 
-        if contents == "interface" and package.contents.internal.interface:
-            # We swap out the original contents layer with the interface layer
-            # after the postinst layer has been generated.
-            content_layer = package.contents.internal.interface
-        else:
-            content_layer = installed_layer
-
         layers.extend([
             SDKLayer(file = output_preinst),
-            SDKLayer(file = content_layer),
+            SDKLayer(file = installed_layer, interface_file = interface_layer),
             SDKLayer(file = output_postinst),
         ])
 
