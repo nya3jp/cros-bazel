@@ -162,6 +162,10 @@ crate.annotation(
     ],
 )
 crate.annotation(
+    crate = "indexmap",
+    crate_features = ["std"],
+)
+crate.annotation(
     additive_build_file = "//bazel/rust/alchemy_crates:additive_build_files/rustix.BUILD.bazel",
     crate = "rustix",
     data = [":static_libs"],
