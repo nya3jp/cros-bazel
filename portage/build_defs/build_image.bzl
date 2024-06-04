@@ -94,14 +94,14 @@ def _build_image_impl(ctx):
     action_wrapper_args.add_all([
         "--log",
         output_log_file,
+        "--temp-dir",
+        output_log_file.dirname + "/tmp",
         "--profile",
         output_profile_file,
         "--privileged",
         "--privileged-output",
         output_image_file,
         ctx.executable._build_image,
-        "--temp-dir",
-        output_log_file.dirname + "/tmp",
     ])
 
     # Define the main action.
