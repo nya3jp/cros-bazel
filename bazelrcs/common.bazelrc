@@ -52,6 +52,10 @@ build --noincompatible_disallow_unsound_directory_outputs
 build --noexperimental_guard_against_concurrent_changes
 query --noexperimental_guard_against_concurrent_changes
 
+# Enable 2 retries (3 attempts) when downloads fail, to work around the case
+# where GS returns incomplete content while downloading.
+build --experimental_repository_downloader_retries=2
+
 # Aspect-Recommended bazel flags for all projects
 # Docs for these flags: https://bazel.build/reference/command-line-reference
 # Accompanies this blog post: https://blog.aspect.dev/bazelrc-flags
