@@ -6,3 +6,10 @@ exports_files([
     "Cargo.toml",
     "Cargo.lock",
 ])
+
+# rules_rust is unable to build their rustix because they don't have our annotations.
+alias(
+    name = "is_terminal",
+    actual = "@alchemy_crates//:is-terminal",
+    visibility = ["//visibility:public"],
+)
