@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
 # We enable optimization even in debug builds (-c dbg) because it will just
 # slow down zstd archive operations while it's super rare that we need to
 # debug zstd by ourselves.
