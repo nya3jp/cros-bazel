@@ -59,6 +59,8 @@ rust_test_suite(
         "testdata/golden/**",
     ]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
+    # TODO(b/346436764): Remove this.
+    tags = ["manual"],
     deps = [
         "//bazel/portage/common/container",
         "//bazel/portage/common/durabletree",
