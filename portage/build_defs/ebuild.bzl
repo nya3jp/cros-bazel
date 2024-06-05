@@ -14,6 +14,10 @@ load("ebuild_sizing.bzl", "HOST", "PACKAGE_TO_CORE_COUNT", "TARGET")
 _CCACHE_DIR_LABEL = "//bazel/portage:ccache_dir"
 _DEFAULT_CORES = 8
 
+# Extract patterns from `PACKAGE_TO_CORE_COUNT` so that ebuild_exec_contraint() doesn't need to
+# iterate over all elements.
+_PATTERNS_IN_PACKAGE_TO_CORE_COUNT = [key for key in PACKAGE_TO_CORE_COUNT if key.count("*") > 0]
+
 # Attributes common to the `ebuild`/`ebuild_debug`/`ebuild_test` rule.
 _EBUILD_COMMON_ATTRS = dict(
     ebuild = attr.label(
@@ -820,19 +824,48 @@ ebuild = rule(
     ),
 )
 
+def _matches_pattern(input, pattern):
+    """
+    Returns if the input string matches the given pattern.
+
+    This function supports patterns with at most one "*".
+    """
+    parts = pattern.split("*")
+    if len(parts) > 2:
+        fail("The pattern contains more than one '*': %s" % pattern)
+    if len(parts) == 2:
+        return input.startswith(parts[0]) and input.endswith(parts[1])
+    return input == pattern
+
 def ebuild_exec_contraint(portage_package_name, is_host):
+    """
+    Returns the constraint with which the build is executed.
+
+    Args:
+        portage_package_name: string: The package name.
+        is_host: bool: Whether building the package for the host.
+
+    Returns:
+        string: The execution constraint.
+    """
+
     host_or_target = HOST if is_host else TARGET
-    size_mapping = PACKAGE_TO_CORE_COUNT.get(
-        portage_package_name,
-        {
-            HOST: _DEFAULT_CORES,
-            TARGET: _DEFAULT_CORES,
-        },
-    )
-    core_count = size_mapping.get(
-        host_or_target,
-        max(size_mapping.values()),
-    )
+
+    # Look for the exact match first.
+    size_mapping = PACKAGE_TO_CORE_COUNT.get(portage_package_name)
+    core_count = size_mapping.get(host_or_target) if size_mapping else None
+
+    # If not found, try pattern matching.
+    if core_count == None:
+        for pattern in _PATTERNS_IN_PACKAGE_TO_CORE_COUNT:
+            if _matches_pattern(portage_package_name, pattern):
+                size_mapping = PACKAGE_TO_CORE_COUNT.get(pattern)
+                core_count = size_mapping.get(host_or_target) if size_mapping else None
+                if core_count:
+                    break
+
+    if core_count == None:
+        core_count = _DEFAULT_CORES
     return "@//bazel/platforms:rbe_%s_cores" % core_count
 
 _DEBUG_SCRIPT = """
