@@ -4,6 +4,7 @@
 
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
 load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
 load("//bazel/build_defs:bool_flag.bzl", "config_setting_all")
 load("//bazel/platforms:platforms.bzl", "HOST_PLATFORM")
@@ -48,6 +49,18 @@ selects.config_setting_group(
     ],
 )
 
+subdirectory(
+    name = "include",
+    parent = "//bazel/module_extensions/toolchains/files:sysroot",
+    path = "usr/include/c++/v1",
+)
+
+subdirectory(
+    name = "clang_include",
+    parent = "//bazel/module_extensions/toolchains/files:sysroot",
+    path = "usr/lib64/clang/18/include",
+)
+
 cc_toolchain(
     name = "toolchain_impl",
     action_type_configs = [
@@ -66,26 +79,16 @@ cc_toolchain(
         "//bazel/module_extensions/toolchains/cc/args:warnings",
         "//bazel/module_extensions/toolchains/cc/args:link_args",
     ],
-    compiler = "clang",
-    # TODO: Replace with directory once upstream supports it.
     cxx_builtin_include_directories = [
-        "%sysroot%/usr/include/c++/v1",
-        "%sysroot%/usr/lib64/clang/16/include",
+        ":include",
+        ":clang_include",
     ],
-    # TODO: Replace with directory once upstream supports it.
-    sysroot = "external/_main~toolchains~toolchain_sdk",
-    target_cpu = "",
-    target_libc = "",
-    # These fields are only used for toolchain resolution when using the
-    # old crosstool_top. They're not used when using platforms.
-    target_system_name = "",
+    sysroot = "//bazel/module_extensions/toolchains/files:sysroot",
     toolchain_features = [
         "//bazel/module_extensions/toolchains/cc/features:dbg",
         "//bazel/module_extensions/toolchains/cc/features:fastbuild",
         "//bazel/module_extensions/toolchains/cc/features:opt",
     ],
-    # TODO: Remove after uprev to upstream.
-    toolchain_identifier = "cc_toolchain",
 )
 
 toolchain(
