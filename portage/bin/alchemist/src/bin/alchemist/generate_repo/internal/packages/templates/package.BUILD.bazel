@@ -248,12 +248,19 @@ sdk_install_deps(
     name = "{{ ebuild.version }}_deps",
     out = "{{ ebuild.basename }}_deps",
     base = "{{ ebuild.version }}_host_deps",
+    {%- if target_board %}
     board = "{{ target_board }}",
     overlays = "{{ target_overlay_set }}",
     portage_config = [
         "//internal/portage-config/host:lite",
         "//internal/portage-config/{{ target_portage_config }}",
     ],
+    {%- else %}
+    overlays = "{{ host_overlay_set }}",
+    portage_config = [
+        "//internal/portage-config/host",
+    ],
+    {%- endif %}
     target_deps = [
         {%- for dep in ebuild.target_build_deps %}
         "{{ dep }}",

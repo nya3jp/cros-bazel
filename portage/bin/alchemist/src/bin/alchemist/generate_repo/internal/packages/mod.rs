@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::{create_dir_all, File},
     io::Write,
     os::unix::fs::symlink,
@@ -332,17 +332,10 @@ impl EBuildEntry {
             .collect();
 
         let (host_build_deps, provided_host_build_deps) = match &target {
-            // When building host packages we need to ensure DEPEND packages
-            // are present on the host.
+            // We handle DEPEND down below.
             PackageType::Host(host) => {
                 let (host_build_deps, provided_host_build_deps) = partition_provided(
-                    package
-                        .dependencies
-                        .indirect
-                        .build_host_set
-                        .iter()
-                        .chain(package.dependencies.direct.build_target.iter())
-                        .unique_by(|details| &details.as_basic_data().ebuild_path),
+                    &package.dependencies.indirect.build_host_set,
                     host.sdk_provided_packages,
                 );
 
@@ -387,8 +380,24 @@ impl EBuildEntry {
             .collect();
 
         let target_build_deps = match &target {
-            // Host DEPENDs are handled above with the host_build_deps
-            PackageType::Host { .. } => Vec::new(),
+            PackageType::Host(host) => {
+                // TODO: Surface provided packages.
+                let (host_deps, _provided_host_deps) = partition_provided(
+                    &package.dependencies.direct.build_target,
+                    host.sdk_provided_packages,
+                );
+
+                // Since BDEPEND and DEPEND are installed into the same sysroot
+                // when building host packages, we filter out the already installed
+                // BDEPEND from our list.
+                let host_build_deps: HashSet<_> = host_build_deps.iter().collect();
+
+                let mut host_deps = format_dependencies(host.prefix, host_deps)?;
+                host_deps.retain(|dep| !host_build_deps.contains(dep));
+                host_deps.sort();
+
+                host_deps
+            }
             PackageType::CrossRoot { target, .. } => {
                 // TODO: Add support for stripping the Board SDK's packages.
                 format_dependencies(
