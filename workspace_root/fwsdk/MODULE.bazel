@@ -62,11 +62,17 @@ register_toolchains("@rust_toolchains//:all")
 fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
 use_repo(
     fwsdk_deps,
+    "cmsis",
     "compiler-builtins",
     "coreboot_sdk",
+    "cr50-utils-deps",
     "cros-sdk",
     "depot_tools",
+    "ec",
     "ec_devutils",
+    "hdctools",
     "shflags",
     "ti50-sdk",
+    "u_boot",
+    "zephyr",
 )

@@ -11,11 +11,3 @@ fwsdk_workspace_phase1()
 load("//platform/rules_cros_firmware/cros_firmware:workspace_phase2.bzl", "fwsdk_workspace_phase2")
 
 fwsdk_workspace_phase2()
-
-load("//platform/rules_cros_firmware/cros_firmware:workspace_phase3.bzl", "fwsdk_workspace_phase3")
-
-fwsdk_workspace_phase3()
-
-load("//platform/rules_cros_firmware/cros_firmware:workspace_phase4.bzl", "fwsdk_workspace_phase4")
-
-fwsdk_workspace_phase4()
