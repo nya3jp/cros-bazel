@@ -138,6 +138,13 @@
     }
   },
   {
+    "File": {
+      "path": "build/board/usr/bin/x86_64-cros-linux-gnu-hello-world-config",
+      "mode": 493,
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
     "Dir": {
       "path": "build/board/usr/include",
       "mode": 493
