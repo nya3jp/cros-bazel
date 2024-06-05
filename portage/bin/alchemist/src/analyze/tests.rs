@@ -92,6 +92,8 @@ struct PackageDependenciesDescription {
     install_host: Vec<String>,
     install_set: Vec<String>,
     build_host_set: Vec<String>,
+    reusable_host_set: Vec<String>,
+    reusable_target_set: Vec<String>,
 }
 
 impl PackageDependenciesDescription {
@@ -105,6 +107,8 @@ impl PackageDependenciesDescription {
         install_host: Vec::new(),
         install_set: Vec::new(),
         build_host_set: Vec::new(),
+        reusable_host_set: Vec::new(),
+        reusable_target_set: Vec::new(),
     };
 }
 
@@ -169,6 +173,8 @@ impl From<MaybePackage> for MaybePackageDescription {
                 install_host: describe_package_list(&deps.direct.install_host),
                 install_set: describe_package_list(&deps.indirect.install_set),
                 build_host_set: describe_package_list(&deps.indirect.build_host_set),
+                reusable_host_set: describe_package_list(&deps.indirect.reusable_host_set),
+                reusable_target_set: describe_package_list(&deps.indirect.reusable_target_set),
             },
             dependency_expressions: deps.expressions.clone(),
         }
@@ -680,6 +686,168 @@ fn test_analyze_packages_indirect_host_deps() -> Result<()> {
 }
 
 #[test]
+fn test_analyze_packages_reusable_deps() -> Result<()> {
+    //                 BDEPEND                     IDEPEND
+    // sys-apps/hello ────────► sys-libs/a ────┬────────────► sys-libs/g
+    //        │                                │
+    //        │                                │
+    //        │   DEPEND                       │   RDEPEND
+    //        ├────────────► sys-libs/b        ├────────────► sys-libs/h
+    //        │                                │
+    //        │                                │
+    //        │   RDEPEND                      │   DEPEND
+    //        ├────────────► sys-libs/c        └────────────► sys-libs/i
+    //        │                                                      │
+    //        │                                                      │ RDEPEND
+    //        │   DEPEND                                             ▼
+    //        ├─────────────────┐                                 sys-libs/j
+    //        │                 │
+    //        │                 │
+    //        │   RDEPEND       ▼                  DEPEND
+    //        ├────────────► sys-libs/d ───────┬────────────► sys-libs/k
+    //        │                                │
+    //        │                                │
+    //        │   DEPEND                       │   RDEPEND
+    //        ├─────────────────┐              ├────────────► sys-libs/l
+    //        │                 │              │                     │
+    //        │                 │              │                     │ IDEPEND
+    //        │   RDEPEND       ▼              │                     ▼
+    //        ├────────────► sys-libs/e        │                  sys-libs/n
+    //        │                     │          │                     │
+    //        │                     │ RDEPEND  │                     │ DEPEND
+    //        │                     ▼          │                     ▼
+    //        │                  sys-libs/s    │                  sys-libs/o
+    //        │                                │
+    //        │                                │
+    //        │   IDEPEND                      │   IDEPEND
+    //        └────────────► sys-libs/f        └────────────► sys-libs/m
+    //                                                               │
+    //                                                               │ RDEPEND
+    //                                                               ▼
+    //                                                            sys-libs/p
+    //                                                               │
+    //                                                               │ IDEPEND
+    //                                                               ▼
+    //                                                            sys-libs/q
+    //                                                               │
+    //                                                               │ DEPEND
+    //                                                               ▼
+    //                                                            sys-libs/r
+
+    let packages = analyze_packages_for_testing(&[
+        PackageSpec::new("sys-apps/hello", "1")?
+            .var("EAPI", "8")
+            .var("DEPEND", "sys-libs/b sys-libs/d sys-libs/e")
+            .var("BDEPEND", "sys-libs/a")
+            .var("RDEPEND", "sys-libs/c sys-libs/d sys-libs/e")
+            .var("IDEPEND", "sys-libs/f"),
+        PackageSpec::new("sys-libs/a", "1")?
+            .var("EAPI", "8")
+            .var("IDEPEND", "sys-libs/g")
+            .var("RDEPEND", "sys-libs/h")
+            .var("DEPEND", "sys-libs/i"),
+        PackageSpec::new("sys-libs/b", "1")?,
+        PackageSpec::new("sys-libs/c", "1")?,
+        PackageSpec::new("sys-libs/d", "1")?
+            .var("EAPI", "8")
+            .var("DEPEND", "sys-libs/k")
+            .var("RDEPEND", "sys-libs/l")
+            .var("IDEPEND", "sys-libs/m"),
+        PackageSpec::new("sys-libs/e", "1")?.var("RDEPEND", "sys-libs/s"),
+        PackageSpec::new("sys-libs/f", "1")?,
+        PackageSpec::new("sys-libs/g", "1")?,
+        PackageSpec::new("sys-libs/h", "1")?,
+        PackageSpec::new("sys-libs/i", "1")?.var("RDEPEND", "sys-libs/j"),
+        PackageSpec::new("sys-libs/j", "1")?,
+        PackageSpec::new("sys-libs/k", "1")?,
+        PackageSpec::new("sys-libs/l", "1")?
+            .var("EAPI", "8")
+            .var("IDEPEND", "sys-libs/n"),
+        PackageSpec::new("sys-libs/m", "1")?.var("RDEPEND", "sys-libs/p"),
+        PackageSpec::new("sys-libs/n", "1")?.var("DEPEND", "sys-libs/o"),
+        PackageSpec::new("sys-libs/o", "1")?,
+        PackageSpec::new("sys-libs/p", "1")?
+            .var("EAPI", "8")
+            .var("IDEPEND", "sys-libs/q"),
+        PackageSpec::new("sys-libs/q", "1")?.var("DEPEND", "sys-libs/r"),
+        PackageSpec::new("sys-libs/r", "1")?,
+        PackageSpec::new("sys-libs/s", "1")?,
+    ])?;
+
+    let hello_package = packages
+        .into_iter()
+        .find(|p| {
+            matches!(
+                p,
+                MaybePackageDescription::Ok { package_name_version, .. }
+                if package_name_version == "sys-apps/hello-1"
+            )
+        })
+        .unwrap();
+
+    assert_eq!(
+        hello_package,
+        MaybePackageDescription::Ok {
+            package_name_version: "sys-apps/hello-1".into(),
+            dependencies: PackageDependenciesDescription {
+                build_target: vec![
+                    "sys-libs/b-1".into(),
+                    "sys-libs/d-1".into(),
+                    "sys-libs/e-1".into(),
+                ],
+                test_target: vec![
+                    "sys-libs/b-1".into(),
+                    "sys-libs/d-1".into(),
+                    "sys-libs/e-1".into(),
+                ],
+                run_target: vec![
+                    "sys-libs/c-1".into(),
+                    "sys-libs/d-1".into(),
+                    "sys-libs/e-1".into(),
+                ],
+                build_host: vec!["sys-libs/a-1".into()],
+                install_host: vec!["sys-libs/f-1".into()],
+                install_set: vec![
+                    "sys-apps/hello-1".into(),
+                    "sys-libs/c-1".into(),
+                    "sys-libs/d-1".into(),
+                    "sys-libs/e-1".into(),
+                    "sys-libs/l-1".into(),
+                    "sys-libs/s-1".into()
+                ],
+                build_host_set: vec![
+                    "sys-libs/a-1".into(),
+                    "sys-libs/m-1".into(),
+                    "sys-libs/n-1".into()
+                ],
+                reusable_host_set: vec![
+                    "sys-libs/m-1".into(),
+                    "sys-libs/n-1".into(),
+                    "sys-libs/p-1".into(),
+                    "sys-libs/q-1".into()
+                ],
+                reusable_target_set: vec![
+                    "sys-libs/d-1".into(),
+                    "sys-libs/e-1".into(),
+                    "sys-libs/l-1".into(),
+                    "sys-libs/s-1".into()
+                ],
+                ..PackageDependenciesDescription::EMPTY
+            },
+            dependency_expressions: DependencyExpressions {
+                build_target: "sys-libs/b sys-libs/d sys-libs/e".into(),
+                run_target: "sys-libs/c sys-libs/d sys-libs/e".into(),
+                build_host: "sys-libs/a".into(),
+                install_host: "sys-libs/f".into(),
+                ..DependencyExpressions::default()
+            }
+        },
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_analyze_packages_propagate_errors() -> Result<()> {
     //                 DEPEND              RDEPEND
     // sys-apps/hello ───────► sys-libs/a ────────► sys-libs/b
@@ -785,6 +953,13 @@ fn test_analyze_dep_xpak_values() -> Result<()> {
                     "sys-apps/coreboot-utils-6".into(),
                     "sys-fs/e2fsprogs-1.50".into(),
                     "sys-libs/libfoo-1".into()
+                ],
+                reusable_target_set: vec![
+                    "app-arch/libarchive-4".into(),
+                    "chromeos-base/crosid-2".into(),
+                    "dev-libs/libverto-0.3".into(),
+                    "dev-libs/libzip-5".into(),
+                    "sys-fs/e2fsprogs-1.50".into()
                 ],
                 ..PackageDependenciesDescription::EMPTY
             },
