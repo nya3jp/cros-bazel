@@ -6,12 +6,13 @@
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint", "REUSE_PKG_INSTALLS_FROM_DEPS")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_install_host_and_target_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
 alias(
     name = "17.0_pre498229-r9_host_deps",
     actual = "//internal/sdk/stage1/target/host",
@@ -21,6 +22,18 @@ alias(
 alias(
     name = "17.0_pre498229-r9_deps",
     actual = "17.0_pre498229-r9_host_deps",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "17.0_pre498229-r9_reusable_deps",
+    actual = "//internal/sdk/stage1/target/host",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "17.0_pre498229-r9_exclusive_deps",
+    actual = "17.0_pre498229-r9_reusable_deps",
     visibility = ["//visibility:private"],
 )
 
@@ -106,7 +119,8 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":17.0_pre498229-r9_deps",
+    sdk = ":17.0_pre498229-r9_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":17.0_pre498229-r9_deps",
+    reusable_sdk = ":17.0_pre498229-r9_reusable_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
@@ -195,7 +209,8 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":17.0_pre498229-r9_deps",
+    sdk = ":17.0_pre498229-r9_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":17.0_pre498229-r9_deps",
+    reusable_sdk = ":17.0_pre498229-r9_reusable_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
@@ -301,7 +316,8 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":17.0_pre498229-r9_deps",
+    sdk = ":17.0_pre498229-r9_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":17.0_pre498229-r9_deps",
+    reusable_sdk = ":17.0_pre498229-r9_reusable_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
@@ -383,7 +399,8 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":17.0_pre498229-r9_deps",
+    sdk = ":17.0_pre498229-r9_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":17.0_pre498229-r9_deps",
+    reusable_sdk = ":17.0_pre498229-r9_reusable_deps",
     overlays = "//internal/overlays:host",
     eclasses = [
     ],
@@ -489,7 +506,8 @@ ebuild(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":17.0_pre498229-r9_deps",
+    sdk = ":17.0_pre498229-r9_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":17.0_pre498229-r9_deps",
+    reusable_sdk = ":17.0_pre498229-r9_reusable_deps",
     overlays = "//internal/overlays:host-full",
     eclasses = [
     ],
@@ -567,7 +585,8 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-host",
-    sdk = ":17.0_pre498229-r9_deps",
+    sdk = ":17.0_pre498229-r9_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":17.0_pre498229-r9_deps",
+    reusable_sdk = ":17.0_pre498229-r9_reusable_deps",
     overlays = "//internal/overlays:host-full",
     eclasses = [
     ],

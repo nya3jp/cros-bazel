@@ -39,6 +39,7 @@ def _binary_package_impl(ctx):
             target[BinaryPackageInfo].partial
             for target in ctx.attr.runtime_deps
         ]),
+        reusable_sdk = None,
     )
     package_set_info = single_binary_package_set_info(
         package_info,
@@ -100,6 +101,7 @@ def _add_runtime_deps(ctx):
             dep[BinaryPackageInfo].partial
             for dep in ctx.attr.runtime_deps
         ] + list(original_package_info.direct_runtime_deps)),
+        reusable_sdk = original_package_info.reusable_sdk,
     )
     package_set_info = BinaryPackageSetInfo(
         packages = depset(

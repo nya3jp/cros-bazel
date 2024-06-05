@@ -56,6 +56,13 @@ BinaryPackageInfo, _new_binary_package_info = provider(
             populate the XPAK entries and install this package into a portage
             sysroot.
         """,
+        "reusable_sdk": """
+            Option[SDKInfo]: SDK with the subset of this package's dependencies
+            that are transitively required by any dependent packages. Dependent
+            packages may base their SDKs on this SDK in order to reuse some of
+            this package's dependencies. Can be None if this is a prebuilt
+            binary package.
+        """,
         "slot": """
             str: The slot value of this package in the form of "main/sub",
             e.g. "0/1.2.3".

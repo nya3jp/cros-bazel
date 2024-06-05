@@ -139,6 +139,9 @@ _EBUILD_COMMON_ATTRS = dict(
         """,
     ),
     sdk = attr.label(
+        doc = """
+        SDK with the required dependencies to build this package.
+        """,
         providers = [SDKInfo],
         mandatory = True,
     ),
@@ -149,6 +152,16 @@ _EBUILD_COMMON_ATTRS = dict(
         a minimum number of dependencies to reduce invalidations. If this is
         unspecified it will default to the value provided by `sdk`.
         """,
+    ),
+    reusable_sdk = attr.label(
+        doc = """
+        SDK with the subset of this package's dependencies that are
+        transitively required by any dependent packages.
+
+        This SDK will be included in the BinaryPackageInfo provided by this
+        rule, and is not used directly by it.
+        """,
+        providers = [SDKInfo],
     ),
     overlays = attr.label(
         providers = [OverlaySetInfo],
@@ -635,6 +648,7 @@ def _ebuild_impl(ctx):
             target[BinaryPackageInfo].partial
             for target in ctx.attr.runtime_deps
         ]),
+        reusable_sdk = ctx.attr.reusable_sdk[SDKInfo],
     )
 
     package_set_info = single_binary_package_set_info(
@@ -1157,3 +1171,13 @@ ebuild_compare_package_test = rule(
     },
     test = True,
 )
+
+# Whether or not to enable reusing package installations from dependencies.
+# See b/342012804 for context.
+#
+# This is a Starlark constant, rather than a change in Alchemist's templating
+# code, because it allows us to enable or disable this feature with a one-liner
+# CL instead of a templating change that could affect dozens of Alchemist
+# goldens. This is important because such CLs are easy to revert, whereas the
+# alternative could lead to Git conflicts caused by diffs in goldens.
+REUSE_PKG_INSTALLS_FROM_DEPS = False

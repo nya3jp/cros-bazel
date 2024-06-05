@@ -6,14 +6,20 @@ load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 {%- endif %}
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint", "REUSE_PKG_INSTALLS_FROM_DEPS")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_install_host_and_target_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", allow_incremental=False, full_config=False, index=0, use_interface_libraries=False) -%}
+{#
+    To enable reusing package installations from dependencies (b/342012804) for
+    a specific ebuild (or ebuild_debug, ebuild_test, etc.) target, set the
+    exclusive_sdk_suffix argument. Note that this feature is only enabled when
+    the REUSE_PKG_INSTALLS_FROM_DEPS global Starlark variable is set to True.
+-#}
+{%- macro ebuild_args(ebuild, suffix="", sdk_suffix="_deps", exclusive_sdk_suffix="", reusable_sdk_suffix="", allow_incremental=False, full_config=False, index=0, use_interface_libraries=False) -%}
     ebuild = "{{ ebuild.ebuild_name }}",
     overlay = "{{ ebuild.overlay }}",
     category = "{{ebuild.category}}",
@@ -105,12 +111,19 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
     {%- if target_board %}
     board = "{{ target_board }}",
     {%- endif %}
+    {%- if exclusive_sdk_suffix %}
+    sdk = ":{{ ebuild.version }}{{ exclusive_sdk_suffix }}" if REUSE_PKG_INSTALLS_FROM_DEPS else ":{{ ebuild.version }}{{ sdk_suffix }}",
+    {%- else %}
     sdk = ":{{ ebuild.version }}{{ sdk_suffix }}",
+    {%- endif %}
     {%- if use_interface_libraries %}
     use_interface_libraries = select({
         "@//bazel/portage:interface_libraries_enabled": True,
         "@//bazel/portage:interface_libraries_disabled": False,
     }),
+    {%- endif %}
+    {%- if reusable_sdk_suffix %}
+    reusable_sdk = ":{{ ebuild.version }}{{ reusable_sdk_suffix }}",
     {%- endif %}
     overlays = "{{ target_overlay_set }}{% if full_config %}-full{% endif %}",
     eclasses = [
@@ -171,7 +184,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
 {%- set ebuild_count = 0 %}
 {%- for ebuild in ebuilds %}
-{% if ebuild.direct_build_target -%}
+{%- if ebuild.direct_build_target %}
 direct_ebuild(
     name = "{{ ebuild.version }}",
     package = "{{ ebuild.direct_build_target }}",
@@ -207,7 +220,7 @@ add_runtime_deps(
 )
 
 {% else -%}
-{% if ebuild.host_build_deps -%}
+{%- if ebuild.host_build_deps -%}
 sdk_install_deps(
     name = "{{ ebuild.version }}_host_deps",
     out = "{{ ebuild.basename }}_host_deps",
@@ -241,7 +254,7 @@ alias(
     actual = "{{ ebuild.sdk }}",
     visibility = ["//visibility:private"],
 )
-{% endif -%}
+{% endif %}
 
 {%- if ebuild.target_build_deps %}
 sdk_install_deps(
@@ -277,7 +290,105 @@ alias(
     actual = "{{ ebuild.version }}_host_deps",
     visibility = ["//visibility:private"],
 )
-{% endif -%}
+{% endif %}
+
+{%- if ebuild.reusable_host_build_deps or ebuild.reusable_target_build_deps %}
+sdk_install_host_and_target_deps(
+    name = "{{ ebuild.version }}_reusable_deps",
+    out = "{{ ebuild.basename }}_reusable_deps",
+    base = "{{ ebuild.sdk }}",
+    {%- if ebuild.reusable_target_build_deps and target_board %}
+    board = "{{ target_board }}",
+    target_overlays = "{{ target_overlay_set }}",
+    target_portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/{{ target_portage_config }}",
+    ],
+    {%- elif ebuild.reusable_target_build_deps %}
+    target_overlays = "{{ host_overlay_set }}",
+    target_portage_config = [
+        "//internal/portage-config/host",
+    ],
+    {%- endif %}
+    {%- if ebuild.reusable_host_build_deps %}
+    host_overlays = "{{ host_overlay_set }}",
+    host_portage_config = [
+        "//internal/portage-config/host",
+    ],
+    host_deps = [
+        {%- for dep in ebuild.reusable_host_build_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.reusable_target_build_deps %}
+    target_deps = [
+        {%- for dep in ebuild.reusable_target_build_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.use_interface_libraries %}
+    target_contents = "interface",
+    {%- endif %}
+    visibility = ["//visibility:private"],
+)
+{% else %}
+alias(
+    name = "{{ ebuild.version }}_reusable_deps",
+    actual = "{{ ebuild.sdk }}",
+    visibility = ["//visibility:private"],
+)
+{% endif %}
+
+{%- if ebuild.host_build_deps or ebuild.target_build_deps %}
+sdk_install_host_and_target_deps(
+    name = "{{ ebuild.version }}_exclusive_deps",
+    out = "{{ ebuild.basename }}_exclusive_deps",
+    base = "{{ ebuild.version }}_reusable_deps",
+    {%- if ebuild.target_build_deps and target_board %}
+    board = "{{ target_board }}",
+    target_overlays = "{{ target_overlay_set }}",
+    target_portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/{{ target_portage_config }}",
+    ],
+    {%- elif ebuild.target_build_deps %}
+    target_overlays = "{{ host_overlay_set }}",
+    target_portage_config = [
+        "//internal/portage-config/host",
+    ],
+    {%- endif %}
+    {%- if ebuild.host_build_deps %}
+    host_overlays = "{{ host_overlay_set }}",
+    host_portage_config = [
+        "//internal/portage-config/host",
+    ],
+    host_deps = [
+        {%- for dep in ebuild.host_build_deps %}
+        "{{ dep }}",
+        {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.target_build_deps %}
+    target_deps = [
+    {%- for dep in ebuild.target_build_deps %}
+        "{{ dep }}",
+    {%- endfor %}
+    ],
+    {%- endif %}
+    {%- if ebuild.use_interface_libraries %}
+    target_contents = "interface",
+    {%- endif %}
+    visibility = ["//visibility:private"],
+)
+{% else %}
+alias(
+    name = "{{ ebuild.version }}_exclusive_deps",
+    actual = "{{ ebuild.version }}_reusable_deps",
+    visibility = ["//visibility:private"],
+)
+{% endif %}
 
 {%- if ebuild.target_test_deps %}
 sdk_install_deps(
@@ -305,7 +416,7 @@ alias(
     actual = "{{ ebuild.version }}_host_deps",
     visibility = ["//visibility:private"],
 )
-{% endif %}
+{% endif -%}
 
 {%- if ebuild.use_interface_libraries %}
     {%- set suffixes = ["", "_hermetic_test_package", "_portage_profile_test_package", "_non_interface_test_package"] -%}
@@ -367,6 +478,8 @@ ebuild(
     {{ self::ebuild_args(
         ebuild=ebuild,
         suffix=suffix,
+        exclusive_sdk_suffix="_exclusive_deps",
+        reusable_sdk_suffix="_reusable_deps",
         allow_incremental=True,
         full_config=full_config,
         index=ebuild_count,
@@ -419,6 +532,8 @@ ebuild_debug(
     {{ self::ebuild_args(
         ebuild=ebuild,
         suffix=suffix,
+        exclusive_sdk_suffix="_exclusive_deps",
+        reusable_sdk_suffix="_reusable_deps",
         allow_incremental=True,
         full_config=full_config,
         use_interface_libraries=use_interface_libraries,
@@ -490,7 +605,7 @@ package_set(
 )
 
 {% endfor %}
-{%- for failure in failures %}
+{%- for failure in failures -%}
 string_flag(
     name = "{{ failure.version }}_prebuilt",
     build_setting_default = "",

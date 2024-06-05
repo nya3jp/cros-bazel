@@ -65,8 +65,10 @@ pub struct EBuildEntry {
     dists: Vec<DistFileEntry>,
     eclasses: Vec<String>,
     provided_host_build_deps: Vec<String>,
+    reusable_host_build_deps: Vec<String>,
     host_build_deps: Vec<String>,
     host_install_deps: Vec<String>,
+    reusable_target_build_deps: Vec<String>,
     target_build_deps: Vec<String>,
     target_test_deps: Vec<String>,
     provided_runtime_deps: Vec<String>,
@@ -331,7 +333,7 @@ impl EBuildEntry {
             })
             .collect();
 
-        let (host_build_deps, provided_host_build_deps) = match &target {
+        let (host_build_deps, reusable_host_build_deps, provided_host_build_deps) = match &target {
             // We handle DEPEND down below.
             PackageType::Host(host) => {
                 let (host_build_deps, provided_host_build_deps) = partition_provided(
@@ -339,11 +341,19 @@ impl EBuildEntry {
                     host.sdk_provided_packages,
                 );
 
-                let mut host_build_deps =
+                let host_build_deps =
                     format_dependencies(host.prefix, host_build_deps.into_iter())?;
-                host_build_deps.sort();
 
-                (host_build_deps, provided_host_build_deps)
+                let reusable_host_build_deps = format_dependencies(
+                    host.prefix,
+                    package.dependencies.indirect.reusable_host_set.iter(),
+                )?;
+
+                (
+                    host_build_deps,
+                    reusable_host_build_deps,
+                    provided_host_build_deps,
+                )
             }
             PackageType::CrossRoot { host, .. } => {
                 // Stage 1 packages don't have a host since we don't know
@@ -354,13 +364,21 @@ impl EBuildEntry {
                         host.sdk_provided_packages,
                     );
 
-                    let mut host_build_deps =
+                    let host_build_deps =
                         format_dependencies(host.prefix, host_build_deps.into_iter())?;
-                    host_build_deps.sort();
 
-                    (host_build_deps, provided_host_build_deps)
+                    let reusable_host_build_deps = format_dependencies(
+                        host.prefix,
+                        package.dependencies.indirect.reusable_host_set.iter(),
+                    )?;
+
+                    (
+                        host_build_deps,
+                        reusable_host_build_deps,
+                        provided_host_build_deps,
+                    )
                 } else {
-                    (Vec::new(), Vec::new())
+                    (Vec::new(), Vec::new(), Vec::new())
                 }
             }
         };
@@ -379,7 +397,7 @@ impl EBuildEntry {
             .sorted()
             .collect();
 
-        let target_build_deps = match &target {
+        let (target_build_deps, reusable_target_build_deps) = match &target {
             PackageType::Host(host) => {
                 // TODO: Surface provided packages.
                 let (host_deps, _provided_host_deps) = partition_provided(
@@ -394,16 +412,23 @@ impl EBuildEntry {
 
                 let mut host_deps = format_dependencies(host.prefix, host_deps)?;
                 host_deps.retain(|dep| !host_build_deps.contains(dep));
-                host_deps.sort();
 
-                host_deps
+                // TODO(b/342012804): Is it worth thinking about reusable target build deps here?
+                (host_deps, Vec::new())
             }
             PackageType::CrossRoot { target, .. } => {
                 // TODO: Add support for stripping the Board SDK's packages.
-                format_dependencies(
-                    target.prefix,
-                    package.dependencies.direct.build_target.iter(),
-                )?
+                (
+                    // Direct DEPENDs.
+                    format_dependencies(
+                        target.prefix,
+                        package.dependencies.direct.build_target.iter(),
+                    )?,
+                    format_dependencies(
+                        target.prefix,
+                        package.dependencies.indirect.reusable_target_set.iter(),
+                    )?,
+                )
             }
         };
 
@@ -565,7 +590,9 @@ impl EBuildEntry {
             eclasses,
             host_build_deps,
             provided_host_build_deps,
+            reusable_host_build_deps,
             host_install_deps,
+            reusable_target_build_deps,
             target_build_deps,
             target_test_deps,
             runtime_deps,

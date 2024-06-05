@@ -6,12 +6,13 @@
 
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint", "REUSE_PKG_INSTALLS_FROM_DEPS")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_install_host_and_target_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
 alias(
     name = "1.0_host_deps",
     actual = "//internal/sdk/stage2/target/board",
@@ -32,6 +33,29 @@ sdk_install_deps(
         "//internal/packages/stage2/target/board/chromiumos/reusabledeps-testpkgs/pkg-03:1.0",
     ],
     contents = "interface",
+    visibility = ["//visibility:private"],
+)
+
+alias(
+    name = "1.0_reusable_deps",
+    actual = "//internal/sdk/stage2/target/board",
+    visibility = ["//visibility:private"],
+)
+
+sdk_install_host_and_target_deps(
+    name = "1.0_exclusive_deps",
+    out = "pkg-02-1.0_exclusive_deps",
+    base = "1.0_reusable_deps",
+    board = "amd64-generic",
+    target_overlays = "//internal/overlays:board",
+    target_portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    target_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/reusabledeps-testpkgs/pkg-03:1.0",
+    ],
+    target_contents = "interface",
     visibility = ["//visibility:private"],
 )
 
@@ -130,11 +154,12 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
     use_interface_libraries = select({
         "@//bazel/portage:interface_libraries_enabled": True,
         "@//bazel/portage:interface_libraries_disabled": False,
     }),
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -230,11 +255,12 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
     use_interface_libraries = select({
         "@//bazel/portage:interface_libraries_enabled": True,
         "@//bazel/portage:interface_libraries_disabled": False,
     }),
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -343,11 +369,12 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
     use_interface_libraries = select({
         "@//bazel/portage:interface_libraries_enabled": True,
         "@//bazel/portage:interface_libraries_disabled": False,
     }),
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -432,11 +459,12 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
     use_interface_libraries = select({
         "@//bazel/portage:interface_libraries_enabled": True,
         "@//bazel/portage:interface_libraries_disabled": False,
     }),
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -545,11 +573,12 @@ ebuild(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
     use_interface_libraries = select({
         "@//bazel/portage:interface_libraries_enabled": True,
         "@//bazel/portage:interface_libraries_disabled": False,
     }),
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board-full",
     eclasses = [
     ],
@@ -630,11 +659,12 @@ ebuild_debug(
     inject_use_flags = False,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
     use_interface_libraries = select({
         "@//bazel/portage:interface_libraries_enabled": True,
         "@//bazel/portage:interface_libraries_disabled": False,
     }),
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board-full",
     eclasses = [
     ],
@@ -739,7 +769,8 @@ ebuild(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],
@@ -824,7 +855,8 @@ ebuild_debug(
     inject_use_flags = True,
     files = glob(["cros/**", "files/**", "*.bashrc"]),
     board = "amd64-generic",
-    sdk = ":1.0_deps",
+    sdk = ":1.0_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":1.0_deps",
+    reusable_sdk = ":1.0_reusable_deps",
     overlays = "//internal/overlays:board",
     eclasses = [
     ],

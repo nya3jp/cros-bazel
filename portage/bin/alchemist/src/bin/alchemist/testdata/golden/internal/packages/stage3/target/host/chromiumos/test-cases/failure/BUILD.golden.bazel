@@ -7,12 +7,13 @@
 load("@//bazel/build_defs:always_fail.bzl", "always_fail")
 load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
 load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
-load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint", "REUSE_PKG_INSTALLS_FROM_DEPS")
 load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
-load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_install_host_and_target_deps")
 load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
 string_flag(
     name = "1.0_prebuilt",
     build_setting_default = "",

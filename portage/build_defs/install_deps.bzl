@@ -27,6 +27,80 @@ def _compute_slot_key(package):
         package.contents.sysroot,
     )
 
+def compute_install_list(sdk, install_set, fail_on_slot_conflict = True):
+    """Returns an effective list of packages to install.
+
+    This function takes a base SDK and a depset with packages to install on top
+    of it, and returns the serialized depset minus any packages already
+    provided by the base SDK.
+
+    Args:
+        sdk: SDKInfo: The base SDK on top of which to install the packages.
+        install_set: Depset[BinaryPackageInfo]: Binary package targets to
+            install. This depset must be closed over transitive runtime
+            dependencies; that is, if the depset contains a package X, it must
+            also contain all transitive dependencies of the package X. Also,
+            This depset's to_list() must return packages in a valid installation
+            order, i.e. a package's runtime dependencies are fully satisfied by
+            packages that appear before it. Any binary packages that are
+            already present in the SDK will be skipped.
+        fail_on_slot_conflict: boolean: If True, this function will fail when
+            attempting to install two packages with the same slot key or if the
+            base SDK contains a package with the same slot key as one of the
+            packages in the install set. If False, it will return None in this
+            case.
+
+    Returns:
+        A list[BinaryPackageInfo] of packages to install on top of the base
+        SDK, in installation order.
+    """
+    slot_key_to_package = {}  # dict[str, BinaryPackageInfo]
+
+    # Inspect already installed packages.
+    for package in sdk.packages.to_list():
+        slot_key = _compute_slot_key(package)
+        conflicting_package = slot_key_to_package.get(slot_key)
+        if conflicting_package:
+            if fail_on_slot_conflict:
+                fail(
+                    ("Slot conflict: cannot install %s when %s has been already " +
+                     "installed with the same slot key %s") % (
+                        package.file.path,
+                        conflicting_package.file.path,
+                        slot_key,
+                    ),
+                )
+            else:
+                return None
+        else:
+            slot_key_to_package[slot_key] = package
+
+    # Create a list of packages to install.
+    install_list = []
+    for package in install_set.to_list():
+        slot_key = _compute_slot_key(package)
+        conflicting_package = slot_key_to_package.get(slot_key)
+        if conflicting_package:
+            # Skip identical packages; that is, skip any packages in the
+            # install set that are already present in the SDK.
+            if package.partial.path != conflicting_package.partial.path:
+                if fail_on_slot_conflict:
+                    fail(
+                        ("Slot conflict: cannot install %s and %s that have " +
+                         "the same slot key %s") % (
+                            package.file.path,
+                            conflicting_package.file.path,
+                            slot_key,
+                        ),
+                    )
+                else:
+                    return None
+        else:
+            install_list.append(package)
+            slot_key_to_package[slot_key] = package
+
+    return install_list
+
 def install_deps(
         ctx,
         output_prefix,
@@ -59,7 +133,8 @@ def install_deps(
             also contain all transitive dependencies of the package X. Also,
             This depset's to_list() must return packages in a valid installation
             order, i.e. a package's runtime dependencies are fully satisfied by
-            packages that appear before it.
+            packages that appear before it. Any binary packages that are
+            already present in the SDK will be skipped.
         executable_action_wrapper: File: An executable file of action_wrapper.
         executable_fast_install_packages: File: An executable file of
             fast_install_packages.
@@ -77,43 +152,7 @@ def install_deps(
     """
     sysroot = "/build/%s" % board if board else "/"
 
-    slot_key_to_package = {}  # dict[str, BinaryPackageInfo]
-
-    # Inspect already installed packages.
-    for package in sdk.packages.to_list():
-        slot_key = _compute_slot_key(package)
-        conflicting_package = slot_key_to_package.get(slot_key)
-        if conflicting_package:
-            fail(
-                ("Slot conflict: cannot install %s when %s has been already " +
-                 "installed with the same slot key %s") % (
-                    package.file.path,
-                    conflicting_package.file.path,
-                    slot_key,
-                ),
-            )
-        else:
-            slot_key_to_package[slot_key] = package
-
-    # Create a list of packages to install.
-    install_list = []
-    for package in install_set.to_list():
-        slot_key = _compute_slot_key(package)
-        conflicting_package = slot_key_to_package.get(slot_key)
-        if conflicting_package:
-            # Skip identical packages.
-            if package.partial.path != conflicting_package.partial.path:
-                fail(
-                    ("Slot conflict: cannot install %s and %s that have " +
-                     "the same slot key %s") % (
-                        package.file.path,
-                        conflicting_package.file.path,
-                        slot_key,
-                    ),
-                )
-        else:
-            install_list.append(package)
-            slot_key_to_package[slot_key] = package
+    install_list = compute_install_list(sdk, install_set)
 
     output_log_file = ctx.actions.declare_file("%s.log" % output_prefix)
     output_profile_file = ctx.actions.declare_file(
@@ -170,8 +209,9 @@ def install_deps(
 
         if package.contents.sysroot != sysroot:
             fail(
-                ("Requested to install %s/%s-%s to %s, but its installed " +
+                ("While building %s: Requested to install %s/%s-%s to %s, but its installed " +
                  "contents layers were generated only for %s") % (
+                    ctx.label,
                     package.category,
                     package.package_name,
                     package.version,
