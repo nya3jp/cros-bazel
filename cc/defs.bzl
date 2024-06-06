@@ -56,11 +56,9 @@ def _hermetic_launcher(wrapper_rule):
         A macro wrapping the rule with a hermetic launcher.
     """
 
-    def wrapper(name, visibility = None, features = [], **kwargs):
-        if kwargs.get("linkshared", False):
-            # Shared libraries don't need a launcher.
-            features = features + ["-hermetic_launcher"]
-        if "-hermetic_launcher" in features:
+    def wrapper(name, visibility = None, features = [], hermetic_launcher = True, **kwargs):
+        # Shared libraries don't need a launcher.
+        if kwargs.get("linkshared", False) or not hermetic_launcher:
             # buildifier: disable=native-cc
             native.cc_binary(
                 name = name,
