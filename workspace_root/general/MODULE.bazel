@@ -2,8 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# We don't need to name our module, but the default is __main__, which isn't
-# very meaningful.
 module(
     name = "cros",
     version = "0.1",
@@ -99,7 +97,17 @@ pip.parse(
     python_version = PY_VERSION,
     requirements_lock = "//bazel/python:requirements_lock.txt",
 )
-use_repo(pip, "pip")
+pip.parse(
+    hub_name = "zephyr_py_deps",
+    python_version = PY_VERSION,
+    requirements_lock = "//platform/rules_cros_firmware/cros_firmware:zephyr-requirements-lock.txt",
+)
+pip.parse(
+    hub_name = "hdctools_py_deps",
+    python_version = PY_VERSION,
+    requirements_lock = "//platform/rules_cros_firmware/cros_firmware:hdctools-requirements-lock.txt",
+)
+use_repo(pip, "hdctools_py_deps", "pip", "zephyr_py_deps")
 
 # Rust support
 bazel_dep(name = "rules_rust", version = "0.20.1")
@@ -107,7 +115,7 @@ bazel_dep(name = "rules_rust", version = "0.20.1")
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
-    extra_target_triples = ["x86_64-unknown-linux-musl"],
+    extra_target_triples = ["riscv32imc-unknown-none-elf"],
     rustfmt_version = "1.75.0",
     versions = ["1.75.0"],
 )
@@ -125,6 +133,11 @@ use_repo(rust_host_tools, "rust_host_tools")
 # their target_settings.
 register_toolchains("//bazel/module_extensions/toolchains/rust/host:all")
 
+# TODO: The ti50 toolchain is defined in the ti50 repo, which is private.
+# Ideally, we'd like to uncomment this after doing something about it.
+# Maybe we just register an alias to the toolchain with a `select`, for example.
+# register_toolchains("//platform/ti50/common/toolchain:all")
+
 register_toolchains("@rust_toolchains//:all")
 
 register_toolchains("//bazel/module_extensions/toolchains/rust/proto:proto_toolchain")
@@ -140,10 +153,6 @@ crate.from_cargo(
     name = "alchemy_crates",
     cargo_lockfile = "//bazel/rust/alchemy_crates:Cargo.lock",
     manifests = ["//bazel/rust/alchemy_crates:Cargo.toml"],
-)
-crate.annotation(
-    build_script_env = {"FORCE_C_COMPILER": "1"},
-    crate = "bzip2-sys",
 )
 crate.annotation(
     crate = "protoc-gen-tonic",
@@ -176,10 +185,6 @@ crate.annotation(
     ],
     rustc_flags = ["-L$(location :static_libs)"],
 )
-crate.annotation(
-    build_script_env = {"FORCE_C_COMPILER": "1"},
-    crate = "zstd-sys",
-)
 use_repo(crate, "alchemy_crates")
 
 files = use_extension("//bazel/module_extensions:files/extension.bzl", "files")
@@ -210,3 +215,14 @@ prebuilt_sdk_tarballs.from_manifests(
 use_repo(prebuilt_sdk, "prebuilt_sdk_demo")
 
 use_repo(prebuilt_sdk_tarballs, "prebuilt_sdk_tarballs")
+
+fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
+use_repo(
+    fwsdk_deps,
+    "compiler-builtins",
+    "coreboot_sdk",
+    "cros-sdk",
+    "ec_devutils",
+    "shflags",
+    "ti50-sdk",
+)

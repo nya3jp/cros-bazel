@@ -1,21 +1,80 @@
-# Copyright 2024 The ChromiumOS Authors
+# Copyright 2023 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Use the name "cros" because that'll make it easier to merge the module files
-# down the line.
 module(
     name = "cros",
     version = "0.1",
 )
 
+local_path_override(
+    module_name = "rules_cc",
+    path = "../bazel_deps/rules_cc",
+)
+
+local_path_override(
+    module_name = "rules_rust",
+    path = "../bazel_deps/rules_rust",
+)
+
 # Language independent stuff.
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.3")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "gazelle", version = "0.36.0")
+bazel_dep(name = "googletest", version = "1.14.0")
+bazel_dep(name = "platforms", version = "0.0.9")
+bazel_dep(name = "protobuf", version = "21.7")
+bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "rules_foreign_cc", version = "0.9.0")
+bazel_dep(name = "rules_pkg", version = "0.7.0")
+bazel_dep(name = "rules_proto", version = "6.0.0")
+bazel_dep(name = "zlib", version = "1.3")
+
+# Hermetic toolchains.
+toolchains = use_extension("//bazel/module_extensions/toolchains:extension.bzl", "toolchains")
+use_repo(
+    toolchains,
+    "toolchain_sdk",
+    "toolchain_sdk_tarball",
+)
+
+# register_toolchains("//bazel/module_extensions/toolchains/cc:toolchain")
+
+# Go support
+GO_VERSION = "1.22.0"
+
+bazel_dep(name = "rules_go", version = "0.48.0")
+
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(
+    name = "go_sdk",
+    version = GO_VERSION,
+)
+use_repo(go_sdk, "go_toolchains")
+
+register_toolchains("@go_toolchains//:all")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//bazel:go.mod")
+
+# This should contain all direct deps listed in go.mod.
+# For now, it needs to be manually maintained, but work is being done to
+# automate this (https://github.com/bazelbuild/bazel/issues/17048).
+use_repo(
+    go_deps,
+    "com_github_alessio_shellescape",
+    "com_github_elastic_go_seccomp_bpf",
+    "com_github_google_go_cmp",
+    "com_github_hanwen_go_fuse_v2",
+    "com_github_urfave_cli_v2",
+    "org_golang_x_net",
+    "org_golang_x_sys",
+)
 
 # Python support
-PY_VERSION = "3.10"
+PY_VERSION = "3.11"
 
-bazel_dep(name = "rules_python", version = "0.31.0")
+bazel_dep(name = "rules_python", version = "0.26.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
@@ -23,7 +82,21 @@ python.toolchain(
     python_version = PY_VERSION,
 )
 
+PY_INTERPRETER_REPO = "python_%s_x86_64-unknown-linux-gnu" % PY_VERSION.replace(".", "_")
+
+use_repo(
+    python,
+    python_interpreter = PY_INTERPRETER_REPO,
+)
+
+register_toolchains("//bazel/python/toolchains:all")
+
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pip",
+    python_version = PY_VERSION,
+    requirements_lock = "//bazel/python:requirements_lock.txt",
+)
 pip.parse(
     hub_name = "zephyr_py_deps",
     python_version = PY_VERSION,
@@ -34,14 +107,10 @@ pip.parse(
     python_version = PY_VERSION,
     requirements_lock = "//platform/rules_cros_firmware/cros_firmware:hdctools-requirements-lock.txt",
 )
-use_repo(pip, "hdctools_py_deps", "zephyr_py_deps")
+use_repo(pip, "hdctools_py_deps", "pip", "zephyr_py_deps")
 
 # Rust support
 bazel_dep(name = "rules_rust", version = "0.20.1")
-local_path_override(
-    module_name = "rules_rust",
-    path = "../bazel_deps/rules_rust",
-)
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
@@ -49,15 +118,99 @@ rust.toolchain(
     extra_target_triples = ["riscv32imc-unknown-none-elf"],
     versions = ["1.70.0"],
 )
+use_repo(rust, "rust_toolchains")
+
+rust_host_tools = use_extension("@rules_rust//rust:extensions.bzl", "rust_host_tools")
+rust_host_tools.host_tools(
+    edition = "2021",
+    version = "1.75.0",
+)
+use_repo(rust_host_tools, "rust_host_tools")
+
+# Ordering matters here. Placing our our toolchains first gives them priority.
+# This means we only fall back to @rust_toolchains if our toolchains don't meet
+# their target_settings.
+# register_toolchains("//bazel/module_extensions/toolchains/rust/host:all")
 
 register_toolchains("//platform/ti50/common/toolchain:all")
 
-use_repo(
-    rust,
-    "rust_toolchains",
+register_toolchains("@rust_toolchains//:all")
+
+register_toolchains("//bazel/module_extensions/toolchains/rust/proto:proto_toolchain")
+
+register_toolchains("//bazel/module_extensions/toolchains/rust/proto:prost_toolchain")
+
+cargo_bazel_bootstrap = use_extension("@rules_rust//crate_universe/private/module_extensions:cargo_bazel_bootstrap.bzl", "cargo_bazel_bootstrap")
+use_repo(cargo_bazel_bootstrap, "cargo_bazel_bootstrap")
+
+# Eventually this will be merged with metallurgy crates.
+crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
+crate.from_cargo(
+    name = "alchemy_crates",
+    cargo_lockfile = "//bazel/rust/alchemy_crates:Cargo.lock",
+    manifests = ["//bazel/rust/alchemy_crates:Cargo.toml"],
+)
+crate.annotation(
+    crate = "protoc-gen-tonic",
+    gen_all_binaries = True,
+)
+crate.annotation(
+    crate = "protoc-gen-prost",
+    gen_all_binaries = True,
+)
+crate.annotation(
+    crate = "chrono",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//third_party/rust_crates/patches:chrono/remove-old-time-feature.patch",
+    ],
+)
+crate.annotation(
+    crate = "indexmap",
+    crate_features = ["std"],
+)
+crate.annotation(
+    additive_build_file = "//bazel/rust/alchemy_crates:additive_build_files/rustix.BUILD.bazel",
+    crate = "rustix",
+    data = [":static_libs"],
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//third_party/rust_crates/patches:rustix/disable-features.patch",
+    ],
+    rustc_flags = ["-L$(location :static_libs)"],
+)
+use_repo(crate, "alchemy_crates")
+
+files = use_extension("//bazel/module_extensions:files/extension.bzl", "files")
+use_repo(files, "files")
+
+cros_deps = use_extension("//bazel/module_extensions/cros_deps:extension.bzl", "cros_deps")
+use_repo(cros_deps, "alpine-minirootfs", "chromite", "depot_tools", "zstd")
+
+portage = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage")
+use_repo(portage, "alchemist", "portage", "portage_digest", "portage_preflight_checks", "remoteexec_info")
+
+portage_deps = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage_deps")
+use_repo(portage_deps, "portage_deps")
+
+prebuilt_sdk = use_extension("//bazel/module_extensions/prebuilt_sdk:extension.bzl", "prebuilt_sdk")
+
+prebuilt_sdk_tarballs = use_extension("//bazel/module_extensions/prebuilt_sdk:extension.bzl", "prebuilt_sdk_tarballs")
+
+prebuilt_sdk.from_url(
+    name = "prebuilt_sdk_demo",
+    url = "gs://chromeos-bazel-prebuilt-test/manifests/1391f724a014d15eb77e6ea792993c725192c5c8c40687ccba40ca6e746a8347.json",
 )
 
-register_toolchains("@rust_toolchains//:all")
+prebuilt_sdk_tarballs.from_manifests(
+    manifests = ["@prebuilt_sdk_demo//file:manifest.json"],
+)
+
+use_repo(prebuilt_sdk, "prebuilt_sdk_demo")
+
+use_repo(prebuilt_sdk_tarballs, "prebuilt_sdk_tarballs")
 
 fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
 use_repo(
@@ -67,7 +220,6 @@ use_repo(
     "coreboot_sdk",
     "cr50-utils-deps",
     "cros-sdk",
-    "depot_tools",
     "ec",
     "ec_devutils",
     "hdctools",
