@@ -6,6 +6,19 @@ load("@rules_pkg//pkg:providers.bzl", "PackageArtifactInfo")
 load(":common.bzl", "BinaryPackageInfo", "BinaryPackageSetInfo", "OverlaySetInfo", "SDKInfo", "SDKLayer", "sdk_to_layer_list")
 load(":install_deps.bzl", "install_deps")
 
+# Print CSV-formatted package installation statistics for each SDK.
+#
+# This is useful e.g. when iterating on ways to reuse package installations
+# from dependencies (b/342012804).
+#
+# Tip: When filtering out Bazel logs (e.g. Bazel's stdout), use ansifilter
+# (https://gitlab.com/saalen/ansifilter) to remove ANSI terminal escape codes,
+# such as color changes. Tools like grep might not detect newlines correctly in
+# the presence of escape codes.
+#
+# Only set this to True when iterating locally.
+_PRINT_PACKAGE_INSTALLATION_STATS = False
+
 def _sdk_from_archive_impl(ctx):
     output_prefix = ctx.attr.out or ctx.attr.name
     output_root = ctx.actions.declare_directory(output_prefix)
@@ -183,6 +196,16 @@ def _sdk_install_deps_impl(ctx):
         transitive = [dep[BinaryPackageSetInfo].packages for dep in ctx.attr.target_deps],
         order = "postorder",
     )
+
+    if _PRINT_PACKAGE_INSTALLATION_STATS:
+        # CSV-formatted line with the following columns:
+        #  - SDK label,
+        #  - Number of packages to install.
+        # buildifier: disable=print
+        print("%s,%d" % (
+            ctx.label,
+            len(install_set.to_list()),
+        ))
 
     deps = install_deps(
         ctx = ctx,
