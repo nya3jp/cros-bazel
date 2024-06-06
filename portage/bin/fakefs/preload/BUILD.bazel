@@ -7,17 +7,21 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 cc_binary(
     name = "fakefs_preload",
     srcs = ["fakefs_preload.c"],
-    features = [
-        # Avoid linking libc++.
-        "-default_link_libs",
-        "c_compiler",
-    ],
+    features = select({
+        "//bazel/module_extensions/toolchains/cc:use_hermetic_launcher_config": [],
+        # Avoid linking libc++
+        "//conditions:default": ["-default_link_libs"],
+    }),
     linkopts = [
         # Force linking to shared objects even if there are static archives.
         # TODO: Compile this code with CrOS SDK and get rid of this hack.
         "-l:libdl.so.2",
         "-l:libpthread.so.0",
-    ],
+    ] + select({
+        # Avoid linking libc++
+        "//bazel/module_extensions/toolchains/cc:use_hermetic_launcher_config": ["-nostdlib++"],
+        "//conditions:default": [],
+    }),
     linkshared = True,
     visibility = ["//bazel/portage/bin/fakefs:__subpackages__"],
 )
