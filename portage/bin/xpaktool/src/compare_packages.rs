@@ -9,12 +9,12 @@ use clap::Parser;
 use itertools::Itertools;
 use std::collections::HashSet;
 use std::fs::{create_dir_all, File};
-use std::io::Read;
-use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use tempfile::TempDir;
+
+use crate::util::{files_contents_equal, files_size_equal, reader_contents_equal};
 
 /// Compares two packages.
 #[derive(Parser, Debug)]
@@ -26,38 +26,6 @@ pub struct ComparePackagesArgs {
     /// Portage binary packages to compare
     #[arg(name = "PACKAGE-B")]
     package_b: PathBuf,
-}
-
-fn files_size_equal(path_a: &Path, path_b: &Path) -> Result<bool> {
-    let metadata_a = std::fs::metadata(path_a).with_context(|| format!("{path_a:?}"))?;
-    let metadata_b = std::fs::metadata(path_b).with_context(|| format!("{path_b:?}"))?;
-
-    Ok(metadata_a.size() == metadata_b.size())
-}
-
-fn files_contents_equal(path_a: &Path, path_b: &Path) -> Result<bool> {
-    let mut file_a = File::open(path_a).with_context(|| format!("{path_a:?}"))?;
-    let mut file_b = File::open(path_b).with_context(|| format!("{path_b:?}"))?;
-
-    reader_contents_equal(&mut file_a, &mut file_b)
-}
-
-fn reader_contents_equal(reader_a: &mut impl Read, reader_b: &mut impl Read) -> Result<bool> {
-    let mut buffer_a = [0u8; 4096];
-    let mut buffer_b = [0u8; 4096];
-
-    loop {
-        let n_a = reader_a.read(&mut buffer_a)?;
-        let n_b = reader_b.read(&mut buffer_b)?;
-
-        if buffer_a[..n_a] != buffer_b[..n_b] {
-            return Ok(false);
-        }
-
-        if n_a == 0 {
-            return Ok(true);
-        }
-    }
 }
 
 fn diff_environment(a: &Vec<u8>, b: &Vec<u8>) -> Result<()> {
@@ -106,13 +74,10 @@ fn diff_tarball_contents(pkg_a: &mut BinaryPackage, pkg_b: &mut BinaryPackage) -
     pkg_a.extract_image(&path_a, false)?;
     pkg_b.extract_image(&path_b, false)?;
 
-    Command::new("diff")
-        .current_dir(base)
-        .arg("-ur")
-        .arg("--no-dereference")
-        .arg("a")
-        .arg("b")
-        .status()?;
+    let diff = crate::diff::diff(&path_a, &path_b)?;
+
+    print!("{}", diff.display());
+
     Ok(())
 }
 

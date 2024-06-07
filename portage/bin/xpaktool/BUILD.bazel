@@ -17,10 +17,13 @@ rust_binary(
         "@alchemy_crates//:anyhow",
         "@alchemy_crates//:bzip2",
         "@alchemy_crates//:clap",
+        "@alchemy_crates//:infer",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:lazy_static",
+        "@alchemy_crates//:rayon",
         "@alchemy_crates//:regex",
         "@alchemy_crates//:tempfile",
+        "@alchemy_crates//:walkdir",
     ],
 )
 
@@ -33,7 +36,9 @@ rust_test(
         "//bazel/portage/common/testdata:nano-clean-env.tbz2",
         "//bazel/portage/common/testdata:nano-diff-tar.tbz2",
         "//bazel/portage/common/testdata:nano-diff-xpak.tbz2",
-    ],
+    ] + glob([
+        "testdata/**",
+    ]),
     rustc_flags = RUSTC_DEBUG_FLAGS,
     deps = [
         "@alchemy_crates//:tempfile",

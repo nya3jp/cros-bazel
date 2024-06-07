@@ -12,10 +12,13 @@ binarypackage = { path = "../../common/portage/binarypackage" }
 anyhow.workspace = true
 bzip2.workspace = true
 clap.workspace = true
+infer.workspace = true
 itertools.workspace = true
 lazy_static.workspace = true
+rayon.workspace = true
 regex.workspace = true
 tempfile.workspace = true
+walkdir.workspace = true
 
 [dev-dependencies]
 runfiles.workspace = true

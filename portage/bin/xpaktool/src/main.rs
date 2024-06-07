@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 
 mod compare_packages;
+mod diff;
 #[cfg(test)]
 mod testdata;
 mod update_xpak;
+mod util;
 mod validate_package;
 
 use anyhow::{Context, Result};
