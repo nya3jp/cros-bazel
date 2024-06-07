@@ -8,6 +8,28 @@ package(default_visibility = [
     "//bazel/module_extensions/toolchains/cc:__subpackages__",
 ])
 
+COMPILE_FEATURES = [
+    "@rules_cc//cc/toolchains/features/legacy:legacy_compile_flags",
+    "@rules_cc//cc/toolchains/features/legacy:user_compile_flags",
+    "@rules_cc//cc/toolchains/features/legacy:sysroot",
+    "@rules_cc//cc/toolchains/features/legacy:unfiltered_compile_flags",
+    "@rules_cc//cc/toolchains/features/legacy:compiler_input_flags",
+    "@rules_cc//cc/toolchains/features/legacy:compiler_output_flags",
+]
+
+LINK_FEATURES = [
+    "@rules_cc//cc/toolchains/features/legacy:strip_debug_symbols",
+    "@rules_cc//cc/toolchains/features/legacy:linkstamps",
+    "@rules_cc//cc/toolchains/features/legacy:output_execpath_flags",
+    "@rules_cc//cc/toolchains/features/legacy:runtime_library_search_directories",
+    "@rules_cc//cc/toolchains/features/legacy:libraries_to_link",
+    "@rules_cc//cc/toolchains/features/legacy:user_link_flags",
+    "@rules_cc//cc/toolchains/features/legacy:legacy_link_flags",
+    "@rules_cc//cc/toolchains/features/legacy:linker_param_file",
+    "@rules_cc//cc/toolchains/features/legacy:fission_support",
+    "@rules_cc//cc/toolchains/features/legacy:sysroot",
+]
+
 # TODO: Minify this. At the moment the whole sysroot is used for every action.
 alias(
     name = "sysroot",
@@ -31,6 +53,7 @@ cc_action_type_config(
         "@rules_cc//cc/toolchains/actions:assembly_actions",
     ],
     data = [":sysroot"],
+    implies = COMPILE_FEATURES,
     tools = ["//bazel/module_extensions/toolchains/cc/tools:clang"],
 )
 
@@ -38,6 +61,7 @@ cc_action_type_config(
     name = "c_compile",
     action_types = ["@rules_cc//cc/toolchains/actions:c_compile"],
     data = [":sysroot"],
+    implies = COMPILE_FEATURES,
     tools = ["//bazel/module_extensions/toolchains/cc/tools:clang"],
 )
 
@@ -45,16 +69,30 @@ cc_action_type_config(
     name = "cpp_compile",
     action_types = ["@rules_cc//cc/toolchains/actions:cpp_compile_actions"],
     data = [":sysroot"],
+    implies = COMPILE_FEATURES,
     tools = ["//bazel/module_extensions/toolchains/cc/tools:clang++"],
 )
 
 cc_action_type_config(
-    name = "link",
-    action_types = ["@rules_cc//cc/toolchains/actions:link_actions"],
+    name = "link_executable",
+    action_types = ["@rules_cc//cc/toolchains/actions:link_executable_actions"],
     data = [":sysroot"],
-    implies = [
-        "@rules_cc//cc/toolchains/features/legacy:libraries_to_link",
-        "@rules_cc//cc/toolchains/features/legacy:legacy_link_flags",
+    implies = LINK_FEATURES + [
+        "@rules_cc//cc/toolchains/features/legacy:library_search_directories",
+        "@rules_cc//cc/toolchains/features/legacy:force_pic_flags",
+    ],
+    tools = ["//bazel/module_extensions/toolchains/cc/tools:clang++"],
+)
+
+cc_action_type_config(
+    name = "link_dynamic_library",
+    action_types = ["@rules_cc//cc/toolchains/actions:dynamic_library_link_actions"],
+    data = [":sysroot"],
+    implies = LINK_FEATURES + [
+        "@rules_cc//cc/toolchains/features/legacy:build_interface_libraries",
+        "@rules_cc//cc/toolchains/features/legacy:dynamic_library_linker_tool",
+        "@rules_cc//cc/toolchains/features/legacy:shared_flag",
+        "@rules_cc//cc/toolchains/features/legacy:library_search_directories",
     ],
     tools = ["//bazel/module_extensions/toolchains/cc/tools:clang++"],
 )
@@ -65,3 +103,5 @@ cc_action_type_config(
     data = [":sysroot"],
     tools = ["//bazel/module_extensions/toolchains/cc/tools:strip"],
 )
+
+# TODO: llvm-cov and objcopy_embed_data don't have an action

@@ -68,7 +68,8 @@ cc_toolchain(
         "//bazel/module_extensions/toolchains/cc/action_type_configs:assemble",
         "//bazel/module_extensions/toolchains/cc/action_type_configs:c_compile",
         "//bazel/module_extensions/toolchains/cc/action_type_configs:cpp_compile",
-        "//bazel/module_extensions/toolchains/cc/action_type_configs:link",
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:link_executable",
+        "//bazel/module_extensions/toolchains/cc/action_type_configs:link_dynamic_library",
         "//bazel/module_extensions/toolchains/cc/action_type_configs:strip",
     ],
     args = [
@@ -77,7 +78,7 @@ cc_toolchain(
         "//bazel/module_extensions/toolchains/cc/args:no_canonical_prefixes",
         "//bazel/module_extensions/toolchains/cc/args:linker_bin_path",
         "//bazel/module_extensions/toolchains/cc/args:warnings",
-        "//bazel/module_extensions/toolchains/cc/args:link_args",
+        "//bazel/module_extensions/toolchains/cc/args:default_args",
     ],
     cxx_builtin_include_directories = [
         ":include",
@@ -88,6 +89,7 @@ cc_toolchain(
         "//bazel/module_extensions/toolchains/cc/features:dbg",
         "//bazel/module_extensions/toolchains/cc/features:fastbuild",
         "//bazel/module_extensions/toolchains/cc/features:opt",
+        "@rules_cc//cc/toolchains/features/legacy:shared_flag",
     ],
 )
 

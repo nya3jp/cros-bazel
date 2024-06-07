@@ -128,9 +128,61 @@ cc_args(
     name = "link_args",
     actions = ["@rules_cc//cc/toolchains/actions:link_actions"],
     args = [
-        "-o",
-        format_arg("%s", "@rules_cc//cc/toolchains/variables:output_execpath"),
-        "-Wl,-S",
+        "-Wl,-no-as-needed",
     ],
-    requires_not_none = "@rules_cc//cc/toolchains/variables:output_execpath",
+)
+
+cc_args(
+    name = "cpp_header_parsing_args",
+    actions = ["@rules_cc//cc/toolchains/actions:cpp_header_parsing"],
+    args = [
+        "-xc++-header",
+        "-fsyntax-only",
+    ],
+)
+
+cc_args(
+    name = "strip_output",
+    actions = ["@rules_cc//cc/toolchains/actions:strip"],
+    args = [
+        "-S",
+        "-p",
+        "-o",
+        format_arg("%s", "@rules_cc//cc/toolchains/variables:output_file"),
+    ],
+)
+
+cc_args(
+    name = "strip_opts",
+    actions = ["@rules_cc//cc/toolchains/actions:strip"],
+    args = [
+        format_arg("%s", "@rules_cc//cc/toolchains/variables:stripopts"),
+    ],
+    iterate_over = "@rules_cc//cc/toolchains/variables:stripopts",
+)
+
+cc_args(
+    name = "strip_input",
+    actions = ["@rules_cc//cc/toolchains/actions:strip"],
+    args = [
+        format_arg("%s", "@rules_cc//cc/toolchains/variables:input_file"),
+    ],
+)
+
+cc_args_list(
+    name = "strip_args",
+    args = [
+        ":strip_output",
+        ":strip_opts",
+        ":strip_input",
+    ],
+)
+
+cc_args_list(
+    name = "default_args",
+    args = [
+        ":cpp_header_parsing_args",
+        ":link_args",
+        ":strip_args",
+    ],
 )
