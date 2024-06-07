@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use std::io::Write;
 use std::os::unix::fs;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -267,12 +269,38 @@ fn build_override_config_source(
 }
 
 fn setup_tools() -> Result<TempDir> {
-    let current_exec = std::env::current_exe()?;
+    let mut alchemist = std::env::current_exe()?;
+
+    let hermetic_dir = alchemist.parent().unwrap();
+    // Check if we're using the hermetic launcher.
+    // The hermetic launcher requires mktemp, tail, and tar, none of which
+    // exist in the environment which ver_rs and ver_test run.
+    if hermetic_dir.join("_real_binary").is_file() {
+        // Instead of running the self-extracting binary, run the already
+        // extracted binary. This means we don't need those tools to exist.
+        let content = format!(
+            r#"
+        #!/bin/bash
+
+        exec "{:?}" --argv0 "$0" --library-path "{:?}" --inhibit-rpath "" "{:?}" "$@"
+        "#,
+            alchemist,
+            hermetic_dir.join("_hermetic_lib"),
+            hermetic_dir.join("_real_binary")
+        );
+
+        alchemist = hermetic_dir.join("launcher");
+        let mut f = std::fs::File::create(&alchemist)?;
+        f.write(content.as_bytes())?;
+        let mut permissions = f.metadata()?.permissions();
+        permissions.set_mode(0o755);
+        f.set_permissions(permissions)?;
+    }
 
     let tools_dir = tempfile::tempdir()?;
 
-    fs::symlink(&current_exec, tools_dir.path().join("ver_test"))?;
-    fs::symlink(&current_exec, tools_dir.path().join("ver_rs"))?;
+    fs::symlink(&alchemist, tools_dir.path().join("ver_test"))?;
+    fs::symlink(&alchemist, tools_dir.path().join("ver_rs"))?;
 
     Ok(tools_dir)
 }
