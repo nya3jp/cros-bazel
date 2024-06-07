@@ -22,6 +22,9 @@ go_library(
 go_binary(
     name = "auditfuse",
     embed = [":auditfuse_lib"],
+    # Since we transitively depend on the "net" package, "auto" compiles it dynamically by default.
+    # https://groups.google.com/g/golang-nuts/c/Rw89bnhPBUI
+    static = "on",
     visibility = ["//bazel:internal"],
 )
 
