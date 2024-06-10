@@ -1180,4 +1180,4 @@ ebuild_compare_package_test = rule(
 # CL instead of a templating change that could affect dozens of Alchemist
 # goldens. This is important because such CLs are easy to revert, whereas the
 # alternative could lead to Git conflicts caused by diffs in goldens.
-REUSE_PKG_INSTALLS_FROM_DEPS = False
+REUSE_PKG_INSTALLS_FROM_DEPS = True
