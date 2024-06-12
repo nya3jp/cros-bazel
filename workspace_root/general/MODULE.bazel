@@ -219,6 +219,7 @@ use_repo(prebuilt_sdk_tarballs, "prebuilt_sdk_tarballs")
 fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
 use_repo(
     fwsdk_deps,
+    "codesigner",
     "compiler-builtins",
     "coreboot_sdk",
     "cros-sdk",

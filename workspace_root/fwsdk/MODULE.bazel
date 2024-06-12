@@ -216,9 +216,9 @@ fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bz
 use_repo(
     fwsdk_deps,
     "cmsis",
+    "codesigner",
     "compiler-builtins",
     "coreboot_sdk",
-    "cr50-utils-deps",
     "cros-sdk",
     "ec",
     "ec_devutils",
