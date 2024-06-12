@@ -9,7 +9,7 @@ package(default_visibility = ["//visibility:public"])
 
 bool_flag(
     name = "hermetic",
-    default = True,
+    default = False,
 )
 
 config_setting_all(
