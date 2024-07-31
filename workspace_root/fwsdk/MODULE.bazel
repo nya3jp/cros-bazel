@@ -229,7 +229,6 @@ use_repo(
     "ec",
     "ec_devutils",
     "hdctools",
-    "nonhermetic",
     "shflags",
     "ti50-sdk",
     "u_boot",
