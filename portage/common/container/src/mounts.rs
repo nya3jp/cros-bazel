@@ -157,7 +157,12 @@ pub(crate) fn mount_overlayfs(
     // directories, which should be sufficient. However note that Linux kernel supports stacking
     // overlayfs up to 2 layers, so it means that this will fail if lower directories are already
     // on overlayfs. Search the kernel code with FILESYSTEM_MAX_STACK_DEPTH for details.
-    const MAX_LOWER_DIRS: usize = 500;
+    //
+    // TODO(b/360547222): The real limit is supposed to be 500. Due to an off by one error in
+    // linux 6.8.0-40, we can only mount 499 layers. There is an upstream patch pending to fix
+    // this problem. Once that lands and is propagated to the stable kernel branches we can
+    // restore this to 500.
+    const MAX_LOWER_DIRS: usize = 499;
 
     ensure!(
         short_lower_dirs.len() <= MAX_LOWER_DIRS * MAX_LOWER_DIRS,
