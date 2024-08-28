@@ -262,9 +262,6 @@ pub fn get_extra_dependencies(
          */
         ("media-libs/opencv-4.7.0", DependencyKind::BuildHost) => "dev-libs/protobuf",
 
-        /* We need to upgrade distutils-r1 to latest from upstream */
-        ("dev-build/meson-1.3.2", DependencyKind::RunTarget) => "dev-python/setuptools",
-
         /*
          * checking for curl-config... no
          * /build/amd64-generic/tmp/portage/dev-libs/xmlrpc-c-1.51.06-r3/work/xmlrpc-c-1.51.06/configure: line 410: test: then: integer expression expected
