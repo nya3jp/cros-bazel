@@ -225,13 +225,6 @@ pub fn get_extra_dependencies(
          * pkg_resources.DistributionNotFound: The 'pip' distribution was not found and is required by the application
          * ERROR: 'pip wheel' requires the 'wheel' package. To fix this, run: pip install wheel
          */
-        ("dev-python/jaraco-functools-2.0", DependencyKind::BuildHost) => {
-            "dev-python/setuptools_scm"
-        }
-        ("dev-python/tempora-1.14.1", DependencyKind::BuildHost) => "dev-python/setuptools_scm",
-        ("dev-python/pyusb-1.2.1", DependencyKind::BuildHost) => "dev-python/setuptools_scm",
-        ("dev-python/portend-2.2", DependencyKind::BuildHost) => "dev-python/setuptools_scm",
-        ("dev-python/cherrypy-17.4.1", DependencyKind::BuildHost) => "dev-python/setuptools_scm",
         ("dev-python/cryptography-3.3.2", DependencyKind::BuildHost) => "dev-python/cffi",
 
         /*
