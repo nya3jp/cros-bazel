@@ -207,9 +207,6 @@ pub fn get_extra_dependencies(
         ("sys-apps/proot-5.4.0", DependencyKind::BuildHost) => "dev-vcs/git",
         ("app-misc/jq-1.7_pre20201109", DependencyKind::BuildHost) => "dev-vcs/git",
 
-        /* Our setuptools is way too old. b/293899573 */
-        ("dev-python/jinja-3.1.3", DependencyKind::BuildHost) => "dev-python/markupsafe",
-
         /*
          * /var/tmp/portage/sys-libs/binutils-libs-2.37_p1-r1/work/binutils-2.37/missing: line 81: makeinfo: command not found
          */
