@@ -1078,7 +1078,7 @@ PACKAGE_TO_CORE_COUNT = {
     "dev-python/selenium": {TARGET: 2},
     "dev-python/setproctitle": {TARGET: 2},
     "dev-python/setuptools": {HOST: 4, TARGET: 2},
-    "dev-python/setuptools_scm": {HOST: 2, TARGET: 2},
+    "dev-python/setuptools-scm": {HOST: 2, TARGET: 2},
     "dev-python/six": {HOST: 2, TARGET: 2},
     "dev-python/sortedcontainers": {HOST: 2},
     "dev-python/strict-rfc3339": {HOST: 4, TARGET: 2},
