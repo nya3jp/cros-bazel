@@ -9,8 +9,8 @@ def _chromite_impl(repo_ctx):
 
     if use_pinned_chromite:
         repo_ctx.download_and_extract(
-            url = "https://storage.googleapis.com/chromeos-localmirror/chromite-bundles/chromite-20240809_152114-7fc849f7df1ea015da6bafc7abfae4dbfc215675.tar.zst",
-            sha256 = "ab6a68cdea708c8158818bd5c74e7645e38a677ae12170f970e6ad6b030fd83c",
+            url = "https://storage.googleapis.com/chromeos-localmirror/chromite-bundles/chromite-20240912_061051-4212a1eb2c7c273ab2600fe54771b74be800fd74.tar.zst",
+            sha256 = "4fc1aa40fb729f69120df63bfb6faf599d9d12663971c9d295bed47872d847d8",
         )
     else:
         # While most repo rules would inject BUILD.project-chromite during the repo
