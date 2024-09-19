@@ -30,7 +30,7 @@ pub static DEPEND_AS_BDEPEND_ALLOW_LIST: [&str; 22] = [
     "sys-devel/bison",
     "sys-devel/flex",
     "sys-devel/gnuconfig",
-    "sys-devel/libtool",
+    "dev-build/libtool",
     "sys-devel/m4",
     "sys-devel/make",
     "virtual/yacc",
