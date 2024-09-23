@@ -136,13 +136,6 @@ pub fn get_extra_dependencies(
         }
 
         /*
-         * checking for compile_et... no
-         * configure: error: cannot find compile_et
-         * ### /build/arm64-generic/tmp/portage/app-crypt/mit-krb5-1.20.1/work/krb5-1.20.1/src-.arm64/config.log:
-         */
-        ("app-crypt/mit-krb5-1.21.2", DependencyKind::BuildHost) => "sys-fs/e2fsprogs",
-
-        /*
          * configure:13038: error: possibly undefined macro: AC_LIB_PREPARE_PREFIX
          */
         ("media-libs/libmtp-1.1.20", DependencyKind::BuildHost) => "sys-devel/gettext",
