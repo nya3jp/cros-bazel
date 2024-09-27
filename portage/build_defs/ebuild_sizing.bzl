@@ -402,7 +402,7 @@ PACKAGE_TO_CORE_COUNT = {
     "chromeos-base/ml-benchmark-drivers": {TARGET: 4},
     "chromeos-base/ml-client": {TARGET: 2},
     "chromeos-base/ml-cmdline": {TARGET: 16},
-    "chromeos-base/ml-core-internal": {TARGET: 2},
+    "chromeos-base/ml-core-dlc": {TARGET: 2},
     "chromeos-base/mock-biod-test-deps": {TARGET: 2},
     "chromeos-base/modem-diagnostics": {TARGET: 2},
     "chromeos-base/modem-fw-dlc-anahera-l850": {TARGET: 2},
