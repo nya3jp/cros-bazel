@@ -9,7 +9,6 @@ overlays
 partner_private
 platform/cros_firmware
 platform/dev
-platform/ec
 platform/hps-firmware2
 platform/release-firmware
 platform/rules_cros

@@ -212,19 +212,27 @@ use_repo(prebuilt_sdk, "prebuilt_sdk_demo")
 
 use_repo(prebuilt_sdk_tarballs, "prebuilt_sdk_tarballs")
 
+cr50_deps = use_extension("//platform/cr50/bazel:deps.bzl", "cr50_deps")
+use_repo(
+    cr50_deps,
+    "cr50-coreboot-sdk-arm-eabi",
+)
+
+ec_deps = use_extension("//platform/ec/bazel:deps.bzl", "ec_deps")
+use_repo(
+    ec_deps,
+    "ec-coreboot-sdk-arm-eabi",
+    "ec-coreboot-sdk-i386-elf",
+    "ec-coreboot-sdk-nds32le-elf",
+    "ec-coreboot-sdk-riscv-elf",
+)
+
 fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
 use_repo(
     fwsdk_deps,
     "cmsis",
     "codesigner",
     "compiler-builtins",
-    "coreboot-sdk-aarch64-elf",
-    "coreboot-sdk-arm-eabi",
-    "coreboot-sdk-i386-elf",
-    "coreboot-sdk-iasl",
-    "coreboot-sdk-nds32le-elf",
-    "coreboot-sdk-riscv-elf",
-    "coreboot-sdk-x86_64-elf",
     "cros-sdk",
     "ec",
     "ec_devutils",
@@ -233,4 +241,10 @@ use_repo(
     "ti50-sdk",
     "u_boot",
     "zephyr",
+)
+
+ish_deps = use_extension("//platform/ish/bazel:deps.bzl", "ish_deps")
+use_repo(
+    ish_deps,
+    "ish-coreboot-sdk-i386-elf",
 )
