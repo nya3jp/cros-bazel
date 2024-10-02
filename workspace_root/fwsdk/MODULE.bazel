@@ -227,6 +227,16 @@ use_repo(
     "ec-coreboot-sdk-riscv-elf",
 )
 
+ap_deps = use_extension("//third_party/coreboot/bazel:deps.bzl", "ap_deps")
+use_repo(
+    ap_deps,
+    "ap-coreboot-sdk-aarch64-elf",
+    "ap-coreboot-sdk-arm-eabi",
+    "ap-coreboot-sdk-i386-elf",
+    "ap-coreboot-sdk-iasl",
+    "ap-coreboot-sdk-x86_64-elf",
+)
+
 fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bzl", "fwsdk_deps")
 use_repo(
     fwsdk_deps,
