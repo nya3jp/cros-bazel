@@ -388,7 +388,6 @@ PACKAGE_TO_CORE_COUNT = {
     "chromeos-base/lvmd": {TARGET: 2},
     "chromeos-base/lvmd-client": {TARGET: 2},
     "chromeos-base/mctk": {TARGET: 4},
-    "chromeos-base/memd": {TARGET: 8},
     "chromeos-base/mems_setup": {TARGET: 4},
     "chromeos-base/metrics": {TARGET: 16},
     "chromeos-base/midis": {TARGET: 4},
