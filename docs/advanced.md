@@ -242,6 +242,10 @@ directly or indirectly inherited by the ebuild.
 Below is the format of the TOML file:
 
 ```toml
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 # This is the only top-level table allowed in the TOML file containing
 # Bazel-specific metadata.
 [bazel]
