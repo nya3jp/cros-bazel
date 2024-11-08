@@ -16,7 +16,7 @@ locale-gen --jobs 1
 
 export SOURCE_DATE_EPOCH=946710000
 
-for PYTHON_VERSION in python3.6 python3.8
+for PYTHON_VERSION in python3.6 python3.8 python3.11
 do
   if ! command -v "${PYTHON_VERSION}" > /dev/null; then
     continue
@@ -26,6 +26,23 @@ do
   PYTHON_LIBDIR=lib
   if [[ "${PYTHON_VERSION}" == "python3.6" ]]; then
     PYTHON_LIBDIR=lib64
+  fi
+
+  # As of 2024-11-08, in the stage 1 SDK, Portage is only installed for the
+  # Python 3.8 interpreter. There is no Portage installation for Python 3.11
+  # in the stage 1 SDK. In other words, the stage 1 SDK contains a
+  # /usr/lib/python3.8/site-packages/portage directory, but it does not contain
+  # a /usr/lib/python3.11/site-packages/portage directory.
+  #
+  # This will be the case until we regenerate the stage 1 SDK tarball after the
+  # Python 3.8 -> 3.11 migration is complete, but in the meantime, the below
+  # snippet will skip applying patches to the 3.11 installation of Portage if
+  # it is absent.
+  #
+  # TODO(b/318531403): Delete once the Python 3.8 -> 3.11 migration is finished
+  #                    and the stage 1 SDK tarball is regenerated.
+  if [[ ! -d "/usr/${PYTHON_LIBDIR}/${PYTHON_VERSION}/site-packages/portage" ]]; then
+    continue
   fi
 
   # Patch portage to support binpkg-hermetic.
