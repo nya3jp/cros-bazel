@@ -195,23 +195,6 @@ use_repo(portage, "alchemist", "portage", "portage_digest", "portage_preflight_c
 portage_deps = use_extension("//bazel/module_extensions/portage:extension.bzl", "portage_deps")
 use_repo(portage_deps, "portage_deps")
 
-prebuilt_sdk = use_extension("//bazel/module_extensions/prebuilt_sdk:extension.bzl", "prebuilt_sdk")
-
-prebuilt_sdk_tarballs = use_extension("//bazel/module_extensions/prebuilt_sdk:extension.bzl", "prebuilt_sdk_tarballs")
-
-prebuilt_sdk.from_url(
-    name = "prebuilt_sdk_demo",
-    url = "gs://chromeos-bazel-prebuilt-test/manifests/1391f724a014d15eb77e6ea792993c725192c5c8c40687ccba40ca6e746a8347.json",
-)
-
-prebuilt_sdk_tarballs.from_manifests(
-    manifests = ["@prebuilt_sdk_demo//file:manifest.json"],
-)
-
-use_repo(prebuilt_sdk, "prebuilt_sdk_demo")
-
-use_repo(prebuilt_sdk_tarballs, "prebuilt_sdk_tarballs")
-
 cr50_deps = use_extension("//platform/cr50/bazel:deps.bzl", "cr50_deps")
 use_repo(
     cr50_deps,

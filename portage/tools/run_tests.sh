@@ -16,7 +16,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../../.."
 
 TARGETS=(
   //bazel/...
-  @prebuilt_sdk_demo//...
 )
 
 if [[ -z "${SKIP_PORTAGE_TESTS:=}" ]]; then
