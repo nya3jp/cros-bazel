@@ -205,7 +205,11 @@ ec_deps = use_extension("//platform/ec/bazel:deps.bzl", "ec_deps")
 use_repo(
     ec_deps,
     "ec-coreboot-sdk-arm-eabi",
+    "ec-coreboot-sdk-picolibc-arm-eabi",
+    "ec-coreboot-sdk-libstdcxx-arm-eabi",
     "ec-coreboot-sdk-i386-elf",
+    "ec-coreboot-sdk-picolibc-i386-elf",
+    "ec-coreboot-sdk-libstdcxx-i386-elf",
     "ec-coreboot-sdk-nds32le-elf",
     "ec-coreboot-sdk-riscv-elf",
 )
