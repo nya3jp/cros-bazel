@@ -1,0 +1,1064 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint", "REUSE_PKG_INSTALLS_FROM_DEPS")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_install_host_and_target_deps")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
+alias(
+    name = "0.27_host_deps",
+    actual = "//internal/sdk/stage2/target/board",
+    visibility = ["//visibility:private"],
+)
+
+sdk_install_deps(
+    name = "0.27_deps",
+    out = "autofdo-0.27_deps",
+    base = "0.27_host_deps",
+    board = "amd64-generic",
+    overlays = "//internal/overlays:board",
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    target_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    contents = "interface",
+    visibility = ["//visibility:private"],
+)
+
+sdk_install_host_and_target_deps(
+    name = "0.27_reusable_deps",
+    out = "autofdo-0.27_reusable_deps",
+    base = "//internal/sdk/stage2/target/board",
+    board = "amd64-generic",
+    target_overlays = "//internal/overlays:board",
+    target_portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    target_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    target_contents = "interface",
+    visibility = ["//visibility:private"],
+)
+
+sdk_install_host_and_target_deps(
+    name = "0.27_exclusive_deps",
+    out = "autofdo-0.27_exclusive_deps",
+    base = "0.27_reusable_deps",
+    board = "amd64-generic",
+    target_overlays = "//internal/overlays:board",
+    target_portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    target_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    target_contents = "interface",
+    visibility = ["//visibility:private"],
+)
+
+sdk_install_deps(
+    name = "0.27_test_deps",
+    out = "autofdo-0.27_test_deps",
+    base = "0.27_host_deps",
+    board = "amd64-generic",
+    overlays = "//internal/overlays:board",
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    target_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+string_flag(
+    name = "0.27_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "0.27_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_incremental_enabled",
+    flag_values = {":0.27_incremental": "true"},
+)
+
+write_file(
+    name = "0.27_cache_marker",
+    out = "0.27_incremental/MARKER",
+)
+
+bool_flag(
+    name = "0.27_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_ccache_enabled_local",
+    flag_values = {
+        ":0.27_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "0.27",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    index = 0,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
+    }),
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_incremental_enabled": ":0.27_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    prebuilt = ":0.27_prebuilt",
+    portage_profile_test_package = select({
+        "@//bazel/portage:portage_config_validator_enabled": ":0.27_portage_profile_test_package",
+        "@//bazel/portage:portage_config_validator_disabled": None,
+    }),
+    hermetic_test_package = select({
+        "@//bazel/portage:hermetic_validator_enabled": ":0.27_hermetic_test_package",
+        "@//bazel/portage:hermetic_validator_disabled": None,
+    }),
+    non_interface_test_package = select({
+        "@//bazel/portage:interface_libraries_validator_enabled": ":0.27_non_interface_test_package",
+        "@//bazel/portage:interface_libraries_validator_disabled": None,
+    }),
+    generate_interface_libraries = True,
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "0.27_including_provided",
+    binpkg = ":0.27",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "0.27_debug",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
+    }),
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_incremental_enabled": ":0.27_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+string_flag(
+    name = "0.27_hermetic_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "0.27_hermetic_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_hermetic_test_package_incremental_enabled",
+    flag_values = {":0.27_hermetic_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "0.27_hermetic_test_package_cache_marker",
+    out = "0.27_hermetic_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "0.27_hermetic_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_hermetic_test_package_ccache_enabled_local",
+    flag_values = {
+        ":0.27_hermetic_test_package_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "0.27_hermetic_test_package",
+    suffix = "_hermetic_test_package",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    index = 1,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
+    }),
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_hermetic_test_package_incremental_enabled": ":0.27_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_hermetic_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    prebuilt = ":0.27_hermetic_test_package_prebuilt",
+    generate_interface_libraries = True,
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "0.27_hermetic_test_package_including_provided",
+    binpkg = ":0.27",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "0.27_hermetic_test_package_debug",
+    suffix = "_hermetic_test_package",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
+    }),
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_hermetic_test_package_incremental_enabled": ":0.27_hermetic_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_hermetic_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+string_flag(
+    name = "0.27_portage_profile_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "0.27_portage_profile_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_portage_profile_test_package_incremental_enabled",
+    flag_values = {":0.27_portage_profile_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "0.27_portage_profile_test_package_cache_marker",
+    out = "0.27_portage_profile_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "0.27_portage_profile_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_portage_profile_test_package_ccache_enabled_local",
+    flag_values = {
+        ":0.27_portage_profile_test_package_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "0.27_portage_profile_test_package",
+    suffix = "_portage_profile_test_package",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    index = 2,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
+    }),
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_portage_profile_test_package_incremental_enabled": ":0.27_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_portage_profile_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    prebuilt = ":0.27_portage_profile_test_package_prebuilt",
+    generate_interface_libraries = True,
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "0.27_portage_profile_test_package_including_provided",
+    binpkg = ":0.27",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "0.27_portage_profile_test_package_debug",
+    suffix = "_portage_profile_test_package",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = False,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    use_interface_libraries = select({
+        "@//bazel/portage:interface_libraries_enabled": True,
+        "@//bazel/portage:interface_libraries_disabled": False,
+    }),
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board-full",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:orig",
+        "//internal/portage-config/target/board:full",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_portage_profile_test_package_incremental_enabled": ":0.27_portage_profile_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_portage_profile_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+string_flag(
+    name = "0.27_non_interface_test_package_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "0.27_non_interface_test_package_incremental",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_non_interface_test_package_incremental_enabled",
+    flag_values = {":0.27_non_interface_test_package_incremental": "true"},
+)
+
+write_file(
+    name = "0.27_non_interface_test_package_cache_marker",
+    out = "0.27_non_interface_test_package_incremental/MARKER",
+)
+
+bool_flag(
+    name = "0.27_non_interface_test_package_ccache",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "0.27_non_interface_test_package_ccache_enabled_local",
+    flag_values = {
+        ":0.27_non_interface_test_package_ccache": "True",
+    },
+)
+
+ebuild(
+    name = "0.27_non_interface_test_package",
+    suffix = "_non_interface_test_package",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    index = 3,
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_non_interface_test_package_incremental_enabled": ":0.27_non_interface_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_non_interface_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    prebuilt = ":0.27_non_interface_test_package_prebuilt",
+    generate_interface_libraries = True,
+    visibility = ["//:__subpackages__"],
+)
+
+add_runtime_deps(
+    name = "0.27_non_interface_test_package_including_provided",
+    binpkg = ":0.27",
+    runtime_deps = [
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_debug(
+    name = "0.27_non_interface_test_package_debug",
+    suffix = "_non_interface_test_package",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_exclusive_deps" if REUSE_PKG_INSTALLS_FROM_DEPS else ":0.27_deps",
+    reusable_sdk = ":0.27_reusable_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    incremental_cache_marker = select({
+        ":0.27_non_interface_test_package_incremental_enabled": ":0.27_non_interface_test_package_cache_marker",
+        "//conditions:default": None,
+    }),
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_non_interface_test_package_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    visibility = ["//:__subpackages__"],
+)
+ebuild_install_action(
+    name = "0.27_installed_no_pdepends",
+    board = "amd64-generic",
+    package = ":0.27",
+    sysroot = "//internal/sysroot:amd64-generic_sysroot",
+    requires = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19_installed_no_pdepends",
+    ],
+    xpak = {
+        "DEPEND": "<sys-devel/llvm-20\n",
+        "RDEPEND": "<sys-devel/llvm-20\n",
+    },
+    visibility = ["//:__subpackages__"],
+)
+
+filegroup(
+    name = "0.27_installed",
+    srcs = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/autofdo:0.27_installed_no_pdepends",
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19_installed_no_pdepends",
+    ],
+    visibility = ["//:__subpackages__"],
+)
+ebuild_test(
+    name = "0.27_test",
+    ebuild = "autofdo-0.27.ebuild",
+    overlay = "//internal/overlays/chromiumos",
+    category = "sys-devel",
+    package_name = "autofdo",
+    version = "0.27",
+    slot = "0/0",
+    distfiles = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": {},
+        "@//bazel/portage:omit_ebuild_src_disabled": {
+        },
+    }),
+    srcs = select({
+        "@//bazel/portage:omit_ebuild_src_enabled": [],
+        "@//bazel/portage:omit_ebuild_src_disabled": [
+            "//internal/sources/src/scripts/hooks:__tarballs__",
+            "@chromite//:src",
+        ],
+    }),
+    runtime_deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    use_flags = [
+        "amd64",
+        "elibc_glibc",
+        "kernel_linux",
+        "userland_GNU",
+        "-alpha",
+        "-amd64-fbsd",
+        "-amd64-linux",
+        "-arm",
+        "-arm-linux",
+        "-arm64",
+        "-elibc_FreeBSD",
+        "-elibc_musl",
+        "-kernel_FreeBSD",
+        "-prefix",
+        "-prefix-guest",
+        "-prefix-stack",
+        "-userland_BSD",
+    ],
+    inject_use_flags = True,
+    files = glob(["cros/**", "files/**", "*.bashrc"]),
+    board = "amd64-generic",
+    sdk = ":0.27_test_deps",
+    overlays = "//internal/overlays:board",
+    eclasses = [
+    ],
+    portage_config = [
+        "//internal/portage-config/host:lite",
+        "//internal/portage-config/target/board",
+    ],
+    bashrcs = [
+        "//internal/bashrcs/chromiumos/base:profile.bashrc",
+        "//internal/bashrcs/amd64-generic/base:profile.bashrc",
+    ],
+    ccache = selects.with_or({
+        ("@//bazel/portage:ccache_enabled_global", ":0.27_ccache_enabled_local"): True,
+        "//conditions:default": False,
+    }),
+    exec_compatible_with = [
+        ebuild_exec_contraint(
+            portage_package_name="sys-devel/autofdo",
+            is_host=False,
+        )
+    ],
+    # Bazel sandbox interferes with restoring permissions in durable trees.
+    tags = ["no-sandbox"],
+    visibility = ["//:__subpackages__"],
+)
+
+ebuild_compare_package_test(
+    name = "0.27_hermetic_test",
+    packages = [
+        ":0.27",
+        ":0.27_hermetic_test_package",
+    ],
+    size="small",
+)
+
+package_set(
+    name = "0.27_package_set",
+    deps = [
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/autofdo:0.27",
+        "//internal/packages/stage2/target/board/chromiumos/sys-devel/llvm:19",
+    ],
+    visibility = ["//:__subpackages__"],
+)
+
+string_flag(
+    name = "0.30_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+always_fail(
+    name = "0.30",
+    message = "\n--\nError analyzing ebuild!\ntarget: @" + repository_name() +
+              "/" + package_name() + "\nebuild: autofdo-0.30.ebuild\n\n" +
+              """Resolving build-time dependencies for sys-devel/autofdo-0.30: Unsatisfiable dependency: No package satisfies >=sys-devel/llvm-20\n--""",
+    visibility = ["//:__subpackages__"],
+)
+
+alias(
+    name = "0.30_hermetic_test_package",
+    actual = "0.30",
+    visibility = ["//:__subpackages__"],
+)
+
+alias(
+    name = "0.30_package_set",
+    actual = "0.30",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "0.30_debug",
+    actual = "0.30",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "0.30_installed_no_pdepends",
+    actual = "0.30",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "0.30_installed",
+    actual = "0.30",
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "0.30_hermetic_test",
+    packages = [
+        ":0.30",
+        ":0.30_hermetic_test_package",
+    ],
+    size="small",
+)
+

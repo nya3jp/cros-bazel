@@ -1,0 +1,210 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+alias(
+    name = "0.27",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.27",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.27_debug",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.27_debug",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.27_package_set",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.27_package_set",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.27_install",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.27_install",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.27_installed",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.27_installed",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.27_install_list",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.27_install_list",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.30",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.30",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.30_debug",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.30_debug",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.30_package_set",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.30_package_set",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.30_install",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.30_install",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.30_installed",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.30_installed",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "0.30_install_list",
+    actual = "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.30_install_list",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "autofdo",
+    actual = ":0.30",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "debug",
+    actual = ":0.30_debug",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "autofdo_debug",
+    actual = ":0.30_debug",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "package_set",
+    actual = ":0.30_package_set",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "autofdo_package_set",
+    actual = ":0.30_package_set",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "install",
+    actual = ":0.30_install",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "autofdo_install",
+    actual = ":0.30_install",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "installed",
+    actual = ":0.30_installed",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "autofdo_installed",
+    actual = ":0.30_installed",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "install_list",
+    actual = ":0.30_install_list",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+alias(
+    name = "autofdo_install_list",
+    actual = ":0.30_install_list",
+    visibility = [
+        "//images:__pkg__",
+        "@//bazel:internal",
+    ],
+)
+test_suite(
+    name = "0.27_test",
+    tests = [ "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.27_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "0.30_test",
+    tests = [ "//internal/packages/stage2/host/chromiumos/sys-devel/autofdo:0.30_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "test",
+    tests = [ ":0.30_test" ],
+    visibility = ["@//bazel:internal"],
+)
+test_suite(
+    name = "autofdo_test",
+    tests = [ ":0.30_test" ],
+    visibility = ["@//bazel:internal"],
+)

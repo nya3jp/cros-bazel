@@ -1,0 +1,69 @@
+# AUTO-GENERATED FILE. DO NOT EDIT.
+
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+load("@//bazel/build_defs:always_fail.bzl", "always_fail")
+load("@//bazel/cros_pkg/private:direct_ebuild.bzl", "direct_ebuild")
+load("@//bazel/portage/build_defs:binary_package.bzl", "add_runtime_deps")
+load("@//bazel/portage/build_defs:ebuild.bzl", "ebuild", "ebuild_debug", "ebuild_install_action", "ebuild_test", "ebuild_compare_package_test", "ebuild_exec_contraint", "REUSE_PKG_INSTALLS_FROM_DEPS")
+load("@//bazel/portage/build_defs:package_set.bzl", "package_set")
+load("@//bazel/portage/build_defs:sdk.bzl", "sdk_install_deps", "sdk_install_host_and_target_deps")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
+string_flag(
+    name = "1_prebuilt",
+    build_setting_default = "",
+    visibility = ["//:__subpackages__"],
+)
+
+always_fail(
+    name = "1",
+    message = "\n--\nError analyzing ebuild!\ntarget: @" + repository_name() +
+              "/" + package_name() + "\nebuild: target-os-test-1.ebuild\n\n" +
+              """Failed to analyze sys-devel/autofdo-0.30: Resolving build-time dependencies for sys-devel/autofdo-0.30: Unsatisfiable dependency: No package satisfies >=sys-devel/llvm-20\n--""",
+    visibility = ["//:__subpackages__"],
+)
+
+alias(
+    name = "1_hermetic_test_package",
+    actual = "1",
+    visibility = ["//:__subpackages__"],
+)
+
+alias(
+    name = "1_package_set",
+    actual = "1",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "1_debug",
+    actual = "1",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "1_installed_no_pdepends",
+    actual = "1",
+    visibility = ["@//bazel:internal"],
+)
+
+alias(
+    name = "1_installed",
+    actual = "1",
+    visibility = ["@//bazel:internal"],
+)
+
+ebuild_compare_package_test(
+    name = "1_hermetic_test",
+    packages = [
+        ":1",
+        ":1_hermetic_test_package",
+    ],
+    size="small",
+)
+
