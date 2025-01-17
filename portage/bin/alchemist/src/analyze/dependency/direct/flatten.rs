@@ -5,6 +5,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use itertools::Itertools;
 
 use crate::{
     data::UseMap,
@@ -89,7 +90,29 @@ pub fn flatten_dependencies(
     let deps = deps.map_tree_par(|dep| match dep {
         Dependency::Composite(composite) => match *composite {
             CompositeDependency::AnyOf { children } if !children.is_empty() => {
-                children.into_iter().next().unwrap()
+                // If all children are false, concat the error messages since
+                // they are helpful for debugging what happened.
+                if children.iter().all(|c| match c {
+                    Dependency::Composite(composite) => match &**composite {
+                        CompositeDependency::Constant { value, .. } => !value,
+                        _ => false,
+                    },
+                    _ => false,
+                }) {
+                    let result = children
+                        .iter()
+                        .filter_map(|c| match c {
+                            Dependency::Composite(composite) => match &**composite {
+                                CompositeDependency::Constant { reason, .. } => Some(reason),
+                                _ => None,
+                            },
+                            _ => None,
+                        })
+                        .join(", ");
+                    Dependency::new_constant(false, &format!("any-of ( {result} )"))
+                } else {
+                    children.into_iter().next().unwrap()
+                }
             }
             other => Dependency::new_composite(other),
         },
