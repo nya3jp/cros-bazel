@@ -53,17 +53,14 @@ def _cros_chrome_repository_impl(ctx):
 
     ctx.template(".gclient", ctx.attr._gclient_template, {
         "{internal}": str(ctx.attr.internal),
-        "{tag}": ctx.attr.tag,
+        "{revision}": ctx.attr.revision,
     })
-
-    reset_ref = "tags/" + ctx.attr.tag
-    fetch_ref = "tags/" + ctx.attr.tag + ":tags/" + ctx.attr.tag
 
     ctx.delete("src")
     _exec(ctx, ["git", "init", "src"])
     _git(ctx, "src", ["remote", "add", "origin", ctx.attr.remote])
-    _git(ctx, "src", ["fetch", "--depth=1", "origin", fetch_ref], "Fetching " + fetch_ref)
-    _git(ctx, "src", ["reset", "--hard", reset_ref], "Resetting to " + reset_ref)
+    _git(ctx, "src", ["fetch", "--depth=1", "origin", ctx.attr.revision], "Fetching " + ctx.attr.revision)
+    _git(ctx, "src", ["reset", "--hard", ctx.attr.revision], "Resetting to " + ctx.attr.revision)
     _git(ctx, "src", ["clean", "-xdf"])
 
     # The chromium repo is huge and gclient will perform a blind `git fetch`
@@ -75,7 +72,7 @@ def _cros_chrome_repository_impl(ctx):
         [
             "config",
             "remote.origin.fetch",
-            "refs/tags/{}:refs/tags/{}".format(ctx.attr.tag, ctx.attr.tag),
+            ctx.attr.revision,
         ],
     )
 
@@ -250,8 +247,8 @@ _cros_sdk_repository_attrs = {
         doc = "The URI of the remote Chromium Git repository",
         default = "https://chromium.googlesource.com/chromium/src.git",
     ),
-    "tag": attr.string(
-        doc = """The expected SHA-256 of the file downloaded.""",
+    "revision": attr.string(
+        doc = """The expected revision of the file downloaded.""",
         mandatory = True,
     ),
     "_build_file": attr.label(

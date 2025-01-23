@@ -7,7 +7,7 @@
 solutions = [
     {
         "name": "src",
-        "url": "https://chromium.googlesource.com/chromium/src.git@{tag}",
+        "url": "https://chromium.googlesource.com/chromium/src.git@{revision}",
         "deps_file": "DEPS",
         "managed": True,
         "custom_deps": {},

@@ -41,7 +41,7 @@ enum Repository {
     #[allow(clippy::enum_variant_names)]
     CrosChromeRepository {
         name: String,
-        tag: String,
+        revision: String,
         internal: bool,
     },
 }
@@ -103,22 +103,31 @@ fn generate_deps(all_sources: &[&PackageSources]) -> Result<Vec<Repository>> {
         .iter()
         .flat_map(|sources| &sources.local_sources)
         .filter_map(|origin| match origin {
-            PackageLocalSource::Chrome(version, chrome_type) => Some((version, chrome_type)),
+            PackageLocalSource::Chrome { .. } => Some(origin),
             _ => None,
         })
         .unique()
         .sorted()
-        .map(|(version, chrome_type)| match chrome_type {
-            ChromeType::Public => Repository::CrosChromeRepository {
-                name: format!("chrome-{}", version),
-                tag: version.clone(),
+        .filter_map(|chrome| match chrome {
+            PackageLocalSource::Chrome {
+                version: chrome_version,
+                git_revision,
+                r#type: ChromeType::Public,
+            } => Some(Repository::CrosChromeRepository {
+                name: format!("chrome-{}", chrome_version),
+                revision: git_revision.clone(),
                 internal: false,
-            },
-            ChromeType::Internal => Repository::CrosChromeRepository {
-                name: format!("chrome-internal-{}", version),
-                tag: version.clone(),
+            }),
+            PackageLocalSource::Chrome {
+                version: chrome_version,
+                git_revision,
+                r#type: ChromeType::Internal,
+            } => Some(Repository::CrosChromeRepository {
+                name: format!("chrome-internal-{}", chrome_version),
+                revision: git_revision.clone(),
                 internal: true,
-            },
+            }),
+            _ => None, // should never happen.
         });
 
     Ok(unique_dists.chain(repos).chain(chrome).collect())

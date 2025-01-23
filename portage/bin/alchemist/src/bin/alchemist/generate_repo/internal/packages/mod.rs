@@ -221,12 +221,16 @@ impl EBuildEntry {
                     "//internal/sources/{}:__tarballs__",
                     src.to_string_lossy()
                 )),
-                PackageLocalSource::Chrome(version, ChromeType::Public) => {
-                    Some(format!("@portage_deps//:chrome-{version}_src"))
-                }
-                PackageLocalSource::Chrome(version, ChromeType::Internal) => {
-                    Some(format!("@portage_deps//:chrome-internal-{version}_src"))
-                }
+                PackageLocalSource::Chrome {
+                    version,
+                    r#type: ChromeType::Public,
+                    ..
+                } => Some(format!("@portage_deps//:chrome-{version}_src")),
+                PackageLocalSource::Chrome {
+                    version,
+                    r#type: ChromeType::Internal,
+                    ..
+                } => Some(format!("@portage_deps//:chrome-internal-{version}_src")),
                 PackageLocalSource::Chromite => Some("@chromite//:src".to_string()),
                 PackageLocalSource::DepotTools => Some("@depot_tools//:src".to_string()),
                 PackageLocalSource::SrcFile(_) => None,
@@ -284,9 +288,11 @@ impl EBuildEntry {
             .iter()
             .filter_map(|source| match source {
                 // Add cipd-cache as a cache source for chromeos-chrome.
-                PackageLocalSource::Chrome(version, chrome_type)
-                    if category == "chromeos-base" && package_name == "chromeos-chrome" =>
-                {
+                PackageLocalSource::Chrome {
+                    version,
+                    r#type: chrome_type,
+                    ..
+                } if category == "chromeos-base" && package_name == "chromeos-chrome" => {
                     let repo_name = match chrome_type {
                         ChromeType::Public => "chrome",
                         ChromeType::Internal => "chrome-internal",

@@ -20,6 +20,7 @@ use itertools::izip;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use url::Url;
+use version::VersionSuffixLabel;
 
 use crate::{
     bash::vars::BashValue,
@@ -36,6 +37,9 @@ use super::restrict::analyze_restricts;
 /// Represents a chrome version number
 /// i.e., 113.0.5623.0
 pub type ChromeVersion = String;
+
+/// Represents the git revision of chrome source code.
+pub type ChromeGitRevision = String;
 
 /// Represents the type of the chrome source code.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -61,7 +65,11 @@ pub enum PackageLocalSource {
     /// Chromite source code at `/mnt/host/source/chromite`.
     Chromite,
     /// Chrome source code.
-    Chrome(ChromeVersion, ChromeType),
+    Chrome {
+        version: ChromeVersion,
+        git_revision: ChromeGitRevision,
+        r#type: ChromeType,
+    },
     /// depot_tools at /mnt/host/source/src/chromium/depot_tools.
     DepotTools,
 }
@@ -350,13 +358,46 @@ fn apply_local_sources_workarounds(
             .first()
             .map_or(false, |main| main != "9999")
     {
-        let version = details.as_basic_data().version.main().join(".");
+        let chrome_tag_version = details.as_basic_data().version.main().join(".");
+        let version = if let Some(first) = details.as_basic_data().version.suffixes().first() {
+            match first.label() {
+                // If ebuild file PVR has _preXXXXX, it means this is a main branch Chrome before
+                // the next canary release. We should treat their version differently as the main
+                // part of ebuild version. Note: 112.0.1234.0 is newer than 112.0.123.0_pre1123122
+                VersionSuffixLabel::Pre => format!("{}_pre{}", chrome_tag_version, first.number()),
+                VersionSuffixLabel::Rc => chrome_tag_version,
+                _ => {
+                    bail!("Unsupported ebuild version suffix: {}", first);
+                }
+            }
+        } else {
+            chrome_tag_version
+        };
         let chrome_type = if *details.use_map.get("chrome_internal").unwrap_or(&false) {
             ChromeType::Internal
         } else {
             ChromeType::Public
         };
-        local_sources.push(PackageLocalSource::Chrome(version, chrome_type));
+        let git_revision = match details.metadata.vars.hash_map().get("GIT_COMMIT") {
+            None => {
+                bail!("GIT_COMMIT is not found from ebuild.");
+            }
+            Some(BashValue::Scalar(value)) => {
+                if value.is_empty() {
+                    bail!("GIT_COMMIT must not be empty");
+                } else {
+                    value.clone()
+                }
+            }
+            Some(other) => {
+                bail!("Unsupported GIT_COMMIT: {:?}", other);
+            }
+        };
+        local_sources.push(PackageLocalSource::Chrome {
+            version: version,
+            git_revision: git_revision,
+            r#type: chrome_type,
+        });
     }
 
     // Building chromium source requires depot_tools.
