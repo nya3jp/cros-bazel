@@ -85,7 +85,7 @@ def _download_file(repository_ctx, url, downloaded_file_path):
     if protocol != "cipd":
         fail("Expected cipd:// URL, got %s" % (url))
 
-    package, version = path.split(":")
+    package, version = path.split(":", 1)
 
     repository_ctx.report_progress("Downloading from CIPD.")
 
