@@ -12,7 +12,8 @@ build:rbe_exec --spawn_strategy=worker,sandboxed,local
 build:rbe_exec --strategy Ebuild=remote
 # this target fails on RBE because cache_srcs are not declared as inputs (b/323180327), and because we do not support running reclient on RBE (b/336841361)
 build:rbe_exec --strategy_regexp='Building @@_main~portage~portage//internal/packages/stage2/target/board/chromiumos/chromeos-base/chromeos-chrome:.*=worker,sandboxed,local'
-# this target fails on RBE because we do not support running reclient on RBE (b/336841361)
+# these targets fails on RBE because we do not support running reclient on RBE (b/336841361)
 build:rbe_exec --strategy_regexp='Building @@_main~portage~portage//internal/packages/stage1/target/host/chromiumos/sys-devel/llvm:.*=worker,sandboxed,local'
+build:rbe_exec --strategy_regexp='Building @@_main~portage~portage//internal/packages/stage2/target/board/chromiumos/sys-boot/coreboot:.*=worker,sandboxed,local'
 # TODO(b/332731744): Remove this line
 build:rbe_exec --strategy_regexp='Building @@_main~portage~portage//internal/packages/stage2/target/board/chromiumos/chromeos-base/factory_installer:.*=worker,sandboxed,local'
