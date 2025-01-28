@@ -86,10 +86,16 @@ def compute_install_list(sdk, install_set, fail_on_slot_conflict = True):
             if package.partial.path != conflicting_package.partial.path:
                 if fail_on_slot_conflict:
                     fail(
-                        ("Slot conflict: cannot install %s and %s that have " +
-                         "the same slot key %s") % (
-                            package.file.path,
-                            conflicting_package.file.path,
+                        ("Slot conflict: cannot install `%s/%s-%s:%s` and `%s/%s-%s:%s` " +
+                         "that have the same slot key `%s`") % (
+                            package.category,
+                            package.package_name,
+                            package.version,
+                            package.slot.split("/")[0],
+                            conflicting_package.category,
+                            conflicting_package.package_name,
+                            conflicting_package.version,
+                            conflicting_package.slot.split("/")[0],
                             slot_key,
                         ),
                     )
