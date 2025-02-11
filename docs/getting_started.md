@@ -84,11 +84,6 @@ the sysroot, e.g. `cros build-image` and `cros deploy`.
 
 You can alternatively run Bazel directly to build certain targets.
 
-*** promo
-Currently you need to use `/mnt/host/source/chromite/bin/bazel` instead of
-`/usr/bin/bazel` that is found first on the standard `$PATH`.
-***
-
 The syntax for specifying a Portage package is:
 
 ```
@@ -102,13 +97,13 @@ Now you're ready to start building. To build a single Portage package, e.g.
 `sys-apps/attr`:
 
 ```sh
-$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/sys-apps/attr
+$ BOARD=amd64-generic bazel build @portage//target/sys-apps/attr
 ```
 
 To build all packages included in the ChromeOS base image:
 
 ```sh
-$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/virtual/target-os:package_set
+$ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set
 ```
 
 A `package_set` is a special target that also includes the target's [PDEPEND]s.
@@ -116,13 +111,13 @@ A `package_set` is a special target that also includes the target's [PDEPEND]s.
 To build a package for the host, use the `host` prefix:
 
 ```sh
-$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//host/app-shells/bash
+$ BOARD=amd64-generic bazel build @portage//host/app-shells/bash
 ```
 
 To build all packages included in the ChromeOS test image:
 
 ```sh
-$ BOARD=amd64-generic /mnt/host/source/chromite/bin/bazel build @portage//target/virtual/target-os:package_set @portage//target/virtual/target-os-dev:package_set @portage//target/virtual/target-os-test:package_set
+$ BOARD=amd64-generic bazel build @portage//target/virtual/target-os:package_set @portage//target/virtual/target-os-dev:package_set @portage//target/virtual/target-os-test:package_set
 ```
 
 *** note
