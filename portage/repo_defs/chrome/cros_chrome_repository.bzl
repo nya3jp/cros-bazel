@@ -4,7 +4,7 @@
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 
-def _exec(ctx, cmd, msg = None, retries = 0, **kwargs):
+def _exec(ctx, cmd, msg = None, retries = 0, delay = 60, **kwargs):
     env = dict(ctx.os.environ)
     env.update(kwargs)
     if msg:
@@ -19,8 +19,12 @@ def _exec(ctx, cmd, msg = None, retries = 0, **kwargs):
                 fail("Error running attempt %s/%s for command %s:\n%s%s" %
                      (attempt + 1, retries + 1, cmd, st.stdout, st.stderr))
             else:
-                print("Error running attempt %s/%s for command %s:\n%s%s\nRetrying." %
-                      (attempt + 1, retries + 1, cmd, st.stdout, st.stderr))
+                print("Error running attempt %s/%s for command %s:\n%s%s\nRetrying in %s s." %
+                      (attempt + 1, retries + 1, cmd, st.stdout, st.stderr, delay))
+
+                # Ignore the return code since we don't want to fail if sleep
+                # fails for some reason.
+                ctx.execute(["sleep", str(delay)])
         else:
             print("Finished running command %s (attempt %s/%s)" % (cmd, attempt + 1, retries + 1))
             break
