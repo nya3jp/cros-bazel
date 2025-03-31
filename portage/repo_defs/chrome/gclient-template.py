@@ -13,11 +13,12 @@ solutions = [
         "custom_deps": {},
         "custom_vars": {
             "checkout_src_internal": {internal},
-            # We don't need any arch specific sysroots.
+            # b/407487248: Chrome is switching to using the included sysroots.
+            # Only enable the ones that we need.
             "checkout_arm": False,
             "checkout_arm64": False,
             "checkout_x86": False,
-            "checkout_x64": False,
+            "checkout_x64": True,
         },
     },
 ]
