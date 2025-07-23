@@ -868,7 +868,11 @@ PACKAGE_TO_CORE_COUNT = {
     "dev-lang/python": {HOST: 2, TARGET: 2},
     "dev-lang/python-exec": {HOST: 2, TARGET: 2},
     "dev-lang/python-exec-conf": {HOST: 2, TARGET: 2},
-    "dev-lang/rust-bootstrap": {HOST: 4},
+    # b/433717967: rust-bootstrap internally just unpacks a tarball _most of
+    # the time_. That said, when Rust upgrades are batched, rust-boostrap may
+    # be built on the fly in the CQ. In that case, it should be given as much
+    # compute as rust-host. Otherwise, we end up hitting timeouts.
+    "dev-lang/rust-bootstrap": {HOST: 16},
     "dev-lang/rust-host": {HOST: 16},
     "dev-lang/swig": {HOST: 4},
     "dev-lang/tcl": {HOST: 4},
