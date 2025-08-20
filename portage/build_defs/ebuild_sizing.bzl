@@ -123,7 +123,6 @@ PACKAGE_TO_CORE_COUNT = {
     "app-i18n/chromeos-zhuyin": {TARGET: 2},
     "app-i18n/hangul-input": {TARGET: 2},
     "app-i18n/input-tools": {TARGET: 2},
-    "app-i18n/input-tools-nacl": {TARGET: 2},
     "app-i18n/keyboard-input": {TARGET: 2},
     "app-metrics/node_exporter": {TARGET: 4},
     "app-misc/c_rehash": {HOST: 4, TARGET: 4},
