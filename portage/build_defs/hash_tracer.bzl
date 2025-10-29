@@ -65,7 +65,7 @@ def _generate_hash_action(ctx, files):
             for FILE in "$@"; do
                 if [[ -d "${FILE}" ]]; then
                     pushd "${FILE}" >/dev/null
-                    HASH="$(find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -f1 -d ' ')"
+                    HASH="$(find . -type f -readable -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -f1 -d ' ')"
                     popd >/dev/null
                 else
                     HASH="$(sha256sum "${FILE}" | cut -f1 -d ' ')"
