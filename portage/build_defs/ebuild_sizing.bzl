@@ -1382,7 +1382,6 @@ PACKAGE_TO_CORE_COUNT = {
     "net-vpn/wireguard-tools": {TARGET: 2},
     "net-wireless/ax211-updater": {TARGET: 2},
     "net-wireless/bluez": {TARGET: 4},
-    "net-wireless/crda": {TARGET: 2},
     "net-wireless/floss": {TARGET: 32},
     "net-wireless/floss_tools": {HOST: 4},
     "net-wireless/hostap-test": {TARGET: 8},
