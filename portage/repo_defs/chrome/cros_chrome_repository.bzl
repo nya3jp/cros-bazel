@@ -37,8 +37,16 @@ def _git(ctx, repo, args, msg = None):
 def _exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, **kwargs):
     """Runs the specified command in a luci context which uses the GCE metadata host for authentication if needed"""
     wrapper = []
-    if ctx.os.environ.get("GCE_METADATA_HOST"):
+    has_gce = bool(ctx.os.environ.get("GCE_METADATA_HOST"))
+    has_luci_ctx = bool(ctx.os.environ.get("LUCI_CONTEXT"))
+
+    if has_gce and not has_luci_ctx:
+        print("_exec_with_gce_context_if_needed: Wrapping in luci-auth context (GCE_METADATA_HOST present, LUCI_CONTEXT missing).")
         wrapper = ["luci-auth", "context", "-service-account-json", ":gce", "--"]
+    else:
+        print("_exec_with_gce_context_if_needed: Using ambient environment (GCE_METADATA_HOST=%s, LUCI_CONTEXT=%s)." %
+              (has_gce, has_luci_ctx))
+
     _exec(ctx, wrapper + cmd, msg, **kwargs)
 
 def _cros_chrome_repository_impl(ctx):
@@ -268,4 +276,8 @@ _cros_sdk_repository_attrs = {
 cros_chrome_repository = repository_rule(
     implementation = _cros_chrome_repository_impl,
     attrs = _cros_sdk_repository_attrs,
+    environ = [
+        "GCE_METADATA_HOST",
+        "LUCI_CONTEXT",
+    ],
 )
