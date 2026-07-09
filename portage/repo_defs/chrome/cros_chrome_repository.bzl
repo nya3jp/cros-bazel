@@ -47,7 +47,7 @@ def _exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, **kwargs
         print("_exec_with_gce_context_if_needed: Using ambient environment (GCE_METADATA_HOST=%s, LUCI_CONTEXT=%s)." %
               (has_gce, has_luci_ctx))
 
-    _exec(ctx, wrapper + cmd, msg, **kwargs)
+    _exec(ctx, wrapper + cmd, msg, retries = retries, **kwargs)
 
 def _cros_chrome_repository_impl(ctx):
     """Repository rule that downloads the Chromium/Chrome source."""
@@ -110,6 +110,7 @@ def _cros_chrome_repository_impl(ctx):
             "12",
         ],
         "Fetching third_party chromium dependencies",
+        retries = 1,
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
@@ -128,6 +129,7 @@ def _cros_chrome_repository_impl(ctx):
         ctx,
         [depot_tools_path.get_child("ensure_bootstrap")],
         "Downloading depot_tools dependencies",
+        retries = 1,
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
@@ -145,6 +147,7 @@ def _cros_chrome_repository_impl(ctx):
             "12",
         ],
         "Running chromium hooks",
+        retries = 1,
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
