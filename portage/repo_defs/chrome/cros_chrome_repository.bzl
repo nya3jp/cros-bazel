@@ -40,7 +40,10 @@ def _exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, **kwargs
     has_gce = bool(ctx.os.environ.get("GCE_METADATA_HOST"))
     has_luci_ctx = bool(ctx.os.environ.get("LUCI_CONTEXT"))
 
-    if has_gce and not has_luci_ctx:
+    if has_luci_ctx:
+        print("_exec_with_gce_context_if_needed: Wrapping in luci-auth context (LUCI_CONTEXT present).")
+        wrapper = ["luci-auth", "context", "--"]
+    elif has_gce:
         print("_exec_with_gce_context_if_needed: Wrapping in luci-auth context (GCE_METADATA_HOST present, LUCI_CONTEXT missing).")
         wrapper = ["luci-auth", "context", "-service-account-json", ":gce", "--"]
     else:
@@ -282,5 +285,6 @@ cros_chrome_repository = repository_rule(
     environ = [
         "GCE_METADATA_HOST",
         "LUCI_CONTEXT",
+        "HOME",
     ],
 )
