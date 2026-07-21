@@ -46,10 +46,10 @@ def exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, delay = 6
 
     if has_luci_ctx:
         print("_exec_with_gce_context_if_needed: Wrapping in luci-auth context (LUCI_CONTEXT present).")
-        wrapper = ["luci-auth", "context", "--"]
+        wrapper = ["luci-auth", "context", "-scopes-context", "--"]
     elif has_gce:
         print("_exec_with_gce_context_if_needed: Wrapping in luci-auth context (GCE_METADATA_HOST present, LUCI_CONTEXT missing).")
-        wrapper = ["luci-auth", "context", "-service-account-json", ":gce", "--"]
+        wrapper = ["luci-auth", "context", "-scopes-context", "-service-account-json", ":gce", "--"]
     else:
         print("_exec_with_gce_context_if_needed: Using ambient environment (GCE_METADATA_HOST=%s, LUCI_CONTEXT=%s)." %
               (has_gce, has_luci_ctx))
