@@ -448,3 +448,28 @@ fn inaccessible_files() -> Result<()> {
 
     Ok(())
 }
+
+// content_hash must not change when restoration makes an unreadable-mode
+// file (0110) actually unreadable on disk.
+#[test]
+fn content_hash_deterministic_across_restore() -> Result<()> {
+    let dir = SafeTempDir::new()?;
+    let dir = dir.path();
+
+    std::fs::write(dir.join("readable.txt"), "hello")?;
+    std::fs::write(dir.join("secret"), "cannot be read once restored")?;
+    set_permissions(dir.join("secret"), PermissionsExt::from_mode(0o110))?;
+
+    DurableTree::convert(dir)?;
+    DurableTree::cool_down_for_testing(dir)?;
+
+    let cold = DurableTree::content_hash(dir)?;
+
+    // Restore the real file modes like the first consuming action does.
+    let tree = DurableTree::expand(dir)?;
+    let restored = DurableTree::content_hash(dir)?;
+    drop(tree);
+
+    assert_eq!(cold, restored);
+    Ok(())
+}

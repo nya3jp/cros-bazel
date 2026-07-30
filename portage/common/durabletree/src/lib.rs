@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 mod consts;
+mod content_hash;
 mod convert;
 mod expand;
 mod manifest;
@@ -10,7 +11,7 @@ mod manifest;
 mod tests;
 mod util;
 
-use crate::{convert::convert_impl, expand::expand_impl};
+use crate::{content_hash::content_hash_impl, convert::convert_impl, expand::expand_impl};
 use anyhow::Result;
 use consts::{MARKER_FILE_NAME, RAW_DIR_NAME};
 use expand::ExtraDir;
@@ -113,6 +114,15 @@ impl DurableTree {
             return Ok(false);
         }
         Ok(root_dir.join(MARKER_FILE_NAME).try_exists()?)
+    }
+
+    /// Computes a deterministic SHA256 hash of the tree content.
+    ///
+    /// Files whose recorded mode has no read bits are covered through the
+    /// manifest only, so the result does not depend on whether the tree has
+    /// been restored and it is safe to run concurrently with expand.
+    pub fn content_hash(root_dir: &Path) -> Result<String> {
+        content_hash_impl(root_dir)
     }
 
     /// Converts a plain directory to a durable tree in place.
