@@ -1,0 +1,8 @@
+# Direct Bazelisk to download prebuilt Bazel binary releases directly from public
+# ChromeOS Google Storage mirrors instead of upstream external servers.
+BAZELISK_FORMAT_URL=https://storage.googleapis.com/chromeos-localmirror/distfiles/bazel-%v-%o-%m%e
+
+# Cryptographic SHA-256 digest verification for bazel-7.2.0-linux-x86_64.
+# NOTE: When updating `.bazelversion`, upload the new static binary to
+# gs://chromeos-localmirror/distfiles/ and update this hash.
+BAZELISK_VERIFY_SHA256=09bac5c11165a6ab0b7a90d6937c8bc3fcdcda662ffe0590e87ac2ae0e5e8978

@@ -3,43 +3,13 @@
 # found in the LICENSE file.
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-
-def _exec(ctx, cmd, msg = None, retries = 0, delay = 60, **kwargs):
-    env = dict(ctx.os.environ)
-    env.update(kwargs)
-    if msg:
-        ctx.report_progress(msg)
-
-    st = None
-    for attempt in range(0, retries + 1):
-        # Use 3600 as timeout because gclient can take a long time to finish.
-        st = ctx.execute(cmd, timeout = 3600, environment = env)
-        if st.return_code:
-            if attempt == retries:
-                fail("Error running attempt %s/%s for command %s:\n%s%s" %
-                     (attempt + 1, retries + 1, cmd, st.stdout, st.stderr))
-            else:
-                print("Error running attempt %s/%s for command %s:\n%s%s\nRetrying in %s s." %
-                      (attempt + 1, retries + 1, cmd, st.stdout, st.stderr, delay))
-
-                # Ignore the return code since we don't want to fail if sleep
-                # fails for some reason.
-                ctx.execute(["sleep", str(delay)])
-        else:
-            print("Finished running command %s (attempt %s/%s)" % (cmd, attempt + 1, retries + 1))
-            break
-    return st.stdout
-
-def _git(ctx, repo, args, msg = None):
-    cmd = ["git", "-C", repo] + args
-    return _exec(ctx, cmd, msg, retries = 1)
-
-def _exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, **kwargs):
-    """Runs the specified command in a luci context which uses the GCE metadata host for authentication if needed"""
-    wrapper = []
-    if ctx.os.environ.get("GCE_METADATA_HOST"):
-        wrapper = ["luci-auth", "context", "-service-account-json", ":gce", "--"]
-    _exec(ctx, wrapper + cmd, msg, **kwargs)
+load(
+    "//bazel/repo_defs:common.bzl",
+    "REPO_AUTH_ENVIRON",
+    _exec = "exec",
+    _exec_with_gce_context_if_needed = "exec_with_gce_context_if_needed",
+    _git = "git",
+)
 
 def _cros_chrome_repository_impl(ctx):
     """Repository rule that downloads the Chromium/Chrome source."""
@@ -102,6 +72,7 @@ def _cros_chrome_repository_impl(ctx):
             "12",
         ],
         "Fetching third_party chromium dependencies",
+        retries = 1,
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
@@ -120,6 +91,7 @@ def _cros_chrome_repository_impl(ctx):
         ctx,
         [depot_tools_path.get_child("ensure_bootstrap")],
         "Downloading depot_tools dependencies",
+        retries = 1,
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
@@ -137,6 +109,7 @@ def _cros_chrome_repository_impl(ctx):
             "12",
         ],
         "Running chromium hooks",
+        retries = 1,
         PATH = "{}:{}".format(depot_tools_path, ctx.os.environ["PATH"]),
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
@@ -268,4 +241,5 @@ _cros_sdk_repository_attrs = {
 cros_chrome_repository = repository_rule(
     implementation = _cros_chrome_repository_impl,
     attrs = _cros_sdk_repository_attrs,
+    environ = REPO_AUTH_ENVIRON,
 )

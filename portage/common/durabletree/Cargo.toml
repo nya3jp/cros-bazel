@@ -10,10 +10,12 @@ fileutil = { path = "../fileutil" }
 testutil = { path = "../testutil" }
 
 anyhow.workspace = true
+hex.workspace = true
 itertools.workspace = true
 nix.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 tar.workspace = true
 tracing.workspace = true
 walkdir.workspace = true
@@ -22,5 +24,3 @@ zstd.workspace = true
 
 [dev-dependencies]
 libc.workspace = true
-hex.workspace = true
-sha2.workspace = true
