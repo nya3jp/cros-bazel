@@ -18,6 +18,7 @@ def _depot_tools_repository_impl(ctx):
         msg = "Fetching depot_tools " + ctx.attr.commit,
         retries = 3,
         delay = 10,
+        GIT_CONFIG_GLOBAL = "/dev/null",
     )
     _exec(ctx, ["git", "reset", "--hard", ctx.attr.commit])
     _exec_with_gce_context_if_needed(

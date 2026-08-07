@@ -34,9 +34,9 @@ def exec(ctx, cmd, msg = None, retries = 0, delay = 60, **kwargs):
             break
     return st.stdout
 
-def git(ctx, repo, args, msg = None):
+def git(ctx, repo, args, msg = None, **kwargs):
     cmd = ["git", "-C", repo] + args
-    return exec(ctx, cmd, msg, retries = 1)
+    return exec(ctx, cmd, msg, retries = 1, **kwargs)
 
 def exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, delay = 60, **kwargs):
     """Runs the specified command in a luci context which uses the GCE metadata host for authentication if needed."""

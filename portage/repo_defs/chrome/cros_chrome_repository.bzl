@@ -33,7 +33,18 @@ def _cros_chrome_repository_impl(ctx):
     ctx.delete("src")
     _exec(ctx, ["git", "init", "src"])
     _git(ctx, "src", ["remote", "add", "origin", ctx.attr.remote])
-    _git(ctx, "src", ["fetch", "--depth=1", "origin", ctx.attr.revision], "Fetching " + ctx.attr.revision)
+    _git(
+        ctx,
+        "src",
+        [
+            "fetch",
+            "--depth=1",
+            "origin",
+            ctx.attr.revision,
+        ],
+        "Fetching " + ctx.attr.revision,
+        GIT_CONFIG_GLOBAL = "/dev/null",
+    )
     _git(ctx, "src", ["reset", "--hard", ctx.attr.revision], "Resetting to " + ctx.attr.revision)
     _git(ctx, "src", ["clean", "-xdf"])
 
