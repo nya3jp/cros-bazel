@@ -5,6 +5,7 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load(
     "//bazel/repo_defs:common.bzl",
+    "GIT_WRAPPER_ATTRS",
     "REPO_AUTH_ENVIRON",
     _exec = "exec",
     _exec_with_gce_context_if_needed = "exec_with_gce_context_if_needed",
@@ -93,6 +94,7 @@ def _cros_chrome_repository_impl(ctx):
         GIT_TRACE = "1",
         GIT_TRACE_CURL = "1",
         GIT_TRACE_CURL_NO_DATA = "1",
+        INFRA_GIT_WRAPPER_TRACE = "1",
     )
 
     # When running hooks `update_depot_tools_toggle.py` will write this file
@@ -231,28 +233,29 @@ def _cros_chrome_repository_impl(ctx):
     ctx.file("WORKSPACE", "workspace(name = \"{name}\")\n".format(name = ctx.name))
     ctx.template("BUILD.bazel", ctx.attr._build_file)
 
-_cros_sdk_repository_attrs = {
-    "internal": attr.bool(
+_cros_sdk_repository_attrs = dict(
+    GIT_WRAPPER_ATTRS,
+    internal = attr.bool(
         doc = """If true download Chrome if false download Chromium.""",
         mandatory = True,
     ),
-    "remote": attr.string(
+    remote = attr.string(
         doc = "The URI of the remote Chromium Git repository",
         default = "https://chromium.googlesource.com/chromium/src.git",
     ),
-    "revision": attr.string(
+    revision = attr.string(
         doc = """The expected revision of the file downloaded.""",
         mandatory = True,
     ),
-    "_build_file": attr.label(
+    _build_file = attr.label(
         allow_single_file = True,
         default = ":BUILD.chrome-template",
     ),
-    "_gclient_template": attr.label(
+    _gclient_template = attr.label(
         doc = """.gclient template.""",
         default = ":gclient-template.py",
     ),
-}
+)
 
 cros_chrome_repository = repository_rule(
     implementation = _cros_chrome_repository_impl,

@@ -6,11 +6,13 @@ load("//bazel/portage/repo_defs/alpine:repositories.bzl", "alpine_repository")
 load("//bazel/portage/repo_defs/zstd:repositories.bzl", "zstd_repository")
 load(":chromite/repositories.bzl", "chromite")
 load(":depot_tools/repositories.bzl", "depot_tools_repository")
+load(":git_wrapper/repositories.bzl", "git_wrapper_repository")
 
 def _cros_deps_impl(_module_ctx):
     alpine_repository()
     chromite(name = "chromite")
     depot_tools_repository()
+    git_wrapper_repository()
     zstd_repository()
 
 cros_deps = module_extension(
