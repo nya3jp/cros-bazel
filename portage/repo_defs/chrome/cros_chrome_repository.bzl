@@ -73,6 +73,7 @@ def _cros_chrome_repository_impl(ctx):
         [
             depot_tools_path.get_child("gclient"),
             "sync",
+            "-v",
             "--noprehooks",
             "--nohooks",
             # This unfortunately doesn't change how much data we fetch.
@@ -88,6 +89,10 @@ def _cros_chrome_repository_impl(ctx):
         CIPD_CACHE_DIR = cipd_cache_dir,
         VPYTHON_VIRTUALENV_ROOT = vpython_root,
         DEPOT_TOOLS_UPDATE = "0",
+        LUCI_AUTH_DEBUG = "1",
+        GIT_TRACE = "1",
+        GIT_TRACE_CURL = "1",
+        GIT_TRACE_CURL_NO_DATA = "1",
     )
 
     # When running hooks `update_depot_tools_toggle.py` will write this file
