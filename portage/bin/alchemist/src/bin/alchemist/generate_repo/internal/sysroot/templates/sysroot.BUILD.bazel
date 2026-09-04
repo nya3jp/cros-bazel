@@ -7,5 +7,10 @@ load("@//bazel/portage/build_defs:sysroot.bzl", "sysroot_create")
 sysroot_create(
     name = "{{ target_board }}_sysroot",
     board = "{{ target_board }}",
+    toolchain_pkgs = [
+        {%- for pkg in toolchain_pkgs %}
+        "{{ pkg }}",
+        {%- endfor %}
+    ],
     visibility = ["//visibility:public"],
 )
