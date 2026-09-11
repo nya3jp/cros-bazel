@@ -47,30 +47,30 @@ def _generate_hash_action(ctx, files):
     output = ctx.actions.declare_file(ctx.rule.attr.name + ".hash")
     args = ctx.actions.args()
     args.add(output)
+    args.add(ctx.executable._hash_durable_tree)
     args.add_all(files, expand_directories = False)
 
     ctx.actions.run_shell(
         outputs = [output],
         inputs = files,
         arguments = [args],
+        tools = [ctx.executable._hash_durable_tree],
         mnemonic = "HashTracer",
-        execution_requirements = {
-            # Disable the sandbox to avoid creating a symlink forest.
-            # The symlink forest will mess up the `find` command.
-            "no-sandbox": "",
-        },
         command = """set -eu -o pipefail
             out="$1"
-            shift
+            hash_durable_tree="$2"
+            shift 2
+
             for FILE in "$@"; do
                 if [[ -d "${FILE}" ]]; then
-                    pushd "${FILE}" >/dev/null
-                    HASH="$(find . -type f -readable -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -f1 -d ' ')"
-                    popd >/dev/null
+                    HASH="$("${hash_durable_tree}" "${FILE}")"
                 else
                     HASH="$(sha256sum "${FILE}" | cut -f1 -d ' ')"
                 fi
-                SIZE="$(du -bs "${FILE}" | cut -f1 -d$'\t')"
+
+                # use -L to compute the size correctly because the sandbox
+                # stages tree as a forest of symlinks.
+                SIZE="$(du -bsL "${FILE}" | cut -f1 -d$'\t')"
                 echo "* Hash Tracer: ${FILE} -> ${HASH} (${SIZE} bytes)" > "$out"
             done
         """,
@@ -159,6 +159,13 @@ hash_tracer = aspect(
     implementation = _hash_tracer_impl,
     doc = "Prints out the sha256 of all dependent tar, go_binary, and rust_binary targets, etc.",
     attr_aspects = ["*"],
+    attrs = {
+        "_hash_durable_tree": attr.label(
+            default = Label("//bazel/portage/common/durabletree:hash_durable_tree"),
+            executable = True,
+            cfg = "exec",
+        ),
+    },
 )
 
 def _hash_tracer_validator_impl(target, ctx):

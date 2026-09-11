@@ -2,13 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
 load("//bazel/build_defs:generate_cargo_toml.bzl", "generate_cargo_toml")
 load("//bazel/portage/build_defs:common.bzl", "RUSTC_DEBUG_FLAGS")
 
 rust_library(
     name = "durabletree",
-    srcs = glob(["src/**/*.rs"]),
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/bin/**"],
+    ),
     crate_name = "durabletree",
     rustc_flags = RUSTC_DEBUG_FLAGS,
     visibility = ["//bazel/portage:__subpackages__"],
@@ -16,15 +19,28 @@ rust_library(
         "//bazel/portage/common/fileutil",
         "//bazel/portage/common/testutil",
         "@alchemy_crates//:anyhow",
+        "@alchemy_crates//:hex",
         "@alchemy_crates//:itertools",
         "@alchemy_crates//:nix",
         "@alchemy_crates//:serde",
         "@alchemy_crates//:serde_json",
+        "@alchemy_crates//:sha2",
         "@alchemy_crates//:tar",
         "@alchemy_crates//:tracing",
         "@alchemy_crates//:walkdir",
         "@alchemy_crates//:xattr",
         "@alchemy_crates//:zstd",
+    ],
+)
+
+rust_binary(
+    name = "hash_durable_tree",
+    srcs = ["src/bin/hash_durable_tree.rs"],
+    rustc_flags = RUSTC_DEBUG_FLAGS,
+    visibility = ["//bazel/portage:__subpackages__"],
+    deps = [
+        ":durabletree",
+        "@alchemy_crates//:anyhow",
     ],
 )
 
