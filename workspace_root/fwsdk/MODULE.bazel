@@ -140,48 +140,9 @@ register_toolchains("//bazel/module_extensions/toolchains/rust/proto:proto_toolc
 
 register_toolchains("//bazel/module_extensions/toolchains/rust/proto:prost_toolchain")
 
-cargo_bazel_bootstrap = use_extension("@rules_rust//crate_universe/private/module_extensions:cargo_bazel_bootstrap.bzl", "cargo_bazel_bootstrap")
-use_repo(cargo_bazel_bootstrap, "cargo_bazel_bootstrap")
-
 # Eventually this will be merged with metallurgy crates.
-crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
-crate.from_cargo(
-    name = "alchemy_crates",
-    cargo_lockfile = "//bazel/rust/alchemy_crates:Cargo.lock",
-    manifests = ["//bazel/rust/alchemy_crates:Cargo.toml"],
-)
-crate.annotation(
-    crate = "protoc-gen-tonic",
-    gen_all_binaries = True,
-)
-crate.annotation(
-    crate = "protoc-gen-prost",
-    gen_all_binaries = True,
-)
-crate.annotation(
-    crate = "chrono",
-    patch_args = ["-p1"],
-    patch_tool = "patch",
-    patches = [
-        "//third_party/rust_crates/patches:chrono/remove-old-time-feature.patch",
-    ],
-)
-crate.annotation(
-    crate = "indexmap",
-    crate_features = ["std"],
-)
-crate.annotation(
-    additive_build_file = "//bazel/rust/alchemy_crates:additive_build_files/rustix.BUILD.bazel",
-    crate = "rustix",
-    data = [":static_libs"],
-    patch_args = ["-p1"],
-    patch_tool = "patch",
-    patches = [
-        "//third_party/rust_crates/patches:rustix/disable-features.patch",
-    ],
-    rustc_flags = ["-L$(location :static_libs)"],
-)
-use_repo(crate, "alchemy_crates")
+alchemy_crates = use_extension("//bazel/rust/alchemy_crates:extension.bzl", "alchemy_crates")
+use_repo(alchemy_crates, "alchemy_crates")
 
 files = use_extension("//bazel/module_extensions:files/extension.bzl", "files")
 use_repo(files, "files")

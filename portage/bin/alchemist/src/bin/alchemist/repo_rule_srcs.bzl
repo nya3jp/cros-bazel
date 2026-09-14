@@ -8,8 +8,8 @@
 # bazel run //bazel/portage/bin/alchemist/src/bin/alchemist:generate_repo_rule_srcs
 
 ALCHEMIST_REPO_RULE_SRCS = [
-    "@@rules_rust~~cargo_bazel_bootstrap~cargo_bazel_bootstrap//:BUILD.bazel",
-    "@@rules_rust~~crate~alchemy_crates//:BUILD.bazel",
+    "@@_main~alchemy_crates~alchemy_crates//:BUILD.bazel",
+    "@@_main~alchemy_crates~alchemy_crates//:defs.bzl",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:BUILD.bazel",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:alchemist.rs",
     "@cros//bazel/portage/bin/alchemist/src/bin/alchemist:digest_repo.rs",
