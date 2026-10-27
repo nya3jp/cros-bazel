@@ -80,17 +80,6 @@ pub fn get_extra_dependencies(
          */
         ("app-arch/cabextract-1.9.1", DependencyKind::BuildHost) => "sys-devel/gettext",
 
-        // When cross compiling `dev-libs/nss`, it requires `dev-libs/nss` to be
-        // installed on the build host. We can't add `dev-libs/nss` as a BDEPEND
-        // to the ebuild because that would cause a circular dependency when
-        // building for the host.
-        // See: https://bugs.gentoo.org/759127
-        ("dev-libs/nss-3.131.1", DependencyKind::BuildHost) if cross_compile => "dev-libs/nss",
-        // dev-libs/nss needs to run the `shlibsign` binary when installing.
-        // When cross-compiling that means we need need to use the build host's
-        // `shlibsign`.
-        ("dev-libs/nss-3.131.1", DependencyKind::InstallHost) if cross_compile => "dev-libs/nss",
-
         /*
          * make[2]: Entering directory '/build/arm64-generic/tmp/portage/net-libs/rpcsvc-proto-1.3.1-r4/work/rpcsvc-proto-1.3.1/rpcsvc'
          * rpcgen -h -o klm_prot.h klm_prot.x
@@ -316,6 +305,18 @@ pub fn get_extra_dependencies(
          * chromeos-chrome-118.0.5949.0_rc-r1:  * ERROR: chromeos-base/chromeos-chrome-118.0.5949.0_rc-r1::chromiumos failed (postinst phase):
          */
         ("chromeos-base/chromeos-chrome", DependencyKind::InstallHost) => " dev-python/six",
+
+        // When cross compiling `dev-libs/nss`, it requires `dev-libs/nss` to be
+        // installed on the build host. We can't add `dev-libs/nss` as a BDEPEND
+        // to the ebuild because that would cause a circular dependency when
+        // building for the host.
+        // See: https://bugs.gentoo.org/759127
+        ("dev-libs/nss", DependencyKind::BuildHost) if cross_compile => " dev-libs/nss",
+        // dev-libs/nss needs to run the `shlibsign` binary when installing.
+        // When cross-compiling that means we need need to use the build host's
+        // `shlibsign`.
+        ("dev-libs/nss", DependencyKind::InstallHost) if cross_compile => " dev-libs/nss",
+
         _ => "",
     };
 
