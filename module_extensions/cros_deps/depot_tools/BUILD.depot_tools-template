@@ -19,6 +19,7 @@ pkg_files(
             "cipd_*",
             "ninja",
             "python-bin/python3",
+            "siso",
             "third_party/colorama/*.py",
             "third_party/repo/*.py",
             "third_party/schema/*.py",
