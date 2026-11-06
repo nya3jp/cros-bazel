@@ -217,20 +217,23 @@ fn write_profile_bashrc(sysroot: &Path, bashrcs: &Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// Collects reclient log files.
-fn collect_reclient_log_files(container_root: &Path) -> Result<()> {
-    // Find directories at /tmp/reclient-*.
-    // The path must be in sync with the one in cros-remoteexec.eclass.
+/// Collects Siso and reclient build log files.
+fn collect_build_log_files(container_root: &Path) -> Result<()> {
+    // Find directories at /tmp/siso-* and /tmp/reclient-*.
+    // The paths must be in sync with CROS_SISO_LOG_DIR in chromeos-chrome-9999.ebuild and
+    // CROS_REMOTEEXEC_LOG_DIR in cros-remoteexec.eclass.
     for entry in std::fs::read_dir(container_root.join("tmp"))? {
         let entry = entry?;
         let path = entry.path();
         let name = path.file_name().unwrap().to_string_lossy();
-        if !entry.file_type()?.is_dir() || !name.starts_with("reclient-") {
+        if !entry.file_type()?.is_dir()
+            || (!name.starts_with("siso-") && !name.starts_with("reclient-"))
+        {
             continue;
         }
         // Generate a unique destination directory path with the current date and a random number.
-        // NOTE: On CI builders, chromite's remoteexec_lib.LogsArchiver will upload reclient log
-        // files found under /tmp/reclient-* as build artifacts.
+        // NOTE: On CI builders, chromite's remoteexec_lib.LogsArchiver will upload build log
+        // files found under /tmp/siso-* and /tmp/reclient-* as build artifacts.
         let date = chrono::Utc::now()
             .naive_utc()
             .format("%Y%m%d%H%M%S")
@@ -239,15 +242,15 @@ fn collect_reclient_log_files(container_root: &Path) -> Result<()> {
         let dest_dir = PathBuf::from(format!("/tmp/{name}-alchemy-{date}-{random_number}"));
 
         std::fs::create_dir(&dest_dir)?;
-        // Copy all log files created by reclient. Skip symlinks as they're not interesting.
-        // Reclient creates no directory in the log output directory.
+        // Copy all regular log files created by Siso or reclient. Skip symlinks as Siso's
+        // siso.INFO points to a glog *.INFO.* file in the same directory that is already copied.
         for entry in std::fs::read_dir(path)? {
             let entry = entry?;
             if entry.file_type()?.is_file() {
                 let from = entry.path();
                 let to = dest_dir.join(from.file_name().expect("`from` should have a file name."));
                 std::fs::copy(&from, &to).with_context(|| {
-                    format!("Failed to copy a reclient log file {from:?} to {to:?}")
+                    format!("Failed to copy a build log file {from:?} to {to:?}")
                 })?;
             }
         }
@@ -496,8 +499,8 @@ fn do_main() -> Result<()> {
     );
 
     let status = command.status()?;
-    collect_reclient_log_files(container.root_dir())
-        .context("Failed to collect reclient log files")?;
+    collect_build_log_files(container.root_dir())
+        .context("Failed to collect build log files")?;
     ensure!(
         status.success(),
         "Command failed: status={:?}, code={:?}, signal={:?}",
