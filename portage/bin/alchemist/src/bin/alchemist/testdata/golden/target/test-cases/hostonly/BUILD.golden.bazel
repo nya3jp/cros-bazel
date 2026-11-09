@@ -10,6 +10,7 @@ alias(
     actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/hostonly:1.0",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -18,6 +19,7 @@ alias(
     actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/hostonly:1.0_debug",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -26,6 +28,7 @@ alias(
     actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/hostonly:1.0_package_set",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -34,6 +37,7 @@ alias(
     actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/hostonly:1.0_install",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -42,6 +46,7 @@ alias(
     actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/hostonly:1.0_installed",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -50,6 +55,7 @@ alias(
     actual = "//internal/packages/stage2/target/board/chromiumos/test-cases/hostonly:1.0_install_list",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -58,6 +64,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -66,6 +73,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -74,6 +82,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -82,6 +91,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -90,6 +100,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -98,6 +109,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -106,6 +118,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -114,6 +127,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -122,6 +136,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -130,6 +145,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
@@ -138,6 +154,7 @@ alias(
     actual = ":best_version_selection_failure",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )

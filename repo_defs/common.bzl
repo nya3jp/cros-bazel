@@ -8,6 +8,14 @@ REPO_AUTH_ENVIRON = [
     "HOME",
 ]
 
+GIT_WRAPPER_ATTRS = {
+    "_git_wrapper": attr.label(
+        default = Label("@git_wrapper//:git"),
+        allow_single_file = True,
+        doc = "The CIPD Git wrapper binary",
+    ),
+}
+
 def exec(ctx, cmd, msg = None, retries = 0, delay = 60, **kwargs):
     env = dict(ctx.os.environ)
     env.update(kwargs)
@@ -53,5 +61,12 @@ def exec_with_gce_context_if_needed(ctx, cmd, msg = None, retries = 0, delay = 6
     else:
         print("_exec_with_gce_context_if_needed: Using ambient environment (GCE_METADATA_HOST=%s, LUCI_CONTEXT=%s)." %
               (has_gce, has_luci_ctx))
+
+    git_wrapper = getattr(ctx.attr, "_git_wrapper", None)
+    if git_wrapper:
+        git_dir = str(ctx.path(git_wrapper).dirname)
+        current_path = kwargs.get("PATH", ctx.os.environ.get("PATH", ""))
+        kwargs["PATH"] = "{}:{}".format(git_dir, current_path)
+        print("_exec_with_gce_context_if_needed: Prepended git wrapper directory to PATH: %s" % git_dir)
 
     return exec(ctx, wrapper + cmd, msg, retries = retries, delay = delay, **kwargs)

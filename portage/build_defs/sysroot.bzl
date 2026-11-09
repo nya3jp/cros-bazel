@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-load("//bazel/portage/build_defs:common.bzl", "SysrootInfo")
+load("//bazel/portage/build_defs:common.bzl", "BinaryPackageInfo", "SysrootInfo")
 
 def _sysroot_create_impl(ctx):
     log = ctx.actions.declare_file(ctx.label.name + ".log")
@@ -26,6 +26,11 @@ def _sysroot_create_impl(ctx):
         # Forces the action to always run.
         ctx.file._cache_bust,
     ]
+
+    for pkg in ctx.attr.toolchain_pkgs:
+        info = pkg[BinaryPackageInfo]
+        inputs.append(info.partial)
+        args.add("--toolchain-pkg", "%s:%s:%s" % (info.category, info.package_name, info.partial.path))
 
     ctx.actions.run(
         executable = ctx.executable._action_wrapper,
@@ -56,6 +61,13 @@ sysroot_create = rule(
             mandatory = True,
             doc = """
             The target board name.
+            """,
+        ),
+        toolchain_pkgs = attr.label_list(
+            providers = [BinaryPackageInfo],
+            doc = """
+            Host cross toolchain binary packages (e.g. cross-${CHOST}/glibc)
+            to stage into the sysroot cache.
             """,
         ),
         _setup_board = attr.label(

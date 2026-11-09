@@ -48,14 +48,33 @@ Note that when adding dependencies, you will probably break some diff tests. How
 Add the corresponding target to your deps.
 
 #### 3rd-party crates
-Add a dep on `@crates//:<crate name>` (for chromeos) or `@alchemy-crates//:<crate name>` (for infra).
+Add a dep on `@crates//:<crate name>` (for chromeos) or `@alchemy_crates//:<crate name>` (for infra).
 
 If the crate doesn't exist, or if the version needs to be updated, then:
 
-##### @alchemy-crates
-Modify the `//bazel/rust/alchemy_crates/Cargo.toml`, then cd to the directory that contains it and run `cargo update --workspace` to update the lockfile.
-
-After you've added a crate that uses it, you'll need to run `bazel run //bazel:generate_cargo_files` (but don't worry, if you forget this step, a test will fail and tell you you need to run this command).
+##### @alchemy_crates
+1. Modify `//bazel/rust/alchemy_crates/Cargo.toml` with the new or updated crate dependency.
+2. Regenerate the vendored Bazel definitions and lockfile:
+   ```bash
+   chromite/bin/bazel run //bazel/rust/alchemy_crates:crates_vendor
+   ```
+   To also update transitive dependencies in the lockfile (`cargo update`):
+   ```bash
+   chromite/bin/bazel run //bazel/rust/alchemy_crates:crates_vendor -- --repin
+   ```
+   Or to upgrade a specific package:
+   ```bash
+   chromite/bin/bazel run //bazel/rust/alchemy_crates:crates_vendor -- --repin=<package_name>
+   ```
+3. If new crates or crate versions were added, mirror their source tarballs to Google Storage so CI builders can download them hermetically:
+   ```bash
+   src/bazel/content_mirror/force_mirror.py $(chromite/bin/bazel query 'kind("alias", @alchemy_crates//:*)')
+   ```
+4. After you've added a crate that uses it, update workspace Cargo files:
+   ```bash
+   chromite/bin/bazel run //bazel:generate_cargo_files
+   ```
+   (Don't worry, if you forget this step, a test will fail and tell you you need to run this command).
 
 ##### @crates
 Modify `//third_party/rust_crates/projects/.../Cargo.toml`, then run `third_party/rust_crates/vendor.py`.
