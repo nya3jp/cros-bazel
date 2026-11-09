@@ -23,8 +23,8 @@ index 0a6bca2fcc..99dae2700b 100644
  		# don't introduce non-reproducible data into the binpkg.
  		unset EPOCHREALTIME EPOCHSECONDS SRANDOM
 +
-+		# CrOS: reclient-related variables
-+		unset USE_REMOTEEXEC GCE_METADATA_HOST REPROXY_CFG_FILE
++		# CrOS: reclient/siso remoteexec variables
++		unset USE_REMOTEEXEC GCE_METADATA_HOST REPROXY_CFG_FILE CROS_SISO_RBE_INSTANCE CROS_SISO_ACTION_SALT
  	fi
  
  	# misc variables inherited from the calling environment

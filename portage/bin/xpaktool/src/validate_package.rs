@@ -123,6 +123,8 @@ fn validate_env(package: &BinaryPackage) -> Result<()> {
     let env = extract_environment(package)?;
 
     let errors = [
+        "CROS_SISO_ACTION_SALT",
+        "CROS_SISO_RBE_INSTANCE",
         "EPOCHREALTIME",
         "EPOCHSECONDS",
         "GCE_METADATA_HOST",

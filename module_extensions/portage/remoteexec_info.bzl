@@ -7,6 +7,8 @@ exports_files(["remoteexec_info"])
 """
 
 _PASSTHROUGH_ENVIRON = [
+    "CROS_SISO_ACTION_SALT",
+    "CROS_SISO_RBE_INSTANCE",
     "GCE_METADATA_HOST",
     "REPROXY_CFG_FILE",
 ]
