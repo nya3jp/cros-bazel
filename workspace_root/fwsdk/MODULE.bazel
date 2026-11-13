@@ -132,8 +132,6 @@ use_repo(rust_host_tools, "rust_host_tools")
 # their target_settings.
 # register_toolchains("//bazel/module_extensions/toolchains/rust/host:all")
 
-register_toolchains("//platform/ti50/common/toolchain:all")
-
 register_toolchains("@rust_toolchains//:all")
 
 register_toolchains("//bazel/module_extensions/toolchains/rust/proto:proto_toolchain")
@@ -192,15 +190,10 @@ fwsdk_deps = use_extension("//platform/rules_cros_firmware/cros_firmware:deps.bz
 use_repo(
     fwsdk_deps,
     "cmsis",
-    "codesigner",
-    "compiler-builtins",
-    "cros-sdk",
     "ec",
     "ec_devutils",
     "hdctools",
-    "opentitantool",
     "shflags",
-    "ti50-sdk",
     "u_boot",
     "zephyr",
 )

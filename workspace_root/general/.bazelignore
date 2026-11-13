@@ -13,6 +13,7 @@ platform/hps-firmware2
 platform/release-firmware
 platform/rules_cros
 platform/tflite
+platform/ti50/common
 platform2
 private-overlays
 program
@@ -29,8 +30,12 @@ third_party/autotest
 third_party/labpack
 third_party/kernel
 third_party/llvm-project
+third_party/lowrisc/opentitan
+third_party/ms-tpm-20-ref
 third_party/pigweed
 third_party/rust_crates/vendor
 third_party/systemd
+third_party/tock/libtock-rs
+third_party/tock/tock
 third_party/webrtc-apm
 third_party/zephyr
