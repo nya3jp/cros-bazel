@@ -71,7 +71,7 @@ calculate_repo_rule_srcs(
     deps = [
         ":alchemist",
         "@alchemy_crates//:BUILD.bazel",
-        "@cargo_bazel_bootstrap//:BUILD.bazel",
+        "@alchemy_crates//:defs.bzl",
     ],
 )
 

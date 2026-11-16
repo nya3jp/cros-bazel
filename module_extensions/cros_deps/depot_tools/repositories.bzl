@@ -4,6 +4,7 @@
 
 load(
     "//bazel/repo_defs:common.bzl",
+    "GIT_WRAPPER_ATTRS",
     "REPO_AUTH_ENVIRON",
     _exec = "exec",
     _exec_with_gce_context_if_needed = "exec_with_gce_context_if_needed",
@@ -33,17 +34,18 @@ def _depot_tools_repository_impl(ctx):
 
 _depot_tools_repository = repository_rule(
     implementation = _depot_tools_repository_impl,
-    attrs = {
-        "build_file": attr.label(
+    attrs = dict(
+        GIT_WRAPPER_ATTRS,
+        build_file = attr.label(
             mandatory = True,
         ),
-        "commit": attr.string(
+        commit = attr.string(
             mandatory = True,
         ),
-        "remote": attr.string(
+        remote = attr.string(
             default = "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
         ),
-    },
+    ),
     environ = REPO_AUTH_ENVIRON,
 )
 
@@ -52,6 +54,6 @@ def depot_tools_repository():
     _depot_tools_repository(
         name = "depot_tools",
         remote = "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-        commit = "86752e9a55281200715749d75a88cf57bf2e7b01",
+        commit = "08f34739d842dbef086f2a4459bd29d29c0dfd4e",
         build_file = "@//bazel/module_extensions/cros_deps:depot_tools/BUILD.depot_tools-template",
     )

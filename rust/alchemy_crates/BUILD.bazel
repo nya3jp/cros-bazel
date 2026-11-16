@@ -2,10 +2,70 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_vendor")
+
 exports_files([
     "Cargo.toml",
     "Cargo.lock",
 ])
+
+_RUSTIX_ADDITIVE_BUILD_FILE_CONTENT = """\
+load("@@//bazel/build_defs:symlink.bzl", "symlink")
+
+config_setting(
+    name = "is_release",
+    values = {"compilation_mode": "opt"},
+)
+
+symlink(
+    name = "static_libs",
+    actual = select({
+        ":is_release": "src/backend/linux_raw/arch/outline/release",
+        "//conditions:default": "src/backend/linux_raw/arch/outline/debug",
+    }),
+    include_target = False,
+    out = "static_libs",
+)
+"""
+
+crates_vendor(
+    name = "crates_vendor",
+    annotations = {
+        "chrono": [crate.annotation(
+            patch_args = ["-p1"],
+            patch_tool = "patch",
+            patches = [
+                "@//third_party/rust_crates/patches:chrono/remove-old-time-feature.patch",
+            ],
+        )],
+        "indexmap": [crate.annotation(
+            crate_features = ["std"],
+        )],
+        "protoc-gen-prost": [crate.annotation(
+            gen_binaries = True,
+        )],
+        "protoc-gen-tonic": [crate.annotation(
+            gen_binaries = True,
+        )],
+        "rustix": [crate.annotation(
+            additive_build_file_content = _RUSTIX_ADDITIVE_BUILD_FILE_CONTENT,
+            data = [":static_libs"],
+            patch_args = ["-p1"],
+            patch_tool = "patch",
+            patches = [
+                "@//third_party/rust_crates/patches:rustix/disable-features.patch",
+            ],
+            rustc_flags = ["-L$(location :static_libs)"],
+        )],
+    },
+    cargo_bazel = "@rules_rust//crate_universe:cargo_bazel_bin",
+    cargo_lockfile = ":Cargo.lock",
+    manifests = [":Cargo.toml"],
+    mode = "remote",
+    repository_name = "alchemy_crates",
+    tags = ["manual"],
+    vendor_path = "crates",
+)
 
 # rules_rust is unable to build their rustix because they don't have our annotations.
 alias(

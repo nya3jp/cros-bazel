@@ -190,6 +190,7 @@ try-import %workspace%/prebuilts.bazelrc
 
 common --experimental_downloader_config=bazel/content_mirror/config/developer.cfg
 common:strict_mirror --experimental_downloader_config=bazel/content_mirror/config/strict.cfg
+common --experimental_repository_downloader_retries=5
 
 common --@rules_cc//cc/toolchains:experimental_enable_rule_based_toolchains
 

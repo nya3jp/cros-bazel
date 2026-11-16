@@ -139,6 +139,12 @@ impl MakeConf {
         let source = base_dir.join(path);
         let context = || format!("Failed to load {}", source.display());
 
+        if source.file_name() == Some(std::ffi::OsStr::new("make.conf.user")) {
+            // Skip loading user configuration overrides to preserve hermeticity
+            // in Bazel profiles.
+            return Ok(());
+        }
+
         if allow_missing && !source.exists() {
             return Ok(());
         }
@@ -334,14 +340,14 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
                     "make.conf",
                     r#"
                         USE="$USE a"
-                        source make.conf.user
+                        source make.conf.extra
                         USE="$USE b"
-                        source make.conf.user
+                        source make.conf.extra
                         USE="$USE c"
                     "#,
                 ),
                 (
-                    "make.conf.user",
+                    "make.conf.extra",
                     r#"
                         USE="$USE x"
                     "#,
@@ -411,12 +417,87 @@ LOL="${LOL} ${LOL} ${LOL} ${LOL} ${LOL}"
 
         assert_eq!(
             vec![
-                dir.join("make.conf.user"),
-                dir.join("make.conf.user"),
+                dir.join("make.conf.extra"),
+                dir.join("make.conf.extra"),
                 dir.join("make.conf")
             ],
             conf.sources
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_make_conf_user_skipped() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                (
+                    "make.conf",
+                    r#"
+                        USE="base"
+                        source make.conf.user
+                    "#,
+                ),
+                (
+                    "make.conf.user",
+                    r#"
+                        USE="override"
+                        EXTRA_VAR="leaked"
+                    "#,
+                ),
+            ],
+        )?;
+
+        let conf = MakeConf::load(&PathBuf::from("make.conf"), dir, true, false)?;
+
+        assert_eq!(
+            HashMap::from_iter([(
+                "USE".to_owned(),
+                RVal::from_iter([Value::Literal("base".to_owned())])
+            )]),
+            conf.values
+        );
+        assert_eq!(vec![dir.join("make.conf")], conf.sources);
+        Ok(())
+    }
+
+    #[test]
+    fn test_make_conf_user_in_dir_skipped() -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let dir = dir.as_ref();
+
+        write_files(
+            dir,
+            [
+                (
+                    "make.conf/00-base",
+                    r#"
+                        USE="base"
+                    "#,
+                ),
+                (
+                    "make.conf/make.conf.user",
+                    r#"
+                        USE="override"
+                        EXTRA_VAR="leaked"
+                    "#,
+                ),
+            ],
+        )?;
+
+        let conf = MakeConf::load(&PathBuf::from("make.conf"), dir, false, false)?;
+
+        assert_eq!(
+            HashMap::from_iter([(
+                "USE".to_owned(),
+                RVal::from_iter([Value::Literal("base".to_owned())])
+            )]),
+            conf.values
+        );
+        assert_eq!(vec![dir.join("make.conf/00-base")], conf.sources);
         Ok(())
     }
 

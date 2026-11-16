@@ -9,5 +9,8 @@ load("@//bazel/portage/build_defs:sysroot.bzl", "sysroot_create")
 sysroot_create(
     name = "amd64-generic_sysroot",
     board = "amd64-generic",
+    toolchain_pkgs = [
+        "@portage//host/cross-x86_64-cros-linux-gnu/glibc",
+    ],
     visibility = ["//visibility:public"],
 )

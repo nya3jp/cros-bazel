@@ -25,10 +25,14 @@ def _calculate_dependencies(dep_info, base_dir):
         dir = dep.dep.output.short_path.rsplit("/", 1)[0]
         dir_parts = dir.split("/")
 
-        # Entries defined by crate.from_cargo will be of the form
-        # ../rules_rust~~crate~<name>__crate.
-        # For example, ../rules_rust~~crate~alchemy_crates__tempfile-3.4.0.
-        has_manifest = dir.startswith("../rules_rust~~crate~")
+        # Entries defined by crate.from_cargo or crates_vendor will be of the form
+        # ../rules_rust~~crate~<name>__crate or ../<module>~<extension>~<name>__crate.
+        # For example, ../rules_rust~~crate~alchemy_crates__tempfile-3.4.0 or
+        # ../_main~alchemy_crates~alchemy_crates__tempfile-3.4.0.
+        has_manifest = (
+            dir.startswith("../rules_rust~~crate~") or
+            "alchemy_crates__" in dir
+        )
 
         # If the path starts with "..", then it was defined in a repo rule.
         # Thus, there's no standard relative path from this package to the

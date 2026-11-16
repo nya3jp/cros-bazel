@@ -28,7 +28,7 @@ pub struct ProfileCompiler<'a> {
 
 const MAKE_DEFAULT_VARIABLES: &[&str; 2] = &["PROFILE_ONLY_VARIABLES", "USE_EXPAND"];
 
-const IGNORED_VARIABLES: &[&str; 3] = &[
+const IGNORED_VARIABLES: &[&str] = &[
     // We don't need a global USE declaration because we inject a
     // per-package package.use.
     "USE",
@@ -37,8 +37,14 @@ const IGNORED_VARIABLES: &[&str; 3] = &[
     "ACCEPT_LICENSE",
     // If MAKEOPTS isn't set, Portage will default it to `-j<cores>`.
     "MAKEOPTS",
-    // TODO: Strip out all RESUMECOMMAND* and FETCHCOMMAND* variables
-    // since we don't need them.
+    // Host-specific ninja parallelism.
+    "NINJAOPTS",
+    // Host developer usernames are host-specific and unnecessary in container sandboxes.
+    "PORTAGE_USERNAME",
+    // BOTO_CONFIG points to user- or host-specific boto files
+    // (e.g. /home/$USER/.boto) and is only used for network fetches which
+    // are disabled in sandboxes.
+    "BOTO_CONFIG",
 ];
 
 // When generating a host (ROOT=/) profile from a target/host
@@ -149,10 +155,14 @@ impl<'a> ProfileCompiler<'a> {
     }
 
     fn is_ignored_key(&self, key: &str) -> bool {
-        IGNORED_VARIABLES.iter().any(|x| *x == key) ||
-        // BINHOSTs are not required because we don't download packages
-        // from inside the container. They also change all the time.
-        key.ends_with("_BINHOST")
+        IGNORED_VARIABLES.iter().any(|x| *x == key)
+            // BINHOSTs are not required because we don't download packages
+            // from inside the container. They also change all the time.
+            || key.ends_with("_BINHOST")
+            // Network fetch and resume commands are unused in sandboxed builds
+            // and interpolate host-specific paths.
+            || key.starts_with("FETCHCOMMAND")
+            || key.starts_with("RESUMECOMMAND")
     }
 
     /// Returns the env keys and values that make up the compiled profile's
@@ -294,6 +304,13 @@ mod tests {
                 ("USE_EXPAND_VALUES_ELIBC".into(), "FreeBSD glibc musl".into()),
                 ("ROOT".into(), sysroot.into()),
                 ("MAKEOPTS".into(), "-j 32".into()),
+                ("NINJAOPTS".into(), "-j 32".into()),
+                ("PORTAGE_USERNAME".into(), "fakeuser".into()),
+                ("BOTO_CONFIG".into(), "/home/fakeuser/.boto".into()),
+                ("FETCHCOMMAND".into(), "curl -f ...".into()),
+                ("FETCHCOMMAND_GS".into(), "gs_fetch ...".into()),
+                ("RESUMECOMMAND".into(), "curl -C ...".into()),
+                ("RESUMECOMMAND_GS".into(), "gs_fetch ...".into()),
                 ("PKG_CONFIG".into(), format!("{sysroot}/build/bin/pkg-config")),
                 ("CQ_BINHOST".into(), "http://foo".to_string()),
             ])),

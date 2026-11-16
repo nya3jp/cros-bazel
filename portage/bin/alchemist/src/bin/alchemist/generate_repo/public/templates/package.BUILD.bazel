@@ -11,6 +11,7 @@ alias(
     actual = "{{ alias.actual }}",
     visibility = [
         "//images:__pkg__",
+        "//internal/sysroot:__pkg__",
         "@//bazel:internal",
     ],
 )
